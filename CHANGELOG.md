@@ -33,6 +33,13 @@
   `CLSMSuperRes.fourier_reweight` applies the Wiener-type filter
   `W(k) = 1/(OTF^2(k) + eps)` of the paper's Eq. 3.
 
+- **The optical models moved into the installed library.** `jones_vector`,
+  `airy_psf`, `vectorial_psf`, `detector_grid` and `psf_volume` are now
+  `CLSMSuperRes` methods rather than functions in `prototype/esrrf/simulate`,
+  so a consumer outside this repository -- a GUI, a deconvolution -- imports
+  them from tttrlib instead of reaching into a prototype directory. The
+  prototype re-exports them, so the examples are unchanged.
+
 - **A better ISM PSF model.** `prototype/esrrf/simulate` gains `detector_grid`,
   ported from BrightEyes-ISM `detector.rect_grid`/`hex_grid`, so the simulated
   array can be hexagonal rather than only square -- a 5-per-side hexagonal grid

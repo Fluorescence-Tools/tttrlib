@@ -259,6 +259,314 @@ def _fourier_reweight(image, otf, epsilon=1e-3):
     return np.real(np.fft.ifft2(weighted))
 
 
+# --- optical models -------------------------------------------------------
+# The point-spread functions the array-detector reconstructions are
+# validated against. Kept here rather than in a prototype directory so a
+# consumer -- a GUI, a deconvolution -- can import them from the installed
+# library instead of reaching into the repository.
+
+def _psf_vectorial_intensity(jones, phi, i0, i1, i2):
+    """
+    Focal intensity for an arbitrary input Jones vector.
+
+    Superposition of the x- and y-polarized Richards-Wolf solutions, which is
+    exact because the focusing operator is linear in the pupil field.
+    """
+    a, b = jones
+    c2, s2 = np.cos(2.0 * phi), np.sin(2.0 * phi)
+    ex = a * (i0 + i2 * c2) + b * (i2 * s2)
+    ey = a * (i2 * s2) + b * (i0 - i2 * c2)
+    ez = -2.0 * i1 * (a * np.cos(phi) + b * np.sin(phi))
+    return np.abs(ex) ** 2 + np.abs(ey) ** 2 + np.abs(ez) ** 2
+
+
+def jones_vector(polarization, angle_deg: float = 0.0):
+    """
+    Jones vector of the light entering the objective pupil.
+
+    Accepts a name or an explicit ``(Ex, Ey)`` pair of complex amplitudes, so
+    any elliptical state can be given directly.
+
+    ============== ===================================================
+    ``'x'``        linear along x
+    ``'y'``        linear along y
+    ``'linear'``   linear at ``angle_deg`` from x
+    ``'circular'`` right-circular (identical in intensity to left)
+    ``'left'``     left-circular
+    ``'right'``    right-circular
+    ============== ===================================================
+
+    Returns
+    -------
+    np.ndarray
+        Normalized complex ``(2,)`` Jones vector.
+    """
+    if not isinstance(polarization, str):
+        v = np.asarray(polarization, dtype=complex).ravel()
+        if v.size != 2:
+            raise ValueError("a Jones vector must have two components")
+        norm = np.sqrt(np.abs(v[0]) ** 2 + np.abs(v[1]) ** 2)
+        if norm == 0:
+            raise ValueError("the Jones vector must not be zero")
+        return v / norm
+
+    name = polarization.lower()
+    if name == "x":
+        return np.array([1.0, 0.0], dtype=complex)
+    if name == "y":
+        return np.array([0.0, 1.0], dtype=complex)
+    if name == "linear":
+        a = np.deg2rad(angle_deg)
+        return np.array([np.cos(a), np.sin(a)], dtype=complex)
+    if name in ("circular", "right"):
+        return np.array([1.0, 1j], dtype=complex) / np.sqrt(2.0)
+    if name == "left":
+        return np.array([1.0, -1j], dtype=complex) / np.sqrt(2.0)
+    raise ValueError(
+        "polarization must be 'x', 'y', 'linear', 'circular', 'left', 'right', "
+        "'radial', 'azimuthal', 'unpolarized', or an (Ex, Ey) pair")
+
+
+def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+                  n_immersion: float = 1.518, polarization="circular",
+                  angle_deg: float = 0.0,
+                  z_nm: float = 0.0, centre=None, n_theta: int = 300,
+                  normalize: bool = True) -> np.ndarray:
+    r"""
+    Vectorial (polarization-aware) PSF from the Richards-Wolf integral.
+
+    Above roughly NA 1.0 the scalar approximation stops being defensible: the
+    strong focusing of an aplanatic lens tips the field out of the transverse
+    plane, and the longitudinal component :math:`E_z` it creates is not small.
+    With *linear* illumination that makes the focal spot measurably **elongated
+    along the polarization axis** -- an asymmetry a scalar or Gaussian model
+    cannot produce at all, and which propagates straight into any ISM shift
+    vector or reconstruction derived from it.
+
+    Richards & Wolf, *Proc. R. Soc. A* **253**, 358 (1959):
+
+    .. math::
+
+        E_x \propto I_0 + I_2\cos 2\phi, \quad
+        E_y \propto I_2 \sin 2\phi, \quad
+        E_z \propto -2 i I_1 \cos\phi
+
+    with
+
+    .. math::
+
+        I_0 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin\theta\,(1+\cos\theta)\,
+                J_0(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta \\
+        I_1 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin^2\theta\,
+                J_1(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta \\
+        I_2 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin\theta\,(1-\cos\theta)\,
+                J_2(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta
+
+    where :math:`\alpha = \arcsin(\mathrm{NA}/n)` and :math:`k = 2\pi n/\lambda`.
+
+    Parameters
+    ----------
+    shape : tuple
+        ``(ny, nx)``.
+    na, wavelength_nm, pixel_size_nm : float
+        Numerical aperture, wavelength, pixel size.
+    n_immersion : float
+        Refractive index of the immersion medium; 1.518 for oil, 1.0 for air.
+        ``na`` must not exceed it.
+    polarization : str or tuple
+        State of the light entering the pupil. Names are those of
+        :func:`jones_vector`, plus ``'unpolarized'`` (an incoherent average of
+        two orthogonal linear states) and the cylindrical vector beams
+        ``'radial'`` and ``'azimuthal'``. An explicit ``(Ex, Ey)`` pair of
+        complex amplitudes gives any elliptical state.
+    angle_deg : float
+        Orientation of ``'linear'``, measured from the x axis.
+    z_nm : float
+        Defocus, in nanometres.
+    n_theta : int
+        Quadrature points over the aperture angle.
+
+    Returns
+    -------
+    np.ndarray
+        Intensity PSF :math:`|E_x|^2 + |E_y|^2 + |E_z|^2`, peak-normalized.
+
+    Notes
+    -----
+    As NA/n falls this converges to the scalar Airy pattern, which is the check
+    :func:`airy_psf` provides.
+    """
+    from scipy.special import jv
+
+    if na >= n_immersion:
+        raise ValueError(f"NA {na} must be below the immersion index {n_immersion}")
+    if isinstance(polarization, str) and polarization.lower() not in (
+            "x", "y", "linear", "circular", "left", "right",
+            "unpolarized", "radial", "azimuthal"):
+        raise ValueError(f"unknown polarization {polarization!r}")
+
+    ny, nx = shape
+    cy, cx = ((ny - 1) / 2.0, (nx - 1) / 2.0) if centre is None else centre
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    dx = (xx - cx) * pixel_size_nm
+    dy = (yy - cy) * pixel_size_nm
+    r = np.hypot(dx, dy).ravel()
+    phi = np.arctan2(dy, dx).ravel()
+
+    alpha = np.arcsin(na / n_immersion)
+    theta = np.linspace(0.0, alpha, n_theta)
+    k = 2.0 * np.pi * n_immersion / wavelength_nm
+
+    st, ct = np.sin(theta), np.cos(theta)
+    common = np.sqrt(ct) * st * np.exp(1j * k * z_nm * ct)
+    krs = k * r[:, None] * st[None, :]
+
+    i0 = np.trapezoid(common * (1.0 + ct) * jv(0, krs), theta, axis=1)
+    i1 = np.trapezoid(common * st * jv(1, krs), theta, axis=1)
+    i2 = np.trapezoid(common * (1.0 - ct) * jv(2, krs), theta, axis=1)
+
+    if isinstance(polarization, str) and polarization.lower() == "unpolarized":
+        # incoherent average of two orthogonal linear states
+        intensity = 0.5 * (
+            _psf_vectorial_intensity(np.array([1.0, 0.0], complex), phi, i0, i1, i2)
+            + _psf_vectorial_intensity(np.array([0.0, 1.0], complex), phi, i0, i1, i2))
+    elif isinstance(polarization, str) and polarization.lower() in ("radial", "azimuthal"):
+        # cylindrical vector beams need their own aperture integrals: the pupil
+        # field is not a constant Jones vector across it
+        j0 = np.trapezoid(common * st * jv(0, krs), theta, axis=1)
+        if polarization.lower() == "radial":
+            e_r = np.trapezoid(common * ct * jv(1, krs), theta, axis=1)
+            e_z = 2j * j0
+            intensity = np.abs(e_r) ** 2 + np.abs(e_z) ** 2
+        else:
+            e_phi = np.trapezoid(common * jv(1, krs), theta, axis=1)
+            intensity = np.abs(e_phi) ** 2
+    else:
+        jones = jones_vector(polarization, angle_deg)
+        intensity = _psf_vectorial_intensity(jones, phi, i0, i1, i2)
+
+    intensity = intensity.reshape(ny, nx)
+    if not normalize:
+        # the caller is stacking planes and must keep the axial profile: peak
+        # normalizing each plane would flatten it away
+        return intensity
+    peak = intensity.max()
+    return intensity / peak if peak > 0 else intensity
+
+
+def airy_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+             centre=None) -> np.ndarray:
+    """
+    Scalar diffraction-limited PSF: the Airy pattern ``(2 J1(v) / v) ** 2``.
+
+    The exact scalar result rather than the Gaussian approximation to it. The
+    difference is in the *wings*: a Gaussian has none, so it understates both
+    the out-of-focus background and the crosstalk between neighbouring
+    detector elements.
+    """
+    from scipy.special import j1
+
+    ny, nx = shape
+    cy, cx = ((ny - 1) / 2.0, (nx - 1) / 2.0) if centre is None else centre
+    y, x = np.mgrid[0:ny, 0:nx]
+    r_nm = np.hypot(x - cx, y - cy) * pixel_size_nm
+    v = 2.0 * np.pi * na * r_nm / wavelength_nm
+    out = np.ones_like(v)
+    nz = v > 1e-12
+    out[nz] = (2.0 * j1(v[nz]) / v[nz]) ** 2
+    return out
+
+
+def detector_grid(n_side: int, geometry: str = "rect") -> np.ndarray:
+    """
+    Normalized coordinates of the detector element centres.
+
+    Ported from BrightEyes-ISM ``detector.rect_grid`` / ``hex_grid``. A
+    hexagonal packing is what real SPAD arrays use -- the 23-element array of
+    the CW-SOFISM work, for instance -- not the square lattice a Gaussian toy
+    model usually assumes.
+
+    Parameters
+    ----------
+    n_side : int
+        Elements per side of the generating square.
+    geometry : str
+        ``'rect'`` or ``'hex'``.
+
+    Returns
+    -------
+    np.ndarray
+        ``(n_elements, 2)`` array of (x, y) centres in element units. A
+        hexagonal grid is trimmed to the inscribed region, so it returns fewer
+        than ``n_side ** 2`` elements.
+    """
+    x = np.arange(-(n_side // 2), n_side // 2 + 1)
+    if geometry == "rect":
+        return np.array([[i, j] for i in x for j in x], dtype=float)
+    if geometry == "hex":
+        s = np.array([[0.5 * np.sqrt(3) * i, j - 0.5 * (i % 2)] for i in x for j in x])
+        return s[np.abs(s[:, 1]) <= (n_side // 2)]
+    raise ValueError("geometry must be 'rect' or 'hex'")
+
+
+def psf_volume(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+               z_step_nm: float = 100.0, n_immersion: float = 1.518,
+               polarization="circular", angle_deg: float = 0.0,
+               model: str = "vectorial", n_theta: int = 300) -> np.ndarray:
+    """
+    A 3-D PSF stack as a plain numpy array, ready to save or view.
+
+    Parameters
+    ----------
+    shape : tuple
+        ``(nz, ny, nx)``. The stack is centred on focus, so ``nz`` planes span
+        ``(nz - 1) * z_step_nm`` symmetrically about z = 0.
+    z_step_nm : float
+        Axial spacing between planes.
+    model : str
+        ``'vectorial'`` (Richards-Wolf, polarization-aware), ``'airy'`` (scalar,
+        z ignored) or ``'gaussian'``.
+
+    Returns
+    -------
+    np.ndarray
+        ``(nz, ny, nx)`` float64 intensity volume, normalized to a peak of 1.
+
+    Examples
+    --------
+    >>> vol = psf_volume((41, 64, 64), na=1.4, wavelength_nm=520.0,
+    ...                  pixel_size_nm=20.0, z_step_nm=50.0)
+    >>> np.save("psf.npy", vol)                           # doctest: +SKIP
+    """
+    nz, ny, nx = shape
+    z = (np.arange(nz) - (nz - 1) / 2.0) * z_step_nm
+
+    if model == "vectorial":
+        planes = [vectorial_psf((ny, nx), na, wavelength_nm, pixel_size_nm,
+                                n_immersion=n_immersion, polarization=polarization,
+                                angle_deg=angle_deg, z_nm=zi, n_theta=n_theta,
+                                normalize=False)
+                  for zi in z]
+    elif model == "airy":
+        planes = [airy_psf((ny, nx), na, wavelength_nm, pixel_size_nm)] * nz
+    elif model == "gaussian":
+        sigma_px = ((0.5 * wavelength_nm / na) / 2.35482) / pixel_size_nm
+        yy, xx = np.mgrid[0:ny, 0:nx]
+        r2 = (xx - (nx - 1) / 2.0) ** 2 + (yy - (ny - 1) / 2.0) ** 2
+        # a paraxial axial envelope, so the stack is not simply constant in z
+        z_r = np.pi * (sigma_px * pixel_size_nm) ** 2 * n_immersion / wavelength_nm
+        planes = []
+        for zi in z:
+            w2 = 1.0 + (zi / z_r) ** 2
+            planes.append(np.exp(-r2 / (2.0 * sigma_px ** 2 * w2)) / w2)
+    else:
+        raise ValueError("model must be 'vectorial', 'airy' or 'gaussian'")
+
+    volume = np.stack(planes).astype(np.float64)
+    peak = volume.max()
+    return volume / peak if peak > 0 else volume
+
+
 def _frc_hann2d(ny, nx):
     """Separable Hann window, matching BrightEyes-ISM FRC_lib.hann2d."""
     wy = 0.5 * (1 - np.cos(2 * np.pi * np.arange(ny) / (ny - 1)))
@@ -429,6 +737,11 @@ _cls.s2ism_reconstruction = staticmethod(_s2ism_reconstruction)
 _cls.fourier_reweight = staticmethod(_fourier_reweight)
 _cls.apr_reconstruction = staticmethod(_apr_reconstruction)
 _cls.focus_reconstruction = staticmethod(_focus_reconstruction)
+_cls.jones_vector = staticmethod(jones_vector)
+_cls.airy_psf = staticmethod(airy_psf)
+_cls.vectorial_psf = staticmethod(vectorial_psf)
+_cls.detector_grid = staticmethod(detector_grid)
+_cls.psf_volume = staticmethod(psf_volume)
 _cls.frc_curve = staticmethod(_frc_curve)
 _cls.frc_resolution = staticmethod(_frc_resolution)
 %}
