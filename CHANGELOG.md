@@ -2,6 +2,103 @@
 
 ## [Unreleased]
 
+### Added
+- **SOFISM** (`CLSMSuperRes.sofism_reconstruction`) -- super-resolution optical
+  fluctuation image scanning microscopy, after Sroda et al., *Optica* **7**, 1308
+  (2020), in the formulation restated by Beck et al., arXiv:2606.16508. It
+  multiplies the two independent resolution mechanisms of ISM and SOFI: for
+  every pair of detector elements the temporal cross-correlation of the
+  fluctuations `C_ij(r,tau) = 1/(N_t-tau) sum_t dI_i(r,t) dI_j(r,t+tau)` is
+  formed, whose effective PSF is the *product* of the two elements' PSFs; the
+  pair acts as one virtual detector midway between them and is reassigned by
+  `v_ij = (v_i + v_j)/2`. Autocorrelation terms are excluded by default, since
+  their shot noise does not cancel. On a simulated blinking sample the measured
+  spot narrows 9.30 -> 6.11 -> 4.74 px going confocal -> APR-ISM -> SOFISM, a
+  factor 1.96, matching the paper's stated ~2x before Fourier reweighting.
+  `CLSMSuperRes.fourier_reweight` applies the Wiener-type filter
+  `W(k) = 1/(OTF^2(k) + eps)` of the paper's Eq. 3.
+
+### Fixed
+- **eSRRF now reproduces NanoJ.** The RGC kernel deviated from
+  `liveSRRF.cl` in four places, none of which showed at the image centre and
+  all of which showed at the borders: the 2x gradient upsampling read a
+  zero-padded buffer instead of clamping to the native width and height; `Gy`
+  was fetched with `Gx`'s sub-pixel index shift (NanoJ shifts each gradient
+  along its *own* axis); the `0 < vx < width` / `0 < vy < height` guards that
+  keep out-of-frame samples out of both the numerator and `distanceWeightSum`
+  were missing; and `getInterpolatedValue`'s bilinear extrapolation branch,
+  which NanoJ takes wherever the bicubic 4x4 support does not fit, was not
+  ported at all. The numpy oracle in `prototype/esrrf/esrrf_reference.py` had
+  the same three last defects and so agreed with the C++ about being wrong; both
+  are fixed, and the A/B test now demands a double-precision match over the
+  whole field instead of a median with a 0.1 tolerance on the tail.
+
+- **eSRRF photon reassignment.** The magnified flat position was accumulated in
+  `int`, overflowing above ~2^31 (a 512x512 frame at magnification 8 wraps at
+  128 frames). In `channel_mode="split"` the RGC field was picked with
+  `event_index % n_channels`, which is not the photon's channel; it now comes
+  from the frame block the photon belongs to, via the new
+  `CLSMImage::get_channel_of_frame`. `CLSMSuperRes::write` discarded the
+  container writer's return value and always reported success. `temporal_combine`
+  divided by `n_frames - 1` for `TAC2` and produced infinities on a single frame.
+
+- **`CLSMImage::get_photon_positions`** doubled the position along a line in its
+  materialized-pixel path: the time offset is measured from the line start, so it
+  already contains the pixel index that was being added to it.
+
+- **ISM reconstructions were quantitatively wrong.** The inverse FFT applied no
+  `1/N` normalization (pocketfft never normalizes on its own, contrary to the
+  comment claiming it did), so every shifted detector channel came back scaled
+  by the number of pixels and APR did not conserve photon flux. Adaptive pixel
+  reassignment also ignored both of its documented knobs -- `usf` (so shifts were
+  integer-pixel only) and `filter_sigma` -- and omitted the Hann apodization the
+  BrightEyes-ISM reference applies before correlating. The estimator now
+  reproduces `skimage.registration.phase_cross_correlation(..., normalization=None)`
+  on apodized, optionally denoised input, including the upsampled-DFT peak
+  refinement, and is exposed as `CLSMSuperRes.shift_vectors`.
+
+- **The ISM subpixel shift no longer wraps around the frame.** It is a Fourier
+  shift, which is periodic, so content leaving one edge reappeared at the
+  opposite one -- with a bright structure at the left of the field, the far
+  right margin carried 3-18% of the peak where it should carry nothing. The
+  shift is now applied on a zero-padded canvas and cropped back, which also
+  confines the interpolation's ringing (far-margin leakage drops to ~0.2%).
+  Photons registered off the edge of the frame are now dropped rather than
+  wrapped, so an APR sum is no longer exactly equal to the input total; the
+  focus-ISM planes still partition the reassigned total exactly. Note that the
+  BrightEyes-ISM reference defaults to `mode='interp'` (a compact-support
+  spline) rather than the Fourier shift ported here; the boundary behaviour now
+  agrees, the interpolation kernel still differs.
+
+- **Focus-ISM follows the published algorithm again.** The separable
+  least-squares core (solve the mixing fraction *B* exactly at each trial
+  background width) was sound and is kept, but everything around it was
+  invented: a confidence weight and a ridge shrinkage that biased *B*, an
+  edge-aware smoothing of the *B* map, detector coordinates inferred from
+  measured shifts rather than the known lattice, an unused APR pass, and a
+  `threshold` parameter that was accepted and ignored -- where the reference
+  assigns sub-threshold pixels wholly to background. It now follows
+  `FocusISM_lib.focusISM`/`pixel_fit_2`: APR first, the in-focus width fitted
+  from the calibration-patch fingerprint, `sigma_bound` as the reference's
+  `sigma_B_bound`, and the threshold honoured.
+
+### Removed
+- `CLSMISM` is gone; every ISM algorithm now lives on `CLSMSuperRes`, which had
+  been forwarding to it. `apr_reconstruction` returns `(1, ny, nx)` and
+  `focus_reconstruction` returns `(3, ny, nx)` -- in-focus signal, background,
+  APR sum -- so the `nz` parameter, which only replicated the same plane, is
+  gone with it.
+- `CLSMSuperRes.s2ism_reconstruction`, `.deconv_reconstruction` and
+  `.generate_ism_psf`. The first was a variance-weighted APR carrying the name of
+  a different published method; the second a hand-rolled Richardson-Lucy against
+  a hardcoded Gaussian, not ISM deconvolution; the third imported from the repo's
+  `prototype/` directory at call time and otherwise silently fell back to a
+  Gaussian approximation. The PSF simulator remains available to examples as
+  `prototype/esrrf/simulate.generate_ism_psf`.
+- `CLSMSuperRes.frc_resolution` returned an FRC *curve*, not a resolution. It is
+  now `frc_curve`, with `frc_resolution_px` alongside it for the 1/7-criterion
+  resolution.
+
 ### Changed
 - **One interface for every decay fit.** A fit is now built by registry name and
   called the same way whatever the model: `DecayFit2("fit23", setup, irf)`, a
@@ -44,6 +141,12 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
+- **A C++ throw from `TTTR`, `TTTRMask` or `H2MM` aborted the interpreter.**
+  Those three `.i` files had no SWIG `%exception` handler, so an exception
+  raised to report a bad argument (a mismatched array length, an unreadable
+  file, a foreign msgpack payload) unwound through the wrapper and terminated
+  the process — no traceback, and no way to catch it. They now raise
+  `RuntimeError` like the rest of the library.
 - **`get_used_routing_channels` could return the channels the file had before
   you edited it.** `set_routing_channel_at` is public but
   `find_used_routing_channels`, which refreshes the cache it invalidates, was
@@ -95,6 +198,17 @@
   is documented as a failure mode in `doc/fit-guide.rst`.
 
 ### Added
+- **`TTTR::set_routing_channel`** — the bulk companion to
+  `set_routing_channel_at`. Relabelling a whole measurement through the
+  per-event setter costs one binding call per photon, which at photon scale is
+  the dominant cost of the operation. Refreshes `used_routing_channels`, so the
+  accessor cannot go stale behind it.
+- **`H2mmChannelMap::allocate` and `H2mmStateSidecar::set_arrays`** — the id
+  allocation and the sidecar format, usable without an `H2MM` engine. A caller
+  that assembled its photon streams some other way (several source files, a
+  burst table, a nanotime-split stream set) can now write *this* layout and
+  *this* file rather than a second, subtly different one; `H2MM::build_channel_map`
+  is a thin wrapper over the former.
 - **H2MM state decoding that reports a distribution, not a winner.** Viterbi
   answers "what is the single most likely state sequence"; most burst analysis
   instead asks "how do the photons distribute over the states", and the argmax

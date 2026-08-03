@@ -200,6 +200,97 @@ public:
 };
 
 
+/// Container-agnostic CLSM imaging metadata parsed from a TTTR header.
+///
+/// All fields are decoded from the header tags of whichever container the data
+/// lives in (PicoQuant PTU/HT3, Becker & Hickl SPC-130 sidecar, ...) into one
+/// uniform representation. The marker channels are normalized: whatever the
+/// source container stores (PTU stores an index and needs 2^(idx-1), HT3 stores
+/// the routing channel directly), the fields here always hold the actual
+/// routing-channel values that the record stream uses.
+struct CLSMImageInfo {
+    /// Source container type (see TTTRHeaderTypes.h, e.g. PQ_PTU_CONTAINER)
+    int container_type = -1;
+
+    /// Number of pixels per line (ImgHdr_PixX)
+    int n_pixel = 0;
+
+    /// Number of lines per frame (ImgHdr_PixY)
+    int n_lines = 0;
+
+    /// Number of frames (ImgHdr_MaxFrames; 0 when not recorded)
+    int n_frames = 0;
+
+    /// Raster dimensionality (ImgHdr_Dimensions, typically 2 or 3)
+    int dimensions = 0;
+
+    /// Routing channel of the line-start marker
+    int marker_line_start = 0;
+
+    /// Routing channel of the line-stop marker
+    int marker_line_stop = 0;
+
+    /// Routing channel(s) of the frame-start markers
+    std::vector<int> marker_frame_start = {};
+
+    /// Event type that marks a marker event (usually 1)
+    int marker_event_type = 0;
+
+    /// Nominal dwell time per pixel in seconds (ImgHdr_TimePerPixel)
+    double time_per_pixel_s = 0.0;
+
+    /// Nominal line scan frequency in Hz (ImgHdr_LineFrequency)
+    double line_frequency_hz = 0.0;
+
+    /// Macro-time clock resolution in seconds (MeasDesc_GlobalResolution)
+    double macro_time_resolution_s = 0.0;
+
+    /// Micro-time clock resolution in seconds (MeasDesc_Resolution)
+    double micro_time_resolution_s = 0.0;
+
+    /// Physical pixel size in microns (ImgHdr_PixResol)
+    double pixel_resolution_um = 0.0;
+
+    /// Scan start coordinates (ImgHdr_X0/Y0/Z0)
+    double x0 = 0.0;
+    double y0 = 0.0;
+    double z0 = 0.0;
+
+    /// Scan acceleration (ImgHdr_Acceleration)
+    double acceleration = 0.0;
+
+    /// Scan direction (ImgHdr_ScanDirection)
+    int scan_direction = 0;
+
+    /// Bidirectional scan flag (ImgHdr_BiDirect)
+    bool bidirectional_scan = false;
+
+    /// PicoQuant hardware identifier (ImgHdr_Ident)
+    int ident = 0;
+
+    /// True when geometry could be read from the header
+    bool is_valid() const { return n_pixel > 0 && n_lines > 0; }
+
+    /// Dwell time per magnified pixel in macro-time units
+    /// (rounds time_per_pixel_s / macro_time_resolution_s).
+    unsigned long long pixel_duration_macro() const {
+        if (macro_time_resolution_s <= 0.0) return 0;
+        return static_cast<unsigned long long>(
+                std::llround(time_per_pixel_s / macro_time_resolution_s));
+    }
+
+    /// Line duration in macro-time units (pixel_duration * n_pixel).
+    unsigned long long line_duration_macro() const {
+        return static_cast<unsigned long long>(n_pixel) * pixel_duration_macro();
+    }
+
+    /// Parse CLSM imaging metadata from a TTTR header. Handles the marker
+    /// encoding differences between containers (PTU 2^idx vs HT3 raw) and the
+    /// geometry/calibration tags common to imaging acquisitions.
+    static CLSMImageInfo from_header(TTTRHeader* header);
+};
+
+
 class CLSMImage {
 
     friend class Correlator;
@@ -210,6 +301,11 @@ class CLSMImage {
 private:
 
     CLSMSettings settings;
+
+    /// Imaging metadata parsed from the TTTR header at construction time.
+    /// Populated whenever the header carries CLSM imaging tags (see
+    /// CLSMImageInfo::from_header); stays default-constructed otherwise.
+    CLSMImageInfo image_info_;
 
     /// Used to tack if the CLSMImage is in a filled state
     bool _is_filled_ = false;
@@ -493,6 +589,12 @@ public:
 
     const CLSMSettings* get_settings(){
         return &settings;
+    }
+
+    /// Imaging metadata parsed from the TTTR header (geometry, markers,
+    /// pixel/line timing, physical calibration). Container-agnostic.
+    CLSMImageInfo get_image_info() const {
+        return image_info_;
     }
 
     /// Get the number of frames in the CLSMImage
@@ -1011,6 +1113,27 @@ public:
         if (n_channels <= 1) return static_cast<int>(n_frames);
         if (ch < 0 || static_cast<size_t>(ch) >= channel_counts.size()) return 0;
         return static_cast<int>(channel_counts[static_cast<size_t>(ch)]);
+    }
+
+    /// Channel a flat frame index belongs to. Frames of one channel are stored
+    /// as a contiguous block, so this is the inverse of get_frame_for_channel.
+    /// Returns 0 for an unsplit image and -1 for an out-of-range index.
+    int get_channel_of_frame(int frame) const {
+        if (frame < 0) return -1;
+        const size_t f = static_cast<size_t>(frame);
+        if (n_channels <= 1) return f < frames.size() ? 0 : -1;
+        for (size_t c = 0; c < channel_offsets.size(); ++c) {
+            if (f >= channel_offsets[c] && f < channel_offsets[c] + channel_counts[c])
+                return static_cast<int>(c);
+        }
+        return -1;
+    }
+
+    /// First flat frame index of a channel (see get_channel_of_frame).
+    int get_channel_frame_offset(int ch) const {
+        if (n_channels <= 1) return 0;
+        if (ch < 0 || static_cast<size_t>(ch) >= channel_offsets.size()) return -1;
+        return static_cast<int>(channel_offsets[static_cast<size_t>(ch)]);
     }
 
     // Flat frame accessor (for Python to bypass custom __getitem__ if needed)

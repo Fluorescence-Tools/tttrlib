@@ -90,37 +90,48 @@ def render_frame(
     background: float = 0.0,
     noise_seed: Optional[int] = None,
 ) -> np.ndarray:
-    """
-    Render a single CLSM frame from known emitters.
-
-    This simulates the physical imaging process: each pixel receives photons
-    from nearby emitters according to the Gaussian PSF, plus Poisson noise.
-
-    Args:
-        emitters: list of Emitters with known positions and brightnesses
-        params: scan parameters
-        sigma: Gaussian PSF sigma (in pixels)
-        background: constant background level
-        noise_seed: random seed for Poisson noise (None = no noise)
-
-    Returns:
-        (ny, nx) image frame
-    """
+    """Vectorized rendering of a CLSM frame from emitters."""
     ny, nx = params.ny, params.nx
-    frame = np.zeros((ny, nx), dtype=float)
+    if len(emitters) == 0:
+        return np.full((ny, nx), background, dtype=float)
+    
+    x_grid = np.arange(nx, dtype=float)[None, :]
+    y_grid = np.arange(ny, dtype=float)[:, None]
+    ex = np.array([e.x for e in emitters])[None, None, :]
+    ey = np.array([e.y for e in emitters])[None, None, :]
+    ep = np.array([e.photons for e in emitters])[None, None, :]
 
-    for y in range(ny):
-        for x in range(nx):
-            # Expected photons at this pixel
-            expected = gaussian_psf(float(x), float(y), emitters, sigma, background)
-            frame[y, x] = expected
+    dx = x_grid[:, :, None] - ex
+    dy = y_grid[:, :, None] - ey
+    r2 = dx * dx + dy * dy
+    frame = background + np.sum(ep * np.exp(-r2 / (2.0 * sigma * sigma)), axis=2)
 
-    # Add Poisson noise if requested
     if noise_seed is not None:
         rng = np.random.default_rng(noise_seed)
         frame = rng.poisson(frame).astype(float)
 
     return frame
+
+
+def render_blinking_frame_stack(
+    emitters: List[Emitter],
+    params: CLSMScanParameters,
+    n_frames: int = 20,
+    p_on: float = 0.20,
+    sigma: float = 1.0,
+    background: float = 0.0,
+    seed: int = 42,
+) -> np.ndarray:
+    """Vectorized multi-frame rendering with ON/OFF blinking kinetics."""
+    rng = np.random.default_rng(seed)
+    stack = np.zeros((n_frames, params.ny, params.nx), dtype=float)
+
+    for f in range(n_frames):
+        active = [e for e in emitters if rng.random() < p_on]
+        frame = render_frame(active, params, sigma=sigma, background=background)
+        stack[f] = rng.poisson(frame).astype(float)
+
+    return stack
 
 
 def render_photon_stream(
@@ -423,3 +434,71 @@ def two_colour_filaments(
 
     params = CLSMScanParameters(nx=nx, ny=ny)
     return emitters, params
+
+
+def generate_ism_psf(
+    na: float = 1.4,
+    wavelength_exc: float = 488.0,
+    wavelength_det: float = 520.0,
+    n_det: int = 5,
+    pitch_au: float = 0.25,
+    nx: int = 64,
+    ny: int = 64,
+    pixel_size_nm: float = 10.0,
+    pinhole_shape: str = 'square'
+):
+    """
+    Generate physical Image Scanning Microscopy (ISM) Point Spread Functions (PSFs).
+
+    Simulates the excitation PSF, detection PSF, SPAD detector array geometry,
+    and calculates individual detector channel PSFs, standard CLSM sum image,
+    and shift-reassigned ISM PSF.
+    """
+    airy_radius_nm = 0.61 * wavelength_det / na
+    sigma_exc = (0.5 * wavelength_exc / na) / 2.35482
+    sigma_det = (0.5 * wavelength_det / na) / 2.35482
+
+    sigma_exc_px = sigma_exc / pixel_size_nm
+    sigma_det_px = sigma_det / pixel_size_nm
+    pitch_px = (pitch_au * airy_radius_nm) / pixel_size_nm
+
+    x_grid = np.arange(nx, dtype=float) - nx / 2.0
+    y_grid = np.arange(ny, dtype=float)[:, None] - ny / 2.0
+    r2_grid = x_grid[None, :]**2 + y_grid**2
+
+    h_exc = np.exp(-r2_grid / (2.0 * sigma_exc_px**2))
+
+    det_side = n_det
+    det_offsets = []
+    channel_psfs = np.zeros((det_side * det_side, ny, nx), dtype=float)
+
+    idx = 0
+    for row in range(det_side):
+        for col in range(det_side):
+            dx_ch = (col - (det_side - 1) / 2.0) * pitch_px
+            dy_ch = (row - (det_side - 1) / 2.0) * pitch_px
+            det_offsets.append([dx_ch, dy_ch])
+
+            r2_ch = (x_grid[None, :] - dx_ch)**2 + (y_grid - dy_ch)**2
+            h_det_k = np.exp(-r2_ch / (2.0 * sigma_det_px**2))
+            ch_psf = h_exc * h_det_k
+            channel_psfs[idx] = ch_psf / ch_psf.sum()
+            idx += 1
+
+    det_offsets = np.array(det_offsets)
+    sum_psf = channel_psfs.sum(axis=0)
+
+    # Shift-reassigned ISM PSF
+    reassigned_psf = np.zeros((ny, nx), dtype=float)
+    from scipy.ndimage import shift as nd_shift
+    for k in range(len(det_offsets)):
+        shift_vec = -0.5 * det_offsets[k]
+        reassigned_psf += nd_shift(channel_psfs[k], shift=(shift_vec[1], shift_vec[0]), order=1)
+
+    return {
+        'channel_psfs': channel_psfs,
+        'detector_offsets': det_offsets,
+        'sum_psf': sum_psf,
+        'reassigned_psf': reassigned_psf,
+        'airy_radius_nm': airy_radius_nm
+    }

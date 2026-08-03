@@ -25,9 +25,10 @@ Core Objects
    frame, line, and pixel positions, which is what makes later TTTR selections
    possible.
 
-``CLSMISM``
-   Image scanning microscopy support for workflows that reconstruct detector
-   reassignment or related ISM representations.
+``CLSMSuperRes``
+   Super-resolution reconstructions on CLSM data: photon-level eSRRF
+   reassignment onto a finer raster, and the array-detector (ISM) methods --
+   shift-vector estimation, adaptive pixel reassignment and focus-ISM.
 
 Marker Routines
 ---------------

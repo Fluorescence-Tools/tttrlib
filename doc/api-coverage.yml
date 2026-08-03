@@ -110,7 +110,7 @@
         "CLSMFrame",
         "CLSMLine",
         "CLSMPixel",
-        "CLSMISM",
+        "CLSMSuperRes",
         "CLSM_DEFAULT",
         "CLSM_SP5",
         "CLSM_SP8",

@@ -4,7 +4,7 @@
  * \brief The frequency-domain donor⊗FRET⊗anisotropy decay kernel.
  *
  * Physics and rationale are in DecayFitDFA.h. The transforms use the pocketfft
- * header already vendored for `Pda.cpp` and `CLSMISM.cpp`, so this adds no
+ * header already vendored for `Pda.cpp` and `CLSMSuperRes.cpp`, so this adds no
  * dependency.
  *
  * The model this implements is due to Oleg Opanasyuk, in work with Nicolaas van

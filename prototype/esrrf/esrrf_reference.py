@@ -58,9 +58,7 @@ def _gradient_2point(img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     for y in range(ny):
         for x in range(nx):
             x0 = max(x - 1, 0)
-            x1 = min(x + 1, nx - 1)
             y0 = max(y - 1, 0)
-            y1 = min(y + 1, ny - 1)
 
             # 2-point backward difference
             Gx[y, x] = img[y, x] - img[y, x0]
@@ -69,67 +67,31 @@ def _gradient_2point(img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return Gx, Gy
 
 
-def _bicubic_upsample_2x(img: np.ndarray) -> np.ndarray:
-    """
-    2× bicubic upsampling of a field, matching liveSRRF.cl:217-233.
-
-    Uses Catmull-Rom spline (a = 0.5). This is the interpolation used on the
-    gradient field before RGC evaluation.
-
-    Args:
-        img: (ny, nx) field to upsample
-
-    Returns:
-        (2*ny, 2*nx) upsampled field
-    """
-    ny, nx = img.shape
-    out = np.zeros((2 * ny, 2 * nx), dtype=float)
-
-    # Catmull-Rom cubic kernel
-    def cubic(x: float) -> float:
-        a = 0.5
-        if x < 0:
-            x = -x
-        if x < 1:
-            return x * x * (x * (-a + 2) + (a - 3)) + 1
-        elif x < 2:
-            return -a * x * x * x + 5 * a * x * x - 8 * a * x + 4 * a
-        return 0.0
-
-    for yM in range(2 * ny):
-        for xM in range(2 * nx):
-            # Continuous position in the source grid
-            x = xM / 2.0
-            y = yM / 2.0
-
-            u0 = int(np.floor(x))
-            v0 = int(np.floor(y))
-
-            q = 0.0
-            for j in range(4):
-                v = min(max(v0 - 1 + j, 0), ny - 1)
-                p = 0.0
-                for i in range(4):
-                    u = min(max(u0 - 1 + i, 0), nx - 1)
-                    p += img[v, u] * cubic(x - u)
-                q += p * cubic(y - v)
-
-            out[yM, xM] = q
-
-    return out
+def _cubic(x: float) -> float:
+    """Catmull-Rom cubic kernel (a = 0.5), liveSRRF.cl:26-35."""
+    a = 0.5
+    if x < 0:
+        x = -x
+    if x < 1:
+        return x * x * (x * (-a + 2) + (a - 3)) + 1
+    elif x < 2:
+        return -a * x * x * x + 5 * a * x * x - 8 * a * x + 4 * a
+    return 0.0
 
 
 def _interpolated_value(img: np.ndarray, x: float, y: float) -> float:
     """
-    Bicubic interpolation at a continuous position (x, y), matching
-    liveSRRF.cl getInterpolatedValue and the intensity-weighting path.
+    Interpolation at a continuous position (x, y), matching NanoJ's
+    getInterpolatedValue (liveSRRF.cl:38-129).
 
-    Used for intensity weighting (the "v" in the RGC kernel) and for the
-    optional interpolated widefield image.
+    Bicubic (Catmull-Rom) wherever the 4×4 support fits inside the image, and
+    bilinear *extrapolation* on the last interior cell everywhere else. The
+    border branch matters: eSRRF evaluates the gradient well outside the frame,
+    and clamping the bicubic support instead is a visibly different field.
 
     Args:
         img: (ny, nx) image
-        x, y: continuous coordinates (may be fractional)
+        x, y: continuous coordinates (may be fractional, may be out of range)
 
     Returns:
         Interpolated value
@@ -138,27 +100,59 @@ def _interpolated_value(img: np.ndarray, x: float, y: float) -> float:
     u0 = int(np.floor(x))
     v0 = int(np.floor(y))
 
-    # Catmull-Rom cubic
-    def cubic(x: float) -> float:
-        a = 0.5
-        if x < 0:
-            x = -x
-        if x < 1:
-            return x * x * (x * (-a + 2) + (a - 3)) + 1
-        elif x < 2:
-            return -a * x * x * x + 5 * a * x * x - 8 * a * x + 4 * a
-        return 0.0
+    if 0 < u0 < nx - 2 and 0 < v0 < ny - 2:
+        q = 0.0
+        for j in range(4):
+            v = min(max(v0 - 1 + j, 0), ny - 1)
+            p = 0.0
+            for i in range(4):
+                u = min(max(u0 - 1 + i, 0), nx - 1)
+                p += img[v, u] * _cubic(x - u)
+            q += p * _cubic(y - v)
+        return q
 
-    q = 0.0
-    for j in range(4):
-        v = min(max(v0 - 1 + j, 0), ny - 1)
-        p = 0.0
-        for i in range(4):
-            u = min(max(u0 - 1 + i, 0), nx - 1)
-            p += img[v, u] * cubic(x - u)
-        q += p * cubic(y - v)
+    # Bilinear extrapolation on the last interior cell
+    xbase = min(max(int(min(nx - 2, max(x, 0.0))), 0), nx - 2)
+    ybase = min(max(int(min(ny - 2, max(y, 0.0))), 0), ny - 2)
+    xbase1 = min(xbase + 1, nx - 1)
+    ybase1 = min(ybase + 1, ny - 1)
+    x_fraction = x - xbase
+    y_fraction = y - ybase
 
-    return q
+    lower_left = img[ybase, xbase]
+    lower_right = img[ybase, xbase1]
+    upper_right = img[ybase1, xbase1]
+    upper_left = img[ybase1, xbase]
+    upper_average = upper_left + x_fraction * (upper_right - upper_left)
+    lower_average = lower_left + x_fraction * (lower_right - lower_left)
+    return lower_average + y_fraction * (upper_average - lower_average)
+
+
+def _upsample_gradient(img: np.ndarray, gradient_magnification: int = 2) -> np.ndarray:
+    """
+    Upsampling of the gradient field, matching calculateGradientInterpolation
+    (liveSRRF.cl:217-233).
+
+    Args:
+        img: (ny, nx) native-resolution gradient
+        gradient_magnification: upsampling factor (2 in NanoJ)
+
+    Returns:
+        (G*ny, G*nx) upsampled field
+    """
+    ny, nx = img.shape
+    g = gradient_magnification
+    out = np.zeros((g * ny, g * nx), dtype=float)
+    for yM in range(g * ny):
+        for xM in range(g * nx):
+            out[yM, xM] = _interpolated_value(img, xM / g, yM / g)
+    return out
+
+
+def _boundary_check(arr: np.ndarray, x: int, y: int) -> float:
+    """Clamped array access, matching getVBoundaryCheck (liveSRRF.cl:132-136)."""
+    h, w = arr.shape
+    return arr[min(max(y, 0), h - 1), min(max(x, 0), w - 1)]
 
 
 def rgc_map(
@@ -199,8 +193,8 @@ def rgc_map(
 
     # Gradient and its 2× upsampling
     Gx, Gy = _gradient_2point(img)
-    Gx_up = _bicubic_upsample_2x(Gx)
-    Gy_up = _bicubic_upsample_2x(Gy)
+    Gx_up = _upsample_gradient(Gx, gradient_magnification)
+    Gy_up = _upsample_gradient(Gy, gradient_magnification)
 
     # Constants matching the OpenCL
     vxy_offset = 0.5
@@ -232,11 +226,19 @@ def rgc_map(
                     float(int(gradient_magnification * (yc - vxy_PixelShift)) + j)
                 ) / gradient_magnification + vxy_PixelShift
 
+                # Samples outside the frame contribute to neither CGLH nor wSum
+                # (liveSRRF.cl:281)
+                if not (0 < vy < ny):
+                    continue
+
                 for i in range(i_min, i_max + 1):
                     # vx position in continuous space
                     vx = (
                         float(int(gradient_magnification * (xc - vxy_PixelShift)) + i)
                     ) / gradient_magnification + vxy_PixelShift
+
+                    if not (0 < vx < nx):
+                        continue
 
                     # Distance from magnified pixel centre to sample point
                     dx = vx - xc
@@ -246,17 +248,14 @@ def rgc_map(
                     if distance == 0 or distance > tso:
                         continue
 
-                    # Fetch gradient at this sample, applying half-pixel offset
-                    # liveSRRF.cl:187-188
-                    gx_idx = int(
-                        gradient_magnification * (vx - vxy_offset) + vxy_ArrayShift
-                    )
-                    gy_idx = int(gradient_magnification * (vy - vxy_offset))
-                    gx_idx = min(max(gx_idx, 0), 2 * nx - 1)
-                    gy_idx = min(max(gy_idx, 0), 2 * ny - 1)
+                    # Fetch the gradient at this sample. Gx and Gy live on grids
+                    # shifted against each other by one sub-pixel along their own
+                    # axis: Gx is shifted in x, Gy in y (liveSRRF.cl:191-192).
+                    vx_g = gradient_magnification * (vx - vxy_offset)
+                    vy_g = gradient_magnification * (vy - vxy_offset)
 
-                    Gx_val = Gx_up[gy_idx, gx_idx]
-                    Gy_val = Gy_up[gy_idx, gx_idx]
+                    Gx_val = _boundary_check(Gx_up, int(vx_g + vxy_ArrayShift), int(vy_g))
+                    Gy_val = _boundary_check(Gy_up, int(vx_g), int(vy_g + vxy_ArrayShift))
 
                     # dGauss^4 distance weight (liveSRRF.cl:190-192)
                     distanceWeight = distance * np.exp(-(distance * distance) / tss)
@@ -280,7 +279,10 @@ def rgc_map(
 
                         CGLH += Dk * distanceWeight
 
-            # Normalize and apply sensitivity exponent
+            # Normalize and apply sensitivity exponent.
+            # NanoJ divides unconditionally (liveSRRF.cl:355) and yields NaN when
+            # no sample fell inside the frame; guarding on wSum is the one
+            # deliberate deviation from the kernel, and the C++ port makes it too.
             if wSum > 0:
                 CGLH /= wSum
                 if CGLH >= 0:

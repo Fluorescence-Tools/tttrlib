@@ -43,7 +43,7 @@
 
 /* Microscopy */
 %include "CLSM.i"
-%include "CLSMISM.i"
+%include "CLSMSuperRes.i"
 %include "Localization.i"
 
 /* TIFF I/O for 2D/3D arrays */

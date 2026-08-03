@@ -1,0 +1,103 @@
+"""
+CLSM Super-Resolution (eSRRF) Method Limitations Demonstration
+==============================================================
+
+This example uses simulated CLSM stripe patterns to illustrate physical and
+algorithmic limitations of eSRRF photon reassignment:
+
+1. **Resolution Limit & Merging Artifacts:** When stripe spacing $d < 0.35 \\times \\text{FWHM}$,
+   radial gradient convergence fails to separate adjacent features and merges them into a false central peak.
+2. **High Sensitivity Beading Artifacts:** Setting sensitivity $S \\ge 3$ on continuous linear structures
+   breaks lines into false discrete puncta (beading).
+3. **Cross-Section Line Profiles:** Quantitative intensity cross-sections comparing Original CLSM,
+   Ground Truth, and eSRRF Reassigned CLSM.
+"""
+
+import sys
+from pathlib import Path
+import numpy as np
+import matplotlib.pyplot as plt
+import tttrlib
+
+PROTOTYPE_DIR = Path(__file__).parents[2] / "prototype" / "esrrf"
+if str(PROTOTYPE_DIR) not in sys.path:
+    sys.path.insert(0, str(PROTOTYPE_DIR))
+
+from simulate import Emitter, CLSMScanParameters, render_frame, render_photon_stream
+
+
+def generate_stripes(spacing: float, n_stripes: int = 3, nx: int = 64, ny: int = 64, photons_per_point: float = 100.0):
+    emitters = []
+    cx = nx / 2.0
+    offset_x = cx - (n_stripes - 1) * spacing / 2.0
+    for s in range(n_stripes):
+        x = offset_x + s * spacing
+        for y in np.linspace(10, ny - 10, 120):
+            emitters.append(Emitter(x=x, y=y, photons=photons_per_point))
+    params = CLSMScanParameters(nx=nx, ny=ny)
+    return emitters, params
+
+
+# Simulation parameters
+fwhm = 2.0
+mag = 4
+nx, ny = 64, 64
+
+# Case 1: Resolvable Stripes (spacing = 3.0 px = 1.5 * FWHM)
+emitters_res, params = generate_stripes(spacing=3.0, n_stripes=3, nx=nx, ny=ny)
+img_orig_res = render_frame(emitters_res, params, sigma=fwhm / 2.354, background=2.0, noise_seed=42)
+rgc_res = tttrlib.CLSMSuperRes.rgc_map(img_orig_res, magnification=mag, fwhm=fwhm, sensitivity=1, intensity_weighting=True)
+
+# Case 2: Unresolvable / Merged Stripes (spacing = 0.6 px = 0.3 * FWHM)
+emitters_unres, params = generate_stripes(spacing=0.6, n_stripes=3, nx=nx, ny=ny)
+img_orig_unres = render_frame(emitters_unres, params, sigma=fwhm / 2.354, background=2.0, noise_seed=42)
+rgc_unres = tttrlib.CLSMSuperRes.rgc_map(img_orig_unres, magnification=mag, fwhm=fwhm, sensitivity=1, intensity_weighting=True)
+
+# Case 3: High Sensitivity Beading (S = 4 on single continuous line)
+emitters_line, params = generate_stripes(spacing=0.0, n_stripes=1, nx=nx, ny=ny, photons_per_point=50.0)
+img_orig_line = render_frame(emitters_line, params, sigma=fwhm / 2.354, background=2.0, noise_seed=42)
+rgc_beading = tttrlib.CLSMSuperRes.rgc_map(img_orig_line, magnification=mag, fwhm=fwhm, sensitivity=4, intensity_weighting=True)
+
+
+# Render Figure with 4 Panels
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Panel 1: Resolvable Stripes
+im0 = axes[0, 0].imshow(rgc_res, cmap='inferno', origin='lower')
+axes[0, 0].set_title(f'A) Resolvable Stripes (d = 1.5×FWHM)\nCleanly Separated Lines ({mag*nx}x{mag*ny})')
+fig.colorbar(im0, ax=axes[0, 0], fraction=0.046, pad=0.04)
+
+# Panel 2: Unresolvable Stripes (Merging Artifact)
+im1 = axes[0, 1].imshow(rgc_unres, cmap='inferno', origin='lower')
+axes[0, 1].set_title(f'B) Unresolvable Stripes (d = 0.3×FWHM)\nMerged Central Artifact ({mag*nx}x{mag*ny})')
+fig.colorbar(im1, ax=axes[0, 1], fraction=0.046, pad=0.04)
+
+# Panel 3: Beading Artifact
+im2 = axes[1, 0].imshow(rgc_beading, cmap='inferno', origin='lower')
+axes[1, 0].set_title(f'C) High Sensitivity (S=4) Beading\nContinuous Line Fragmented ({mag*nx}x{mag*ny})')
+fig.colorbar(im2, ax=axes[1, 0], fraction=0.046, pad=0.04)
+
+# Panel 4: Line Profile Cross-Sections
+x_axis_orig = np.linspace(0, nx, nx)
+x_axis_sr = np.linspace(0, nx, mag * nx)
+mid_y_orig = ny // 2
+mid_y_sr = (mag * ny) // 2
+
+p_orig_res = img_orig_res[mid_y_orig, :] / img_orig_res[mid_y_orig, :].max()
+p_sr_res = rgc_res[mid_y_sr, :] / rgc_res[mid_y_sr, :].max()
+
+p_orig_unres = img_orig_unres[mid_y_orig, :] / img_orig_unres[mid_y_orig, :].max()
+p_sr_unres = rgc_unres[mid_y_sr, :] / rgc_unres[mid_y_sr, :].max()
+
+axes[1, 1].plot(x_axis_orig, p_orig_res, 'k--', label='Orig CLSM (d=3.0px)', alpha=0.6)
+axes[1, 1].plot(x_axis_sr, p_sr_res, 'r-', label='eSRRF Resolved (d=3.0px)', linewidth=2)
+axes[1, 1].plot(x_axis_sr, p_sr_unres, 'b-.', label='eSRRF Merged (d=0.6px)', linewidth=2)
+
+axes[1, 1].set_title('D) Intensity Cross-Section Line Profiles')
+axes[1, 1].set_xlabel('Position (native pixels)')
+axes[1, 1].set_ylabel('Normalized Intensity')
+axes[1, 1].legend(loc='upper right')
+axes[1, 1].set_xlim(16, 48)
+
+plt.tight_layout()
+plt.show()

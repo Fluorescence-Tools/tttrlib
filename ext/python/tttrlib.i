@@ -117,15 +117,6 @@ def experimental(cls):
     """Decorator to mark a class as experimental."""
     return mark_experimental(cls)
 
-
-# Apply experimental marking to SWIG classes that are not yet stable API.
-# This patches CLSMISM to emit warnings when instantiated.
-if 'CLSMISM' in dir():
-    mark_experimental(
-        CLSMISM,
-        "CLSMISM is experimental and may change or be removed in a future "
-        "release. Use with caution."
-    )
 %}
 
 %include "info.h"
@@ -156,7 +147,6 @@ if 'CLSMISM' in dir():
 
 /* Microscopy */
 %include "CLSM.i"
-%include "CLSMISM.i"
 %include "CLSMSuperRes.i"
 %include "Localization.i"
 

@@ -4,7 +4,7 @@ Generic ISM reconstruction pipeline using tttrlib only.
 This script loads a PTU file via tttrlib, constructs a CLSMImage with
 split_by_channel=True (so that detector elements are exposed as frames),
 and performs Adaptive Pixel Reassignment (APR) and optionally Focus-ISM
-background rejection using tttrlib.CLSMISM. No BrightEyes dependencies.
+background rejection using tttrlib.CLSMSuperRes. No BrightEyes dependencies.
 
 Example:
     python examples/ism/ism_reconstruction.py --file <path-to>.ptu \
@@ -36,17 +36,38 @@ DEFAULT_PTU = str(
 )
 
 
-def _load_clsm_image(ptu_file: str, *, n_det: int | None) -> tuple[tttrlib.CLSMImage, dict]:
-    """Load a CLSMImage from a PTU file and return metadata.
-    The image is constructed with split_by_channel=True so that the intensity
-    stack has shape (n_det, n_lines, n_pixel).
+def _load_clsm_image(ptu_file: str, *, n_det: int | None) -> tuple[np.ndarray, dict]:
+    """Load a CLSMImage from a PTU file or generate simulated SPAD array tubulin dataset.
+    The intensity stack has shape (n_det, n_lines, n_pixel).
     """
-    print(f"Loading TTTR: {ptu_file}")
-    tttr = tttrlib.TTTR(ptu_file, "PTU")
-    print("Constructing CLSMImage (split_by_channel=True, fill=True)")
-    img = tttrlib.CLSMImage(tttr_data=tttr, split_by_channel=True, fill=True)
+    if ptu_file and os.path.exists(ptu_file):
+        print(f"Loading TTTR: {ptu_file}")
+        tttr = tttrlib.TTTR(ptu_file, "PTU")
+        print("Constructing CLSMImage (split_by_channel=True, fill=True)")
+        img = tttrlib.CLSMImage(tttr_data=tttr, split_by_channel=True, fill=True)
+        intensity = np.asarray(img.intensity)
+    else:
+        print("Input file not found; generating simulated 25-channel SPAD array tubulin dataset...")
+        sim_dir = Path(__file__).resolve().parent.parent / "simulation"
+        if str(sim_dir) not in sys.path:
+            sys.path.insert(0, str(sim_dir))
+        from generate_tubulin_phantom import generate_tubulin_phantom
+        from scipy.signal import fftconvolve
 
-    intensity = np.asarray(img.intensity)
+        ground_truth = generate_tubulin_phantom(n_filaments=18, size_px=128, pixel_size_nm=10.0)
+        proto_dir = Path(__file__).resolve().parents[2] / "prototype" / "esrrf"
+        if str(proto_dir) not in sys.path:
+            sys.path.insert(0, str(proto_dir))
+        from simulate import generate_ism_psf
+
+        psf_sim = generate_ism_psf(na=1.4, n_det=5, pitch_au=0.25, nx=64, ny=64)
+        channel_psfs = psf_sim['channel_psfs']
+        n_det_sim, ny, nx = 25, ground_truth.shape[0], ground_truth.shape[1]
+        intensity = np.zeros((n_det_sim, ny, nx), dtype=np.float64)
+        for k in range(n_det_sim):
+            intensity[k] = fftconvolve(ground_truth, channel_psfs[k], mode='same')
+        intensity = np.random.poisson(np.clip(intensity * 40.0, 0, None)).astype(np.float64)
+
     if intensity.ndim != 3:
         raise RuntimeError(
             f"Unexpected intensity shape {intensity.shape}; expected (det, lines, pixels)."
@@ -57,7 +78,7 @@ def _load_clsm_image(ptu_file: str, *, n_det: int | None) -> tuple[tttrlib.CLSMI
     print(
         f"Image shape (detectors, lines, pixel): {meta['n_det']} x {meta['n_lines']} x {meta['n_pixel']}"
     )
-    return img, meta
+    return intensity, meta
 
 
 def _imshow(img2d: np.ndarray, title: str, *, subplot: Optional[int] = None):
@@ -138,9 +159,9 @@ def _compute_basic_frc(image: np.ndarray, *, bin_width: float = 2.0, threshold: 
         print(f"FRC computation failed: {exc}")
 
 @click.command()
-@click.option("--file", "file_path", type=click.Path(exists=True, dir_okay=False),
+@click.option("--file", "file_path", type=str,
               default=DEFAULT_PTU, show_default=True,
-              help="Path to the PTU file.")
+              help="Path to the PTU file (if missing, runs simulation).")
 @click.option("--usf", default=10, show_default=True, type=int, help="Upsampling factor for APR.")
 @click.option("--ref-idx", default=-1, show_default=True, type=int,
               help="Reference detector index for APR (-1: auto).")
@@ -154,7 +175,6 @@ def _compute_basic_frc(image: np.ndarray, *, bin_width: float = 2.0, threshold: 
               help="Focus-ISM threshold parameter.")
 @click.option("--calibration-size", default=10, show_default=True, type=int,
               help="Calibration size (frames) for Focus-ISM.")
-@click.option("--nz", default=10, show_default=True, type=int, help="z-upsample factor for APR/Focus-ISM.")
 @click.option("--n-det", default=-1, show_default=True, type=int,
               help="Number of detector elements to use (-1: use all).")
 @click.option("--save-fig", default="", show_default=True, type=str,
@@ -171,26 +191,25 @@ def _compute_basic_frc(image: np.ndarray, *, bin_width: float = 2.0, threshold: 
               help="Compute a basic Fourier Ring Correlation (FRC) estimate for APR and Focus-ISM images.")
 def main(file_path: str, usf: int, ref_idx: int, filter_sigma: float,
          focus: bool, sigma_bound: float, threshold: float, calibration_size: int,
-         nz: int, n_det: int, save_fig: str, save_npz: str, no_show: bool,
+         n_det: int, save_fig: str, save_npz: str, no_show: bool,
          focus_signal_img: str, focus_background_img: str, frc: bool):
     """Run ISM reconstruction from a PTU file using tttrlib only."""
-    img, meta = _load_clsm_image(file_path, n_det=n_det)
+    intensity, meta = _load_clsm_image(file_path, n_det=n_det)
 
-    # Prepare detector cube (D, H, W) as float64 for CLSMISM entry points
-    intensity = np.asarray(img.intensity, dtype=np.float64)
+    # Prepare detector cube (D, H, W) as float64 for the CLSMSuperRes entry points
+    intensity = np.asarray(intensity, dtype=np.float64)
     det_count = int(meta["n_det"]) if "n_det" in meta else int(intensity.shape[0])
     detector_cube = np.ascontiguousarray(intensity[:det_count], dtype=np.float64)
     print(f"Detector cube shape for reconstruction: {detector_cube.shape}")
 
     # APR reconstruction on raw arrays (avoid passing CLSMImage to wrapper)
     print("Running APR reconstruction...")
-    apr = tttrlib.CLSMISM.apr_reconstruction(
+    apr = tttrlib.CLSMSuperRes.apr_reconstruction(
         detector_cube,
         channels_last=False,
         usf=int(usf),
         ref_idx=int(ref_idx),
         filter_sigma=float(filter_sigma),
-        nz=int(nz),
         n_det=det_count,
     )
     # Normalize APR output to 2-D image for display/saving
@@ -200,15 +219,14 @@ def main(file_path: str, usf: int, ref_idx: int, filter_sigma: float,
     focus_background = None
     if focus:
         print("Running Focus-ISM background rejection...")
-        focus_result = tttrlib.CLSMISM.focus_reconstruction(
+        focus_result = tttrlib.CLSMSuperRes.focus_reconstruction(
             detector_cube,
             channels_last=False,
             sigma_bound=float(sigma_bound),
             threshold=float(threshold),
             calibration_size=int(calibration_size),
             parallelize=False,
-            nz=int(nz),
-            n_det=det_count,
+                n_det=det_count,
             detector_coords=None,
         )
         # Unify focus outputs (tuple or ndarray)

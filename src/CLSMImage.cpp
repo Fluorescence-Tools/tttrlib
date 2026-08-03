@@ -125,6 +125,111 @@ struct SeqMacroTime {
 };
 } // namespace
 
+// ========================================================================
+// CLSMImageInfo: container-agnostic imaging metadata from the TTTR header
+// ========================================================================
+
+namespace {
+
+// Read a scalar header tag value as a double. Returns false when the tag is
+// absent or carries a non-numeric value.
+bool read_tag_double(const nlohmann::json& json, const std::string& name, double& out) {
+    auto t = TTTRHeader::get_tag(json, name);
+    if (t.is_null() || !t.contains("value") || t["value"].is_null()) return false;
+    const auto& v = t["value"];
+    if (v.is_number()) { out = v.get<double>(); return true; }
+    if (v.is_boolean()) { out = v.get<bool>() ? 1.0 : 0.0; return true; }
+    return false;
+}
+
+// Read a scalar header tag value as an int. Returns false when absent.
+bool read_tag_int(const nlohmann::json& json, const std::string& name, int& out) {
+    auto t = TTTRHeader::get_tag(json, name);
+    if (t.is_null() || !t.contains("value") || t["value"].is_null()) return false;
+    const auto& v = t["value"];
+    if (v.is_number()) { out = v.get<int>(); return true; }
+    if (v.is_boolean()) { out = v.get<bool>() ? 1 : 0; return true; }
+    return false;
+}
+
+} // namespace
+
+CLSMImageInfo CLSMImageInfo::from_header(TTTRHeader* header) {
+    CLSMImageInfo info;
+    if (header == nullptr) return info;
+
+    nlohmann::json json;
+    try {
+        json = nlohmann::json::parse(header->get_json());
+    } catch (...) {
+        return info;
+    }
+
+    info.container_type = header->get_tttr_container_type();
+
+    // --- geometry ---------------------------------------------------------
+    if (!read_tag_int(json, "ImgHdr_PixX", info.n_pixel)) info.n_pixel = 0;
+    if (!read_tag_int(json, "ImgHdr_PixY", info.n_lines)) info.n_lines = 0;
+    read_tag_int(json, "ImgHdr_MaxFrames", info.n_frames);
+    read_tag_int(json, "ImgHdr_Dimensions", info.dimensions);
+    read_tag_int(json, "ImgHdr_Ident", info.ident);
+
+    // --- markers (container-specific encoding) ----------------------------
+    // PTU stores marker *indices* that decode to routing channels via 2^(idx-1)
+    // (or 2^idx when ImgHdr_LineStart == 0); HT3 stores the routing channel
+    // directly. The normalized routing-channel values are what the record
+    // stream actually uses, and what CLSMSettings expects.
+    int ls_raw = 0, le_raw = 0, frame_raw = 0;
+    bool has_ls = read_tag_int(json, "ImgHdr_LineStart", ls_raw);
+    bool has_le = read_tag_int(json, "ImgHdr_LineStop", le_raw);
+    read_tag_int(json, "ImgHdr_Frame", frame_raw);
+
+    if (info.container_type == PQ_PTU_CONTAINER) {
+        if (has_ls && has_le) {
+            if (ls_raw == 0) {
+                // 2^index encoding
+                info.marker_line_start = 1 << ls_raw;
+                info.marker_line_stop  = 1 << le_raw;
+                info.marker_frame_start = { frame_raw >= 0 ? (1 << frame_raw) : 4 };
+            } else {
+                info.marker_line_start = 1 << (ls_raw - 1);
+                info.marker_line_stop  = 1 << (le_raw - 1);
+                if (frame_raw > 0)
+                    info.marker_frame_start = { 1 << (frame_raw - 1) };
+            }
+        }
+    } else {
+        // HT3 (and any other container storing raw routing channels)
+        if (has_ls) info.marker_line_start = ls_raw;
+        if (has_le) info.marker_line_stop  = le_raw;
+        if (frame_raw > 0)
+            info.marker_frame_start = { frame_raw };
+        else if (has_ls)
+            info.marker_frame_start = { 4 };
+    }
+    info.marker_event_type = 1;
+
+    // --- timing -----------------------------------------------------------
+    read_tag_double(json, "ImgHdr_TimePerPixel", info.time_per_pixel_s);
+    read_tag_double(json, "ImgHdr_LineFrequency", info.line_frequency_hz);
+    read_tag_double(json, TTTRTagGlobRes, info.macro_time_resolution_s);
+    read_tag_double(json, TTTRTagRes, info.micro_time_resolution_s);
+
+    // --- physical calibration ----------------------------------------------
+    read_tag_double(json, "ImgHdr_PixResol", info.pixel_resolution_um);
+    read_tag_double(json, "ImgHdr_X0", info.x0);
+    read_tag_double(json, "ImgHdr_Y0", info.y0);
+    read_tag_double(json, "ImgHdr_Z0", info.z0);
+    read_tag_double(json, "ImgHdr_Acceleration", info.acceleration);
+    read_tag_int(json, "ImgHdr_ScanDirection", info.scan_direction);
+
+    int bd = 0;
+    if (read_tag_int(json, "ImgHdr_BiDirect", bd))
+        info.bidirectional_scan = (bd != 0);
+
+    return info;
+}
+
 // Helper to setup micro-time filtering bitmap
 // Returns: {bitmap_pointer, owns_bitmap_flag, use_filter_flag}
 static std::tuple<bool*, bool, bool> setup_microtime_filter(
@@ -302,6 +407,7 @@ void CLSMImage::copy(const CLSMImage &p2, bool fill) {
     }
     this->tttr = p2.tttr;
     settings = p2.settings;
+    image_info_ = p2.image_info_;
     n_frames = p2.n_frames;
     n_lines = p2.n_lines;
     n_pixel = p2.n_pixel;
@@ -593,62 +699,27 @@ CLSMImage::CLSMImage(
         }
 
         // Auto-configure CLSM markers and dimensions from PicoQuant PTU/HT3 header
-        // tags. Ported from the Python-only CLSMImage.read_clsm_settings so that R,
-        // Java and native C++ reconstruct identically to Python. Runs only for the
+        // tags via the container-agnostic CLSMImageInfo parser. Runs only for the
         // default reading routine and only when the caller has not already supplied
         // pixel dimensions (n_pixel_per_line == 0), so callers that pass explicit
         // settings -- including the Python __init__, which resolves these itself --
-        // are unaffected.
-        if (this->settings.reading_routine == CLSM_DEFAULT &&
-            this->settings.n_pixel_per_line == 0) {
+        // are unaffected. The full parsed metadata (geometry, timing, calibration)
+        // is always stored in image_info_ for introspection.
+        if (this->settings.reading_routine == CLSM_DEFAULT) {
             auto pq_header = tttr_data->get_header();
             if (pq_header != nullptr) {
                 try {
-                    auto pq_json = nlohmann::json::parse(pq_header->get_json());
-                    auto tag_int = [&](const char* name, int fallback) -> int {
-                        auto t = TTTRHeader::get_tag(pq_json, name);
-                        if (!t.is_null() && t.contains("value") && !t["value"].is_null())
-                            return t["value"].get<int>();
-                        return fallback;
-                    };
-                    int container = pq_header->get_tttr_container_type();
-                    if (container == PQ_HT3_CONTAINER) {
-                        int ls = tag_int("ImgHdr_LineStart", -1);
-                        int le = tag_int("ImgHdr_LineStop", -1);
-                        if (ls >= 0 && le >= 0) {
-                            this->settings.marker_line_start  = ls;
-                            this->settings.marker_line_stop   = le;
-                            this->settings.n_pixel_per_line   = tag_int("ImgHdr_PixX", 0);
-                            this->settings.n_lines            = tag_int("ImgHdr_PixY", 0);
-                            this->settings.marker_frame_start = { tag_int("ImgHdr_Frame", 0) };
-                            this->settings.marker_event_type  = 1;
-                            this->n_pixel = this->settings.n_pixel_per_line;
-                        }
-                    } else if (container == PQ_PTU_CONTAINER) {
-                        int ls = tag_int("ImgHdr_LineStart", -1);
-                        int le = tag_int("ImgHdr_LineStop", -1);
-                        if (ls >= 0 && le >= 0) {
-                            int frame_raw = tag_int("ImgHdr_Frame", -1);
-                            if (ls == 0) {
-                                // ImgHdr_LineStart == 0 uses 2^index marker encoding
-                                this->settings.marker_line_start  = 1 << ls;
-                                this->settings.marker_line_stop   = 1 << le;
-                                this->settings.marker_frame_start =
-                                    { frame_raw >= 0 ? (1 << frame_raw) : 4 };
-                            } else {
-                                this->settings.marker_line_start  = 1 << (ls - 1);
-                                this->settings.marker_line_stop   = 1 << (le - 1);
-                                this->settings.marker_frame_start =
-                                    frame_raw > 0 ? std::vector<int>{ 1 << (frame_raw - 1) }
-                                                  : std::vector<int>{};
-                            }
-                            this->settings.n_pixel_per_line = tag_int("ImgHdr_PixX", 0);
-                            this->settings.n_lines          = tag_int("ImgHdr_PixY", 0);
-                            this->settings.marker_event_type = 1;
-                            this->n_pixel = this->settings.n_pixel_per_line;
-                        }
+                    this->image_info_ = CLSMImageInfo::from_header(pq_header);
+                    if (this->settings.n_pixel_per_line == 0 && this->image_info_.is_valid()) {
+                        this->settings.marker_line_start  = this->image_info_.marker_line_start;
+                        this->settings.marker_line_stop   = this->image_info_.marker_line_stop;
+                        this->settings.marker_frame_start = this->image_info_.marker_frame_start;
+                        this->settings.marker_event_type  = this->image_info_.marker_event_type;
+                        this->settings.n_pixel_per_line   = this->image_info_.n_pixel;
+                        this->settings.n_lines            = this->image_info_.n_lines;
+                        this->settings.bidirectional_scan = this->image_info_.bidirectional_scan;
+                        this->n_pixel = this->settings.n_pixel_per_line;
                     }
-                    this->settings.bidirectional_scan = (tag_int("ImgHdr_BiDirect", 0) != 0);
                 } catch (...) {
                     if (is_verbose())
                         std::clog << "-- CLSM: could not read PQ header settings" << std::endl;
@@ -2736,18 +2807,22 @@ void CLSMImage::get_photon_positions(
                 auto pixel_duration = line->get_pixel_duration();
                 if (pixel_duration == 0) pixel_duration = 1;  // avoid division by zero
 
+                const int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
                 for (size_t p_idx = 0; p_idx < line->pixels.size(); ++p_idx) {
                     CLSMPixel& pixel = line->pixels[p_idx];
-                    int pixel_idx = static_cast<int>(p_idx);
                     const auto& indices = pixel.get_tttr_indices();
 
                     for (int event_i : indices) {
                         unsigned long long mt = tttr->get_macro_time_at(event_i);
                         unsigned long long time_offset = mt - line_start_time;
 
-                        // Exact fractional x position
-                        double x_exact = static_cast<double>(pixel_idx) +
-                                       static_cast<double>(time_offset) / pixel_duration;
+                        // Exact fractional x position. time_offset runs from the
+                        // start of the *line*, so dividing by the dwell time
+                        // already yields the position in pixel units -- adding
+                        // p_idx on top would roughly double it.
+                        double x_exact = static_cast<double>(time_offset) / pixel_duration;
+                        if (x_exact < 0.0 || x_exact > static_cast<double>(n_pixels_minus_1) + 1.0)
+                            continue;
 
                         frames_vec.push_back(frame_idx);
                         lines_vec.push_back(line_idx);

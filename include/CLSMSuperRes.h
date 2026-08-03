@@ -1,20 +1,21 @@
 /*
  * CLSMSuperRes.h
  *
- * Photon-level eSRRF (enhanced Super-Resolution Radial Fluctuations) for CLSM data.
+ * Super-resolution reconstructions for CLSM data, in two families:
  *
- * This module implements the Henriques lab eSRRF algorithms ported from camera-frame
- * data to single-photon TTTR data. The key idea is to use the Radial Gradient
- * Convergence (RGC) field as a spatial probability density and redistribute individual
- * photons onto a finer raster.
+ *  - Photon-level eSRRF (enhanced Super-Resolution Radial Fluctuations). The
+ *    Henriques-lab algorithm, ported from camera frames to single-photon TTTR
+ *    data: the Radial Gradient Convergence (RGC) field is used as a spatial
+ *    probability density, and individual photons are redistributed onto a finer
+ *    raster. Reference: NanoJ-eSRRF (liveSRRF.cl,
+ *    RadialGradientConvergence.cl, LiveSRRF_CL.java); Laine et al.,
+ *    Nat. Methods 20, 1949 (2023).
  *
- * Ported from:
- *   - junk/NanoJ-eSRRF/resources/liveSRRF.cl (calculateRadialGradientConvergence)
- *   - junk/NanoJ-eSRRF/resources/RadialGradientConvergence.cl
- *   - junk/NanoJ-eSRRF/src/nanoj/liveSRRF/LiveSRRF_CL.java
+ *  - Array-detector (ISM) reconstructions: shift-vector estimation by phase
+ *    cross-correlation, adaptive pixel reassignment, and focus-ISM background
+ *    rejection. Reference: BrightEyes-ISM (APR_lib.py, FocusISM_lib.py);
+ *    Tortarolo et al., Nat. Commun. 13, 7929 (2022).
  *
- * Author: tttrlib development team
- * Date: 2025-01-31
  * License: Same as tttrlib (see LICENSE)
  */
 
@@ -31,36 +32,41 @@ class CLSMImage;
 /**
  * @brief Super-resolution method selector.
  *
- * eSRRF (Radial Gradient Convergence reassignment) is one of a family of
- * photon-level super-resolution approaches. This enum selects which spatial
- * prior is used to redistribute photons. New methods (SOFI, ISM, etc.) are
- * added here as they are implemented.
+ * Selects the spatial prior reassign_photons() samples a photon's new position
+ * from.
  *
- *   - "esrrf"    : Radial Gradient Convergence (RGC) reassignment [default]
- *                  Ported from NanoJ-eSRRF (Laine & Heil, Nat. Methods 2023)
- *   - "uniform"  : No spatial prior — uniform upsampling within search radius
- *                  (baseline; equivalent to esrrf with sensitivity=0)
- *   - "sofi"     : SOFI-style reweighting [not yet implemented]
- *   - "ism"      : Image Scanning Microscopy shift [not yet implemented]
+ *   - "esrrf"     : Radial Gradient Convergence (RGC) reassignment [default]
+ *   - "uniform"   : No spatial prior -- uniform sampling within the search
+ *                   radius. The baseline to compare eSRRF against.
+ *   - "ism"       : Image Scanning Microscopy shift-reassignment. Each photon
+ *                   is moved by half its detector element's offset before
+ *                   sampling; with sensitivity <= 0 the shift is applied
+ *                   directly, without an RGC prior.
+ *   - "esrrf+ism" : the ISM shift, then RGC sampling around the shifted position
+ *   - "sofi"      : reserved, not implemented -- requesting it raises
  */
 enum class SuperResMethod {
-    ESRRF,    // Radial Gradient Convergence reassignment
-    UNIFORM,  // Uniform upsampling (no spatial prior)
-    SOFI,     // SOFI-style (reserved)
-    ISM       // Image Scanning Microscopy (reserved)
+    ESRRF,      // Radial Gradient Convergence reassignment
+    UNIFORM,    // Uniform sampling (no spatial prior)
+    SOFI,       // SOFI-style (reserved, not implemented)
+    ISM,        // Image Scanning Microscopy shift-reassignment
+    ESRRF_ISM   // Combined eSRRF + ISM (ISM shift + RGC radial convergence sampling)
 };
 
 /**
- * @brief Photon-level super-resolution reassignment for CLSM data
+ * @brief Super-resolution reconstructions for CLSM data
  *
- * This class provides static methods for:
- *   - Computing RGC maps on magnified grids (the eSRRF spatial prior)
- *   - Reassigning photons to sub-pixel positions using a spatial prior
- *   - Temporal combination (AVG/VAR/TAC2) of reassigned frames
- *   - PTU output with magnified raster
+ * Photon-level eSRRF:
+ *   - rgc_map: the Radial Gradient Convergence field on a magnified grid
+ *   - reassign_photons: redistribute photons onto a finer raster
+ *   - temporal_combine: AVG/VAR/TAC2 over a stack of per-frame fields
+ *   - get_photon_positions: the exact fractional photon positions both build on
+ *   - write: the reassigned stream as a magnified-raster TTTR file
  *
- * eSRRF is the first and default method; the framework supports adding more
- * (SOFI, ISM variants) via SuperResMethod.
+ * Array-detector (ISM) reconstructions:
+ *   - shift_vectors: per-element registration shifts
+ *   - apr_reconstruction: adaptive pixel reassignment
+ *   - focus_reconstruction: in-focus / out-of-focus separation
  *
  * All methods are static and work on plain C arrays for SWIG compatibility.
  * Output arrays are malloc()ed and ownership is transferred to the caller
@@ -91,8 +97,8 @@ public:
      */
     static void rgc_map(
         const double* img,
-        int nx,
         int ny,
+        int nx,
         int magnification,
         double fwhm,
         int sensitivity,
@@ -105,8 +111,8 @@ public:
     // Overload returning the array directly (for SWIG)
     static double* rgc_map(
         const double* img,
-        int nx,
         int ny,
+        int nx,
         int magnification,
         double fwhm,
         int sensitivity,
@@ -150,7 +156,10 @@ public:
         double search_radius,
         const char* channel_mode,  // "merged" or "split"
         unsigned long long seed,
-        const char* method = "esrrf"  // super-res method: "esrrf", "uniform", ...
+        const char* method = "esrrf",  // super-res method: "esrrf", "uniform", "ism"
+        const double* detector_offsets = nullptr,
+        int n_detector_offsets = 0,
+        double ism_shift_factor = 0.5
     );
 
     // ========================================================================
@@ -167,6 +176,8 @@ public:
      * @param nx Frame width
      * @param mode Combination mode: "AVG", "VAR", "TAC2", or "INT"
      * @param output Output combined image (ny, nx), caller must free()
+     * @param n_output1 Output height (= ny)
+     * @param n_output2 Output width (= nx)
      */
     static void temporal_combine(
         const double* stack,
@@ -174,7 +185,9 @@ public:
         int ny,
         int nx,
         const char* mode,
-        double** output
+        double** output,
+        int* n_output1,
+        int* n_output2
     );
 
     // Overload returning the array directly
@@ -217,39 +230,172 @@ public:
     );
 
     // ========================================================================
-    // PTU Output with Magnified Raster
+    // Write Reassigned Photons to a Magnified-Raster TTTR File
     // ========================================================================
 
     /**
-     * @brief Build a PTU file with magnified raster from reassigned photons
+     * @brief Write reassigned photons to a TTTR file with magnified raster
      *
-     * Synthesizes frame/line markers for an (M*nx) x (M*ny) raster and places
-     * each photon at line_start + subpixel_index * dwell'. Micro times and routing
-     * channels are copied through.
+     * Decodes each photon's magnified flat position from the reassigned TTTR
+     * macro times, synthesizes frame/line markers for the (M*nx) x (M*ny)
+     * raster, and writes the stream to disk. The container type is inferred
+     * from the output filename extension (PTU, HT3, ...); ImgHdr geometry tags
+     * are emitted so the file reads back as a CLSMImage.
      *
-     * Tradeoff: position is faithfully preserved, but macro time is synthetic.
-     * Correlation/FCS on the raster timescale is not meaningful on the output.
+     * Timing model:
+     *   - frame f starts at frame_base = f * (my*line_duration + frame_marker_delay)
+     *   - line l starts at line_base = frame_base + l * line_duration
+     *   - a photon at subpixel x sits at line_base + x * pixel_duration
      *
-     * @param tttr_reassigned Reassigned TTTR object
-     * @param nx Native width
-     * @param ny Native height
+     * Macro time is synthetic: position is faithfully preserved, but
+     * correlation/FCS on the raster timescale is not meaningful on the output.
+     *
+     * @param tttr_reassigned Reassigned TTTR object (macro times encode the
+     *                        magnified flat position frame*my*mx + y*mx + x)
+     * @param nx Native width (pixels)
+     * @param ny Native height (pixels)
      * @param magnification Magnification factor M
-     * @param pixel_duration Dwell time per magnified pixel (macro time units)
-     * @param line_duration Total time per magnified line
-     * @param frame_marker_delay Delay between frames
-     * @param output_filename Path for output PTU file
+     * @param output_filename Path for the output file; the container type is
+     *                        inferred from its extension
+     * @param pixel_duration Dwell time per magnified pixel (macro time units);
+     *                        if <= 0, defaults to 1
+     * @param line_duration Total time per magnified line; if <= 0, defaults to
+     *                      M*nx * pixel_duration
+     * @param frame_marker_delay Extra macro-time gap inserted between frames
      *
-     * @return true on success
+     * @return true on success, false if the container type is unsupported
      */
-    static bool write_ptu_magnified(
+    static bool write(
         TTTR* tttr_reassigned,
         int nx,
         int ny,
         int magnification,
-        int pixel_duration,
-        int line_duration,
-        int frame_marker_delay,
-        const char* output_filename
+        const char* output_filename,
+        int pixel_duration = -1,
+        int line_duration = -1,
+        int frame_marker_delay = 0
+    );
+
+    // ========================================================================
+    // Image Scanning Microscopy (ISM) - BrightEyes-ISM Algorithms
+    // ========================================================================
+
+    /**
+     * @brief Shift vectors of an array-detector cube (BrightEyes-ISM ShiftVectors)
+     *
+     * Phase cross-correlates every detector element against a reference element
+     * and returns the shift that registers it onto that reference. The images
+     * are Hann-apodized and optionally denoised first, and the correlation peak
+     * is refined to 1/usf of a pixel.
+     *
+     * @param data Detector cube, (n_det, ny, nx) or (ny, nx, n_det)
+     * @param channels_last True when the detector axis is last
+     * @param usf Upsampling factor of the peak refinement (1 = integer pixels)
+     * @param ref_idx Reference detector element; < 0 selects the centre
+     * @param filter_sigma Gaussian denoising before the correlation, in pixels
+     * @param n_det Use only the first n_det channels; < 0 uses all
+     * @param output (n_det, 2) shifts as (dy, dx) in pixels, row axis first,
+     *               matching skimage/scipy. Caller owns the memory (std::free).
+     */
+    static void shift_vectors(
+        const double* data,
+        int dim0, int dim1, int dim2,
+        bool channels_last,
+        double** output, int* out_dim1, int* out_dim2,
+        int usf = 10, int ref_idx = -1, double filter_sigma = 0.0,
+        int n_det = -1
+    );
+
+    /**
+     * @brief Adaptive Pixel Reassignment (APR-ISM) reconstruction
+     *
+     * Estimates a shift vector per detector element (see shift_vectors),
+     * registers every channel image with its vector and sums them. Mirrors
+     * BrightEyes-ISM APR_lib.APR.
+     *
+     * @param output (1, ny, nx) reassigned sum; caller owns the memory.
+     */
+    static void apr_reconstruction(
+        const double* data,
+        int dim0, int dim1, int dim2,
+        bool channels_last,
+        double** output, int* out_dim1, int* out_dim2, int* out_dim3,
+        int usf = 10, int ref_idx = -1, double filter_sigma = 0.0,
+        int n_det = -1
+    );
+
+    /**
+     * @brief SOFISM: super-resolution optical fluctuation image scanning microscopy
+     *
+     * Combines the two independent resolution mechanisms of ISM and SOFI. At
+     * every scan position the array detector records a short time series; for
+     * each pair of detector elements the temporal cross-correlation of the
+     * fluctuations is formed,
+     *
+     *   C_ij(r, tau) = 1/(N_t - tau) * sum_t dI_i(r,t) dI_j(r,t+tau),
+     *
+     * whose effective PSF is the product of the two elements' PSFs (narrower by
+     * sqrt(2) for Gaussians). The pair acts as one virtual detector midway
+     * between the two elements, so it is reassigned by the mean of their ISM
+     * shifts, v_ij = (v_i + v_j)/2, and the shifted correlation images are
+     * summed. Sroda et al., Optica 7, 1308 (2020).
+     *
+     * The contrast comes from emitters blinking *independently*: cross-terms
+     * between different emitters average away, which is what leaves a
+     * per-emitter, PSF-squared response. Data without genuine fluctuations
+     * (a static sample, or shot noise alone) carries no SOFI signal.
+     *
+     * @param data Photon counts, (n_time, n_det, ny, nx): the time series
+     *             recorded at each scan position, one plane per detector element
+     * @param lag Correlation delay tau, in time bins. 0 is the variance-like
+     *            zero-lag cumulant; a small non-zero lag suppresses the
+     *            uncorrelated shot-noise spike at tau = 0.
+     * @param usf Upsampling factor of the shift estimate (see shift_vectors)
+     * @param ref_idx Reference detector element; < 0 selects the centre
+     * @param filter_sigma Gaussian denoising before the shift correlation only
+     * @param include_auto Include the i == j autocorrelation terms. Off by
+     *                     default: their shot noise does not cancel and enters
+     *                     the result as a bias.
+     * @param output (ny, nx) SOFISM image; caller owns the memory (std::free)
+     */
+    static void sofism_reconstruction(
+        const double* data,
+        int n_time, int n_det, int ny, int nx,
+        double** output, int* out_dim1, int* out_dim2,
+        int lag = 0, int usf = 10, int ref_idx = -1, double filter_sigma = 0.0,
+        bool include_auto = false
+    );
+
+    /**
+     * @brief Focus-ISM: separate in-focus signal from out-of-focus background
+     *
+     * After an APR pass, every pixel's micro-image (its distribution over the
+     * detector array) is fitted with two Gaussians sharing the array centre --
+     * a narrow in-focus one whose width is calibrated from the fingerprint of a
+     * central patch, and a wider free one for the background. Mirrors
+     * BrightEyes-ISM FocusISM_lib.focusISM / pixel_fit_2.
+     *
+     * @param sigma_bound Lower bound of the background width, in units of the
+     *                    in-focus width
+     * @param threshold Pixels whose total photon count does not exceed this are
+     *                  assigned wholly to the background
+     * @param calibration_size Side of the central patch the in-focus
+     *                         fingerprint is calibrated on, in pixels
+     * @param parallelize Fit pixel rows in parallel
+     * @param detector_coords Optional (n_det, 2) element coordinates. Without
+     *                        them a square lattice is assumed, and a non-square
+     *                        channel count is an error.
+     * @param output (3, ny, nx): in-focus signal, background, APR sum
+     */
+    static void focus_reconstruction(
+        const double* data,
+        int dim0, int dim1, int dim2,
+        bool channels_last,
+        double** output, int* out_dim1, int* out_dim2, int* out_dim3,
+        double sigma_bound = 2.0, double threshold = 0.0, int calibration_size = 10,
+        bool parallelize = false,
+        int n_det = -1,
+        const double* detector_coords = nullptr, int detector_coords_len = 0
     );
 };
 
