@@ -110,6 +110,7 @@ Documentation
    pda-guide
    fcs-correlation
    clsm-flim-guide
+   superres-guide
    simulator-guide
    localization-guide
    fit-guide
