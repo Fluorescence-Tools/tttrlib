@@ -17,6 +17,8 @@
 %apply (double* IN_ARRAY1, int DIM1) {(const double* detector_coords, int detector_coords_len)};
 %apply (double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* out_dim1, int* out_dim2)};
 %apply (double* IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4) {(const double* data, int n_time, int n_det, int ny, int nx)};
+%apply (double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(const double* data, int n_ch, int ny, int nx)};
+%apply (double* IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4) {(const double* psf, int psf_nz, int psf_nch, int psf_ny, int psf_nx)};
 
 // Typemap for temporal_combine's double** output parameter
 #ifdef SWIGPYTHON
@@ -43,6 +45,7 @@
 %rename(_native_reassign_photons) CLSMSuperRes::reassign_photons;
 %rename(_native_shift_vectors) CLSMSuperRes::shift_vectors;
 %rename(_native_sofism_reconstruction) CLSMSuperRes::sofism_reconstruction;
+%rename(_native_s2ism_reconstruction) CLSMSuperRes::s2ism_reconstruction;
 %rename(_native_apr_reconstruction) CLSMSuperRes::apr_reconstruction(const double* data, int dim0, int dim1, int dim2, bool channels_last, double** output, int* out_dim1, int* out_dim2, int* out_dim3, int usf, int ref_idx, double filter_sigma, int n_det);
 %rename(_native_focus_reconstruction) CLSMSuperRes::focus_reconstruction(const double* data, int dim0, int dim1, int dim2, bool channels_last, double** output, int* out_dim1, int* out_dim2, int* out_dim3, double sigma_bound, double threshold, int calibration_size, bool parallelize, int n_det, const double* detector_coords, int detector_coords_len);
 
@@ -218,6 +221,26 @@ def _sofism_reconstruction(data, lag=0, usf=10, ref_idx=-1, filter_sigma=0.0,
     )
 
 
+def _s2ism_reconstruction(data, psf, max_iter=100, threshold=1e-3,
+                          auto_stop=False, init_from_sum=False):
+    """
+    s2ISM: joint super-resolution and optical sectioning by adaptive
+    maximum-likelihood deconvolution over a stack of axial planes.
+
+    `data` is (n_ch, ny, nx); `psf` is (nz, n_ch, ny, nx), centred in the frame.
+    Returns the (nz, ny, nx) object estimate, focal plane at index nz // 2.
+    """
+    cube = np.ascontiguousarray(np.asarray(data, dtype=np.float64))
+    h = np.ascontiguousarray(np.asarray(psf, dtype=np.float64))
+    if cube.ndim != 3:
+        raise ValueError(f"s2ism_reconstruction expects (n_ch, ny, nx), got {cube.shape}")
+    if h.ndim != 4:
+        raise ValueError(f"the PSF must be (nz, n_ch, ny, nx), got {h.shape}")
+    return _cls._native_s2ism_reconstruction(
+        cube, h, int(max_iter), float(threshold), bool(auto_stop), bool(init_from_sum)
+    )
+
+
 def _fourier_reweight(image, otf, epsilon=1e-3):
     """
     Wiener-type Fourier reweighting of a SOFISM image (Sroda et al., Eq. 3):
@@ -307,6 +330,7 @@ _cls.temporal_combine = staticmethod(_temporal_combine)
 _cls.reassign_photons = staticmethod(_reassign_photons)
 _cls.shift_vectors = staticmethod(_shift_vectors)
 _cls.sofism_reconstruction = staticmethod(_sofism_reconstruction)
+_cls.s2ism_reconstruction = staticmethod(_s2ism_reconstruction)
 _cls.fourier_reweight = staticmethod(_fourier_reweight)
 _cls.apr_reconstruction = staticmethod(_apr_reconstruction)
 _cls.focus_reconstruction = staticmethod(_focus_reconstruction)

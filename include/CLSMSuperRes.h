@@ -325,6 +325,43 @@ public:
     );
 
     /**
+     * @brief s2ISM: joint super-resolution and optical sectioning
+     *
+     * Adaptive maximum-likelihood deconvolution of an array-detector dataset
+     * over a stack of axial planes (Zunino et al., Nat. Photonics 2025). The
+     * detector array is treated as Nch images of one object seen through Nch
+     * different PSFs, and a multi-image Richardson-Lucy iteration inverts them
+     * jointly:
+     *
+     *   est_ch = sum_z obj_z (*) psf_z,ch ;  frac_ch = data_ch / est_ch ;
+     *   obj_z <- obj_z * sum_ch frac_ch (corr) psf_z,ch
+     *
+     * Giving the object several axial planes with their own PSFs is what buys
+     * the sectioning: out-of-focus signal is explained by the out-of-focus
+     * planes instead of being smeared into the focal one. Unlike APR, this
+     * needs a PSF model -- it does not derive one from the data.
+     *
+     * @param data Detector cube, (n_ch, ny, nx)
+     * @param psf Per-plane, per-element PSF, (nz, n_ch, ny, nx), same ny/nx as
+     *            the data and centred in the frame. Normalized internally.
+     * @param max_iter Maximum Richardson-Lucy iterations
+     * @param threshold Halt when the focal-plane photon count changes by less
+     *                  than this fraction of the total, twice in a row
+     * @param auto_stop Use that adaptive rule; otherwise run max_iter
+     * @param init_from_sum Start from the channel sum shared over the planes
+     *                      rather than a flat object
+     * @param output (nz, ny, nx) object estimate; the focal plane is nz/2.
+     *               Caller owns the memory (std::free).
+     */
+    static void s2ism_reconstruction(
+        const double* data, int n_ch, int ny, int nx,
+        const double* psf, int psf_nz, int psf_nch, int psf_ny, int psf_nx,
+        double** output, int* out_dim1, int* out_dim2, int* out_dim3,
+        int max_iter = 100, double threshold = 1e-3, bool auto_stop = false,
+        bool init_from_sum = false
+    );
+
+    /**
      * @brief SOFISM: super-resolution optical fluctuation image scanning microscopy
      *
      * Combines the two independent resolution mechanisms of ISM and SOFI. At

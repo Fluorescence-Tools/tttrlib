@@ -1999,6 +1999,159 @@ static void sofism_core(
     *output = buf;
 }
 
+// ---------- s2ISM ----------
+//
+// Adaptive maximum-likelihood deconvolution of an array-detector dataset over a
+// stack of axial planes: Zunino et al., "Structured detection for simultaneous
+// super-resolution and optical sectioning in laser scanning microscopy",
+// Nat. Photonics (2025). Ported from the reference implementation
+// s2ism/s2ism.py (amd_update_fft, amd_stop, max_likelihood_reconstruction).
+//
+// Unlike APR this is not a reassignment: the detector array is treated as a set
+// of images of one object seen through Nch different PSFs, and a multi-image
+// Richardson-Lucy iteration inverts them jointly. Giving the object several
+// axial planes with their own PSFs is what buys the sectioning -- out-of-focus
+// signal is explained by the out-of-focus planes rather than smeared into the
+// focal one.
+//
+//   est_ch   = sum_z  obj_z (*) psf_z,ch
+//   frac_ch  = data_ch / est_ch          (0 where est_ch < eps)
+//   upd_z    = sum_ch frac_ch (corr) psf_z,ch
+//   obj_z   <- obj_z * upd_z
+//
+// The PSF of each plane is normalized over (channel, y, x) so the update needs
+// no further scaling, and the correlation uses the conjugate spectrum, which on
+// the origin-centred PSF is exactly the reference's flipped array.
+static void s2ism_core(
+    const double* data,          // (n_ch, ny, nx)
+    const double* psf,           // (nz, n_ch, ny, nx)
+    size_t nz, size_t n_ch, size_t ny, size_t nx,
+    int max_iter, double threshold, bool auto_stop, bool init_from_sum,
+    double** output, int* out_dim1, int* out_dim2, int* out_dim3)
+{
+    if (nz == 0 || n_ch == 0 || ny == 0 || nx == 0)
+        throw std::runtime_error("CLSMSuperRes: s2ISM given an empty array");
+    if (max_iter < 1)
+        throw std::runtime_error("CLSMSuperRes: s2ISM needs at least one iteration");
+
+    const size_t n_pixel = ny * nx;
+    const double eps = std::numeric_limits<float>::epsilon();
+
+    // Per-plane PSF normalization over (channel, y, x), and its spectrum with
+    // the centre rolled to the origin so a delta PSF is the identity.
+    // Two spectra per (plane, element): the PSF for the forward model, and the
+    // PSF flipped in x and y for the correlation. The flip is taken literally
+    // from the reference (numpy flip, i.e. about index (N-1)/2); conjugating
+    // the spectrum instead would be a circular flip about index 0 and lands one
+    // sample off in each axis.
+    std::vector<CImage> psf_fft(nz * n_ch), psf_m_fft(nz * n_ch);
+    for (size_t z = 0; z < nz; ++z) {
+        double norm = 0.0;
+        for (size_t i = 0; i < n_ch * n_pixel; ++i) norm += psf[(z * n_ch) * n_pixel + i];
+        if (!(norm > 0.0)) norm = 1.0;
+        for (size_t c = 0; c < n_ch; ++c) {
+            Image kernel(nx, ny, 0.0), mirrored(nx, ny, 0.0);
+            const double* src = psf + ((z * n_ch) + c) * n_pixel;
+            for (size_t y = 0; y < ny; ++y) {
+                for (size_t x = 0; x < nx; ++x) {
+                    const size_t yy = (y + ny - ny / 2) % ny;   // ifftshift
+                    const size_t xx = (x + nx - nx / 2) % nx;
+                    kernel.data[yy * nx + xx] = src[y * nx + x] / norm;
+                    mirrored.data[yy * nx + xx] =
+                            src[(ny - 1 - y) * nx + (nx - 1 - x)] / norm;
+                }
+            }
+            fft2d::fft2(kernel, psf_fft[z * n_ch + c]);
+            fft2d::fft2(mirrored, psf_m_fft[z * n_ch + c]);
+        }
+    }
+
+    // Object initialization: a flat object carrying the measured flux, or the
+    // channel sum shared out over the planes.
+    double total = 0.0;
+    for (size_t i = 0; i < n_ch * n_pixel; ++i) total += data[i];
+
+    std::vector<Image> obj(nz, Image(nx, ny, 0.0));
+    if (init_from_sum) {
+        for (size_t z = 0; z < nz; ++z)
+            for (size_t c = 0; c < n_ch; ++c)
+                for (size_t p = 0; p < n_pixel; ++p)
+                    obj[z].data[p] += data[c * n_pixel + p] / static_cast<double>(nz);
+    } else {
+        const double flat = total / static_cast<double>(nz * n_pixel);
+        for (auto& o : obj) std::fill(o.data.begin(), o.data.end(), flat);
+    }
+
+    std::vector<CImage> obj_fft(nz), frac_fft(n_ch), work(std::max(nz, n_ch));
+    Image scratch(nx, ny, 0.0);
+    std::vector<Image> fraction(n_ch, Image(nx, ny, 0.0));
+
+    bool pre_flag = true, running = true;
+    for (int k = 1; k <= max_iter && running; ++k) {
+        for (size_t z = 0; z < nz; ++z) fft2d::fft2(obj[z], obj_fft[z]);
+
+        // forward model, then the data/model ratio
+        for (size_t c = 0; c < n_ch; ++c) {
+            CImage acc(nx, ny, cpx(0.0, 0.0));
+            for (size_t z = 0; z < nz; ++z) {
+                const CImage& h = psf_fft[z * n_ch + c];
+                for (size_t i = 0; i < acc.data.size(); ++i)
+                    acc.data[i] += obj_fft[z].data[i] * h.data[i];
+            }
+            fft2d::ifft2_real(acc, scratch);
+            const double* obs = data + c * n_pixel;
+            for (size_t p = 0; p < n_pixel; ++p)
+                fraction[c].data[p] = (scratch.data[p] < eps) ? 0.0 : obs[p] / scratch.data[p];
+            fft2d::fft2(fraction[c], frac_fft[c]);
+        }
+
+        // correlate the ratio back through each plane's PSFs and update
+        double focal_before = obj[nz / 2].data.size()
+                ? std::accumulate(obj[nz / 2].data.begin(), obj[nz / 2].data.end(), 0.0) : 0.0;
+        double all_before = 0.0;
+        for (const auto& o : obj)
+            all_before += std::accumulate(o.data.begin(), o.data.end(), 0.0);
+
+        for (size_t z = 0; z < nz; ++z) {
+            CImage acc(nx, ny, cpx(0.0, 0.0));
+            for (size_t c = 0; c < n_ch; ++c) {
+                const CImage& hm = psf_m_fft[z * n_ch + c];
+                for (size_t i = 0; i < acc.data.size(); ++i)
+                    acc.data[i] += frac_fft[c].data[i] * hm.data[i];
+            }
+            fft2d::ifft2_real(acc, scratch);
+            for (size_t p = 0; p < n_pixel; ++p) {
+                obj[z].data[p] *= scratch.data[p];
+                if (!(obj[z].data[p] >= 0.0)) obj[z].data[p] = 0.0;
+            }
+        }
+
+        // Adaptive halt: stop once the focal-plane photon count stops moving,
+        // for two consecutive iterations (amd_stop's two flags).
+        if (auto_stop && total > 0.0) {
+            double focal_after = std::accumulate(
+                    obj[nz / 2].data.begin(), obj[nz / 2].data.end(), 0.0);
+            const double d_focal = (focal_after - focal_before) / total;
+            (void) all_before;
+            if (std::abs(d_focal) < threshold) {
+                if (!pre_flag) running = false;   // second consecutive quiet step
+                else pre_flag = false;
+            } else {
+                pre_flag = true;
+            }
+        }
+    }
+
+    *out_dim1 = static_cast<int>(nz);
+    *out_dim2 = static_cast<int>(ny);
+    *out_dim3 = static_cast<int>(nx);
+    double* buf = static_cast<double*>(std::malloc(nz * n_pixel * sizeof(double)));
+    if (!buf) throw std::bad_alloc();
+    for (size_t z = 0; z < nz; ++z)
+        std::copy(obj[z].data.begin(), obj[z].data.end(), buf + z * n_pixel);
+    *output = buf;
+}
+
 } // anonymous namespace
 
 void CLSMSuperRes::shift_vectors(
@@ -2069,6 +2222,23 @@ void CLSMSuperRes::apr_reconstruction(
 
     apr_reconstruction_core(det_imgs, output, out_dim1, out_dim2, out_dim3,
                             usf, ref_idx, filter_sigma);
+}
+
+void CLSMSuperRes::s2ism_reconstruction(
+    const double* data, int n_ch, int ny, int nx,
+    const double* psf, int psf_nz, int psf_nch, int psf_ny, int psf_nx,
+    double** output, int* out_dim1, int* out_dim2, int* out_dim3,
+    int max_iter, double threshold, bool auto_stop, bool init_from_sum)
+{
+    if (!output || !out_dim1 || !out_dim2 || !out_dim3)
+        throw std::runtime_error("s2ism_reconstruction: null output/dims");
+    if (psf_nch != n_ch || psf_ny != ny || psf_nx != nx)
+        throw std::runtime_error(
+            "s2ism_reconstruction: the PSF must be (nz, n_ch, ny, nx) matching the data");
+    s2ism_core(data, psf, static_cast<size_t>(psf_nz), static_cast<size_t>(n_ch),
+               static_cast<size_t>(ny), static_cast<size_t>(nx),
+               max_iter, threshold, auto_stop, init_from_sum,
+               output, out_dim1, out_dim2, out_dim3);
 }
 
 void CLSMSuperRes::sofism_reconstruction(

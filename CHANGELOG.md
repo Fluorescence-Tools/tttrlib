@@ -3,6 +3,21 @@
 ## [Unreleased]
 
 ### Added
+- **s2ISM** (`CLSMSuperRes.s2ism_reconstruction`) -- joint super-resolution and
+  optical sectioning by adaptive maximum-likelihood deconvolution over a stack
+  of axial planes, after Zunino et al., *Nat. Photonics* (2025). A real port of
+  the reference `s2ism/s2ism.py` (`amd_update_fft`, `amd_stop`,
+  `max_likelihood_reconstruction`): the detector array is treated as Nch images
+  of one object seen through Nch PSFs and inverted jointly by multi-image
+  Richardson-Lucy, with the sectioning coming from giving the object several
+  axial planes with their own PSFs. A line-by-line numpy transcription of the
+  reference is the test oracle and the port matches it to round-off (3e-15
+  relative). Two details the parity test pins down: the PSF flip is numpy's
+  (about index (N-1)/2 -- conjugating the spectrum instead is a circular flip
+  about 0 and lands one sample off per axis), and the update carries no extra
+  normalization because each plane's PSF is already normalized over
+  (channel, y, x).
+
 - **SOFISM** (`CLSMSuperRes.sofism_reconstruction`) -- super-resolution optical
   fluctuation image scanning microscopy, after Sroda et al., *Optica* **7**, 1308
   (2020), in the formulation restated by Beck et al., arXiv:2606.16508. It
@@ -88,9 +103,10 @@
   `focus_reconstruction` returns `(3, ny, nx)` -- in-focus signal, background,
   APR sum -- so the `nz` parameter, which only replicated the same plane, is
   gone with it.
-- `CLSMSuperRes.s2ism_reconstruction`, `.deconv_reconstruction` and
+- The old `CLSMSuperRes.s2ism_reconstruction`, `.deconv_reconstruction` and
   `.generate_ism_psf`. The first was a variance-weighted APR carrying the name of
-  a different published method; the second a hand-rolled Richardson-Lucy against
+  a different published method -- the real s2ISM is now implemented, see Added;
+  the second a hand-rolled Richardson-Lucy against
   a hardcoded Gaussian, not ISM deconvolution; the third imported from the repo's
   `prototype/` directory at call time and otherwise silently fell back to a
   Gaussian approximation. The PSF simulator remains available to examples as
