@@ -120,6 +120,20 @@ IF(BUILD_PYTHON_INTERFACE)
             SOURCES python/tttrlib.i ${SRC_files}
     )
 
+    # The SWIG module compiles all SRC_files directly (it does not link the
+    # tttrlib library), so it needs the same OpenMP include dirs and flags as
+    # the library target — otherwise info.h's #include <omp.h> fails.
+    if(WITH_OPENMP AND OpenMP_CXX_FOUND)
+        target_include_directories(${MODULE_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
+        # OpenMP_CXX_FLAGS is a *string*, and on AppleClang it is two words
+        # ("-Xclang -fopenmp"). target_compile_options treats each list element
+        # as one argument, so passing it unsplit hands clang the single argument
+        # "-Xclang -fopenmp" and every translation unit dies with
+        # "unknown argument". Split it the way a shell would.
+        separate_arguments(_tttrlib_omp_cxx_flags NATIVE_COMMAND "${OpenMP_CXX_FLAGS}")
+        target_compile_options(${MODULE_NAME} PRIVATE ${_tttrlib_omp_cxx_flags})
+    endif()
+
     # Force correct Python extension suffix for auditwheel compatibility
     if(Python3_EXECUTABLE)
         execute_process(
