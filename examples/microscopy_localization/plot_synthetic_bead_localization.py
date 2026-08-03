@@ -182,12 +182,12 @@ def localize_beads(image, peak_positions, fit_size=15):
             continue
             
         # Convert to SWIG vector format
-        data_2d = tttrlib.new_VectorDouble_2D()
+        data_2d = tttrlib.VectorDouble_2D()
         for row in region:
-            row_vector = tttrlib.new_VectorDouble()
+            row_vector = tttrlib.VectorDouble()
             for val in row:
-                tttrlib.VectorDouble_push_back(row_vector, float(val))
-            tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)
+                row_vector.push_back(float(val))
+            data_2d.push_back(row_vector)
         
         # Set up fitting parameters
         vars = [0.0] * 18
@@ -205,7 +205,7 @@ def localize_beads(image, peak_positions, fit_size=15):
         
         try:
             # Perform the fit
-            result = tttrlib.localization_fit2DGaussian(vars, data_2d)
+            result = tttrlib.localization.fit2DGaussian(vars, data_2d)
             
             if result > 0:  # Successful fit
                 # Convert back to global coordinates

@@ -27,6 +27,8 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
 #%
 from __future__ import print_function
 
+import sys
+from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pylab as p
@@ -48,6 +50,10 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 
 
 #%%
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_path
 
 # The FLIM dataset consists of a measurement of the sample

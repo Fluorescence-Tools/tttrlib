@@ -232,7 +232,9 @@ BH132 spc files. Hence, for simpler analysis, the data is first stacked into a s
 
     # open a set of files and stack them in a single TTTR object
     import os; from pathlib import Path
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
     files = glob.glob(str(DATA_ROOT / 'bh/bh_spc132_smDNA/*.spc'))
     data = tttrlib.TTTR(files[0], 'SPC-130')
     for d in files[1:]:
@@ -484,6 +486,7 @@ needs to be deconvolved from the experimental P(S) :cite:`kalinin2007`.
 """
 
 from __future__ import division
+import os
 import pylab as p
 import tttrlib
 

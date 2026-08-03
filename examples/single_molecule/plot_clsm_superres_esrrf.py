@@ -15,6 +15,7 @@ The workflow:
 """
 
 import os
+import sys
 import time
 from pathlib import Path
 import numpy as np
@@ -31,7 +32,9 @@ file_path = Path(data_root) / 'imaging' / 'pq' / 'Microtime200_TH260' / 'beads.p
 if not file_path.exists():
     print(f"Data file not found at {file_path}. Please set TTTRLIB_DATA.")
     # Fallback to simulated phantom for demonstration
-    from prototype.esrrf.simulate import ring_phantom, render_frame
+    sys.path[:0] = [str(_p / "prototype" / "esrrf") for _p in Path(__file__).resolve().parents
+                    if (_p / "prototype" / "esrrf" / "simulate.py").is_file()][:1]
+    from simulate import ring_phantom, render_frame
     emitters, params = ring_phantom(radius=8.0, nx=64, ny=64, n_points=60, photons_per_point=100.0)
     img_orig = render_frame(emitters, params, sigma=1.5, background=5.0, noise_seed=42)
     nx, ny = 64, 64

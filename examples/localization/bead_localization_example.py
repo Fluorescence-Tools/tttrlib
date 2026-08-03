@@ -23,7 +23,9 @@ from matplotlib.patches import Circle
 import tttrlib
 from tttrlib import ImageLocalizer
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 
 def load_and_process_tttr_data(filename):
     """

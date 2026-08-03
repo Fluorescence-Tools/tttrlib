@@ -13,7 +13,9 @@ import tttrlib
 import numpy as np
 import pylab as plt
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 
 # %%
 # The fit operates on a parallel and a perpendicular detection

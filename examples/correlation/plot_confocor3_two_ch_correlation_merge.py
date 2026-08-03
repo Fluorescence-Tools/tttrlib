@@ -15,6 +15,8 @@ analysis. The merge method automatically handles time sorting and is more
 efficient than manual concatenation.
 
 """
+import sys
+from pathlib import Path
 import pathlib
 import numpy as np
 
@@ -26,6 +28,10 @@ import tttrlib
 # Reading data
 # ------------
 # The photon data registered by different detectors are saved in separate files.
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_root
 # Read the data of all channels that should be correlated into separate containers.
 fns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])

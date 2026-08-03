@@ -8,11 +8,17 @@ this example shows how to achieve the same functionality by pre-filtering the TT
 """
 # %%
 # Import required libraries
+import sys
+from pathlib import Path
 import tttrlib
 import numpy as np
 import matplotlib.pyplot as plt
 
 # %%
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_path
 
 # Load data

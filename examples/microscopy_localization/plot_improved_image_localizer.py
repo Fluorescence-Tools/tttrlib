@@ -51,7 +51,7 @@ class ImprovedImageLocalizer:
     
     def __init__(self, model=0, fit_background=True, allow_elliptical=False):
         """Initialize the improved localizer."""
-        self.localization = tttrlib.new_localization()
+        self.localization = tttrlib.localization()
         self.model = model
         self.fit_background = fit_background
         self.allow_elliptical = allow_elliptical
@@ -125,18 +125,18 @@ class ImprovedImageLocalizer:
         print("Localization object created successfully")
         
         # Convert image to SWIG 2D vector using the exact working pattern
-        data_2d = tttrlib.new_VectorDouble_2D()
+        data_2d = tttrlib.VectorDouble_2D()
         for row in image:
-            row_vector = tttrlib.new_VectorDouble()
+            row_vector = tttrlib.VectorDouble()
             for val in row:
-                tttrlib.VectorDouble_push_back(row_vector, float(val))
-            tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)
+                row_vector.push_back(float(val))
+            data_2d.push_back(row_vector)
         
         print("Data converted to SWIG vector format")
         print("Initial parameter guesses set")
         
         # Perform fitting using the exact working pattern
-        result = tttrlib.localization_fit2DGaussian(params, data_2d)
+        result = tttrlib.localization.fit2DGaussian(params, data_2d)
         
         if result > 0:
             print("Gaussian fitting successful!")

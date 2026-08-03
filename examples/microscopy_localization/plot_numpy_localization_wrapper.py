@@ -47,18 +47,18 @@ class LocalizationNumPy:
         """
         
         # Make a copy of parameters to avoid modifying the input
-        vars = list(parameters)
+        vars = tttrlib.VectorDouble(list(parameters))
         
         # Convert NumPy array to SWIG vector format
-        data_2d = tttrlib.new_VectorDouble_2D()
+        data_2d = tttrlib.VectorDouble_2D()
         for row in image_data:
-            row_vector = tttrlib.new_VectorDouble()
+            row_vector = tttrlib.VectorDouble()
             for val in row:
-                tttrlib.VectorDouble_push_back(row_vector, float(val))
-            tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)
+                row_vector.push_back(float(val))
+            data_2d.push_back(row_vector)
         
         # Perform fitting
-        result = tttrlib.localization_fit2DGaussian(vars, data_2d)
+        result = tttrlib.localization.fit2DGaussian(vars, data_2d)
         
         # Store results for later access
         self.last_result = result
@@ -96,7 +96,7 @@ class LocalizationNumPy:
             raise ValueError("Either 'shape' or 'rows' and 'cols' must be provided")
         
         # Generate model using SWIG interface
-        vars = list(parameters)
+        vars = tttrlib.VectorDouble(list(parameters))
         model = tttrlib.localization_model2DGaussian_array(vars, rows, cols)
         
         return model

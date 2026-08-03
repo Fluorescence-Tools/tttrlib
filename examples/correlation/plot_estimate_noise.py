@@ -34,7 +34,9 @@ import pylab as plt
 import tttrlib
 import numpy as np
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))
 
 #%%

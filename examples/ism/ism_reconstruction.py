@@ -30,7 +30,9 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 # Default PTU file — set TTTRLIB_DATA env var to point to your data root
-_DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+_DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 DEFAULT_PTU = str(
     _DATA_ROOT / "imaging/pq/Luminosa_SPAD_Array/100x_ISM_no_PH_485nm_lin_pol_Silvio_6spec_no5_25us_1.ptu"
 )

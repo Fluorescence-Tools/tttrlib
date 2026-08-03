@@ -56,16 +56,16 @@ print(f"Data range: {np.min(gaussian):.1f} - {np.max(gaussian):.1f}")
 # We convert the NumPy array to the required VectorDouble_2D format.
 
 # Test if localization functionality is available
-localization = tttrlib.new_localization()
+localization = tttrlib.localization()
 print("Localization object created successfully")
 
 # Convert image data to SWIG vector format
-data_2d = tttrlib.new_VectorDouble_2D()
+data_2d = tttrlib.VectorDouble_2D()
 for row in gaussian:
-    row_vector = tttrlib.new_VectorDouble()
+    row_vector = tttrlib.VectorDouble()
     for val in row:
-        tttrlib.VectorDouble_push_back(row_vector, float(val))
-    tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)
+        row_vector.push_back(float(val))
+    data_2d.push_back(row_vector)
 
 print("Data converted to SWIG vector format")
 
@@ -96,7 +96,7 @@ print("Initial parameter guesses set")
 # localization algorithm.
 
 # Perform fitting using SWIG vector interface
-result = tttrlib.localization_fit2DGaussian(vars, data_2d)
+result = tttrlib.localization.fit2DGaussian(tttrlib.VectorDouble(list(vars)), data_2d)
 
 if result > 0:  # Successful fit
     fitted_x = vars[0]

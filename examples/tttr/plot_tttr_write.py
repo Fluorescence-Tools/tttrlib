@@ -31,7 +31,9 @@ import pylab as plt
 
 #%%
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")).resolve()
 filename_tttr = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
 tttr = tttrlib.TTTR(filename_tttr)
 

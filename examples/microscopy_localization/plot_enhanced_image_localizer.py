@@ -51,7 +51,7 @@ class EnhancedImageLocalizer:
     
     def __init__(self, model=0, fit_background=True, allow_elliptical=False):
         """Initialize the enhanced localizer."""
-        self.localization = tttrlib.new_localization()
+        self.localization = tttrlib.localization()
         self.model = model
         self.fit_background = fit_background
         self.allow_elliptical = allow_elliptical
@@ -123,22 +123,22 @@ class EnhancedImageLocalizer:
         params = self._prepare_parameters(image, initial_params)
         
         # Convert to SWIG vector for the fitting call
-        param_vec = tttrlib.new_VectorDouble()
+        param_vec = tttrlib.VectorDouble()
         for val in params:
-            tttrlib.VectorDouble_push_back(param_vec, float(val))
+            param_vec.push_back(float(val))
         
         # Convert image to SWIG 2D vector
         image_contiguous = np.ascontiguousarray(image, dtype=np.float64)
-        data_2d = tttrlib.new_VectorDouble_2D()
+        data_2d = tttrlib.VectorDouble_2D()
         
         for row in image_contiguous:
-            row_vector = tttrlib.new_VectorDouble()
+            row_vector = tttrlib.VectorDouble()
             for val in row:
-                tttrlib.VectorDouble_push_back(row_vector, float(val))
-            tttrlib.VectorDouble_2D_push_back(data_2d, row_vector)
+                row_vector.push_back(float(val))
+            data_2d.push_back(row_vector)
         
         # Perform fitting
-        status = tttrlib.localization_fit2DGaussian(param_vec, data_2d)
+        status = tttrlib.localization.fit2DGaussian(param_vec, data_2d)
         
         # Extract fitted parameters using the same pattern as working examples
         fitted_params = np.fromiter(

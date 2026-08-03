@@ -22,7 +22,9 @@ import tttrlib
 import pylab as p
 
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")).resolve()
 
 ###############################################################################
 # Effect of micro time coarsening

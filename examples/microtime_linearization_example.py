@@ -79,7 +79,7 @@ def main():
     print("\nVerification:")
     print(f"  Events preserved: {tttr.size() == n_photons}")
     print(f"  Macro times preserved: {np.array_equal(np.array(tttr.get_macro_times()), macro_times)}")
-    print(f"  Channels preserved: {np.array_equal(np.array(tttr.get_routing_channels()), routing_channels)}")
+    print(f"  Channels preserved: {np.array_equal(np.array(tttr.routing_channels), routing_channels)}")
 
     # Test reproducibility with seed
     print("\nTesting reproducibility...")

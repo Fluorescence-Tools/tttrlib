@@ -550,7 +550,9 @@ def main():
     print("="*80)
     
     # Get data path from environment variable
-    data_root = Path(os.environ.get("TTTRLIB_DATA", "")).resolve()
+    data_root = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")).resolve()
     if not data_root.exists():
         raise FileNotFoundError(
             "TTTRLIB_DATA environment variable not set or path does not exist. "
