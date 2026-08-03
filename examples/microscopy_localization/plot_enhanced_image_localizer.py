@@ -158,7 +158,7 @@ class EnhancedImageLocalizer:
             raise ValueError("Parameters must contain 18 elements")
         
         rows, cols = shape
-        model = tttrlib.localization_model2DGaussian_array(parameters, rows, cols)
+        model = tttrlib.localization.model2DGaussian_array(parameters, rows, cols)
         return np.array(model, dtype=np.float64)
     
     def fit_with_model(self, image, initial_params=None, return_model=True):

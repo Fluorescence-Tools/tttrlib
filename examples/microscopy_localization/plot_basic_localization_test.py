@@ -122,7 +122,7 @@ if result > 0:  # Successful fit
     
     # Generate model image using array interface
     try:
-        model = tttrlib.localization_model2DGaussian_array(vars, size, size)
+        model = tttrlib.localization.model2DGaussian_array(vars, size, size)
         if model is not None:
             print("Model image successfully generated")
     except Exception as model_error:

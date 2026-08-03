@@ -189,7 +189,7 @@ class ImprovedImageLocalizer:
         rows, cols = shape
         
         # Use the working pattern from successful examples
-        model = tttrlib.localization_model2DGaussian_array(list(parameters), rows, cols)
+        model = tttrlib.localization.model2DGaussian_array(list(parameters), rows, cols)
         
         print("Model image successfully generated")
         return np.array(model, dtype=np.float64)

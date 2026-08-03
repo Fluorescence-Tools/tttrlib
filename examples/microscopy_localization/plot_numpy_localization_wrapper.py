@@ -97,7 +97,7 @@ class LocalizationNumPy:
         
         # Generate model using SWIG interface
         vars = tttrlib.VectorDouble(list(parameters))
-        model = tttrlib.localization_model2DGaussian_array(vars, rows, cols)
+        model = tttrlib.localization.model2DGaussian_array(vars, rows, cols)
         
         return model
     
