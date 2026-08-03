@@ -246,31 +246,76 @@ def test_focus_ism_needs_a_square_array_without_coordinates():
     assert out.shape == (3, 12, 12)
 
 
-def test_frc_curve_and_resolution():
+def _brighteyes_frc_lib():
+    """Load the reference FRC_lib directly; its package __init__ pulls in a
+    reader we do not have."""
+    import importlib.util
+    path = ("/Users/tpeulen/dev/chisurf/junk/brighteyes-ism/src/"
+            "brighteyes_ism/analysis/FRC_lib.py")
+    if not __import__("os").path.exists(path):
+        pytest.skip("BrightEyes-ISM reference not available")
+    spec = importlib.util.spec_from_file_location("FRC_lib", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _frc_pair(seed=0, n=96):
+    rng = np.random.default_rng(seed)
+    gy, gx = np.mgrid[0:n, 0:n]
+    obj = np.exp(-(((gx - 48) ** 2 + (gy - 40) ** 2) / (2 * 7.0 ** 2))) * 300
+    obj += np.exp(-(((gx - 30) ** 2 + (gy - 60) ** 2) / (2 * 4.0 ** 2))) * 200
+    return (rng.poisson(obj + 5).astype(float),
+            rng.poisson(obj + 5).astype(float))
+
+
+def test_frc_curve_matches_the_brighteyes_reference():
     """
-    FRC of an image with itself is 1 everywhere; against an independent noise
-    realization it decays. The resolution helper reports the period of the first
-    frequency below the criterion.
+    The raw curve is a port of FRC_lib.FRC, apodization and radial binning
+    included, and has to reproduce it to round-off.
     """
+    ref = _brighteyes_frc_lib()
+    a, b = _frc_pair()
+    assert np.abs(ref.FRC(a, b) - tttrlib.CLSMSuperRes.frc_curve(a, b)).max() < 1e-12
+
+
+@pytest.mark.parametrize("method", ["fixed", "3sigma"])
+def test_frc_resolution_matches_the_brighteyes_reference(method):
+    """
+    Including the LOWESS smoothing, which is reimplemented here rather than
+    pulled in from a statistics package -- so it has to agree with statsmodels'
+    window choice, not merely look similar.
+    """
+    ref = _brighteyes_frc_lib()
+    a, b = _frc_pair()
+    expected = ref.FRC_resolution(a, b, px=0.05, method=method)
+    got = tttrlib.CLSMSuperRes.frc_resolution(a, b, pixel_size=0.05, method=method)
+
+    assert got[0] == pytest.approx(expected[0], rel=1e-9)      # resolution
+    assert np.abs(got[1] - expected[1]).max() < 1e-12          # k axis
+    assert np.abs(got[4] - expected[4]).max() < 1e-9           # smoothed curve
+
+
+def test_frc_curve_limits():
+    """An image against itself correlates perfectly; independent noise does not."""
     rng = np.random.default_rng(3)
     gy, gx = np.mgrid[0:64, 0:64]
     smooth = np.exp(-(((gx - 32) ** 2 + (gy - 32) ** 2) / (2 * 6.0 ** 2)))
 
     same = tttrlib.CLSMSuperRes.frc_curve(smooth, smooth)
-    assert np.allclose(same, 1.0, atol=1e-9)
+    assert np.allclose(same[np.isfinite(same)], 1.0, atol=1e-9)
 
-    noise_a = rng.normal(size=(64, 64))
-    noise_b = rng.normal(size=(64, 64))
-    cross = tttrlib.CLSMSuperRes.frc_curve(noise_a, noise_b)
+    cross = tttrlib.CLSMSuperRes.frc_curve(rng.normal(size=(64, 64)),
+                                           rng.normal(size=(64, 64)))
     assert np.abs(cross[5:]).mean() < 0.3
 
-    # a smooth object shared by both halves plus independent noise: correlated
-    # at low frequencies, uncorrelated at high ones
-    res = tttrlib.CLSMSuperRes.frc_resolution_px(
-        smooth * 100 + noise_a, smooth * 100 + noise_b
-    )
-    assert np.isfinite(res) and res > 2.0
-    assert not np.isfinite(tttrlib.CLSMSuperRes.frc_resolution_px(smooth, smooth))
+
+def test_frc_resolution_rejects_bad_arguments():
+    a, b = _frc_pair(n=64)
+    with pytest.raises(ValueError):
+        tttrlib.CLSMSuperRes.frc_resolution(a, b, method="nope")
+    with pytest.raises(ValueError):
+        tttrlib.CLSMSuperRes.frc_resolution(a, b, smoothing="nope")
 
 
 def test_detector_cube_accepts_a_tiff_path():

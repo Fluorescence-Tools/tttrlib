@@ -259,52 +259,147 @@ def _fourier_reweight(image, otf, epsilon=1e-3):
     return np.real(np.fft.ifft2(weighted))
 
 
+def _frc_hann2d(ny, nx):
+    """Separable Hann window, matching BrightEyes-ISM FRC_lib.hann2d."""
+    wy = 0.5 * (1 - np.cos(2 * np.pi * np.arange(ny) / (ny - 1)))
+    wx = 0.5 * (1 - np.cos(2 * np.pi * np.arange(nx) / (nx - 1)))
+    return np.outer(wy, wx)
+
+
+def _frc_radial_profile(data, center):
+    """Angular sum per integer radius, matching FRC_lib.radial_profile."""
+    y, x = np.indices(data.shape)
+    r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2).astype(int)
+    tbin = np.bincount(r.ravel(), np.real(data).ravel()).astype(np.complex128)
+    tbin += 1j * np.bincount(r.ravel(), np.imag(data).ravel())
+    return tbin, np.bincount(r.ravel())
+
+
 def _frc_curve(image_a, image_b):
     """
-    Fourier ring correlation between two independent images of the same object.
+    Fourier ring correlation of two images that differ only in their noise.
 
-    Returns the correlation per integer spatial-frequency ring, indexed in
-    cycles per field of view. Turning that into a resolution needs a threshold
-    criterion (1/7, or a sigma curve) and the pixel size, neither of which this
-    function assumes -- see frc_resolution_px.
+    Port of BrightEyes-ISM FRC_lib.FRC: both images are Hann-apodized before
+    the transform -- without that the spectral leakage from the frame edges
+    correlates perfectly between the two halves and holds the curve up at every
+    frequency -- and the rings are summed by integer radius about the centre.
     """
     i1 = np.asarray(image_a, dtype=np.float64)
     i2 = np.asarray(image_b, dtype=np.float64)
     if i1.ndim != 2 or i1.shape != i2.shape:
         raise ValueError("frc_curve expects two 2-D images of equal shape")
-    f1 = np.fft.fftshift(np.fft.fft2(i1))
-    f2 = np.fft.fftshift(np.fft.fft2(i2))
-    ny, nx = i1.shape
-    cy, cx = ny // 2, nx // 2
-    y, x = np.ogrid[-cy:ny - cy, -cx:nx - cx]
-    r = np.hypot(x, y).astype(int)
-    r_max = min(cy, cx)
-    curve = np.zeros(r_max)
-    for k in range(r_max):
-        mask = (r == k)
-        if mask.any():
-            num = np.real(np.sum(f1[mask] * np.conj(f2[mask])))
-            den = np.sqrt(np.sum(np.abs(f1[mask]) ** 2) * np.sum(np.abs(f2[mask]) ** 2))
-            curve[k] = num / den if den > 0 else 0.0
-    return curve
+
+    m, n = i1.shape
+    centre = [int((n + n % 2) / 2), int((m + m % 2) / 2)]
+    window = _frc_hann2d(m, n)
+
+    ft1 = np.fft.fftshift(np.fft.fft2(i1 * window))
+    ft2 = np.fft.fftshift(np.fft.fft2(i2 * window))
+
+    num = np.real(_frc_radial_profile(ft1 * np.conj(ft2), centre)[0])
+    den = np.real(_frc_radial_profile(np.abs(ft1) ** 2, centre)[0])
+    den = den * np.real(_frc_radial_profile(np.abs(ft2) ** 2, centre)[0])
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.nan_to_num(num / np.sqrt(den))
 
 
-def _frc_resolution_px(image_a, image_b, threshold=1.0 / 7.0):
+def _frc_smooth(x, y, frac=0.05):
     """
-    Resolution in pixels from the FRC curve: the period of the first spatial
-    frequency at which the correlation drops below `threshold` (the 1/7
-    criterion by default). Returns NaN when the curve never crosses it.
+    LOWESS smoothing of the FRC curve on a 100x finer axis (FRC_lib.smooth).
+
+    Locally weighted linear regression with a tricube kernel; equivalent to
+    statsmodels' lowess with it=0, reimplemented so the FRC does not drag in a
+    statistics package.
     """
-    curve = _frc_curve(image_a, image_b)
-    ny, nx = np.asarray(image_a).shape
-    below = np.nonzero(curve < threshold)[0]
-    if below.size == 0:
-        return float('nan')
-    k = below[0]
-    if k == 0:
-        return float('nan')
-    # ring index k is k cycles across min(ny, nx) pixels
-    return float(min(ny, nx)) / float(k)
+    x_interp = np.linspace(x[0], x[-1], num=100 * len(x))
+    y_interp = np.interp(x_interp, x, y)
+
+    n = len(x_interp)
+    r = int(np.ceil(frac * n))
+    out = np.empty(n)
+    for i in range(n):
+        # the r *nearest* points, as statsmodels' lowess does -- a symmetric
+        # +-r window would be twice as wide and oversmooth
+        lo = min(max(i - r // 2, 0), max(n - r, 0))
+        hi = min(lo + r, n)
+        xs, ys = x_interp[lo:hi], y_interp[lo:hi]
+        d = np.abs(xs - x_interp[i])
+        dmax = d.max()
+        w = (1 - (d / dmax) ** 3) ** 3 if dmax > 0 else np.ones_like(d)
+        sw = w.sum()
+        mx = (w * xs).sum() / sw
+        my = (w * ys).sum() / sw
+        var = (w * (xs - mx) ** 2).sum()
+        slope = (w * (xs - mx) * (ys - my)).sum() / var if var > 0 else 0.0
+        out[i] = my + slope * (x_interp[i] - mx)
+    return x_interp, out
+
+
+def _frc_fixed_threshold(frc, y):
+    """First crossing of a constant threshold (FRC_lib.fixed_threshold)."""
+    th = np.ones(len(frc)) * y
+    idx = np.argwhere(np.diff(np.sign(frc - y))).flatten()
+    return th, (int(idx[0]) if idx.size else 0)
+
+
+def _frc_nsigma_threshold(k, frc, img, sigma):
+    """n-sigma threshold curve (FRC_lib.nsigma_threshold)."""
+    m, n = np.asarray(img).shape
+    centre = [int((n + n % 2) / 2), int((m + m % 2) / 2)]
+    nr = _frc_radial_profile(np.asarray(img, dtype=np.float64), centre)[1]
+    with np.errstate(divide="ignore"):
+        th = sigma / np.sqrt(nr / 2)
+    _, th_interp = _frc_smooth(k, th)
+    idx = np.argwhere(np.diff(np.sign(frc - th_interp))).flatten()
+    return th_interp, (int(idx[1]) if idx.size > 1 else 0)
+
+
+def _frc_resolution(image_a, image_b, pixel_size=1.0, method="fixed",
+                    smoothing="lowess"):
+    """
+    Resolution from the FRC curve of two independent images.
+
+    Port of BrightEyes-ISM FRC_lib.FRC_resolution. `method` is 'fixed' (the 1/7
+    criterion), '3sigma' or '5sigma'; `smoothing` is 'lowess' or 'fit' (a
+    sigmoid fit that also removes a high-frequency offset).
+
+    Returns (resolution, k, frc, k_interp, frc_smooth, threshold), with the
+    resolution in the units of `pixel_size`.
+
+    Note that FRC needs two *independent* acquisitions of the same object. On a
+    simulation where only the shot noise differs, the two halves agree wherever
+    there is signal and the crossing lands where the object's spectrum dies
+    rather than where the method's resolution is.
+    """
+    frc = _frc_curve(image_a, image_b)
+    n_bins = len(frc)
+    k = np.linspace(0, 1 / np.sqrt(2), n_bins, endpoint=True) / pixel_size
+
+    if smoothing == "lowess":
+        k_interp, frc_smooth = _frc_smooth(k, frc)
+    elif smoothing == "fit":
+        from scipy.optimize import curve_fit
+        kpx = k * pixel_size
+        sigmoid = lambda x, a, b, c, d: a / (1 + np.exp((x - b) / c)) + d
+        popt, _ = curve_fit(sigmoid, k[kpx < 0.5], frc[kpx < 0.5], (1, 1, 10, 0),
+                            bounds=((0, 0, 0, 0), (np.inf,) * 4))
+        amplitude, offset = popt[0], popt[-1]
+        k_interp = np.linspace(0, 1 / np.sqrt(2), n_bins * 100,
+                               endpoint=True) / pixel_size
+        frc_smooth = (sigmoid(k_interp, *popt) - offset) / amplitude
+        frc = (frc - offset) / amplitude
+    else:
+        raise ValueError("smoothing must be 'lowess' or 'fit'")
+
+    if method == "fixed":
+        th, idx = _frc_fixed_threshold(frc_smooth, 1 / 7)
+    elif method in ("3sigma", "5sigma"):
+        th, idx = _frc_nsigma_threshold(k, frc_smooth, image_a, int(method[0]))
+    else:
+        raise ValueError("method must be 'fixed', '3sigma' or '5sigma'")
+
+    resolution = np.inf if idx == 0 else 1.0 / k_interp[idx]
+    return resolution, k, frc, k_interp, frc_smooth, th
 
 
 def _reassign_photons(clsm, tttr, magnification=2, fwhm=1.5, sensitivity=1,
@@ -335,6 +430,6 @@ _cls.fourier_reweight = staticmethod(_fourier_reweight)
 _cls.apr_reconstruction = staticmethod(_apr_reconstruction)
 _cls.focus_reconstruction = staticmethod(_focus_reconstruction)
 _cls.frc_curve = staticmethod(_frc_curve)
-_cls.frc_resolution_px = staticmethod(_frc_resolution_px)
+_cls.frc_resolution = staticmethod(_frc_resolution)
 %}
 #endif

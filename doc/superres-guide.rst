@@ -35,6 +35,8 @@ for quite different reasons, and the distinction decides which one you want.
 References
 ----------
 
+* Fourier ring correlation — ported from BrightEyes-ISM ``FRC_lib``;
+  see ``CLSMSuperRes.frc_curve`` and ``CLSMSuperRes.frc_resolution``.
 * eSRRF — Laine *et al.*, *Nat. Methods* **20**, 1949 (2023),
   `doi:10.1038/s41592-023-02057-w <https://doi.org/10.1038/s41592-023-02057-w>`_.
   Ported from NanoJ-eSRRF.

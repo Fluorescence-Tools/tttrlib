@@ -111,9 +111,18 @@
   `prototype/` directory at call time and otherwise silently fell back to a
   Gaussian approximation. The PSF simulator remains available to examples as
   `prototype/esrrf/simulate.generate_ism_psf`.
-- `CLSMSuperRes.frc_resolution` returned an FRC *curve*, not a resolution. It is
-  now `frc_curve`, with `frc_resolution_px` alongside it for the 1/7-criterion
-  resolution.
+- `CLSMSuperRes.frc_resolution` returned an FRC *curve*, not a resolution, and
+  was not a port of anything. It is now `frc_curve` plus `frc_resolution`,
+  ported from BrightEyes-ISM `FRC_lib`: Hann apodization before the transform
+  (without it the spectral leakage from the frame edges correlates perfectly
+  between the two halves and holds the curve up at every frequency), the
+  reference radial binning and frequency axis, LOWESS smoothing or a sigmoid
+  fit, and the fixed 1/7, 3-sigma and 5-sigma threshold criteria. Verified
+  against the reference: the raw curve to 2e-15, the frequency axis exactly,
+  and the resolution to nine digits for both criteria. The LOWESS is
+  reimplemented rather than taken from statsmodels, which meant matching its
+  window choice -- the r *nearest* points, where a symmetric window twice as
+  wide oversmooths and shifts the resolution by 0.25%.
 
 ### Changed
 - **One interface for every decay fit.** A fit is now built by registry name and
