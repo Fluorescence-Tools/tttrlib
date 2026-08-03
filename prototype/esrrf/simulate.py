@@ -491,6 +491,110 @@ def airy_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     return out
 
 
+def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+                  n_immersion: float = 1.518, polarization: str = "circular",
+                  z_nm: float = 0.0, centre=None, n_theta: int = 300) -> np.ndarray:
+    r"""
+    Vectorial (polarization-aware) PSF from the Richards-Wolf integral.
+
+    Above roughly NA 1.0 the scalar approximation stops being defensible: the
+    strong focusing of an aplanatic lens tips the field out of the transverse
+    plane, and the longitudinal component :math:`E_z` it creates is not small.
+    With *linear* illumination that makes the focal spot measurably **elongated
+    along the polarization axis** -- an asymmetry a scalar or Gaussian model
+    cannot produce at all, and which propagates straight into any ISM shift
+    vector or reconstruction derived from it.
+
+    Richards & Wolf, *Proc. R. Soc. A* **253**, 358 (1959):
+
+    .. math::
+
+        E_x \propto I_0 + I_2\cos 2\phi, \quad
+        E_y \propto I_2 \sin 2\phi, \quad
+        E_z \propto -2 i I_1 \cos\phi
+
+    with
+
+    .. math::
+
+        I_0 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin\theta\,(1+\cos\theta)\,
+                J_0(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta \\
+        I_1 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin^2\theta\,
+                J_1(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta \\
+        I_2 &= \int_0^\alpha \sqrt{\cos\theta}\,\sin\theta\,(1-\cos\theta)\,
+                J_2(k r \sin\theta)\, e^{i k z \cos\theta}\, d\theta
+
+    where :math:`\alpha = \arcsin(\mathrm{NA}/n)` and :math:`k = 2\pi n/\lambda`.
+
+    Parameters
+    ----------
+    shape : tuple
+        ``(ny, nx)``.
+    na, wavelength_nm, pixel_size_nm : float
+        Numerical aperture, wavelength, pixel size.
+    n_immersion : float
+        Refractive index of the immersion medium; 1.518 for oil, 1.0 for air.
+        ``na`` must not exceed it.
+    polarization : str
+        ``'x'`` or ``'y'`` for linear, ``'circular'`` for circular or
+        unpolarized (the two coincide in intensity after the azimuthal average).
+    z_nm : float
+        Defocus, in nanometres.
+    n_theta : int
+        Quadrature points over the aperture angle.
+
+    Returns
+    -------
+    np.ndarray
+        Intensity PSF :math:`|E_x|^2 + |E_y|^2 + |E_z|^2`, peak-normalized.
+
+    Notes
+    -----
+    As NA/n falls this converges to the scalar Airy pattern, which is the check
+    :func:`airy_psf` provides.
+    """
+    from scipy.special import jv
+
+    if na >= n_immersion:
+        raise ValueError(f"NA {na} must be below the immersion index {n_immersion}")
+    if polarization not in ("x", "y", "circular"):
+        raise ValueError("polarization must be 'x', 'y' or 'circular'")
+
+    ny, nx = shape
+    cy, cx = ((ny - 1) / 2.0, (nx - 1) / 2.0) if centre is None else centre
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    dx = (xx - cx) * pixel_size_nm
+    dy = (yy - cy) * pixel_size_nm
+    r = np.hypot(dx, dy).ravel()
+    phi = np.arctan2(dy, dx).ravel()
+
+    alpha = np.arcsin(na / n_immersion)
+    theta = np.linspace(0.0, alpha, n_theta)
+    k = 2.0 * np.pi * n_immersion / wavelength_nm
+
+    st, ct = np.sin(theta), np.cos(theta)
+    common = np.sqrt(ct) * st * np.exp(1j * k * z_nm * ct)
+    krs = k * r[:, None] * st[None, :]
+
+    i0 = np.trapezoid(common * (1.0 + ct) * jv(0, krs), theta, axis=1)
+    i1 = np.trapezoid(common * st * jv(1, krs), theta, axis=1)
+    i2 = np.trapezoid(common * (1.0 - ct) * jv(2, krs), theta, axis=1)
+
+    if polarization == "circular":
+        # averaged over the polarization angle; the cross term integrates away
+        intensity = np.abs(i0) ** 2 + 2.0 * np.abs(i1) ** 2 + np.abs(i2) ** 2
+    else:
+        angle = phi if polarization == "x" else phi - np.pi / 2.0
+        ex = i0 + i2 * np.cos(2.0 * angle)
+        ey = i2 * np.sin(2.0 * angle)
+        ez = -2.0 * i1 * np.cos(angle)
+        intensity = np.abs(ex) ** 2 + np.abs(ey) ** 2 + np.abs(ez) ** 2
+
+    intensity = intensity.reshape(ny, nx)
+    peak = intensity.max()
+    return intensity / peak if peak > 0 else intensity
+
+
 def generate_ism_psf(
     na: float = 1.4,
     wavelength_exc: float = 488.0,
@@ -502,7 +606,9 @@ def generate_ism_psf(
     pixel_size_nm: float = 10.0,
     pinhole_shape: str = 'square',
     geometry: str = 'rect',
-    model: str = 'gaussian'
+    model: str = 'gaussian',
+    n_immersion: float = 1.518,
+    polarization: str = 'circular'
 ):
     """
     Generate physical Image Scanning Microscopy (ISM) Point Spread Functions (PSFs).
@@ -517,13 +623,15 @@ def generate_ism_psf(
         Detector lattice, ``'rect'`` or ``'hex'`` (see :func:`detector_grid`).
     model : str
         ``'gaussian'`` for the usual approximation, ``'airy'`` for the exact
-        scalar diffraction PSF.
-
-    Notes
-    -----
-    This is a *scalar* model. The vectorial calculation of BrightEyes-ISM
-    ``PSF_sim`` additionally accounts for polarization and high-NA apodization,
-    which begin to matter above roughly NA 1.0.
+        scalar diffraction PSF, or ``'vectorial'`` for the Richards-Wolf
+        calculation. Use ``'vectorial'`` above about NA 1.0, where the
+        longitudinal field is not negligible.
+    n_immersion : float
+        Immersion index, used by the vectorial model only.
+    polarization : str
+        Excitation polarization for the vectorial model: ``'x'``, ``'y'`` or
+        ``'circular'``. Linear polarization elongates the focal spot along its
+        own axis, which a scalar model cannot reproduce.
     """
     airy_radius_nm = 0.61 * wavelength_det / na
     sigma_exc = (0.5 * wavelength_exc / na) / 2.35482
@@ -537,20 +645,31 @@ def generate_ism_psf(
     y_grid = np.arange(ny, dtype=float)[:, None] - ny / 2.0
     r2_grid = x_grid[None, :]**2 + y_grid**2
 
-    if model == 'airy':
+    if model == 'vectorial':
+        h_exc = vectorial_psf((ny, nx), na, wavelength_exc, pixel_size_nm,
+                              n_immersion=n_immersion, polarization=polarization,
+                              centre=(ny / 2.0, nx / 2.0))
+    elif model == 'airy':
         h_exc = airy_psf((ny, nx), na, wavelength_exc, pixel_size_nm,
                          centre=(ny / 2.0, nx / 2.0))
     elif model == 'gaussian':
         h_exc = np.exp(-r2_grid / (2.0 * sigma_exc_px**2))
     else:
-        raise ValueError("model must be 'gaussian' or 'airy'")
+        raise ValueError("model must be 'gaussian', 'airy' or 'vectorial'")
 
     # element centres on the requested lattice, scaled to the pitch
     det_offsets = detector_grid(n_det, geometry) * pitch_px
     channel_psfs = np.zeros((len(det_offsets), ny, nx), dtype=float)
 
     for idx, (dx_ch, dy_ch) in enumerate(det_offsets):
-        if model == 'airy':
+        if model == 'vectorial':
+            # detection is incoherent over dipole orientation, so the
+            # circularly-averaged form is the right one whatever the excitation
+            h_det_k = vectorial_psf((ny, nx), na, wavelength_det, pixel_size_nm,
+                                    n_immersion=n_immersion,
+                                    polarization='circular',
+                                    centre=(ny / 2.0 + dy_ch, nx / 2.0 + dx_ch))
+        elif model == 'airy':
             h_det_k = airy_psf((ny, nx), na, wavelength_det, pixel_size_nm,
                                centre=(ny / 2.0 + dy_ch, nx / 2.0 + dx_ch))
         else:

@@ -126,3 +126,66 @@ def test_reassignment_sharpens_the_simulated_psf():
         return np.sqrt((img * ((xx - mx) ** 2 + (yy - my) ** 2)).sum() / tot / 2)
 
     assert width(psf["reassigned_psf"]) < width(psf["sum_psf"])
+
+
+def test_vectorial_psf_converges_to_the_scalar_limit():
+    """
+    Richards-Wolf must reduce to the Airy pattern as the aperture angle shrinks.
+    That is the check that the integral, the apodization factor and the
+    normalization are all right, since at low NA the answer is known.
+    """
+    from simulate import vectorial_psf
+
+    for na, tol in ((0.1, 1e-3), (0.3, 5e-3)):
+        vec = vectorial_psf((129, 129), na, 520.0, 40.0, n_immersion=1.518)
+        scalar = airy_psf((129, 129), na, 520.0, 40.0)
+        assert np.abs(vec - scalar).max() < tol, f"NA {na}"
+
+
+def test_vectorial_psf_elongates_along_the_polarization_axis():
+    """
+    The reason this exists. At NA 1.4 the longitudinal field is not negligible,
+    and with linear illumination the focal spot is measurably longer along the
+    polarization axis -- an asymmetry no scalar or Gaussian model can produce.
+    Circular illumination must stay radially symmetric.
+    """
+    from simulate import vectorial_psf
+
+    n, px = 161, 8.0
+
+    def fwhm(img, axis):
+        profile = img[n // 2, :] if axis == "x" else img[:, n // 2]
+        radius = np.arange(len(profile)) * px
+        below = np.where(profile < 0.5)[0]
+        return 2 * abs(radius[below[below > n // 2][0]] - radius[n // 2])
+
+    linear = vectorial_psf((n, n), 1.4, 520.0, px, polarization="x")
+    circular = vectorial_psf((n, n), 1.4, 520.0, px, polarization="circular")
+
+    # elongated along x by about a third
+    assert fwhm(linear, "x") / fwhm(linear, "y") > 1.2
+    # and 'y' polarization elongates the other way
+    linear_y = vectorial_psf((n, n), 1.4, 520.0, px, polarization="y")
+    assert fwhm(linear_y, "y") / fwhm(linear_y, "x") > 1.2
+    # circular is symmetric
+    assert fwhm(circular, "x") == pytest.approx(fwhm(circular, "y"))
+
+    # and the scalar model is optimistic even about the symmetric case
+    assert fwhm(circular, "x") > 1.1 * fwhm(airy_psf((n, n), 1.4, 520.0, px), "x")
+
+
+def test_vectorial_psf_rejects_impossible_optics():
+    from simulate import vectorial_psf
+
+    with pytest.raises(ValueError):
+        vectorial_psf((33, 33), 1.6, 520.0, 20.0, n_immersion=1.518)
+    with pytest.raises(ValueError):
+        vectorial_psf((33, 33), 1.2, 520.0, 20.0, polarization="radial")
+
+
+@pytest.mark.parametrize("geometry,expected", [("rect", 25), ("hex", 23)])
+def test_generate_ism_psf_vectorial(geometry, expected):
+    psf = generate_ism_psf(n_det=5, geometry=geometry, model="vectorial",
+                           nx=40, ny=40, pixel_size_nm=25.0, polarization="x")
+    assert psf["channel_psfs"].shape == (expected, 40, 40)
+    assert np.allclose(psf["channel_psfs"].sum(axis=(1, 2)), 1.0)

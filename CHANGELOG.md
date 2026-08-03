@@ -44,8 +44,18 @@
   and holds ~43x less energy beyond the first zero -- which is exactly where
   out-of-focus background and element-to-element crosstalk live, so any result
   judged on a Gaussian-simulated background inherits that error. The model
-  remains scalar; the vectorial calculation of BrightEyes-ISM `PSF_sim` needs
-  torch, psf_generator and zernikepy and could not be run to compare against.
+  Alongside it, `vectorial_psf` implements the Richards-Wolf integral
+  (`model="vectorial"`), which matters because the examples run at NA 1.4 where
+  the scalar approximation is not defensible: the longitudinal field is not
+  small, and with linear illumination the focal spot is **elongated along the
+  polarization axis by about a third** (FWHM 256 nm along x against 192 nm
+  along y at NA 1.4) -- an asymmetry no scalar or Gaussian model can produce.
+  Even for circular polarization the scalar model underestimates the FWHM by
+  17%. Validated by convergence to the Airy pattern as the aperture closes
+  (agreement to 3e-4 at NA 0.1). Detection uses the circularly averaged form,
+  which is the right one for an incoherent sum over dipole orientation.
+  Aberrations and the Zernike pupil of BrightEyes-ISM `PSF_sim` are still
+  unmodelled.
 
 ### Fixed
 - **eSRRF now reproduces NanoJ.** The RGC kernel deviated from
