@@ -54,8 +54,16 @@
   17%. Validated by convergence to the Airy pattern as the aperture closes
   (agreement to 3e-4 at NA 0.1). Detection uses the circularly averaged form,
   which is the right one for an incoherent sum over dipole orientation.
-  Aberrations and the Zernike pupil of BrightEyes-ISM `PSF_sim` are still
-  unmodelled.
+  The state entering the pupil is selectable: `'x'`, `'y'`, `'linear'` at any
+  `angle_deg`, `'circular'`, `'left'`, `'right'`, `'unpolarized'`, the
+  cylindrical vector beams `'radial'` and `'azimuthal'`, or an explicit
+  `(Ex, Ey)` Jones pair for any elliptical state. Each carries a signature that
+  the tests check at NA 1.4: linear elongates along its own axis and x/y are
+  mirror images; circular, left-circular and unpolarized are indistinguishable
+  in intensity; radial focuses *tighter* than circular (192 nm against 224 nm),
+  its longitudinal lobe being the point of using it; and azimuthal has an exact
+  on-axis zero, being a doughnut. Aberrations and the Zernike pupil of
+  BrightEyes-ISM `PSF_sim` are still unmodelled.
 
 ### Fixed
 - **eSRRF now reproduces NanoJ.** The RGC kernel deviated from

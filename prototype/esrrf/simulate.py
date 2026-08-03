@@ -491,8 +491,71 @@ def airy_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     return out
 
 
+def _vectorial_intensity(jones, phi, i0, i1, i2):
+    """
+    Focal intensity for an arbitrary input Jones vector.
+
+    Superposition of the x- and y-polarized Richards-Wolf solutions, which is
+    exact because the focusing operator is linear in the pupil field.
+    """
+    a, b = jones
+    c2, s2 = np.cos(2.0 * phi), np.sin(2.0 * phi)
+    ex = a * (i0 + i2 * c2) + b * (i2 * s2)
+    ey = a * (i2 * s2) + b * (i0 - i2 * c2)
+    ez = -2.0 * i1 * (a * np.cos(phi) + b * np.sin(phi))
+    return np.abs(ex) ** 2 + np.abs(ey) ** 2 + np.abs(ez) ** 2
+
+
+def jones_vector(polarization, angle_deg: float = 0.0):
+    """
+    Jones vector of the light entering the objective pupil.
+
+    Accepts a name or an explicit ``(Ex, Ey)`` pair of complex amplitudes, so
+    any elliptical state can be given directly.
+
+    ============== ===================================================
+    ``'x'``        linear along x
+    ``'y'``        linear along y
+    ``'linear'``   linear at ``angle_deg`` from x
+    ``'circular'`` right-circular (identical in intensity to left)
+    ``'left'``     left-circular
+    ``'right'``    right-circular
+    ============== ===================================================
+
+    Returns
+    -------
+    np.ndarray
+        Normalized complex ``(2,)`` Jones vector.
+    """
+    if not isinstance(polarization, str):
+        v = np.asarray(polarization, dtype=complex).ravel()
+        if v.size != 2:
+            raise ValueError("a Jones vector must have two components")
+        norm = np.sqrt(np.abs(v[0]) ** 2 + np.abs(v[1]) ** 2)
+        if norm == 0:
+            raise ValueError("the Jones vector must not be zero")
+        return v / norm
+
+    name = polarization.lower()
+    if name == "x":
+        return np.array([1.0, 0.0], dtype=complex)
+    if name == "y":
+        return np.array([0.0, 1.0], dtype=complex)
+    if name == "linear":
+        a = np.deg2rad(angle_deg)
+        return np.array([np.cos(a), np.sin(a)], dtype=complex)
+    if name in ("circular", "right"):
+        return np.array([1.0, 1j], dtype=complex) / np.sqrt(2.0)
+    if name == "left":
+        return np.array([1.0, -1j], dtype=complex) / np.sqrt(2.0)
+    raise ValueError(
+        "polarization must be 'x', 'y', 'linear', 'circular', 'left', 'right', "
+        "'radial', 'azimuthal', 'unpolarized', or an (Ex, Ey) pair")
+
+
 def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
-                  n_immersion: float = 1.518, polarization: str = "circular",
+                  n_immersion: float = 1.518, polarization="circular",
+                  angle_deg: float = 0.0,
                   z_nm: float = 0.0, centre=None, n_theta: int = 300) -> np.ndarray:
     r"""
     Vectorial (polarization-aware) PSF from the Richards-Wolf integral.
@@ -535,9 +598,14 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     n_immersion : float
         Refractive index of the immersion medium; 1.518 for oil, 1.0 for air.
         ``na`` must not exceed it.
-    polarization : str
-        ``'x'`` or ``'y'`` for linear, ``'circular'`` for circular or
-        unpolarized (the two coincide in intensity after the azimuthal average).
+    polarization : str or tuple
+        State of the light entering the pupil. Names are those of
+        :func:`jones_vector`, plus ``'unpolarized'`` (an incoherent average of
+        two orthogonal linear states) and the cylindrical vector beams
+        ``'radial'`` and ``'azimuthal'``. An explicit ``(Ex, Ey)`` pair of
+        complex amplitudes gives any elliptical state.
+    angle_deg : float
+        Orientation of ``'linear'``, measured from the x axis.
     z_nm : float
         Defocus, in nanometres.
     n_theta : int
@@ -557,8 +625,10 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
 
     if na >= n_immersion:
         raise ValueError(f"NA {na} must be below the immersion index {n_immersion}")
-    if polarization not in ("x", "y", "circular"):
-        raise ValueError("polarization must be 'x', 'y' or 'circular'")
+    if isinstance(polarization, str) and polarization.lower() not in (
+            "x", "y", "linear", "circular", "left", "right",
+            "unpolarized", "radial", "azimuthal"):
+        raise ValueError(f"unknown polarization {polarization!r}")
 
     ny, nx = shape
     cy, cx = ((ny - 1) / 2.0, (nx - 1) / 2.0) if centre is None else centre
@@ -580,15 +650,25 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     i1 = np.trapezoid(common * st * jv(1, krs), theta, axis=1)
     i2 = np.trapezoid(common * (1.0 - ct) * jv(2, krs), theta, axis=1)
 
-    if polarization == "circular":
-        # averaged over the polarization angle; the cross term integrates away
-        intensity = np.abs(i0) ** 2 + 2.0 * np.abs(i1) ** 2 + np.abs(i2) ** 2
+    if isinstance(polarization, str) and polarization.lower() == "unpolarized":
+        # incoherent average of two orthogonal linear states
+        intensity = 0.5 * (
+            _vectorial_intensity(np.array([1.0, 0.0], complex), phi, i0, i1, i2)
+            + _vectorial_intensity(np.array([0.0, 1.0], complex), phi, i0, i1, i2))
+    elif isinstance(polarization, str) and polarization.lower() in ("radial", "azimuthal"):
+        # cylindrical vector beams need their own aperture integrals: the pupil
+        # field is not a constant Jones vector across it
+        j0 = np.trapezoid(common * st * jv(0, krs), theta, axis=1)
+        if polarization.lower() == "radial":
+            e_r = np.trapezoid(common * ct * jv(1, krs), theta, axis=1)
+            e_z = 2j * j0
+            intensity = np.abs(e_r) ** 2 + np.abs(e_z) ** 2
+        else:
+            e_phi = np.trapezoid(common * jv(1, krs), theta, axis=1)
+            intensity = np.abs(e_phi) ** 2
     else:
-        angle = phi if polarization == "x" else phi - np.pi / 2.0
-        ex = i0 + i2 * np.cos(2.0 * angle)
-        ey = i2 * np.sin(2.0 * angle)
-        ez = -2.0 * i1 * np.cos(angle)
-        intensity = np.abs(ex) ** 2 + np.abs(ey) ** 2 + np.abs(ez) ** 2
+        jones = jones_vector(polarization, angle_deg)
+        intensity = _vectorial_intensity(jones, phi, i0, i1, i2)
 
     intensity = intensity.reshape(ny, nx)
     peak = intensity.max()

@@ -180,7 +180,7 @@ def test_vectorial_psf_rejects_impossible_optics():
     with pytest.raises(ValueError):
         vectorial_psf((33, 33), 1.6, 520.0, 20.0, n_immersion=1.518)
     with pytest.raises(ValueError):
-        vectorial_psf((33, 33), 1.2, 520.0, 20.0, polarization="radial")
+        vectorial_psf((33, 33), 1.2, 520.0, 20.0, polarization="diagonal-ish")
 
 
 @pytest.mark.parametrize("geometry,expected", [("rect", 25), ("hex", 23)])
@@ -189,3 +189,92 @@ def test_generate_ism_psf_vectorial(geometry, expected):
                            nx=40, ny=40, pixel_size_nm=25.0, polarization="x")
     assert psf["channel_psfs"].shape == (expected, 40, 40)
     assert np.allclose(psf["channel_psfs"].sum(axis=(1, 2)), 1.0)
+
+
+def _fwhm_cut(img, axis, px):
+    n = img.shape[0]
+    profile = img[n // 2, :] if axis == "x" else img[:, n // 2]
+    radius = np.arange(len(profile)) * px
+    below = np.where(profile < 0.5 * profile.max())[0]
+    beyond = below[below > n // 2]
+    return 2 * abs(radius[beyond[0]] - radius[n // 2])
+
+
+def test_jones_vector_states():
+    from simulate import jones_vector
+
+    assert np.allclose(jones_vector("x"), [1, 0])
+    assert np.allclose(jones_vector("y"), [0, 1])
+    assert np.allclose(jones_vector("linear", 0), [1, 0])
+    assert np.allclose(jones_vector("linear", 90), [0, 1], atol=1e-12)
+    assert np.allclose(jones_vector("circular"), np.array([1, 1j]) / np.sqrt(2))
+    assert np.allclose(jones_vector("left"), np.array([1, -1j]) / np.sqrt(2))
+    # an explicit elliptical state, normalized on the way in
+    v = jones_vector((2.0, 1.0j))
+    assert np.isclose(np.abs(v[0]) ** 2 + np.abs(v[1]) ** 2, 1.0)
+
+    for bad in ((1.0,), (0.0, 0.0), "diagonal"):
+        with pytest.raises(ValueError):
+            jones_vector(bad)
+
+
+def test_polarization_states_behave_as_the_physics_requires():
+    """
+    Each input state has a signature that pins it down at NA 1.4:
+
+    * linear elongates the spot along its own axis, and x/y are mirror images;
+    * circular, left-circular and unpolarized are indistinguishable in
+      intensity, and radially symmetric;
+    * radial polarization focuses *tighter* than circular, its longitudinal
+      lobe being the point of using it;
+    * azimuthal polarization has an exact zero on axis -- it is a doughnut.
+    """
+    from simulate import vectorial_psf
+
+    n, px = 161, 8.0
+    kw = dict(na=1.4, wavelength_nm=520.0, pixel_size_nm=px)
+
+    def psf(pol, **extra):
+        return vectorial_psf((n, n), polarization=pol, **kw, **extra)
+
+    x, y = psf("x"), psf("y")
+    assert _fwhm_cut(x, "x", px) > 1.2 * _fwhm_cut(x, "y", px)
+    assert np.allclose(x, y.T, atol=1e-9)                      # mirror images
+
+    assert np.allclose(psf("linear", angle_deg=0), x, atol=1e-9)
+    assert np.allclose(psf("linear", angle_deg=90), y, atol=1e-9)
+
+    circular, left, unpol = psf("circular"), psf("left"), psf("unpolarized")
+    assert np.allclose(circular, left, atol=1e-9)
+    assert np.allclose(circular, unpol, atol=1e-9)
+    assert _fwhm_cut(circular, "x", px) == pytest.approx(_fwhm_cut(circular, "y", px))
+
+    # linear sits outside circular in its own direction, inside it across
+    assert _fwhm_cut(x, "x", px) > _fwhm_cut(circular, "x", px)
+    assert _fwhm_cut(x, "y", px) < _fwhm_cut(circular, "y", px)
+
+    radial = psf("radial")
+    assert _fwhm_cut(radial, "x", px) < _fwhm_cut(circular, "x", px)
+    assert _fwhm_cut(radial, "x", px) == pytest.approx(_fwhm_cut(radial, "y", px))
+
+    azimuthal = psf("azimuthal")
+    assert azimuthal[n // 2, n // 2] < 1e-6 * azimuthal.max()
+
+    # an elliptical state lies between linear and circular
+    elliptical = psf((1.0, 0.5j))
+    assert (_fwhm_cut(circular, "x", px) < _fwhm_cut(elliptical, "x", px)
+            < _fwhm_cut(x, "x", px))
+
+
+def test_linear_polarization_follows_its_angle():
+    """At 45 degrees the elongation runs along the diagonal, so the axis cuts
+    become equal while the diagonal outgrows the anti-diagonal."""
+    from simulate import vectorial_psf
+
+    n, px = 161, 8.0
+    img = vectorial_psf((n, n), 1.4, 520.0, px, polarization="linear", angle_deg=45)
+    assert _fwhm_cut(img, "x", px) == pytest.approx(_fwhm_cut(img, "y", px))
+
+    diag = np.array([img[n // 2 + i, n // 2 + i] for i in range(-40, 41)])
+    anti = np.array([img[n // 2 - i, n // 2 + i] for i in range(-40, 41)])
+    assert (diag > 0.5).sum() > (anti > 0.5).sum()
