@@ -556,7 +556,8 @@ def jones_vector(polarization, angle_deg: float = 0.0):
 def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
                   n_immersion: float = 1.518, polarization="circular",
                   angle_deg: float = 0.0,
-                  z_nm: float = 0.0, centre=None, n_theta: int = 300) -> np.ndarray:
+                  z_nm: float = 0.0, centre=None, n_theta: int = 300,
+                  normalize: bool = True) -> np.ndarray:
     r"""
     Vectorial (polarization-aware) PSF from the Richards-Wolf integral.
 
@@ -671,8 +672,70 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
         intensity = _vectorial_intensity(jones, phi, i0, i1, i2)
 
     intensity = intensity.reshape(ny, nx)
+    if not normalize:
+        # the caller is stacking planes and must keep the axial profile: peak
+        # normalizing each plane would flatten it away
+        return intensity
     peak = intensity.max()
     return intensity / peak if peak > 0 else intensity
+
+
+def psf_volume(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
+               z_step_nm: float = 100.0, n_immersion: float = 1.518,
+               polarization="circular", angle_deg: float = 0.0,
+               model: str = "vectorial", n_theta: int = 300) -> np.ndarray:
+    """
+    A 3-D PSF stack as a plain numpy array, ready to save or view.
+
+    Parameters
+    ----------
+    shape : tuple
+        ``(nz, ny, nx)``. The stack is centred on focus, so ``nz`` planes span
+        ``(nz - 1) * z_step_nm`` symmetrically about z = 0.
+    z_step_nm : float
+        Axial spacing between planes.
+    model : str
+        ``'vectorial'`` (Richards-Wolf, polarization-aware), ``'airy'`` (scalar,
+        z ignored) or ``'gaussian'``.
+
+    Returns
+    -------
+    np.ndarray
+        ``(nz, ny, nx)`` float64 intensity volume, normalized to a peak of 1.
+
+    Examples
+    --------
+    >>> vol = psf_volume((41, 64, 64), na=1.4, wavelength_nm=520.0,
+    ...                  pixel_size_nm=20.0, z_step_nm=50.0)
+    >>> np.save("psf.npy", vol)                           # doctest: +SKIP
+    """
+    nz, ny, nx = shape
+    z = (np.arange(nz) - (nz - 1) / 2.0) * z_step_nm
+
+    if model == "vectorial":
+        planes = [vectorial_psf((ny, nx), na, wavelength_nm, pixel_size_nm,
+                                n_immersion=n_immersion, polarization=polarization,
+                                angle_deg=angle_deg, z_nm=zi, n_theta=n_theta,
+                                normalize=False)
+                  for zi in z]
+    elif model == "airy":
+        planes = [airy_psf((ny, nx), na, wavelength_nm, pixel_size_nm)] * nz
+    elif model == "gaussian":
+        sigma_px = ((0.5 * wavelength_nm / na) / 2.35482) / pixel_size_nm
+        yy, xx = np.mgrid[0:ny, 0:nx]
+        r2 = (xx - (nx - 1) / 2.0) ** 2 + (yy - (ny - 1) / 2.0) ** 2
+        # a paraxial axial envelope, so the stack is not simply constant in z
+        z_r = np.pi * (sigma_px * pixel_size_nm) ** 2 * n_immersion / wavelength_nm
+        planes = []
+        for zi in z:
+            w2 = 1.0 + (zi / z_r) ** 2
+            planes.append(np.exp(-r2 / (2.0 * sigma_px ** 2 * w2)) / w2)
+    else:
+        raise ValueError("model must be 'vectorial', 'airy' or 'gaussian'")
+
+    volume = np.stack(planes).astype(np.float64)
+    peak = volume.max()
+    return volume / peak if peak > 0 else volume
 
 
 def generate_ism_psf(

@@ -278,3 +278,48 @@ def test_linear_polarization_follows_its_angle():
     diag = np.array([img[n // 2 + i, n // 2 + i] for i in range(-40, 41)])
     anti = np.array([img[n // 2 - i, n // 2 + i] for i in range(-40, 41)])
     assert (diag > 0.5).sum() > (anti > 0.5).sum()
+
+
+def test_psf_volume_exports_a_numpy_stack(tmp_path):
+    """
+    A 3-D stack as a plain array, which is what a viewer or a deconvolution
+    wants. Checks the properties that are actually pinned down: shape, peak
+    normalization, and the symmetries an unaberrated focus must have.
+    """
+    from simulate import psf_volume
+
+    nz, ny, nx = 9, 32, 32
+    vol = psf_volume((nz, ny, nx), na=1.4, wavelength_nm=520.0,
+                     pixel_size_nm=40.0, z_step_nm=200.0, n_theta=120)
+
+    assert vol.shape == (nz, ny, nx)
+    assert vol.dtype == np.float64
+    assert vol.max() == pytest.approx(1.0)
+    assert (vol >= 0).all()
+
+    focus = nz // 2
+    # brightest in focus, and symmetric about it for an unaberrated system
+    assert vol[focus].max() == pytest.approx(vol.max())
+    for k in range(1, focus + 1):
+        assert np.allclose(vol[focus - k], vol[focus + k], atol=1e-9)
+        assert vol[focus - k].max() < vol[focus].max()
+
+    # circular polarization is laterally symmetric
+    assert np.allclose(vol[focus], vol[focus].T, atol=1e-9)
+
+    out = tmp_path / "psf.npy"
+    np.save(out, vol)
+    assert np.array_equal(np.load(out), vol)
+
+
+def test_psf_volume_models_and_validation():
+    from simulate import psf_volume
+
+    kw = dict(na=1.2, wavelength_nm=520.0, pixel_size_nm=60.0, z_step_nm=300.0)
+    for model in ("vectorial", "airy", "gaussian"):
+        vol = psf_volume((5, 16, 16), model=model, n_theta=60, **kw)
+        assert vol.shape == (5, 16, 16)
+        assert np.isfinite(vol).all()
+
+    with pytest.raises(ValueError):
+        psf_volume((3, 8, 8), model="nope", **kw)
