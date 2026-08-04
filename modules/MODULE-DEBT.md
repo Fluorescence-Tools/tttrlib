@@ -16,13 +16,22 @@ every failure ambiguous.
 `hmm`. `tttrlib_finalize_modules()` refuses to configure if a source ends up
 claimed twice or not at all, so each extraction is a small, checkable change.
 
-## 2. `tttrlibShared` and `tttrlibStatic` still compile `src/` themselves
+## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
 
-The three SWIG targets now link the module instead of recompiling the glob, so
+The three SWIG targets now link the modules instead of recompiling the glob, so
 the sources are compiled three times per configure rather than five. The two
 library targets still have their own compile because they are what a C++
 consumer installs (`libtttrlib.so`, with its soname) and what the conda R package
 links (`libtttrlib_static.a`), and changing their artefact names would break both.
+
+They build from `TTTRLIB_CLAIMED_SOURCES` -- the same list
+`tttrlib_finalize_modules()` validates -- and **not** from a glob of `src/`. That
+is not a stylistic choice. Extracting `imageio` moved `TiffArrayIO.cpp` out of
+`src/`, and while the glob still configured, built, linked and passed every test,
+`libtttrlib_static.a` had quietly lost the TIFF symbols: nothing in the test
+suite links that archive, and the R package that does link it was only being
+*compiled*, not run. An extraction must not be able to silently subtract from an
+artefact nobody exercises.
 
 **Exit:** make them thin aggregates over the module objects once the modules
 exist, keeping the installed names.

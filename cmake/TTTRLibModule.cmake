@@ -16,6 +16,7 @@
 #       EXTERNAL_DEPS <targets...>        # e.g. tttrlib::json, tttrlib::eigen
 #       SWIG_INTERFACES <files...>        # .i fragments this module contributes
 #       TEST_DIR      <dir>               # test/python/<dir>, linked not moved
+#       INTERFACE                         # header-only: no SOURCES, no library
 #       OPTIONAL                          # gives the module a WITH_<NAME> switch
 #   )
 #
@@ -62,7 +63,7 @@ function(tttrlib_set_sibling_rpath target)
 endfunction()
 
 function(tttrlib_add_module)
-    set(options OPTIONAL)
+    set(options OPTIONAL INTERFACE)
     set(one_value NAME TEST_DIR)
     set(multi_value SOURCES HEADERS DEPENDS EXTERNAL_DEPS SWIG_INTERFACES)
     cmake_parse_arguments(M "${options}" "${one_value}" "${multi_value}" ${ARGN})
@@ -86,6 +87,34 @@ function(tttrlib_add_module)
             set_property(GLOBAL APPEND PROPERTY TTTRLIB_CLAIMED_SOURCES ${M_SOURCES})
             return()
         endif()
+    endif()
+
+    # A header-only module is a real module: it declares a dependency edge and a
+    # boundary, it just has nothing to compile. Reaching for one is what keeps a
+    # shared header from being filed under whichever module happened to use it
+    # first -- i_lbfgs.h sat in the HMM cluster and gave `decay` and
+    # `localization` phantom dependencies on `hmm` for no reason at all.
+    if(M_INTERFACE)
+        if(M_SOURCES)
+            message(FATAL_ERROR "tttrlib_add_module(${M_NAME}): INTERFACE modules have no SOURCES")
+        endif()
+        add_library(${target} INTERFACE)
+        add_library(tttrlib::${M_NAME} ALIAS ${target})
+        foreach(dir IN LISTS M_HEADERS)
+            target_include_directories(${target} INTERFACE "${dir}")
+            set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "${dir}")
+        endforeach()
+        foreach(dep IN LISTS M_DEPENDS)
+            target_link_libraries(${target} INTERFACE tttrlib::${dep})
+        endforeach()
+        foreach(dep IN LISTS M_EXTERNAL_DEPS)
+            target_link_libraries(${target} INTERFACE ${dep})
+        endforeach()
+        set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_LIST ${M_NAME})
+        set_property(GLOBAL PROPERTY TTTRLIB_MODULE_${M_NAME}_SWIG "${M_SWIG_INTERFACES}")
+        set_property(GLOBAL PROPERTY TTTRLIB_MODULE_${M_NAME}_TESTS "${M_TEST_DIR}")
+        message(STATUS "module ${M_NAME}: header-only (INTERFACE)")
+        return()
     endif()
 
     if(NOT M_SOURCES)

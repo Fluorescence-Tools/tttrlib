@@ -22,6 +22,8 @@
 
 # Extracted modules first: each owns its own sources under modules/<name>/src,
 # so what is left in src/ is by definition what nobody has claimed yet.
+add_subdirectory(opt)
+add_subdirectory(hist)
 add_subdirectory(imageio)
 
 file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -29,6 +31,11 @@ file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 tttrlib_add_module(
     NAME    legacy
     SOURCES ${TTTRLIB_LEGACY_SOURCES}
+    # The first declared edges between modules. TTTR.h and TTTRHeader.h include
+    # Histogram.h; DecayFit.h, DecayFit23.h and ImageLocalization.h include
+    # i_lbfgs.h. Declaring them is what puts those headers on this module's
+    # compile line -- and, equally, keeps everything else off it.
+    DEPENDS opt hist
     # Everything, for now. The point of the split is that these become per-module
     # declarations -- Eigen is REQUIRED project-wide today for the sake of two
     # files, and that only stops being true once `localization` and `nn` are the

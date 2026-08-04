@@ -447,13 +447,32 @@ INCLUDE(TTTRLibThirdParty)
 INCLUDE(TTTRLibModule)
 ADD_SUBDIRECTORY(modules)
 
+# Module headers, for the targets declared BELOW this line only.
+#
+# Placement is the whole point: modules/ has already been processed, so it does
+# not inherit this, and a module still sees only its own headers plus those of
+# the modules it declared as DEPENDS. What does need them is the pair of
+# whole-library targets further down, which compile every source themselves.
+tttrlib_module_include_directories()
+
+# Every source in the project: what is still in src/, plus what the extracted
+# modules own. tttrlib_finalize_modules() has already checked that this is each
+# source exactly once.
+GET_PROPERTY(TTTRLIB_ALL_SOURCES GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES)
+
 
 IF(BUILD_LIBRARY)
   ## Shared / static library
   ###########################
   # cmake needs unique target name, thus place shared in front of project
-  ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${SRC_files})
-  ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${SRC_files})
+  # These build EVERY source, including the ones extracted modules now own.
+  # libtttrlib.so is what a C++ consumer links and libtttrlib_static.a is what
+  # the conda R package links, and both must stay complete: globbing src/ alone
+  # would silently drop a capability with each extraction (the R package wraps
+  # both Histogram and Tiff). See modules/MODULE-DEBT.md -- collapsing these onto
+  # the module objects is the exit, and it must not change either artefact's name.
+  ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${TTTRLIB_ALL_SOURCES})
+  ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${TTTRLIB_ALL_SOURCES})
   IF(NOT MSVC)
     # The static archive is consumed outside this build (e.g. R CMD INSTALL
     # links it into the R package). If it holds slim LTO bitcode, an ar/linker
