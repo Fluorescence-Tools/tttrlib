@@ -4,17 +4,24 @@ Compromises the module split accepts, why, and what would let each one go. A
 compromise recorded here is a decision; one that is not is a surprise for whoever
 hits it next.
 
-## 1. `legacy` still holds everything
+## 1. `legacy` still holds the core cluster
 
-`modules/CMakeLists.txt` declares one module containing all of `src/`. That is
-the starting point, not the goal: switching the build to shared module libraries
-and splitting the sources are independent risks, and doing both at once makes
-every failure ambiguous.
+The leaves are out: `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
+`localization`. `legacy` is down from 68 sources to 55 and now holds the part
+that is genuinely tangled -- core, burst, decay, imaging, nn and hmm.
 
-**Exit:** extract leaves first (`opt`, `hist`, `imageio`, `sim`, `pda`,
-`superres`, `localization`), then `burst`, `core`, `decay`, `imaging`, `nn`,
-`hmm`. `tttrlib_finalize_modules()` refuses to configure if a source ends up
-claimed twice or not at all, so each extraction is a small, checkable change.
+Two of the extracted modules are leaves of the *include* graph without being
+independent of core, and say so in `DEPENDS`: nothing includes `Pda.h` or
+`CLSMSuperRes.h`, but both implementations read the photon-stream data model.
+`DEPENDS legacy` becomes `DEPENDS core` and `DEPENDS core imaging` once those
+exist. `sim`'s edge runs the other way from what its name suggests: the
+simulator reaches into nothing but `Random.h`, and it is `hmm` and `nn` --
+still inside `legacy` -- that include `SimDecay.h` and `SimPcgRandom.h`, so
+`legacy` declares `DEPENDS sim`.
+
+**Exit:** `burst`, then `core`, `decay`, `imaging`, `nn`, `hmm`.
+`tttrlib_finalize_modules()` refuses to configure if a source ends up claimed
+twice or not at all, so each extraction is a small, checkable change.
 
 ## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
 
@@ -36,14 +43,19 @@ artefact nobody exercises.
 **Exit:** make them thin aggregates over the module objects once the modules
 exist, keeping the installed names.
 
-## 3. Modules carry every third-party dependency
+## 3. `legacy` still carries every third-party dependency
 
-`legacy` declares all of `tttrlib::{json,pocketfft,autodiff,eigen,highfive}`
-because it contains every source. Eigen is a project-wide `REQUIRED` today for
-the sake of two files.
+The extracted modules declare only what they use -- `localization` asks for
+Eigen and autodiff, `pda` and `superres` for pocketfft, `sim` for HighFive --
+but `legacy` still declares all of them, because it still contains a consumer of
+each.
 
-**Exit:** the declaration becomes per-module. Eigen stops being mandatory when
-`localization` and `nn` are the only modules that ask for it.
+Eigen in particular is a project-wide `REQUIRED` for the sake of two files, and
+`localization` is only one of them.
+
+**Exit:** extracting `nn`, the other Eigen consumer. At that point Eigen is
+needed by exactly two modules and can stop being mandatory for the whole
+project.
 
 ## 4. Module libraries carry no soname
 

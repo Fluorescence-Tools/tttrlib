@@ -25,6 +25,8 @@
 add_subdirectory(opt)
 add_subdirectory(hist)
 add_subdirectory(imageio)
+add_subdirectory(sim)
+add_subdirectory(localization)
 
 file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
@@ -35,7 +37,7 @@ tttrlib_add_module(
     # Histogram.h; DecayFit.h, DecayFit23.h and ImageLocalization.h include
     # i_lbfgs.h. Declaring them is what puts those headers on this module's
     # compile line -- and, equally, keeps everything else off it.
-    DEPENDS opt hist
+    DEPENDS opt hist sim
     # Everything, for now. The point of the split is that these become per-module
     # declarations -- Eigen is REQUIRED project-wide today for the sake of two
     # files, and that only stops being true once `localization` and `nn` are the
@@ -48,5 +50,12 @@ tttrlib_add_module(
         tttrlib::highfive
     TEST_DIR test/python
 )
+
+# These two depend on `legacy`, so they are declared after it. Both are leaves of
+# the include graph -- nothing else includes Pda.h or CLSMSuperRes.h -- but their
+# implementations read the photon-stream data model, so the edge is real and
+# becomes `core` / `core imaging` once those modules exist.
+add_subdirectory(pda)
+add_subdirectory(superres)
 
 tttrlib_finalize_modules()
