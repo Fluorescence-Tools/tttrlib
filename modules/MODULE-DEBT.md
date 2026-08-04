@@ -7,8 +7,8 @@ hits it next.
 ## 1. `legacy` still holds the core cluster
 
 Out so far: `util`, `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
-`localization`, `core`. `legacy` is down from 68 sources to 39 and now holds
-imaging, decay, burst's separable half, nn and hmm.
+`localization`, `core`, `imaging`. `legacy` is down from 68 sources to 31 and
+now holds decay, burst's separable half, nn and hmm.
 
 Two of the extracted modules are leaves of the *include* graph without being
 independent of core, and say so in `DEPENDS`: nothing includes `Pda.h` or
@@ -19,8 +19,7 @@ simulator reaches into nothing but `Random.h`, and it is `hmm` and `nn` --
 still inside `legacy` -- that include `SimDecay.h` and `SimPcgRandom.h`, so
 `legacy` declares `DEPENDS sim`.
 
-**Exit:** `imaging`, then `decay`, `burst`, `nn`, `hmm`. `core` is out, which
-is what unblocks the rest.
+**Exit:** `decay`, then `burst`, `nn`, `hmm`.
 `tttrlib_finalize_modules()` refuses to configure if a source ends up claimed
 twice or not at all, so each extraction is a small, checkable change.
 
@@ -97,10 +96,12 @@ also need `extern template`). Annotate `imageio` and `pda` first, `core` last.
 
 ## 6. Known cross-module reach-ins, to resolve as the modules land
 
-- `CLSMImage` <-> `Correlator` <-> `DecayPhasor` are mutual friends, so they must
-  be co-located in one `imaging` module: CMake will not accept a link cycle
-  between shared libraries. **Exit:** replace the three `friend` declarations
-  with a narrow accessor.
+- `CLSMImage` <-> `Correlator` <-> `DecayPhasor` are mutual friends and include
+  each other's headers, so they are co-located in one `imaging` module -- CMake
+  will not accept a link cycle between shared libraries. This costs nothing in
+  the bindings: `tttrlib.Correlator` is named by its SWIG fragment, not by which
+  library it lives in. **Exit:** replace the three `friend` declarations with a
+  narrow accessor.
 - `TTTR` publishes the whole burst-search API as its own methods, and five
   translation units define `TTTR::` members outside `TTTR.cpp`, so those stay in
   `core`. **Exit:** free functions taking `const TTTR&`, with the methods kept as
