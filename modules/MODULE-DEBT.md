@@ -100,7 +100,6 @@ also need `extern template`). Annotate `imageio` and `pda` first, `core` last.
   API does not change.
 - `HMMEmission.h -> SimDecay.h`, `HMMRestraints.h -> DecayFitPrior.h`,
   `NeuralNet.cpp -> SimPcgRandom.h` make `hmm` depend on nearly everything.
-- `SimSimd.h` (508 lines) is dead in-tree -- nothing includes it.
 
 ## 7. R and Java `%include` lists lag Python by 12 fragments
 

@@ -20,7 +20,7 @@
 #   sim                     the simulator (depends on nothing above util)
 #   nn                      feed-forward network, for the HMM surrogate
 #   hmm                     photon-by-photon HMMs -- the top of the graph
-#   imageio, pda, superres, localization, graph
+#   imageio, pda, superres, localization
 #
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
@@ -38,7 +38,6 @@ add_subdirectory(decay)
 add_subdirectory(burst)
 add_subdirectory(nn)
 add_subdirectory(hmm)
-add_subdirectory(graph)
 add_subdirectory(pda)
 add_subdirectory(superres)
 
