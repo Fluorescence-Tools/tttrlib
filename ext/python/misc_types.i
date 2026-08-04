@@ -111,7 +111,9 @@ $result = swig::from($1);
 // Float/Double
 %apply(double* IN_ARRAY1, int DIM1) {(double *input, int n_input)}
 %apply(double* IN_ARRAY2, int DIM1, int DIM2) {(double *input, int n_input1, int n_input2)}
-%apply(double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(const double* data, int dim0, int dim1, int dim2)}
+%apply(double* IN_ARRAY2, int DIM1, int DIM2) {(const double* img, int ny, int nx)}
+%apply(double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {(const double* data, int dim0, int dim1, int dim2), (const double* stack, int n_frames, int ny, int nx)}
+%apply(double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** output, int* dim1, int* dim2)}
 
 // Integers
 %apply(char* IN_ARRAY1, int DIM1) {(char *input, int n_input)}

@@ -399,12 +399,14 @@ def __init__(
         except Exception:
             pass
 
-    # Always include bidirectional_scan=False by default
+    # bidirectional_scan is deliberately NOT set here. It is read from the file
+    # header (ImgHdr_BiDirect) by the C++ CLSMImage constructor, so that Python,
+    # R, Java and native C++ all reconstruct the same image. Hardcoding False
+    # here used to mask that value from Python only.
     settings_kwargs = {
         "skip_before_first_frame_marker": bool(skip_before_first_frame_marker),
         "skip_after_last_frame_marker":  bool(skip_after_last_frame_marker),
         "reading_routine":               rt.get(reading_routine, rt['default']),
-        "bidirectional_scan":            False,
         "split_by_channel":              bool(split_by_channel),
         "use_pixel_markers":             bool(use_pixel_markers),
         "marker_pixel":                  int(marker_pixel),
@@ -434,16 +436,16 @@ def __init__(
                     settings_kwargs[key] = json_settings[key]
 
     if not isinstance(source, CLSMImage):
-        # If the user provided TTTR data, try reading any header‐derived settings
+        # Header-derived markers, geometry, bidirectional flag, BH pixel clock and
+        # BH reading routine are resolved by CLSMImageInfo::from_header in the C++
+        # constructor (gated on reading_routine == CLSM_DEFAULT and
+        # n_pixel_per_line == 0, i.e. only when the caller supplied none of them).
+        # read_clsm_settings() duplicated that logic here and the two had already
+        # drifted apart, so Python saw different settings than R/Java/C++ for the
+        # same file. It is kept as a public helper for callers that want to
+        # inspect the values, but is no longer applied here.
         if tttr_data is not None:
-            header = tttr_data.header
-            self.header = header
-            try:
-                auto_settings = self.read_clsm_settings(tttr_data)
-                if auto_settings:
-                    settings_kwargs.update(auto_settings)
-            except:
-                print("Error reading TTTR CLSM header")
+            self.header = tttr_data.header
 
         # Set default markers if not provided, to avoid passing None to SWIG
         if marker_line_start is None: marker_line_start = settings_kwargs.get("marker_line_start", 3)
@@ -483,33 +485,12 @@ def __init__(
                 if key in json_settings and settings_kwargs.get(key) is None:
                     settings_kwargs[key] = json_settings[key]
 
-        # Pre‐set routines override everything else
-        if reading_routine == 'SP5':
-            settings_kwargs["marker_event_type"] = 1
-            settings_kwargs["marker_frame_start"] = [4, 6]
-            settings_kwargs["marker_line_start"] = 1
-            settings_kwargs["marker_line_stop"] = 2
-        elif reading_routine == 'SP8':
-            settings_kwargs["marker_event_type"] = 15
-            settings_kwargs["marker_frame_start"] = [4, 6]
-            settings_kwargs["marker_line_start"] = 1
-            settings_kwargs["marker_line_stop"] = 2
-            if tttr_data is not None:
-                header = tttr_data.header
-                try:
-                    settings_kwargs["marker_line_start"] = int(header.tag('ImgHdr_LineStart')["value"])
-                    settings_kwargs["marker_line_stop"]  = int(header.tag('ImgHdr_LineStop')["value"])
-                    bd = int(header.tag('ImgHdr_BiDirect')["value"])
-                    settings_kwargs["bidirectional_scan"] = (bd != 0)
-                except:
-                    pass
-        elif reading_routine == 'BH_SPC130':
-            settings_kwargs["marker_event_type"] = 1
-            settings_kwargs["marker_frame_start"] = [4]
-            settings_kwargs["marker_line_start"] = 2
-            settings_kwargs["marker_line_stop"] = 255
-            settings_kwargs["skip_before_first_frame_marker"] = True
-            settings_kwargs["skip_after_last_frame_marker"] = False
+        # The SP5 / SP8 / BH_SPC130 marker conventions are applied by the C++
+        # CLSMImage constructor, so every binding uses the same ones. They used to
+        # be duplicated here, and the SP8 branch read ImgHdr_BiDirect via
+        # header.tag(...)["value"], which yields -1 for a *missing* tag (get_tag
+        # returns a not-found sentinel) and so silently enabled bidirectional
+        # scanning — mirroring every other line — on SP8 files lacking the tag.
 
         # Remove None values so CLSMSettings uses its C++ defaults
         settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}

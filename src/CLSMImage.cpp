@@ -132,21 +132,47 @@ struct SeqMacroTime {
 
 namespace {
 
+// True when TTTRHeader::get_tag reported "tag not found".
+//
+// get_tag does not signal absence with null -- it returns a sentinel
+//     {"value": -1.0, "idx": -1, "name": "NONE"}
+// so a plain "has a numeric value" test succeeds for tags that are not in the
+// file and hands back -1. That silently turned every missing flag into a set
+// one: a file without an ImgHdr_BiDirect tag produced
+// bidirectional_scan = (-1 != 0) = true, mirroring every other scan line.
+// (Python was unaffected only because its CLSMImage wrapper resolves the
+// settings itself and skips this auto-configuration path.)
+bool tag_is_absent(const nlohmann::json& t) {
+    if (t.is_null() || !t.contains("value") || t["value"].is_null()) return true;
+    return t.contains("name") && t["name"].is_string()
+           && t["name"].get<std::string>() == "NONE";
+}
+
 // Read a scalar header tag value as a double. Returns false when the tag is
 // absent or carries a non-numeric value.
 bool read_tag_double(const nlohmann::json& json, const std::string& name, double& out) {
     auto t = TTTRHeader::get_tag(json, name);
-    if (t.is_null() || !t.contains("value") || t["value"].is_null()) return false;
+    if (tag_is_absent(t)) return false;
     const auto& v = t["value"];
     if (v.is_number()) { out = v.get<double>(); return true; }
     if (v.is_boolean()) { out = v.get<bool>() ? 1.0 : 0.0; return true; }
     return false;
 }
 
+// Read a scalar header tag value as a string. Returns false when absent.
+bool read_tag_string(const nlohmann::json& json, const std::string& name, std::string& out) {
+    auto t = TTTRHeader::get_tag(json, name);
+    if (tag_is_absent(t)) return false;
+    const auto& v = t["value"];
+    if (!v.is_string()) return false;
+    out = v.get<std::string>();
+    return true;
+}
+
 // Read a scalar header tag value as an int. Returns false when absent.
 bool read_tag_int(const nlohmann::json& json, const std::string& name, int& out) {
     auto t = TTTRHeader::get_tag(json, name);
-    if (t.is_null() || !t.contains("value") || t["value"].is_null()) return false;
+    if (tag_is_absent(t)) return false;
     const auto& v = t["value"];
     if (v.is_number()) { out = v.get<int>(); return true; }
     if (v.is_boolean()) { out = v.get<bool>() ? 1 : 0; return true; }
@@ -184,6 +210,9 @@ CLSMImageInfo CLSMImageInfo::from_header(TTTRHeader* header) {
     bool has_ls = read_tag_int(json, "ImgHdr_LineStart", ls_raw);
     bool has_le = read_tag_int(json, "ImgHdr_LineStop", le_raw);
     read_tag_int(json, "ImgHdr_Frame", frame_raw);
+    info.marker_line_start_raw = ls_raw;
+    info.marker_line_stop_raw  = le_raw;
+    info.has_line_markers      = has_ls && has_le;
 
     if (info.container_type == PQ_PTU_CONTAINER) {
         if (has_ls && has_le) {
@@ -209,6 +238,33 @@ CLSMImageInfo CLSMImageInfo::from_header(TTTRHeader* header) {
             info.marker_frame_start = { 4 };
     }
     info.marker_event_type = 1;
+
+    // Becker & Hickl SPC: the record file cannot carry the scan geometry, so it
+    // arrives from the .set sidecar (SP_IMG_X/SP_IMG_Y/SP_PIX_CLK, normalized to
+    // ImgHdr_PixX/ImgHdr_PixY/BH_UsePixelClock by TTTRHeader::read_bh_set_file),
+    // and the marker layout is a property of the instrument rather than the file.
+    // A BH measurement records which reading routine produced it; honour that
+    // hint and apply the matching marker convention. Without this the markers
+    // stay at the CLSMSettings zero defaults, nothing ever matches, and the image
+    // reconstructs to zero frames. This lived only in the Python wrapper, which
+    // is why BH images reconstructed from Python but not from Java, R or C++.
+    std::string routine;
+    if (read_tag_string(json, "BH_SPC_ReadingRoutine", routine)) {
+        if (routine == "BH_SPC130") info.reading_routine = CLSM_BH_SPC130;
+        else if (routine == "SP5")  info.reading_routine = CLSM_SP5;
+        else if (routine == "SP8")  info.reading_routine = CLSM_SP8;
+    }
+    if (info.reading_routine == CLSM_BH_SPC130) {
+        info.marker_event_type  = 1;
+        info.marker_frame_start = { 4 };
+        info.marker_line_start  = 2;
+        info.marker_line_stop   = 255;
+        info.skip_before_first_frame_marker = true;
+    }
+
+    int pix_clk = 0;
+    if (read_tag_int(json, "BH_UsePixelClock", pix_clk))
+        info.use_pixel_markers = (pix_clk != 0);
 
     // --- timing -----------------------------------------------------------
     read_tag_double(json, "ImgHdr_TimePerPixel", info.time_per_pixel_s);
@@ -706,20 +762,81 @@ CLSMImage::CLSMImage(
         // settings -- including the Python __init__, which resolves these itself --
         // are unaffected. The full parsed metadata (geometry, timing, calibration)
         // is always stored in image_info_ for introspection.
-        if (this->settings.reading_routine == CLSM_DEFAULT) {
+        {
             auto pq_header = tttr_data->get_header();
             if (pq_header != nullptr) {
                 try {
                     this->image_info_ = CLSMImageInfo::from_header(pq_header);
+                    // Geometry is a property of the acquisition, not of the
+                    // reconstruction routine: an SP5/SP8 caller still needs
+                    // ImgHdr_PixX/PixY. Only the marker layout is routine-specific,
+                    // so the two are gated separately. (Applying both under
+                    // reading_routine == CLSM_DEFAULT left explicit-routine callers
+                    // with no dimensions at all.)
                     if (this->settings.n_pixel_per_line == 0 && this->image_info_.is_valid()) {
-                        this->settings.marker_line_start  = this->image_info_.marker_line_start;
-                        this->settings.marker_line_stop   = this->image_info_.marker_line_stop;
-                        this->settings.marker_frame_start = this->image_info_.marker_frame_start;
-                        this->settings.marker_event_type  = this->image_info_.marker_event_type;
                         this->settings.n_pixel_per_line   = this->image_info_.n_pixel;
                         this->settings.n_lines            = this->image_info_.n_lines;
                         this->settings.bidirectional_scan = this->image_info_.bidirectional_scan;
                         this->n_pixel = this->settings.n_pixel_per_line;
+
+                        if (this->settings.reading_routine == CLSM_DEFAULT) {
+                            this->settings.marker_line_start  = this->image_info_.marker_line_start;
+                            this->settings.marker_line_stop   = this->image_info_.marker_line_stop;
+                            this->settings.marker_frame_start = this->image_info_.marker_frame_start;
+                            this->settings.marker_event_type  = this->image_info_.marker_event_type;
+                            // BH pixel-clock binning and the mid-frame start, so the
+                            // sidecar-derived configuration is honoured identically
+                            // in every language binding.
+                            if (this->image_info_.use_pixel_markers) {
+                                this->settings.use_pixel_markers = true;
+                            }
+                            if (this->image_info_.skip_before_first_frame_marker) {
+                                this->settings.skip_before_first_frame_marker = true;
+                            }
+                            // A header-recorded reading routine (BH SPC) selects the
+                            // instrument-specific reconstruction path, not just the
+                            // marker numbers.
+                            if (this->image_info_.reading_routine != CLSM_DEFAULT) {
+                                this->settings.reading_routine = this->image_info_.reading_routine;
+                            }
+                        }
+                    }
+                    // Instrument marker conventions for the non-default reading
+                    // routines. These lived only in the Python wrapper, so a
+                    // Leica SP5/SP8 or BH SPC measurement reconstructed correctly
+                    // from Python and not from R, Java or native C++. As in the
+                    // Python original, a named routine overrides caller-supplied
+                    // markers -- the routine *is* the marker convention.
+                    switch (this->settings.reading_routine) {
+                        case CLSM_SP5:
+                            this->settings.marker_event_type  = 1;
+                            this->settings.marker_frame_start = { 4, 6 };
+                            this->settings.marker_line_start  = 1;
+                            this->settings.marker_line_stop   = 2;
+                            break;
+                        case CLSM_SP8:
+                            this->settings.marker_event_type  = 15;
+                            this->settings.marker_frame_start = { 4, 6 };
+                            // SP8 uses the RAW ImgHdr_LineStart/Stop values, not
+                            // the 2^index decoding the default PTU routine applies.
+                            if (this->image_info_.has_line_markers) {
+                                this->settings.marker_line_start = this->image_info_.marker_line_start_raw;
+                                this->settings.marker_line_stop  = this->image_info_.marker_line_stop_raw;
+                            } else {
+                                this->settings.marker_line_start = 1;
+                                this->settings.marker_line_stop  = 2;
+                            }
+                            break;
+                        case CLSM_BH_SPC130:
+                            this->settings.marker_event_type  = 1;
+                            this->settings.marker_frame_start = { 4 };
+                            this->settings.marker_line_start  = 2;
+                            this->settings.marker_line_stop   = 255;
+                            this->settings.skip_before_first_frame_marker = true;
+                            this->settings.skip_after_last_frame_marker   = false;
+                            break;
+                        default:
+                            break;
                     }
                 } catch (...) {
                     if (is_verbose())
@@ -2496,18 +2613,23 @@ void CLSMImage::get_intensity_masked(
     }
 }
 
-void CLSMImage::get_intensity_from_masks(
-        unsigned short **output, int *dim1, int *dim2, int *dim3
+template<typename T>
+void CLSMImage::get_intensity_from_masks_t(
+        T **output, int *dim1, int *dim2, int *dim3
 ) {
     // Fused counts from the stream acceptance masks: one pass per channel
     // block, no per-pixel index vectors touched (same binning as
     // consume_masks_into_pixels; scatter-add instead of insert).
+    //
+    // The counter width is a template parameter: the 16-bit instantiation wraps
+    // at 65536 photons/pixel (historical behaviour, kept bit-identical), the
+    // 32-bit one does not.
     *dim1 = static_cast<int>(n_frames);
     *dim2 = static_cast<int>(n_lines);
     *dim3 = static_cast<int>(n_pixel);
     const size_t n_total = n_frames * n_lines * n_pixel;
-    auto* img = static_cast<unsigned short*>(
-            calloc(std::max(n_total, size_t(1)), sizeof(unsigned short)));
+    auto* img = static_cast<T*>(
+            calloc(std::max(n_total, size_t(1)), sizeof(T)));
     *output = img;
     if (img == nullptr || n_total == 0) return;
     if (stream_masks_.empty() || mask_tttr_ == nullptr) return;
@@ -2545,7 +2667,7 @@ void CLSMImage::get_intensity_from_masks(
         if (mi >= stream_masks_.size()) continue;
         const uint64_t* accept_words = stream_masks_[mi].data();
 
-        unsigned short* frame_img = img + static_cast<size_t>(f_idx) * n_lines * n_pixel;
+        T* frame_img = img + static_cast<size_t>(f_idx) * n_lines * n_pixel;
         const size_t lines_in_frame = std::min(frame->lines.size(), n_lines);
         for (size_t l_idx = 0; l_idx < lines_in_frame; ++l_idx) {
             CLSMLine* line = frame->lines[l_idx];
@@ -2564,7 +2686,7 @@ void CLSMImage::get_intensity_from_masks(
             const unsigned long long line_start_time = line->get_start_time(tttr_data);
             const int n_pixels_minus_1 = static_cast<int>(line->pixels.size()) - 1;
             const double pixel_duration_reciprocal = 1.0 / static_cast<double>(pixel_duration);
-            unsigned short* line_img = frame_img + l_idx * n_pixel;
+            T* line_img = frame_img + l_idx * n_pixel;
 
             smt.reset(static_cast<size_t>(start_idx));
             const int64_t w_first = start_idx >> 6;
@@ -2599,6 +2721,17 @@ void CLSMImage::get_intensity_from_masks(
             }
         }
     }
+}
+
+template void CLSMImage::get_intensity_from_masks_t<unsigned short>(unsigned short**, int*, int*, int*);
+template void CLSMImage::get_intensity_from_masks_t<unsigned int>(unsigned int**, int*, int*, int*);
+
+void CLSMImage::get_intensity_from_masks(unsigned short **output, int *dim1, int *dim2, int *dim3) {
+    get_intensity_from_masks_t<unsigned short>(output, dim1, dim2, dim3);
+}
+
+void CLSMImage::get_intensity_from_masks_u32(unsigned int **output, int *dim1, int *dim2, int *dim3) {
+    get_intensity_from_masks_t<unsigned int>(output, dim1, dim2, dim3);
 }
 
 void CLSMImage::get_tttr_indices(int** output, int* n_output) {
@@ -2876,7 +3009,8 @@ void CLSMImage::get_photon_positions(
     *out_event_idx = event_arr;
 }
 
-void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3) {
+template<typename T>
+void CLSMImage::get_intensity_t(T **output, int *dim1, int *dim2, int *dim3) {
     // Lazy fill: compute the counts straight from the stream masks (no
     // per-pixel index materialization). Marker-based binning is handled by
     // the materialized path.
@@ -2884,7 +3018,7 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
         if (settings.use_pixel_markers) {
             ensure_pixels_materialized();
         } else {
-            get_intensity_from_masks(output, dim1, dim2, dim3);
+            get_intensity_from_masks_t<T>(output, dim1, dim2, dim3);
             return;
         }
     }
@@ -2900,7 +3034,7 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
     }
     
     // Allocate output array for all frames
-    auto *t = (unsigned short *) malloc(n_pixel_total * sizeof(unsigned short));
+    auto *t = (T *) malloc(n_pixel_total * sizeof(T));
     
     // Configure OpenMP for parallel intensity computation
 #ifndef _WIN32
@@ -2916,10 +3050,10 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
     for (int i_frame = 0; i_frame < static_cast<int>(n_frames); i_frame++) {
         auto &frame = frames[i_frame];
         
-        // Use CLSMFrame::get_intensity() to get frame data
-        unsigned short *frame_intensity = nullptr;
+        // Use CLSMFrame::get_intensity_t() to get frame data
+        T *frame_intensity = nullptr;
         int frame_lines = 0, frame_pixels = 0;
-        frame->get_intensity(&frame_intensity, &frame_lines, &frame_pixels);
+        frame->template get_intensity_t<T>(&frame_intensity, &frame_lines, &frame_pixels);
         
         // Copy frame intensity into the output array at the correct offset
         if (frame_intensity != nullptr) {
@@ -2929,12 +3063,23 @@ void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int
                 static_cast<size_t>(frame_lines) * static_cast<size_t>(frame_pixels),
                 static_cast<size_t>(n_lines) * static_cast<size_t>(n_pixel)
             );
-            std::memcpy(&t[frame_offset], frame_intensity, frame_size * sizeof(unsigned short));
+            std::memcpy(&t[frame_offset], frame_intensity, frame_size * sizeof(T));
             free(frame_intensity);
         }
     }
-    
+
     *output = t;
+}
+
+template void CLSMImage::get_intensity_t<unsigned short>(unsigned short**, int*, int*, int*);
+template void CLSMImage::get_intensity_t<unsigned int>(unsigned int**, int*, int*, int*);
+
+void CLSMImage::get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3) {
+    get_intensity_t<unsigned short>(output, dim1, dim2, dim3);
+}
+
+void CLSMImage::get_intensity_u32(unsigned int **output, int *dim1, int *dim2, int *dim3) {
+    get_intensity_t<unsigned int>(output, dim1, dim2, dim3);
 }
 
 void CLSMImage::get_fluorescence_decay(
@@ -3072,11 +3217,23 @@ void CLSMImage::get_fcs_image(
 ) {
     ensure_pixels_materialized();
     if (clsm_other != nullptr) clsm_other->ensure_pixels_materialized();
+    // clsm_other is documented as optional (nullptr = autocorrelate each pixel
+    // with itself), and the guard above already allows for it -- but the frame
+    // loop below dereferenced it unconditionally, so every call that omitted a
+    // second image segfaulted. Fall back to this image.
+    CLSMImage* other = (clsm_other != nullptr) ? clsm_other : this;
+    // This method declares correlation_method = "default", but Correlator only
+    // knows "wahl", "felekyan" and "laurence"; anything else logs a warning per
+    // pixel and leaves the curve empty, so the default returned all zeros. Map it
+    // onto Correlator's own default instead.
+    const std::string method =
+            (correlation_method == "default" || correlation_method.empty())
+            ? std::string("wahl") : correlation_method;
     if (is_verbose()) {
         std::clog << "Get fluorescence correlation image" << std::endl;
     }
     size_t nf = (stack_frames) ? 1 : n_frames;
-    auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+    auto corr = Correlator(tttr, method, n_bins, n_casc);
     size_t n_corr = corr.curve.size();
     size_t n_cor_total = nf * n_lines * n_pixel * n_corr;
     auto t = (float *) calloc(n_cor_total, sizeof(float));
@@ -3093,9 +3250,9 @@ void CLSMImage::get_fcs_image(
     // Create once per frame instead of per pixel
     //#pragma omp parallel for default(none) shared(tttr, o_frame, t, clsm_other)
     for (unsigned int i_frame = 0; i_frame < n_frames; i_frame++) {
-        auto corr = Correlator(tttr, correlation_method, n_bins, n_casc);
+        auto corr = Correlator(tttr, method, n_bins, n_casc);
         auto frame = frames[i_frame];
-        auto other_frame = clsm_other->frames[i_frame];
+        auto other_frame = other->frames[i_frame];
         
         // Pre-allocate reusable TTTR objects to avoid repeated construction
         TTTR tttr_1(*tttr, nullptr, 0, false);
@@ -3116,24 +3273,25 @@ void CLSMImage::get_fcs_image(
                     const auto& v1 = pixel.get_tttr_indices();
                     const auto& v2 = other_pixel.get_tttr_indices();
                     
-                    // Create TTTR objects for this pixel pair
-                    TTTR tttr_1_temp(
+                    // Build the pixel selections directly in the shared_ptrs.
+                    // These used to be constructed as stack temporaries and then
+                    // copy-assigned into the reused shared_ptrs; the assignment
+                    // does not deep-copy the event buffers, so once the temporary
+                    // went out of scope the correlator was reading freed memory
+                    // and aborted on the first pixel with photons in it.
+                    tttr_1_ptr = std::make_shared<TTTR>(
                         *tttr,
                         const_cast<int*>(v1.data()),
                         static_cast<int>(v1.size()),
                         false
                     );
-                    TTTR tttr_2_temp(
+                    tttr_2_ptr = std::make_shared<TTTR>(
                         *tttr,
                         const_cast<int*>(v2.data()),
                         static_cast<int>(v2.size()),
                         false
                     );
-                    
-                    // Update shared pointers
-                    *tttr_1_ptr = tttr_1_temp;
-                    *tttr_2_ptr = tttr_2_temp;
-                    
+
                     corr.set_tttr(tttr_1_ptr, tttr_2_ptr);
                     
                     double *correlation;

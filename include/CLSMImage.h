@@ -236,6 +236,28 @@ struct CLSMImageInfo {
     /// Event type that marks a marker event (usually 1)
     int marker_event_type = 0;
 
+    /// Photons are binned by pixel-clock marker events rather than by dwell
+    /// time. Becker & Hickl records this as SP_PIX_CLK in the .set sidecar,
+    /// normalized to the BH_UsePixelClock header tag.
+    bool use_pixel_markers = false;
+
+    /// Skip events before the first frame marker (BH SPC scans start mid-frame).
+    bool skip_before_first_frame_marker = false;
+
+    /// Reading routine implied by the header (CLSM_DEFAULT when not indicated).
+    /// A BH SPC measurement records BH_SPC_ReadingRoutine, which selects
+    /// CLSM_BH_SPC130 together with that instrument's marker conventions.
+    int reading_routine = CLSM_DEFAULT;
+
+    /// Raw, undecoded ImgHdr_LineStart / ImgHdr_LineStop values. The default
+    /// routine decodes PTU marker *indices* into routing channels (2^idx), but
+    /// the Leica SP8 routine uses the raw values, so both are kept.
+    int marker_line_start_raw = 0;
+    int marker_line_stop_raw = 0;
+
+    /// Whether the header actually carried line-marker tags.
+    bool has_line_markers = false;
+
     /// Nominal dwell time per pixel in seconds (ImgHdr_TimePerPixel)
     double time_per_pixel_s = 0.0;
 
@@ -413,6 +435,14 @@ private:
 
     /// Fused intensity from the stored stream masks (no materialization)
     void get_intensity_from_masks(unsigned short** output, int* dim1, int* dim2, int* dim3);
+
+    /// As get_intensity_from_masks, with 32-bit counters (no wrap at 65536).
+    void get_intensity_from_masks_u32(unsigned int** output, int* dim1, int* dim2, int* dim3);
+
+    /// Counter-width-generic implementation behind the two above.
+    /// Instantiated for unsigned short and unsigned int in CLSMImage.cpp.
+    template<typename T>
+    void get_intensity_from_masks_t(T** output, int* dim1, int* dim2, int* dim3);
 
     /*!
      * Visit every accepted photon of the stored stream masks together with
@@ -800,6 +830,26 @@ public:
      * @param dim3   Number of pixels per line in the intensity image.
      */
     void get_intensity(unsigned short **output, int *dim1, int *dim2, int *dim3);
+
+    /*!
+     * \brief Computes an intensity image with 32-bit photon counters.
+     *
+     * Identical to get_intensity(), but per-pixel counts are neither truncated
+     * nor wrapped at 65536. Prefer this for long acquisitions; get_intensity()
+     * is retained unchanged for backward compatibility.
+     *
+     * @param output Pointer to the array that will contain the intensity image. The array
+     *               is allocated by the function.
+     * @param dim1   Number of frames in the intensity image.
+     * @param dim2   Number of lines per frame in the intensity image.
+     * @param dim3   Number of pixels per line in the intensity image.
+     */
+    void get_intensity_u32(unsigned int **output, int *dim1, int *dim2, int *dim3);
+
+    /// Counter-width-generic implementation behind get_intensity/get_intensity_u32.
+    /// Instantiated for unsigned short and unsigned int in CLSMImage.cpp.
+    template<typename T>
+    void get_intensity_t(T **output, int *dim1, int *dim2, int *dim3);
 
     /*!
      * \brief Computes an image stack where the value of each pixel corresponds to a histogram

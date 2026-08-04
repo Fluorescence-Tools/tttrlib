@@ -105,8 +105,16 @@ IF(BUILD_PYTHON_INTERFACE)
     set(SWIG_DEPENDENCIES "${SWIG_INTERFACE_FILES};${SWIG_PYTHON_HELPERS}")
     if(SWIG_DEPENDENCIES)
         list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
-        set_property(SOURCE python/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${SWIG_DEPENDENCIES}")
+        # NB: SWIG_MODULE_DEPENDS is NOT a property UseSWIG reads -- it was silently
+        # ignored, so editing a .i (or a header) never regenerated the wrapper and a
+        # cached build directory could ship a stale one. UseSWIG.cmake consumes the
+        # SWIG_MODULE_<name>_EXTRA_DEPS variable (and the target's SWIG_DEPENDS).
+        set(SWIG_MODULE_${MODULE_NAME}_EXTRA_DEPS ${SWIG_DEPENDENCIES})
     endif()
+    # Better still: let swig compute implicit dependencies itself, which also covers
+    # the C++ headers pulled in by %include. Requires CMake >= 3.20 (this project
+    # declares 3.13), hence the explicit list above as a fallback.
+    set_property(SOURCE python/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
@@ -259,7 +267,9 @@ IF(BUILD_R_INTERFACE)
     file(GLOB R_SWIG_DEPS
             "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
             "${CMAKE_CURRENT_SOURCE_DIR}/r/*.i")
-    set_property(SOURCE r/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${R_SWIG_DEPS}")
+    # See the Python block: SWIG_MODULE_DEPENDS is not read by UseSWIG.
+    set(SWIG_MODULE_${R_MODULE_NAME}_EXTRA_DEPS ${R_SWIG_DEPS})
+    set_property(SOURCE r/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
 
     SWIG_ADD_LIBRARY(
             ${R_MODULE_NAME}
@@ -310,7 +320,9 @@ IF(BUILD_JAVA_INTERFACE)
     file(GLOB J_SWIG_DEPS
             "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
             "${CMAKE_CURRENT_SOURCE_DIR}/java/*.i")
-    set_property(SOURCE java/tttrlib.i PROPERTY SWIG_MODULE_DEPENDS "${J_SWIG_DEPS}")
+    # See the Python block: SWIG_MODULE_DEPENDS is not read by UseSWIG.
+    set(SWIG_MODULE_${J_MODULE_NAME}_EXTRA_DEPS ${J_SWIG_DEPS})
+    set_property(SOURCE java/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
 
     SWIG_ADD_LIBRARY(
             ${J_MODULE_NAME}

@@ -25,6 +25,12 @@ static int myErr = 0; // flag to save error state
 %apply (unsigned short** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {
     (unsigned short** output, int* dim1, int* dim2)
 }
+// Typemap for CLSMFrame::get_intensity_u32 (2D array output, 32-bit counters).
+// ARGOUTVIEWM (managed) so numpy takes ownership of the malloc'd buffer; the
+// 3-D CLSMImage::get_intensity_u32 case is already covered by misc_types.i.
+%apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {
+    (unsigned int** output, int* dim1, int* dim2)
+}
 
 // Typemap for CLSMImage::get_memory_usage_detailed (size_t* output parameters)
 %apply size_t *OUTPUT { size_t* overhead, size_t* indices, size_t* ranges }

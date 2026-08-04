@@ -182,6 +182,23 @@ public:
     void get_intensity(unsigned short **output, int *dim1, int *dim2);
 
     /*!
+     * \brief Get the intensity array for this frame with 32-bit counters.
+     *
+     * Identical to get_intensity(), but the per-pixel photon counts are not
+     * truncated to 16 bits. Use this when a pixel may exceed 65535 photons.
+     *
+     * @param output [out] Pointer to the output array (will be allocated).
+     * @param dim1 [out] Number of lines.
+     * @param dim2 [out] Number of pixels per line.
+     */
+    void get_intensity_u32(unsigned int **output, int *dim1, int *dim2);
+
+    /// Counter-width-generic implementation behind get_intensity/get_intensity_u32.
+    /// Instantiated for unsigned short and unsigned int in CLSMFrame.cpp.
+    template<typename T>
+    void get_intensity_t(T **output, int *dim1, int *dim2);
+
+    /*!
      * \brief Get the memory usage of this frame in bytes.
      *
      * @return Total memory usage in bytes.
