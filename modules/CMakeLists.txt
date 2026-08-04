@@ -30,6 +30,8 @@ add_subdirectory(sim)
 add_subdirectory(localization)
 add_subdirectory(core)
 add_subdirectory(imaging)
+add_subdirectory(registry)
+add_subdirectory(decay)
 
 file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
@@ -40,7 +42,7 @@ tttrlib_add_module(
     # Histogram.h; DecayFit.h, DecayFit23.h and ImageLocalization.h include
     # i_lbfgs.h. Declaring them is what puts those headers on this module's
     # compile line -- and, equally, keeps everything else off it.
-    DEPENDS util opt hist sim core imaging
+    DEPENDS util opt hist sim core imaging registry decay
     # Everything, for now. The point of the split is that these become per-module
     # declarations -- Eigen is REQUIRED project-wide today for the sake of two
     # files, and that only stops being true once `localization` and `nn` are the
