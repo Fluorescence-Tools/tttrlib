@@ -427,7 +427,7 @@ std::map<std::string, std::vector<int64_t>> read_photons(
         const std::vector<int64_t>& v = oit->second;
         int64_t start = *std::min_element(v.begin(), v.end());
         int64_t maxoff = *std::max_element(v.begin(), v.end());
-        int64_t end = std::min<int64_t>(index_off, maxoff + 65536);
+        int64_t end = index_off;
         return decode_region(fp, v, start, end, page, n_datasets);
     };
 

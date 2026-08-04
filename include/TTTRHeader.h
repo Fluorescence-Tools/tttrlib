@@ -251,10 +251,32 @@ public:
         TTTRHeader::add_tag(json_data, name, value, tyFloat8, -1);
     }
 
+    /// Set an arbitrary integer metadata tag by name
+    void set_int_tag(const std::string& name, int value){
+        TTTRHeader::add_tag(json_data, name, value, tyInt8, -1);
+    }
+
+    /// Set an arbitrary binary-blob metadata tag by name (e.g. the HT3 ImgHdr
+    /// scan/marker configuration vector)
+    void set_blob_tag(const std::string& name, const std::vector<int32_t>& value){
+        TTTRHeader::add_tag(json_data, name, value, tyBinaryBlob, -1);
+    }
+
+    /// Set an arbitrary ANSI-string metadata tag by name
+    void set_string_tag(const std::string& name, const std::string& value){
+        std::string copy = value;
+        TTTRHeader::add_tag(json_data, name, const_cast<char*>(copy.c_str()), tyAnsiString, -1);
+    }
+
     /// Duration of a pixel in LSM in units of macro time clock
     int get_pixel_duration(){
-        double pixel_duration_d = TTTRHeader::get_tag(
-                json_data, "$TimePerPixel")["value"];
+        double pixel_duration_d = 0.0;
+        auto tpp = TTTRHeader::get_tag(json_data, "ImgHdr_TimePerPixel");
+        if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
+            pixel_duration_d = tpp["value"].get<double>();
+        else
+            pixel_duration_d = TTTRHeader::get_tag(
+                    json_data, "$TimePerPixel")["value"];
         double global_res = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
         // Round to nearest integer duration in macro clock units and cast explicitly to int
@@ -264,8 +286,13 @@ public:
 
     /// Duration of a line in LSM in units of macro time clock
     int get_line_duration(){
-        double pixel_duration_d = TTTRHeader::get_tag(
-                json_data, "$TimePerPixel")["value"];
+        double pixel_duration_d = 0.0;
+        auto tpp = TTTRHeader::get_tag(json_data, "ImgHdr_TimePerPixel");
+        if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
+            pixel_duration_d = tpp["value"].get<double>();
+        else
+            pixel_duration_d = TTTRHeader::get_tag(
+                    json_data, "$TimePerPixel")["value"];
         double global_res_d = TTTRHeader::get_tag(
                 json_data, "MeasDesc_GlobalResolution")["value"];
         double n_pixel = TTTRHeader::get_tag(json_data, "ImgHdr_PixX")["value"];

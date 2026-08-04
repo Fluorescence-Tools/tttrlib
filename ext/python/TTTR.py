@@ -353,7 +353,7 @@ def _burst_search_spec(algorithm):
     return algorithms[algorithm]
 
 
-def burst_search_by_name(self, algorithm, **parameters):
+def burst_search_by_name(self, algorithm, /, **parameters):
     """Run a burst search selected by name, filling in the registry defaults.
 
     Dispatches to whichever method implements ``algorithm``, so a caller can
@@ -361,7 +361,10 @@ def burst_search_by_name(self, algorithm, **parameters):
     method implements it or what its full signature is.
 
     Args:
-        algorithm: key from :meth:`burst_search_algorithms`.
+        algorithm: key from :meth:`burst_search_algorithms`. Positional-only, so
+            a search whose own parameters include one called ``algorithm`` — the
+            coincident search names its per-group search that way — does not
+            collide with it.
         **parameters: overrides; anything omitted takes its registry default.
 
     Returns:
@@ -387,6 +390,15 @@ def burst_search_by_name(self, algorithm, **parameters):
 
     kwargs = TTTR.burst_search_defaults(algorithm)
     kwargs.update(parameters)
+    # Some parameters have no meaningful default — a detector grouping depends on
+    # the instrument, so inventing one would silently search the wrong channels.
+    required = spec["params_schema"].get("required", ())
+    missing = [p for p in required if p not in kwargs]
+    if missing:
+        raise ValueError(
+            f"{algorithm} requires {sorted(missing)}, which have no default "
+            f"and must be supplied"
+        )
     # Coerce to the declared JSON Schema types: a form hands back whatever its
     # widget produced, and a float where the C++ signature wants an int fails in
     # the SWIG layer rather than here.
@@ -394,6 +406,9 @@ def burst_search_by_name(self, algorithm, **parameters):
         if name not in kwargs:
             continue
         kind = prop.get("type")
+        # Only scalars are coerced: a form hands back whatever its widget
+        # produced, and a float where the C++ signature wants an int fails in the
+        # SWIG layer. Arrays, objects and strings are passed through as they are.
         if kind == "integer":
             kwargs[name] = int(kwargs[name])
         elif kind == "number":
@@ -402,3 +417,98 @@ def burst_search_by_name(self, algorithm, **parameters):
             kwargs[name] = bool(kwargs[name])
     result = getattr(self, spec["method"])(**kwargs)
     return _np.asarray(result, dtype=_np.int64).reshape(-1, 2)
+
+
+def burst_search_coincident(
+    self, channel_groups, algorithm="maxtree", min_groups=0, L=20,
+    parameters=None,
+):
+    """Bursts that appear in several detector groups at once.
+
+    A burst search over the pooled photon stream cannot tell a molecule carrying
+    every label from one carrying a subset: both are simply bright. Requiring the
+    burst to be found *independently* in more than one group of detectors can —
+    it is what rejects singly-labelled and photobleached molecules in ALEX/PIE,
+    where the classical form is the dual-channel burst search over a
+    donor-excitation and an acceptor-excitation stream.
+
+    This is the general form of that idea. Any number of detector groups may be
+    given, and ``min_groups`` sets how many must agree, so "2 of 3" is expressible
+    as well as "all of 2". It is a *composition*, not a new algorithm: the search
+    named by ``algorithm`` runs once per group, so it works with every entry in
+    the burst-search registry, including ones added later.
+
+    Coincidence is decided in *time*, not per photon. A burst found in one group
+    marks the whole span of photons it covers, so photons belonging to the other
+    groups fall inside it; a photon is coincident when at least ``min_groups``
+    groups mark it.
+
+    Args:
+        channel_groups: sequence of routing-channel groups, e.g.
+            ``[[0, 1], [2, 3]]``. A group with no photons is ignored rather than
+            forcing an empty result.
+        algorithm: which registered burst search to run per group.
+        min_groups: how many groups must agree. ``0`` means all of the groups
+            that actually contain photons.
+        L: minimum photons per burst, applied to the coincident result. The inner
+            search applies its own ``L`` per group first.
+        parameters: parameters for the inner search; omitted ones take their
+            registry defaults.
+
+    Returns:
+        numpy.ndarray: ``(n, 2)`` array of inclusive ``[start, stop]`` photon
+        indices, in the same convention as every other burst search.
+
+    Raises:
+        ValueError: no usable group, or ``min_groups`` exceeding the number of
+            groups that contain photons.
+
+    Example:
+        >>> # a burst must be seen by both detector pairs
+        >>> bursts = tttr.burst_search_coincident([[0, 1], [2, 3]])   # doctest: +SKIP
+    """
+    import numpy as _np
+    import tttrlib as _tttrlib
+
+    groups = [list(g) for g in channel_groups]
+    if not groups:
+        raise ValueError("channel_groups is empty")
+
+    channels = _np.asarray(self.routing_channels)
+    n_photons = len(channels)
+    votes = _np.zeros(n_photons, dtype=_np.int32)
+
+    n_used = 0
+    for group in groups:
+        member = _np.flatnonzero(_np.isin(channels, group))
+        if member.size == 0:
+            continue          # a detector group with no photons cannot vote
+        n_used += 1
+        selection = _tttrlib.TTTR(self, member.astype(_np.int32))
+        bursts = selection.burst_search_by_name(algorithm, **dict(parameters or {}))
+        for first, last in bursts:
+            # Sub-indices map back through `member`; marking the enclosed global
+            # range is what makes the coincidence temporal rather than per photon.
+            votes[member[first]:member[last] + 1] += 1
+
+    if n_used == 0:
+        raise ValueError(
+            "no channel group contains photons; "
+            f"used routing channels are {sorted(set(channels.tolist()))}"
+        )
+    required = int(min_groups) if min_groups else n_used
+    if required > n_used:
+        raise ValueError(
+            f"min_groups={required} exceeds the {n_used} group(s) containing photons"
+        )
+
+    mask = votes >= required
+    if not mask.any():
+        return _np.zeros((0, 2), dtype=_np.int64)
+
+    # Run-length encode the coincident mask into inclusive intervals.
+    padded = _np.concatenate(([False], mask, [False]))
+    edges = _np.flatnonzero(padded[1:] != padded[:-1])
+    starts, stops = edges[0::2], edges[1::2] - 1
+    keep = (stops - starts + 1) >= int(L)
+    return _np.stack([starts[keep], stops[keep]], axis=1).astype(_np.int64)

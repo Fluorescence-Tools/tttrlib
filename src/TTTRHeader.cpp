@@ -1068,7 +1068,14 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     char Magic[8] = "PQTTTR";
     fwrite(&Magic, 1, sizeof(Magic), fp);
     try {
-        version_str = header->json_data["Tag Version"];
+        // A "Tag Version" written by add_tag/set_string_tag lives in the tag
+        // list; the PTU reader stores it as a top-level json key. Prefer the
+        // tag-list value so programmatically built headers are honoured.
+        int idx = find_tag(header->json_data, "Tag Version");
+        if (idx >= 0)
+            version_str = get_tag(header->json_data, "Tag Version")["value"];
+        else
+            version_str = header->json_data["Tag Version"];
     } catch (...) {
         std::clog << "WARNING: No PTU version defined in header using default" << std::endl;
         version_str = "0      ";

@@ -985,6 +985,35 @@ public:
     );
 
     /**
+     * How strongly the data supports each burst, in sigma.
+     *
+     * Computed after the fact from the burst boundaries and the photon stream,
+     * so it applies to the output of *any* burst search — including ones added
+     * later — and means the same thing across all of them. An algorithm's own
+     * internal score does not: an MSER variation and a Mahalanobis distance are
+     * not comparable, so bursts from different searches could not be ranked
+     * together. The background is measured from the photons flanking each burst.
+     *
+     * See include/BurstConfidence.h.
+     *
+     * Arguments:
+     *     bursts: interleaved, inclusive start/stop indices from a burst search.
+     *     background_window (double): seconds of context around each burst used
+     *         to measure the background; the burst's own photons are excluded.
+     *     significance_mode (int): 0 Gaussian, 1 exact Poisson, 2 Li & Ma.
+     *         Li & Ma by default, since the background is measured, not known.
+     *
+     * Returns:
+     *     vector<double>: one value per burst, in sigma. 0 where a burst fills
+     *     its own context window, leaving no flank to measure a background from.
+     */
+    std::vector<double> burst_confidence(
+        const std::vector<long long>& bursts,
+        double background_window = 0.05,
+        int significance_mode = 2
+    );
+
+    /**
      * Machine-readable description of every available burst search, as JSON.
      *
      * Mirrors what `container_names` does for file containers, but carries enough

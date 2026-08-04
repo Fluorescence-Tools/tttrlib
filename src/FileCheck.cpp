@@ -151,7 +151,10 @@ bool isHT3File(const std::string& filename) {
     std::fclose(file);
 
     if (read_size != sizeof(ht3_header_begin)) return false;
-    return (std::strncmp(ht3_header_begin.FormatVersion, "1.0", 3) == 0);
+    // HydraHarp 1 files carry FormatVersion "1.0"; HydraHarp 2 (and the
+    // HHT3v2 record stream) carry "2.0". Both are valid HT3 containers.
+    return (std::strncmp(ht3_header_begin.FormatVersion, "1.0", 3) == 0) ||
+           (std::strncmp(ht3_header_begin.FormatVersion, "2.0", 3) == 0);
 }
 
 // Function to check if the file is a BH132 file
