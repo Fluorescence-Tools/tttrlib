@@ -135,14 +135,16 @@ jobs:
             -DBUILD_LIBRARY=ON \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build-java --target tttrlibJava
-      - name: Compile Java proxies + tests
+      # The binding tests are JUnit 5 and live in the tttrlib Maven module
+      # (ext/java/pkg). Stage the CMake-generated proxies and the JNI native into
+      # its source roots, exactly as the ImageJ module does.
+      - name: Stage SWIG proxies and JNI native into the Maven source tree
         run: |
-          cp ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java \
-             build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/
-          javac -d build-java/java-classes \
-            build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java
-          javac -cp build-java/java-classes -d build-java/test-classes \
-            test/java/TTTRSmokeTest.java test/java/CLSMTest.java test/java/LifetimeTest.java test/java/DecayFitTest.java test/java/PdaTest.java
+          DST=ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib
+          cp build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java "$DST/"
+          mkdir -p ext/java/pkg/src/main/resources/native/linux-x86-64
+          cp build-java/java-pkg/native/libtttrlibjni.so \
+             ext/java/pkg/src/main/resources/native/linux-x86-64/
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3
@@ -150,17 +152,10 @@ jobs:
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
           curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
-      - name: Run Java tests
+      - name: Run Java tests (JUnit 5)
         env:
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
-        run: |
-          CP=build-java/java-classes:build-java/test-classes
-          NATIVE=build-java/java-pkg/native
-          java -cp $CP -Djava.library.path=$NATIVE TTTRSmokeTest
-          java -cp $CP -Djava.library.path=$NATIVE CLSMTest
-          java -cp $CP -Djava.library.path=$NATIVE LifetimeTest
-          java -cp $CP -Djava.library.path=$NATIVE DecayFitTest
-          java -cp $CP -Djava.library.path=$NATIVE PdaTest
+        run: mvn -B -f ext/java/pkg test
 
   # ── ImageJ/Fiji plugin: build per-OS JNI native, assemble & release the JAR ──
 
@@ -239,27 +234,44 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: maven
       - uses: actions/download-artifact@v4
         with:
           pattern: imagej-*
           path: dl
           merge-multiple: true
-      - name: Assemble cross-platform fat JAR
+      # The plugin is a SciJava/Fiji plugin built by Maven (pom-scijava parent).
+      # The SWIG proxies and per-OS JNI natives are produced by CMake in the
+      # imagej_native jobs, so stage them into the standard Maven source roots
+      # before packaging; both are gitignored.
+      - name: Stage SWIG proxies and JNI natives into the Maven source tree
+        run: |
+          DST=ext/java/imagej/src/main/java/io/github/fluorescencetools/tttrlib
+          cp dl/proxies/*.java "$DST/"
+          cp ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java "$DST/"
+          mkdir -p ext/java/imagej/src/main/resources/native
+          cp -r dl/native/* ext/java/imagej/src/main/resources/native/
+          echo "Bundled natives:"; find ext/java/imagej/src/main/resources/native -type f
+      # The plugin's JUnit tests reconstruct a reference CLSM image, so they need
+      # the same data file as the swig_multilang job.
+      - name: Download reference test data
+        run: |
+          mkdir -p tttr-data/imaging/pq/ht3
+          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+            https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+      - name: Build plugin JAR (runs the headless Command tests)
+        env:
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
         run: |
           # Version from pyproject; append short SHA for non-release builds.
           VER=$(python3 -c "import re;print(re.search(r'version\s*=\s*\"([^\"]+)\"',open('pyproject.toml').read()).group(1))")
           if [ "${{ github.event_name }}" != "release" ]; then VER="${VER}+$(git rev-parse --short HEAD)"; fi
-          curl -sSL -o ij.jar https://repo1.maven.org/maven2/net/imagej/ij/1.54f/ij-1.54f.jar
-          mkdir -p jarroot classes
-          javac -cp ij.jar -d classes \
-            dl/proxies/*.java \
-            ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java \
-            ext/java/imagej/src/main/java/io/github/fluorescencetools/tttrlib/imagej/*.java
-          cp -r classes/* jarroot/
-          cp ext/java/imagej/src/main/resources/plugins.config jarroot/
-          cp -r dl/native jarroot/native            # native/{linux-x86-64,darwin-x86-64,darwin-aarch64,win32-x86-64}/
-          ( cd jarroot && jar cf ../tttrlib_imagej-${VER}.jar . )
-          echo "Bundled natives:"; ( cd jarroot && find native -type f )
+          echo "VER=${VER}" >> "$GITHUB_ENV"
+          cd ext/java/imagej
+          mvn -B versions:set -DnewVersion="${VER}" -DgenerateBackupPoms=false
+          mvn -B package
+          cd -
+          cp ext/java/imagej/target/tttrlib_ImageJ-${VER}.jar "tttrlib_imagej-${VER}.jar"
           ls -la tttrlib_imagej-*.jar
       # Downloadable from any qualifying CI run (Actions ▸ run ▸ Artifacts).
       - uses: actions/upload-artifact@v4
@@ -272,6 +284,43 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" tttrlib_imagej-*.jar --clobber
+      # ── Self-hosted Fiji update site on gh-pages ──────────────────────────
+      # db.xml.gz is generated by Fiji's OWN updater rather than hand-written: its
+      # per-file checksums use a Fiji-specific algorithm, and a hand-rolled file
+      # yields a site Fiji reports as corrupt. That means fetching a Fiji here,
+      # which is why this runs on releases only.
+      #
+      # The gh-pages checkout carries the existing db.xml.gz forward, so a release
+      # appends a version instead of dropping the site's history. `file:` selects
+      # the local uploader; the upload directory must be ABSOLUTE — a relative one
+      # is resolved against Fiji.app and silently writes into the install itself.
+      - name: Publish to the Fiji update site
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SITE="$PWD/gh-pages/imagej"
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          mkdir -p "$SITE"
+
+          curl -sSL -o fiji.zip https://downloads.imagej.net/fiji/latest/fiji-linux64.zip
+          unzip -q fiji.zip && rm fiji.zip
+          cp tttrlib_imagej-*.jar Fiji.app/plugins/tttrlib_imagej.jar
+
+          ( cd Fiji.app
+            ./ImageJ-linux64 --update add-update-site tttrlib \
+              "https://${GITHUB_REPOSITORY_OWNER}.github.io/tttrlib/imagej/" \
+              "file:" "$SITE/"
+            ./ImageJ-linux64 --update upload --update-site tttrlib \
+              plugins/tttrlib_imagej.jar )
+
+          cd gh-pages
+          git add -A imagej
+          git -c user.name=github-actions -c user.email=github-actions@github.com \
+            commit -m "ImageJ update site: tttrlib ${VER}" || echo "nothing to commit"
+          git push origin gh-pages
 
   # ── Quick smoke test for feature branches (no artifact builds) ────────────
 
@@ -1054,6 +1103,10 @@ jobs:
             --version "$DOCS_VERSION" \
             --label "$DOCS_LABEL" \
             --url "$DOCS_VERSION/index.html"
+          # pydata-sphinx-theme version switcher source (header "Version" dropdown)
+          python tools/make_switcher.py \
+            --versions doc/_build/pages-root/versions.json \
+            --output doc/_build/pages-root/switcher.json
       - uses: actions/upload-artifact@v4
         with:
           name: html-docs

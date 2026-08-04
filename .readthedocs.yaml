@@ -1,0 +1,39 @@
+# Read the Docs configuration for tttrlib.
+# https://docs.readthedocs.io/en/stable/config-file/v2.html
+#
+# tttrlib's documentation is built by GitHub Actions (which can compile the C++
+# extension) and published to the gh-pages branch. Read the Docs' build runners
+# are too small to compile tttrlib, so RTD does NOT build the docs here — it only
+# MIRRORS the pre-built HTML that GitHub Actions already published to gh-pages,
+# selecting the directory that matches the Read the Docs version:
+#
+#   RTD "latest"  -> gh-pages/dev       (development-branch build)
+#   RTD "stable"  -> gh-pages/stable    (latest release build)
+#   RTD "<x.y.z>" -> gh-pages/<x.y.z>   (that release's build)
+#
+# This keeps the heavy build on GitHub runners while Read the Docs hosting /
+# versioned URLs (tttrlib.readthedocs.io) keep working.
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.12"
+  commands:
+    - |
+      set -eu
+      case "${READTHEDOCS_VERSION}" in
+        latest) SUB=dev ;;
+        stable) SUB=stable ;;
+        *)      SUB="${READTHEDOCS_VERSION}" ;;
+      esac
+      echo "Mirroring gh-pages/${SUB} into the Read the Docs HTML output"
+      git clone --depth 1 --branch gh-pages --single-branch \
+        https://github.com/Fluorescence-Tools/tttrlib.git .rtd_ghpages
+      mkdir -p "${READTHEDOCS_OUTPUT}/html"
+      if [ -d ".rtd_ghpages/${SUB}" ]; then
+        cp -a ".rtd_ghpages/${SUB}/." "${READTHEDOCS_OUTPUT}/html/"
+      else
+        echo "gh-pages/${SUB} not found — falling back to gh-pages/dev"
+        cp -a ".rtd_ghpages/dev/." "${READTHEDOCS_OUTPUT}/html/"
+      fi
