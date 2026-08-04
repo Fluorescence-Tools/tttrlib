@@ -21,6 +21,7 @@ import unittest
 import numpy as np
 
 import tttrlib
+import pytest
 
 
 P_LOW, P_HIGH = 0.25, 0.75      # two static species
@@ -116,6 +117,7 @@ class TestCoincidenceManufacturesDynamics(unittest.TestCase):
         self.assertLess(rate, 1e-8)
         self.assertTrue(all(k == 2 for k in ks), ks)
 
+    @pytest.mark.slow
     def test_apparent_switching_grows_with_contamination(self):
         """Monotone in the contamination, which is what identifies the cause."""
         rates = [self._over_seeds(f)[0] for f in (0.0, 0.10, 0.50)]
@@ -204,6 +206,7 @@ class TestBrightnessEnvelopeIsHarmless(unittest.TestCase):
             best = min(best, (m.bic(), k))
         return best[1]
 
+    @pytest.mark.slow
     def test_a_huge_intensity_swing_adds_no_state(self):
         """425000x brighter at the centre than the edge, still one state."""
         narrow = lambda u: np.exp(-u ** 2 / 0.25)

@@ -25,6 +25,18 @@ pytest test/ -m "tttr or correlator" # two groups
 pytest test/ -m "not slow"           # skip the long-running ones
 ```
 
+**Skipping the slow ones.** 16 tests are ~70% of the runtime -- FCS curves
+across a diffusion-coefficient sweep, and HMM bootstrap and Gibbs convergence
+checks, all of which need a lot of simulated photons to say anything. They carry
+`@pytest.mark.slow`:
+
+```bash
+pytest test/ -m "not slow"    # 1277 of 1321 tests, ~3 min instead of ~10
+```
+
+That is the run to use while working. The full suite goes before a merge and at
+the end of a phase.
+
 **By module.** `--modules` takes the names declared in `modules/` and expands
 each to the groups that exercise it -- including through a dependency, because
 changing `core` can break anything downstream of it:

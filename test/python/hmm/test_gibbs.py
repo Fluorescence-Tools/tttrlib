@@ -24,6 +24,7 @@ import unittest
 import numpy as np
 
 import tttrlib
+import pytest
 
 
 TRUE_TRANS = [0.995, 0.005, 0.008, 0.992]
@@ -62,6 +63,7 @@ class TestTargetsThePosterior(unittest.TestCase):
         np.testing.assert_allclose(trans[1, 0], mle.trans_np[1, 0], rtol=0.15)
         np.testing.assert_allclose(obs[1, 1], mle.obs_np[1, 1], rtol=0.05)
 
+    @pytest.mark.slow
     def test_converges_from_an_em_seed_and_covers(self):
         """The workflow to actually use: fit first, then sample around the fit."""
         eng, _ = _engine()
@@ -131,6 +133,7 @@ class TestExchangeableStates(unittest.TestCase):
         for k in (1, 2):
             np.testing.assert_allclose(a[k], b[k], atol=0.03)
 
+    @pytest.mark.slow
     def test_relabelling_makes_rhat_meaningful(self):
         """Pinned because the raw statistic looks catastrophic and is not.
 
@@ -229,6 +232,7 @@ class TestParameterisedEmissionSampling(unittest.TestCase):
                              2, self.N_BINS, dt)
         return eng
 
+    @pytest.mark.slow
     def test_it_converges_where_the_free_emission_does_not(self):
         eng = self._engine()
         spec = self._spec((8.0, 0.8))          # deliberately wrong start
