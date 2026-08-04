@@ -7,8 +7,8 @@ hits it next.
 ## 1. `legacy` still holds the core cluster
 
 Out so far: `util`, `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
-`localization`. `legacy` is down from 68 sources to 53 and now holds the part
-that is genuinely tangled -- core, burst, decay, imaging, nn and hmm.
+`localization`, `core`. `legacy` is down from 68 sources to 39 and now holds
+imaging, decay, burst's separable half, nn and hmm.
 
 Two of the extracted modules are leaves of the *include* graph without being
 independent of core, and say so in `DEPENDS`: nothing includes `Pda.h` or
@@ -19,7 +19,8 @@ simulator reaches into nothing but `Random.h`, and it is `hmm` and `nn` --
 still inside `legacy` -- that include `SimDecay.h` and `SimPcgRandom.h`, so
 `legacy` declares `DEPENDS sim`.
 
-**Exit:** `core`, then `imaging`, `decay`, `burst`, `nn`, `hmm`.
+**Exit:** `imaging`, then `decay`, `burst`, `nn`, `hmm`. `core` is out, which
+is what unblocks the rest.
 `tttrlib_finalize_modules()` refuses to configure if a source ends up claimed
 twice or not at all, so each extraction is a small, checkable change.
 
