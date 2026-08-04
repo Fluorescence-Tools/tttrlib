@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// Persisting a decoded H2MM state assignment.
+// Persisting a decoded HMM state assignment.
 //
 // A decoder (Viterbi, the marginal γ draw, or FFBS) produces one state per
 // photon.  That assignment has to outlive the process, and there are two ways
@@ -19,7 +19,7 @@
 // Both are built on the same per-photon state array, and both must agree
 // photon for photon — that equivalence is the contract the tests hold them to.
 
-#include "H2MM.h"
+#include "HMM.h"
 #include "TTTRMask.h"
 
 #include <nlohmann/json.hpp>
@@ -39,7 +39,7 @@ namespace tttrlib {
 // Channel map (Path A)
 // ---------------------------------------------------------------------------
 
-std::string H2mmChannelMap::to_json() const {
+std::string HmmChannelMap::to_json() const {
     nlohmann::json j;
     j["n_streams"] = n_streams;
     j["n_states"] = n_states;
@@ -50,25 +50,25 @@ std::string H2mmChannelMap::to_json() const {
     return j.dump();
 }
 
-H2mmChannelMap H2mmChannelMap::from_json(const std::string& payload) {
+HmmChannelMap HmmChannelMap::from_json(const std::string& payload) {
     nlohmann::json j = nlohmann::json::parse(payload);
-    H2mmChannelMap m;
+    HmmChannelMap m;
     m.n_streams = j.value("n_streams", 0);
     m.n_states = j.value("n_states", 0);
-    m.max_channel = j.value("max_channel", H2MM_PTU_MAX_CHANNEL);
+    m.max_channel = j.value("max_channel", HMM_DEFAULT_MAX_CHANNEL);
     m.channels = j.value("channels", std::vector<int>{});
     m.used_channels = j.value("used_channels", std::vector<int>{});
     m.compressed_channels = j.value("compressed_channels", std::vector<int>{});
     return m;
 }
 
-H2mmChannelMap H2mmChannelMap::allocate(
+HmmChannelMap HmmChannelMap::allocate(
     const std::vector<int>& used_channels, int n_streams, int n_states, int max_channel
 ) {
     if (n_states < 1)
-        throw std::invalid_argument("H2mmChannelMap::allocate: n_states < 1");
+        throw std::invalid_argument("HmmChannelMap::allocate: n_states < 1");
     if (n_streams < 1)
-        throw std::invalid_argument("H2mmChannelMap::allocate: n_streams < 1");
+        throw std::invalid_argument("HmmChannelMap::allocate: n_streams < 1");
     const std::set<int> used(used_channels.begin(), used_channels.end());
 
     // Compress the source ids first.  A file's channels are usually sparse
@@ -86,20 +86,20 @@ H2mmChannelMap H2mmChannelMap::allocate(
         // silently truncating ids would misattribute photons to a state that
         // looks perfectly plausible downstream.
         std::string msg =
-            "H2MM::build_channel_map: " + std::to_string(n_used) +
+            "HMM::build_channel_map: " + std::to_string(n_used) +
             " source channels + " + std::to_string(n_streams) + " streams x " +
             std::to_string(n_states) + " states needs " + std::to_string(total) +
             " routing-channel ids, but only " + std::to_string(max_channel + 1) +
             " (0.." + std::to_string(max_channel) + ") are available. The target "
             "container's record field is the limit -- PTU HydraHarp T2/T3 store 6 "
-            "bits, so ids above " + std::to_string(H2MM_PTU_MAX_CHANNEL) +
+            "bits, so ids above " + std::to_string(hmm_max_channel(6)) +
             " cannot be written at all, and narrower containers (PicoHarp / "
             "SPC-130: 4 bits, SPC-600/256: 3 bits) truncate silently. "
-            "Use the state sidecar (H2MM::state_sidecar), which has no id budget.";
+            "Use the state sidecar (HMM::state_sidecar), which has no id budget.";
         throw std::runtime_error(msg);
     }
 
-    H2mmChannelMap m;
+    HmmChannelMap m;
     m.n_streams = n_streams;
     m.n_states = n_states;
     m.max_channel = max_channel;
@@ -115,7 +115,7 @@ H2mmChannelMap H2mmChannelMap::allocate(
     return m;
 }
 
-H2mmChannelMap H2MM::build_channel_map(
+HmmChannelMap HMM::build_channel_map(
     std::shared_ptr<TTTR> src, int n_states, int max_channel
 ) const {
     if (!src) throw std::invalid_argument("build_channel_map: null TTTR");
@@ -131,16 +131,16 @@ H2mmChannelMap H2MM::build_channel_map(
         for (int i = 0; i < n_chans; ++i) used.push_back(static_cast<int>(chans[i]));
         free(chans);
     }
-    return H2mmChannelMap::allocate(used, n_streams_, n_states, max_channel);
+    return HmmChannelMap::allocate(used, n_streams_, n_states, max_channel);
 }
 
-void H2mmStateSidecar::set_arrays(
+void HmmStateSidecar::set_arrays(
     unsigned char* states_in, int n_states_in,
     unsigned char* streams_in, int n_streams_in
 ) {
     if (n_states_in != n_streams_in)
         throw std::invalid_argument(
-            "H2mmStateSidecar::set_arrays: states has " + std::to_string(n_states_in) +
+            "HmmStateSidecar::set_arrays: states has " + std::to_string(n_states_in) +
             " entries but streams has " + std::to_string(n_streams_in) +
             " -- both are one entry per source photon");
     const size_t n = static_cast<size_t>(std::max(n_states_in, 0));
@@ -152,41 +152,41 @@ void H2mmStateSidecar::set_arrays(
 // Spreading a CSR-ordered decode over the source photon range
 // ---------------------------------------------------------------------------
 
-void H2MM::photon_states(
+void HMM::photon_states(
     const long long* path, int n_path,
     unsigned char** states_out, int* n_states_out
 ) const {
     if (photon_index_.empty())
         throw std::runtime_error(
-            "H2MM::photon_states: no source photon index -- load the bursts with "
+            "HMM::photon_states: no source photon index -- load the bursts with "
             "set_bursts_from_tttr / set_bursts_from_filter, not set_bursts");
     if (static_cast<long long>(n_path) != get_n_photons())
         throw std::invalid_argument(
-            "H2MM::photon_states: path length " + std::to_string(n_path) +
+            "HMM::photon_states: path length " + std::to_string(n_path) +
             " != photon count " + std::to_string(get_n_photons()));
 
     const size_t n_src = static_cast<size_t>(n_source_photons_);
     auto* out = static_cast<unsigned char*>(malloc(std::max<size_t>(n_src, 1)));
     if (!out) throw std::bad_alloc();
-    std::fill(out, out + n_src, H2MM_UNASSIGNED);
+    std::fill(out, out + n_src, HMM_UNASSIGNED);
     for (int i = 0; i < n_path; ++i) {
         const long long st = path[i];
-        if (st < 0 || st >= H2MM_UNASSIGNED) continue;
+        if (st < 0 || st >= HMM_UNASSIGNED) continue;
         out[photon_index_[i]] = static_cast<unsigned char>(st);
     }
     *states_out = out;
     *n_states_out = static_cast<int>(n_src);
 }
 
-void H2MM::photon_stream_index(unsigned char** streams_out, int* n_streams_out) const {
+void HMM::photon_stream_index(unsigned char** streams_out, int* n_streams_out) const {
     if (photon_index_.empty())
         throw std::runtime_error(
-            "H2MM::photon_stream_index: no source photon index -- load the bursts "
+            "HMM::photon_stream_index: no source photon index -- load the bursts "
             "with set_bursts_from_tttr / set_bursts_from_filter, not set_bursts");
     const size_t n_src = static_cast<size_t>(n_source_photons_);
     auto* out = static_cast<unsigned char*>(malloc(std::max<size_t>(n_src, 1)));
     if (!out) throw std::bad_alloc();
-    std::fill(out, out + n_src, H2MM_UNASSIGNED);
+    std::fill(out, out + n_src, HMM_UNASSIGNED);
     for (size_t i = 0; i < photon_index_.size(); ++i)
         out[photon_index_[i]] = static_cast<unsigned char>(streams_[i]);
     *streams_out = out;
@@ -197,28 +197,28 @@ void H2MM::photon_stream_index(unsigned char** streams_out, int* n_streams_out) 
 // Path A — state-encoded routing channels
 // ---------------------------------------------------------------------------
 
-std::shared_ptr<TTTR> H2MM::split_routing_channels(
+std::shared_ptr<TTTR> HMM::split_routing_channels(
     std::shared_ptr<TTTR> src,
     const long long* path, int n_path,
-    const H2mmChannelMap& map
+    const HmmChannelMap& map
 ) const {
     if (!src) throw std::invalid_argument("split_routing_channels: null TTTR");
     if (photon_index_.empty())
         throw std::runtime_error(
-            "H2MM::split_routing_channels: no source photon index -- load the "
+            "HMM::split_routing_channels: no source photon index -- load the "
             "bursts with set_bursts_from_tttr / set_bursts_from_filter");
     if (static_cast<long long>(src->size()) != n_source_photons_)
         throw std::invalid_argument(
-            "H2MM::split_routing_channels: TTTR has " + std::to_string(src->size()) +
+            "HMM::split_routing_channels: TTTR has " + std::to_string(src->size()) +
             " photons but the bursts were loaded from a file with " +
             std::to_string(n_source_photons_));
     if (static_cast<long long>(n_path) != get_n_photons())
         throw std::invalid_argument(
-            "H2MM::split_routing_channels: path length " + std::to_string(n_path) +
+            "HMM::split_routing_channels: path length " + std::to_string(n_path) +
             " != photon count " + std::to_string(get_n_photons()));
     if (map.n_streams != n_streams_)
         throw std::invalid_argument(
-            "H2MM::split_routing_channels: channel map has " +
+            "HMM::split_routing_channels: channel map has " +
             std::to_string(map.n_streams) + " streams, engine has " +
             std::to_string(n_streams_));
 
@@ -243,7 +243,7 @@ std::shared_ptr<TTTR> H2MM::split_routing_channels(
         const int ch = compress[static_cast<unsigned char>(orig)];
         if (ch < 0)
             throw std::runtime_error(
-                "H2MM::split_routing_channels: photon " + std::to_string(i) +
+                "HMM::split_routing_channels: photon " + std::to_string(i) +
                 " is on routing channel " + std::to_string(static_cast<int>(orig)) +
                 ", which the channel map does not know -- the map was built from a "
                 "different file");
@@ -266,14 +266,14 @@ std::shared_ptr<TTTR> H2MM::split_routing_channels(
 // Path B — the msgpack state sidecar
 // ---------------------------------------------------------------------------
 
-H2mmStateSidecar H2MM::state_sidecar(
+HmmStateSidecar HMM::state_sidecar(
     const long long* path, int n_path,
-    const H2mmModel& model,
+    const HmmModel& model,
     const std::string& decoder,
     long long seed,
-    const H2mmChannelMap* map
+    const HmmChannelMap* map
 ) const {
-    H2mmStateSidecar sc;
+    HmmStateSidecar sc;
     unsigned char* st = nullptr; int n_st = 0;
     unsigned char* sr = nullptr; int n_sr = 0;
     photon_states(path, n_path, &st, &n_st);
@@ -292,7 +292,7 @@ H2mmStateSidecar H2MM::state_sidecar(
     return sc;
 }
 
-long long H2mmStateSidecar::count_state(int state) const {
+long long HmmStateSidecar::count_state(int state) const {
     if (state < 0 || state >= 255) return 0;
     const auto want = static_cast<uint8_t>(state);
     long long c = 0;
@@ -300,7 +300,7 @@ long long H2mmStateSidecar::count_state(int state) const {
     return c;
 }
 
-std::shared_ptr<TTTRMask> H2mmStateSidecar::mask_for_state(int state) const {
+std::shared_ptr<TTTRMask> HmmStateSidecar::mask_for_state(int state) const {
     auto m = std::make_shared<TTTRMask>();
     const size_t n = states.size();
     // TTTRMask bits mark *excluded* events, so everything outside the state is
@@ -334,15 +334,15 @@ std::vector<uint8_t> from_binary(const nlohmann::json& j) {
 
 }  // namespace
 
-void H2mmStateSidecar::write(const std::string& filename) const {
+void HmmStateSidecar::write(const std::string& filename) const {
     nlohmann::json j;
-    j["format"] = "tttrlib.h2mm.states";
+    j["format"] = "tttrlib.hmm.states";
     j["version"] = 1;
     j["n_states"] = n_states;
     j["n_streams"] = n_streams;
     j["decoder"] = decoder;
     j["seed"] = seed;
-    j["unassigned"] = static_cast<int>(H2MM_UNASSIGNED);
+    j["unassigned"] = static_cast<int>(HMM_UNASSIGNED);
     j["n_photons"] = static_cast<long long>(states.size());
     j["states"] = to_binary(states);
     j["streams"] = to_binary(streams);
@@ -368,25 +368,25 @@ void H2mmStateSidecar::write(const std::string& filename) const {
     const std::vector<uint8_t> buf = nlohmann::json::to_msgpack(j);
     std::ofstream fp(filename, std::ios::binary);
     if (!fp) throw std::runtime_error(
-        "H2mmStateSidecar::write: cannot open " + filename);
+        "HmmStateSidecar::write: cannot open " + filename);
     fp.write(reinterpret_cast<const char*>(buf.data()),
              static_cast<std::streamsize>(buf.size()));
     if (!fp) throw std::runtime_error(
-        "H2mmStateSidecar::write: write failed for " + filename);
+        "HmmStateSidecar::write: write failed for " + filename);
 }
 
-H2mmStateSidecar H2mmStateSidecar::read(const std::string& filename) {
+HmmStateSidecar HmmStateSidecar::read(const std::string& filename) {
     std::ifstream fp(filename, std::ios::binary);
     if (!fp) throw std::runtime_error(
-        "H2mmStateSidecar::read: cannot open " + filename);
+        "HmmStateSidecar::read: cannot open " + filename);
     std::vector<uint8_t> buf((std::istreambuf_iterator<char>(fp)),
                              std::istreambuf_iterator<char>());
     nlohmann::json j = nlohmann::json::from_msgpack(buf);
-    if (j.value("format", std::string()) != "tttrlib.h2mm.states")
+    if (j.value("format", std::string()) != "tttrlib.hmm.states")
         throw std::runtime_error(
-            "H2mmStateSidecar::read: " + filename + " is not an H2MM state sidecar");
+            "HmmStateSidecar::read: " + filename + " is not an HMM state sidecar");
 
-    H2mmStateSidecar sc;
+    HmmStateSidecar sc;
     sc.n_states = j.value("n_states", 0);
     sc.n_streams = j.value("n_streams", 0);
     sc.decoder = j.value("decoder", std::string());
@@ -407,7 +407,7 @@ H2mmStateSidecar H2mmStateSidecar::read(const std::string& filename) {
         const auto& c = j["channel_map"];
         sc.channel_map.n_streams = c.value("n_streams", 0);
         sc.channel_map.n_states = c.value("n_states", 0);
-        sc.channel_map.max_channel = c.value("max_channel", H2MM_PTU_MAX_CHANNEL);
+        sc.channel_map.max_channel = c.value("max_channel", HMM_DEFAULT_MAX_CHANNEL);
         sc.channel_map.channels = c.value("channels", std::vector<int>{});
         sc.channel_map.used_channels = c.value("used_channels", std::vector<int>{});
         sc.channel_map.compressed_channels =

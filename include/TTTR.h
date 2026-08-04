@@ -671,7 +671,7 @@ public:
      * used_routing_channels with the routing channel numbers that are in use.
      *
      * Public because `set_routing_channel_at` is: rewriting channels (as the
-     * H2MM state split does) invalidates the cache that `get_used_routing_channels`
+     * HMM state split does) invalidates the cache that `get_used_routing_channels`
      * reads, and without a way to refresh it that accessor silently returns the
      * channels the file had before the edit.
      */
@@ -1149,7 +1149,7 @@ public:
       * \brief Replaces the routing channel of every event.
       *
       * The bulk companion to `set_routing_channel_at`: relabelling a whole
-      * measurement (as an H2MM state split does) through the per-event setter
+      * measurement (as an HMM state split does) through the per-event setter
       * costs a Python-level call per photon, which at photon scale is the
       * dominant cost of the operation. `used_routing_channels` is refreshed, so
       * `get_used_routing_channels` cannot go stale behind this.

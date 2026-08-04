@@ -28,7 +28,22 @@ public:
     SimDecay() = default;
 
     bool empty() const { return prob_.empty(); }
-    int n_bins() const { return int(prob_.size()); }
+    int n_bins() const { return int(pdf_.size()); }
+
+    /*!
+     * \brief Normalised probability of micro-time bin `bin` (0 outside the axis).
+     *
+     * The alias table samples in O(1) but cannot be read back as a density, so
+     * the normalised pattern is kept beside it. That is what makes one
+     * `SimDecay` both *draw* a micro-time and *score* one, which is the point:
+     * a simulator and a likelihood that share an object cannot drift apart the
+     * way two implementations of the same decay silently do.
+     */
+    double pdf(int bin) const {
+        return (bin < 0 || bin >= int(pdf_.size())) ? 0.0 : pdf_[bin];
+    }
+    /// The whole normalised density, summing to 1 (empty when the pattern was).
+    const std::vector<double>& pdf() const { return pdf_; }
 
     // --- pattern builders (static helpers operate on plain arrays) --------------
 
@@ -115,7 +130,9 @@ private:
         size_t n = w.size();
         double sum = 0.0;
         for (double x : w) if (x > 0.0) sum += x;
-        if (n == 0 || sum <= 0.0) { prob_.clear(); alias_.clear(); return; }
+        if (n == 0 || sum <= 0.0) { prob_.clear(); alias_.clear(); pdf_.clear(); return; }
+        pdf_.assign(n, 0.0);
+        for (size_t i = 0; i < n; ++i) pdf_[i] = (w[i] > 0.0 ? w[i] : 0.0) / sum;
         prob_.assign(n, 0.0); alias_.assign(n, 0);
         std::vector<double> scaled(n);
         std::vector<uint32_t> small, large;
@@ -136,6 +153,7 @@ private:
 
     std::vector<double> prob_;
     std::vector<uint32_t> alias_;
+    std::vector<double> pdf_;   ///< normalised density, for scoring
 };
 
 } // namespace tttrlib

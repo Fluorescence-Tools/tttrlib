@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef TTTRLIB_H2MMSURROGATE_H
-#define TTTRLIB_H2MMSURROGATE_H
+#ifndef TTTRLIB_HMMSURROGATE_H
+#define TTTRLIB_HMMSURROGATE_H
 
 #include <string>
 #include <vector>
 
-#include "H2MM.h"
+#include "HMM.h"
 #include "NeuralNet.h"
 
 namespace tttrlib {
@@ -14,7 +14,7 @@ namespace tttrlib {
  * @brief Amortised ("surrogate") neural estimator for H2MM.
  *
  * Instead of iterating Baum-Welch EM to the maximum-likelihood estimate, a
- * network is trained **once** on data drawn from the H2MM generative model and
+ * network is trained **once** on data drawn from the HMM generative model and
  * then estimates the parameters of a real dataset in a **single forward pass**
  * — the simulation-based / amortised-inference idea.
  *
@@ -35,7 +35,7 @@ namespace tttrlib {
  * Models interoperate with the scikit-learn implementation in ChiSurf through a
  * shared JSON format.
  */
-class H2mmSurrogate {
+class HmmSurrogate {
 public:
     /// Feature-layout version; bumped when :func:`extract_features` changes so a
     /// stale cached model is rejected rather than silently mis-fed.
@@ -43,15 +43,15 @@ public:
     /// Length of the vector produced by :func:`extract_features`.
     static const int N_FEATURES = 24;
 
-    H2mmSurrogate() = default;
-    H2mmSurrogate(NeuralNet net, int n_states, int n_streams,
+    HmmSurrogate() = default;
+    HmmSurrogate(NeuralNet net, int n_states, int n_streams,
                   int features_version = FEATURES_VERSION);
 
     // --- serialisation ----------------------------------------------------
-    /// Parse a ``tttrlib.h2mm_surrogate`` JSON document.
-    static H2mmSurrogate from_json_string(const std::string& json);
-    /// Read a ``tttrlib.h2mm_surrogate`` JSON file.
-    static H2mmSurrogate from_json_file(const std::string& path);
+    /// Parse a ``tttrlib.hmm_surrogate`` JSON document.
+    static HmmSurrogate from_json_string(const std::string& json);
+    /// Read a ``tttrlib.hmm_surrogate`` JSON file.
+    static HmmSurrogate from_json_file(const std::string& path);
     /// Serialise to JSON; ``indent < 0`` emits the compact form.
     std::string to_json_string(int indent = -1) const;
     /// Write the JSON document to ``path``.
@@ -72,13 +72,13 @@ public:
      * interpolation on the sorted values, and the @f$\Delta t@f$ spread is a
      * population standard deviation.
      */
-    static std::vector<double> extract_features(const H2MM& data);
+    static std::vector<double> extract_features(const HMM& data);
 
     /**
-     * @brief Estimate an H2MM model from ``data`` in a single forward pass.
+     * @brief Estimate an HMM model from ``data`` in a single forward pass.
      * @throws std::runtime_error if ``data`` has a different stream count.
      */
-    H2mmModel predict(const H2MM& data) const;
+    HmmModel predict(const HMM& data) const;
 
     // --- training ---------------------------------------------------------
     /**
@@ -97,7 +97,7 @@ public:
      * @param options Network hyper-parameters.
      * @param seed Seed for the simulation and the network initialisation.
      */
-    static H2mmSurrogate train(
+    static HmmSurrogate train(
         int n_states, int n_streams,
         int n_samples = 2500,
         int n_bursts = 150,
@@ -125,9 +125,9 @@ public:
     static int n_targets(int n_states, int n_streams);
 
     /// Flatten a model to the regression target vector (canonical state order).
-    static std::vector<double> encode(const H2mmModel& model);
+    static std::vector<double> encode(const HmmModel& model);
     /// Rebuild a valid model from a (possibly noisy) target vector.
-    static H2mmModel decode(const std::vector<double>& vec, int n_states, int n_streams);
+    static HmmModel decode(const std::vector<double>& vec, int n_states, int n_streams);
 
     // --- introspection ----------------------------------------------------
     const NeuralNet& get_net() const { return net_; }
@@ -144,4 +144,4 @@ private:
 
 } // namespace tttrlib
 
-#endif // TTTRLIB_H2MMSURROGATE_H
+#endif // TTTRLIB_HMMSURROGATE_H

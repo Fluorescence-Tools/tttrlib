@@ -86,7 +86,7 @@ struct TrainOptions {
  * Deliberately domain-agnostic: it knows nothing about photons, H2MM, or any
  * other tttrlib concept, so several surrogate models can share it.  A surrogate
  * supplies only its own feature extractor and output decoder — see
- * :class:`H2mmSurrogate` for the first consumer.
+ * :class:`HmmSurrogate` for the first consumer.
  *
  * Both directions are supported.  :func:`train` fits weights with Adam and
  * explicit backpropagation (four transposed GEMMs for a four-layer net —

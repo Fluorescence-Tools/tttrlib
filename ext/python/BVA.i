@@ -9,7 +9,7 @@
 
 // Burst boundaries arrive as a NumPy int array (Python) / numeric vector (R) /
 // long[] (Java) — one buffer conversion, no per-element list boxing. Also used
-// by H2MM.i (included right after this file).
+// by HMM.i (included right after this file).
 %apply (long long* IN_ARRAY2, int DIM1, int DIM2) {(long long* bursts, int n_bursts, int n_cols)};
 
 // Release the GIL around the burst loop (embarrassingly parallel, OpenMP).

@@ -3,8 +3,8 @@
 #include "TTTRMask.h"
 %}
 
-// Masks are handed out as shared_ptr by the H2MM state sidecar
-// (H2mmStateSidecar::mask_for_state), so the type has to be shared_ptr-aware.
+// Masks are handed out as shared_ptr by the HMM state sidecar
+// (HmmStateSidecar::mask_for_state), so the type has to be shared_ptr-aware.
 %shared_ptr(TTTRMask)
 
 // Hide the std::vector<bool> version (slow in Python)

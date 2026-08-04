@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "H2MM.h"
+#include "HMM.h"
 #include "Channel.h"
 #include "BurstFilter.h"
 
@@ -31,7 +31,7 @@ int worker_count(int n_items) {
 
 }  // namespace
 
-namespace h2mm_detail {
+namespace hmm_detail {
 
 /**
  * @brief Persistent fork-join thread pool.
@@ -118,7 +118,7 @@ private:
     bool stop_ = false;
 };
 
-}  // namespace h2mm_detail
+}  // namespace hmm_detail
 
 namespace {
 /// Fallback fork-join over one-shot std::threads (used off the hot EM path,
@@ -284,7 +284,7 @@ void pair_pow(
 template <class R>
 void fill_caches_t(
     const std::vector<int64_t>& unique_dt, const double* A, int n,
-    R* pow_cache, R* rho_cache, h2mm_detail::ForkJoinPool* pool
+    R* pow_cache, R* rho_cache, hmm_detail::ForkJoinPool* pool
 ) {
     const int n2 = n * n, n4 = n2 * n2;
     const int n_slots = static_cast<int>(unique_dt.size());
@@ -435,7 +435,7 @@ double estep_t(
     const std::vector<double>& prior, const std::vector<double>& obs,
     const R* pow_cache, const R* rho_cache, int n, int p, int n_slots,
     std::vector<double>& xi_acc, std::vector<double>& gamma_obs_acc,
-    std::vector<double>& prior_acc, bool have_dt, h2mm_detail::ForkJoinPool* pool
+    std::vector<double>& prior_acc, bool have_dt, hmm_detail::ForkJoinPool* pool
 ) {
     const int n2 = n * n, n4 = n2 * n2;
     const int nthreads = pool ? pool->size() : 1;
@@ -551,8 +551,8 @@ double estep_t(
 
 }  // namespace
 
-void H2mmModel::normalize() {
-    int n = n_states(), p = n_streams();
+void HmmModel::normalize() {
+    int n = n_states(), p = n_symbols();
     if (n <= 0) return;
     row_normalize(prior, 1, n);
     row_normalize(trans, n, n);
@@ -563,7 +563,7 @@ void H2mmModel::normalize() {
 // Data preparation (CSR layout + unique-Δt table)
 // ---------------------------------------------------------------------------
 
-void H2MM::set_bursts(
+void HMM::set_bursts(
     const std::vector<std::vector<long long>>& times,
     const std::vector<std::vector<int>>& streams,
     int n_streams
@@ -571,19 +571,43 @@ void H2MM::set_bursts(
     set_bursts_impl(times, streams, n_streams, nullptr, 0);
 }
 
-void H2MM::set_bursts_impl(
+void HMM::set_bursts_micro(
+    const std::vector<std::vector<long long>>& times,
+    const std::vector<std::vector<int>>& streams,
+    const std::vector<std::vector<int>>& micro_bins,
+    int n_streams,
+    int n_micro_bins,
+    double bin_width_ns
+) {
+    if (micro_bins.size() != times.size())
+        throw std::invalid_argument(
+            "set_bursts_micro: micro_bins must have the same burst count as times");
+    set_bursts_impl(times, streams, n_streams, nullptr, 0,
+                    &micro_bins, n_micro_bins, bin_width_ns);
+}
+
+void HMM::set_bursts_impl(
     const std::vector<std::vector<long long>>& times,
     const std::vector<std::vector<int>>& streams,
     int n_streams,
     const std::vector<std::vector<int64_t>>* indices,
-    long long n_source_photons
+    long long n_source_photons,
+    const std::vector<std::vector<int>>* micro_bins,
+    int n_micro_bins,
+    double bin_width_ns
 ) {
     if (times.size() != streams.size())
         throw std::invalid_argument("times and streams must have equal burst count");
     if (indices && indices->size() != times.size())
         throw std::invalid_argument("indices must have the same burst count as times");
+    if (n_micro_bins < 1)
+        throw std::invalid_argument("n_micro_bins must be >= 1");
+    if (micro_bins && micro_bins->size() != times.size())
+        throw std::invalid_argument("micro_bins must have the same burst count as times");
 
     n_streams_ = n_streams;
+    n_micro_bins_ = n_micro_bins;
+    micro_bin_width_ns_ = bin_width_ns;
     n_source_photons_ = n_source_photons;
     streams_.clear();
     gap_slot_.clear();
@@ -595,15 +619,19 @@ void H2MM::set_bursts_impl(
     std::vector<const std::vector<long long>*> kept_times;
     std::vector<const std::vector<int>*> kept_streams;
     std::vector<const std::vector<int64_t>*> kept_indices;
+    std::vector<const std::vector<int>*> kept_micro;
     for (size_t b = 0; b < times.size(); ++b) {
         if (times[b].size() != streams[b].size())
             throw std::invalid_argument("each burst needs equal-length times and streams");
         if (indices && (*indices)[b].size() != times[b].size())
             throw std::invalid_argument("each burst needs as many indices as times");
+        if (micro_bins && (*micro_bins)[b].size() != times[b].size())
+            throw std::invalid_argument("each burst needs as many micro bins as times");
         if (times[b].empty()) continue;
         kept_times.push_back(&times[b]);
         kept_streams.push_back(&streams[b]);
         if (indices) kept_indices.push_back(&(*indices)[b]);
+        if (micro_bins) kept_micro.push_back(&(*micro_bins)[b]);
     }
 
     // Total photons is known from the kept bursts; reserve once so the flat CSR
@@ -617,7 +645,21 @@ void H2MM::set_bursts_impl(
     if (indices) photon_index_.reserve(total_photons);
     for (size_t b = 0; b < kept_times.size(); ++b) {
         const auto& s = *kept_streams[b];
-        for (int v : s) streams_.push_back(static_cast<int32_t>(v));
+        if (micro_bins) {
+            // The product symbol.  Bins are clamped rather than rejected: a
+            // photon just past the end of the axis is a real photon, and
+            // dropping it would thin the stream a fit reads as a longer gap.
+            const auto& m = *kept_micro[b];
+            for (size_t k = 0; k < s.size(); ++k) {
+                int bin = m[k];
+                if (bin < 0) bin = 0;
+                if (bin >= n_micro_bins) bin = n_micro_bins - 1;
+                streams_.push_back(
+                    static_cast<int32_t>(s[k] * n_micro_bins + bin));
+            }
+        } else {
+            for (int v : s) streams_.push_back(static_cast<int32_t>(v));
+        }
         if (indices) {
             const auto& ix = *kept_indices[b];
             photon_index_.insert(photon_index_.end(), ix.begin(), ix.end());
@@ -658,22 +700,57 @@ void H2MM::set_bursts_impl(
     }
 }
 
-std::vector<long long> H2MM::get_unique_dt() const {
+std::vector<long long> HMM::get_unique_dt() const {
     return std::vector<long long>(unique_dt_.begin(), unique_dt_.end());
 }
 
-void H2MM::set_bursts_from_tttr(
+void HMM::set_bursts_from_tttr(
     std::shared_ptr<TTTR> tttr,
     long long* bursts, int n_bursts, int n_cols,
     const std::vector<std::shared_ptr<Channel>>& stream_channels,
     int min_photons,
-    long long time_scale
+    long long time_scale,
+    int n_micro_bins
 ) {
     if (!tttr) throw std::invalid_argument("set_bursts_from_tttr: null TTTR");
     if (stream_channels.empty())
         throw std::invalid_argument("set_bursts_from_tttr: no stream definitions");
+    if (n_micro_bins < 1)
+        throw std::invalid_argument("set_bursts_from_tttr: n_micro_bins must be >= 1");
     const long long ts = std::max<long long>(1, time_scale);
     const int64_t n_total = static_cast<int64_t>(tttr->size());
+
+    // Micro-time axis: bin the raw TAC channel over the file's full range, so
+    // the bins are a coarsening of the instrument's own grid rather than of
+    // whatever window the stream Channels happen to select.  Two streams with
+    // different micro-time windows then share one axis, which is what lets a
+    // single decay be scored across them.
+    //
+    // Three sources, in order of how much they are trusted.  The *effective*
+    // channel count is best -- it stops at one laser period, and TAC channels
+    // past that are empty, so binning over them would waste most of the axis on
+    // nothing.  Failing that the header's total, and failing *that* the data
+    // themselves: a synthetic or header-stripped file reports 1 effective
+    // channel, and taking that literally would put every photon in the last bin
+    // -- a silent, total loss of the micro-time information, which is precisely
+    // what this argument was asked for.
+    TTTRHeader* hdr = tttr->get_header();
+    int n_tac = 0;
+    double tac_res = hdr ? hdr->get_micro_time_resolution() : 0.0;
+    if (n_micro_bins > 1) {
+        n_tac = static_cast<int>(tttr->get_number_of_micro_time_channels());
+        if (n_tac <= 1 && hdr)
+            n_tac = static_cast<int>(hdr->get_number_of_micro_time_channels());
+        if (n_tac <= 1) {
+            int mx = 0;
+            for (int64_t i = 0; i < n_total; ++i)
+                mx = std::max(mx, static_cast<int>(tttr->get_micro_time_at(i)));
+            n_tac = mx + 1;
+        }
+        if (n_tac < 1) n_tac = 1;
+    }
+    const double bin_width_ns = (n_micro_bins > 1 && tac_res > 0.0)
+        ? tac_res * 1e9 * double(n_tac) / double(n_micro_bins) : 0.0;
 
     // Pre-extract each stream's (routing_channel, mt_start, mt_stop) components.
     std::vector<std::vector<std::tuple<int, int, int>>> comps(stream_channels.size());
@@ -696,6 +773,7 @@ void H2MM::set_bursts_from_tttr(
     // Index in the source file of every photon kept, so a decoded state can be
     // written back to the right record / mask bit later.
     std::vector<std::vector<int64_t>> idxs;
+    std::vector<std::vector<int>> micro;   // empty unless n_micro_bins > 1
     // bursts is an (n_bursts, 2) [start, stop] array (row-major).
     const size_t n_pairs = (bursts == nullptr || n_bursts < 1 || n_cols != 2)
         ? 0 : static_cast<size_t>(n_bursts);
@@ -706,6 +784,7 @@ void H2MM::set_bursts_from_tttr(
         std::vector<long long> bt;
         std::vector<int> bs;
         std::vector<int64_t> bi;
+        std::vector<int> bm;
         long long last_t = std::numeric_limits<long long>::min();
         for (int64_t idx = s; idx <= e; ++idx) {
             const int ch = static_cast<int>(tttr->get_routing_channel_at(idx));
@@ -718,22 +797,33 @@ void H2MM::set_bursts_from_tttr(
             bt.push_back(t);
             bs.push_back(stream);
             bi.push_back(idx);
+            if (n_micro_bins > 1) {
+                int bin = static_cast<int>(
+                    (static_cast<int64_t>(mt) * n_micro_bins) / n_tac);
+                if (bin < 0) bin = 0;
+                if (bin >= n_micro_bins) bin = n_micro_bins - 1;
+                bm.push_back(bin);
+            }
         }
         if (static_cast<int>(bt.size()) >= min_photons) {
             times.push_back(std::move(bt));
             strms.push_back(std::move(bs));
             idxs.push_back(std::move(bi));
+            if (n_micro_bins > 1) micro.push_back(std::move(bm));
         }
     }
     set_bursts_impl(times, strms, static_cast<int>(stream_channels.size()),
-                    &idxs, static_cast<long long>(n_total));
+                    &idxs, static_cast<long long>(n_total),
+                    n_micro_bins > 1 ? &micro : nullptr, n_micro_bins,
+                    bin_width_ns);
 }
 
-void H2MM::set_bursts_from_filter(
+void HMM::set_bursts_from_filter(
     std::shared_ptr<BurstFilter> burst_filter,
     const std::vector<std::shared_ptr<Channel>>& stream_channels,
     int min_photons,
-    long long time_scale
+    long long time_scale,
+    int n_micro_bins
 ) {
     if (!burst_filter) throw std::invalid_argument("set_bursts_from_filter: null BurstFilter");
     // get_burst_indices() is vector<int64_t>; on LP64 Linux that is a distinct
@@ -742,23 +832,23 @@ void H2MM::set_bursts_from_filter(
                              burst_filter->get_burst_indices().end());
     set_bursts_from_tttr(burst_filter->get_tttr(),
                          b.data(), static_cast<int>(b.size() / 2), 2,
-                         stream_channels, min_photons, time_scale);
+                         stream_channels, min_photons, time_scale, n_micro_bins);
 }
 
 // ---------------------------------------------------------------------------
 // Caches
 // ---------------------------------------------------------------------------
 
-void H2MM::fill_caches(
+void HMM::fill_caches(
     const std::vector<double>& A, int n,
     std::vector<double>& pow_cache, std::vector<double>& rho_cache,
-    h2mm_detail::ForkJoinPool* pool
+    hmm_detail::ForkJoinPool* pool
 ) const {
     fill_caches_t<double>(unique_dt_, A.data(), n,
                           pow_cache.data(), rho_cache.data(), pool);
 }
 
-void H2MM::fill_pow_cache(
+void HMM::fill_pow_cache(
     const std::vector<double>& A, int n, std::vector<double>& pow_cache
 ) const {
     const int n2 = n * n;
@@ -776,7 +866,7 @@ void H2MM::fill_pow_cache(
 // E-step: scaled forward-backward + Baum-Welch accumulation
 // ---------------------------------------------------------------------------
 
-double H2MM::estep(
+double HMM::estep(
     const std::vector<double>& prior,
     const std::vector<double>& obs,
     const std::vector<double>& pow_cache,
@@ -785,7 +875,7 @@ double H2MM::estep(
     std::vector<double>& xi_acc,
     std::vector<double>& gamma_obs_acc,
     std::vector<double>& prior_acc,
-    h2mm_detail::ForkJoinPool* pool
+    hmm_detail::ForkJoinPool* pool
 ) const {
     const int n_slots = std::max<int>(1, static_cast<int>(unique_dt_.size()));
     return estep_t<double>(
@@ -850,18 +940,35 @@ std::vector<double> project(
 
 }  // namespace
 
-H2mmModel H2MM::optimize(
-    const H2mmModel& init,
+HmmModel HMM::optimize(
+    const HmmModel& init,
     int max_iter, double tol, double min_trans, bool accelerate,
-    bool single_precision
+    bool single_precision, const HmmRestraints* restraints,
+    const HmmConstraints* constraints, HmmEmissionSpec* emission
 ) {
     const int n = init.n_states();
-    const int p = n_streams_;
+    const int p = get_n_symbols();
+    // SQUAREM extrapolates in the flattened (prior, trans, obs) space, which a
+    // parameterised emission is not free to move in -- `obs` there is a
+    // function of a handful of decay parameters, so an extrapolated table need
+    // not be reachable at all.  Plain EM instead; it converges in a few maps
+    // here anyway, because there is so little left to fit.
+    if (emission) accelerate = false;
     const int n2 = n * n;
     const int n4 = n2 * n2;
     const int n_dt = static_cast<int>(unique_dt_.size());
     const int n_slots = std::max(n_dt, 1);
     const long long n_phot = get_n_photons();
+
+    // The emission table has to span the alphabet the data were loaded on --
+    // otherwise every read past its end is out of bounds, and a stream-only
+    // model handed to a micro-time engine is exactly that mistake.
+    if (n > 0 && init.n_symbols() != p)
+        throw std::invalid_argument(
+            "HMM::optimize: model has " + std::to_string(init.n_symbols()) +
+            " emission columns but the data span " + std::to_string(p) +
+            " symbols (" + std::to_string(n_streams_) + " streams x " +
+            std::to_string(n_micro_bins_) + " micro-time bins)");
 
     // float32 round-off swamps a tight logL threshold, so raise the floor.
     if (single_precision) tol = std::max(tol, 1e-3);
@@ -886,7 +993,7 @@ H2mmModel H2MM::optimize(
     }
 
     // Persistent worker pool reused across every EM map (no per-map thread spawn).
-    h2mm_detail::ForkJoinPool pool(worker_count(get_n_bursts()));
+    hmm_detail::ForkJoinPool pool(worker_count(get_n_bursts()));
 
     // One EM map: caches from trans_, forward-backward, M-step. Returns logL(input).
     auto em_step = [&](const std::vector<double>& prior_,
@@ -918,58 +1025,115 @@ H2mmModel H2MM::optimize(
         std::vector<double> new_prior(n), new_trans = xi_acc, new_obs = gamma_obs_acc;
         const int n_bursts = std::max(1, get_n_bursts());
         for (int i = 0; i < n; ++i) new_prior[i] = prior_acc[i] / n_bursts;
+        // Order matters: restrain (add pseudo-counts), then normalise, then
+        // constrain.  Imposing before normalising would rescale a pinned value.
+        if (restraints) {
+            restraints->add_pseudocounts(new_prior, restraints->alpha_prior());
+            restraints->add_pseudocounts(new_trans, restraints->alpha_trans());
+            // Not on `obs` under a parameterised emission: the M-step there
+            // maximises over decay parameters from the raw counts, so
+            // pseudo-counts added here would simply be discarded below.  A
+            // prior on a *lifetime* belongs on the lifetime, not on the table
+            // the lifetime generates.
+            if (!emission)
+                restraints->add_pseudocounts(new_obs, restraints->alpha_obs());
+        }
         row_normalize(new_prior, 1, n);
         row_normalize(new_trans, n, n);
-        row_normalize(new_obs, n, p);
+        if (emission) {
+            // Parameterised emission: re-fit the decay parameters from the raw
+            // counts instead of freeing every column.  Restraints and
+            // constraints on `obs` do not apply -- the family *is* the
+            // constraint, and a far stronger one: no lifetime spectrum can put
+            // an exact zero in the interior of a decay, which is the degenerate
+            // solution a free M-step can reach and never leave.
+            new_obs = emission->fit_counts(gamma_obs_acc);
+        } else {
+            row_normalize(new_obs, n, p);
+        }
+        if (constraints) {
+            HmmConstraints::impose(new_prior, 1, n, constraints->fixed_prior());
+            HmmConstraints::impose(new_trans, n, n, constraints->fixed_trans());
+            if (!emission)
+                HmmConstraints::impose(new_obs, n, p, constraints->fixed_obs());
+        }
         if (min_trans > 0.0) {
             for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j)
                     if (i != j && new_trans[i * n + j] < min_trans)
                         new_trans[i * n + j] = min_trans;
+            // Unconditional, exactly as the unconstrained path has always done:
+            // skipping it when nothing was clamped is arithmetically harmless
+            // but changes the last bit, and bit-identity with plain EM is the
+            // property that makes sharing one loop safe.
             row_normalize(new_trans, n, n);
+            // renormalising would otherwise perturb a pinned entry
+            if (constraints)
+                HmmConstraints::impose(new_trans, n, n, constraints->fixed_trans());
         }
         return EMResult{std::move(new_prior), std::move(new_trans), std::move(new_obs), ll};
     };
 
+    // Under a prior the EM fixed point belongs to the *penalised* map, so every
+    // stopping and accept test below compares logL + log p, not logL.  With no
+    // constraints the penalty is identically zero and this is the classic loop.
+    auto penalty = [&](const std::vector<double>& pr, const std::vector<double>& tr,
+                       const std::vector<double>& ob) -> double {
+        return restraints ? restraints->log_prior(pr, tr, ob) : 0.0;
+    };
+
     double last_ll = -std::numeric_limits<double>::infinity();
+    // Tracked beside last_ll rather than recomputed at the end, so both always
+    // describe the *same* model: EM's reported loglik is that of the iterate
+    // before the final M-step, and a penalty evaluated on the final parameters
+    // would silently pair a likelihood and a prior from different iterates.
+    double last_obj = -std::numeric_limits<double>::infinity();
     int it = 0;
     bool converged = false;
 
     if (!accelerate) {
         // ---- plain Baum-Welch ----
-        double prev_ll = -std::numeric_limits<double>::infinity();
+        double prev_obj = -std::numeric_limits<double>::infinity();
         for (it = 1; it <= max_iter; ++it) {
+            const double lp = penalty(prior, trans, obs);   // of the input model
             EMResult r = em_step(prior, trans, obs);
             prior = std::move(r.prior);
             trans = std::move(r.trans);
             obs = std::move(r.obs);
             last_ll = r.ll;
-            if (last_ll - prev_ll < tol && it > 1) { converged = true; prev_ll = last_ll; break; }
-            prev_ll = last_ll;
+            const double obj = r.ll + lp;
+            last_obj = obj;
+            if (obj - prev_obj < tol && it > 1) { converged = true; break; }
+            prev_obj = obj;
         }
     } else {
         // ---- SQUAREM (Varadhan & Roland 2008, S3) ----
-        auto em_vec = [&](const std::vector<double>& vec, double& ll_out) -> std::vector<double> {
+        // Returns the penalised objective of the *input* model in `obj_out`, so
+        // every comparison below is on the objective EM is actually climbing.
+        auto em_vec = [&](const std::vector<double>& vec, double& ll_out,
+                          double& obj_out) -> std::vector<double> {
             std::vector<double> pr, tr, ob;
             unpack(vec, n, p, pr, tr, ob);
+            const double lp = penalty(pr, tr, ob);
             EMResult r = em_step(pr, tr, ob);
             ll_out = r.ll;
+            obj_out = r.ll + lp;
             return pack(r.prior, r.trans, r.obs);
         };
 
         std::vector<double> theta = pack(prior, trans, obs);
-        double prev_ll = -std::numeric_limits<double>::infinity();
+        double prev_obj = -std::numeric_limits<double>::infinity();
         int evals = 0;
         while (evals < max_iter) {
-            double l0;
-            std::vector<double> p1 = em_vec(theta, l0);
+            double l0, o0;
+            std::vector<double> p1 = em_vec(theta, l0, o0);
             ++evals;
-            if (evals >= max_iter) { theta = std::move(p1); last_ll = l0; break; }
+            if (evals >= max_iter) { theta = std::move(p1); last_ll = l0; last_obj = o0; break; }
 
             std::vector<double> r(theta.size());
             for (size_t i = 0; i < theta.size(); ++i) r[i] = p1[i] - theta[i];
-            double l1;
-            std::vector<double> p2 = em_vec(p1, l1);
+            double l1, o1;
+            std::vector<double> p2 = em_vec(p1, l1, o1);
             ++evals;
             std::vector<double> v(theta.size());
             for (size_t i = 0; i < theta.size(); ++i) v[i] = (p2[i] - p1[i]) - r[i];
@@ -978,9 +1142,9 @@ H2mmModel H2MM::optimize(
             for (size_t i = 0; i < r.size(); ++i) { rn += r[i] * r[i]; vn += v[i] * v[i]; }
             rn = std::sqrt(rn); vn = std::sqrt(vn);
             if (vn < 1e-12 || rn < 1e-12) {
-                theta = std::move(p2); last_ll = l1;
-                if (l1 - prev_ll < tol) { converged = true; break; }
-                prev_ll = l1;
+                theta = std::move(p2); last_ll = l1; last_obj = o1;
+                if (o1 - prev_obj < tol) { converged = true; break; }
+                prev_obj = o1;
                 continue;
             }
             double a = -rn / vn;
@@ -989,21 +1153,38 @@ H2mmModel H2MM::optimize(
             for (size_t i = 0; i < theta.size(); ++i)
                 theta_e_in[i] = theta[i] - 2.0 * a * r[i] + (a * a) * v[i];
             std::vector<double> theta_e = project(theta_e_in, n, p, min_trans);
-            if (evals >= max_iter) { theta = std::move(p2); last_ll = l1; break; }
-            double l2;
-            std::vector<double> p3 = em_vec(theta_e, l2);
+            if (constraints) {
+                // the projection ignores pinned entries; restore them or an
+                // accepted extrapolation would silently break the constraint
+                std::vector<double> epr, etr, eob;
+                unpack(theta_e, n, p, epr, etr, eob);
+                HmmConstraints::impose(epr, 1, n, constraints->fixed_prior());
+                HmmConstraints::impose(etr, n, n, constraints->fixed_trans());
+                HmmConstraints::impose(eob, n, p, constraints->fixed_obs());
+                theta_e = pack(epr, etr, eob);
+            }
+            if (evals >= max_iter) { theta = std::move(p2); last_ll = l1; last_obj = o1; break; }
+            double l2, o2;
+            std::vector<double> p3 = em_vec(theta_e, l2, o2);
             ++evals;
-            if (!std::isfinite(l2) || l2 < l1) { theta = std::move(p2); last_ll = l1; }
-            else { theta = std::move(p3); last_ll = l2; }
-            if (last_ll - prev_ll < tol && evals > 2) { converged = true; break; }
-            prev_ll = last_ll;
+            // Accept the extrapolation only if it improves the PENALISED
+            // objective: comparing marginal likelihoods here would accept steps
+            // that lower the posterior and reject ones that raise it.
+            double cur_obj;
+            if (!std::isfinite(o2) || o2 < o1) { theta = std::move(p2); last_ll = l1; cur_obj = o1; }
+            else { theta = std::move(p3); last_ll = l2; cur_obj = o2; }
+            last_obj = cur_obj;
+            if (cur_obj - prev_obj < tol && evals > 2) { converged = true; break; }
+            prev_obj = cur_obj;
         }
         it = evals;
         unpack(theta, n, p, prior, trans, obs);
     }
 
-    H2mmModel out(prior, trans, obs);
+    HmmModel out(prior, trans, obs);
+    out.n_micro_bins = n_micro_bins_;   // the alphabet the fit ran on
     out.loglik = last_ll;
+    out.logpost = last_obj;
     out.n_iter = it;
     out.n_phot = n_phot;
     out.converged = converged;
@@ -1014,13 +1195,13 @@ H2mmModel H2MM::optimize(
 // Viterbi
 // ---------------------------------------------------------------------------
 
-void H2MM::viterbi(
-    const H2mmModel& model,
+void HMM::viterbi(
+    const HmmModel& model,
     long long** output, int* n_output,
     double* icl
 ) {
     const int n = model.n_states();
-    const int p = n_streams_;
+    const int p = get_n_symbols();
     const int n2 = n * n;
     const int n_slots = std::max<int>(static_cast<int>(unique_dt_.size()), 1);
     const long long N = get_n_photons();
@@ -1125,7 +1306,7 @@ void H2MM::viterbi(
 /// Kept as a macro-free lambda-taking template so the three decoders share the
 /// recursion rather than each carrying a copy of it.
 template <class Sink>
-static void h2mm_backward_gamma(
+static void hmm_backward_gamma(
     const std::vector<int32_t>& streams, const std::vector<int32_t>& gap_slot,
     int64_t s, int64_t m_len, const double* obs, const double* pow_cache,
     int n, int p, int n2, const double* alpha, const double* scale,
@@ -1163,13 +1344,13 @@ static void h2mm_backward_gamma(
     }
 }
 
-void H2MM::posterior(
-    const H2mmModel& model,
+void HMM::posterior(
+    const HmmModel& model,
     float** gamma_out, int* gamma_rows, int* gamma_cols,
     long long* n_underflow
 ) {
     const int n = model.n_states();
-    const int p = n_streams_;
+    const int p = get_n_symbols();
     const int n2 = n * n;
     const long long N = get_n_photons();
 
@@ -1201,7 +1382,7 @@ void H2MM::posterior(
                                   model.prior.data(), model.obs.data(),
                                   pow_cache.data(), n, p,
                                   alpha.data(), scale.data());
-            h2mm_backward_gamma(
+            hmm_backward_gamma(
                 streams_, gap_slot_, s, m_len, model.obs.data(), pow_cache.data(),
                 n, p, n2, alpha.data(), scale.data(),
                 w.data(), beta_next.data(), beta_cur.data(), g.data(),
@@ -1236,13 +1417,13 @@ void H2MM::posterior(
     *gamma_cols = n;
 }
 
-void H2MM::sample_states(
-    const H2mmModel& model, long long seed,
+void HMM::sample_states(
+    const HmmModel& model, long long seed,
     long long** output, int* n_output,
     long long* n_underflow
 ) {
     const int n = model.n_states();
-    const int p = n_streams_;
+    const int p = get_n_symbols();
     const int n2 = n * n;
     const long long N = get_n_photons();
 
@@ -1274,7 +1455,7 @@ void H2MM::sample_states(
                                   model.prior.data(), model.obs.data(),
                                   pow_cache.data(), n, p,
                                   alpha.data(), scale.data());
-            h2mm_backward_gamma(
+            hmm_backward_gamma(
                 streams_, gap_slot_, s, m_len, model.obs.data(), pow_cache.data(),
                 n, p, n2, alpha.data(), scale.data(),
                 w.data(), beta_next.data(), beta_cur.data(), g.data(),
@@ -1302,12 +1483,12 @@ void H2MM::sample_states(
     *n_output = static_cast<int>(N);
 }
 
-void H2MM::sample_paths(
-    const H2mmModel& model, long long seed, int n_samples,
+void HMM::sample_paths(
+    const HmmModel& model, long long seed, int n_samples,
     long long** paths_out, int* path_rows, int* path_cols
 ) {
     const int n = model.n_states();
-    const int p = n_streams_;
+    const int p = get_n_symbols();
     const int n2 = n * n;
     const long long N = get_n_photons();
     const int draws = std::max(1, n_samples);
@@ -1380,7 +1561,9 @@ void H2MM::sample_paths(
 // Model init / simulation / fitting
 // ---------------------------------------------------------------------------
 
-H2mmModel H2MM::factory_model(int n_states, int n_streams, double trans_scale, int seed) {
+HmmModel HMM::factory_model(int n_states, int n_symbols, double trans_scale,
+                            int seed, int n_micro_bins) {
+    const int n_streams = n_symbols;   // the seed spreads over the whole alphabet
     std::mt19937_64 rng(seed < 0 ? std::random_device{}() : static_cast<uint64_t>(seed));
     std::normal_distribution<double> normal(0.0, 1.0);
 
@@ -1403,17 +1586,21 @@ H2mmModel H2MM::factory_model(int n_states, int n_streams, double trans_scale, i
         }
     }
     row_normalize(obs, n_states, n_streams);
-    return H2mmModel(prior, trans, obs);
+    HmmModel m(prior, trans, obs);
+    m.n_micro_bins = n_micro_bins > 0 ? n_micro_bins : 1;
+    return m;
 }
 
-std::vector<std::vector<int>> H2MM::simulate_bursts(
-    const H2mmModel& model,
+std::vector<std::vector<int>> HMM::simulate_bursts(
+    const HmmModel& model,
     const std::vector<std::vector<long long>>& burst_times,
     int seed
 ) {
     std::mt19937_64 rng(seed < 0 ? std::random_device{}() : static_cast<uint64_t>(seed));
     const int n = model.n_states();
-    const int p = model.n_streams();
+    // Symbols, not streams: on a product alphabet each draw carries the
+    // micro-time bin too, and the result feeds straight back into set_bursts*.
+    const int p = model.n_symbols();
 
     auto sample = [&](const double* probs, int len) -> int {
         std::uniform_real_distribution<double> u(0.0, 1.0);
@@ -1441,17 +1628,339 @@ std::vector<std::vector<int>> H2MM::simulate_bursts(
     return out;
 }
 
-H2mmModel H2MM::fit(
+// ---------------------------------------------------------------------------
+// Blocked Gibbs
+// ---------------------------------------------------------------------------
+
+namespace {
+
+/*!
+ * Sample the tick-level path through one gap, conditioned on both endpoints,
+ * and accumulate the one-tick transitions it makes.
+ *
+ * `A` is the one-tick matrix. At tick `t` inside a gap of length `dt` the
+ * conditional for the next state is `A[prev, i] * A^(dt-t)[i, v]`, so the
+ * powers needed are `A^(dt-1) ... A^1` — every intermediate power, not just the
+ * observed gaps the engine's sparse cache holds.
+ *
+ * Materialising those as matrices would rebuild exactly the dense `dt`-indexed
+ * cache the sparse design exists to avoid: one long dark gap would then cost
+ * `n^2 * dt_max`, which is the flaw that makes the reference implementation
+ * slow. Only the *column* at `v` is ever needed, so `b[s] = A^s e_v` is built
+ * by the backward recursion `b[1] = A[:,v]`, `b[s+1] = A b[s]` — `dt`
+ * matrix-vector products, `O(dt*n)` scratch, and nothing cached across gaps.
+ */
+void sample_bridge(
+    const double* A, int n, int64_t dt, int u_state, int v_state,
+    double* col, double* w, double* trans_cnt,
+    uint64_t key, uint64_t& counter
+) {
+    // col[s * n + i] = (A^s)[i, v], for s = 1 .. dt-1
+    for (int i = 0; i < n; ++i) col[i] = A[i * n + v_state];
+    for (int64_t s = 1; s + 1 < dt; ++s) {
+        const double* prev = col + (s - 1) * n;
+        double* cur = col + s * n;
+        for (int i = 0; i < n; ++i) {
+            double acc = 0.0;
+            for (int j = 0; j < n; ++j) acc += A[i * n + j] * prev[j];
+            cur[i] = acc;
+        }
+    }
+    int prev_state = u_state;
+    for (int64_t t = 1; t < dt; ++t) {
+        const double* bcol = col + (dt - t - 1) * n;   // A^(dt-t) column at v
+        double total = 0.0;
+        for (int i = 0; i < n; ++i) {
+            w[i] = A[prev_state * n + i] * bcol[i];
+            total += w[i];
+        }
+        int s;
+        if (total <= 0.0) {
+            s = v_state;   // numerically impossible bridge: go straight there
+        } else {
+            const double target = hmm_rand::unit(key, counter++) * total;
+            double acc = 0.0;
+            s = n - 1;
+            for (int i = 0; i < n; ++i) { acc += w[i]; if (target <= acc) { s = i; break; } }
+        }
+        trans_cnt[prev_state * n + s] += 1.0;
+        prev_state = s;
+    }
+    trans_cnt[prev_state * n + v_state] += 1.0;
+}
+
+}  // namespace
+
+HmmPosterior HMM::sample(
+    const HmmModel& init, int n_draws, int n_burnin, int n_chains,
+    long long seed, const HmmRestraints* restraints, int thin,
+    HmmEmissionSpec* emission
+) const {
+    const int n = init.n_states();
+    const int p = get_n_symbols();
+    if (n <= 0) throw std::invalid_argument("HMM::sample: model has no states");
+    if (init.n_symbols() != p)
+        throw std::invalid_argument(
+            "HMM::sample: model has " + std::to_string(init.n_symbols()) +
+            " emission columns but the data span " + std::to_string(p) + " symbols");
+    const int draws = std::max(1, n_draws);
+    const int chains = std::max(1, n_chains);
+    const int keep = std::max(1, thin);
+    const int n_bursts = get_n_bursts();
+
+    HmmPosterior post;
+    post.n_states = n;
+    post.n_symbols = p;
+    post.n_chains = chains;
+    post.n_par = n + n * n + n * p;
+    post.draws.assign(size_t(chains) * draws * post.n_par, 0.0);
+    post.loglik.assign(size_t(chains) * draws, 0.0);
+
+    // Flat Dirichlet unless restrained.  Note the concentration is used as-is
+    // here, *not* as `alpha - 1`: the MAP M-step wants the mode, a sampler
+    // wants the distribution, and conflating them is the classic off-by-one
+    // that makes a "calibrated" sampler quietly biased.
+    std::vector<double> a_prior(n, 1.0), a_trans(size_t(n) * n, 1.0),
+                        a_obs(size_t(n) * p, 1.0);
+    if (restraints) {
+        a_prior = restraints->alpha_prior();
+        a_trans = restraints->alpha_trans();
+        a_obs = restraints->alpha_obs();
+    }
+
+    int64_t max_len = 0, max_gap = 1;
+    for (int b = 0; b < n_bursts; ++b)
+        max_len = std::max(max_len, offsets_[b + 1] - offsets_[b]);
+    for (int64_t d : unique_dt_) max_gap = std::max(max_gap, d);
+
+    for (int c = 0; c < chains; ++c) {
+        std::vector<double> prior = init.prior, trans = init.trans, obs = init.obs;
+        row_normalize(prior, 1, n);
+        row_normalize(trans, n, n);
+        row_normalize(obs, n, p);
+        // Chains must start apart, or R-hat compares copies of one another and
+        // reports convergence that was assumed rather than observed.
+        //
+        // Dispersed *around the supplied model*, not drawn from the prior. A
+        // flat Dirichlet on a transition row starts a 2-state chain near
+        // A01 = 0.5 -- deep in the fast-switching mode, which for sticky data
+        // is a genuine second mode of the posterior that a sampler cannot
+        // escape in any practical number of sweeps. Measured: chains seeded
+        // that way sat at A01 ~ 0.3 against a truth of 0.005 and never left,
+        // while a chain started at the truth stayed there and mixed cleanly.
+        // Concentrating at `kDisperse * row` keeps the spread wide enough for
+        // R-hat to mean something and narrow enough to stay in one basin.
+        if (c > 0) {
+            const double kDisperse = 20.0;
+            uint64_t k = static_cast<uint64_t>(seed) ^ (uint64_t(c) * 0x9E3779B97F4A7C15ULL);
+            uint64_t ctr = 0;
+            std::vector<double> conc(std::max(n, p));
+            const double floor_a = 1e-3;   // a zero row would be undrawable
+            for (int i = 0; i < n; ++i) conc[i] = kDisperse * prior[i] + floor_a;
+            hmm_rand::dirichlet(conc.data(), n, prior.data(), k, ctr);
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < n; ++j)
+                    conc[j] = kDisperse * init.trans[size_t(i) * n + j] + floor_a;
+                hmm_rand::dirichlet(conc.data(), n, &trans[size_t(i) * n], k, ctr);
+            }
+            for (int i = 0; i < n; ++i) {
+                for (int y = 0; y < p; ++y)
+                    conc[y] = kDisperse * init.obs[size_t(i) * p + y] + floor_a;
+                hmm_rand::dirichlet(conc.data(), p, &obs[size_t(i) * p], k, ctr);
+            }
+        }
+
+        std::vector<double> pow_cache, alpha(size_t(std::max<int64_t>(max_len, 1)) * n),
+                            scale(std::max<int64_t>(max_len, 1)), w(n);
+        std::vector<double> col(size_t(max_gap) * n);
+        std::vector<int> path(size_t(std::max<int64_t>(max_len, 1)));
+        std::vector<double> prior_cnt(n), trans_cnt(size_t(n) * n), obs_cnt(size_t(n) * p);
+
+        const int total_sweeps = n_burnin + draws * keep;
+        int kept = 0;
+        for (int sweep = 0; sweep < total_sweeps; ++sweep) {
+            fill_pow_cache(trans, n, pow_cache);
+            std::fill(prior_cnt.begin(), prior_cnt.end(), 0.0);
+            std::fill(trans_cnt.begin(), trans_cnt.end(), 0.0);
+            std::fill(obs_cnt.begin(), obs_cnt.end(), 0.0);
+            double ll = 0.0;
+
+            for (int b = 0; b < n_bursts; ++b) {
+                const int64_t s0 = offsets_[b], e0 = offsets_[b + 1];
+                const int64_t m_len = e0 - s0;
+                if (m_len <= 0) continue;
+                // One stream per (chain, sweep, burst): reproducible, and
+                // independent of how bursts are distributed over threads.
+                uint64_t key = static_cast<uint64_t>(seed)
+                             ^ (uint64_t(c + 1) * 0xD1B54A32D192ED03ULL)
+                             ^ (uint64_t(sweep + 1) * 0x9E3779B97F4A7C15ULL)
+                             ^ (uint64_t(b + 1) * 0xC2B2AE3D27D4EB4FULL);
+                uint64_t ctr = 0;
+
+                ll += forward_burst<double>(streams_.data(), gap_slot_.data(), s0, m_len,
+                                            prior.data(), obs.data(), pow_cache.data(),
+                                            n, p, alpha.data(), scale.data());
+
+                // Backward-sample the photon-level path.
+                const double* alast = alpha.data() + (m_len - 1) * n;
+                double u = hmm_rand::unit(key, ctr++);
+                int j = draw_from(alast, n, u);
+                if (j < 0) j = std::min(n - 1, int(u * n));
+                path[m_len - 1] = j;
+                for (int64_t li = m_len - 2; li >= 0; --li) {
+                    const int32_t slot = gap_slot_[s0 + li];
+                    if (slot < 0) { path[li] = j; continue; }
+                    const double* P = pow_cache.data() + size_t(slot) * n * n;
+                    const double* arow = alpha.data() + li * n;
+                    for (int i = 0; i < n; ++i) w[i] = arow[i] * P[i * n + j];
+                    u = hmm_rand::unit(key, ctr++);
+                    int jj = draw_from(w.data(), n, u);
+                    if (jj < 0) jj = j;
+                    path[li] = jj;
+                    j = jj;
+                }
+
+                prior_cnt[path[0]] += 1.0;
+                for (int64_t li = 0; li < m_len; ++li)
+                    obs_cnt[size_t(path[li]) * p + streams_[s0 + li]] += 1.0;
+
+                // Tick-level bridge inside every gap -- this is what makes the
+                // counts *one-tick* transitions rather than photon-to-photon
+                // jumps, which is what `trans` actually parameterises.
+                for (int64_t li = 0; li + 1 < m_len; ++li) {
+                    const int32_t slot = gap_slot_[s0 + li];
+                    if (slot < 0) continue;
+                    const int64_t dt = unique_dt_[slot];
+                    if (dt <= 0) continue;
+                    sample_bridge(trans.data(), n, dt, path[li], path[li + 1],
+                                  col.data(), w.data(), trans_cnt.data(), key, ctr);
+                }
+            }
+
+            // Conjugate draw.
+            uint64_t dkey = static_cast<uint64_t>(seed)
+                          ^ (uint64_t(c + 1) * 0xA24BAED4963EE407ULL)
+                          ^ (uint64_t(sweep + 1) * 0x9FB21C651E98DF25ULL);
+            uint64_t dctr = 0;
+            std::vector<double> post_a(std::max(n, p));
+            for (int i = 0; i < n; ++i) post_a[i] = prior_cnt[i] + a_prior[i];
+            hmm_rand::dirichlet(post_a.data(), n, prior.data(), dkey, dctr);
+            for (int i = 0; i < n; ++i) {
+                for (int j2 = 0; j2 < n; ++j2)
+                    post_a[j2] = trans_cnt[size_t(i) * n + j2] + a_trans[size_t(i) * n + j2];
+                hmm_rand::dirichlet(post_a.data(), n, &trans[size_t(i) * n], dkey, dctr);
+            }
+            if (emission) {
+                // Parameterised emission: draw the *decay parameters* rather
+                // than every column. Without this the sampler explores the
+                // free-categorical family the parameterised M-step exists to
+                // avoid, wanders out of a good lifetime fit, and takes the
+                // sampled paths -- and hence the transition counts -- with it.
+                // Measured on 64 micro-time bins: R-hat stuck at 1.04 after
+                // 2000 burn-in sweeps, driven by the transitions rather than by
+                // the 256 emission entries.
+                std::vector<double> a_split;
+                if (restraints) {
+                    a_split.assign(size_t(n) * emission->n_streams, 1.0);
+                    for (int i = 0; i < n; ++i)
+                        for (int k = 0; k < emission->n_streams; ++k) {
+                            double s = 0.0;
+                            for (int b = 0; b < emission->n_micro_bins; ++b)
+                                s += a_obs[size_t(i) * p + size_t(k) * emission->n_micro_bins + b];
+                            a_split[size_t(i) * emission->n_streams + k] = s;
+                        }
+                }
+                obs = emission->sample_counts(obs_cnt, a_split, dkey, dctr);
+            } else {
+                for (int i = 0; i < n; ++i) {
+                    for (int y = 0; y < p; ++y)
+                        post_a[y] = obs_cnt[size_t(i) * p + y] + a_obs[size_t(i) * p + y];
+                    hmm_rand::dirichlet(post_a.data(), p, &obs[size_t(i) * p], dkey, dctr);
+                }
+            }
+
+            if (sweep >= n_burnin && ((sweep - n_burnin) % keep) == 0 && kept < draws) {
+                double* out = post.draws.data()
+                            + (size_t(c) * draws + kept) * post.n_par;
+                std::copy(prior.begin(), prior.end(), out);
+                std::copy(trans.begin(), trans.end(), out + n);
+                std::copy(obs.begin(), obs.end(), out + n + n * n);
+                post.loglik[size_t(c) * draws + kept] = ll;
+                ++kept;
+            }
+        }
+    }
+    return post;
+}
+
+HmmEval HMM::evaluate(const HmmModel& model) const {
+    const int n = model.n_states();
+    const int p = get_n_symbols();
+    if (n <= 0) throw std::invalid_argument("HMM::evaluate: model has no states");
+    if (model.n_symbols() != p)
+        throw std::invalid_argument(
+            "HMM::evaluate: model has " + std::to_string(model.n_symbols()) +
+            " emission columns but the data span " + std::to_string(p) + " symbols");
+
+    const int n2 = n * n, n4 = n2 * n2;
+    const int n_dt = static_cast<int>(unique_dt_.size());
+    const int n_slots = std::max(n_dt, 1);
+
+    std::vector<double> pow_cache(static_cast<size_t>(n_slots) * n2, 0.0);
+    std::vector<double> rho_cache(static_cast<size_t>(n_slots) * n4, 0.0);
+    hmm_detail::ForkJoinPool pool(worker_count(get_n_bursts()));
+
+    HmmEval out;
+    out.xi.assign(n2, 0.0);
+    out.gamma_obs.assign(static_cast<size_t>(n) * p, 0.0);
+    out.prior_counts.assign(n, 0.0);
+
+    if (n_dt > 0)
+        fill_caches_t<double>(unique_dt_, model.trans.data(), n,
+                              pow_cache.data(), rho_cache.data(), &pool);
+    out.loglik = estep_t<double>(
+        streams_, gap_slot_, offsets_, get_n_bursts(),
+        model.prior, model.obs, pow_cache.data(), rho_cache.data(),
+        n, p, n_slots, out.xi, out.gamma_obs, out.prior_counts, n_dt > 0, &pool);
+
+    // Fisher's identity: the gradient of the marginal log-likelihood is the
+    // expected complete-data score, and for a multinomial parameter that is
+    // just count/parameter.  Zero parameters are left at zero rather than
+    // producing an infinity: the count there is zero too, so the limit is the
+    // derivative of a term that contributes nothing, and a NaN would poison a
+    // consumer's whole gradient.
+    out.score.assign(size_t(n) + n2 + size_t(n) * p, 0.0);
+    size_t o = 0;
+    for (int i = 0; i < n; ++i, ++o)
+        if (model.prior[i] > 0.0) out.score[o] = out.prior_counts[i] / model.prior[i];
+
+    // Valid *along the simplex*, which is the only place it means anything.
+    // The A^dt cache is built by `matmul_norm`, which row-normalises after every
+    // composition; for a row-stochastic `trans` that is a no-op and the
+    // propagator is exact, but it makes the likelihood invariant to scaling a
+    // row, so the component of this gradient that leaves the simplex is an
+    // artifact of the renormalisation rather than a property of the model.
+    // Differences along simplex-preserving directions are unaffected and agree
+    // with central finite differences, which is what the contract test checks.
+    for (int i = 0; i < n2; ++i, ++o)
+        if (model.trans[i] > 0.0) out.score[o] = out.xi[i] / model.trans[i];
+    for (size_t i = 0; i < out.gamma_obs.size(); ++i, ++o)
+        if (model.obs[i] > 0.0) out.score[o] = out.gamma_obs[i] / model.obs[i];
+    return out;
+}
+
+HmmModel HMM::fit(
     int n_states, int n_restarts, int max_iter, double tol, int seed,
     bool accelerate, bool single_precision
 ) {
-    H2mmModel best;
+    HmmModel best;
     bool have_best = false;
     const int restarts = std::max(1, n_restarts);
     for (int r = 0; r < restarts; ++r) {
-        H2mmModel init = factory_model(n_states, n_streams_,
-                                       1e-4, seed < 0 ? -1 : seed + r);
-        H2mmModel fitr = optimize(init, max_iter, tol, 1e-12, accelerate, single_precision);
+        HmmModel init = factory_model(n_states, get_n_symbols(),
+                                       1e-4, seed < 0 ? -1 : seed + r,
+                                       n_micro_bins_);
+        HmmModel fitr = optimize(init, max_iter, tol, 1e-12, accelerate, single_precision);
         if (!have_best || fitr.loglik > best.loglik) { best = fitr; have_best = true; }
     }
     return best;

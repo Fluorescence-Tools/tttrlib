@@ -135,9 +135,11 @@ def experimental(cls):
 %include "BurstFeature.i"
 %include "BVA.i"
 %include "TwoCDE.i"
-%include "H2MM.i"
+%include "HMMRestraints.i"
+%include "HMMConstraints.i"
+%include "HMM.i"
 %include "NeuralNet.i"
-%include "H2MMSurrogate.i"
+%include "HmmSurrogate.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"

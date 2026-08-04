@@ -150,7 +150,7 @@ public:
 
     /**
      * @brief Get the current (filtered) bursts as an interleaved index vector
-     *        ``[s0,e0,s1,e1,...]`` for use by BVA / H2MM and other C++ callers.
+     *        ``[s0,e0,s1,e1,...]`` for use by BVA / HMM and other C++ callers.
      */
     const std::vector<int64_t>& get_burst_indices() const { return bursts; }
 

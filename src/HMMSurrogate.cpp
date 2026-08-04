@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "H2MMSurrogate.h"
+#include "HMMSurrogate.h"
 
 #include <algorithm>
 #include <cmath>
@@ -80,9 +80,9 @@ void row_normalize(std::vector<double>& a, int n, int m) {
 }
 
 /// Reorder states by descending stream-0 emission, making labels canonical.
-H2mmModel canonical_order(const H2mmModel& model) {
+HmmModel canonical_order(const HmmModel& model) {
     const int n = model.n_states();
-    const int p = model.n_streams();
+    const int p = model.n_symbols();   // the stride of `obs`, whatever a symbol is
     std::vector<int> order(n);
     std::iota(order.begin(), order.end(), 0);
     // Stable, so ties keep their original order; NumPy's argsort on the
@@ -90,7 +90,7 @@ H2mmModel canonical_order(const H2mmModel& model) {
     std::stable_sort(order.begin(), order.end(),
                      [&](int a, int b) { return model.obs[a * p] > model.obs[b * p]; });
 
-    H2mmModel out;
+    HmmModel out;
     out.prior.resize(n);
     out.trans.resize(static_cast<size_t>(n) * n);
     out.obs.resize(static_cast<size_t>(n) * p);
@@ -132,7 +132,7 @@ std::vector<double> mat_pow(const std::vector<double>& A, long long e, int n) {
 }
 
 /// Draw a random, well-ordered model over a realistic FRET/kinetics range.
-H2mmModel random_model(int n, int p, SimPcgRandom& rng) {
+HmmModel random_model(int n, int p, SimPcgRandom& rng) {
     std::vector<double> fret(n);
     for (int i = 0; i < n; ++i) fret[i] = 0.08 + rng.random0i1e() * (0.92 - 0.08);
     std::sort(fret.begin(), fret.end());
@@ -170,7 +170,7 @@ H2mmModel random_model(int n, int p, SimPcgRandom& rng) {
     std::vector<double> prior(n, 1.0 / n);
     row_normalize(trans, n, n);
     row_normalize(obs, n, p);
-    return H2mmModel(std::move(prior), std::move(trans), std::move(obs));
+    return HmmModel(std::move(prior), std::move(trans), std::move(obs));
 }
 
 /// Index of the first element of ``cum`` strictly greater than ``u``.
@@ -190,32 +190,32 @@ int searchsorted(const double* cum, int n, double u) {
 // Construction / validation
 // ---------------------------------------------------------------------------
 
-H2mmSurrogate::H2mmSurrogate(NeuralNet net, int n_states, int n_streams, int features_version)
+HmmSurrogate::HmmSurrogate(NeuralNet net, int n_states, int n_streams, int features_version)
     : net_(std::move(net)),
       n_states_(n_states),
       n_streams_(n_streams),
       features_version_(features_version) {
     if (n_states_ < 1 || n_streams_ < 1)
-        throw std::runtime_error("H2mmSurrogate: n_states and n_streams must be positive");
+        throw std::runtime_error("HmmSurrogate: n_states and n_streams must be positive");
     if (net_.n_inputs() != N_FEATURES)
         throw std::runtime_error(
-            "H2mmSurrogate: net takes " + std::to_string(net_.n_inputs()) +
+            "HmmSurrogate: net takes " + std::to_string(net_.n_inputs()) +
             " inputs, expected " + std::to_string(N_FEATURES));
     const int want = n_targets(n_states_, n_streams_);
     if (net_.n_outputs() != want)
         throw std::runtime_error(
-            "H2mmSurrogate: net produces " + std::to_string(net_.n_outputs()) +
+            "HmmSurrogate: net produces " + std::to_string(net_.n_outputs()) +
             " outputs, expected " + std::to_string(want) + " for n_states=" +
             std::to_string(n_states_) + ", n_streams=" + std::to_string(n_streams_));
 }
 
-int H2mmSurrogate::n_targets(int n, int p) { return n * p + n * (n - 1) + n; }
+int HmmSurrogate::n_targets(int n, int p) { return n * p + n * (n - 1) + n; }
 
 // ---------------------------------------------------------------------------
 // Feature extraction
 // ---------------------------------------------------------------------------
 
-std::vector<double> H2mmSurrogate::extract_features(const H2MM& data) {
+std::vector<double> HmmSurrogate::extract_features(const HMM& data) {
     const std::vector<int32_t>& streams = data.get_streams();
     const std::vector<int32_t>& gap_slot = data.get_gap_slot();
     const std::vector<int64_t>& offsets = data.get_offsets();
@@ -354,9 +354,9 @@ std::vector<double> H2mmSurrogate::extract_features(const H2MM& data) {
 // Encode / decode
 // ---------------------------------------------------------------------------
 
-std::vector<double> H2mmSurrogate::encode(const H2mmModel& model) {
-    const H2mmModel m = canonical_order(model);
-    const int n = m.n_states(), p = m.n_streams();
+std::vector<double> HmmSurrogate::encode(const HmmModel& model) {
+    const HmmModel m = canonical_order(model);
+    const int n = m.n_states(), p = m.n_symbols();
     std::vector<double> out;
     out.reserve(n_targets(n, p));
     for (int i = 0; i < n * p; ++i) out.push_back(m.obs[i]);
@@ -369,9 +369,9 @@ std::vector<double> H2mmSurrogate::encode(const H2mmModel& model) {
     return out;
 }
 
-H2mmModel H2mmSurrogate::decode(const std::vector<double>& vec, int n, int p) {
+HmmModel HmmSurrogate::decode(const std::vector<double>& vec, int n, int p) {
     if (static_cast<int>(vec.size()) != n_targets(n, p))
-        throw std::runtime_error("H2mmSurrogate::decode: vector has " +
+        throw std::runtime_error("HmmSurrogate::decode: vector has " +
                                  std::to_string(vec.size()) + " entries, expected " +
                                  std::to_string(n_targets(n, p)));
     size_t k = 0;
@@ -398,21 +398,21 @@ H2mmModel H2mmSurrogate::decode(const std::vector<double>& vec, int n, int p) {
     for (int i = 0; i < n; ++i) prior[i] = std::max(vec[k + i], 1e-9);
     row_normalize(prior, 1, n);
 
-    return canonical_order(H2mmModel(std::move(prior), std::move(trans), std::move(obs)));
+    return canonical_order(HmmModel(std::move(prior), std::move(trans), std::move(obs)));
 }
 
 // ---------------------------------------------------------------------------
 // Prediction
 // ---------------------------------------------------------------------------
 
-H2mmModel H2mmSurrogate::predict(const H2MM& data) const {
+HmmModel HmmSurrogate::predict(const HMM& data) const {
     if (data.get_n_streams() != n_streams_)
         throw std::runtime_error(
-            "H2mmSurrogate: trained for n_streams=" + std::to_string(n_streams_) +
+            "HmmSurrogate: trained for n_streams=" + std::to_string(n_streams_) +
             ", got " + std::to_string(data.get_n_streams()));
     const std::vector<double> feats = extract_features(data);
     const std::vector<double> y = net_.predict(feats);
-    H2mmModel out = decode(y, n_states_, n_streams_);
+    HmmModel out = decode(y, n_states_, n_streams_);
     out.n_phot = data.get_n_photons();
     return out;
 }
@@ -421,13 +421,13 @@ H2mmModel H2mmSurrogate::predict(const H2MM& data) const {
 // Training-set generation and training
 // ---------------------------------------------------------------------------
 
-void H2mmSurrogate::generate_training_set(
+void HmmSurrogate::generate_training_set(
     int n_states, int n_streams, int n_samples,
     int n_bursts, int burst_len, double mean_dt, int seed,
     std::vector<double>& X, std::vector<double>& Y
 ) {
     if (n_samples <= 0 || n_bursts <= 0 || burst_len < 2)
-        throw std::runtime_error("H2mmSurrogate::generate_training_set: degenerate problem size");
+        throw std::runtime_error("HmmSurrogate::generate_training_set: degenerate problem size");
 
     const int n_y = n_targets(n_states, n_streams);
     X.assign(static_cast<size_t>(n_samples) * N_FEATURES, 0.0);
@@ -437,7 +437,7 @@ void H2mmSurrogate::generate_training_set(
     rng.reset(static_cast<uint32_t>(seed), 0, 0);
 
     for (int s = 0; s < n_samples; ++s) {
-        const H2mmModel model = random_model(n_states, n_streams, rng);
+        const HmmModel model = random_model(n_states, n_streams, rng);
 
         // --- Poisson-spaced macro times per burst
         std::vector<std::vector<long long>> times(n_bursts);
@@ -507,7 +507,7 @@ void H2mmSurrogate::generate_training_set(
 
         // Reuse the engine's CSR builder so the surrogate sees exactly the
         // layout a real dataset would produce.
-        H2MM engine;
+        HMM engine;
         engine.set_bursts(times, streams, n_streams);
 
         const std::vector<double> feats = extract_features(engine);
@@ -517,7 +517,7 @@ void H2mmSurrogate::generate_training_set(
     }
 }
 
-H2mmSurrogate H2mmSurrogate::train(
+HmmSurrogate HmmSurrogate::train(
     int n_states, int n_streams, int n_samples,
     int n_bursts, int burst_len, double mean_dt,
     const TrainOptions& options, int seed
@@ -530,53 +530,53 @@ H2mmSurrogate H2mmSurrogate::train(
     opt.seed = seed;
     NeuralNet net = NeuralNet::train(X.data(), n_samples, N_FEATURES,
                                      Y.data(), n_samples, n_y, opt);
-    return H2mmSurrogate(std::move(net), n_states, n_streams, FEATURES_VERSION);
+    return HmmSurrogate(std::move(net), n_states, n_streams, FEATURES_VERSION);
 }
 
 // ---------------------------------------------------------------------------
 // Serialisation
 // ---------------------------------------------------------------------------
 
-H2mmSurrogate H2mmSurrogate::from_json_string(const std::string& text) {
+HmmSurrogate HmmSurrogate::from_json_string(const std::string& text) {
     json j;
     try {
         j = json::parse(text);
     } catch (const std::exception& e) {
-        throw std::runtime_error(std::string("H2mmSurrogate: invalid JSON: ") + e.what());
+        throw std::runtime_error(std::string("HmmSurrogate: invalid JSON: ") + e.what());
     }
-    if (j.contains("format") && j.at("format").get<std::string>() != "tttrlib.h2mm_surrogate")
-        throw std::runtime_error("H2mmSurrogate: unexpected format '" +
+    if (j.contains("format") && j.at("format").get<std::string>() != "tttrlib.hmm_surrogate")
+        throw std::runtime_error("HmmSurrogate: unexpected format '" +
                                  j.at("format").get<std::string>() +
-                                 "', expected 'tttrlib.h2mm_surrogate'");
+                                 "', expected 'tttrlib.hmm_surrogate'");
 
     const int fv = j.contains("features_version") ? j.at("features_version").get<int>()
                                                   : FEATURES_VERSION;
     if (fv != FEATURES_VERSION)
         throw std::runtime_error(
-            "H2mmSurrogate: features_version " + std::to_string(fv) + " != current " +
+            "HmmSurrogate: features_version " + std::to_string(fv) + " != current " +
             std::to_string(FEATURES_VERSION) + "; retrain the surrogate");
 
     if (!j.contains("net"))
-        throw std::runtime_error("H2mmSurrogate: document has no 'net' object");
+        throw std::runtime_error("HmmSurrogate: document has no 'net' object");
 
     NeuralNet net = NeuralNet::from_json_string(j.at("net").dump());
-    return H2mmSurrogate(std::move(net),
+    return HmmSurrogate(std::move(net),
                          j.at("n_states").get<int>(),
                          j.at("n_streams").get<int>(),
                          fv);
 }
 
-H2mmSurrogate H2mmSurrogate::from_json_file(const std::string& path) {
+HmmSurrogate HmmSurrogate::from_json_file(const std::string& path) {
     std::ifstream fh(path);
-    if (!fh) throw std::runtime_error("H2mmSurrogate: cannot open '" + path + "'");
+    if (!fh) throw std::runtime_error("HmmSurrogate: cannot open '" + path + "'");
     std::stringstream ss;
     ss << fh.rdbuf();
     return from_json_string(ss.str());
 }
 
-std::string H2mmSurrogate::to_json_string(int indent) const {
+std::string HmmSurrogate::to_json_string(int indent) const {
     json j;
-    j["format"] = "tttrlib.h2mm_surrogate";
+    j["format"] = "tttrlib.hmm_surrogate";
     j["version"] = 1;
     j["features_version"] = features_version_;
     j["n_states"] = n_states_;
@@ -585,9 +585,9 @@ std::string H2mmSurrogate::to_json_string(int indent) const {
     return j.dump(indent);
 }
 
-void H2mmSurrogate::to_json_file(const std::string& path, int indent) const {
+void HmmSurrogate::to_json_file(const std::string& path, int indent) const {
     std::ofstream fh(path);
-    if (!fh) throw std::runtime_error("H2mmSurrogate: cannot write '" + path + "'");
+    if (!fh) throw std::runtime_error("HmmSurrogate: cannot write '" + path + "'");
     fh << to_json_string(indent);
 }
 
