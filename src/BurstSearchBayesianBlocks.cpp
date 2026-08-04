@@ -257,16 +257,6 @@ std::vector<long long> burst_search_bayesian_blocks(
     const int64_t trigger_window_ticks =
         static_cast<int64_t>(trigger_window_seconds / tick);
 
-    std::vector<bool> candidate(static_cast<size_t>(n), false);
-    for (int64_t i = 0; i + m - 1 < n; ++i) {
-        if (macro_times[static_cast<size_t>(i + m - 1)] - macro_times[static_cast<size_t>(i)] <=
-            trigger_window_ticks) {
-            // Mark the whole window, not just its first photon: the criterion
-            // says these m photons are jointly dense.
-            for (int64_t j = i; j < i + m; ++j) candidate[static_cast<size_t>(j)] = true;
-        }
-    }
-
     // ---------------------------------------------------------------- stage 2
     // Pad candidate runs with background context and merge overlaps. Padding is
     // load-bearing: without background on both flanks the DP has no rate
@@ -275,24 +265,47 @@ std::vector<long long> burst_search_bayesian_blocks(
     int64_t cap = settings.max_region_photons;
     if (cap < 4 * m) cap = 4 * m;
 
+    // The trigger is a pure macro-time-difference test — the Fries/Eggeling
+    // criterion — and the candidate runs it produces are built here directly,
+    // without an intermediate per-photon flag array.
+    //
+    // A firing window says its m photons are jointly dense, so it covers the
+    // half-open range [i, i+m). Marking each of those photons costs O(n*m), and
+    // it costs it precisely inside bursts, where windows fire at every offset.
+    // Consecutive firing windows overlap by construction, so their union is a
+    // set of runs that can be accumulated in one pass instead: extend the open
+    // run while windows keep firing, close it when one does not. The candidate
+    // set is identical; only the bookkeeping is cheaper.
     std::vector<Region> regions;
-    {
-        int64_t i = 0;
-        while (i < n) {
-            if (!candidate[static_cast<size_t>(i)]) { ++i; continue; }
-            int64_t j = i;
-            while (j < n && candidate[static_cast<size_t>(j)]) ++j;
-            Region r;
-            r.lo = std::max<int64_t>(0, i - pad);
-            r.hi = std::min<int64_t>(n, j + pad);
-            if (!regions.empty() && r.lo <= regions.back().hi) {
-                regions.back().hi = std::max(regions.back().hi, r.hi);
-            } else {
-                regions.push_back(r);
-            }
-            i = j;
+    const auto emit_run = [&](int64_t lo, int64_t hi) {
+        Region r;
+        r.lo = std::max<int64_t>(0, lo - pad);
+        r.hi = std::min<int64_t>(n, hi + pad);
+        if (!regions.empty() && r.lo <= regions.back().hi) {
+            regions.back().hi = std::max(regions.back().hi, r.hi);
+        } else {
+            regions.push_back(r);
+        }
+    };
+
+    int64_t run_lo = -1, run_hi = -1;   // half-open [run_lo, run_hi)
+    for (int64_t i = 0; i + m - 1 < n; ++i) {
+        if (macro_times[static_cast<size_t>(i + m - 1)] -
+                macro_times[static_cast<size_t>(i)] > trigger_window_ticks) {
+            continue;
+        }
+        if (run_lo < 0) {
+            run_lo = i;
+            run_hi = i + m;
+        } else if (i <= run_hi) {          // overlaps or abuts the open run
+            run_hi = std::max(run_hi, i + m);
+        } else {
+            emit_run(run_lo, run_hi);
+            run_lo = i;
+            run_hi = i + m;
         }
     }
+    if (run_lo >= 0) emit_run(run_lo, run_hi);
 
     // Split oversized regions so the O(n^2) cost stays bounded. The cut goes at
     // the largest inter-photon gap in the middle third: in dilute data a region

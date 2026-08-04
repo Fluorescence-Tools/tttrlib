@@ -1,7 +1,7 @@
 """Burst index ranges are inclusive on both ends, everywhere.
 
 A burst spanning photons 0..29 is reported as ``[0, 29]`` and contains 30
-photons. This was not always consistent: BVA and H2MM indexed their ranges
+photons. This was not always consistent: BVA and the HMM indexed their ranges
 half-open while every producer emitted inclusive ones, so both silently dropped
 each burst's last photon -- a 5% count error on a 20-photon burst, and a biased
 one, since the dropped photon is the photon that ended the burst.
@@ -76,13 +76,13 @@ class TestBurstRangeConvention(unittest.TestCase):
         sub = bf.get_burst_photons(bounds)
         self.assertEqual(len(np.asarray(sub.macro_times)), 60)
 
-    def test_h2mm_keeps_the_last_photon_of_each_burst(self):
-        # The regression this file exists for. With half-open indexing H2MM saw
+    def test_hmm_keeps_the_last_photon_of_each_burst(self):
+        # The regression this file exists for. With half-open indexing the HMM saw
         # 29 of every 30 photons.
         d, bounds = make_tttr([30, 30])
         g = tttrlib.Channel('g')
         g.add_component(0, 0, 65535)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts_from_tttr(d, bounds, [g], 3, 1)
         self.assertEqual(eng.get_n_bursts(), 2)
         self.assertEqual(eng.get_n_photons(), 60)

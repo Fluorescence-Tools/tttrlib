@@ -47,7 +47,7 @@ selection = tttrlib.TTTRSelection()
 selection.set_range(1000, 50000)  # Select photons from index 1000 to 50000
 selection.set_dense(True)  # Use dense representation
 
-print(f"Selection range: {selection.get_start()} - {selection.get_stop()}")
+print(f"Selection range: {selection.start} - {selection.stop}")
 print(f"Selection is dense: {selection.is_dense()}")
 
 # %%
@@ -61,7 +61,7 @@ print(f"\nSelection as JSON: {selection_json}")
 new_selection = tttrlib.TTTRSelection()
 new_selection.from_json(selection_json)
 
-print(f"New selection range: {new_selection.get_start()} - {new_selection.get_stop()}")
+print(f"New selection range: {new_selection.start} - {new_selection.stop}")
 print(f"New selection is dense: {new_selection.is_dense()}")
 
 # %%

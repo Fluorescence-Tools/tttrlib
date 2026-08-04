@@ -274,6 +274,112 @@ class TestKalmanBurstSearch(unittest.TestCase):
                 self.assertLess(out.max(), tttr.size())
 
 
+def multi_group_stream(seed=4, n_events=40):
+    """Complete molecules emitting into all three groups, plus brighter
+    single-group ones — which no intensity threshold can reject."""
+    rng = np.random.default_rng(seed)
+    times, channels = [], []
+    background = rng.uniform(0.0, 6.0, rng.poisson(2000 * 6.0))
+    times.append(background)
+    channels.append(rng.integers(0, 3, background.size))
+    complete, partial = [], []
+    for k in range(n_events):
+        t0 = 0.02 + k * 0.14
+        for channel in (0, 1, 2):
+            x = rng.uniform(t0, t0 + 1e-3, rng.poisson(30000 * 1e-3))
+            times.append(x)
+            channels.append(np.full(x.size, channel))
+        complete.append((t0, t0 + 1e-3))
+        t1 = t0 + 0.07
+        x = rng.uniform(t1, t1 + 1e-3, rng.poisson(90000 * 1e-3))
+        times.append(x)
+        channels.append(np.full(x.size, 0))
+        partial.append((t1, t1 + 1e-3))
+    t = np.concatenate(times)
+    c = np.concatenate(channels).astype(np.int8)
+    order = np.argsort(t)
+    t, c = t[order], c[order]
+    ticks = np.round(t / MACRO_TIME_RESOLUTION).astype(np.uint64)
+    n = ticks.size
+    tttr = tttrlib.TTTR(ticks, np.zeros(n, np.uint16), c, np.zeros(n, np.int8))
+    tttr.header.set_macro_time_resolution(MACRO_TIME_RESOLUTION)
+    return tttr, complete, partial
+
+
+class TestCoincidentBurstSearch(unittest.TestCase):
+
+    def setUp(self):
+        self.tttr, self.complete, self.partial = multi_group_stream()
+        self.times_s = (
+            np.asarray(self.tttr.macro_times, dtype=np.float64) * MACRO_TIME_RESOLUTION
+        )
+
+    def hits(self, bursts, truth):
+        if not len(bursts):
+            return 0
+        return sum(
+            1 for a, z in truth
+            if np.any((self.times_s[bursts[:, 0]] <= z)
+                      & (self.times_s[bursts[:, 1]] >= a))
+        )
+
+    def test_rejects_partially_labelled_events(self):
+        """The point of coincidence: brightness cannot do this."""
+        pooled = self.tttr.burst_search_by_name("maxtree")
+        self.assertGreaterEqual(self.hits(pooled, self.partial), 35,
+                                "pooled search should see the partial events")
+
+        coincident = self.tttr.burst_search_coincident([[0], [1], [2]])
+        self.assertGreaterEqual(self.hits(coincident, self.complete), 35)
+        self.assertEqual(self.hits(coincident, self.partial), 0)
+
+    def test_generalises_beyond_two_groups(self):
+        """Any number of groups, and any quorum among them."""
+        for groups, min_groups in (
+            ([[0], [1]], 0),            # the classical dual-channel case
+            ([[0], [1], [2]], 0),       # all of three
+            ([[0], [1], [2]], 2),       # two of three
+        ):
+            b = self.tttr.burst_search_coincident(groups, min_groups=min_groups)
+            self.assertGreater(len(b), 0, f"{groups} min={min_groups}")
+            self.assertEqual(self.hits(b, self.partial), 0)
+
+    def test_works_with_every_registered_search(self):
+        """It composes: the inner search is chosen by registry name."""
+        for algorithm in ("sliding_window", "maxtree", "kalman"):
+            b = self.tttr.burst_search_coincident(
+                [[0], [1], [2]], algorithm=algorithm
+            )
+            self.assertEqual(b.ndim, 2)
+            self.assertEqual(self.hits(b, self.partial), 0, algorithm)
+
+    def test_returns_the_standard_interval_convention(self):
+        b = self.tttr.burst_search_coincident([[0], [1], [2]])
+        self.assertTrue((b[:, 0] <= b[:, 1]).all())
+        self.assertGreaterEqual(b.min(), 0)
+        self.assertLess(b.max(), self.tttr.size())
+        self.assertTrue((np.diff(b[:, 0]) > 0).all())
+        self.assertTrue((b[1:, 0] > b[:-1, 1]).all())
+
+    def test_min_photons_applies_to_the_coincident_burst(self):
+        b = self.tttr.burst_search_coincident([[0], [1], [2]], L=150)
+        if len(b):
+            self.assertTrue(((b[:, 1] - b[:, 0] + 1) >= 150).all())
+
+    def test_empty_group_is_ignored_not_fatal(self):
+        """A detector group with no photons must not empty the result."""
+        b = self.tttr.burst_search_coincident([[0], [1], [2], [99]])
+        self.assertGreater(len(b), 0)
+
+    def test_rejects_impossible_requests(self):
+        with self.assertRaises(ValueError):
+            self.tttr.burst_search_coincident([])
+        with self.assertRaises(ValueError):
+            self.tttr.burst_search_coincident([[97], [98]])      # no photons at all
+        with self.assertRaises(ValueError):
+            self.tttr.burst_search_coincident([[0], [1]], min_groups=5)
+
+
 class TestBurstSearchRegistry(unittest.TestCase):
 
     def test_registry_describes_every_search(self):
@@ -290,11 +396,19 @@ class TestBurstSearchRegistry(unittest.TestCase):
             properties = spec["params_schema"]["properties"]
             self.assertTrue(properties)
             for prop_name, prop in properties.items():
-                self.assertIn(prop["type"], ("integer", "number", "boolean"))
+                self.assertIn(prop["type"],
+                              ("integer", "number", "boolean", "string",
+                               "array", "object"))
                 self.assertTrue(prop["title"])
                 self.assertTrue(prop["description"])
-                self.assertIn("default", prop)
-                if prop["type"] != "boolean":
+                if "default" not in prop:
+                    # Legitimate: either the caller must decide it (a detector
+                    # grouping) or the function's own default applies. What must
+                    # not happen is a default declared here that disagrees with
+                    # the function — test_registry_defaults_match_the_c_defaults
+                    # guards that.
+                    continue
+                if prop["type"] in ("integer", "number"):
                     self.assertLessEqual(prop["minimum"], prop["default"])
                     self.assertLessEqual(prop["default"], prop["maximum"])
 
@@ -306,16 +420,26 @@ class TestBurstSearchRegistry(unittest.TestCase):
         for name, spec in tttrlib.TTTR.burst_search_algorithms().items():
             self.assertTrue(hasattr(tttr, spec["method"]), spec["method"])
             defaults = tttrlib.TTTR.burst_search_defaults(name)
-            self.assertEqual(
-                set(defaults), set(spec["params_schema"]["properties"])
-            )
-            getattr(tttr, spec["method"])(**defaults)   # must not raise
+            properties = spec["params_schema"]["properties"]
+            self.assertLessEqual(set(defaults), set(properties))
+            # An entry may require something with no sensible default (a detector
+            # grouping depends on the instrument); those are exercised where the
+            # value can be supplied, not here.
+            if set(spec["params_schema"].get("required", ())) <= set(defaults):
+                getattr(tttr, spec["method"])(**defaults)   # must not raise
 
     def test_dispatch_by_name(self):
         tttr, _ = synthetic_stream(
             seed=2, bursts=[(0.05 * k, 60000.0, 1e-3) for k in range(30)]
         )
-        for name in tttrlib.TTTR.burst_search_algorithms():
+        for name, spec in tttrlib.TTTR.burst_search_algorithms().items():
+            defaults = tttrlib.TTTR.burst_search_defaults(name)
+            if not set(spec["params_schema"].get("required", ())) <= set(defaults):
+                # Needs something only the caller can decide; exercised in
+                # TestCoincidentBurstSearch, where a grouping can be supplied.
+                with self.assertRaises(ValueError):
+                    tttr.burst_search_by_name(name)
+                continue
             bursts = tttr.burst_search_by_name(name)
             self.assertEqual(bursts.ndim, 2)
             self.assertEqual(bursts.shape[1], 2)
@@ -340,13 +464,22 @@ class TestBurstSearchRegistry(unittest.TestCase):
             for prop, schema in spec["params_schema"]["properties"].items():
                 self.assertIn(prop, params, f"{name}: {prop} not an argument of "
                                             f"{spec['method']}")
-                cpp = params[prop].default
-                self.assertIsNot(cpp, inspect.Parameter.empty,
-                                 f"{name}: {prop} has no C++ default")
-                self.assertAlmostEqual(
-                    float(cpp), float(schema["default"]), places=12,
-                    msg=f"{name}.{prop}: registry says {schema['default']}, "
-                        f"C++ default is {cpp}")
+                if "default" not in schema:
+                    continue   # nothing advertised, so nothing can drift
+                declared = params[prop].default
+                self.assertIsNot(declared, inspect.Parameter.empty,
+                                 f"{name}: {prop} has no default")
+                message = (f"{name}.{prop}: registry says {schema['default']}, "
+                           f"the function's default is {declared}")
+                # Numeric defaults are compared as floats so an int/float
+                # mismatch in the JSON does not read as drift; everything else
+                # (lists, strings, objects) must match exactly.
+                if isinstance(declared, (int, float)) and not isinstance(declared, bool):
+                    self.assertAlmostEqual(
+                        float(declared), float(schema["default"]), places=12,
+                        msg=message)
+                else:
+                    self.assertEqual(declared, schema["default"], msg=message)
 
     def test_rejects_unknown_algorithm_and_parameter(self):
         tttr, _ = synthetic_stream(seed=4, bursts=())
