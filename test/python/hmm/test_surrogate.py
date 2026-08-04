@@ -1,4 +1,4 @@
-"""Tests for tttrlib.H2mmSurrogate — the amortised neural estimator for H2MM.
+"""Tests for tttrlib.HmmSurrogate — the amortised neural estimator for H2MM.
 
 The C++ feature extractor must reproduce the reference NumPy implementation
 *exactly*, because a surrogate trained in Python (scikit-learn) has to be
@@ -97,7 +97,7 @@ def _reference_features(times, streams_list, n_streams):
 
 
 def _make_dataset(n_bursts=40, burst_len=60, n_streams=2, seed=0, mean_gap=4):
-    """Simulate a small two-state dataset and load it into an H2MM engine."""
+    """Simulate a small two-state dataset and load it into an HMM engine."""
     rng = np.random.default_rng(seed)
     times, streams = [], []
     for _ in range(n_bursts):
@@ -112,7 +112,7 @@ def _make_dataset(n_bursts=40, burst_len=60, n_streams=2, seed=0, mean_gap=4):
         times.append(t)
         streams.append(s)
 
-    engine = tttrlib.H2MM()
+    engine = tttrlib.HMM()
     engine.set_bursts(
         tttrlib.VectorVectorInt64([tttrlib.VectorInt64(t.tolist()) for t in times]),
         tttrlib.VectorVectorInt32([tttrlib.VectorInt32(s.tolist()) for s in streams]),
@@ -139,16 +139,16 @@ def _make_dataset(n_bursts=40, burst_len=60, n_streams=2, seed=0, mean_gap=4):
 )
 def test_features_match_numpy_reference(n_bursts, burst_len, n_streams, seed, mean_gap):
     engine, times, streams = _make_dataset(n_bursts, burst_len, n_streams, seed, mean_gap)
-    got = tttrlib.H2mmSurrogate.features(engine)
+    got = tttrlib.HmmSurrogate.features(engine)
     expect = _reference_features(times, streams, n_streams)
 
-    assert got.shape == (tttrlib.H2mmSurrogate.N_FEATURES,)
+    assert got.shape == (tttrlib.HmmSurrogate.N_FEATURES,)
     np.testing.assert_allclose(got, expect, rtol=0, atol=1e-12)
 
 
 def test_feature_count_is_stable():
     """24 = 1 mean + 10 histogram + 5 quantiles + 6 lags + 2 gap statistics."""
-    assert tttrlib.H2mmSurrogate.N_FEATURES == 24
+    assert tttrlib.HmmSurrogate.N_FEATURES == 24
 
 
 def test_features_are_permutation_invariant():
@@ -158,7 +158,7 @@ def test_features_are_permutation_invariant():
     order = rng.permutation(len(times))
 
     def build(ts, ss):
-        e = tttrlib.H2MM()
+        e = tttrlib.HMM()
         e.set_bursts(
             tttrlib.VectorVectorInt64([tttrlib.VectorInt64(np.asarray(t).tolist()) for t in ts]),
             tttrlib.VectorVectorInt32([tttrlib.VectorInt32(np.asarray(s).tolist()) for s in ss]),
@@ -166,8 +166,8 @@ def test_features_are_permutation_invariant():
         )
         return e
 
-    a = tttrlib.H2mmSurrogate.features(build(times, streams))
-    b = tttrlib.H2mmSurrogate.features(build([times[i] for i in order],
+    a = tttrlib.HmmSurrogate.features(build(times, streams))
+    b = tttrlib.HmmSurrogate.features(build([times[i] for i in order],
                                              [streams[i] for i in order]))
     np.testing.assert_allclose(a, b, rtol=0, atol=1e-12)
 
@@ -184,7 +184,7 @@ def test_matches_chisurf_reference():
     data = h2mm_py.prepare_bursts([np.asarray(t) for t in times],
                                   [np.asarray(s) for s in streams], 2)
     expect = surrogate.extract_features(data)
-    got = tttrlib.H2mmSurrogate.features(engine)
+    got = tttrlib.HmmSurrogate.features(engine)
     np.testing.assert_allclose(got, expect, rtol=0, atol=1e-12)
 
 
@@ -211,14 +211,14 @@ def test_encode_decode_round_trip(n, p):
     """decode(encode(m)) must return the same model, up to the log10 floor."""
     rng = np.random.default_rng(4)
     prior, trans, obs = _random_model(n, p, rng)
-    m = tttrlib.H2mmModel(tttrlib.VectorDouble(prior.ravel().tolist()),
+    m = tttrlib.HmmModel(tttrlib.VectorDouble(prior.ravel().tolist()),
                           tttrlib.VectorDouble(trans.ravel().tolist()),
                           tttrlib.VectorDouble(obs.ravel().tolist()))
 
-    vec = tttrlib.H2mmSurrogate.encode(m)
-    assert len(vec) == tttrlib.H2mmSurrogate.n_targets(n, p)
+    vec = tttrlib.HmmSurrogate.encode(m)
+    assert len(vec) == tttrlib.HmmSurrogate.n_targets(n, p)
 
-    back = tttrlib.H2mmSurrogate.decode(vec, n, p)
+    back = tttrlib.HmmSurrogate.decode(vec, n, p)
     np.testing.assert_allclose(back.obs_np, obs, rtol=1e-9, atol=1e-9)
     np.testing.assert_allclose(back.trans_np, trans, rtol=1e-6, atol=1e-9)
     np.testing.assert_allclose(back.prior_np, prior, rtol=1e-9, atol=1e-9)
@@ -228,8 +228,8 @@ def test_decode_produces_valid_stochastic_model():
     """Even from noise, decode must return normalised rows."""
     rng = np.random.default_rng(6)
     n, p = 3, 2
-    vec = rng.normal(size=tttrlib.H2mmSurrogate.n_targets(n, p))
-    m = tttrlib.H2mmSurrogate.decode(tttrlib.VectorDouble(vec.tolist()), n, p)
+    vec = rng.normal(size=tttrlib.HmmSurrogate.n_targets(n, p))
+    m = tttrlib.HmmSurrogate.decode(tttrlib.VectorDouble(vec.tolist()), n, p)
     np.testing.assert_allclose(m.obs_np.sum(axis=1), 1.0, atol=1e-12)
     np.testing.assert_allclose(m.trans_np.sum(axis=1), 1.0, atol=1e-12)
     np.testing.assert_allclose(m.prior_np.sum(), 1.0, atol=1e-12)
@@ -238,7 +238,7 @@ def test_decode_produces_valid_stochastic_model():
 
 def test_decode_rejects_wrong_length():
     with pytest.raises(Exception):
-        tttrlib.H2mmSurrogate.decode(tttrlib.VectorDouble([0.1, 0.2]), 3, 2)
+        tttrlib.HmmSurrogate.decode(tttrlib.VectorDouble([0.1, 0.2]), 3, 2)
 
 
 def test_encode_is_label_invariant():
@@ -249,10 +249,10 @@ def test_encode_is_label_invariant():
     perm = np.array([2, 0, 1])
 
     def enc(pr, tr, ob):
-        m = tttrlib.H2mmModel(tttrlib.VectorDouble(pr.ravel().tolist()),
+        m = tttrlib.HmmModel(tttrlib.VectorDouble(pr.ravel().tolist()),
                               tttrlib.VectorDouble(tr.ravel().tolist()),
                               tttrlib.VectorDouble(ob.ravel().tolist()))
-        return np.asarray(tttrlib.H2mmSurrogate.encode(m))
+        return np.asarray(tttrlib.HmmSurrogate.encode(m))
 
     np.testing.assert_allclose(
         enc(prior, trans, obs),
@@ -272,15 +272,15 @@ def _train_small(n_states=2, n_streams=2, seed=0):
     opt.max_iter = 150
     opt.batch_size = 32
     opt.learning_rate = 3e-3
-    return tttrlib.H2mmSurrogate.train(
+    return tttrlib.HmmSurrogate.train(
         n_states, n_streams, 200, 40, 60, 4.0, opt, seed)
 
 
 def test_generate_training_set_shapes():
-    X, Y = tttrlib.H2mmSurrogate.generate_training_set(
+    X, Y = tttrlib.HmmSurrogate.generate_training_set(
         2, 2, n_samples=12, n_bursts=20, burst_len=40, seed=3)
-    assert X.shape == (12, tttrlib.H2mmSurrogate.N_FEATURES)
-    assert Y.shape == (12, tttrlib.H2mmSurrogate.n_targets(2, 2))
+    assert X.shape == (12, tttrlib.HmmSurrogate.N_FEATURES)
+    assert Y.shape == (12, tttrlib.HmmSurrogate.n_targets(2, 2))
     assert np.isfinite(X).all() and np.isfinite(Y).all()
     # the simulated datasets must not all be identical
     assert X.std(axis=0).max() > 0
@@ -290,9 +290,9 @@ def test_training_produces_usable_surrogate():
     s = _train_small()
     assert s.get_n_states() == 2
     assert s.get_n_streams() == 2
-    assert s.get_features_version() == tttrlib.H2mmSurrogate.FEATURES_VERSION
-    assert s.get_net().n_inputs() == tttrlib.H2mmSurrogate.N_FEATURES
-    assert s.get_net().n_outputs() == tttrlib.H2mmSurrogate.n_targets(2, 2)
+    assert s.get_features_version() == tttrlib.HmmSurrogate.FEATURES_VERSION
+    assert s.get_net().n_inputs() == tttrlib.HmmSurrogate.N_FEATURES
+    assert s.get_net().n_outputs() == tttrlib.HmmSurrogate.n_targets(2, 2)
 
     engine, _, _ = _make_dataset(40, 60, 2, seed=77)
     m = s.predict(engine)
@@ -316,7 +316,7 @@ def test_surrogate_beats_a_constant_guess():
             e = np.where(state, e_hi, e_lo)
             streams.append((rng.random(80) < e).astype(np.int32))
             times.append(t)
-        engine = tttrlib.H2MM()
+        engine = tttrlib.HMM()
         engine.set_bursts(
             tttrlib.VectorVectorInt64([tttrlib.VectorInt64(t.tolist()) for t in times]),
             tttrlib.VectorVectorInt32([tttrlib.VectorInt32(x.tolist()) for x in streams]),
@@ -349,7 +349,7 @@ def test_json_round_trip():
     s = _train_small()
     engine, _, _ = _make_dataset(20, 50, 2, seed=44)
 
-    back = tttrlib.H2mmSurrogate.from_json_string(s.to_json_string())
+    back = tttrlib.HmmSurrogate.from_json_string(s.to_json_string())
     np.testing.assert_allclose(back.predict(engine).obs_np,
                                s.predict(engine).obs_np, rtol=0, atol=1e-12)
 
@@ -360,19 +360,19 @@ def test_json_file_round_trip_and_shape():
         path = os.path.join(d, "surrogate.json")
         s.to_json_file(path)
         doc = json.load(open(path))
-        assert doc["format"] == "tttrlib.h2mm_surrogate"
+        assert doc["format"] == "tttrlib.hmm_surrogate"
         assert doc["n_states"] == 2 and doc["n_streams"] == 2
         assert doc["net"]["format"] == "tttrlib.neural_net"
-        tttrlib.H2mmSurrogate.from_json_file(path)
+        tttrlib.HmmSurrogate.from_json_file(path)
 
 
 def test_stale_features_version_is_rejected():
     """A model built for a different feature layout must fail loudly."""
     s = _train_small()
     doc = json.loads(s.to_json_string())
-    doc["features_version"] = tttrlib.H2mmSurrogate.FEATURES_VERSION + 1
+    doc["features_version"] = tttrlib.HmmSurrogate.FEATURES_VERSION + 1
     with pytest.raises(Exception) as exc:
-        tttrlib.H2mmSurrogate.from_json_string(json.dumps(doc))
+        tttrlib.HmmSurrogate.from_json_string(json.dumps(doc))
     assert "features_version" in str(exc.value)
 
 
@@ -381,7 +381,7 @@ def test_wrong_format_is_rejected():
     doc = json.loads(s.to_json_string())
     doc["format"] = "tttrlib.neural_net"
     with pytest.raises(Exception):
-        tttrlib.H2mmSurrogate.from_json_string(json.dumps(doc))
+        tttrlib.HmmSurrogate.from_json_string(json.dumps(doc))
 
 
 def test_net_output_width_must_match_state_count():
@@ -390,5 +390,5 @@ def test_net_output_width_must_match_state_count():
     doc = json.loads(s.to_json_string())
     doc["n_states"] = 3  # net still produces the 2-state target width
     with pytest.raises(Exception) as exc:
-        tttrlib.H2mmSurrogate.from_json_string(json.dumps(doc))
+        tttrlib.HmmSurrogate.from_json_string(json.dumps(doc))
     assert "outputs" in str(exc.value)

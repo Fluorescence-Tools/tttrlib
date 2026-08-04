@@ -49,8 +49,8 @@ def _simulate():
         for _ in range(N_BURSTS)
     ]
     prior, trans, obs = _make_true_model()
-    true = tttrlib.H2mmModel(list(prior.ravel()), list(trans.ravel()), list(obs.ravel()))
-    streams = tttrlib.H2MM.simulate_bursts(true, [list(t) for t in times], SEED + 1)
+    true = tttrlib.HmmModel(list(prior.ravel()), list(trans.ravel()), list(obs.ravel()))
+    streams = tttrlib.HMM.simulate_bursts(true, [list(t) for t in times], SEED + 1)
     streams = [np.asarray(s, dtype=np.int8) for s in streams]
     return times, streams
 
@@ -75,10 +75,10 @@ def _write_shared(times, streams, init):
 
 def main():
     times, streams = _simulate()
-    init = tttrlib.H2MM.factory_model(N_STATES, N_STREAMS, 1e-3, 7)
+    init = tttrlib.HMM.factory_model(N_STATES, N_STREAMS, 1e-3, 7)
     _write_shared(times, streams, init)
 
-    eng = tttrlib.H2MM()
+    eng = tttrlib.HMM()
     eng.set_bursts([list(map(int, t)) for t in times],
                    [list(map(int, s)) for s in streams], N_STREAMS)
     n_phot = eng.get_n_photons()

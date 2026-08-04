@@ -72,7 +72,7 @@ def simulate(true, seed=1, n_bursts=60, burst_len=200, mean_gap=30):
         np.cumsum(rng.integers(1, 2 * mean_gap, size=burst_len)).astype(np.int64).tolist()
         for _ in range(n_bursts)
     ]
-    streams = tttrlib.H2MM.simulate_bursts(true, times, seed + 1)
+    streams = tttrlib.HMM.simulate_bursts(true, times, seed + 1)
     return times, [list(s) for s in streams]
 
 
@@ -96,12 +96,12 @@ SEPARATED = ([0.5, 0.5],
 
 class TestPosterior(unittest.TestCase):
     def setUp(self):
-        self.true = tttrlib.H2mmModel(*SEPARATED)
+        self.true = tttrlib.HmmModel(*SEPARATED)
         self.times, self.streams = simulate(self.true, seed=2, n_bursts=25)
-        self.eng = tttrlib.H2MM()
+        self.eng = tttrlib.HMM()
         self.eng.set_bursts(self.times, self.streams, 2)
         self.fit = self.eng.optimize(
-            tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
+            tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
 
     def test_gamma_is_a_distribution(self):
         g, n_underflow = self.eng.gamma(self.fit)
@@ -131,11 +131,11 @@ class TestWinnerTakesAllBias(unittest.TestCase):
     """The reason this feature exists, as an executable claim."""
 
     def test_viterbi_occupancy_is_biased_and_sampling_is_not(self):
-        true = tttrlib.H2mmModel(*AMBIGUOUS)
+        true = tttrlib.HmmModel(*AMBIGUOUS)
         times, streams = simulate(true, seed=11, n_bursts=120, burst_len=200)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        fit = eng.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
+        fit = eng.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
 
         g, _ = eng.gamma(fit)
         post = g.mean(axis=0)                       # unbiased posterior occupancy
@@ -161,12 +161,12 @@ class TestWinnerTakesAllBias(unittest.TestCase):
 
 class TestSamplers(unittest.TestCase):
     def setUp(self):
-        self.true = tttrlib.H2mmModel(*SEPARATED)
+        self.true = tttrlib.HmmModel(*SEPARATED)
         self.times, self.streams = simulate(self.true, seed=3, n_bursts=40)
-        self.eng = tttrlib.H2MM()
+        self.eng = tttrlib.HMM()
         self.eng.set_bursts(self.times, self.streams, 2)
         self.fit = self.eng.optimize(
-            tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
+            tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
 
     def test_jitter_converges_to_gamma_column_means(self):
         g, _ = self.eng.gamma(self.fit)
@@ -217,7 +217,7 @@ class TestSamplers(unittest.TestCase):
         # from a shared generator, so splitting the bursts differently across
         # threads cannot change the answer.  Re-running on a single burst set
         # loaded as one burst vs many exercises the same keying.
-        big = tttrlib.H2MM()
+        big = tttrlib.HMM()
         big.set_bursts(self.times, self.streams, 2)
         a, _ = big.jitter_path(self.fit, seed=7)
         b, _ = self.eng.jitter_path(self.fit, seed=7)
@@ -236,11 +236,11 @@ class TestEmUnchanged(unittest.TestCase):
     def test_refactored_forward_sweep_moves_no_number(self):
         # The forward recursion was lifted out of the E-step so the decoders can
         # share it.  These are the fitted values from before that change.
-        true = tttrlib.H2mmModel(*SEPARATED)
+        true = tttrlib.HmmModel(*SEPARATED)
         times, streams = simulate(true, seed=2, n_bursts=25)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        fit = eng.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
+        fit = eng.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
         self.assertTrue(fit.converged)
         obs = fit.obs_np[np.argsort(fit.obs_np[:, 0])[::-1]]
         np.testing.assert_allclose(obs, true.obs_np, atol=0.05)
@@ -282,7 +282,7 @@ class TestPersistence(unittest.TestCase):
         self.tttr, self.bursts = _synthetic_tttr()
         g = tttrlib.Channel('g'); g.add_component(0, 0, 65535)
         r = tttrlib.Channel('r'); r.add_component(1, 0, 65535)
-        self.eng = tttrlib.H2MM()
+        self.eng = tttrlib.HMM()
         self.eng.set_bursts_from_tttr(self.tttr, self.bursts, [g, r], 3, 1)
         self.fit = self.eng.fit(2, 1, 200, 1e-7, 3)
         self.path, _ = self.eng.viterbi_path(self.fit)
@@ -296,7 +296,7 @@ class TestPersistence(unittest.TestCase):
     def test_set_bursts_has_no_photon_index(self):
         # Bursts given as plain arrays have no source file to point at, so both
         # persistence paths must refuse rather than guess.
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts([[0, 1, 2]], [[0, 1, 0]], 2)
         self.assertEqual(len(eng.get_photon_index()), 0)
         with self.assertRaises(Exception):
@@ -337,7 +337,7 @@ class TestPersistence(unittest.TestCase):
                         np.zeros(n, np.int8), False, 0)
         g = tttrlib.Channel('g'); g.add_component(1, 0, 65535)
         r = tttrlib.Channel('r'); r.add_component(12, 0, 65535)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts_from_tttr(d, np.asarray([[0, n - 1]], np.int64), [g, r], 3, 1)
         fit = eng.fit(2, 1, 100, 1e-7, 0)
         path, _ = eng.viterbi_path(fit)
@@ -410,10 +410,10 @@ class TestPersistence(unittest.TestCase):
         out = self.eng.split_routing_channels(self.tttr, self.path, cmap)
         sc = self.eng.state_sidecar(self.path, self.fit, "viterbi", 0, cmap)
 
-        fn = tempfile.mktemp(suffix="_h2mm_states.msgpack")
+        fn = tempfile.mktemp(suffix="_hmm_states.msgpack")
         try:
             sc.write(fn)
-            back = tttrlib.H2mmStateSidecar.read(fn)
+            back = tttrlib.HmmStateSidecar.read(fn)
             np.testing.assert_array_equal(back.states_np, sc.states_np)
             np.testing.assert_array_equal(back.streams_np, sc.streams_np)
             self.assertEqual(back.decoder, "viterbi")
@@ -518,7 +518,7 @@ class TestPersistence(unittest.TestCase):
         fn = tempfile.mktemp(suffix=".msgpack")
         try:
             sc.write(fn)
-            back = tttrlib.H2mmStateSidecar.read(fn)
+            back = tttrlib.HmmStateSidecar.read(fn)
             self.assertEqual(back.decoder, "jitter")
             self.assertEqual(back.seed, 99)
             self.assertFalse(back.has_channel_map)

@@ -40,7 +40,7 @@ def main():
     n_streams = int(d["n_streams"])
 
     data = eng.prepare_bursts(times, streams, n_streams)
-    init = eng.H2mmModel(d["init_prior"].astype(np.float64),
+    init = eng.HmmModel(d["init_prior"].astype(np.float64),
                          d["init_trans"].astype(np.float64),
                          d["init_obs"].astype(np.float64))
     n_phot = data.n_photons

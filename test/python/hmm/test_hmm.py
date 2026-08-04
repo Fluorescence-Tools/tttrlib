@@ -23,14 +23,14 @@ def _simulate(true, seed=1, n_bursts=60, burst_len=300, mean_gap=30):
         np.cumsum(rng.integers(1, 2 * mean_gap, size=burst_len)).astype(np.int64).tolist()
         for _ in range(n_bursts)
     ]
-    streams = tttrlib.H2MM.simulate_bursts(true, times, seed + 1)
+    streams = tttrlib.HMM.simulate_bursts(true, times, seed + 1)
     return times, [list(s) for s in streams]
 
 
-class TestH2MM(unittest.TestCase):
+class TestHMM(unittest.TestCase):
     def setUp(self):
         # Two clearly separated FRET states, slow dynamics.
-        self.true = tttrlib.H2mmModel(
+        self.true = tttrlib.HmmModel(
             [0.5, 0.5],
             [0.999, 0.001, 0.002, 0.998],
             [0.80, 0.20, 0.25, 0.75],
@@ -38,9 +38,9 @@ class TestH2MM(unittest.TestCase):
 
     def test_model_recovery(self):
         times, streams = _simulate(self.true, seed=2)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        fit = eng.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
+        fit = eng.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
         self.assertTrue(fit.converged)
         # Emission matrix recovered up to a possible state relabelling.
         obs = fit.obs_np
@@ -51,9 +51,9 @@ class TestH2MM(unittest.TestCase):
 
     def test_squarem_matches_plain_em(self):
         times, streams = _simulate(self.true, seed=3, n_bursts=30)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        init = tttrlib.H2MM.factory_model(2, 2, 1e-3, 5)
+        init = tttrlib.HMM.factory_model(2, 2, 1e-3, 5)
         fast = eng.optimize(init, 500, 1e-10, 1e-12, True)
         slow = eng.optimize(init, 500, 1e-10, 1e-12, False)
         # Same EM fixed point (identical log-likelihood), SQUAREM in fewer maps.
@@ -62,9 +62,9 @@ class TestH2MM(unittest.TestCase):
 
     def test_viterbi_path(self):
         times, streams = _simulate(self.true, seed=4, n_bursts=20)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        fit = eng.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
+        fit = eng.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 300, 1e-9)
         path, icl = eng.viterbi_path(fit)
         self.assertEqual(path.shape[0], eng.get_n_photons())
         self.assertTrue(np.isfinite(icl))
@@ -73,7 +73,7 @@ class TestH2MM(unittest.TestCase):
 
     def test_bic_selects_true_state_count(self):
         times, streams = _simulate(self.true, seed=6, n_bursts=80)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
         bic = {}
         for k in (1, 2, 3):
@@ -88,10 +88,10 @@ class TestH2MM(unittest.TestCase):
         prior = np.array([0.6, 0.4])
         A = np.array([[0.9, 0.1], [0.2, 0.8]])
         B = np.array([[0.7, 0.3], [0.3, 0.7]])
-        model = tttrlib.H2mmModel(list(prior.ravel()), list(A.ravel()), list(B.ravel()))
+        model = tttrlib.HmmModel(list(prior.ravel()), list(A.ravel()), list(B.ravel()))
         times = [[0, 1], [0, 2]]
         streams = [[0, 1], [1, 0]]
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
         # engine log-likelihood (one map's E-step value == logL of input model)
         fit = eng.optimize(model, 1, 1e30)  # single map, huge tol -> no convergence loop past 1
@@ -112,9 +112,9 @@ class TestH2MM(unittest.TestCase):
         # The approximate float32 fast mode should recover the same model as the
         # exact double path (to within its ~1e-2 log-likelihood round-off).
         times, streams = _simulate(self.true, seed=7, n_bursts=40)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts(times, streams, 2)
-        init = tttrlib.H2MM.factory_model(2, 2, 1e-3, 0)
+        init = tttrlib.HMM.factory_model(2, 2, 1e-3, 0)
         exact = eng.optimize(init, 300, 1e-9, 1e-12, True, False)
         fast = eng.optimize(init, 300, 1e-3, 1e-12, True, True)  # single_precision
         ea = exact.obs_np[np.argsort(exact.obs_np[:, 0])]
@@ -153,7 +153,7 @@ class TestH2MM(unittest.TestCase):
         # C++ extraction
         g = tttrlib.Channel('g'); g.add_component(0, 0, 65535)
         r = tttrlib.Channel('r'); r.add_component(1, 0, 65535)
-        eng = tttrlib.H2MM()
+        eng = tttrlib.HMM()
         eng.set_bursts_from_tttr(d, np.asarray(bursts, dtype=np.int64), [g, r], 3, 1)
 
         # NumPy reference
