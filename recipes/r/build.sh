@@ -37,7 +37,14 @@ cp "${R_IF}" ext/r/pkg/R/tttrlib.R
 # as the static core: repo root (for "include/Foo.h"), src, and the vendored
 # thirdparty (HighFive, nlohmann/json), plus the conda prefix (hdf5, pocketfft).
 ROOT="$(pwd)"
-INCDIRS="-I${ROOT}/include -I${ROOT}/src -I${ROOT}/thirdparty -I${ROOT}/thirdparty/nlohmann_json/include -I${ROOT}/thirdparty/HighFive/include -I${PREFIX}/include"
+# Modules keep their public headers in modules/<name>/include, so the list has
+# to be discovered rather than spelled out -- extracting a module would
+# otherwise break this build with "file not found" on a header that moved.
+MODULE_INCDIRS=""
+for d in "${ROOT}"/modules/*/include; do
+  [ -d "$d" ] && MODULE_INCDIRS="${MODULE_INCDIRS} -I${d}"
+done
+INCDIRS="-I${ROOT}/include -I${ROOT}/src${MODULE_INCDIRS} -I${ROOT}/thirdparty -I${ROOT}/thirdparty/nlohmann_json/include -I${ROOT}/thirdparty/HighFive/include -I${PREFIX}/include"
 sed -e "s|@TTTRLIB_INCLUDE@|${ROOT}|g" \
     -e "s|@HDF5_CFLAGS@|${INCDIRS}|g" \
     -e "s|@TTTRLIB_LIBS@|${STATIC}|g" \

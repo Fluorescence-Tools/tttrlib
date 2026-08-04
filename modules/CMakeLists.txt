@@ -20,12 +20,11 @@
 #   opt, hist, imageio, sim, pda, superres, localization,
 #   then burst, core, decay, imaging, nn, hmm.
 
-file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+# Extracted modules first: each owns its own sources under modules/<name>/src,
+# so what is left in src/ is by definition what nobody has claimed yet.
+add_subdirectory(imageio)
 
-# As modules are extracted, their sources are removed here:
-#   list(REMOVE_ITEM TTTRLIB_LEGACY_SOURCES ${TTTRLIB_SIM_SOURCES})
-# and a doubly-claimed or unclaimed file becomes a configure error rather than a
-# duplicate-symbol link failure or a silently missing capability.
+file(GLOB_RECURSE TTTRLIB_LEGACY_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 tttrlib_add_module(
     NAME    legacy

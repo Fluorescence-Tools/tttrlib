@@ -465,7 +465,13 @@ IF(BUILD_LIBRARY)
   # Link libraries (Boost removed - using C++17 standard library)
 
   # Define which headers are going to be included in the install target
-  FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/include/*.h*")
+  # A module's headers are public headers as well: they install flat into
+  # include/tttrlib/ exactly as the ones still in include/ do, so a C++ consumer
+  # sees one directory and #include <tttrlib/TiffArrayIO.h> keeps working no
+  # matter which module owns it.
+  FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true
+          "${CMAKE_SOURCE_DIR}/include/*.h*"
+          "${CMAKE_SOURCE_DIR}/modules/*/include/*.h*")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 

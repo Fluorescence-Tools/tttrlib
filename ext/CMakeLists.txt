@@ -7,6 +7,10 @@ if(POLICY CMP0148)
 endif()
 
 
+# Module headers must be on the include path of every binding target -- and, 
+# critically, of swig itself. See cmake/TTTRLibModule.cmake.
+tttrlib_module_include_directories()
+
 SET(MODULE_NAME ${PROJECT_NAME})
 
 FIND_PACKAGE(SWIG REQUIRED)

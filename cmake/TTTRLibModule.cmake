@@ -44,6 +44,7 @@ set_property(CACHE TTTRLIB_MODULE_TYPE PROPERTY STRINGS SHARED STATIC)
 # Accumulated across tttrlib_add_module() calls; read by tttrlib_finalize_modules().
 set_property(GLOBAL PROPERTY TTTRLIB_MODULE_LIST "")
 set_property(GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES "")
+set_property(GLOBAL PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "")
 
 # Point a target at its own directory for sibling libraries.
 function(tttrlib_set_sibling_rpath target)
@@ -106,6 +107,7 @@ function(tttrlib_add_module)
 
     foreach(dir IN LISTS M_HEADERS)
         target_include_directories(${target} PUBLIC "${dir}")
+        set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "${dir}")
     endforeach()
 
     # No VERSION/SOVERSION. These libraries are shipped inside the Python
@@ -170,7 +172,11 @@ function(tttrlib_finalize_modules)
     get_property(claimed GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES)
     get_property(modules GLOBAL PROPERTY TTTRLIB_MODULE_LIST)
 
-    file(GLOB_RECURSE all_sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
+    # Everything that must be built: what is still in src/, plus what extracted
+    # modules have taken into modules/<name>/src/.
+    file(GLOB_RECURSE all_sources
+            "${CMAKE_SOURCE_DIR}/src/*.cpp"
+            "${CMAKE_SOURCE_DIR}/modules/*/src/*.cpp")
 
     set(duplicates "")
     set(seen "")
@@ -215,7 +221,29 @@ function(tttrlib_link_all_modules target)
     foreach(m IN LISTS modules)
         target_link_libraries(${target} tttrlib::${m})
     endforeach()
+
 endfunction()
+
+
+# Put every module's public headers on the current DIRECTORY's include path.
+#
+# For the C++ compile step, linking tttrlib::<module> is enough -- the usage
+# requirement carries the include directory. swig is different: UseSWIG builds
+# the swig command line from directory-scope include directories, and neither a
+# linked library's INTERFACE_INCLUDE_DIRECTORIES nor a target_include_directories
+# call reaches it. Without this, swig fails to find a header that the compiler
+# would have found perfectly well:
+#   Tiff.i:32: Error: Unable to find 'TiffArrayIO.h'
+#
+# A macro, not a function, so include_directories() applies to the calling
+# directory rather than to a scope that evaporates on return.
+macro(tttrlib_module_include_directories)
+    get_property(_tttrlib_mod_dirs GLOBAL PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS)
+    if(_tttrlib_mod_dirs)
+        include_directories(${_tttrlib_mod_dirs})
+    endif()
+    unset(_tttrlib_mod_dirs)
+endmacro()
 
 
 # Install every module. COMPONENT matters: pyproject.toml installs only the
