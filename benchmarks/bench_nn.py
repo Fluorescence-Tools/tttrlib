@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NeuralNet / H2MM-surrogate benchmark — tttrlib C++ vs scikit-learn vs EM.
+"""NeuralNet / HMM-surrogate benchmark — tttrlib C++ vs scikit-learn vs EM.
 
 Answers three questions the PRD-010 design rests on, on the *real*
 implementation rather than a standalone probe:
@@ -44,7 +44,7 @@ def _train_options(max_iter=200):
 
 
 def _simulate_dataset(e_lo, e_hi, k, rng, n_bursts=N_BURSTS, burst_len=BURST_LEN):
-    """Simulate a two-state kinetic dataset and load it into an H2MM engine."""
+    """Simulate a two-state kinetic dataset and load it into an HMM engine."""
     times, streams = [], []
     for _ in range(n_bursts):
         t = np.concatenate(
@@ -60,7 +60,7 @@ def _simulate_dataset(e_lo, e_hi, k, rng, n_bursts=N_BURSTS, burst_len=BURST_LEN
         times.append(t)
         streams.append(s)
 
-    engine = tttrlib.H2MM()
+    engine = tttrlib.HMM()
     engine.set_bursts(
         tttrlib.VectorVectorInt64([tttrlib.VectorInt64(t.tolist()) for t in times]),
         tttrlib.VectorVectorInt32([tttrlib.VectorInt32(s.tolist()) for s in streams]),
@@ -73,7 +73,7 @@ def main():
     rng = np.random.default_rng(SEED)
 
     # ---- 1. training-set generation (the dominant cost of building a surrogate)
-    gen = lambda: tttrlib.H2mmSurrogate.generate_training_set(
+    gen = lambda: tttrlib.HmmSurrogate.generate_training_set(
         N_STATES, N_STREAMS, n_samples=N_TRAIN, n_bursts=N_BURSTS,
         burst_len=BURST_LEN, mean_dt=MEAN_DT, seed=SEED)
     bench("nn", "tttrlib", "generate_training_set", gen,
@@ -114,7 +114,7 @@ def main():
         mlp = fit_sklearn()
 
         # held-out accuracy on freshly simulated data, same metric for both
-        Xte, Yte = tttrlib.H2mmSurrogate.generate_training_set(
+        Xte, Yte = tttrlib.HmmSurrogate.generate_training_set(
             N_STATES, N_STREAMS, n_samples=100, n_bursts=N_BURSTS,
             burst_len=BURST_LEN, mean_dt=MEAN_DT, seed=SEED + 999)
         mae_cpp = float(np.abs(net_cpp.predict_batch_np(Xte) - Yte).mean())
@@ -124,13 +124,13 @@ def main():
                extra={"tttrlib": mae_cpp, "sklearn": mae_skl})
 
     # ---- 3. forward pass: feature extraction + net, on a real dataset
-    surrogate = tttrlib.H2mmSurrogate(net_cpp, N_STATES, N_STREAMS)
+    surrogate = tttrlib.HmmSurrogate(net_cpp, N_STATES, N_STREAMS)
     engine = _simulate_dataset(0.25, 0.75, 0.02, rng)
     print(f"    eval dataset: {engine.get_n_bursts()} bursts, "
           f"{engine.get_n_photons()} photons")
 
     bench("nn", "tttrlib", "extract_features",
-          lambda: tttrlib.H2mmSurrogate.features(engine),
+          lambda: tttrlib.HmmSurrogate.features(engine),
           repeat=7, n_items=engine.get_n_photons(), unit="photons")
     bench("nn", "tttrlib", "surrogate_predict",
           lambda: surrogate.predict(engine),
