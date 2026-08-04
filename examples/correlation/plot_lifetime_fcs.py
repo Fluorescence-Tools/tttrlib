@@ -1,7 +1,7 @@
 """
-==========================================
+============================================
 Lifetime-filtered correlation (lifetime-FCS)
-==========================================
+============================================
 
 Fluorescence-lifetime correlation spectroscopy (FLCS / lifetime-FCS) separates
 species that overlap spatially and spectrally but differ in their **fluorescence
@@ -203,7 +203,7 @@ fig.tight_layout()
 
 # %%
 # 2. Interconverting states — the cross-correlation reveals the kinetics
-# ---------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Now both states diffuse identically (D = 0.15 um^2/ms) but interconvert at
 # k = 3 ms^-1 while they cross the focus. The auto-correlations coincide (same
 # diffusion), yet the species cross-correlation rises from below one (a photon is

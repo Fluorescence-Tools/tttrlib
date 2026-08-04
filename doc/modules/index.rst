@@ -14,6 +14,6 @@ Notebook-style topic pages for the main tttrlib analysis domains.
    imaging_mle
    single-molecule
    pda
-   h2mm_bva
+   hmm_bva
    features
    ics

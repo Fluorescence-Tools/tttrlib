@@ -26,9 +26,9 @@ interface** to three languages, all from the same engine:
 
 - **Python** — the primary, most-tested binding; native NumPy arrays, integrates
   with SciPy/Matplotlib/Jupyter.
-- **R** — native R vectors; see [docs/r-package.md](docs/r-package.md).
+- **R** — native R vectors; see [doc/r-package.rst](doc/r-package.rst).
 - **Java** — clean 64-bit `long` macro times; ships an
-  [ImageJ/Fiji plugin](docs/imagej-plugin.md).
+  [ImageJ/Fiji plugin](doc/imagej-plugin.rst).
 
 It runs on **Linux, macOS (Intel + Apple silicon), and Windows**, with
 prebuilt packages (pip wheels, conda) for all three. Photon-stream operations
@@ -51,57 +51,31 @@ fluorescence decay analysis, FLIM, CLSM, and image scanning microscopy.
 
 Speed is the point of tttrlib. The hot loops are vectorized C++ with
 runtime-dispatched AVX/NEON kernels and OpenMP, so it stays fast on an ordinary
-laptop CPU — **and you don't need a GPU to keep up with GPU-accelerated tools;
-tttrlib on the CPU is faster than they are on the GPU.** On the same machine,
-tttrlib's CPU per-pixel FLIM fitting (~0.40 s, stable) beats FLIMKit running on the
-GPU (0.5–1.2 s, run-to-run) — **1.3–2.9× faster** across runs (the per-pixel fit is
-a swarm of tiny independent fits with branching, which GPUs handle poorly, so the
-GPU brings no benefit there). Every number below is
-tttrlib on CPU only, against the common open-source tools on **identical data,
-same machine** (reproducible suite in [`benchmarks/`](benchmarks/)):
+laptop CPU — **and you don't need a GPU to keep up with GPU-accelerated tools.**
+On the same machine, tttrlib's CPU per-pixel FLIM fitting (0.40 s) beats FLIMKit
+running on the GPU (0.54 s): the per-pixel fit is a swarm of tiny independent
+fits with branching, which GPUs handle poorly. Highlights, CPU only, against the
+common open-source tools on identical data:
 
 ![tttrlib speedup vs competitors](benchmarks/plots/summary_speedup.png)
 
-### 0.27.0 — a performance & memory release
-
-0.27.0 makes confocal (CLSM/FLIM) reconstruction both faster and much lighter on
-memory. `fill()` now uses a lazy per-event stream-mask (one bit per event)
-instead of eagerly materializing a per-pixel photon-index vector, and the new
-`CLSMImage(..., build_pixels=False)` virtual fill skips per-pixel allocation
-entirely for intensity-only work. Measured against the previous release **0.26.2**
-on the same machine and inputs (task memory = peak RSS minus the post-import
-baseline; full method and per-task charts in the
-[performance guide](https://tttrlib.readthedocs.io/en/latest/performance_guide.html)
-and [`benchmarks/`](benchmarks/)):
-
-| Task | 0.26.2 | 0.27.0 | Faster | Less memory |
-|------|-------:|-------:|:------:|:-----------:|
-| CLSM fill + structure (512×512 PTU) | 125 ms | 46 ms | **2.7×** | **−12%** |
-| CLSM fill, 2.6 M-pixel FLIM image (HT3) | 1484 ms | 279 ms | **5.3×** | **−40%** |
-| Correlation / FCS (3.5 M photons) | 438 ms | 279 ms | 1.6× | −7% |
-
-<sub>Apple M1 Pro, CPU only. Regenerate with `python benchmarks/bench_versions.py
---versions 0.26.2 0.27.0=local && python benchmarks/make_version_plots.py`.</sub>
-
-### What tttrlib now wins
-
-CPU only, no GPU, identical data.
-
 | Task | tttrlib | Best competitor | Result |
 |------|--------:|----------------:|:-------|
-| **Single-curve lifetime fit** (one detector) | 0.23 ms | flimlib LMA 2.38 ms | **10×** (36× batched) |
+| **Single-curve lifetime fit** (one detector) | 0.23 ms | flimlib LMA 2.38 ms | **10×** (39× batched) |
 | **H2MM** photon-by-photon HMM (Baum-Welch) | 0.10 s | H2MM_C (C ref) 0.79 s · numba 0.39 s | **7.6× vs C ref** |
-| Burst search | 2.8 ms | FRETBursts 13.0 ms | **4.7×** |
 | Correlation / FCS (multi-tau) | 0.13 s | pycorrelate 1.71 s (direct) | **13×** |
 | Diffusion simulation (coasting) | 0.44 s | PyBroMo 2.23 s | **5.1×** |
-| Per-pixel reconvolution MLE (CPU) | 0.40 s | FLIMKit **on GPU** 0.5–1.2 s · CPU 0.9 s | **1.3–2.9× vs GPU** |
-| CLSM intensity image | 19 ms | ptufile 22 ms | **1.2×** |
-| TTTR file reading | 24 ms | ptufile 26 ms | **1.1×** |
-| Fast lifetime (moments) map | 36 ms | flimlib RLD 44 ms | **1.2×** |
-| ↳ re-tune IRF on a built map | **0.1 ms** | flimlib RLD 43 ms (recomputes) | **~400×** |
+| Burst search | 2.8 ms | FRETBursts 13.0 ms | **4.7×** |
+| Per-pixel reconvolution MLE (CPU) | 0.40 s | FLIMKit **on GPU** 0.54 s · CPU 0.86 s | **1.4× vs GPU** |
+| ↳ re-tune IRF on a built lifetime map | **0.09 ms** | flimlib RLD 44 ms (recomputes) | **~510×** |
 
-<sub>Apple M1 Pro, CPU only, identical input files. Full methodology, per-task
-charts, and honest trade-offs: [`benchmarks/README.md`](benchmarks/README.md).</sub>
+**0.27.0 is a performance & memory release**: CLSM fill + structure is 2.7×
+faster at −12% memory, and a 2.6 M-pixel FLIM image fills 5.3× faster at −40%
+memory, versus 0.26.2.
+
+<sub>Apple M1 Pro, CPU only, identical input files. **Full results, per-task
+charts, cross-version tracking, methodology and honest trade-offs:
+[`PERF.md`](PERF.md).**</sub>
 
 Single-detector setups are first-class: `FitNExp` is a native C++ single- or
 multi-exponential Poisson reconvolution fitter for one decay curve, with batched
@@ -141,10 +115,10 @@ Start here:
   background rejection.
 
 On representative workloads, tttrlib runs about 5x faster than FRETBursts for
-burst selection, 9-36x faster than flimlib for reconvolution lifetime fitting,
+burst selection, 10-39x faster than flimlib for reconvolution lifetime fitting,
 and produces per-pixel FLIM lifetime maps faster than FLIMKit and flimlib — all
-on CPU. See the [benchmark suite](benchmarks/) for the full, reproducible
-comparison and the cases where other tools win.
+on CPU. See [`PERF.md`](PERF.md) for the full, reproducible comparison and the
+cases where other tools win.
 
 ## Installation
 
@@ -190,13 +164,13 @@ mamba install -c conda-forge -c tpeulen r-tttrlib
 ```
 
 Native R vectors, S4 API. Linux/macOS. Full instructions, usage, and
-from-source build: **[docs/r-package.md](docs/r-package.md)**.
+from-source build: **[doc/r-package.rst](doc/r-package.rst)**.
 
 ### Java / ImageJ
 
 The Java binding ships as an ImageJ/Fiji plugin — a single cross-platform JAR
 you drop into `plugins/`. See the [ImageJ / Fiji plugin](#imagej--fiji-plugin)
-section below and **[docs/imagej-plugin.md](docs/imagej-plugin.md)**.
+section below and **[doc/imagej-plugin.rst](doc/imagej-plugin.rst)**.
 
 Legacy 32-bit platforms and Python 2.7 are not supported.
 
@@ -298,7 +272,7 @@ from the [Releases page](https://github.com/fluorescence-tools/tttrlib/releases)
 your `Fiji.app/plugins/` (or `ImageJ/plugins/`) folder, and restart. The JAR
 bundles the native libraries for Linux, macOS (Intel + Apple silicon) and
 Windows, so no extra setup is needed. Full instructions and usage:
-[`docs/imagej-plugin.md`](docs/imagej-plugin.md).
+[`doc/imagej-plugin.rst`](doc/imagej-plugin.rst).
 
 ## Supported file formats
 

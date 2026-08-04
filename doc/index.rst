@@ -105,8 +105,8 @@ Documentation
    tttr-core
    file-formats
    burst-analysis
-   h2mm-bva
-   h2mm-state-decoding
+   hmm-bva
+   hmm-state-decoding
    pda-guide
    fcs-correlation
    clsm-flim-guide
