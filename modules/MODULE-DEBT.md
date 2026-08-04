@@ -6,8 +6,8 @@ hits it next.
 
 ## 1. `legacy` still holds the core cluster
 
-The leaves are out: `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
-`localization`. `legacy` is down from 68 sources to 55 and now holds the part
+Out so far: `util`, `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
+`localization`. `legacy` is down from 68 sources to 53 and now holds the part
 that is genuinely tangled -- core, burst, decay, imaging, nn and hmm.
 
 Two of the extracted modules are leaves of the *include* graph without being
@@ -19,9 +19,25 @@ simulator reaches into nothing but `Random.h`, and it is `hmm` and `nn` --
 still inside `legacy` -- that include `SimDecay.h` and `SimPcgRandom.h`, so
 `legacy` declares `DEPENDS sim`.
 
-**Exit:** `burst`, then `core`, `decay`, `imaging`, `nn`, `hmm`.
+**Exit:** `core`, then `imaging`, `decay`, `burst`, `nn`, `hmm`.
 `tttrlib_finalize_modules()` refuses to configure if a source ends up claimed
 twice or not at all, so each extraction is a small, checkable change.
+
+**The order matters, and it is not the one originally planned.** Taking `burst`
+first produces a link cycle, which CMake rejects outright between shared
+libraries:
+
+- `burst` -> `legacy`, because `BurstFilter.h` includes `TTTR.h`, `TTTRMask.h`
+  and `Channel.h`;
+- `legacy` -> `burst`, because `HMM.cpp` includes `BurstFilter.h`, and
+  `BurstConfidence.h`, `BurstSearchBayesianBlocks.h` and `BurstSearchMaxTree.h`
+  all include `BurstSignificance.h`.
+
+The same applies to `nn`: `HMMSurrogate.h` includes `NeuralNet.h` while
+`NeuralNet.cpp` reaches into imaging and sim. Nothing above `core` can come out
+while `core` is still inside `legacy` -- the residual module is on both ends of
+every edge. `core` first, and `BurstSignificance.h` goes with it, since core's
+own burst-search headers include it.
 
 ## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
 

@@ -13,7 +13,7 @@ tttrlib_add_module(
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Pda.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/PdaCallback.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  legacy
+    DEPENDS  util legacy
     EXTERNAL_DEPS tttrlib::pocketfft
     SWIG_INTERFACES Pda.i
     TEST_DIR test/python

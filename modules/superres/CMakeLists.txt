@@ -12,7 +12,7 @@ tttrlib_add_module(
     NAME     superres
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/CLSMSuperRes.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  legacy
+    DEPENDS  util legacy
     EXTERNAL_DEPS tttrlib::pocketfft
     SWIG_INTERFACES CLSMSuperRes.i
     TEST_DIR test/python/clsm

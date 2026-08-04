@@ -19,6 +19,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/SimSystem.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/SimVectorGrid.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    DEPENDS  util          # Random.h, via SimCounterRandom.h
     EXTERNAL_DEPS tttrlib::highfive
     SWIG_INTERFACES Sim.i
     TEST_DIR test/python/sim
