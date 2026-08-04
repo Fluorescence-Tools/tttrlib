@@ -54,6 +54,35 @@ OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(BUILD_JAVA_INTERFACE "Build Java interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
+# Build-turnaround switches. Neither changes what is produced for a release
+# build; both exist so that iterating on one file does not cost a whole-program
+# link. See CMakePresets.json for ready-made developer configurations.
+OPTION(TTTRLIB_CCACHE "Use ccache as the compiler launcher when it is available" ON)
+OPTION(TTTRLIB_LTO "Link-time optimization in Release builds" ON)
+
+# ccache. `pip install -e .` reconfigures into a fresh build directory often
+# enough that the cache is what makes a rebuild cheap. Restricted to GCC/Clang:
+# ccache's MSVC support needs a different invocation and is not exercised in CI.
+#
+# Never inside conda-build (which includes the bioconda recipe): those builds run
+# once in a throwaway prefix, so a cache buys nothing, and interposing a launcher
+# in front of conda's compiler activation wrappers is a risk taken for no gain.
+IF(DEFINED ENV{CONDA_BUILD} OR DEFINED ENV{CONDA_BUILD_STATE})
+  SET(TTTRLIB_CCACHE OFF)
+  MESSAGE(STATUS "ccache: skipped (conda-build)")
+ENDIF()
+
+IF(TTTRLIB_CCACHE AND NOT MSVC AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
+  FIND_PROGRAM(CCACHE_PROGRAM ccache)
+  IF(CCACHE_PROGRAM)
+    SET(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    SET(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    MESSAGE(STATUS "ccache: ${CCACHE_PROGRAM}")
+  ELSE()
+    MESSAGE(STATUS "ccache: not found (set TTTRLIB_CCACHE=OFF to stop looking)")
+  ENDIF()
+ENDIF()
+
 ## System-specific adjustments
 ################################
 
@@ -144,9 +173,12 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
       /Ob2         # Inline function expansion
       /Oi          # Enable intrinsic functions
       /Ot          # Favor fast code
-      /GL          # Whole program optimization
       /w           # Disable all warnings in Release builds
     )
+    # /GL and /LTCG are a pair -- MSVC errors if one is set without the other.
+    IF(TTTRLIB_LTO)
+      ADD_COMPILE_OPTIONS(/GL)   # Whole program optimization
+    ENDIF()
     # Native AVX2 for the whole library only when explicitly opted in via
     # WITH_AVX (non-portable). Runtime-dispatched AVX kernels do NOT need this:
     # MSVC accepts AVX/FMA intrinsics without /arch and the scalar paths stay
@@ -160,8 +192,10 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
     # Suppress informational pragma messages from external libraries (HighFive)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4996")  # Disable deprecation warnings
-    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")  # Link-time code generation
-    SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+    IF(TTTRLIB_LTO)
+      SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")  # Link-time code generation
+      SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG")
+    ENDIF()
   ELSE()
     # GCC/Clang optimizations
     ADD_COMPILE_OPTIONS(
@@ -174,10 +208,17 @@ ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
     # LTO everywhere except MinGW: MinGW's ld fails to resolve symbols from
     # LTO bitcode inside static archives (e.g. TIFFSetErrorHandler from the
     # bundled libtiff.a), producing undefined references at link time.
-    IF(NOT MINGW)
+    #
+    # TTTRLIB_LTO=OFF is for iteration only: a whole-program link dominates the
+    # turnaround of a one-file change, and `pip install -e .` configures Release
+    # by default, so without this switch every developer build pays for it.
+    # Release artefacts (wheels, conda) keep it ON.
+    IF(NOT MINGW AND TTTRLIB_LTO)
       ADD_COMPILE_OPTIONS(-flto)
       SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
       SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -flto")
+    ELSEIF(NOT MINGW)
+      MESSAGE(STATUS "LTO disabled (TTTRLIB_LTO=OFF) -- developer build")
     ENDIF()
   ENDIF()
 ENDIF ()
@@ -217,6 +258,8 @@ if(APPLE)
         set(CMAKE_SKIP_INSTALL_RPATH TRUE)
     endif()
 endif()
+endif()
+
 
 
 #######################################

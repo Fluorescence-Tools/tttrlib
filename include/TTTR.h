@@ -26,17 +26,9 @@
 
 //#include <boost/filesystem.hpp> // std::filesystem is not in osx 10.14
 
-#ifdef BUILD_PHOTON_HDF
-#include <highfive/H5File.hpp>
-#include <highfive/H5Group.hpp>
-#include <highfive/H5DataSet.hpp>
-#include <highfive/H5DataType.hpp>
-#endif
-
 #include "Histogram.h"
 #include "TTTRHeader.h"
 #include "FileCheck.h"
-#include "TTTRMask.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
 #include "MicrotimeLinearization.h"
@@ -268,10 +260,6 @@ private:
 
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;                          /* File handle for all other file types */
-
-#ifdef BUILD_PHOTON_HDF
-    hid_t hdf5_file;                        /*HDF5 file handle */
-#endif
 
 
     /// End the end of the header the begining of the tttr records in the input file

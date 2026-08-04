@@ -193,6 +193,104 @@ not across tables.
   contest — it is a single-threaded per-pixel Levenberg–Marquardt over the full
   image. The meaningful MLE comparison is against FLIMKit.
 
+## Build time
+
+Run-time speed is what the rest of this file measures. Build time is the other
+number that matters, because it is what a change to tttrlib costs to try. All
+figures below are the same machine as above (M1 Pro, 8 cores, clang/libc++,
+`-std=gnu++17`), C++ library only (`-DBUILD_PYTHON_INTERFACE=OFF`), `ninja -j8`.
+
+### Where the time went
+
+The cost was never the size of the sources — it was what the *public headers*
+dragged in. Measured as preprocessed line counts, with `#include <vector>`
+alone (53,438 lines) as the floor any translation unit pays:
+
+| header, alone | before | after | over the `<vector>` floor |
+|---|---:|---:|---|
+| `<nlohmann/json.hpp>` | 95,070 | — | +41,632 |
+| `<nlohmann/json_fwd.hpp>` | — | 62,466 | +9,028 |
+| `"TTTR.h"` | 133,889 | **99,196** | −26% |
+| `"TTTRHeader.h"` | 126,512 | **91,899** | −27% |
+| `"CLSMImage.h"` | 142,221 | **104,960** | −26% |
+| `"TTTRRange.h"` | 135,139 | **100,456** | −26% |
+| `"BurstFilter.h"` | 134,286 | **99,829** | −26% |
+| `"HMM.h"` | 135,468 | **100,697** | −26% |
+| `"Channel.h"` | 95,071 | **62,438** | −34% |
+| `"DecayFitModel.h"` | 96,749 | **69,460** | −28% |
+
+`src/Pda.cpp` is the extreme case: 460 source lines that used to preprocess to
+138,564, now 104,966. `src/Correlator.cpp` went 142,892 → 105,875.
+
+Three things did it, in order of payoff:
+
+1. **`nlohmann/json.hpp` is out of every public header.** It cost ~41.6k
+   preprocessed lines and appeared in 14 of them. Headers that only name `json`
+   in a signature use `json_fwd.hpp`; headers that defined `to_json` inline
+   (`DecayFit.h`, `DecayFitModel.h`, `DecayFitProblem.h`, `DecayFitPrior.h`)
+   have those bodies in `.cpp` now; `TTTRHeader` holds its `json_data` behind a
+   `unique_ptr` so the type may stay incomplete. `TTTRRange.h` and
+   `TTTRSelection.h` did not use `nlohmann::json` at all — their serialisation
+   has always been `std::string`.
+2. **HighFive is out of `TTTR.h` and `TTTRHeader.h`.** `TTTR.h` needed it only
+   for a private `hid_t` handle that was opened and closed inside a single
+   function, so it is a local there now; `TTTRHeader.h` names `HighFive::Group`
+   in one private declaration and uses HighFive's own forward-declaration header
+   (44 preprocessed lines) for it. HDF5 no longer reaches any downstream
+   consumer's include path.
+3. **`pocketfft` is out of `CLSMImage.h`.** A vendored 71k-line header was in a
+   public *installed* header for an FFT used only in the `.cpp`.
+
+### What that buys
+
+| clean build, C++ library only | wall | CPU (user) |
+|---|---:|---:|
+| before | 48.6 s | 212 s |
+| after | **40.5 s** | **180 s** |
+| after, `-DTTTRLIB_LTO=OFF` | **38.1 s** | 192 s |
+
+(The LTO-off row spends *more* user CPU and less wall time: with LTO the
+compiles emit bitcode cheaply and the real work happens in a single-threaded
+link, which parallelizes across cores not at all.)
+
+−17% wall on a clean build, while compiling two *more* translation units than
+before (the moved-out `.cpp` bodies).
+
+The number that governs daily iteration is the incremental one. Touching
+`include/TTTR.h` and rebuilding:
+
+| `touch include/TTTR.h && ninja` | wall |
+|---|---:|
+| LTO on (the `Release` default, and what `pip install -e .` configures) | 26.5 s |
+| `-DTTTRLIB_LTO=OFF` | **18.2 s** |
+
+LTO is a whole-program link and buys nothing while iterating, so
+`TTTRLIB_LTO=OFF` is the default in the `dev` preset. Release artefacts — wheels
+and conda packages — keep it on.
+
+### Configuring for iteration
+
+`CMakePresets.json` carries the developer configurations, so none of this is
+archaeology:
+
+```bash
+cmake --preset dev        # Release without LTO -- the default for iteration
+cmake --preset lib-only   # no SWIG wrappers at all: the fastest "does it compile"
+cmake --preset no-hdf5    # drops HighFive/HDF5 from the compile line entirely
+cmake --preset debug      # -Wall -Wextra -pedantic, verbose logging
+cmake --preset release    # what ships; benchmark numbers above are taken here
+```
+
+`ccache` is used automatically when it is on `PATH` (`TTTRLIB_CCACHE=OFF` to
+stop looking). It is worth installing: `pip install -e .` reconfigures into a
+fresh build directory often enough that the cache is what makes a rebuild cheap.
+
+**Still outstanding.** `tttrlibPYTHON_wrap.cxx` is ~182k lines in a *single*
+translation unit and is fully serial, so touching any `.i` file recompiles all of
+it — it is the longest pole in any build that includes the bindings, and none of
+the above touches it. Splitting it into one SWIG module per subsystem is
+tracked with the modularization work, not here.
+
 ## Reproducing
 
 ```bash

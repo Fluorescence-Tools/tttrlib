@@ -2,7 +2,7 @@
 #ifndef TTTRLIB_DECAYFIT24_H
 #define TTTRLIB_DECAYFIT24_H
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include "DecayFit.h"
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"

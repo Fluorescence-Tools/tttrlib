@@ -11,8 +11,6 @@
 #include <complex>
 #include <cmath>
 
-#include "pocketfft/pocketfft_hdronly.h"
-
 #include "TTTR.h" /* TTTR */
 
 #include "CLSMFrame.h"

@@ -10,7 +10,6 @@
 #include <vector>
 #include <cstdint>  /* uint16_t */
 #include <string>
-#include <nlohmann/json.hpp>
 
 #include "TTTR.h"
 

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTRSelection.h"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 
 void TTTRSelection::set_selection_flags(uint8_t flags){

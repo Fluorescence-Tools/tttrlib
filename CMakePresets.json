@@ -1,0 +1,79 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "TTTRLIB_CCACHE": "ON"
+      }
+    },
+
+    {
+      "name": "dev",
+      "inherits": "base",
+      "displayName": "Developer build (Release, no LTO)",
+      "description": "Optimized like a release build but without the whole-program link, which dominates the turnaround of a one-file change. Use this for iteration; use 'release' to reproduce what ships.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "TTTRLIB_LTO": "OFF"
+      }
+    },
+
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug build (warnings on, VERBOSE_TTTRLIB)",
+      "description": "-Wall -Wextra -pedantic and the verbose logging paths. Slow at run time; this is the configuration to reproduce a crash in, not to benchmark in.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release build (what ships)",
+      "description": "Matches the wheel/conda configuration, LTO included. Benchmark numbers in PERF.md are taken here.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "TTTRLIB_LTO": "ON"
+      }
+    },
+
+    {
+      "name": "lib-only",
+      "inherits": "dev",
+      "displayName": "C++ library only, no bindings",
+      "description": "Skips the SWIG wrappers entirely. tttrlibPYTHON_wrap.cxx is a single ~180k-line translation unit and is fully serial, so it is the longest pole in any incremental build; when a change does not touch the interface, this is the fastest way to know whether it compiles.",
+      "cacheVariables": {
+        "BUILD_PYTHON_INTERFACE": "OFF",
+        "BUILD_R_INTERFACE": "OFF",
+        "BUILD_JAVA_INTERFACE": "OFF"
+      }
+    },
+
+    {
+      "name": "no-hdf5",
+      "inherits": "dev",
+      "displayName": "Developer build without the HDF5 reader",
+      "description": "Drops the only HDF5 consumer, so HighFive and the HDF5 headers leave the compile line. Useful when working on anything other than Photon-HDF5 I/O.",
+      "cacheVariables": {
+        "BUILD_PHOTON_HDF": "OFF"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "lib-only", "configurePreset": "lib-only" },
+    { "name": "no-hdf5", "configurePreset": "no-hdf5" }
+  ]
+}

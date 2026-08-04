@@ -25,13 +25,12 @@
 #include <any>
 
 #ifdef BUILD_PHOTON_HDF
-#include <highfive/H5File.hpp>
-#include <highfive/H5Group.hpp>
-#include <highfive/H5DataSet.hpp>
-#include <highfive/H5DataType.hpp>
+// Forward declarations only -- HighFive::Group appears in a private
+// declaration below; the real headers are included in TTTRHeader.cpp.
+#include <highfive/bits/H5_definitions.hpp>
 #endif
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
@@ -94,8 +93,18 @@ private:
 
 protected:
 
-    // JSON object used to store all the header information
-    nlohmann::json json_data;
+    /*!
+     * JSON object used to store all the header information.
+     *
+     * Held behind a pointer so this header needs only <nlohmann/json_fwd.hpp>.
+     * The full json.hpp costs ~41k preprocessed lines, and TTTRHeader.h is
+     * reached from nearly every translation unit through TTTR.h. Never null.
+     */
+    std::unique_ptr<nlohmann::json> json_data_;
+
+    /// The header metadata. Protected, as the raw member always was.
+    nlohmann::json& json_data();
+    const nlohmann::json& json_data() const;
 
     /*!
      * Marks the end of the header in the file (position in file)
@@ -107,33 +116,25 @@ public:
     /*!
      * @return The TTTR container type of the associated TTTR file as a char
      */
-    int get_tttr_record_type(){
-        return (int) json_data[TTTRRecordType];
-    }
+    int get_tttr_record_type();
 
     /*!
      *
      * @param v record type
      */
-    void set_tttr_record_type(int v){
-        json_data[TTTRRecordType] = v;
-    }
+    void set_tttr_record_type(int v);
 
     /*!
      * The container type
      * @return
      */
-    int get_tttr_container_type(){
-        return (int) json_data[TTTRContainerType];
-    }
+    int get_tttr_container_type();
 
     /*!
      *
      * @param v container type
      */
-    void set_tttr_container_type(int v){
-        json_data[TTTRContainerType] = v;
-    }
+    void set_tttr_container_type(int v);
 
     /*!
      * Get a tag / entry from the meta data list in a JSON dict
@@ -185,9 +186,7 @@ public:
      * Stores the bytes per TTTR record of the associated TTTR file
      * This attribute is changed when a header is read
     */
-    size_t get_bytes_per_record(){
-        return (size_t) get_tag(json_data, TTTRTagBits)["value"] / 8;
-    }
+    size_t get_bytes_per_record();
 
     size_t end() const{
         return header_end;
@@ -196,17 +195,11 @@ public:
     /*!
      * Number of meta data entries
      */
-    size_t size(){
-        return json_data["tags"].size();
-    }
+    size_t size();
 
-    nlohmann::json& operator[](std::size_t idx){
-        return json_data["tags"][idx];
-    }
+    nlohmann::json& operator[](std::size_t idx);
 
-    const nlohmann::json& operator[](std::size_t idx) const {
-        return json_data["tags"][idx];
-    }
+    const nlohmann::json& operator[](std::size_t idx) const;
 
     /*!
      * The total (possible) number of micro time channels.
@@ -214,91 +207,41 @@ public:
      * The number of TAC channels (TAC - Time to analog converter) refers to
      * the number of micro time channels.
      */
-     unsigned int get_number_of_micro_time_channels(){
-         int v = get_tag(json_data, TTTRNMicroTimes)["value"];
-         if(v < 0){
-             return 0;
-         } else{
-             return v;
-         }
-     }
+     unsigned int get_number_of_micro_time_channels();
 
     /// Resolution for the macro time in nanoseconds
     double get_macro_time_resolution();
 
     /// Resolution for the micro time in nanoseconds
-    double get_micro_time_resolution(){
-        return get_tag(json_data, TTTRTagRes)["value"];
-    }
+    double get_micro_time_resolution();
 
     /// Set the microtime resolution in nanoseconds
-    void set_micro_time_resolution(double resolution){
-        TTTRHeader::add_tag(json_data, TTTRTagRes, resolution, tyFloat8, -1);
-    }
+    void set_micro_time_resolution(double resolution);
 
     /// Set the macro (global) time resolution in seconds
-    void set_macro_time_resolution(double resolution){
-        TTTRHeader::add_tag(json_data, TTTRTagGlobRes, resolution, tyFloat8, -1);
-    }
+    void set_macro_time_resolution(double resolution);
 
     /// Set the total number of micro time channels
-    void set_number_of_micro_time_channels(int n_channels){
-        TTTRHeader::add_tag(json_data, TTTRNMicroTimes, n_channels, tyInt8, -1);
-    }
+    void set_number_of_micro_time_channels(int n_channels);
 
     /// Set an arbitrary floating-point metadata tag by name
-    void set_float_tag(const std::string& name, double value){
-        TTTRHeader::add_tag(json_data, name, value, tyFloat8, -1);
-    }
+    void set_float_tag(const std::string& name, double value);
 
     /// Set an arbitrary integer metadata tag by name
-    void set_int_tag(const std::string& name, int value){
-        TTTRHeader::add_tag(json_data, name, value, tyInt8, -1);
-    }
+    void set_int_tag(const std::string& name, int value);
 
     /// Set an arbitrary binary-blob metadata tag by name (e.g. the HT3 ImgHdr
     /// scan/marker configuration vector)
-    void set_blob_tag(const std::string& name, const std::vector<int32_t>& value){
-        TTTRHeader::add_tag(json_data, name, value, tyBinaryBlob, -1);
-    }
+    void set_blob_tag(const std::string& name, const std::vector<int32_t>& value);
 
     /// Set an arbitrary ANSI-string metadata tag by name
-    void set_string_tag(const std::string& name, const std::string& value){
-        std::string copy = value;
-        TTTRHeader::add_tag(json_data, name, const_cast<char*>(copy.c_str()), tyAnsiString, -1);
-    }
+    void set_string_tag(const std::string& name, const std::string& value);
 
     /// Duration of a pixel in LSM in units of macro time clock
-    int get_pixel_duration(){
-        double pixel_duration_d = 0.0;
-        auto tpp = TTTRHeader::get_tag(json_data, "ImgHdr_TimePerPixel");
-        if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
-            pixel_duration_d = tpp["value"].get<double>();
-        else
-            pixel_duration_d = TTTRHeader::get_tag(
-                    json_data, "$TimePerPixel")["value"];
-        double global_res = TTTRHeader::get_tag(
-                json_data, "MeasDesc_GlobalResolution")["value"];
-        // Round to nearest integer duration in macro clock units and cast explicitly to int
-        int pixel_duration = static_cast<int>(std::llround(pixel_duration_d / global_res));
-        return pixel_duration;
-    }
+    int get_pixel_duration();
 
     /// Duration of a line in LSM in units of macro time clock
-    int get_line_duration(){
-        double pixel_duration_d = 0.0;
-        auto tpp = TTTRHeader::get_tag(json_data, "ImgHdr_TimePerPixel");
-        if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
-            pixel_duration_d = tpp["value"].get<double>();
-        else
-            pixel_duration_d = TTTRHeader::get_tag(
-                    json_data, "$TimePerPixel")["value"];
-        double global_res_d = TTTRHeader::get_tag(
-                json_data, "MeasDesc_GlobalResolution")["value"];
-        double n_pixel = TTTRHeader::get_tag(json_data, "ImgHdr_PixX")["value"];
-        int line_duration = static_cast<int>(std::ceil((pixel_duration_d * n_pixel) / global_res_d));
-        return line_duration;
-    }
+    int get_line_duration();
 
     /*!
      * The number of micro time channels that fit between two macro times.
@@ -327,6 +270,15 @@ public:
     TTTRHeader(const TTTRHeader &p2);
 
     /*!
+     * Copy assignment.
+     *
+     * Declared explicitly because the pimpl'd `json_data_` would otherwise
+     * make the implicit one deleted, silently removing an operation the class
+     * had before.
+     */
+    TTTRHeader& operator=(const TTTRHeader &p2);
+
+    /*!
      * Constructor for the @class Header that takes a file pointer and the container
      * type of the file represented by the file pointer. The container type refers either to a PicoQuant (PQ) PTU or
      * HT3 file, or a BeckerHickl (BH) spc file. There are three different types of BH spc files SPC130,
@@ -340,7 +292,9 @@ public:
      */
     TTTRHeader(std::FILE *fpin, int tttr_container_type=0, bool close_file=false);
     TTTRHeader(std::string fn, int tttr_container_type=0);
-    ~TTTRHeader() = default;
+
+    /// Out of line: `json_data_` points at an incomplete type here.
+    ~TTTRHeader();
 
     /*!
      * @brief Reads the header of a PTU file and sets the reading routing.
@@ -609,9 +563,7 @@ public:
      *
      * @param json_string
      */
-    void set_json(std::string json_string){
-        json_data = nlohmann::json::parse(json_string);
-    }
+    void set_json(std::string json_string);
 
 };
 

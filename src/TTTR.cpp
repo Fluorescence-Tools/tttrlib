@@ -1,10 +1,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTR.h"
 
+#ifdef BUILD_PHOTON_HDF
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
+#endif
+
+#include <nlohmann/json.hpp>
+
 #include "BurstSearchBayesianBlocks.h"
 #include "BurstSearchMaxTree.h"
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
+#include "TTTRMask.h"
 #include "FileCheck.h"
 #include "PhotonscoreD7.h"
 #include "Verbose.h"
@@ -305,7 +315,7 @@ int TTTR::read_hdf_file(const char *fn) {
     hsize_t dims[1] = {0};
 
     /* open file */
-    hdf5_file = H5Fopen(fn, H5F_ACC_RDONLY, H5P_DEFAULT);
+    hid_t hdf5_file = H5Fopen(fn, H5F_ACC_RDONLY, H5P_DEFAULT);
     if (hdf5_file < 0) {
         std::cerr << "Error: Unable to open file: " << fn << std::endl;
         return 1;
@@ -525,8 +535,8 @@ bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
     // used otherwise.
     auto setup_tag_int = [&header](const char* name, int d) -> int {
         std::string tag_name = std::string("setup.") + name;
-        if (TTTRHeader::find_tag(header->json_data, tag_name, 0) < 0) return d;
-        auto v = TTTRHeader::get_tag(header->json_data, tag_name, 0)["value"];
+        if (TTTRHeader::find_tag(header->json_data(), tag_name, 0) < 0) return d;
+        auto v = TTTRHeader::get_tag(header->json_data(), tag_name, 0)["value"];
         if (v.is_boolean()) return (int) v.get<bool>();
         if (v.is_number()) return (int) v.get<double>();
         return d;
@@ -935,9 +945,9 @@ unsigned TTTR::spcqc_routing_shift() const {
     // Without the tag the data did not come from a QC file (built in memory, or
     // transcoded in). Assume the full width then: it is the only choice that
     // keeps every channel a QC record can express.
-    int idx = TTTRHeader::find_tag(header->json_data, "BH_SPCQC_RoutingBits");
+    int idx = TTTRHeader::find_tag(header->json_data(), "BH_SPCQC_RoutingBits");
     if (idx < 0) return BH_SPCQC_CH_SHIFT;
-    int shift = header->json_data["tags"][idx]["value"];
+    int shift = header->json_data()["tags"][idx]["value"];
     if (shift < 0 || shift > BH_SPCQC_CH_SHIFT) return BH_SPCQC_CH_SHIFT;
     return (unsigned) shift;
 }
@@ -945,8 +955,8 @@ unsigned TTTR::spcqc_routing_shift() const {
 void TTTR::compact_spcqc_routing_channels() {
     // How many routing bits the measurement declared. Absent means no router.
     int declared = 0;
-    int idx = TTTRHeader::find_tag(header->json_data, "BH_SPCQC_RoutingBits");
-    if (idx >= 0) declared = header->json_data["tags"][idx]["value"];
+    int idx = TTTRHeader::find_tag(header->json_data(), "BH_SPCQC_RoutingBits");
+    if (idx >= 0) declared = header->json_data()["tags"][idx]["value"];
     if (declared < 0 || declared > BH_SPCQC_CH_SHIFT) declared = BH_SPCQC_CH_SHIFT;
 
     // Trust but verify: if any photon routes beyond the declared width,
@@ -969,7 +979,7 @@ void TTTR::compact_spcqc_routing_channels() {
     }
 
     // Record what was actually used, so the writer can undo exactly this split
-    TTTRHeader::add_tag(header->json_data, "BH_SPCQC_RoutingBits",
+    TTTRHeader::add_tag(header->json_data(), "BH_SPCQC_RoutingBits",
                         (int) shift, tyInt8);
     if (shift == BH_SPCQC_CH_SHIFT) return;  // already in its packed form
 
@@ -984,7 +994,7 @@ void TTTR::compact_spcqc_routing_channels() {
 
 void TTTR::backfill_cz_routing_channels() {
     // Confocor raw data has no channel number in events
-    auto tag = header->get_tag(header->json_data, "channel");
+    auto tag = header->get_tag(header->json_data(), "channel");
     int channel = tag["value"];
 if (is_verbose()) {
     std::clog << "-- Confocor3 channel: " << channel << std::endl;
@@ -2947,7 +2957,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     TTTRHeader::ensure_minimal_tags(header, container_type, get_n_valid_events());
     if(container_type == PQ_PTU_CONTAINER){
         TTTRHeader::add_tag(
-                header->json_data, TTTRTagTTTRRecType,
+                header->json_data(), TTTRTagTTTRRecType,
                 pq_ptu_record_type_identifier(record_type), tyInt8);
     }
 

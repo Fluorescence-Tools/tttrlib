@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "include/CLSMImage.h"
+
+#include <nlohmann/json.hpp>
 #include "include/BitOps.h"
 #include "include/Verbose.h"
 #include "include/info.h"
@@ -9,6 +11,10 @@
 #include <stdexcept>
 #include <iostream>
 #include <map>
+
+/* FFT is an implementation detail of this file only -- keep the 71k-line
+ * vendored header out of the installed CLSMImage.h. */
+#include "pocketfft/pocketfft_hdronly.h"
 
 #ifdef _OPENMP
 #include <omp.h>

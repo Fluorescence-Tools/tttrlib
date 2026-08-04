@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 // Constraints carry no priors, so this header no longer reaches DecayFitPrior.h
 // for the alias -- declare it here rather than depend on an include order.

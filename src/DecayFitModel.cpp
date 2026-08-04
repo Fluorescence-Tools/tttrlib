@@ -5,6 +5,8 @@
  */
 #include "DecayFitModel.h"
 
+#include <nlohmann/json.hpp>
+
 #include <cstdlib>
 #include <map>
 #include <mutex>
@@ -375,4 +377,31 @@ DecayFitLinkedOutcome fit_linked(
         out.objective += out.row_objective[row];
     }
     return out;
+}
+
+
+// ---------------------------------------------------------------------------
+// DecayFitConstraints JSON serialisation.
+//
+// Out of line so DecayFitModel.h needs only <nlohmann/json_fwd.hpp>.
+// ---------------------------------------------------------------------------
+
+json DecayFitConstraints::to_json() const {
+    json j;
+    j["link"] = link;
+    json ps = json::array();
+    for (const auto &p : priors) ps.push_back(p ? p->to_json() : json());
+    j["priors"] = ps;
+    return j;
+}
+
+DecayFitConstraints DecayFitConstraints::from_json(const json &j) {
+    DecayFitConstraints c;
+    if (j.contains("link")) c.link = j.at("link").get<std::vector<int>>();
+    if (j.contains("priors")) {
+        for (const auto &sub : j.at("priors")) {
+            c.priors.push_back(sub.is_null() ? nullptr : DecayFitPrior::from_json(sub));
+        }
+    }
+    return c;
 }

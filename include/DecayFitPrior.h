@@ -52,7 +52,7 @@
 #include <utility>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 using json = nlohmann::json;
 
@@ -160,9 +160,7 @@ public:
     /*! Empty — the box is enforced through `support()`. */
     std::vector<double> residuals(double) const override { return {}; }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"lb", lb_}, {"ub", ub_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -192,9 +190,7 @@ public:
         return {(x - mu_) / sigma_};
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"mu", mu_}, {"sigma", sigma_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -230,10 +226,7 @@ public:
         return m;
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"mu", mu_}, {"sigma", sigma_},
-                    {"lb", lb_}, {"ub", ub_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -266,9 +259,7 @@ public:
         return {(x - loc_) / sigma_};
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"sigma", sigma_}, {"loc", loc_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -307,9 +298,7 @@ public:
         return {(std::log(x) - mu_) / sigma_};
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"mu", mu_}, {"sigma", sigma_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -336,9 +325,7 @@ public:
         return {loc_, std::numeric_limits<double>::infinity()};
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"scale", scale_}, {"loc", loc_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -372,9 +359,7 @@ public:
         return {loc_, std::numeric_limits<double>::infinity()};
     }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"alpha", alpha_}, {"beta", beta_}, {"loc", loc_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -405,9 +390,7 @@ public:
 
     std::pair<double, double> support() const override { return {0.0, 1.0}; }
 
-    json to_json() const override {
-        return json{{"kind", kind()}, {"alpha", alpha_}, {"beta", beta_}};
-    }
+    json to_json() const override;
 };
 
 
@@ -464,68 +447,7 @@ public:
 
     const std::vector<std::shared_ptr<DecayFitPrior>> &components() const { return priors_; }
 
-    json to_json() const override {
-        json parts = json::array();
-        for (const auto &p : priors_) {
-            if (p) parts.push_back(p->to_json());
-        }
-        return json{{"kind", kind()}, {"priors", parts}};
-    }
+    json to_json() const override;
 };
-
-
-inline std::shared_ptr<DecayFitPrior> DecayFitPrior::from_json(const json &state) {
-    if (state.is_null()) return nullptr;
-    if (!state.contains("kind")) {
-        throw std::invalid_argument("prior state has no 'kind' key");
-    }
-    const std::string kind = state.at("kind").get<std::string>();
-
-    auto num = [&state](const char *key, double fallback) -> double {
-        return state.contains(key) ? state.at(key).get<double>() : fallback;
-    };
-    const double inf = std::numeric_limits<double>::infinity();
-
-    if (kind == "uniform") {
-        return std::make_shared<UniformPrior>(num("lb", -inf), num("ub", inf));
-    }
-    if (kind == "normal") {
-        return std::make_shared<NormalPrior>(num("mu", 0.0), num("sigma", 1.0));
-    }
-    if (kind == "truncated_normal") {
-        return std::make_shared<TruncatedNormalPrior>(
-            num("mu", 0.0), num("sigma", 1.0), num("lb", -inf), num("ub", inf));
-    }
-    if (kind == "half_normal") {
-        return std::make_shared<HalfNormalPrior>(num("sigma", 1.0), num("loc", 0.0));
-    }
-    if (kind == "lognormal") {
-        return std::make_shared<LogNormalPrior>(num("mu", 0.0), num("sigma", 1.0));
-    }
-    if (kind == "exponential") {
-        return std::make_shared<ExponentialPrior>(num("scale", 1.0), num("loc", 0.0));
-    }
-    if (kind == "gamma") {
-        return std::make_shared<GammaPrior>(num("alpha", 1.0), num("beta", 1.0), num("loc", 0.0));
-    }
-    if (kind == "beta") {
-        return std::make_shared<BetaPrior>(num("alpha", 1.0), num("beta", 1.0));
-    }
-    if (kind == "product") {
-        std::vector<std::shared_ptr<DecayFitPrior>> parts;
-        if (state.contains("priors")) {
-            for (const auto &sub : state.at("priors")) parts.push_back(from_json(sub));
-        }
-        return std::make_shared<ProductPrior>(std::move(parts));
-    }
-    if (kind == "callable") {
-        // A live Python callback. Reported rather than approximated: silently
-        // substituting a flat prior would change the posterior without saying so.
-        throw std::invalid_argument(
-            "prior kind 'callable' is a Python callback and cannot be evaluated in C++; "
-            "replace it with an analytic kind to use it in a native fit");
-    }
-    throw std::invalid_argument("unknown prior kind '" + kind + "'");
-}
 
 #endif // TTTRLIB_DECAYFITPRIOR_H

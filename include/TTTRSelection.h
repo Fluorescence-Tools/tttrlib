@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 #include <string>
-#include <nlohmann/json.hpp>
 
 #include "TTTRRange.h"
 

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTRRange.h"
 
+#include <nlohmann/json.hpp>
+
 TTTRRange::TTTRRange(const TTTRRange& p2){
     if(p2._tttr_indices){
         _tttr_indices = std::make_unique<indices_set>(*p2._tttr_indices);

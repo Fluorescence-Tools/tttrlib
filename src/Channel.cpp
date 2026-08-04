@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Channel.h"
 
+#include <nlohmann/json.hpp>
+
 namespace tttrlib {
 
 Channel::Channel(const std::string& name) : name(name) {}

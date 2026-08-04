@@ -5,6 +5,15 @@
 #include "FileCheck.h"
 #include "include/Verbose.h"
 
+#ifdef BUILD_PHOTON_HDF
+#include <highfive/H5File.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataType.hpp>
+#endif
+
+#include <nlohmann/json.hpp>
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -12,23 +21,25 @@
 
 
 TTTRHeader::TTTRHeader() :
+        json_data_(new nlohmann::json()),
         header_end(0)
 {
-    json_data = nlohmann::json::object();
-    json_data["tags"] = nlohmann::json::array();
-    json_data[TTTRContainerType] = 0;
-    json_data[TTTRRecordType] = -1;
+    json_data() = nlohmann::json::object();
+    json_data()["tags"] = nlohmann::json::array();
+    json_data()[TTTRContainerType] = 0;
+    json_data()[TTTRRecordType] = -1;
 if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader" << std::endl;
 }
 }
 
-TTTRHeader::TTTRHeader(const TTTRHeader &p2)
+TTTRHeader::TTTRHeader(const TTTRHeader &p2) :
+        json_data_(new nlohmann::json())
 {
 if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader - Copy constructor" << std::endl;
 }
-    json_data = p2.json_data;
+    json_data() = p2.json_data();
     header_end = p2.header_end;
 }
 
@@ -44,8 +55,8 @@ if (is_verbose()) {
 }
     int tttr_record_type;
     if(tttr_container_type == PQ_PTU_CONTAINER){
-        header_end = read_ptu_header(fpin, tttr_record_type, json_data);
-        int RecordType = get_tag(json_data, "TTResultFormat_TTTRRecType")["value"];
+        header_end = read_ptu_header(fpin, tttr_record_type, json_data());
+        int RecordType = get_tag(json_data(), "TTResultFormat_TTTRRecType")["value"];
         switch (RecordType)
         {
             case rtPicoHarpT2:
@@ -80,44 +91,44 @@ if (is_verbose()) {
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
         }
     } else if(tttr_container_type == CZ_CONFOCOR3_CONTAINER) {
-        header_end = read_cz_confocor3_header(fpin, json_data);
-        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+        header_end = read_cz_confocor3_header(fpin, json_data());
+        tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else if(tttr_container_type == SM_CONTAINER){
-        header_end = read_sm_header(fpin, json_data);
-        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+        header_end = read_sm_header(fpin, json_data());
+        tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     }
     else if(tttr_container_type == PQ_HT3_CONTAINER){
-        header_end = read_ht3_header(fpin, json_data);
-        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+        header_end = read_ht3_header(fpin, json_data());
+        tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else if(tttr_container_type == BH_SPC600_256_CONTAINER){
         header_end = 0;
-        add_tag(json_data, TTTRTagGlobRes, 1.0, tyFloat8);
-        add_tag(json_data, TTTRNMicroTimes, 256, tyInt8);
-        add_tag(json_data, TTTRTagBits, 32, tyInt8);
+        add_tag(json_data(), TTTRTagGlobRes, 1.0, tyFloat8);
+        add_tag(json_data(), TTTRNMicroTimes, 256, tyInt8);
+        add_tag(json_data(), TTTRTagBits, 32, tyInt8);
         tttr_record_type = BH_RECORD_TYPE_SPC600_256;
     } else if(tttr_container_type == BH_SPC600_4096_CONTAINER){
         header_end = 0;
-        add_tag(json_data, TTTRTagGlobRes, 1.0, tyFloat8);
-        add_tag(json_data, TTTRNMicroTimes, 4096, tyInt8);
-        add_tag(json_data, TTTRTagBits, 48, tyInt8);
+        add_tag(json_data(), TTTRTagGlobRes, 1.0, tyFloat8);
+        add_tag(json_data(), TTTRNMicroTimes, 4096, tyInt8);
+        add_tag(json_data(), TTTRTagBits, 48, tyInt8);
         tttr_record_type = BH_RECORD_TYPE_SPC600_4096;
     } else if(tttr_container_type == BH_SPC130_CONTAINER){
-        header_end = read_bh132_header(fpin, json_data);
+        header_end = read_bh132_header(fpin, json_data());
         tttr_record_type = BH_RECORD_TYPE_SPC130;
     } else if(tttr_container_type == BH_SPCQC_CONTAINER){
-        header_end = read_bh_spcqc_header(fpin, json_data);
+        header_end = read_bh_spcqc_header(fpin, json_data());
         // QC-x04 and QC-x06 differ in the channel width; the header picks one
-        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
+        tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else{
         header_end = 0;
-        add_tag(json_data, TTTRTagBits, 32, tyInt8);
+        add_tag(json_data(), TTTRTagBits, 32, tyInt8);
         tttr_record_type = BH_RECORD_TYPE_SPC130;
     }
     set_tttr_record_type(tttr_record_type);
     if(close_file) fclose(fpin);
 if (is_verbose()) {
     std::clog << "End of header: " << header_end << std::endl;
-    std::clog << json_data << std::endl;
+    std::clog << json_data() << std::endl;
 }
 }
 
@@ -133,6 +144,144 @@ TTTRHeader::TTTRHeader(
 TTTRHeader::TTTRHeader(int tttr_container_type) : TTTRHeader(){
     set_tttr_container_type(tttr_container_type);
 };
+
+
+TTTRHeader& TTTRHeader::operator=(const TTTRHeader &p2){
+    if (this != &p2) {
+        json_data() = p2.json_data();
+        header_end = p2.header_end;
+    }
+    return *this;
+}
+
+
+// Defined here, not in the class body: `json_data_` points at an incomplete
+// type in TTTRHeader.h, so unique_ptr's deleter cannot be instantiated there.
+TTTRHeader::~TTTRHeader() = default;
+
+
+nlohmann::json& TTTRHeader::json_data(){
+    return *json_data_;
+}
+
+const nlohmann::json& TTTRHeader::json_data() const {
+    return *json_data_;
+}
+
+
+// ---------------------------------------------------------------------------
+// Accessors that used to be inline in TTTRHeader.h. They live here so the
+// header needs only <nlohmann/json_fwd.hpp>; none of them is on a per-photon
+// path -- they are read once per file.
+// ---------------------------------------------------------------------------
+
+int TTTRHeader::get_tttr_record_type(){
+    return (int) json_data()[TTTRRecordType];
+}
+
+void TTTRHeader::set_tttr_record_type(int v){
+    json_data()[TTTRRecordType] = v;
+}
+
+int TTTRHeader::get_tttr_container_type(){
+    return (int) json_data()[TTTRContainerType];
+}
+
+void TTTRHeader::set_tttr_container_type(int v){
+    json_data()[TTTRContainerType] = v;
+}
+
+size_t TTTRHeader::get_bytes_per_record(){
+    return (size_t) get_tag(json_data(), TTTRTagBits)["value"] / 8;
+}
+
+size_t TTTRHeader::size(){
+    return json_data()["tags"].size();
+}
+
+nlohmann::json& TTTRHeader::operator[](std::size_t idx){
+    return json_data()["tags"][idx];
+}
+
+const nlohmann::json& TTTRHeader::operator[](std::size_t idx) const {
+    return json_data()["tags"][idx];
+}
+
+unsigned int TTTRHeader::get_number_of_micro_time_channels(){
+    int v = get_tag(json_data(), TTTRNMicroTimes)["value"];
+    if(v < 0){
+        return 0;
+    } else{
+        return v;
+    }
+}
+
+double TTTRHeader::get_micro_time_resolution(){
+    return get_tag(json_data(), TTTRTagRes)["value"];
+}
+
+void TTTRHeader::set_micro_time_resolution(double resolution){
+    TTTRHeader::add_tag(json_data(), TTTRTagRes, resolution, tyFloat8, -1);
+}
+
+void TTTRHeader::set_macro_time_resolution(double resolution){
+    TTTRHeader::add_tag(json_data(), TTTRTagGlobRes, resolution, tyFloat8, -1);
+}
+
+void TTTRHeader::set_number_of_micro_time_channels(int n_channels){
+    TTTRHeader::add_tag(json_data(), TTTRNMicroTimes, n_channels, tyInt8, -1);
+}
+
+void TTTRHeader::set_float_tag(const std::string& name, double value){
+    TTTRHeader::add_tag(json_data(), name, value, tyFloat8, -1);
+}
+
+void TTTRHeader::set_int_tag(const std::string& name, int value){
+    TTTRHeader::add_tag(json_data(), name, value, tyInt8, -1);
+}
+
+void TTTRHeader::set_blob_tag(const std::string& name, const std::vector<int32_t>& value){
+    TTTRHeader::add_tag(json_data(), name, value, tyBinaryBlob, -1);
+}
+
+void TTTRHeader::set_string_tag(const std::string& name, const std::string& value){
+    std::string copy = value;
+    TTTRHeader::add_tag(json_data(), name, const_cast<char*>(copy.c_str()), tyAnsiString, -1);
+}
+
+int TTTRHeader::get_pixel_duration(){
+    double pixel_duration_d = 0.0;
+    auto tpp = TTTRHeader::get_tag(json_data(), "ImgHdr_TimePerPixel");
+    if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
+        pixel_duration_d = tpp["value"].get<double>();
+    else
+        pixel_duration_d = TTTRHeader::get_tag(
+                json_data(), "$TimePerPixel")["value"];
+    double global_res = TTTRHeader::get_tag(
+            json_data(), "MeasDesc_GlobalResolution")["value"];
+    // Round to nearest integer duration in macro clock units and cast explicitly to int
+    int pixel_duration = static_cast<int>(std::llround(pixel_duration_d / global_res));
+    return pixel_duration;
+}
+
+int TTTRHeader::get_line_duration(){
+    double pixel_duration_d = 0.0;
+    auto tpp = TTTRHeader::get_tag(json_data(), "ImgHdr_TimePerPixel");
+    if (!tpp.is_null() && tpp.contains("value") && !tpp["value"].is_null())
+        pixel_duration_d = tpp["value"].get<double>();
+    else
+        pixel_duration_d = TTTRHeader::get_tag(
+                json_data(), "$TimePerPixel")["value"];
+    double global_res_d = TTTRHeader::get_tag(
+            json_data(), "MeasDesc_GlobalResolution")["value"];
+    double n_pixel = TTTRHeader::get_tag(json_data(), "ImgHdr_PixX")["value"];
+    int line_duration = static_cast<int>(std::ceil((pixel_duration_d * n_pixel) / global_res_d));
+    return line_duration;
+}
+
+void TTTRHeader::set_json(std::string json_string){
+    json_data() = nlohmann::json::parse(json_string);
+}
 
 
 size_t TTTRHeader::read_bh132_header(
@@ -280,7 +429,7 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
     std::string raw = buffer.str();
     if (!raw.empty()) {
         std::string b64 = bh_base64_encode(raw);
-        add_tag(json_data, "BH_SPC_SetFile",
+        add_tag(json_data(), "BH_SPC_SetFile",
                 const_cast<char*>(b64.c_str()), tyAnsiString);
     }
 
@@ -320,12 +469,12 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
 
                     try {
                         if (key == "SP_IMG_X") {
-                            add_tag(json_data, "ImgHdr_PixX", std::stoi(val), tyInt8);
+                            add_tag(json_data(), "ImgHdr_PixX", std::stoi(val), tyInt8);
                         } else if (key == "SP_IMG_Y") {
-                            add_tag(json_data, "ImgHdr_PixY", std::stoi(val), tyInt8);
+                            add_tag(json_data(), "ImgHdr_PixY", std::stoi(val), tyInt8);
                         } else if (key == "SP_PIX_CLK") {
                             int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
-                            add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+                            add_tag(json_data(), "BH_UsePixelClock", use_pixel_clock, tyInt8);
                         } else if (key == "SP_TAC_R") {
                             tac_range = std::stod(val);
                         } else if (key == "SP_ADC_RE") {
@@ -352,8 +501,8 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
     // by read_bh_spcqc_header.
     if(get_tttr_container_type() == BH_SPCQC_CONTAINER &&
        tac_range > 0.0 && adc_resolution > 0){
-        add_tag(json_data, TTTRTagRes, tac_range / (double) adc_resolution, tyFloat8);
-        add_tag(json_data, TTTRNMicroTimes, adc_resolution, tyInt8);
+        add_tag(json_data(), TTTRTagRes, tac_range / (double) adc_resolution, tyFloat8);
+        add_tag(json_data(), TTTRNMicroTimes, adc_resolution, tyInt8);
     }
 
     // Record that this is a BH SPC CLSM image so the reconstruction routine can
@@ -361,8 +510,8 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
     // container (e.g. PTU). The frame/line markers are byte-preserved by the
     // record writers, so the BH_SPC130 routine reconstructs the image exactly
     // from any container. The hint rides along as a normal header tag.
-    if(find_tag(json_data, "ImgHdr_PixX") >= 0){
-        add_tag(json_data, "BH_SPC_ReadingRoutine",
+    if(find_tag(json_data(), "ImgHdr_PixX") >= 0){
+        add_tag(json_data(), "BH_SPC_ReadingRoutine",
                 const_cast<char*>("BH_SPC130"), tyAnsiString);
     }
     return true;
@@ -370,7 +519,7 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
 
 
 bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* header){
-    nlohmann::json &json = header->json_data;
+    nlohmann::json &json = header->json_data();
 
     // Preferred path: an original .set was captured on read (directly or via a
     // PTU round trip). Re-emit it byte-for-byte so all BH settings are
@@ -706,7 +855,7 @@ if (is_verbose()) {
 if (is_verbose()) {
                     std::cout << obj_name << " (int): " << value << std::endl;
 }
-                    add_tag(json_data, group_name + "." + obj_name, value, tyInt8, 0);
+                    add_tag(json_data(), group_name + "." + obj_name, value, tyInt8, 0);
                 } else {
                     std::vector<int> values;
                     dataset.read(values);
@@ -718,14 +867,14 @@ if (is_verbose()) {
                     std::cout << std::endl;
 }
                     for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyInt8, static_cast<int>(idx));
+                        add_tag(json_data(), group_name + "." + obj_name, values[idx], tyInt8, static_cast<int>(idx));
                     }
                 }
             } else if (datatype == HighFive::AtomicType<float>() || datatype == HighFive::AtomicType<double>()) {
                 if (is_scalar) {
                     double value;
                     dataset.read(value);
-                    add_tag(json_data, group_name + "." + obj_name, value, tyFloat8, 0);
+                    add_tag(json_data(), group_name + "." + obj_name, value, tyFloat8, 0);
                 } else {
                     std::vector<double> values;
                     dataset.read(values);
@@ -737,7 +886,7 @@ if (is_verbose()) {
                     std::cout << std::endl;
 }
                     for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data, group_name + "." + obj_name, values[idx], tyFloat8, static_cast<int>(idx));
+                        add_tag(json_data(), group_name + "." + obj_name, values[idx], tyFloat8, static_cast<int>(idx));
                     }
                 }
             } else {
@@ -748,7 +897,7 @@ if (is_verbose()) {
                 char* allocated_str = new char[value.size() + 2];
                 std::strcpy(allocated_str, value.c_str());
 
-                add_tag(json_data, group_name + "." + obj_name, allocated_str, tyAnsiString, 0);
+                add_tag(json_data(), group_name + "." + obj_name, allocated_str, tyAnsiString, 0);
 
                 // Free allocated memory
                 delete[] allocated_str;
@@ -772,7 +921,7 @@ if (is_verbose()) {
 if (is_verbose()) {
         std::cout << "File opened successfully." << std::endl;
 }
-        json_data["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
+        json_data()["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
 
         if (file.exist("/setup")) {
             process_hdf5_group_datasets(file.getGroup("/setup"), "setup");
@@ -782,15 +931,15 @@ if (is_verbose()) {
         }
         if (file.exist("/photon_data/timestamps_specs")) {
             process_hdf5_group_datasets(file.getGroup("/photon_data/timestamps_specs"), "timestamps_specs");
-            double v = get_tag(json_data, "timestamps_specs.timestamps_unit")["value"];
-            add_tag(json_data, TTTRTagGlobRes, v, tyFloat8);
+            double v = get_tag(json_data(), "timestamps_specs.timestamps_unit")["value"];
+            add_tag(json_data(), TTTRTagGlobRes, v, tyFloat8);
         }
         if (file.exist("/photon_data/nanotimes_specs")) {
             process_hdf5_group_datasets(file.getGroup("/photon_data/nanotimes_specs"), "nanotimes_specs");
-            int v1 = get_tag(json_data, "nanotimes_specs.tcspc_num_bins")["value"];
-            add_tag(json_data, TTTRNMicroTimes, v1, tyInt8);
-            double v2 = get_tag(json_data, "nanotimes_specs.tcspc_unit")["value"];
-            add_tag(json_data, TTTRTagRes, v2, tyFloat8);
+            int v1 = get_tag(json_data(), "nanotimes_specs.tcspc_num_bins")["value"];
+            add_tag(json_data(), TTTRNMicroTimes, v1, tyInt8);
+            double v2 = get_tag(json_data(), "nanotimes_specs.tcspc_unit")["value"];
+            add_tag(json_data(), TTTRTagRes, v2, tyFloat8);
         }
         return 0; // Return success
     } catch (const HighFive::Exception& err) {
@@ -948,7 +1097,7 @@ if (is_verbose()) {
 
 void TTTRHeader::ensure_minimal_tags(
         TTTRHeader* header, int container_type, size_t n_records){
-    nlohmann::json &json = header->json_data;
+    nlohmann::json &json = header->json_data();
 
     // Macro time resolution (seconds). Several writers (SPC-132, HT3, SM, CZ)
     // read this directly; a missing value makes them emit a garbage clock, so
@@ -991,7 +1140,7 @@ void TTTRHeader::write_spc132_header(
     head.bits.unused = 0;
     head.bits.invalid = true;
 
-    nlohmann::json tag = get_tag(header->json_data, TTTRTagGlobRes);
+    nlohmann::json tag = get_tag(header->json_data(), TTTRTagGlobRes);
     head.bits.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
 
     FILE* fp = fopen(fn.c_str(), mode.c_str());
@@ -1013,7 +1162,7 @@ void TTTRHeader::write_spcqc_header(
     // container (a 50 ns PTU sync period needs 5e7 fs). Fall back to the classic
     // 0.1 ns unit in that case rather than truncating.
     const unsigned kClockMax = (1u << 22) - 1;
-    double mt_clk = get_tag(header->json_data, TTTRTagGlobRes)["value"];
+    double mt_clk = get_tag(header->json_data(), TTTRTagGlobRes)["value"];
     double femto_clock = mt_clk * 1e15;
     if (femto_clock <= (double) kClockMax) {
         head.bits.femto = 1;
@@ -1029,13 +1178,13 @@ void TTTRHeader::write_spcqc_header(
     // the record writer splits the channel on exactly this width, so the two
     // have to agree -- including the default for data that came from elsewhere
     // (see TTTR::spcqc_routing_shift).
-    int idx = find_tag(header->json_data, "BH_SPCQC_RoutingBits");
+    int idx = find_tag(header->json_data(), "BH_SPCQC_RoutingBits");
     head.bits.n_routing_bits = (idx >= 0)
-            ? ((unsigned) (int) header->json_data["tags"][idx]["value"] & 0xF)
+            ? ((unsigned) (int) header->json_data()["tags"][idx]["value"] & 0xF)
             : (unsigned) BH_SPCQC_CH_SHIFT;
-    idx = find_tag(header->json_data, "BH_SPCQC_HasMarkers");
+    idx = find_tag(header->json_data(), "BH_SPCQC_HasMarkers");
     if (idx >= 0) head.bits.markers =
-            (unsigned) ((int) header->json_data["tags"][idx]["value"] ? 1 : 0);
+            (unsigned) ((int) header->json_data()["tags"][idx]["value"] ? 1 : 0);
 
     // The channel field of the QC-x06 layout reaches into bit 30, so the reader
     // has to be told which layout the records use.
@@ -1071,11 +1220,11 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
         // A "Tag Version" written by add_tag/set_string_tag lives in the tag
         // list; the PTU reader stores it as a top-level json key. Prefer the
         // tag-list value so programmatically built headers are honoured.
-        int idx = find_tag(header->json_data, "Tag Version");
+        int idx = find_tag(header->json_data(), "Tag Version");
         if (idx >= 0)
-            version_str = get_tag(header->json_data, "Tag Version")["value"];
+            version_str = get_tag(header->json_data(), "Tag Version")["value"];
         else
-            version_str = header->json_data["Tag Version"];
+            version_str = header->json_data()["Tag Version"];
     } catch (...) {
         std::clog << "WARNING: No PTU version defined in header using default" << std::endl;
         version_str = "0      ";
@@ -1091,7 +1240,7 @@ void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::strin
     std::wstring tmp_wstr;
     // Flag to check if the header end tag was written
     bool header_end_written = false;
-    for(auto &it: header->json_data["tags"].items()){
+    for(auto &it: header->json_data()["tags"].items()){
         auto tag = it.value();
 if (is_verbose()) {
         std::clog << tag << std::endl;
@@ -1209,7 +1358,7 @@ void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::strin
 if (is_verbose()) {
     std::clog << "-- WRITE_HT3_HEADER" << std::endl;
 }
-    nlohmann::json &json = header->json_data;
+    nlohmann::json &json = header->json_data();
 
     // Tag lookup helpers with defaults (get_tag returns a NONE tag when a
     // tag is missing, e.g. when transcoding from another container)
@@ -1342,7 +1491,7 @@ void TTTRHeader::write_sm_header(std::string fn, TTTRHeader* header, std::string
 if (is_verbose()) {
     std::clog << "-- WRITE_SM_HEADER" << std::endl;
 }
-    nlohmann::json &json = header->json_data;
+    nlohmann::json &json = header->json_data();
     auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
         if (TTTRHeader::find_tag(json, name) < 0) return d;
         auto v = TTTRHeader::get_tag(json, name)["value"];
@@ -1411,7 +1560,7 @@ void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, s
 if (is_verbose()) {
     std::clog << "-- WRITE_CZ_CONFOCOR3_HEADER" << std::endl;
 }
-    nlohmann::json &json = header->json_data;
+    nlohmann::json &json = header->json_data();
     auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
         if (TTTRHeader::find_tag(json, name) < 0) return d;
         auto v = TTTRHeader::get_tag(json, name)["value"];
@@ -1540,9 +1689,9 @@ if (is_verbose()) {
 
 double TTTRHeader::get_macro_time_resolution(){
     double res;
-    auto tag = get_tag(json_data, TTTRTagGlobRes);
+    auto tag = get_tag(json_data(), TTTRTagGlobRes);
     if(tag["name"] == "NONE"){
-        res = 1. / (double) get_tag(json_data, TTTRSyncRate)["value"];
+        res = 1. / (double) get_tag(json_data(), TTTRSyncRate)["value"];
     } else{
         res = tag["value"];
     }
@@ -1553,11 +1702,11 @@ double TTTRHeader::get_macro_time_resolution(){
 std::string TTTRHeader::get_json(std::string tag_name, int idx, int indent){
     std::string s;
     if(tag_name.empty()){
-        s = json_data.dump(indent);
+        s = json_data().dump(indent);
     } else{
-        int tag_idx = find_tag(json_data, tag_name, idx);
+        int tag_idx = find_tag(json_data(), tag_name, idx);
         if(tag_idx >= 0){
-            s = json_data["tags"][tag_idx].dump(indent);
+            s = json_data()["tags"][tag_idx].dump(indent);
         } else {
             s = "{}";
         }

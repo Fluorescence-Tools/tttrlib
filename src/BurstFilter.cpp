@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BurstFilter.h"
+
+#include <nlohmann/json.hpp>
 #include <algorithm>
 #include <numeric>
 #include <iostream>

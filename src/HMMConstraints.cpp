@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "HMMConstraints.h"
 
+#include <nlohmann/json.hpp>
+
 namespace tttrlib {
 
 void HmmConstraints::impose(std::vector<double>& value, int n_rows, int n_cols,

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "HMMRestraints.h"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 
 namespace tttrlib {

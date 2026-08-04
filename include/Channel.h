@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 using json = nlohmann::json;
 

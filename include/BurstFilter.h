@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 #include <map>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include "TTTR.h"
 #include "TTTRMask.h"
 #include "Channel.h"
