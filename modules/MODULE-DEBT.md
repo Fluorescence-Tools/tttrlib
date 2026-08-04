@@ -4,29 +4,14 @@ Compromises the module split accepts, why, and what would let each one go. A
 compromise recorded here is a decision; one that is not is a surprise for whoever
 hits it next.
 
-## 1. `legacy` still holds the core cluster
+## 1. ~~`legacy`~~ -- done
 
-Out so far: `util`, `opt`, `hist`, `imageio`, `sim`, `pda`, `superres`,
-`localization`, `core`, `imaging`, `registry`, `decay`. `legacy` is down from
-68 sources to 14 and now holds only burst's separable half, nn, hmm and the
-unused layer-graph pair.
+There is no residual module. `src/` and `include/` are empty and every source
+belongs to exactly one of sixteen subsystems, checked at configure time.
 
-Two of the extracted modules are leaves of the *include* graph without being
-independent of core, and say so in `DEPENDS`: nothing includes `Pda.h` or
-`CLSMSuperRes.h`, but both implementations read the photon-stream data model.
-`DEPENDS legacy` becomes `DEPENDS core` and `DEPENDS core imaging` once those
-exist. `sim`'s edge runs the other way from what its name suggests: the
-simulator reaches into nothing but `Random.h`, and it is `hmm` and `nn` --
-still inside `legacy` -- that include `SimDecay.h` and `SimPcgRandom.h`, so
-`legacy` declares `DEPENDS sim`.
-
-**Exit:** `burst`, then `nn` and `hmm`.
-`tttrlib_finalize_modules()` refuses to configure if a source ends up claimed
-twice or not at all, so each extraction is a small, checkable change.
-
-**The order matters, and it is not the one originally planned.** Taking `burst`
-first produces a link cycle, which CMake rejects outright between shared
-libraries:
+The extraction order was **not** the one planned, and the reason is worth
+keeping. Taking `burst` first -- as the plan said -- is a link cycle, which CMake
+rejects outright between shared libraries:
 
 - `burst` -> `legacy`, because `BurstFilter.h` includes `TTTR.h`, `TTTRMask.h`
   and `Channel.h`;
@@ -34,11 +19,16 @@ libraries:
   `BurstConfidence.h`, `BurstSearchBayesianBlocks.h` and `BurstSearchMaxTree.h`
   all include `BurstSignificance.h`.
 
-The same applies to `nn`: `HMMSurrogate.h` includes `NeuralNet.h` while
-`NeuralNet.cpp` reaches into imaging and sim. Nothing above `core` can come out
-while `core` is still inside `legacy` -- the residual module is on both ends of
-every edge. `core` first, and `BurstSignificance.h` goes with it, since core's
-own burst-search headers include it.
+`nn` has the same shape. The general rule: **nothing above `core` can come out
+while `core` is still inside the residual module**, because the residual sits on
+both ends of every edge. Order actually used: `imageio`, `opt`, `hist`, `sim`,
+`pda`, `superres`, `localization`, `util`, `core`, `imaging`, `registry`,
+`decay`, then `burst`, `nn`, `hmm`, `graph`.
+
+Two edges only the linker or the compiler found, not a reading of the headers:
+`Registry.cpp` calls `fit_models_json()` and friends, so the fit description
+tables belong with `registry` and not `decay`; and `LayerNode.cpp` reaches into
+the CLSM hierarchy that `LayerNode.h` gives no hint of.
 
 ## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
 
