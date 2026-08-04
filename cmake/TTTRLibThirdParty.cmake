@@ -101,6 +101,22 @@ target_compile_definitions(tttrlib_build_config INTERFACE
 if(VERBOSE_TTTRLIB)
     target_compile_definitions(tttrlib_build_config INTERFACE VERBOSE_TTTRLIB)
 endif()
+# OpenMP belongs here because it is genuinely project-wide: the top-level
+# CMakeLists puts ${OpenMP_CXX_FLAGS} into CMAKE_CXX_FLAGS, so *every*
+# translation unit compiles with it, whichever module it ends up in. The link
+# side did not follow -- ${OpenMP_EXE_LINKER_FLAGS} goes to
+# CMAKE_EXE_LINKER_FLAGS, which reaches executables only. That was invisible
+# while the sources were one static archive consumed by the extension (which
+# links OpenMP::OpenMP_CXX itself), and became a hard link error the moment the
+# module split made them SHARED libraries: compiled with -fopenmp, linked
+# without it, so libtttrlib_legacy.dylib failed on every ___kmpc_* symbol.
+#
+# Carrying it on build_config rather than in tttrlib_add_module() keeps one
+# statement of the rule: a module compiles with the project's flags, so it links
+# the project's runtimes. Every module extracted from here on gets it for free.
+if(WITH_OPENMP AND OpenMP_CXX_FOUND)
+    target_link_libraries(tttrlib_build_config INTERFACE OpenMP::OpenMP_CXX)
+endif()
 add_library(tttrlib::build_config ALIAS tttrlib_build_config)
 
 message(STATUS "Third-party INTERFACE targets defined (tttrlib::json, ::pocketfft, "
