@@ -24,7 +24,7 @@ tttrlib_add_module(
              # same reason they belong on this side of the line.
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FitRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util core
+    DEPENDS  io util core
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES Registry.i
     TEST_DIR test/python

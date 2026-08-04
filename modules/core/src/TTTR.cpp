@@ -14,6 +14,7 @@
 #include "BurstSearchMaxTree.h"
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
+#include "TTTRFormat.h"
 #include "TTTRMask.h"
 #include "FileCheck.h"
 #include "PhotonscoreD7.h"
@@ -26,6 +27,14 @@
 #include <array>
 
 // Static member definition outside the class
+tttrlib::bimap<std::string, int> TTTR::initialize_container_names() {
+    tttrlib::bimap<std::string, int> m;
+    for (const auto& f : tttrlib::IORegistry::formats()) {
+        m.insert({f.name, f.container_type});
+    }
+    return m;
+}
+
 tttrlib::bimap<std::string, int>& TTTR::container_names() {
     static tttrlib::bimap<std::string, int> names = TTTR::initialize_container_names();
     return names;

@@ -227,21 +227,15 @@ private:
      */
     static tttrlib::bimap<std::string, int>& container_names();
 
-    // Static function that seeds container_names() on first use
-    static tttrlib::bimap<std::string, int> initialize_container_names() {
-        tttrlib::bimap<std::string, int> m;
-        m.insert({std::string("PTU"), PQ_PTU_CONTAINER});
-        m.insert({std::string("HT3"), PQ_HT3_CONTAINER});
-        m.insert({std::string("SPC-130"), BH_SPC130_CONTAINER});
-        m.insert({std::string("SPC-600_256"), BH_SPC600_256_CONTAINER});
-        m.insert({std::string("SPC-600_4096"), BH_SPC600_4096_CONTAINER});
-        m.insert({std::string("PHOTON-HDF5"), PHOTON_HDF_CONTAINER});
-        m.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
-        m.insert({std::string("SM"), SM_CONTAINER});
-        m.insert({std::string("PHOTONS"), PS_PHOTONS_CONTAINER});
-        m.insert({std::string("SPC-QC"), BH_SPCQC_CONTAINER});
-        return m;
-    }
+    /*!
+     * Seeds container_names() on first use, from the format table.
+     *
+     * This used to be ten hand-written insertions -- one of six places that had
+     * to be edited in step to add a format. It is now derived, so a format
+     * registered by an io_* module, or later by a plugin, is a name tttrlib
+     * knows without anyone editing this function.
+     */
+    static tttrlib::bimap<std::string, int> initialize_container_names();
 
     /*!
      * The type of the TTTR file.

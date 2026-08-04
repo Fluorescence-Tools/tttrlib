@@ -25,6 +25,7 @@
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
 add_subdirectory(util)
+add_subdirectory(io)
 add_subdirectory(opt)
 add_subdirectory(hist)
 add_subdirectory(imageio)

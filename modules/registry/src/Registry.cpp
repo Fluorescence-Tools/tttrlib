@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "TTTRFormat.h"
 #include "TTTR.h"
 
 namespace tttrlib {
@@ -20,34 +21,30 @@ using json = nlohmann::ordered_json;   // ordered: a form renders in declared or
  * same shape as everything else, so one piece of code can render any category.
  */
 json file_container_entries() {
+    // Derived from the format table rather than restated. This was the second
+    // of six copies of the same knowledge, and the comment it replaces admitted
+    // as much: "Labels and extensions are not derivable from it at all, so the
+    // table is written out here". They are derivable now.
     json out = json::object();
-    // The container *names* exist in TTTR::container_names, but that member is
-    // private and maps only name to integer. Labels and extensions are not
-    // derivable from it at all, so the table is written out here; the container
-    // type is taken from the public constants in TTTRHeaderTypes.h so the two
-    // cannot disagree about which integer means which format.
-    const struct {
-        const char* name; const char* label; const char* extensions; int type;
-    } kInfo[] = {
-        {"PTU",          "PicoQuant PTU",                ".ptu",       PQ_PTU_CONTAINER},
-        {"HT3",          "PicoQuant HT3",                ".ht3",       PQ_HT3_CONTAINER},
-        {"SPC-130",      "Becker & Hickl SPC-130",       ".spc",       BH_SPC130_CONTAINER},
-        {"SPC-600_256",  "Becker & Hickl SPC-600 (256)", ".spc",       BH_SPC600_256_CONTAINER},
-        {"SPC-600_4096", "Becker & Hickl SPC-600 (4096)",".spc",       BH_SPC600_4096_CONTAINER},
-        {"SPC-QC",   "Becker & Hickl SPC-QC",".spc",      BH_SPCQC_CONTAINER},
-        {"PHOTON-HDF5",  "Photon-HDF5",                  ".h5,.hdf5",  PHOTON_HDF_CONTAINER},
-        {"CZ-RAW",       "Zeiss ConfoCor3 raw",          ".raw",       CZ_CONFOCOR3_CONTAINER},
-        {"SM",           "Single-molecule (SM)",         ".sm",        SM_CONTAINER},
-        {"PHOTONS",      "Photonscore LINCam",           ".photons",   PS_PHOTONS_CONTAINER},
-    };
-    for (const auto& info : kInfo) {
+    for (const auto& f : tttrlib::IORegistry::formats()) {
+        std::string extensions;
+        for (const auto& e : f.extensions) {
+            if (!extensions.empty()) extensions += ",";
+            extensions += "." + e;
+        }
         json entry = json::object();
-        entry["name"] = info.name;
-        entry["label"] = info.label;
-        entry["summary"] = std::string("TTTR container: ") + info.label;
-        entry["extensions"] = info.extensions;
-        entry["container_type"] = info.type;
-        out[info.name] = entry;
+        entry["name"] = f.name;
+        entry["label"] = f.label;
+        entry["summary"] = f.summary;
+        entry["extensions"] = extensions;
+        entry["container_type"] = f.container_type;
+        entry["can_read"] = f.can_read;
+        entry["can_write"] = f.can_write;
+        // Tells a consumer which container ints are safe to persist. Built-in
+        // formats own 0-999 permanently; a plugin's id is session-local, so for
+        // those the NAME is the stable identifier.
+        entry["stable"] = f.stable;
+        out[f.name] = entry;
     }
     return out;
 }

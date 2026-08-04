@@ -1,0 +1,177 @@
+// SPDX-License-Identifier: BSD-3-Clause
+#include "TTTRFormat.h"
+#include "TTTRHeaderTypes.h"   // the container and record-type constants
+
+#include <algorithm>
+#include <mutex>
+
+namespace tttrlib {
+
+namespace {
+
+/*!
+ * \brief The built-in formats.
+ *
+ * Every value here is transcribed from the code it replaces, not invented:
+ * names from TTTR::initialize_container_names(), labels and extensions from
+ * Registry.cpp's file_container_entries(), record types from
+ * valid_container_record_pair(), defaults from
+ * default_record_type_for_container(). A test asserts the table still agrees
+ * with each of them, so a divergence is a test failure rather than a format
+ * that quietly stops being recognised.
+ */
+std::vector<FileFormat> builtin_formats() {
+    std::vector<FileFormat> f;
+
+    FileFormat ptu;
+    ptu.name = "PTU";
+    ptu.container_type = PQ_PTU_CONTAINER;
+    ptu.label = "PicoQuant PTU";
+    ptu.extensions = {"ptu"};
+    ptu.record_types = {PQ_RECORD_TYPE_HHT2v1, PQ_RECORD_TYPE_HHT3v2,
+                        PQ_RECORD_TYPE_HHT2v2, PQ_RECORD_TYPE_HHT3v1,
+                        PQ_RECORD_TYPE_PHT2,   PQ_RECORD_TYPE_PHT3,
+                        PQ_RECORD_TYPE_GENERIC_T3, PQ_RECORD_TYPE_GENERIC_T2};
+    ptu.default_record_type = PQ_RECORD_TYPE_HHT3v2;
+    ptu.can_write = true;
+    f.push_back(ptu);
+
+    FileFormat ht3 = ptu;
+    ht3.name = "HT3";
+    ht3.container_type = PQ_HT3_CONTAINER;
+    ht3.label = "PicoQuant HT3";
+    ht3.extensions = {"ht3"};
+    // SF compression exists only for HT3 containers, not for PTU.
+    ht3.record_types.push_back(PQ_RECORD_TYPE_SF_HT3);
+    f.push_back(ht3);
+
+    FileFormat spc130;
+    spc130.name = "SPC-130";
+    spc130.container_type = BH_SPC130_CONTAINER;
+    spc130.label = "Becker & Hickl SPC-130";
+    spc130.extensions = {"spc"};
+    spc130.record_types = {BH_RECORD_TYPE_SPC130};
+    spc130.default_record_type = BH_RECORD_TYPE_SPC130;
+    spc130.can_write = true;
+    f.push_back(spc130);
+
+    FileFormat spc256 = spc130;
+    spc256.name = "SPC-600_256";
+    spc256.container_type = BH_SPC600_256_CONTAINER;
+    spc256.label = "Becker & Hickl SPC-600 (256)";
+    spc256.record_types = {BH_RECORD_TYPE_SPC600_256};
+    spc256.default_record_type = BH_RECORD_TYPE_SPC600_256;
+    f.push_back(spc256);
+
+    FileFormat spc4096 = spc130;
+    spc4096.name = "SPC-600_4096";
+    spc4096.container_type = BH_SPC600_4096_CONTAINER;
+    spc4096.label = "Becker & Hickl SPC-600 (4096)";
+    spc4096.record_types = {BH_RECORD_TYPE_SPC600_4096};
+    spc4096.default_record_type = BH_RECORD_TYPE_SPC600_4096;
+    f.push_back(spc4096);
+
+    FileFormat hdf5;
+    hdf5.name = "PHOTON-HDF5";
+    hdf5.container_type = PHOTON_HDF_CONTAINER;
+    hdf5.label = "Photon-HDF5";
+    hdf5.extensions = {"h5", "hdf5"};
+    // Photon-HDF5 stores decoded arrays, so any record type is acceptable and
+    // none is canonical -- empty means "any".
+    hdf5.can_write = true;
+    f.push_back(hdf5);
+
+    FileFormat cz;
+    cz.name = "CZ-RAW";
+    cz.container_type = CZ_CONFOCOR3_CONTAINER;
+    cz.label = "Zeiss ConfoCor3 raw";
+    cz.extensions = {"raw"};
+    cz.record_types = {CZ_RECORD_TYPE_CONFOCOR3};
+    cz.default_record_type = CZ_RECORD_TYPE_CONFOCOR3;
+    cz.can_write = true;
+    f.push_back(cz);
+
+    FileFormat sm;
+    sm.name = "SM";
+    sm.container_type = SM_CONTAINER;
+    sm.label = "Single-molecule (SM)";
+    sm.extensions = {"sm"};
+    sm.record_types = {SM_RECORD_TYPE};
+    sm.default_record_type = SM_RECORD_TYPE;
+    sm.can_write = true;
+    f.push_back(sm);
+
+    FileFormat ps;
+    ps.name = "PHOTONS";
+    ps.container_type = PS_PHOTONS_CONTAINER;
+    ps.label = "Photonscore LINCam";
+    ps.extensions = {"photons"};
+    ps.can_write = true;
+    f.push_back(ps);
+
+    FileFormat qc;
+    qc.name = "SPC-QC";
+    qc.container_type = BH_SPCQC_CONTAINER;
+    qc.label = "Becker & Hickl SPC-QC";
+    qc.extensions = {"spc"};
+    qc.record_types = {BH_RECORD_TYPE_SPCQC_X04, BH_RECORD_TYPE_SPCQC_X06};
+    qc.default_record_type = BH_RECORD_TYPE_SPCQC_X04;
+    qc.can_write = true;
+    f.push_back(qc);
+
+    for (auto& fmt : f) {
+        if (fmt.summary.empty()) fmt.summary = "TTTR container: " + fmt.label;
+    }
+    return f;
+}
+
+std::vector<FileFormat>& table() {
+    static std::vector<FileFormat> t = builtin_formats();
+    return t;
+}
+
+std::mutex& table_mutex() {
+    static std::mutex m;
+    return m;
+}
+
+}  // namespace
+
+const std::vector<FileFormat>& IORegistry::formats() {
+    return table();
+}
+
+const FileFormat* IORegistry::by_name(const std::string& name) {
+    for (const auto& f : table()) if (f.name == name) return &f;
+    return nullptr;
+}
+
+const FileFormat* IORegistry::by_container_type(int container_type) {
+    for (const auto& f : table()) if (f.container_type == container_type) return &f;
+    return nullptr;
+}
+
+std::vector<const FileFormat*> IORegistry::by_extension(const std::string& extension) {
+    std::vector<const FileFormat*> out;
+    for (const auto& f : table()) if (f.has_extension(extension)) out.push_back(&f);
+    std::sort(out.begin(), out.end(), [](const FileFormat* a, const FileFormat* b) {
+        return a->container_type < b->container_type;
+    });
+    return out;
+}
+
+bool IORegistry::add(const FileFormat& format) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    for (const auto& f : table()) {
+        if (f.name == format.name) return false;              // refused, not shadowed
+        if (f.container_type == format.container_type) return false;
+    }
+    table().push_back(format);
+    std::sort(table().begin(), table().end(),
+              [](const FileFormat& a, const FileFormat& b) {
+                  return a.container_type < b.container_type;
+              });
+    return true;
+}
+
+}  // namespace tttrlib
