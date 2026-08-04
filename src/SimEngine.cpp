@@ -869,6 +869,31 @@ SimRngScope rng_scope_from(const std::string& s) {
     return (s == "per_thread") ? SimRngScope::PerThread : SimRngScope::PerMolecule;
 }
 
+// Build a SimDecay micro-time pattern from a JSON spec. One grammar, used for
+// both a species' own decay and the background's, so a scatter background can be
+// written the way it is measured — a lifetime and a prompt — rather than as a
+// hand-built array. Either:
+//   "pattern"   — an arbitrary micro-time histogram (primary form), or
+//   "lifetimes" — multi-exponential with optional "amplitudes" (default [1]),
+//                 "n_bins" (4096) and "irf" (an array to convolve with).
+// "dt" (0.008 ns) is the bin width and "t0" (0.0 ns) shifts the pattern within the
+// laser period, which is how a PIE delay channel is placed.
+SimDecay decay_from(const json& d) {
+    const double ddt = d.value("dt", 0.008), dt0 = d.value("t0", 0.0);
+    if (d.contains("pattern"))
+        return SimDecay::from_pattern(d["pattern"].get<std::vector<double>>(), ddt, dt0);
+    if (d.contains("lifetimes")) {
+        auto amps = d.value("amplitudes", std::vector<double>{1.0});
+        auto taus = d["lifetimes"].get<std::vector<double>>();
+        const int nb = d.value("n_bins", 4096);
+        if (d.contains("irf"))
+            return SimDecay::multi_exponential_with_irf(
+                amps, taus, nb, ddt, d["irf"].get<std::vector<double>>(), dt0);
+        return SimDecay::multi_exponential(amps, taus, nb, ddt, dt0);
+    }
+    return SimDecay{};
+}
+
 // Build a SimGrid excitation/detection field from a JSON spec. Supported "type"s:
 //   "gaussian3d"           — separable 3D Gaussian (w0, z0); "analytic":true ⇒ grid-free eval.
 //   "analytic_gaussian3d"  — same, always grid-free.
@@ -914,12 +939,43 @@ SimGrid grid_from(const json& g) {
 }
 } // namespace
 
+// Reject a key the parser does not read, rather than let it become a default.
+// Every value here has one, so a misspelling is silent: "seed_emmision" runs the
+// whole simulation on seed 54321 and reports success. The cost of the check is a
+// string compare per key at construction.
+static void reject_unknown(const json& obj, const char* where,
+                           std::initializer_list<const char*> known) {
+    if (!obj.is_object()) return;
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+        if (it.key().rfind("_comment", 0) == 0) continue;
+        bool found = false;
+        for (const char* k : known) if (it.key() == k) { found = true; break; }
+        if (!found)
+            throw std::invalid_argument(
+                std::string("SimEngine config: unknown key '") + it.key() +
+                "' in " + where);
+    }
+}
+
 SimEngine* SimEngine::from_json(const std::string& json_config) {
     json cfg = json::parse(json_config);
+    reject_unknown(cfg, "the top level",
+                   {"settings", "box", "species", "k_rad", "k_nrad", "background",
+                    "background_decay", "population", "flow", "occlusion",
+                    "emitters", "excitation", "detection"});
 
     SimIntegrator st;
     if (cfg.contains("settings")) {
         const json& s = cfg["settings"];
+        reject_unknown(s, "'settings'",
+                       {"dt", "n_ph_max", "max_windows", "seed_diffusion",
+                        "seed_emission", "n_channels", "n_microtime_channels",
+                        "microtime_resolution", "laser_period", "alex_period",
+                        "alex_markers", "alex_marker_event_type", "rng_kind",
+                        "rng_scope", "drift_midpoint", "fast_grid_bbox",
+                        "focus_threshold", "per_molecule_skip", "coast_safety",
+                        "min_coast_windows", "independent_molecules",
+                        "active_margin"});
         st.dt = s.value("dt", st.dt);
         st.n_ph_max = s.value("n_ph_max", st.n_ph_max);
         st.max_windows = s.value("max_windows", st.max_windows);
@@ -955,37 +1011,28 @@ SimEngine* SimEngine::from_json(const std::string& json_config) {
             s.r0 = sp.value("r0", 0.0); s.l1 = sp.value("l1", 0.0);
             s.l2 = sp.value("l2", 0.0); s.D_rot = sp.value("D_rot", 0.0);
             s.v_scale = sp.value("v_scale", 1.0);
-            if (sp.contains("decay")) {   // micro-time decay: arbitrary pattern (primary) or a model helper
-                const json& d = sp["decay"];
-                double ddt = d.value("dt", 0.008), dt0 = d.value("t0", 0.0);
-                if (d.contains("pattern")) {
-                    s.decay = SimDecay::from_pattern(d["pattern"].get<std::vector<double>>(), ddt, dt0);
-                } else if (d.contains("lifetimes")) {
-                    auto amps = d.value("amplitudes", std::vector<double>{1.0});
-                    auto taus = d["lifetimes"].get<std::vector<double>>();
-                    int nb = d.value("n_bins", 4096);
-                    if (d.contains("irf"))
-                        s.decay = SimDecay::multi_exponential_with_irf(
-                            amps, taus, nb, ddt, d["irf"].get<std::vector<double>>(), dt0);
-                    else
-                        s.decay = SimDecay::multi_exponential(amps, taus, nb, ddt, dt0);
-                }
-            }
+            if (sp.contains("decay")) s.decay = decay_from(sp["decay"]);
             sample.add_species(s);
         }
     }
+    // Both matrices or neither. Accepting one and silently dropping it would run
+    // the scheme *static* while reporting nothing, which reads downstream as "the
+    // model cannot recover exchange" rather than as a config error.
+    if (cfg.contains("k_rad") != cfg.contains("k_nrad"))
+        throw std::invalid_argument(
+            "SimEngine config: 'k_rad' and 'k_nrad' must be given together; "
+            "supply a zero matrix for the one that does not apply "
+            "(k_rad is scaled by the excitation intensity, k_nrad is spontaneous)");
     if (cfg.contains("k_rad") && cfg.contains("k_nrad"))
         sample.set_rate_matrices(cfg["k_rad"].get<std::vector<double>>(),
                                  cfg["k_nrad"].get<std::vector<double>>());
     if (cfg.contains("background"))
         sample.set_background(cfg["background"].get<std::vector<double>>());
-    if (cfg.contains("background_decay")) {   // micro-time pattern for background (G1)
-        const json& d = cfg["background_decay"];
-        double ddt = d.value("dt", 0.008), dt0 = d.value("t0", 0.0);
-        if (d.contains("pattern"))
-            sample.set_background_decay(
-                SimDecay::from_pattern(d["pattern"].get<std::vector<double>>(), ddt, dt0));
-    }
+    // Same grammar as a species decay: a raw pattern, or lifetimes with an
+    // optional IRF. Scattered excitation light is the usual background and it is
+    // naturally written as a lifetime plus the prompt, not as a hand-built array.
+    if (cfg.contains("background_decay"))
+        sample.set_background_decay(decay_from(cfg["background_decay"]));
     if (cfg.contains("box"))
         sample.set_box(cfg["box"].value("xy", 2.0), cfg["box"].value("z", 4.0));
     if (cfg.contains("flow")) {

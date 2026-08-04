@@ -110,6 +110,48 @@ def test_per_molecule_skip_preserves_statistics():
         assert 0 < run(True, 10 ** 9, mw).n_molecules() < 40
 
 
+def test_counter_rng_seek_is_constant_time():
+    """Reseeding a counter-based RNG must not cost more the further in you seek.
+
+    `SimEngine` reseeds every molecule every window at `window * kWindowStride`,
+    so if `reset` walks to that offset by *burning* draws -- as it once did --
+    the cost grows with the window index and the whole run becomes quadratic in
+    window count.  At a few thousand molecules that reached ~1e10 draws and
+    never finished, so `test_rng_thread_count_independent[Philox]` hung and no
+    full suite run could complete.
+
+    Asserted as a *ratio against Xoshiro*, whose reset was always O(1), so the
+    comparison cancels machine speed and CI load rather than hard-coding a
+    wall-clock budget.  The regression it guards against is worth ~1e5x here, so
+    a 20x bound is loose enough never to flap and tight enough to catch it.
+    """
+    import time
+
+    def run(kind, max_windows):
+        s = tttrlib.SimSystem()
+        sp = tttrlib.SimSpecies(); sp.D = 0.0; sp.q = _vd([50.0, 50.0]); s.add_species(sp)
+        s.set_rate_matrices(_vd([0.0]), _vd([0.0])); s.set_background(_vd([0.0, 0.0]))
+        rng = np.random.RandomState(3)
+        for _ in range(400):
+            s.add_fluorophore(*rng.uniform(-0.8, 0.8, 3).tolist(), 0, False)
+        exc = tttrlib.SimGrid.gaussian3d(0.3, 1.0, 1.0, 2.0, 0.05, 1.0)
+        st = tttrlib.SimIntegrator(); st.dt = 0.01; st.n_channels = 2
+        st.n_ph_max = 10 ** 9          # window-limited, so the reseed cost dominates
+        st.max_windows = max_windows
+        st.rng_kind = getattr(tttrlib, "SimRngKind_" + kind)
+        eng = tttrlib.SimEngine(s, exc, tttrlib.VectorSimGrid([]), st)
+        eng.set_num_threads(1); eng.set_parallel_threshold(10 ** 18)
+        t0 = time.perf_counter(); eng.run()
+        return time.perf_counter() - t0
+
+    windows = 3000
+    t_ref = max(run("Xoshiro", windows), 1e-4)
+    t_ctr = run("Philox", windows)
+    assert t_ctr < 20.0 * t_ref, (
+        f"Philox reseed looks superlinear in the counter: {t_ctr:.3f}s vs "
+        f"Xoshiro {t_ref:.3f}s -- SimCounterRandom::reset should seek, not burn")
+
+
 @pytest.mark.parametrize("kind", ["Xoshiro", "Pcg", "Philox", "Mt19937"])
 def test_rng_thread_count_independent(kind):
     def run(threads):
@@ -149,3 +191,80 @@ def test_spc132_encoder_roundtrip(tmp_path):
         f.write(bytes(enc.file_bytes(rec.bytes)))
     t = tttrlib.TTTR(path, "SPC-130")
     assert t.get_n_valid_events() == eng.n_photons()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Config errors are errors, not defaults
+# ──────────────────────────────────────────────────────────────────────────────
+def _minimal_config():
+    """Return the smallest config that runs, as a mutable dict."""
+    import json
+    cfg = json.loads(tttrlib.SimEngine.default_json())
+    cfg["settings"]["n_ph_max"] = 200
+    cfg["settings"]["max_windows"] = 10 ** 6
+    return cfg
+
+
+def test_one_rate_matrix_without_the_other_is_refused():
+    """Accepting one and dropping it would run the scheme static and say nothing.
+
+    ``k_rad`` is scaled by the local excitation intensity and ``k_nrad`` is
+    spontaneous, so a caller who supplies only the spontaneous rates means
+    something definite. Silently ignoring both used to make the simulation come
+    out with no exchange at all, which reads downstream as "the model cannot
+    recover this rate" rather than as a configuration mistake.
+    """
+    cfg = _minimal_config()
+    del cfg["k_rad"]                       # spontaneous rates only
+    with pytest.raises(ValueError, match="together"):
+        tttrlib.SimEngine.from_dict(cfg)
+
+    cfg["k_rad"] = [0.0] * len(cfg["k_nrad"])
+    tttrlib.SimEngine.from_dict(cfg)       # both present: fine
+
+
+def test_a_misspelled_key_is_refused_rather_than_defaulted():
+    """Every setting has a default, so a typo is otherwise invisible."""
+    cfg = _minimal_config()
+    cfg["settings"]["seed_emmision"] = 7          # one 's'
+    with pytest.raises(ValueError, match="seed_emmision"):
+        tttrlib.SimEngine.from_dict(cfg)
+
+    cfg = _minimal_config()
+    cfg["exitation"] = {"type": "uniform"}        # one 'c'
+    with pytest.raises(ValueError, match="exitation"):
+        tttrlib.SimEngine.from_dict(cfg)
+
+
+def test_the_background_decay_takes_lifetimes_like_a_species_decay():
+    """Scatter is written as a lifetime and a prompt, not as a hand-built array.
+
+    ``species[].decay`` has always accepted ``lifetimes``/``amplitudes``/``irf``;
+    ``background_decay`` accepted only a raw ``pattern`` and ignored the rest
+    without complaint, so a background configured the natural way came out flat.
+    """
+    def background_delays_ns(decay_block):
+        """Return background photon delays in ns, on the engine's micro-time grid."""
+        cfg = _minimal_config()
+        cfg["species"][0]["q"] = [0.0, 0.0]        # background only
+        cfg["background"] = [0.5, 0.5]
+        cfg["background_decay"] = decay_block
+        eng = tttrlib.SimEngine.from_dict(cfg)
+        eng.run()
+        resolution = eng.settings().microtime_resolution
+        return np.asarray(eng.photons()["micro_time"]) * resolution
+
+    period = _minimal_config()["settings"]["laser_period"]
+    n_bins, dt = 4096, 0.008
+
+    lifetimes = background_delays_ns({"lifetimes": [2.0], "n_bins": n_bins, "dt": dt})
+    assert lifetimes.size > 50
+    # A 2 ns decay, not the half-period a flat background would give.
+    assert lifetimes.mean() == pytest.approx(2.0, rel=0.3)
+    assert lifetimes.mean() < 0.25 * period
+
+    # And the raw-pattern form still works, unchanged.
+    pattern = np.zeros(n_bins)
+    pattern[125] = 1.0                              # 125 * 0.008 ns = 1.0 ns
+    only = background_delays_ns({"pattern": list(pattern), "dt": dt})
+    assert np.allclose(only, 1.0, atol=dt)

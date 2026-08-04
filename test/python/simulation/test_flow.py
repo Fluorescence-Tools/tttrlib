@@ -314,8 +314,14 @@ def test_coasting_agrees_with_flow():
         "flow": {"type": "uniform", "vx": 1.0, "vy": 0.0, "vz": 0.0},
         "excitation": {"type": "analytic_gaussian3d", "w0": 0.3, "z0": 2.0, "amplitude": 1.0},
     }
-    cfg_no_coast = {**cfg, "per_molecule_skip": False, "seed_diffusion": 11, "seed_emission": 22}
-    cfg_coast = {**cfg, "per_molecule_skip": True, "seed_diffusion": 11, "seed_emission": 22}
+    def variant(per_molecule_skip):
+        """Return the config with the coasting flag set, seeds pinned together."""
+        return {**cfg, "settings": {**cfg["settings"],
+                                    "per_molecule_skip": per_molecule_skip,
+                                    "seed_diffusion": 11, "seed_emission": 22}}
+
+    cfg_no_coast = variant(False)
+    cfg_coast = variant(True)
     e0 = tttrlib.SimEngine.from_json(json.dumps(cfg_no_coast))
     e1 = tttrlib.SimEngine.from_json(json.dumps(cfg_coast))
     e0.run(); e1.run()
@@ -341,8 +347,14 @@ def test_coasting_inert_for_poiseuille():
                  "extent_xy": 6.0, "extent_z": 6.0, "spacing": 0.1},
         "excitation": {"type": "analytic_gaussian3d", "w0": 0.3, "z0": 2.0, "amplitude": 1.0},
     }
-    cfg_off = {**cfg, "per_molecule_skip": False, "seed_diffusion": 7, "seed_emission": 8}
-    cfg_on = {**cfg, "per_molecule_skip": True, "seed_diffusion": 7, "seed_emission": 8}
+    def variant(per_molecule_skip):
+        """Return the config with the coasting flag set, seeds pinned together."""
+        return {**cfg, "settings": {**cfg["settings"],
+                                    "per_molecule_skip": per_molecule_skip,
+                                    "seed_diffusion": 7, "seed_emission": 8}}
+
+    cfg_off = variant(False)
+    cfg_on = variant(True)
     e0 = tttrlib.SimEngine.from_json(json.dumps(cfg_off))
     e1 = tttrlib.SimEngine.from_json(json.dumps(cfg_on))
     e0.run(); e1.run()
