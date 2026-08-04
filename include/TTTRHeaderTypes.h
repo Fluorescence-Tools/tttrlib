@@ -41,6 +41,7 @@
 #define CZ_CONFOCOR3_CONTAINER    6
 #define SM_CONTAINER              7
 #define PS_PHOTONS_CONTAINER      8  // Photonscore LINCam ".photons" (D7)
+#define BH_SPCQC_CONTAINER        9  // Becker & Hickl SPC-QC ".spc"
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1
@@ -57,6 +58,25 @@
 #define PQ_RECORD_TYPE_GENERIC_T3   12  // MultiHarp 150 / PicoHarp 330 T3 mode
 #define PQ_RECORD_TYPE_GENERIC_T2   13  // MultiHarp 150 / PicoHarp 330 T2 mode
 #define PQ_RECORD_TYPE_SF_HT3       14  // SF-compressed HT3 (S. Felekyan): HHT3 records, overflow record carries a 24-bit count
+#define BH_RECORD_TYPE_SPCQC_X04    15  // Becker & Hickl SPC-QC-104 / QC-004 (2 bit channel)
+#define BH_RECORD_TYPE_SPCQC_X06    16  // Becker & Hickl SPC-QC-106 / QC-006 (3 bit channel)
+
+/// Micro time channels of a Becker & Hickl SPC-QC record (12 bit ADC)
+#define BH_SPCQC_N_MICRO_TIMES  4096
+/// Macro time field width of a Becker & Hickl SPC-QC record; one overflow
+/// record accounts for this many macro time units.
+#define BH_SPCQC_MT_WRAP        4096
+/*!
+ * Fallback TAC range (in seconds) of the Becker & Hickl SPC-QC modules.
+ *
+ * Unlike the classic SPC-130/600 cards the QC modules run their TAC
+ * independently of the macro time clock, so the micro time resolution cannot be
+ * derived from the 4 byte .spc header. The value below is the range SPCM writes
+ * by default (65.54 ns over 4096 ADC channels, i.e. 16 ps per channel) and is
+ * replaced by the true setting as soon as a ".set" sidecar is found
+ * (SP_TAC_R / SP_ADC_RE, see TTTRHeader::read_bh_set_file).
+ */
+#define BH_SPCQC_DEFAULT_TAC_RANGE 6.554e-8
 
 
 /*
@@ -198,6 +218,42 @@ typedef union bh_spc132_header{
         bool invalid              :1;    // true if dataset is marked as invalid
     } bits;
 } bh_spc132_header_t;
+
+
+/*!
+ * \brief Becker & Hickl SPC-QC header (first 4 byte of the .spc file)
+ *
+ * Occupies the same word as @ref bh_spc132_header_t but carries flags where the
+ * classic header has reserved bits, and only 22 (not 24) bits of macro time
+ * clock. Layout per Becker & Hickl's `SPC_data_file_structure.h`:
+ *
+ *  * bit    31  invalid flag (always set)
+ *  * bit 30-27  number of routing bits used during the measurement
+ *  * bit    26  raw data file -- always 1, QC .spc files are never processed
+ *  * bit    25  file contains markers (written in imaging mode)
+ *  * bit    24  femto flag: macro time clock is in femtoseconds
+ *  * bit    23  six input channel module (SPC-QC-106/006), selecting the
+ *               wider channel field of the QC-x06 record layout
+ *  * bit    22  unused
+ *  * bit 21- 0  macro time clock period
+ *
+ * The femto flag is what lets the QC clock be expressed at all: the reference
+ * module runs at 2048131 fs (2.048131 ns), far finer than the 0.1 ns unit of
+ * the classic header.
+ */
+typedef union bh_spcqc_header{
+    uint32_t allbits;
+    struct{
+        unsigned macro_time_clock :22;   // femtoseconds when femto is set, else 0.1 ns
+        unsigned unused           :1;
+        unsigned six_channel      :1;    // SPC-QC-106/006 -> QC-x06 record layout
+        unsigned femto            :1;    // macro time clock is in femtoseconds
+        unsigned markers          :1;    // written in imaging mode
+        unsigned raw              :1;    // always 1 for QC .spc files
+        unsigned n_routing_bits   :4;
+        bool invalid              :1;    // true if dataset is marked as invalid
+    } bits;
+} bh_spcqc_header_t;
 
 
 /// A Header Tag entry of a PTU file

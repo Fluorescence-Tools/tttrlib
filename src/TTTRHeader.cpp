@@ -104,6 +104,10 @@ if (is_verbose()) {
     } else if(tttr_container_type == BH_SPC130_CONTAINER){
         header_end = read_bh132_header(fpin, json_data);
         tttr_record_type = BH_RECORD_TYPE_SPC130;
+    } else if(tttr_container_type == BH_SPCQC_CONTAINER){
+        header_end = read_bh_spcqc_header(fpin, json_data);
+        // QC-x04 and QC-x06 differ in the channel width; the header picks one
+        tttr_record_type = get_tag(json_data, TTTRRecordType)["value"];
     } else{
         header_end = 0;
         add_tag(json_data, TTTRTagBits, 32, tyInt8);
@@ -150,6 +154,55 @@ if (is_verbose()) {
     std::clog << "-- BH132 header reader " << std::endl;
     std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
     std::clog << "-- micro_time_resolution: " << mi_clk << std::endl;
+}
+    return 4;
+}
+
+
+size_t TTTRHeader::read_bh_spcqc_header(
+        std::FILE *fpin,
+        nlohmann::json &data,
+        bool rewind
+){
+    if(rewind) std::fseek(fpin, 0, SEEK_SET);
+    bh_spcqc_header_t rec;
+    fread(&rec, sizeof(rec),1, fpin);
+
+    // The femto flag selects the unit of the 22 bit clock field. Without it the
+    // QC modules could not express their clock at all: 2.048131 ns needs
+    // femtoseconds, and the classic 0.1 ns unit would round it to 2.0 ns. When
+    // the flag is clear the classic unit applies, which is also the only way
+    // the field can reach into the microsecond range.
+    double mt_clk = (double) rec.bits.macro_time_clock *
+                    (rec.bits.femto ? 1e-15 : 1e-10);
+    // The TAC of the QC modules is not slaved to the macro time clock, so the
+    // micro time resolution cannot be computed from mt_clk. Assume the TAC range
+    // SPCM writes by default; read_bh_set_file overrides it from SP_TAC_R /
+    // SP_ADC_RE whenever the .set sidecar is available.
+    double mi_clk = BH_SPCQC_DEFAULT_TAC_RANGE / (double) BH_SPCQC_N_MICRO_TIMES;
+    add_tag(data, TTTRTagRes, mi_clk, tyFloat8);
+    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
+    add_tag(data, TTTRNMicroTimes, (int) BH_SPCQC_N_MICRO_TIMES, tyInt8);
+    add_tag(data, TTTRTagBits, 32, tyInt8);
+    // Keep the flags: the routing width is needed to split a decoded channel
+    // back into input channel and router signal on write, and the marker flag
+    // records whether the file was written in imaging mode.
+    add_tag(data, "BH_SPCQC_RoutingBits", (int) rec.bits.n_routing_bits, tyInt8);
+    add_tag(data, "BH_SPCQC_HasMarkers", (int) rec.bits.markers, tyInt8);
+    add_tag(data, "BH_SPCQC_FemtoClock", (int) rec.bits.femto, tyInt8);
+    // Six input channels widen the channel field into bit 30, which is a record
+    // selector in the QC-x04 layout -- the two cannot share a decoder.
+    add_tag(data, TTTRRecordType,
+            rec.bits.six_channel ? BH_RECORD_TYPE_SPCQC_X06
+                                 : BH_RECORD_TYPE_SPCQC_X04, tyInt8);
+
+if (is_verbose()) {
+    std::clog << "-- BH SPC-QC header reader " << std::endl;
+    std::clog << "-- macro_time_resolution: " << mt_clk
+              << (rec.bits.femto ? " (femto units)" : " (0.1 ns units)") << std::endl;
+    std::clog << "-- micro_time_resolution: " << mi_clk << " (default, see .set)" << std::endl;
+    std::clog << "-- routing bits: " << rec.bits.n_routing_bits << std::endl;
+    std::clog << "-- record layout: " << (rec.bits.six_channel ? "QC-x06" : "QC-x04") << std::endl;
 }
     return 4;
 }
@@ -231,6 +284,11 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
                 const_cast<char*>(b64.c_str()), tyAnsiString);
     }
 
+    // TAC range and ADC resolution; only used for the SPC-QC modules, whose
+    // 4 byte .spc header cannot carry the micro time resolution (see below)
+    double tac_range = 0.0;
+    int adc_resolution = 0;
+
     std::istringstream text(raw);
     std::string line;
     while (std::getline(text, line)) {
@@ -268,6 +326,10 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
                         } else if (key == "SP_PIX_CLK") {
                             int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
                             add_tag(json_data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
+                        } else if (key == "SP_TAC_R") {
+                            tac_range = std::stod(val);
+                        } else if (key == "SP_ADC_RE") {
+                            adc_resolution = std::stoi(val);
                         }
                     } catch (const std::exception& e) {
                         #ifdef VERBOSE_TTTRLIB
@@ -282,6 +344,16 @@ bool TTTRHeader::read_bh_set_file(const std::string& filename) {
                 }
             }
         }
+    }
+
+    // The SPC-QC modules run the TAC independently of the macro time clock, so
+    // the micro time resolution is not derivable from the .spc header. The .set
+    // is the only place it is recorded; use it to replace the default assumed
+    // by read_bh_spcqc_header.
+    if(get_tttr_container_type() == BH_SPCQC_CONTAINER &&
+       tac_range > 0.0 && adc_resolution > 0){
+        add_tag(json_data, TTTRTagRes, tac_range / (double) adc_resolution, tyFloat8);
+        add_tag(json_data, TTTRNMicroTimes, adc_resolution, tyInt8);
     }
 
     // Record that this is a BH SPC CLSM image so the reconstruction routine can
@@ -921,6 +993,54 @@ void TTTRHeader::write_spc132_header(
 
     nlohmann::json tag = get_tag(header->json_data, TTTRTagGlobRes);
     head.bits.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
+
+    FILE* fp = fopen(fn.c_str(), mode.c_str());
+    fwrite(&head, 4, 1, fp);
+    fclose(fp);
+}
+
+
+void TTTRHeader::write_spcqc_header(
+        std::string fn, TTTRHeader* header, std::string mode){
+    bh_spcqc_header_t head;
+    head.allbits = 0;
+    head.bits.unused = 0;
+    head.bits.invalid = true;
+    head.bits.raw = 1;  // QC .spc files are always raw, never processed
+
+    // The clock field is only 22 bit wide, so femtoseconds top out at 4.19 ns.
+    // That covers every QC module, but not a macro clock inherited from another
+    // container (a 50 ns PTU sync period needs 5e7 fs). Fall back to the classic
+    // 0.1 ns unit in that case rather than truncating.
+    const unsigned kClockMax = (1u << 22) - 1;
+    double mt_clk = get_tag(header->json_data, TTTRTagGlobRes)["value"];
+    double femto_clock = mt_clk * 1e15;
+    if (femto_clock <= (double) kClockMax) {
+        head.bits.femto = 1;
+        head.bits.macro_time_clock = (unsigned) (femto_clock + 0.5);
+    } else {
+        head.bits.femto = 0;
+        double coarse = mt_clk * 1e10;
+        head.bits.macro_time_clock =
+                (unsigned) (coarse < (double) kClockMax ? coarse + 0.5 : kClockMax);
+    }
+
+    // Preserve the routing width and marker flag when they came from a QC file;
+    // the record writer splits the channel on exactly this width, so the two
+    // have to agree -- including the default for data that came from elsewhere
+    // (see TTTR::spcqc_routing_shift).
+    int idx = find_tag(header->json_data, "BH_SPCQC_RoutingBits");
+    head.bits.n_routing_bits = (idx >= 0)
+            ? ((unsigned) (int) header->json_data["tags"][idx]["value"] & 0xF)
+            : (unsigned) BH_SPCQC_CH_SHIFT;
+    idx = find_tag(header->json_data, "BH_SPCQC_HasMarkers");
+    if (idx >= 0) head.bits.markers =
+            (unsigned) ((int) header->json_data["tags"][idx]["value"] ? 1 : 0);
+
+    // The channel field of the QC-x06 layout reaches into bit 30, so the reader
+    // has to be told which layout the records use.
+    head.bits.six_channel =
+            (header->get_tttr_record_type() == BH_RECORD_TYPE_SPCQC_X06) ? 1 : 0;
 
     FILE* fp = fopen(fn.c_str(), mode.c_str());
     fwrite(&head, 4, 1, fp);

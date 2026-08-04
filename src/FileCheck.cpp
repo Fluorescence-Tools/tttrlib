@@ -170,6 +170,41 @@ bool isBH132File(const std::string& filename) {
     return (time_res > 0.0 && time_res < 500.0);
 }
 
+// Function to check if the file is a Becker & Hickl SPC-QC file
+bool isBHSPCQCFile(const std::string& filename) {
+    bh_spcqc_header_t head{};
+    FILE* file = open_file(filename, "rb");
+    if (!file) return false;
+
+    std::rewind(file);
+    if (std::fread(&head, sizeof(head), 1, file) != 1) {
+        std::fclose(file);
+        return false;
+    }
+
+    // "QC .spc files are always raw (not processed)", so the raw flag is set on
+    // every one of them. A clock of zero is not a QC file either.
+    if (!head.bits.raw || head.bits.macro_time_clock == 0) {
+        std::fclose(file);
+        return false;
+    }
+
+    // Structural check of the record stream: a macro time overflow has bits
+    // 30-28 clear and every remaining bit zero by definition, on both the
+    // QC-x04 and the QC-x06 layout. A classic SPC overflow record instead sets
+    // MTOV (bit 30) and carries a count, so it fails this test. Markers and GAP
+    // records set bits 30-28 and are skipped here -- they carry payload legally.
+    uint32_t records[1024];
+    size_t n = std::fread(records, sizeof(uint32_t), 1024, file);
+    std::fclose(file);
+    if (n == 0) return false;
+    for (size_t i = 0; i < n; ++i) {
+        const uint32_t rec = records[i];
+        if ((rec & 0xF0000000u) == 0x80000000u && rec != 0x80000000u) return false;
+    }
+    return true;
+}
+
 /**
  * @brief Determines if the given file is a Carl Zeiss Confocor3 raw data file.
  */
@@ -228,6 +263,9 @@ int inferTTTRFileType(const char* fn) {
             if (isBH132File(filename)) {
                 return BH_SPC130_CONTAINER;
             }
+            if (isBHSPCQCFile(filename)) {
+                return BH_SPCQC_CONTAINER;
+            }
 
         } else if (extension == "ht3") {
             if (isHT3File(filename)) {
@@ -284,7 +322,8 @@ std::string tttrContainerCanonicalExtension(int container_type) {
         case PQ_HT3_CONTAINER:           return "ht3";
         case BH_SPC130_CONTAINER:
         case BH_SPC600_256_CONTAINER:
-        case BH_SPC600_4096_CONTAINER:   return "spc";
+        case BH_SPC600_4096_CONTAINER:
+        case BH_SPCQC_CONTAINER:    return "spc";
         case PHOTON_HDF_CONTAINER:       return "hdf5";
         case CZ_CONFOCOR3_CONTAINER:     return "raw";
         case SM_CONTAINER:               return "sm";

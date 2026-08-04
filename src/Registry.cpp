@@ -34,6 +34,7 @@ json file_container_entries() {
         {"SPC-130",      "Becker & Hickl SPC-130",       ".spc",       BH_SPC130_CONTAINER},
         {"SPC-600_256",  "Becker & Hickl SPC-600 (256)", ".spc",       BH_SPC600_256_CONTAINER},
         {"SPC-600_4096", "Becker & Hickl SPC-600 (4096)",".spc",       BH_SPC600_4096_CONTAINER},
+        {"SPC-QC",   "Becker & Hickl SPC-QC",".spc",      BH_SPCQC_CONTAINER},
         {"PHOTON-HDF5",  "Photon-HDF5",                  ".h5,.hdf5",  PHOTON_HDF_CONTAINER},
         {"CZ-RAW",       "Zeiss ConfoCor3 raw",          ".raw",       CZ_CONFOCOR3_CONTAINER},
         {"SM",           "Single-molecule (SM)",         ".sm",        SM_CONTAINER},

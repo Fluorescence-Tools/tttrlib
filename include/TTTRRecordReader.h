@@ -414,6 +414,99 @@ struct RecordProcessor<BH_RECORD_TYPE_SPC130> {
     }
 };
 
+// Specialization for Becker & Hickl SPC-QC-104 / QC-004 (2 bit channel)
+template<>
+struct RecordProcessor<BH_RECORD_TYPE_SPCQC_X04> {
+    static inline bool process(
+        uint32_t& TTTRRecord,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        bh_spcqc_record_t rec;
+        rec.allbits = TTTRRecord;
+        const unsigned event = rec.bits.type >> 2;  // bits 31-30
+
+        // Macro time overflow: a bare 0x80000000 standing for one wrap of the
+        // 12 bit macro time field. There is no count field to accumulate.
+        if (event == BH_SPCQC_X04_TYPE_OVERFLOW) {
+            overflow_counter += 1;
+            return false;
+        }
+
+        true_nsync = rec.bits.mt + overflow_counter * BH_SPCQC_MT_WRAP;
+
+        // Marker: the routing field carries the marker type, as on SPC-130,
+        // and neither channel nor micro time are meaningful.
+        if (event == BH_SPCQC_X04_TYPE_MARKER) {
+            micro_time = rec.bits.rout;
+            channel = static_cast<int16_t>(rec.bits.rout);
+            record_type = RECORD_MARKER;
+            return true;
+        }
+
+        // Photon, or a GAP record -- which *is* a photon, only with a possible
+        // FIFO overrun in front of it, so its fields are decoded the same way.
+        // No reverse start-stop correction: SPCM already stores the micro time
+        // the way it histograms it.
+        micro_time = rec.bits.adc;
+        // The detector is the input channel *and* the router signal, so keep
+        // both, packed the way Becker & Hickl number QC detectors themselves:
+        // routing in bits 3-0, input channel in bits 6-4 (see BH_SPCQC_CH_SHIFT).
+        channel = static_cast<int16_t>(
+                rec.bits.rout | ((rec.bits.type & 0x3) << BH_SPCQC_CH_SHIFT));
+        record_type = RECORD_PHOTON;
+        return true;
+    }
+};
+
+// Specialization for Becker & Hickl SPC-QC-106 / QC-006 (3 bit channel)
+template<>
+struct RecordProcessor<BH_RECORD_TYPE_SPCQC_X06> {
+    static inline bool process(
+        uint32_t& TTTRRecord,
+        uint64_t& overflow_counter,
+        uint64_t& true_nsync,
+        uint32_t& micro_time,
+        int16_t& channel,
+        int16_t& record_type
+    ) {
+        bh_spcqc_record_t rec;
+        rec.allbits = TTTRRecord;
+        const unsigned event = rec.bits.type;  // bits 31-28
+
+        if (event == BH_SPCQC_TYPE_OVERFLOW) {
+            overflow_counter += 1;
+            return false;
+        }
+
+        true_nsync = rec.bits.mt + overflow_counter * BH_SPCQC_MT_WRAP;
+
+        if (event == BH_SPCQC_X06_TYPE_MARKER) {
+            micro_time = rec.bits.rout;
+            channel = static_cast<int16_t>(rec.bits.rout);
+            record_type = RECORD_MARKER;
+            return true;
+        }
+
+        micro_time = rec.bits.adc;
+        if (event & 0x8) {
+            // Only GAP (11xx) remains; it is a photon, but with just the two
+            // low channel bits -- the format has no room for Ch[2] there.
+            if ((event & 0xC) != 0xC) return false;  // undefined selector, skip
+            channel = static_cast<int16_t>(
+                    rec.bits.rout | ((event & 0x3) << BH_SPCQC_CH_SHIFT));
+        } else {
+            channel = static_cast<int16_t>(
+                    rec.bits.rout | ((event & 0x7) << BH_SPCQC_CH_SHIFT));
+        }
+        record_type = RECORD_PHOTON;
+        return true;
+    }
+};
+
 // Specialization for Becker & Hickl SPC-600 with 256 channels
 template<>
 struct RecordProcessor<BH_RECORD_TYPE_SPC600_256> {

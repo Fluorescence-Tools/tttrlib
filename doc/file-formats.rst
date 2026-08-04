@@ -66,6 +66,86 @@ Becker & Hickl SPC-130/150/830 (``.spc``, container ``SPC-130``)
    settings is parsed automatically when present and re-emitted on write
    (see :ref:`bh_set_sidecar`).
 
+Becker & Hickl SPC-QC (``.spc``, container ``SPC-QC``)
+   The QC generation (SPC-QC-104/004 and SPC-QC-106/006) writes ``.spc`` files
+   too, but with a record layout of its own. The lower 28 bits are common to
+   every event kind: a 12-bit macro time (bits 0-11), a 4-bit routing signal
+   (bits 12-15) and a 12-bit ADC (bits 16-27). Unlike **every** classic SPC
+   card the ADC value is *not* inverted — ``0x000`` is 0 ns, the micro time the
+   way SPCM histograms it. The top bits select the event:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 22 26 52
+
+      * - Event
+        - QC-x04 (bits 31-30)
+        - QC-x06 (bits 31-28)
+      * - photon
+        - ``00``, channel in bits 29-28
+        - ``0xxx``, channel in bits 30-28
+      * - macro time overflow
+        - ``10``, all other bits zero
+        - ``1000``, all other bits zero
+      * - marker
+        - ``01``, type in bits 15-12
+        - ``1010``, type in bits 15-12
+      * - GAP
+        - ``11``, otherwise a photon
+        - ``11xx``, otherwise a photon
+
+   A macro time overflow is therefore the bare word ``0x80000000`` on both
+   layouts and always stands for exactly one wrap of 4096 units — there is no
+   count field, so idle stretches are not compressed. Writing an SPC-QC
+   measurement back out reproduces the instrument's record stream byte for
+   byte, so other readers see exactly what the module produced. A GAP record *is* a
+   photon; it only warns that a FIFO overrun may precede it.
+
+   A QC detector is identified by the router signal **and** the module input,
+   so tttrlib keeps both in ``routing_channels``: the routing signal in the low
+   bits and the input channel directly above them. Becker & Hickl reserve four
+   routing bits for this whether or not a router is attached
+   (``MeasFCSInfo.chan``, "bits 6-4 = input channel for QC-x0x modules", so a
+   plain three-input measurement is chan 0, 16, 32 in the ``.sdt``). tttrlib
+   instead places the input channel on the routing width the header declares,
+   which keeps the numbering dense: with no router the channel is simply the
+   module input — 0, 1, 2 — and with one, both dimensions still pack
+   losslessly. The declared width is checked against the records first, and the
+   full four bits are kept if any photon routes beyond it, so a wrong header
+   cannot silently merge two detectors.
+
+   The 4-byte header word carries flags where the classic one has reserved
+   bits: number of routing bits (30-27), raw (26, always set), markers (25,
+   imaging mode), femto (24), six-input-channel module (23) and the macro time
+   clock in bits 21-0. The femto flag is what lets the QC clock be expressed at
+   all — 2.048131 ns in the reference data needs femtoseconds, where the
+   classic 0.1 ns unit would round it to 2.0 ns. Bit 23 selects the QC-x06
+   record layout, whose wider channel field reaches into bit 30 and so cannot
+   share a decoder with QC-x04.
+
+   The QC modules run their TAC independently of the macro time clock, so the
+   micro time resolution is not derivable from the header. tttrlib assumes
+   the default TAC range SPCM writes (65.54 ns over 4096 channels, i.e. 16 ps
+   per channel) and replaces it with ``SP_TAC_R``/``SP_ADC_RE`` as soon as a
+   ``.set`` sidecar is found (see :ref:`bh_set_sidecar`).
+
+   The header stores the macro time clock as a whole number of femtoseconds,
+   so its precision is limited to one part in 4 × 10\ :sup:`6` (one LSB on the
+   reference module's 2048131 fs). Against SPCM's own intensity trace the
+   residual is about 4 × 10\ :sup:`-8` — a drift of a few microseconds per
+   100 s, i.e. more than ten times *finer* than the header can express. Raw
+   macro time counter values are exact; only their conversion to seconds
+   inherits this limit, which matters solely for absolute timing over long
+   acquisitions.
+
+   .. note::
+
+      The QC "absolute time" FIFO mode is not supported. There the micro time
+      field instead holds the low 9 bits of a 4 ps absolute time
+      (``t = (macrotime × 512 + microtime) × 4 ps``). Nothing in the ``.spc``
+      header distinguishes it from the regular stream, so it cannot be detected
+      from the file alone and would be decoded as ordinary micro times.
+
 Becker & Hickl SPC-600/630, 256-channel mode (``.spc``, container ``SPC-600_256``)
    Headerless 32-bit records with 8-bit inverted ADC, 17-bit macro time and
    3-bit routing. Every macro time overflow accounts for 2\ :sup:`17` units.
@@ -139,6 +219,16 @@ Support matrix
      - **Macro clock** (4-byte header) plus a companion ``.set`` sidecar file
        (written next to the ``.spc``) carrying the imaging geometry — see
        :ref:`bh_set_sidecar`
+   * - ``SPC-QC``
+     - QC-x04, QC-x06
+     - ✓
+     - ✓
+     - 12 bit
+     - 4 bit routing + 2 bit input (x04) / 3 bit (x06)
+     - ✓
+     - **Macro clock** (4-byte header, in fs) plus routing width and marker
+       flag, and a companion ``.set`` sidecar — the sidecar is the only source
+       of the micro time resolution
    * - ``SPC-600_256``
      - SPC-600/630 (32 bit)
      - ✓
@@ -240,9 +330,9 @@ extra arguments:
    data.write("measurement.ht3")     # → HydraHarp HT3  (inferred from .ht3)
 
 Recognised extensions are ``.ptu``, ``.ht3``, ``.spc``, ``.hdf5``/``.h5``,
-``.raw`` and ``.sm``. Because all three Becker & Hickl flavours share the
-``.spc`` extension, writing an SPC source to ``.spc`` keeps its specific
-flavour (an ``SPC-600_256`` file is not silently downgraded to ``SPC-130``);
+``.raw`` and ``.sm``. Because all Becker & Hickl flavours share the ``.spc``
+extension, writing an SPC source to ``.spc`` keeps its specific flavour (an
+``SPC-600_256`` or ``SPC-QC`` file is not silently downgraded to ``SPC-130``);
 only a cross-family target (e.g. a PTU source written to ``.spc``) switches
 container.
 
@@ -316,10 +406,14 @@ source container, including files assembled from bare arrays with
      - 7
      - ``CZ_RECORD_TYPE_CONFOCOR3`` / ``SM_RECORD_TYPE`` / generic T3/T2
      - 10 / 11 / 12 / 13
-   * -
-     -
+   * - ``PHOTONS``
+     - 8
      - ``PQ_RECORD_TYPE_SF_HT3`` (SF-compressed HT3)
      - 14
+   * - ``SPC-QC``
+     - 9
+     - ``BH_RECORD_TYPE_SPCQC_X04`` / ``_X06``
+     - 15 / 16
 
 What survives a conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,6 +441,13 @@ rules follow directly from the record layouts above:
        channels and markers survive.
    * - T2 → T3
      - Micro times read as 0 and are written as 0.
+   * - anything → ``SPC-QC``
+     - Micro times clip to 12 bit; the channel splits into a 4-bit router
+       signal (bits 3-0) and an input channel (bits 6-4, 2 bit on QC-x04 and
+       3 on QC-x06), so channels 0..63 survive (0..127 on QC-x06) and wider
+       ones clip. Markers survive as marker records. The overflow record carries no count, so one
+       word per 4096 macro time units of idle time is emitted — long, sparse
+       measurements produce large files (as they do on the instrument).
    * - anything → ``SPC-600_256``
      - Micro times clip to 8 bit, channels to 3 bit, markers dropped.
    * - anything → ``SPC-600_4096``

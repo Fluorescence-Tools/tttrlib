@@ -925,6 +925,63 @@ void TTTR::read_bh_set_sidecar() {
     }
 }
 
+unsigned TTTR::spcqc_routing_shift() const {
+    // The width the routing signal occupies in a decoded routing channel. It is
+    // settled once, while the channels are still in their packed form (see
+    // compact_spcqc_routing_channels), and stored in the header; everything
+    // afterwards -- the record writer above all -- must use that same value,
+    // never re-derive it from channels that have since been compacted.
+    //
+    // Without the tag the data did not come from a QC file (built in memory, or
+    // transcoded in). Assume the full width then: it is the only choice that
+    // keeps every channel a QC record can express.
+    int idx = TTTRHeader::find_tag(header->json_data, "BH_SPCQC_RoutingBits");
+    if (idx < 0) return BH_SPCQC_CH_SHIFT;
+    int shift = header->json_data["tags"][idx]["value"];
+    if (shift < 0 || shift > BH_SPCQC_CH_SHIFT) return BH_SPCQC_CH_SHIFT;
+    return (unsigned) shift;
+}
+
+void TTTR::compact_spcqc_routing_channels() {
+    // How many routing bits the measurement declared. Absent means no router.
+    int declared = 0;
+    int idx = TTTRHeader::find_tag(header->json_data, "BH_SPCQC_RoutingBits");
+    if (idx >= 0) declared = header->json_data["tags"][idx]["value"];
+    if (declared < 0 || declared > BH_SPCQC_CH_SHIFT) declared = BH_SPCQC_CH_SHIFT;
+
+    // Trust but verify: if any photon routes beyond the declared width,
+    // compacting would fold two detectors together. Keep all four bits then.
+    // Only photons count -- a marker's routing field holds its marker type,
+    // which says nothing about how wide the router signal is.
+    const unsigned mask = (1u << BH_SPCQC_CH_SHIFT) - 1;
+    const unsigned limit = (1u << declared) - 1;
+    unsigned shift = (unsigned) declared;
+    for (size_t i = 0; i < n_valid_events; i++) {
+        if (event_types[i] == RECORD_MARKER) continue;
+        if (((unsigned) routing_channels[i] & mask) > limit) {
+            if (is_verbose()) {
+                std::clog << "-- SPC-QC: routing exceeds the declared "
+                          << declared << " bit, keeping the full width" << std::endl;
+            }
+            shift = BH_SPCQC_CH_SHIFT;
+            break;
+        }
+    }
+
+    // Record what was actually used, so the writer can undo exactly this split
+    TTTRHeader::add_tag(header->json_data, "BH_SPCQC_RoutingBits",
+                        (int) shift, tyInt8);
+    if (shift == BH_SPCQC_CH_SHIFT) return;  // already in its packed form
+
+    for (size_t i = 0; i < n_valid_events; i++) {
+        // A marker's channel is its type, not a detector; leave it alone.
+        if (event_types[i] == RECORD_MARKER) continue;
+        const unsigned ch = (unsigned) routing_channels[i];
+        routing_channels[i] =
+                (signed char) ((ch & mask) | ((ch >> BH_SPCQC_CH_SHIFT) << shift));
+    }
+}
+
 void TTTR::backfill_cz_routing_channels() {
     // Confocor raw data has no channel number in events
     auto tag = header->get_tag(header->json_data, "channel");
@@ -986,7 +1043,8 @@ int TTTR::read_records_file(const char *fn, int container_type) {
     header = new TTTRHeader(fp, container_type);
 
     // BH SPC files may come with a .set sidecar file that holds the settings
-    if (container_type == BH_SPC130_CONTAINER) {
+    if (container_type == BH_SPC130_CONTAINER ||
+        container_type == BH_SPCQC_CONTAINER) {
         read_bh_set_sidecar();
     }
 
@@ -1018,6 +1076,9 @@ if (is_verbose()) {
 
     if (container_type == CZ_CONFOCOR3_CONTAINER) {
         backfill_cz_routing_channels();
+    }
+    if (container_type == BH_SPCQC_CONTAINER) {
+        compact_spcqc_routing_channels();
     }
     return 1;
 }
@@ -1290,6 +1351,8 @@ static bool dispatch_process_records_batch(
         TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T2)
         TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_SF_HT3)
         TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC130)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X04)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X06)
         TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_256)
         TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_4096)
         TTTRLIB_CASE_PROCESS(CZ_RECORD_TYPE_CONFOCOR3)
@@ -2344,6 +2407,49 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     }
 }
 
+void TTTR::write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel){
+    // The QC modules emit one bare overflow word per wrap of the 12 bit macro
+    // time field; unlike the classic SPC overflow record there is no count
+    // field to compress long idle stretches into a single word.
+    const uint32_t overflow = 0x80000000u;
+
+    // Undo the split the reader made: the input channel sits above the routing
+    // bits actually in use (see compact_spcqc_routing_channels).
+    const unsigned channel_mask = six_channel ? 0x7u : 0x3u;
+    const unsigned shift = tttr->spcqc_routing_shift();
+    const unsigned routing_mask = (1u << shift) - 1;
+
+    const uint64_t MT_WRAP = BH_SPCQC_MT_WRAP;
+    uint64_t MT_ov = 0; // cumulative macro time overflow counter
+    for (size_t n = 0; n < tttr->size(); n++) {
+        uint64_t MT = tttr->get_macro_time_at(n);
+        uint64_t MT_target = MT / MT_WRAP;
+        for (; MT_ov < MT_target; MT_ov++) {
+            fwrite(&overflow, 4, 1, fp);
+        }
+        bh_spcqc_record_t record;
+        record.allbits = 0;
+        record.bits.mt = (unsigned) (MT % MT_WRAP);
+        if (tttr->event_types[n] == RECORD_MARKER) {
+            // Markers carry their type in the routing field; channel and micro
+            // time are zero by definition.
+            record.bits.rout = (unsigned) (tttr->routing_channels[n] & 0xF);
+            record.bits.type = six_channel ? BH_SPCQC_X06_TYPE_MARKER
+                                           : (BH_SPCQC_X04_TYPE_MARKER << 2);
+        } else {
+            const unsigned ch = (unsigned) tttr->routing_channels[n];
+            record.bits.rout = ch & routing_mask;
+            // photon selector bits are zero, so the channel is the whole field
+            record.bits.type = (ch >> shift) & channel_mask;
+            // Micro times are stored the way they are histogrammed (no reverse
+            // start-stop).
+            record.bits.adc = std::min<unsigned short>(
+                    tttr->micro_times[n], BH_SPCQC_N_MICRO_TIMES - 1);
+        }
+        fwrite(&record, 4, 1, fp);
+    }
+}
+
 void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr){
     bh_overflow_t overflow;
     overflow.allbits = 0;
@@ -2656,6 +2762,8 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
         container_type = this->tttr_container_type;
     if(container_type == BH_SPC130_CONTAINER){
         TTTRHeader::write_spc132_header(fn, header);
+    } else if(container_type == BH_SPCQC_CONTAINER){
+        TTTRHeader::write_spcqc_header(fn, header);
     } else if(container_type == PQ_PTU_CONTAINER){
         TTTRHeader::write_ptu_header(fn, header);
     } else if(container_type == PQ_HT3_CONTAINER){
@@ -2704,6 +2812,9 @@ bool valid_container_record_pair(int container_type, int record_type){
         }
     } else if(container_type == BH_SPC130_CONTAINER){
         return record_type == BH_RECORD_TYPE_SPC130;
+    } else if(container_type == BH_SPCQC_CONTAINER){
+        return (record_type == BH_RECORD_TYPE_SPCQC_X04) ||
+               (record_type == BH_RECORD_TYPE_SPCQC_X06);
     } else if(container_type == BH_SPC600_256_CONTAINER){
         return record_type == BH_RECORD_TYPE_SPC600_256;
     } else if(container_type == BH_SPC600_4096_CONTAINER){
@@ -2730,6 +2841,8 @@ static int default_record_type_for_container(int container_type){
             return PQ_RECORD_TYPE_HHT3v2;
         case BH_SPC130_CONTAINER:
             return BH_RECORD_TYPE_SPC130;
+        case BH_SPCQC_CONTAINER:
+            return BH_RECORD_TYPE_SPCQC_X04;
         case BH_SPC600_256_CONTAINER:
             return BH_RECORD_TYPE_SPC600_256;
         case BH_SPC600_4096_CONTAINER:
@@ -2849,6 +2962,12 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
         case BH_RECORD_TYPE_SPC130:
             write_spc132_events(fp, this);
             break;
+        case BH_RECORD_TYPE_SPCQC_X04:
+            write_spcqc_events(fp, this, false);
+            break;
+        case BH_RECORD_TYPE_SPCQC_X06:
+            write_spcqc_events(fp, this, true);
+            break;
         case BH_RECORD_TYPE_SPC600_256:
             write_spc600_256_events(fp, this);
             break;
@@ -2896,7 +3015,8 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     // picks up the .set automatically, see read_bh_set_sidecar).
     if(container_type == BH_SPC130_CONTAINER ||
        container_type == BH_SPC600_256_CONTAINER ||
-       container_type == BH_SPC600_4096_CONTAINER){
+       container_type == BH_SPC600_4096_CONTAINER ||
+       container_type == BH_SPCQC_CONTAINER){
         auto dot = filename.rfind('.');
         std::string set_fn =
             (dot == std::string::npos ? filename : filename.substr(0, dot)) + ".set";

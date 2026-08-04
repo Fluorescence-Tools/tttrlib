@@ -376,6 +376,27 @@ public:
     );
 
     /*!
+     * @brief Reads the header of a Becker & Hickl SPC-QC file.
+     *
+     * The header is the same 4 byte word as in an SPC-130 file, but the macro
+     * time clock is stored in femtoseconds (see @ref bh_spcqc_header_t).
+     * The micro time resolution cannot be derived from it because the QC
+     * modules run their TAC independently of the macro time clock; a default
+     * TAC range is assumed and replaced from the ".set" sidecar when present
+     * (see @ref read_bh_set_file).
+     *
+     * @param fpin File pointer to the SPC-QC file.
+     * @param data Output parameter for JSON data.
+     * @param rewind Flag to indicate whether to rewind the file (default is true).
+     * @return The position of the file pointer at the end of the header.
+     */
+    static size_t read_bh_spcqc_header(
+            std::FILE *fpin,
+            nlohmann::json &data,
+            bool rewind = true
+    );
+
+    /*!
      * @brief Reads a Becker & Hickl .set file and extracts imaging parameters.
      *
      * Parses the BH .set file to extract SP_IMG_X (pixels per line),
@@ -384,6 +405,10 @@ public:
      *   - ImgHdr_PixX
      *   - ImgHdr_PixY
      *   - BH_UsePixelClock
+     *
+     * For SPC-QC containers SP_TAC_R (TAC range) and SP_ADC_RE (ADC
+     * resolution) are read in addition and define the micro time resolution
+     * (TTTRTagRes), which the 4 byte .spc header of those modules cannot carry.
      *
      * @param filename Path to the .set file
      * @return true if parsing succeeded, false otherwise
@@ -436,6 +461,21 @@ public:
      * @param modes the writing modes (default 'w+b')
      */
     static void write_spc132_header(
+            std::string fn,
+            TTTRHeader* header,
+            std::string modes = "w"
+    );
+
+    /*!
+     * Write a Becker & Hickl SPC-QC header to a file
+     *
+     * WARNING: If the default write mode is "wb". Existing files are overwritten.
+     *
+     * @param fn filename
+     * @param header pointer to the TTTRHeader object that is written to the file
+     * @param modes the writing modes (default 'w+b')
+     */
+    static void write_spcqc_header(
             std::string fn,
             TTTRHeader* header,
             std::string modes = "w"

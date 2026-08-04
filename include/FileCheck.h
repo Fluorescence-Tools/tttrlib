@@ -132,6 +132,28 @@ bool isHT3File(const std::string& filename);
  */
 bool isBH132File(const std::string& filename);
 
+/**
+ * @brief Checks if the given file is a Becker & Hickl SPC-QC file.
+ *
+ * SPC-QC files share the `.spc` extension with the classic SPC-130/600 files
+ * and open with a header in the same word, but put flags where the classic
+ * header keeps reserved bits. Two of those are checked here: the raw flag,
+ * which Becker & Hickl document as always set ("QC .spc files are always raw"),
+ * and a non-zero macro time clock.
+ *
+ * Because header flags alone are weak evidence, the start of the record stream
+ * is checked as well: a macro time overflow record has bits 30-28 clear and
+ * every remaining bit zero by definition. A classic SPC overflow record instead
+ * sets MTOV (bit 30) and carries a 28 bit count, so it fails that test.
+ *
+ * @note Call this only after @ref isBH132File has declined the file: classic
+ *       SPC files are recognised first, by their much smaller clock value.
+ *
+ * @param filename The name of the file to check.
+ * @return true if the file is an SPC-QC file, false otherwise.
+ */
+bool isBHSPCQCFile(const std::string& filename);
+
 
 /**
  * @brief Determines the type of the TTTR file based on its content.
@@ -174,7 +196,8 @@ int inferTTTRContainerTypeFromExtension(const std::string& fn);
  * consistent with an existing container type. All Becker & Hickl SPC flavours
  * (SPC-130, SPC-600/256, SPC-600/4096) share the extension `spc`, so this map
  * groups them into one family and lets a `.spc` round trip preserve the more
- * specific source container instead of collapsing it to SPC-130.
+ * specific source container instead of collapsing it to SPC-130. The SPC-QC
+ * modules also write `.spc` and belong to the same family.
  *
  * @param container_type A `*_CONTAINER` container id.
  * @return The canonical extension without a leading dot (e.g. "ptu", "spc"),

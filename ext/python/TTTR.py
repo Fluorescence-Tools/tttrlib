@@ -235,7 +235,12 @@ def __init__(self, *args, **kwargs):
             
             if channel_luts is not None or channel_shifts is not None:
                 if container_type == -1:
-                    container_type = 2  # assume BH_SPC130_CONTAINER for .spc files
+                    # This overload takes no "auto" sentinel, so resolve the
+                    # container here. Guessing SPC-130 for every .spc used to
+                    # mis-read the other Becker & Hickl flavours (e.g. SPC-QC).
+                    container_type = _tttrlib.inferTTTRFileType(filename)
+                    if container_type < 0:
+                        container_type = 2  # BH_SPC130_CONTAINER
                 this = _tttrlib.new_TTTR(filename, container_type, channel_luts or {}, channel_shifts or {}, True)
             else:
                 if len(args) == 1:

@@ -110,6 +110,96 @@ typedef union bh_spc130_record{
 } bh_spc130_record_t;
 
 
+/*!
+ * \brief Becker & Hickl SPC-QC records (QC-104/004 and QC-106/006)
+ *
+ * The QC modules use a layout of their own that only superficially resembles
+ * the SPC-130 record. The lower 28 bit are common to both flavours and to every
+ * event kind; the top four bits select what the event is, and how wide the
+ * input-channel field is differs between QC-x04 and QC-x06.
+ *
+ *  * bit  0-11  macro time, low 12 bit. The high bits come from the overflow
+ *               records, one of which accounts for 4096 macro time units.
+ *  * bit 12-15  routing signal (marker type on marker records). The number of
+ *               routing bits actually in use is in the file header.
+ *  * bit 16-27  micro time (12 bit ADC). Unlike every classic SPC card the
+ *               value is *not* reversed -- it is the micro time the way SPCM
+ *               histograms it, so 0x000 is 0 ns.
+ *
+ * QC-x04 (SPC-QC-104 / QC-004), bits 31-30 select the event, bits 29-28 hold
+ * the two channel bits:
+ *
+ *  | 31 | 30 | event                                                        |
+ *  |----|----|--------------------------------------------------------------|
+ *  |  0 |  0 | photon                                                       |
+ *  |  1 |  0 | macro time overflow; every other bit is zero by definition    |
+ *  |  0 |  1 | marker, type in bits 15-12, macro time valid                  |
+ *  |  1 |  1 | GAP: a photon, but a FIFO overrun may precede it              |
+ *
+ * QC-x06 (SPC-QC-106 / QC-006), bit 31 flags a non-photon and the channel
+ * widens to three bits (30-28):
+ *
+ *  | 31-28  | event                                                          |
+ *  |--------|----------------------------------------------------------------|
+ *  | 0xxx   | photon, channel in bits 30-28                                  |
+ *  | 1000   | macro time overflow                                            |
+ *  | 1010   | marker, type in bits 15-12                                     |
+ *  | 11xx   | GAP photon, channel in bits 29-28                              |
+ *
+ * Layout per Becker & Hickl's own `SPC_data_file_structure.h`. Cross-checked on
+ * SPC-QC-004 recordings against the companion .sdt SPCM writes for a FIFO
+ * measurement: histogramming the micro times per channel reproduces its decay
+ * curves bin for bin, and binning the macro times reproduces its 1 ms intensity
+ * trace.
+ *
+ * \note Not handled: the QC "absolute time" FIFO mode, where the micro time
+ *       instead carries the low 9 bit of a 4 ps absolute time. Nothing in the
+ *       .spc header distinguishes it, so it cannot be detected from the record
+ *       stream alone.
+ */
+typedef union bh_spcqc_record{
+    uint32_t allbits;
+    struct {
+        unsigned mt       :12;  ///< macro time, low 12 bit
+        unsigned rout     :4;   ///< routing signal / marker type
+        unsigned adc      :12;  ///< micro time, not reversed
+        unsigned type     :4;   ///< event selector, see above (QC-x04 uses the top 2 bit)
+    } bits;
+} bh_spcqc_record_t;
+
+/*!
+ * Bit position of the input channel within a decoded SPC-QC routing channel.
+ *
+ * A QC detector is identified by the router signal *and* the module input the
+ * photon arrived on, so both have to be kept. Becker & Hickl combine them as
+ * "routing channel number, bits 6-4 = input channel for QC-x0x modules"
+ * (`MeasFCSInfo.chan` in SPC_data_file_structure.h) -- routing in bits 3-0,
+ * input channel in bits 6-4 -- which is the packing the record decoders emit.
+ * The two fields together occupy exactly the 7 bits of a positive signed char.
+ *
+ * Reserving four routing bits when no router is attached would leave a plain
+ * three-input measurement on channels 0, 16, 32, so TTTR::read_records_file
+ * afterwards moves the input channel down onto the routing width the header
+ * declares (see TTTR::compact_spcqc_routing_channels). Only when that width is
+ * the full four bits does a routing channel equal SPCM's own `chan` value.
+ *
+ * \note This is the opposite packing from phconvert's BH reader, which puts the
+ *       input channel in the low bits. Verified against SPCM: for a three-input
+ *       measurement without a router it writes chan = 0, 16, 32.
+ */
+#define BH_SPCQC_CH_SHIFT        4
+
+/// Event selector (bits 31-28) of a macro time overflow, both QC flavours
+#define BH_SPCQC_TYPE_OVERFLOW   0x8
+/// Event selector (bits 31-28) of a QC-x06 marker
+#define BH_SPCQC_X06_TYPE_MARKER 0xA
+/// Event selector (bits 31-30) of a QC-x04 photon / overflow / marker / GAP
+#define BH_SPCQC_X04_TYPE_PHOTON   0x0
+#define BH_SPCQC_X04_TYPE_OVERFLOW 0x2
+#define BH_SPCQC_X04_TYPE_MARKER   0x1
+#define BH_SPCQC_X04_TYPE_GAP      0x3
+
+
 // Becker Hickl SPC-130/600 macro time overflow record
 typedef union bh_overflow{
     uint32_t allbits;

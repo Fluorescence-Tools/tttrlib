@@ -237,6 +237,7 @@ private:
         m.insert({std::string("CZ-RAW"), CZ_CONFOCOR3_CONTAINER});
         m.insert({std::string("SM"), SM_CONTAINER});
         m.insert({std::string("PHOTONS"), PS_PHOTONS_CONTAINER});
+        m.insert({std::string("SPC-QC"), BH_SPCQC_CONTAINER});
         return m;
     }
 
@@ -252,6 +253,9 @@ private:
      *  * BH_SPC600_4096_CONTAINER  4
      *  * PHOTON_HDF5_CONTAINER     5
      *  * CZ_CONFOCOR3_CONTAINER    6
+     *  * SM_CONTAINER               7
+     *  * PS_PHOTONS_CONTAINER       8
+     *  * BH_SPCQC_CONTAINER    9
      *
      * The numbers correspond to the numbers that should be used when
      * initializing the class.
@@ -334,6 +338,37 @@ private:
      * not in the records; back-fill the routing channel array from the header.
      */
     void backfill_cz_routing_channels();
+
+    /*!
+     * \brief Compact SPC-QC routing channels down to the routing width in use.
+     *
+     * The record decoder packs the router signal and the module input the way
+     * Becker & Hickl number QC detectors (routing in bits 3-0, input channel in
+     * bits 6-4). That reserves four routing bits whether or not a router is
+     * attached, so a plain three-input measurement would come out as channels
+     * 0, 16, 32 -- correct, but a poor stream index.
+     *
+     * The file header records how many routing bits the measurement actually
+     * used, so the input channel can be moved down to sit directly on top of
+     * them: with no router at all the channel is simply the input (0, 1, 2),
+     * and with a router the pair still packs losslessly. The declared width is
+     * verified against the decoded records first and the full four bits are
+     * kept if any routing value exceeds it, so a wrong header cannot silently
+     * collapse two detectors onto one channel.
+     *
+     * Markers are unaffected: their type lives in the routing field and their
+     * input channel is zero, so compacting is a no-op for them.
+     */
+    void compact_spcqc_routing_channels();
+
+    /*!
+     * \brief Routing width in use for SPC-QC data, i.e. the bit position the
+     * input channel sits at within a routing channel.
+     *
+     * Taken from the file header and validated against the decoded records;
+     * see @ref compact_spcqc_routing_channels.
+     */
+    unsigned spcqc_routing_shift() const;
 
     // Friend declarations for functions that need direct array access for performance
     template<int RecordType>
@@ -1346,6 +1381,9 @@ public:
     *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
     *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
     *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
+    *   - 7: Single-molecule SM Container (SM_CONTAINER)
+    *   - 8: Photonscore LINCam Container (PS_PHOTONS_CONTAINER)
+    *   - 9: Becker & Hickl SPC-QC Container (BH_SPCQC_CONTAINER)
     * @param read_input If true, reads the content of the file.
     */
     TTTR(const char *filename, int container_type, bool read_input);
@@ -1381,6 +1419,9 @@ public:
      *   - 4: Becker & Hickl SPC-600 with 4096 channels Container (BH_SPC600_4096_CONTAINER)
      *   - 5: Photon-HDF5 Container (PHOTON_HDF5_CONTAINER)
      *   - 6: Carl Zeiss ConfoCor3 (CZ_CONFOCOR3_CONTAINER)
+     *   - 7: Single-molecule SM Container (SM_CONTAINER)
+     *   - 8: Photonscore LINCam Container (PS_PHOTONS_CONTAINER)
+     *   - 9: Becker & Hickl SPC-QC Container (BH_SPCQC_CONTAINER)
      * @param channel_luts Map of routing channel -> LUT vector for microtime linearization
      * @param channel_shifts Map of routing channel -> microtime shift value (bins to add, modulo wraparound)
      * @param read_input If true, reads the content of the file and applies LUTs/shifts (default: true).
@@ -1401,7 +1442,10 @@ public:
      *   - "SPC-600_256": Becker & Hickl SPC-600 with 256 channels Container
      *   - "SPC-600_4096": Becker & Hickl SPC-600 with 4096 channels Container
      *   - "PHOTON-HDF5": Photon-HDF5 Container
-     *   - "CZ_CONFOCOR3_CONTAINER": Carl Zeiss ConfoCor3 Container
+     *   - "CZ-RAW": Carl Zeiss ConfoCor3 Container
+     *   - "SM": Single-molecule SM Container
+     *   - "PHOTONS": Photonscore LINCam Container
+     *   - "SPC-QC": Becker & Hickl SPC-QC Container
      * @param read_input If true, reads the content of the file.
      */
     TTTR(const char *filename, const char* container_type, bool read_input);
@@ -1695,6 +1739,25 @@ public:
      * @param tttr The TTTR object containing the events to be written.
      */
     void write_spc132_events(FILE* fp, TTTR* tttr);
+
+    /*!
+     * @brief Write events from the TTTR object to a file as SPC-QC.
+     *
+     * Micro times are clipped to 12 bit. The decoded channel is split back into
+     * a 4-bit router signal (bits 3-0) and an input channel (bits 6-4, clipped
+     * to 2 bit for QC-x04 and 3 bit for QC-x06), mirroring how the reader
+     * combines them. Markers are written as marker records with their type in
+     * the routing field.
+     *
+     * Note that the macro time overflow record of the QC modules carries no
+     * count, so one word is written per 4096 macro time units of idle time.
+     *
+     * @param fp The FILE pointer for the output file.
+     * @param tttr The TTTR object containing the events to be written.
+     * @param six_channel Use the QC-x06 layout (SPC-QC-106/006) instead of the
+     *                    QC-x04 one (SPC-QC-104/004).
+     */
+    void write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel = false);
 
     /*!
      * @brief Write events from the TTTR object to a file as HHT3v2.
