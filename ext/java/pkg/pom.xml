@@ -41,5 +41,22 @@
         <directory>src/main/resources</directory>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <!--
+            The JNI native is staged into src/main/resources/native/<os-arch>/ and
+            extracted at runtime by NativeLoader, so no java.library.path is
+            required. The reference data location comes from the environment.
+          -->
+          <environmentVariables>
+            <TTTRLIB_DATA>${env.TTTRLIB_DATA}</TTTRLIB_DATA>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>

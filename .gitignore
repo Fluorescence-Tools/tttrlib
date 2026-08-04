@@ -112,3 +112,15 @@ examples/tttr/conv1.spc
 /benchmarks/.venvs/
 /benchmarks/logs/
 /benchmarks/results/
+
+# ImageJ plugin: CMake-generated SWIG proxies and JNI natives are staged into the
+# Maven source roots before `mvn package` (locally and in CI); never commit them.
+ext/java/imagej/target/
+ext/java/imagej/src/main/java/io/github/fluorescencetools/tttrlib/*.java
+ext/java/imagej/src/main/resources/native/
+
+# Java library module: CMake-generated SWIG proxies and JNI natives are staged
+# into the Maven source roots before `mvn test`/`mvn package`; never commit them.
+ext/java/pkg/target/
+ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java
+ext/java/pkg/src/main/resources/native/

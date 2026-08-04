@@ -17,9 +17,13 @@
   <version>0.27.0-SNAPSHOT</version>
 
   <name>tttrlib ImageJ</name>
-  <description>ImageJ/Fiji plugin reading time-tagged time-resolved (TTTR) confocal images
-    (PicoQuant PTU/HT3, Becker &amp; Hickl SPC, Leica SP5/SP8) via the tttrlib C++ engine.
-    Reconstructs Intensity and FastLifetime (mean arrival time) image stacks.</description>
+  <!-- Shown in the Fiji updater and on the update site, so keep it current. -->
+  <description>Fiji plugin for time-tagged time-resolved (TTTR) confocal imaging via the
+    tttrlib C++ engine: PicoQuant PTU/HT3, Becker &amp; Hickl SPC and Leica SP5/SP8.
+    Reconstructs intensity, mean arrival time, lifetime and phasor images with
+    routing-channel grouping and PIE gating; fits multi-exponential decays per pixel;
+    computes per-pixel FCS and image correlation (ICS). Detectors and PIE windows are
+    defined in chisurf's detector-setup format.</description>
   <url>https://github.com/fluorescence-tools/tttrlib</url>
   <inceptionYear>2026</inceptionYear>
 
@@ -56,18 +60,96 @@
     <license.copyrightOwners>Thomas-Otavio Peulen</license.copyrightOwners>
     <!--
       The tttrlib SWIG Java proxies and the JNI native are produced by the CMake
-      build (-DBUILD_JAVA_INTERFACE=ON). CI copies:
+      build (-DBUILD_JAVA_INTERFACE=ON). CI stages, before 'mvn package':
         * the generated *.java proxies -> src/main/java/io/github/.../tttrlib/
         * the native libtttrlibjni.*   -> src/main/resources/native/<os-arch>/
-      before 'mvn package', so they are compiled and bundled into the plugin JAR.
+      Both land in the standard Maven source/resource roots, so the default jar
+      packaging compiles and bundles them without extra plugin configuration.
       NativeLoader extracts the platform native from the JAR at runtime.
+
+      Fiji supplies scijava-common / imagej-common / imglib2 / imagej-legacy /
+      scifio at runtime, so they are NOT bundled into the plugin JAR.
+      This plugin requires Fiji (or ImageJ2); the SciJava annotation-driven
+      commands are invisible to a plain ImageJ 1.x install.
     -->
+    <!-- Location of the JNI native for surefire; override locally with -Dtttrlib.native.dir=... -->
+    <tttrlib.native.dir>${project.basedir}/src/main/resources/native</tttrlib.native.dir>
   </properties>
 
+  <!-- imagej-common, imagej-legacy and scifio are not published to Maven Central;
+       they are only in the SciJava repository. pom-scijava does not declare it. -->
+  <repositories>
+    <repository>
+      <id>scijava.public</id>
+      <url>https://maven.scijava.org/content/groups/public</url>
+    </repository>
+  </repositories>
+
   <dependencies>
+    <!-- IJ1: ImagePlus/Roi/LUT interop at the edges, and macro compatibility. -->
     <dependency>
       <groupId>net.imagej</groupId>
       <artifactId>ij</artifactId>
     </dependency>
+    <!-- SciJava Command framework: @Plugin/@Parameter, headless, macro recording. -->
+    <dependency>
+      <groupId>org.scijava</groupId>
+      <artifactId>scijava-common</artifactId>
+    </dependency>
+    <!-- Dataset / ImgLib2: the image type every command emits. -->
+    <dependency>
+      <groupId>net.imagej</groupId>
+      <artifactId>imagej-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.imglib2</groupId>
+      <artifactId>imglib2</artifactId>
+    </dependency>
+    <!-- Legacy bridge: Dataset <-> ImagePlus conversion, ROI handoff. -->
+    <dependency>
+      <groupId>net.imagej</groupId>
+      <artifactId>imagej-legacy</artifactId>
+    </dependency>
+    <!-- SCIFIO Format so File>Open and drag-and-drop handle .ptu/.ht3/.spc. -->
+    <dependency>
+      <groupId>io.scif</groupId>
+      <artifactId>scifio</artifactId>
+    </dependency>
+
+    <!-- chisurf detector-setup JSON. Gson is already in Fiji; declared so the
+         dependency is explicit rather than inherited transitively. -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+
+    <!-- pom-scijava 42.0.0 does not manage the junit-jupiter aggregate artifact,
+         so pin it here, matching ext/java/pkg/pom.xml. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!--
+            Tests exercise the JNI native. NativeLoader first tries
+            System.loadLibrary, so point java.library.path at the staged native;
+            it falls back to extracting from the classpath resources.
+          -->
+          <argLine>-Djava.library.path=${tttrlib.native.dir}</argLine>
+          <environmentVariables>
+            <TTTRLIB_DATA>${env.TTTRLIB_DATA}</TTTRLIB_DATA>
+          </environmentVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

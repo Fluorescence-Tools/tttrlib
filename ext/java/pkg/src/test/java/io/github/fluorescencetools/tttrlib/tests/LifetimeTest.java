@@ -1,21 +1,25 @@
-// FastLifetime (mean micro time) test for the Java bindings, including the
-// C++ IRF-offset correction (CLSMImage::get_mean_micro_time correct_irf_offset /
-// get_decay_irf_offset). Verifies that the IRF offset is the decay leading-edge
-// rise and that subtracting it lowers the mean arrival time.
-//
-// Reference: imaging/pq/ht3/pq_ht3_clsm.ht3 (micro-time resolution 1 ps),
-// decay rise near channel 680 -> IRF offset ~6.8e-10 s.
+// SPDX-License-Identifier: BSD-3-Clause
+package io.github.fluorescencetools.tttrlib.tests;
 
 import io.github.fluorescencetools.tttrlib.*;
 
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * JUnit port of test/java/LifetimeTest.java (PRD-001 cross-language reference).
+ */
 public class LifetimeTest {
+
     static double meanNonzero(double[] a) {
         double s = 0; int c = 0;
         for (double v : a) if (v > 0) { s += v; c++; }
         return c > 0 ? s / c : 0;
     }
 
-    public static void main(String[] args) {
+    @Test
+    public void referenceValuesMatch() throws Exception {
         String root = System.getenv().getOrDefault("TTTRLIB_DATA", "tttr-data");
         TTTR t = new TTTR(root + "/imaging/pq/ht3/pq_ht3_clsm.ht3");
         VectorInt32 ch = new VectorInt32(); ch.add(0);
@@ -32,10 +36,7 @@ public class LifetimeTest {
                 offset, mr, mc);
         boolean ok = offset > 0 && mr > 0 && mc >= 0 && mc < mr
                      && Math.abs((mr - mc) - offset) < offset * 0.01;
-        if (!ok) {
-            System.err.println("Lifetime IRF-correction test: FAIL");
-            System.exit(1);
-        }
+        assertTrue(ok, "Lifetime IRF-correction test: FAIL");
         System.out.println("Lifetime IRF-correction test: PASS");
     }
 }

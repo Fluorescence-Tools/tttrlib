@@ -77,6 +77,155 @@
 %ARRAY_INTO(TTTR, get_routing_channel, get_routing_channels_into, signed char)
 %ARRAY_INTO(TTTR, get_event_type,      get_event_types_into,      signed char)
 
+// ── Multi-dimensional output-array marshalling ─────────────────────────────
+// Same idea as %ARRAY_INTO, for the far more common tttrlib shape
+//   void CLASS::METHOD(<pre-args>, CTYPE** out, int* d1, ..., int* dN, <post-args>)
+// which returns an N-dimensional block flattened row-major. The Java caller
+// preallocates a 1-D array of d1*...*dN and gets back the element count.
+//
+// Most of these getters take extra arguments before and/or after the output
+// block, and the SWIG preprocessor cannot splice a comma-containing argument
+// list into a call. So the caller passes the COMPLETE call, parenthesised --
+// `(...)` keeps the commas inside one macro argument, and a parenthesised
+// expression statement is valid C++. Inside the call, use `buf` for the output
+// pointer and `d1`..`dN` for the dimensions.
+//
+// NOTE: the C++ getter allocates the whole block regardless of the array it is
+// handed, so an undersized array truncates but saves nothing. The return value
+// is always the TRUE element count, so a caller detects truncation by comparing
+// it against arr.length.
+//
+//   %ARRAY_INTO_3D(CLSMImage, get_mean_lifetime_into, double,
+//                  SWIG_ARGS(, int minimum_number_of_photons, bool stack_frames),
+//                  ($self->get_mean_lifetime($self->get_tttr().get(),
+//                                            &buf, &d1, &d2, &d3,
+//                                            minimum_number_of_photons, 0,
+//                                            1.0, 1.0, stack_frames)))
+%define SWIG_ARGS(...) __VA_ARGS__ %enddef
+
+%define %ARRAY_INTO_2D(CLASS, INTONAME, CTYPE, EXTRA_PARAMS, CALL)
+%extend CLASS {
+  int INTONAME(CTYPE* INPLACE_ARRAY1, int DIM1 EXTRA_PARAMS) {
+    CTYPE* buf = 0; int d1 = 0, d2 = 0;
+    CALL;
+    size_t n = (size_t) d1 * (size_t) d2;
+    size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return (int) n;
+  }
+}
+%enddef
+
+%define %ARRAY_INTO_3D(CLASS, INTONAME, CTYPE, EXTRA_PARAMS, CALL)
+%extend CLASS {
+  int INTONAME(CTYPE* INPLACE_ARRAY1, int DIM1 EXTRA_PARAMS) {
+    CTYPE* buf = 0; int d1 = 0, d2 = 0, d3 = 0;
+    CALL;
+    size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3;
+    size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return (int) n;
+  }
+}
+%enddef
+
+%define %ARRAY_INTO_4D(CLASS, INTONAME, CTYPE, EXTRA_PARAMS, CALL)
+%extend CLASS {
+  int INTONAME(CTYPE* INPLACE_ARRAY1, int DIM1 EXTRA_PARAMS) {
+    CTYPE* buf = 0; int d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+    CALL;
+    size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3 * (size_t) d4;
+    size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return (int) n;
+  }
+}
+%enddef
+
+// First real user: the IRF-corrected mean lifetime map, which the plugin's
+// "Lifetime Map" command needs. get_mean_micro_time (already wrapped by hand
+// above) is only the mean arrival time.
+%ARRAY_INTO_3D(CLSMImage, get_mean_lifetime_into, double,
+               SWIG_ARGS(, int minimum_number_of_photons = 3,
+                           bool stack_frames = false),
+               ($self->get_mean_lifetime($self->get_tttr().get(),
+                                         &buf, &d1, &d2, &d3,
+                                         minimum_number_of_photons,
+                                         0, 1.0, 1.0, stack_frames)))
+
+// Per-pixel FCS: one correlation curve per pixel, straight from the photon
+// stream. Layout is frame-major like the other image getters, with the lag axis
+// innermost: value(f, y, x, tau) = arr[((f*n_lines + y)*n_pixel + x)*n_tau + tau].
+// n_tau = returned_count / (n_frames*n_lines*n_pixel).
+%ARRAY_INTO_4D(CLSMImage, get_fcs_image_into, float,
+               SWIG_ARGS(, const std::string& correlation_method = "default",
+                           int n_bins = 50, int n_casc = 1,
+                           bool stack_frames = false,
+                           bool normalized_correlation = false,
+                           int min_photons = 2),
+               ($self->get_fcs_image(&buf, &d1, &d2, &d3, &d4,
+                                     $self->get_tttr(), 0,
+                                     correlation_method, n_bins, n_casc,
+                                     stack_frames, normalized_correlation,
+                                     min_photons)))
+
+%extend CLSMImage {
+  // Per-pixel micro-time decays: a 4-D block (frame, line, pixel, tac) flattened
+  // row-major, so pixel (f, y, x) occupies
+  //   [(((f*n_lines + y)*n_pixel + x) * n_tac) ... + n_tac)
+  // and n_tac = returned_count / (n_frames*n_lines*n_pixel).
+  //
+  // Hand-written rather than macro-stamped because the C++ getter fills
+  // unsigned char (counts saturate at 255 per bin) while Java wants int[]; the
+  // macro copies through a single CTYPE.
+  int get_fluorescence_decay_into(int* INPLACE_ARRAY1, int DIM1,
+                                  int micro_time_coarsening = 1,
+                                  bool stack_frames = false,
+                                  int max_micro_time_channels = -1) {
+    unsigned char* buf = 0;
+    int d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+    $self->get_fluorescence_decay($self->get_tttr().get(), &buf,
+                                  &d1, &d2, &d3, &d4,
+                                  micro_time_coarsening, stack_frames,
+                                  max_micro_time_channels);
+    size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3 * (size_t) d4;
+    size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = (int) buf[i];
+    if (buf) free(buf);
+    return (int) n;
+  }
+
+  // Image correlation spectroscopy over this image. compute_ics is static in
+  // C++; exposing it as a member that passes $self is the only way it is ever
+  // used, and keeps the Java call site free of raw pointers.
+  //
+  // Hand-written rather than stamped with %ARRAY_INTO_3D: the x/y ranges must be
+  // the {0, -1} ("whole image") sentinels, and an EMPTY vector segfaults inside
+  // compute_ics. The macro emits the call as a single expression statement and
+  // so cannot declare the locals this needs.
+  int compute_ics_into(double* INPLACE_ARRAY1, int DIM1,
+                       const std::string& subtract_average = "") {
+    double* buf = 0;
+    int d1 = 0, d2 = 0, d3 = 0;
+    std::vector<int> x_range; x_range.push_back(0); x_range.push_back(-1);
+    std::vector<int> y_range; y_range.push_back(0); y_range.push_back(-1);
+    std::vector<std::pair<int,int> > frame_pairs;
+    CLSMImage::compute_ics(&buf, &d1, &d2, &d3,
+                           $self->get_tttr(), $self,
+                           0, -1, -1, 1,
+                           x_range, y_range, frame_pairs,
+                           subtract_average);
+    size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3;
+    size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return (int) n;
+  }
+}
+
 %extend CLSMImage {
   // Decay-from-mask: return the micro-time histogram of photons in the masked
   // pixels (frame-major uint8 mask, size n_frames*n_lines*n_pixel, nonzero =
@@ -157,12 +306,14 @@
   // Fill a preallocated int[] (length >= n_frames*n_lines*n_pixel) with the
   // frame-major intensity image and return the number of elements written:
   //   value(frame, line, pixel) = arr[(frame*n_lines + line)*n_pixel + pixel]
-  // Counts are widened from unsigned short so the full 0..65535 range survives.
+  // Sourced from the 32-bit counter path (get_intensity_u32), so pixels above
+  // 65535 photons are neither truncated nor wrapped -- the 16-bit
+  // get_intensity() would silently wrap during accumulation.
   // The image must have been filled (construct the CLSMImage with fill = true).
   int get_intensity_into(int* INPLACE_ARRAY1, int DIM1) {
-    unsigned short* buf = 0;
+    unsigned int* buf = 0;
     int d1 = 0, d2 = 0, d3 = 0;
-    $self->get_intensity(&buf, &d1, &d2, &d3);
+    $self->get_intensity_u32(&buf, &d1, &d2, &d3);
     size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3;
     size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
     for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = (int) buf[i];
