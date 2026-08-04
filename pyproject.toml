@@ -97,6 +97,22 @@ norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
 markers = [
   "integration: marks tests as integration tests requiring external resources",
   "slow: marks tests that take a while (diffusing single-molecule simulations)",
+  # One marker per test group. conftest.py applies these automatically from the
+  # directory a test lives in, so `pytest -m clsm` works with nothing to
+  # annotate. `--modules <name>` selects by tttrlib module instead.
+  "tttr: photon-stream data model and file I/O",
+  "clsm: confocal imaging, super-resolution, ISM",
+  "correlator: correlation / FCS",
+  "decayfit: fluorescence decay fitting",
+  "burstfilter: burst search, selection and filtering",
+  "bva: burst variance analysis",
+  "twocde: two-channel kernel density estimator",
+  "hmm: photon-by-photon hidden Markov models",
+  "pda: photon distribution analysis",
+  "simulation: the diffusion / photon-emission simulator",
+  "misc: cross-cutting helpers",
+  "benchmarks: performance checks, not correctness",
+  "toplevel: registry, settings and other suite-wide tests",
 ]
 
 [tool.cibuildwheel]
