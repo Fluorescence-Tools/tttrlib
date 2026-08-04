@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "include/Pda.h"
-#include "include/Verbose.h"
-#include "include/info.h"   // AVX/FMA intrinsics + runtime dispatch macros
+#include "Pda.h"
+#include "Verbose.h"
+#include "info.h"   // AVX/FMA intrinsics + runtime dispatch macros
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "thirdparty/pocketfft/pocketfft_hdronly.h"
+#include "pocketfft/pocketfft_hdronly.h"
 #include <complex>
 #include <cmath>
 

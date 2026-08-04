@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayConvolution.h"
-#include "include/Verbose.h"
-#include "include/info.h"
+#include "Verbose.h"
+#include "info.h"
 
 /* rescaling -- old version. sum(fit)->sum(decay) */
 void rescale(double *fit, double *decay, double *scale, int start, int stop) {

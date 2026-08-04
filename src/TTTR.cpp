@@ -26,7 +26,10 @@
 #include <array>
 
 // Static member definition outside the class
-tttrlib::bimap<std::string, int> TTTR::container_names = TTTR::initialize_container_names();
+tttrlib::bimap<std::string, int>& TTTR::container_names() {
+    static tttrlib::bimap<std::string, int> names = TTTR::initialize_container_names();
+    return names;
+}
 bool TTTR::auto_compress_on_read = []() {
     bool enabled = tttrlib::env::init_auto_compress_on_read();
     if (!enabled && is_verbose()) {
@@ -193,7 +196,7 @@ TTTR::TTTR(const TTTR &p2){
 
 TTTR::TTTR(const char *filename, int container_type, bool read_input) : TTTR(){
     if(container_type >= 0){
-        tttr_container_type_str = container_names.right.at(container_type);
+        tttr_container_type_str = container_names().right.at(container_type);
         tttr_container_type = container_type;
         this->filename.assign(filename);
         if(read_input){
@@ -210,7 +213,7 @@ TTTR::TTTR(const char *filename, int container_type,
            const std::map<signed char, int>& channel_shifts,
            bool read_input) : TTTR(){
     if(container_type >= 0){
-        tttr_container_type_str = container_names.right.at(container_type);
+        tttr_container_type_str = container_names().right.at(container_type);
         tttr_container_type = container_type;
         this->filename.assign(filename);
         // Configure LUTs and shifts directly in MicrotimeLinearization
@@ -237,10 +240,10 @@ TTTR::TTTR(const char *fn, const char *container_type, bool read_input) : TTTR()
 
         if (container_type_str_lower == "auto") {
             tttr_container_type = inferTTTRFileType(fn);
-            tttr_container_type_str = container_names.right.at(tttr_container_type);
+            tttr_container_type_str = container_names().right.at(tttr_container_type);
         } else {
             tttr_container_type_str.assign(container_type);
-            tttr_container_type = container_names.left.at(std::string(container_type));
+            tttr_container_type = container_names().left.at(std::string(container_type));
         }
 
         filename.assign(fn);
@@ -261,10 +264,10 @@ TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
 
         if (container_type_str_lower == "auto") {
             tttr_container_type = inferTTTRFileType(fn);
-            tttr_container_type_str = container_names.right.at(tttr_container_type);
+            tttr_container_type_str = container_names().right.at(tttr_container_type);
         } else {
             tttr_container_type_str.assign(container_type);
-            tttr_container_type = container_names.left.at(std::string(container_type));
+            tttr_container_type = container_names().left.at(std::string(container_type));
         }
 
         filename.assign(fn);
@@ -2888,8 +2891,8 @@ bool TTTR::write(std::string filename, const char* container_type, TTTRHeader* h
     int ct = -1;
     if(container_type != nullptr){
         std::string name(container_type);
-        if(container_names.count_left(name)){
-            ct = container_names.left.at(name);
+        if(container_names().count_left(name)){
+            ct = container_names().left.at(name);
         } else {
             std::cerr << "ERROR in TTTR::write: unknown container type '"
                       << name << "'." << std::endl;

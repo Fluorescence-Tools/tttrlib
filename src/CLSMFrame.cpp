@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "include/CLSMPixel.h"
-#include "include/CLSMLine.h"
-#include "include/CLSMFrame.h"
+#include "CLSMPixel.h"
+#include "CLSMLine.h"
+#include "CLSMFrame.h"
 #include "TTTRRange.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 CLSMFrame::CLSMFrame(): TTTRSelection() {}
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "include/CLSMImage.h"
+#include "CLSMImage.h"
 
 #include <nlohmann/json.hpp>
-#include "include/BitOps.h"
-#include "include/Verbose.h"
-#include "include/info.h"
+#include "BitOps.h"
+#include "Verbose.h"
+#include "info.h"
 #include <memory>
 #include <tuple>
 #include <cstring>  // for memset

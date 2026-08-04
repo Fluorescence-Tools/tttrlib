@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 %{
-#include "include/MicrotimeLinearization.h"
+#include "MicrotimeLinearization.h"
 %}
 
 // Exception handling for std::invalid_argument

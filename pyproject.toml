@@ -77,7 +77,9 @@ cmake.args = [
     "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
     "-DCMAKE_INSTALL_LIBDIR:STRING=tttrlib",
 ]
-wheel.packages = ["tttrlib"]
+# No source-tree Python package: ext/CMakeLists.txt installs the SWIG wrapper
+# as tttrlib/__init__.py with the extension and plugins/ beside it.
+wheel.packages = []
 # wheel.py-api = "py3"
 build-dir = "build/{wheel_tag}"
 install.strip = true
@@ -85,7 +87,9 @@ install.components = ["bindings"]
 
 [tool.scikit-build.metadata]
 version.provider = "scikit_build_core.metadata.setuptools_scm"
-version.write-to = "tttrlib/_version.py"
+# No version.write-to: the package directory is produced by CMake's install
+# rules, so there is no source-tree file to write into -- and nothing imports it.
+# __version__ comes from importlib.metadata (see ext/python/tttrlib.i).
 
 [tool.pytest.ini_options]
 testpaths = ["test/python"]
@@ -111,7 +115,8 @@ repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest
 
 [tool.cibuildwheel.macos.environment]
 CMAKE_PREFIX_PATH = "$(brew --prefix hdf5)"
-CMAKE_INSTALL_RPATH = "@loader_path"
+# NOTE: CMAKE_INSTALL_RPATH is NOT settable from the environment -- CMake does
+# not read it there. It is set in CMakeLists.txt under the wheel-build branch.
 SKBUILD = "1"
 
 [tool.cibuildwheel.linux]
@@ -123,7 +128,7 @@ before-all = [
 repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.linux.environment]
-CMAKE_INSTALL_RPATH = "$ORIGIN"
+# See the macOS note: CMAKE_INSTALL_RPATH is set in CMakeLists.txt, not here.
 CMAKE_PREFIX_PATH = "/usr"
 SKBUILD = "1"
 

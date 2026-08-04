@@ -1,7 +1,22 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
 
 SET(PROJECT_NAME tttrlib)
-PROJECT(${PROJECT_NAME})
+
+# One source of truth for the version: pyproject.toml. Parsed rather than
+# duplicated so a release bump cannot leave CMake's idea of the version behind,
+# which is what a SOVERSION on a per-module shared library would then inherit.
+FILE(READ "${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml" _tttrlib_pyproject)
+STRING(REGEX MATCH "\nversion[ \t]*=[ \t]*\"([0-9]+\.[0-9]+\.[0-9]+)\"" _m "${_tttrlib_pyproject}")
+IF(CMAKE_MATCH_1)
+  SET(TTTRLIB_VERSION "${CMAKE_MATCH_1}")
+ELSE()
+  SET(TTTRLIB_VERSION "0.0.0")
+  MESSAGE(WARNING "Could not read the version from pyproject.toml; using ${TTTRLIB_VERSION}")
+ENDIF()
+UNSET(_tttrlib_pyproject)
+
+PROJECT(${PROJECT_NAME} VERSION ${TTTRLIB_VERSION})
+MESSAGE(STATUS "tttrlib version: ${PROJECT_VERSION}")
 
 # C++ standard
 ENABLE_LANGUAGE(CXX)
@@ -250,16 +265,48 @@ if(APPLE)
     # explicit link to libc++ for recent osx versions
     MESSAGE(STATUS "Explicitly link to libc++ on modern osx versions")
     ADD_DEFINITIONS(-stdlib=libc++)
-    # Don't set MACOSX_RPATH by default
+    # Don't set MACOSX_RPATH in a conda BUILD -- conda-build rewrites install
+    # names itself in its post-processing step.
     # https://github.com/conda/conda/issues/3624
-    if(DEFINED ENV{CONDA_PREFIX})
+    #
+    # The condition used to be CONDA_PREFIX, which is set whenever *any* conda
+    # environment is merely active. That silently disabled the wheel's RPATH for
+    # every developer and CI machine that builds a wheel from inside a conda
+    # env -- which is most of them -- so the installed extension had no LC_RPATH
+    # at all and could not find a sibling library. CONDA_BUILD is set only by
+    # conda-build, which is the case this is actually about.
+    if(DEFINED ENV{CONDA_BUILD} OR DEFINED ENV{CONDA_BUILD_STATE})
         set(MACOSX_RPATH OFF)
         set(CMAKE_SKIP_RPATH TRUE)
         set(CMAKE_SKIP_INSTALL_RPATH TRUE)
     endif()
 endif()
-endif()
 
+#######################################
+# WHEEL RPATH
+#######################################
+# The extension and anything shipped beside it live in the same directory
+# (tttrlib/), so the extension has to look next to itself at load time.
+#
+# This was configured in pyproject.toml as CMAKE_INSTALL_RPATH under
+# [tool.cibuildwheel.*.environment] -- but CMake does not read
+# CMAKE_INSTALL_RPATH from the environment, only as a variable, so it never took
+# effect: the installed .so carried no LC_RPATH/RUNPATH at all. It has to be set
+# here, where it is also platform-aware in one place and covers a plain
+# `pip install .` rather than only cibuildwheel.
+IF((SKBUILD OR DEFINED ENV{SKBUILD}) AND NOT CMAKE_SKIP_INSTALL_RPATH)
+    IF(APPLE)
+        SET(CMAKE_INSTALL_RPATH "@loader_path")
+        SET(CMAKE_INSTALL_NAME_DIR "@rpath")
+    ELSEIF(UNIX)
+        SET(CMAKE_INSTALL_RPATH "$ORIGIN")
+    ENDIF()
+    # Link against the install RPATH straight away: a wheel is the only thing
+    # this configuration ever produces, so there is no build-tree layout worth
+    # relinking for, and it keeps the repaired wheel and the built one identical.
+    SET(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+    MESSAGE(STATUS "Wheel build: CMAKE_INSTALL_RPATH='${CMAKE_INSTALL_RPATH}'")
+ENDIF()
 
 
 #######################################
@@ -380,6 +427,13 @@ IF(WITH_TIFF)
     MESSAGE(WARNING "WITH_TIFF=ON but thirdparty/libtiff not found and WITH_TIFF_SYSTEM=OFF; disabling TIFF support")
   ENDIF()
 ENDIF()
+
+
+# Name each third-party dependency as an INTERFACE target, so a target can later
+# ask for exactly the ones it uses instead of inheriting all of them from the
+# directory scope above. Defined here, after the upstream imported targets exist;
+# nothing consumes them yet. See cmake/TTTRLibThirdParty.cmake.
+INCLUDE(TTTRLibThirdParty)
 
 
 IF(BUILD_LIBRARY)

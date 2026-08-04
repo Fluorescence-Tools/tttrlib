@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "CorrelatorPhotonStream.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 
 void CorrelatorPhotonStream::make_fine_times(

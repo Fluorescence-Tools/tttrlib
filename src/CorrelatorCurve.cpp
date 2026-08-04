@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "CorrelatorCurve.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 void CorrelatorCurve::get_x_axis(double **output, int *n_output){
     (*n_output) = (int) settings.get_ncorr();

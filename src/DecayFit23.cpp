@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit23.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 #include <algorithm>
 #include <array>

@@ -214,10 +214,20 @@ private:
 
     TTTRHeader *header = nullptr;
 
-    /// map to translates string container types to int container types
-    static tttrlib::bimap<std::string, int> container_names;
+    /*!
+     * Map that translates string container types to int container types.
+     *
+     * A function-local static behind an accessor, not a namespace-scope object:
+     * anything that registers a container from its own static initialiser -- a
+     * future io_* module, or a plugin -- would otherwise race this map's dynamic
+     * initialisation, with no defined order between translation units. Reaching
+     * the table only through this accessor makes it exist on first use, whenever
+     * that is. The decay-fit factory table takes the same approach for the same
+     * reason; see src/DecayFitModel.cpp.
+     */
+    static tttrlib::bimap<std::string, int>& container_names();
 
-    // Static function to initialize the container_names
+    // Static function that seeds container_names() on first use
     static tttrlib::bimap<std::string, int> initialize_container_names() {
         tttrlib::bimap<std::string, int> m;
         m.insert({std::string("PTU"), PQ_PTU_CONTAINER});
@@ -1337,8 +1347,8 @@ public:
     static std::vector<std::string> get_supported_container_names() {
         // 1) pull into a vector of (name, id)
         std::vector<std::pair<std::string,int>> items;
-        items.reserve(container_names.size());
-        for (auto const& kv : container_names.left) {
+        items.reserve(container_names().size());
+        for (auto const& kv : container_names().left) {
             // kv.first  = std::string
             // kv.second = int
             items.emplace_back(kv.first, kv.second);

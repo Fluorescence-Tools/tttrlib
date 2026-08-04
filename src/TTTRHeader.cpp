@@ -3,7 +3,7 @@
 #include "TTTRRange.h"
 #include "TTTRHeader.h"
 #include "FileCheck.h"
-#include "include/Verbose.h"
+#include "Verbose.h"
 
 #ifdef BUILD_PHOTON_HDF
 #include <highfive/H5File.hpp>

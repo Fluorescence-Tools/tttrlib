@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "include/LayerNode.h"
-#include "include/CLSMPixel.h"
-#include "include/CLSMLine.h"
-#include "include/CLSMFrame.h"
-#include "include/CLSMImage.h"
+#include "LayerNode.h"
+#include "CLSMPixel.h"
+#include "CLSMLine.h"
+#include "CLSMFrame.h"
+#include "CLSMImage.h"
 #include <algorithm>
 #include <numeric>
 #include <cmath>

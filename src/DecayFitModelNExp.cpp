@@ -174,11 +174,17 @@ public:
 };
 
 
-const bool registered = [] {
+}  // namespace
+
+
+/*!
+ * \brief Register the n-exponential model.
+ *
+ * Named and called explicitly; see src/DecayFitModelRegistration.h for why a
+ * static initialiser is not enough.
+ */
+void register_decay_fit_models_nexp() {
     register_decay_fit("fit_nexp", [](const std::vector<double> &s, const std::vector<double> &irf) {
         return std::make_shared<const NExpModel>(s, irf);
     });
-    return true;
-}();
-
-}  // namespace
+}

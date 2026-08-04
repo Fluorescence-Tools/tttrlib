@@ -11,6 +11,7 @@
 #include <map>
 #include <mutex>
 
+#include "DecayFitModelRegistration.h"
 #include "ParallelFor.h"
 #include "i_lbfgs.h"
 
@@ -68,6 +69,26 @@ std::mutex &factory_mutex() {
     return m;
 }
 
+/*!
+ * \brief Populate the table with the built-in models, once.
+ *
+ * Called from every entry point that reads the table rather than run from a
+ * static initialiser: the models used to register from unreferenced
+ * anonymous-namespace initialisers, which the linker may drop when the
+ * consumer links libtttrlib_static.a instead of loose object files. See
+ * src/DecayFitModelRegistration.h.
+ *
+ * `call_once` and not a plain flag: `make_decay_fit` is reachable from several
+ * threads at once through the batch fits.
+ */
+void ensure_builtin_models() {
+    static std::once_flag once;
+    std::call_once(once, [] {
+        register_decay_fit_models_fit2x();
+        register_decay_fit_models_nexp();
+    });
+}
+
 }  // namespace
 
 
@@ -81,6 +102,7 @@ std::shared_ptr<const DecayFitModel> make_decay_fit(
     const std::string &name,
     const std::vector<double> &setup,
     const std::vector<double> &irf) {
+    ensure_builtin_models();
     DecayFitFactory factory;
     {
         std::lock_guard<std::mutex> guard(factory_mutex());
@@ -103,6 +125,7 @@ std::shared_ptr<const DecayFitModel> make_decay_fit(
 
 
 std::vector<std::string> decay_fit_names() {
+    ensure_builtin_models();
     std::lock_guard<std::mutex> guard(factory_mutex());
     std::vector<std::string> names;
     names.reserve(factory_table().size());

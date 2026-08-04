@@ -440,13 +440,17 @@ public:
 };
 
 
+}  // namespace
+
+
 /*!
  * \brief Register the Fit2x family.
  *
- * A static initialiser rather than a central table, so adding a model is a
- * self-contained change and nothing else has to learn that it exists.
+ * Named and called explicitly rather than run from a static initialiser: an
+ * unreferenced initialiser lets the linker drop this whole object file out of
+ * libtttrlib_static.a. See src/DecayFitModelRegistration.h.
  */
-const bool registered = [] {
+void register_decay_fit_models_fit2x() {
     register_decay_fit("fit23", [](const std::vector<double> &s, const std::vector<double> &irf) {
         return std::make_shared<const Fit23Model>(s, irf);
     });
@@ -459,7 +463,4 @@ const bool registered = [] {
     register_decay_fit("fit26", [](const std::vector<double> &s, const std::vector<double> &irf) {
         return std::make_shared<const Fit26Model>(s, irf);
     });
-    return true;
-}();
-
-}  // namespace
+}
