@@ -6,6 +6,7 @@
 #include <memory>
 #include <tuple>
 #include <cstring>  // for memset
+#include <stdexcept>
 #include <iostream>
 #include <map>
 
@@ -3560,6 +3561,17 @@ void CLSMImage::get_phasor(
             tttr_irf->micro_times, tttr_irf->n_valid_events,
             frequency
         );
+        // compute_phasor returns the sentinel {-1, -1} when the IRF holds too
+        // few photons. Feeding that back in as an IRF phasor is not a division
+        // by zero -- its modulus is 2 -- so it used to sail through and rotate
+        // every pixel by 225 degrees while halving it. Reject it instead.
+        if (gs[0] == -1.0 && gs[1] == -1.0) {
+            throw std::invalid_argument(
+                "CLSMImage::get_phasor: the IRF has too few photons (" +
+                std::to_string(tttr_irf->n_valid_events) +
+                ") to define a phasor at this frequency, so it cannot be used "
+                "as a calibration.");
+        }
         g_irf = gs[0];
         s_irf = gs[1];
     }

@@ -5,6 +5,9 @@
 #include <vector>
 #include <cmath>
 #include <algorithm> /* std::max */
+#include <numeric>   /* std::accumulate */
+#include <stdexcept> /* std::invalid_argument */
+#include <string>   /* std::to_string */
 
 #include "TTTR.h" /* TTTR */
 #include "CLSMImage.h" /* CLSMImage */
@@ -12,6 +15,20 @@
 
 /**
  * @brief Utility class for computing phasor values in decay analysis.
+ *
+ * **Error contract.** Two failure modes are deliberately distinguished:
+ *
+ * - *Too few photons* is a property of the data, not a mistake. The
+ *   `compute_phasor*` functions return the sentinel `{-1, -1}`, as they always
+ *   have.
+ * - *Invalid arguments* are programmer error and throw `std::invalid_argument`
+ *   (surfaced as `ValueError` in Python). Previously several of these returned
+ *   `nan` or read out of bounds instead.
+ *
+ * **The IRF phasor must be non-degenerate.** The correction divides by
+ * \f$g_{irf}^2 + s_{irf}^2\f$, so `(0, 0)` is not "no IRF" — it is a division
+ * by zero that used to yield a silent `nan`. The identity, meaning an ideal
+ * delta-function instrument response, is **`(1, 0)`**, which is the default.
  */
 class DecayPhasor{
 
@@ -30,8 +47,14 @@ public:
      * @param[in] minimum_number_of_photons Minimum number of photons.
      * @param[in] g_irf G-value of instrument response phasor.
      * @param[in] s_irf S-value of instrument response phasor.
-     * @param[in] idxs Vector of selected indices.
-     * @return Vector of length 2: first element g-value, second element s-value.
+     * @param[in] idxs Vector of selected indices. Every index must be within
+     *            `[0, n_microtimes)`; an out-of-range index throws rather than
+     *            reading out of bounds.
+     * @return Vector of length 2: first element g-value, second element s-value,
+     *         or `{-1, -1}` when the selection holds too few photons.
+     * @throws std::invalid_argument on a degenerate or non-finite IRF phasor, a
+     *         non-finite or non-positive frequency, a negative count, a null
+     *         `microtimes` with `n_microtimes > 0`, or an out-of-range index.
      */
     static std::vector<double> compute_phasor(
             unsigned short* microtimes, int n_microtimes,
@@ -52,14 +75,23 @@ public:
      * @param[in] frequency The frequency of the phasor.
      * @param[in] minimum_number_of_photons Minimum number of photons.
      * @param[in] g_irf G-value of instrument response phasor.
-     * @param[in] s_irf S-value of instrument response phasor.
-     * @return Vector of length 2: first element g-value, second element s-value.
+     * @param[in] s_irf S-value of instrument response phasor. Together with
+     *            `g_irf` this must not be `(0, 0)`; the identity is `(1, 0)`.
+     * @return Vector of length 2: first element g-value, second element s-value,
+     *         or `{-1, -1}` when the histogram holds too few photons.
+     * @throws std::invalid_argument on a degenerate or non-finite IRF phasor, or
+     *         a non-finite or non-positive frequency.
+     *
+     * @note Negative bin counts are permitted — a background-subtracted decay
+     *       legitimately has them — but the *total* must exceed
+     *       `minimum_number_of_photons` and be positive, or the sentinel is
+     *       returned.
      */
     static std::vector<double> compute_phasor_bincounts(
             std::vector<int> &bincounts,
-            double frequency,
-            int minimum_number_of_photons,
-            double g_irf, double s_irf
+            double frequency = 1.0,
+            int minimum_number_of_photons = 1,
+            double g_irf = 1.0, double s_irf = 0.0
     );
 
 
@@ -73,6 +105,8 @@ public:
      * @param[in] g_exp Experimental g-value.
      * @param[in] s_exp Experimental s-value.
      * @return Computed g-value.
+     * @throws std::invalid_argument if the IRF phasor is degenerate or
+     *         non-finite. `(0, 0)` is not "no IRF"; the identity is `(1, 0)`.
      */
     static double g(
             double g_irf, double s_irf,
@@ -90,6 +124,8 @@ public:
      * @param[in] g_exp Experimental g-value.
      * @param[in] s_exp Experimental s-value.
      * @return Computed s-value.
+     * @throws std::invalid_argument if the IRF phasor is degenerate or
+     *         non-finite. `(0, 0)` is not "no IRF"; the identity is `(1, 0)`.
      */
     static double s(
             double g_irf, double s_irf,

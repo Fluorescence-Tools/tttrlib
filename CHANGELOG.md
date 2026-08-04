@@ -699,6 +699,34 @@
   even.
 
 
+### Fixed
+
+- **`DecayPhasor` no longer fails silently.** The IRF correction divides by
+  `g_irf^2 + s_irf^2`, so `(0, 0)` -- the natural way to write "no IRF" -- was a
+  division by zero returning a quiet `nan` that propagated into every downstream
+  result. Invalid arguments now raise `std::invalid_argument` (`ValueError` in
+  Python) with a message naming the fix; the identity IRF phasor is `(1, 0)`,
+  and it is now the **default** for `compute_phasor_bincounts`, which previously
+  required all five arguments.
+
+  Also guarded: non-finite `g_irf`/`s_irf`, an IRF phasor too small to invert,
+  non-finite or non-positive `frequency`, negative `n_microtimes`, and a null
+  `microtimes` pointer.
+
+  **`compute_phasor` bounds-checks the caller's index selection.** It previously
+  read `microtimes[idx]` for every entry of `idxs` with no bounds check -- an
+  out-of-bounds read on a stale or mis-sized index vector.
+
+  **`CLSMImage::get_phasor` no longer uses the "too few photons" sentinel as a
+  calibration.** When the supplied IRF held too few photons, `compute_phasor`
+  returned `{-1, -1}` and `get_phasor` fed it straight back in as the IRF
+  phasor. That is not a division by zero -- its modulus is 2 -- so it sailed
+  through and rotated every pixel by 225 degrees while halving it. It now raises.
+
+  The "too few photons" sentinel `{-1, -1}` is unchanged for the
+  `compute_phasor*` return values: that is a property of the data, not a
+  mistaken call, and the two are now deliberately distinguished.
+
 ## [0.27.0] - 2026-07-17
 
 A **performance and memory** release. Confocal (CLSM/FLIM) reconstruction is
