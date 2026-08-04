@@ -28,20 +28,25 @@ class SimCounterRandom {
 public:
     SimCounterRandom() = default;
 
-    /// Position the stream: key = (base_seed, molecule_id); counter starts at `counter_start`.
+    /*!
+     * \brief Position the stream: key = (base_seed, molecule_id), at draw `counter_start`.
+     *
+     * O(1) in `counter_start`. It used to walk there by *burning* that many
+     * draws, which is O(n) — and since `SimEngine` reseeds every molecule every
+     * window at `window * kWindowStride`, the burn grew with the window index
+     * and made a run quadratic in window count. At a few thousand molecules
+     * that reached ~1e10 draws and simply never finished, which is why the
+     * Philox and Mt19937 paths appeared to hang while Xoshiro and Pcg (whose
+     * resets were already O(1)) ran the same workload in well under a second.
+     *
+     * Seeking rather than burning is not an optimisation of a counter-based
+     * generator, it is the point of one: the output is a pure function of
+     * (key, counter). `Random::seek` reproduces the burned state bit for bit,
+     * so streams are unchanged.
+     */
     void reset(uint32_t base_seed, uint32_t molecule_id, uint64_t counter_start = 0) {
         rng_.seed(base_seed, molecule_id);
-        // Advance the internal counter to counter_start (each philox() block = 4 draws)
-        uint64_t blocks = counter_start / 4;
-        for (uint64_t i = 0; i < blocks; ++i) {
-            // Burn blocks to reach the desired position
-            (void)rng_.next_u32(); (void)rng_.next_u32();
-            (void)rng_.next_u32(); (void)rng_.next_u32();
-        }
-        // Burn the remainder within the block
-        for (uint64_t i = 0; i < counter_start % 4; ++i) {
-            (void)rng_.next_u32();
-        }
+        rng_.seek(counter_start);
     }
 
     inline uint32_t next_u32() {

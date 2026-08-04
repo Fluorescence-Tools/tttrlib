@@ -95,6 +95,43 @@ public:
         idx_ = 4;  // force refill on first draw
     }
 
+    /*!
+     * \brief Jump to draw `draw_index` of the current stream, in O(1).
+     *
+     * Philox is a *counter-based* generator: its output is a pure function of
+     * (key, counter), so an arbitrary position is reachable by setting the
+     * counter rather than by generating everything up to it. This is the whole
+     * reason to choose it for parallel work, and it is what makes a
+     * per-molecule, per-window reseed affordable.
+     *
+     * Equivalent to `seed(...)` followed by `draw_index` calls to `next_u32()`,
+     * exactly — not merely statistically. The state is reproduced bit for bit,
+     * which is what lets `SimEngine` reseed mid-run without perturbing a
+     * stream, and what the round-trip test pins.
+     *
+     * The two cases mirror `next_u32`'s own bookkeeping: it refills from `ctr_`
+     * and *then* increments, so draw `n` lives in block `n/4` at offset `n%4`.
+     * Landing on a block boundary means "refill on the next call" (`idx_ = 4`,
+     * counter left *at* the block); landing mid-block means the refill has
+     * already happened, so the buffer must be filled here and the counter left
+     * one past it.
+     */
+    void seek(uint64_t draw_index) {
+        const uint64_t block = draw_index / 4;
+        const int rem = static_cast<int>(draw_index % 4);
+        ctr_[0] = static_cast<uint32_t>(block);
+        ctr_[1] = static_cast<uint32_t>(block >> 32);
+        ctr_[2] = 0; ctr_[3] = 0;
+        if (rem == 0) {
+            idx_ = 4;                                  // refill block `block` on next draw
+        } else {
+            philox_refill();                           // buf_ = output of block `block`
+            ++ctr_[0];
+            if (ctr_[0] == 0) ++ctr_[1];
+            idx_ = rem;
+        }
+    }
+
     /// Next raw 32-bit value (Philox streaming).
     inline uint32_t next_u32() {
         if (idx_ >= 4) {
