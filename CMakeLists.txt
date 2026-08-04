@@ -436,6 +436,18 @@ ENDIF()
 INCLUDE(TTTRLibThirdParty)
 
 
+#######################################
+# MODULES
+#######################################
+# One declared unit per subsystem, each with its own sources, dependencies and
+# library. Declared here, after the third-party targets exist, so a module can
+# ask for exactly the dependencies it uses. See cmake/TTTRLibModule.cmake and
+# modules/CMakeLists.txt -- which today declares exactly one module holding all
+# of src/, on purpose.
+INCLUDE(TTTRLibModule)
+ADD_SUBDIRECTORY(modules)
+
+
 IF(BUILD_LIBRARY)
   ## Shared / static library
   ###########################

@@ -137,12 +137,16 @@ IF(BUILD_PYTHON_INTERFACE)
             ${MODULE_NAME}
             TYPE MODULE
             LANGUAGE python
-            SOURCES python/tttrlib.i ${SRC_files}
+            SOURCES python/tttrlib.i
     )
+    # Link the modules rather than recompiling every source into the wrapper.
+    # The same glob used to be handed to this target, to the R target, to the
+    # Java target and to both library targets, so src/ was compiled up to five
+    # times per configure.
+    tttrlib_link_all_modules(${MODULE_NAME})
 
-    # The SWIG module compiles all SRC_files directly (it does not link the
-    # tttrlib library), so it needs the same OpenMP include dirs and flags as
-    # the library target — otherwise info.h's #include <omp.h> fails.
+    # The wrapper itself still needs the OpenMP include dirs and flags: it
+    # includes the project headers, and info.h reaches for <omp.h>.
     if(WITH_OPENMP AND OpenMP_CXX_FOUND)
         target_include_directories(${MODULE_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
         # OpenMP_CXX_FLAGS is a *string*, and on AppleClang it is two words
@@ -166,6 +170,11 @@ IF(BUILD_PYTHON_INTERFACE)
             set_target_properties(${MODULE_NAME} PROPERTIES SUFFIX "${PYTHON_EXT_SUFFIX}")
         endif()
     endif()
+
+    # The extension now loads its module libraries from its own directory, so it
+    # needs the rpath in EVERY build, not only wheel builds: the conda package
+    # installs the same layout into site-packages/tttrlib/.
+    tttrlib_set_sibling_rpath(${MODULE_NAME})
 
     # Keep the SWIG runtime type table private to this module. SWIG modules
     # otherwise share one process-global table, and whichever registers a common
@@ -195,7 +204,15 @@ IF(BUILD_PYTHON_INTERFACE)
     ENDIF()
     # On macOS, use dynamic lookup for Python symbols
     IF (APPLE)
-        SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-flat_namespace,-undefined,dynamic_lookup")
+        # Plain dynamic_lookup, NOT -flat_namespace. Both let the Python symbols
+        # stay unresolved until the interpreter loads the extension, which is the
+        # only thing needed here -- but flat namespace is process-wide: it merges
+        # every loaded image into one symbol namespace, so a plugin (or any other
+        # extension) that statically links its own zlib or libtiff can interpose
+        # on the copies tttrlib bundles, and which definition wins depends on load
+        # order. That is a bad property for a library that is about to start
+        # loading third-party binaries on purpose.
+        SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
     ENDIF()
 
     # =======
@@ -211,6 +228,33 @@ IF(BUILD_PYTHON_INTERFACE)
             DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
             RENAME __init__.py
             COMPONENT bindings)
+
+    # Where the module libraries go depends on who is packaging.
+    #
+    # A wheel must be self-contained, so they sit beside the extension inside
+    # tttrlib/ and @loader_path / $ORIGIN finds them. (pyproject.toml already
+    # passes -DCMAKE_INSTALL_LIBDIR=tttrlib for exactly this.)
+    #
+    # A conda package must NOT do that. conda-build rewrites install names and
+    # rpaths in post-processing on the assumption that shared libraries live in
+    # $PREFIX/lib: it turns the extension's `@loader_path` into
+    # `@loader_path/../../..`, which from site-packages/tttrlib/ is $PREFIX/lib.
+    # Installing the modules next to the extension there produces a package that
+    # builds and packages cleanly and then fails at `import tttrlib` with the
+    # library not found -- which is exactly what happened. Put them where
+    # conda-build's rewriting already points.
+    #
+    # COMPONENT bindings is load-bearing either way: pyproject.toml installs only
+    # that component, so a module installed without it yields a wheel that
+    # builds, repairs and uploads cleanly and then ImportErrors.
+    include(GNUInstallDirs)
+    if(SKBUILD OR DEFINED ENV{SKBUILD})
+        set(TTTRLIB_MODULE_INSTALL_DIR "${TTTRLIB_PY_PACKAGE_DIR}")
+    else()
+        set(TTTRLIB_MODULE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}")
+    endif()
+    MESSAGE(STATUS "Module libraries install dir: ${TTTRLIB_MODULE_INSTALL_DIR}")
+    tttrlib_install_modules(DESTINATION ${TTTRLIB_MODULE_INSTALL_DIR} COMPONENT bindings)
 
     # The drop-in plugin directory. Shipped with a README so it exists, is
     # discoverable, and explains itself without anyone having to find the docs.
@@ -295,8 +339,9 @@ IF(BUILD_R_INTERFACE)
             ${R_MODULE_NAME}
             TYPE MODULE
             LANGUAGE r
-            SOURCES r/tttrlib.i ${SRC_files}
+            SOURCES r/tttrlib.i
     )
+    tttrlib_link_all_modules(${R_MODULE_NAME})
     # R expects the loadable object to be named "tttrlib.so" (no "lib" prefix).
     SET_TARGET_PROPERTIES(${R_MODULE_NAME} PROPERTIES
             OUTPUT_NAME tttrlib
@@ -348,8 +393,9 @@ IF(BUILD_JAVA_INTERFACE)
             ${J_MODULE_NAME}
             TYPE MODULE
             LANGUAGE java
-            SOURCES java/tttrlib.i ${SRC_files}
+            SOURCES java/tttrlib.i
     )
+    tttrlib_link_all_modules(${J_MODULE_NAME})
     # System.loadLibrary("tttrlibjni") -> libtttrlibjni.so / tttrlibjni.dll / libtttrlibjni.dylib
     SET_TARGET_PROPERTIES(${J_MODULE_NAME} PROPERTIES
             OUTPUT_NAME tttrlibjni

@@ -136,7 +136,11 @@ SKBUILD = "1"
 archs = ["AMD64"]
 before-build = "pip install delvewheel"
 # --add-libcxx is macOS only; Windows doesn't need it
-repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"
+# --no-mangle for our own libraries: delvewheel renames bundled DLLs with a
+# content hash to avoid collisions, which is right for third-party dependencies
+# and wrong for tttrlib_*.dll -- the module libraries are referenced by name and
+# a mangled name is a name nothing looks for.
+repair-wheel-command = "delvewheel repair --no-mangle \"tttrlib_*.dll\" -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
