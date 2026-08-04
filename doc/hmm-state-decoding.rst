@@ -1,9 +1,9 @@
-.. _h2mm_state_decoding:
+.. _hmm_state_decoding:
 
-H2MM state decoding: distributions, not winner-takes-all
-========================================================
+HMM state decoding: distributions, not winner-takes-all
+=======================================================
 
-Fitting an H2MM model tells you *how many* states there are and what they look
+Fitting an HMM tells you *how many* states there are and what they look
 like. Using it means going one step further and asking which state each photon
 belongs to. That step is called **decoding**, and which decoder is right depends
 entirely on the question being asked.
@@ -23,7 +23,7 @@ Two different questions
 
 "Most likely sequence"
    Of all possible state trajectories, which single one has the highest
-   probability given the data? This is what :meth:`tttrlib.H2MM.viterbi`
+   probability given the data? This is what :meth:`tttrlib.HMM.viterbi`
    returns, and it is the right answer when you want *the* trajectory — for
    plotting one burst, or as a point estimate of the path.
 
@@ -90,13 +90,13 @@ The quantity that answers the distribution question is
 from the scaled forward-backward recursion — the same array the reference
 ``H2MM_C`` implementation calls ``gamma``, so the numbers are directly
 comparable. tttrlib's E-step has always formed it internally and contracted it
-away; :meth:`tttrlib.H2MM.posterior` now returns it.
+away; :meth:`tttrlib.HMM.posterior` now returns it.
 
 .. code-block:: python
 
    import tttrlib
 
-   engine = tttrlib.H2MM()
+   engine = tttrlib.HMM()
    engine.set_bursts_from_tttr(data, bursts, [green, red], 3, 1)
    model = engine.fit(n_states=3)
 
@@ -157,7 +157,7 @@ tttrlib provides two ways to draw.
 Marginal draw (jitter)
 ~~~~~~~~~~~~~~~~~~~~~~
 
-:meth:`tttrlib.H2MM.sample_states` draws each photon's state independently from
+:meth:`tttrlib.HMM.sample_states` draws each photon's state independently from
 its own gamma row:
 
 .. code-block:: python
@@ -185,7 +185,7 @@ occupancies, per-state decays, per-state micro-time or spectral histograms.
 Joint draw (FFBS)
 ~~~~~~~~~~~~~~~~~
 
-:meth:`tttrlib.H2MM.sample_paths` implements **forward filtering, backward
+:meth:`tttrlib.HMM.sample_paths` implements **forward filtering, backward
 sampling**: the same scaled forward pass, then
 
 .. math::
@@ -251,7 +251,7 @@ written holding every photon:
 The result is **self-describing**: per-state decays, FCS, burst analyses and
 lifetime fits all become ordinary :class:`tttrlib.Channel` selections, with no
 new plumbing anywhere downstream and no need for the consuming tool to know
-H2MM exists.
+an HMM was involved.
 
 **Channel allocation — the whole id space is compacted.** A source file's
 channels are usually sparse: 1, 12 and 30 for three detectors is perfectly
@@ -341,9 +341,9 @@ The source file is left untouched and the assignment travels beside it:
 .. code-block:: python
 
    sidecar = engine.state_sidecar(path, model, "viterbi", 0, cmap)
-   sidecar.write("decoded_h2mm_states.msgpack")
+   sidecar.write("decoded_hmm_states.msgpack")
 
-   back = tttrlib.H2mmStateSidecar.read("decoded_h2mm_states.msgpack")
+   back = tttrlib.HmmStateSidecar.read("decoded_hmm_states.msgpack")
    idx = back.indices_for_state(1)          # source photon indices
    mask = back.mask_for_state(1)            # a TTTRMask, for the selection API
 
@@ -429,8 +429,8 @@ range only and leaves the type alone.
 See also
 --------
 
-* :ref:`h2mm_bva_guide` — fitting the model in the first place.
-* ``examples/single_molecule/plot_h2mm_state_channels.py`` — a complete
+* :ref:`hmm_bva_guide` — fitting the model in the first place.
+* ``examples/single_molecule/plot_hmm_state_channels.py`` — a complete
   worked example: fit, decode three ways, write both a PTU and a sidecar, read
   them back and show the per-state decays agree.
 * ``benchmarks/bench_h2mm.py`` — decode cost and occupancy error side by side.

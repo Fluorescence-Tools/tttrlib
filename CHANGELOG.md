@@ -3,6 +3,631 @@
 ## [Unreleased]
 
 ### Added
+- **ImageJ/Fiji plugin rebuilt on SciJava** — the two IJ1 `PlugIn` classes became
+  SciJava `Command`s, so every command is now macro-recordable, scriptable from
+  Groovy/Jython, headless-capable and unit-testable. New commands: *Show TTTR
+  Metadata*, *Batch Process Folder…*, and both a SCIFIO `Format` and an
+  `IOPlugin` so `File ▸ Open` and drag-and-drop handle `.ptu`/`.ht3`/`.spc`
+  directly. (Both are needed: `File ▸ Open` for images goes through
+  `DatasetIOService`, which consults SCIFIO formats and ignores plain
+  `IOPlugin`s, while drag-and-drop and scripts use `IOService`.) Reconstruction logic moved
+  into `…imagej.core` with no ImageJ dependency at all.
+
+  Images are now ImageJ2 `Dataset`s with **named axes** (`X`, `Y`, `CHANNEL`,
+  `TIME`, and a custom `PIE` axis). Routing group and micro-time window are
+  separate axes instead of being flattened into one channel index, so a group or
+  a window can be addressed independently rather than parsed out of slice labels.
+
+  **This makes the plugin Fiji-only**: SciJava commands are discovered through
+  annotations, and a plain ImageJ 1.x install has no SciJava layer, so they do
+  not appear in its menu. The Java *library* is unaffected.
+
+- `CLSMImage::get_intensity_u32` / `get_intensity_from_masks_u32` and
+  `CLSMFrame::get_intensity_u32` — 32-bit counter variants of the intensity
+  getters. Available from Python (numpy) and Java; existing 16-bit signatures are
+  unchanged.
+
+### Fixed
+- **`CLSMImage::get_fcs_image` was unusable — three separate defects.** It
+  dereferenced `clsm_other` unconditionally although that parameter is documented
+  as optional (and guarded for null two lines earlier), so every call that did
+  not pass a second image segfaulted; its declared default correlation method
+  `"default"` is not one the correlator knows (`wahl`, `felekyan`, `laurence`),
+  so it warned once per pixel and returned all zeros; and it copy-assigned
+  stack-local `TTTR` selections into reused `shared_ptr`s, leaving the correlator
+  reading freed memory and aborting on the first pixel with photons. Per-pixel
+  FCS now works from every binding.
+
+- **Every other scan line was mirrored on files without an `ImgHdr_BiDirect`
+  tag.** `TTTRHeader::get_tag` reports a missing tag with a sentinel
+  (`{"value": -1.0, "name": "NONE"}`), not null, so the `read_tag_int` /
+  `read_tag_double` helpers in `CLSMImage.cpp` accepted it as a real value: every
+  absent tag read as `-1`, and `bidirectional_scan = (-1 != 0)` became `true`.
+  Python was unaffected only because its wrapper hardcoded the flag to `False`.
+  Sum- and dimension-based tests cannot catch this — mirroring preserves both —
+  so the ImageJ module now asserts row-to-row coherence.
+
+- **Becker & Hickl SPC images reconstructed to zero frames outside Python.** BH
+  carries the scan geometry in a `.set` sidecar and the marker layout in the
+  `BH_SPC_ReadingRoutine` header tag; the mapping from that tag to
+  `CLSM_BH_SPC130` plus its marker convention lived only in the Python wrapper.
+  It now lives in `CLSMImageInfo::from_header`, so Python, R, Java and native C++
+  reconstruct identically (`FocalCheck_A1_20x_8xzoom_750nm_m1.spc` →
+  20×512×512, sum 1036407 in both Python and Java). `CLSMImageInfo` gained
+  `use_pixel_markers`, `skip_before_first_frame_marker` and `reading_routine`.
+
+- CLSM header auto-configuration applied geometry and markers under a single
+  gate, so callers naming an explicit reading routine (Leica SP5/SP8) received no
+  pixel dimensions. Geometry and markers are now gated separately.
+
+- `CLSMImage.__init__` no longer duplicates the header resolution in Python: it
+  had drifted from the C++ implementation, which is why the same file yielded
+  different settings in Python than in the other bindings.
+
+- **Leica SP5/SP8 and BH SPC-130 marker conventions moved into C++.** They were
+  Python-only, so those reading routines produced no image from R, Java or native
+  C++. Verified against the Python reference values: SP8 93×512×512 sum 2758188,
+  SP5 230×256×256 sum 3486614. The old SP8 branch also read `ImgHdr_BiDirect`
+  through `header.tag(...)["value"]`, hitting the same not-found sentinel and
+  mirroring alternate lines on SP8 files lacking that tag.
+
+- **Pixels above 65535 photons no longer wrap.** The intensity path accumulated
+  into `unsigned short` in two places — `CLSMFrame::get_intensity` truncated a
+  true `size_t` count at the cast, and `CLSMImage::get_intensity_from_masks`
+  wrapped *during* accumulation, so the real value never existed. Both are now
+  templated on the counter width. The ImageJ plugin additionally cast to signed
+  `short`, displaying anything above 32767 as negative; it now uses the 32-bit
+  path end to end into an `UnsignedIntType` dataset.
+
+- **SWIG wrappers were never regenerated when an interface or header changed.**
+  `ext/CMakeLists.txt` set `SWIG_MODULE_DEPENDS`, which is not a property UseSWIG
+  reads, so the declared dependencies were silently ignored for **all three
+  languages** — a cached build directory could ship a stale wrapper with no
+  error. Now uses `SWIG_MODULE_<target>_EXTRA_DEPS` plus
+  `USE_SWIG_DEPENDENCIES`, so swig computes implicit dependencies itself.
+
+- ImageJ plugin: the routing-channel list was capped at a fixed `int[256]` buffer
+  and the decay histogram at 65536 bins, both truncating silently. Both now query
+  the exact size.
+
+### Changed
+- ImageJ plugin is built by Maven (`pom-scijava`) instead of raw `javac`/`jar`,
+  and ships headless JUnit tests that run the commands through `CommandService`.
+- The Java binding tests moved from `test/java` (`public static void main`) into
+  the `tttrlib` Maven module as JUnit 5 (`ext/java/pkg/src/test/java`), run by
+  `mvn -f ext/java/pkg test`. They now also cover BH SPC and Leica SP5/SP8.
+- `ext/java/helpers.i` gained 2-D/3-D/4-D output-array marshalling macros;
+  `get_mean_lifetime_into`, `get_fcs_image_into`, `compute_ics_into` and
+  `get_fluorescence_decay_into` are exposed to Java through them.
+- **Detectors and PIE windows, in chisurf's format.** The plugin reads and writes
+  chisurf detector-setup JSON, so named detectors (routing channels with their own
+  micro-time gates, G-factor and leakage) and named PIE windows carry across the
+  two tools. *Open TTTR CLSM Image* driven by a setup produces one image channel
+  per window × detector pair, each gated by the intersection of the two — not the
+  cross product of the group and window fields, which cannot express two
+  detectors gated differently inside one window. Parallel/perpendicular follows
+  the imaging convention (even/odd *positions* in `chs`, or explicit
+  `ch_p`/`ch_s`) and can be split into separate channels. Unmodelled keys
+  (`mle_settings`, `fret_calibration`, LUTs) survive a round trip. New command
+  **Detector Definition…**.
+
+  Verified in both directions against chisurf's own code: files written here load
+  through `chisurf.core.data_io.detector_setups.load_detector_setups` and
+  `mle.setup.parse_detector_setup`, survive a chisurf rewrite, and read back
+  unchanged. The channel list alternates VV, VH, VV, … so the split is by list
+  position; chisurf's MLE parser used to split on channel-number parity, which
+  silently swapped VV/VH for non-consecutive lists such as `[8,0,3]` — corrected
+  in chisurf alongside this work.
+- **Settings…** — defaults shared across commands (detector setup file plus the
+  detector/window selection), remembered between sessions via SciJava's
+  preference store and exportable as JSON.
+- New ImageJ commands: **Lifetime Map** (IRF-corrected mean lifetime),
+  **Fit Decay per Pixel…** (multi-exponential, parallel, with optional IRF),
+  **Phasor Plot** (2-D g/s histogram plus the universal semicircle),
+  **Pixel-wise FCS** (a correlation curve per pixel, lag on its own axis) and
+  **Image Correlation (ICS)**.
+- Documentation consolidated: the orphaned `docs/` tree (published nowhere, and
+  the more detailed of two copies) was merged into the Sphinx tree under `doc/`
+  and removed.
+- **`SimCounterRandom::reset` now seeks in O(1) instead of burning draws** — the
+  Philox path could not finish a run. Philox is *counter-based*: its output is a
+  pure function of (key, counter), so an arbitrary position is reachable by
+  setting the counter. `reset` instead walked there by generating and
+  discarding `counter_start` values. Since `SimEngine` reseeds every molecule
+  every window at `window * kWindowStride`, that burn grew with the window index
+  and made a run **quadratic in window count** — ~1e10 draws at a few thousand
+  molecules.
+
+  The visible symptom was that
+  `test_engine.py::test_rng_thread_count_independent[Philox]` never completed,
+  which is why no full test-suite run had ever finished. It now takes 0.14 s,
+  against 0.13 s for Pcg and 0.12 s for Xoshiro (whose resets were already
+  O(1)); the whole suite runs in about five minutes.
+
+  `Random::seek(draw_index)` positions the counter directly and reproduces the
+  burned state **bit for bit**, verified at every offset class including block
+  boundaries, so no simulation output changes. Guarded by
+  `test_counter_rng_seek_is_constant_time`, which asserts the cost as a *ratio
+  against Xoshiro* so the check cancels machine speed rather than hard-coding a
+  wall-clock budget.
+
+### Added
+- **Becker & Hickl SPC-QC support (`SPC-QC` container, id 9).** The QC modules
+  write `.spc` files whose record layout shares only its width with the classic
+  SPC-130 one. The lower 28 bits are common to every event kind — 12-bit macro
+  time (bits 0-11), 4-bit routing (bits 12-15), 12-bit ADC (bits 16-27) — and
+  the top bits select photon / macro time overflow / marker / GAP. Unlike every
+  classic SPC card the ADC value is **not** inverted. An overflow is the bare
+  word `0x80000000` standing for exactly one wrap of 4096 units, with no count
+  field. Both record layouts are supported: `BH_RECORD_TYPE_SPCQC_X04` (id 15,
+  SPC-QC-104/004, 2-bit channel) and `_X06` (id 16, SPC-QC-106/006, 3-bit
+  channel), chosen by a header flag. Reading, writing and auto-detection are
+  wired up; `tttrlib.TTTR("file.spc")` picks the container by itself.
+
+  The 4-byte header carries flags where the classic one has reserved bits:
+  routing width, raw, markers, femto, six-channel, and only 22 bits of macro
+  time clock. The femto flag is what lets the QC clock be expressed at all —
+  2.048131 ns needs femtoseconds, where the classic 0.1 ns unit would round it
+  to 2.0 ns.
+
+  Since the detector is the input channel *and* the router signal, both are
+  kept in `routing_channels` — routing low, input channel directly above it.
+  B&H reserve four routing bits for this regardless (`MeasFCSInfo.chan`, "bits
+  6-4 = input channel", so their `.sdt` calls a plain three-input measurement
+  chan 0/16/32); tttrlib puts the input channel on the routing width the header
+  declares instead, so the usual no-router case reads back as 0, 1, 2 and stays
+  usable as a stream index, while a router still packs losslessly. The declared
+  width is validated against the records, so an understated header cannot merge
+  two detectors. Markers decode as markers with their type in the routing
+  field, as on SPC-130, so CLSM reconstruction works unchanged. GAP records are
+  photons — the flag only warns of a preceding FIFO overrun.
+
+  Not supported: the QC "absolute time" FIFO mode, where the micro time instead
+  holds the low 9 bits of a 4 ps absolute time. Nothing in the `.spc` header
+  distinguishes it, so it cannot be detected from the file alone.
+
+  New gallery example `examples/tttr/plot_tttr_spcqc.py` covers reading,
+  conversion to PTU / Photon-HDF5 and back, and the byte-identical rewrite;
+  `plot_tttr_file_conversion.py` gains a PTU -> SPC-QC leg.
+
+  The layout was first derived from data and then checked against Becker &
+  Hickl's published `SPC_data_file_structure.h`, which confirmed the field
+  positions and supplied the parts the reference recordings do not exercise
+  (markers, GAP, routing, QC-x06, the header flags). Where phconvert's BH
+  reader disagrees with that spec, the spec was followed: phconvert packs the
+  input channel into the *low* bits of its detector id and ignores the femto
+  flag, applying femtosecond units unconditionally. Both halves of the record
+  are pinned against SPCM's own output on all ten reference recordings:
+
+  - *Micro times and channels* — histogramming the decoded micro times per
+    channel reproduces the decay curves SPCM writes into the companion `.sdt`
+    **bin for bin** (three channels with counts differing by 50×, so a channel
+    permutation could not pass).
+  - *The writer* — re-writing a reference measurement reproduces SPCM's record
+    stream **byte for byte** over 13.1 million records (only the trailing
+    overflow padding after the last photon is dropped). This is the check that
+    a round trip cannot make: a writer that swaps two fields still round-trips
+    through its own reader, and one did — the channel and routing fields came
+    out transposed until this comparison caught it.
+  - *Macro times* — a FIFO `.sdt` also carries a 1 ms intensity trace per
+    channel. Binning the decoded macro times reproduces it to **54 of 3.1
+    million bins** across the ten files, and nearly all of those are each
+    channel's trailing partial bin, which SPCM truncates. This is a
+    per-photon check: monotonicity and total duration alone would not catch a
+    wrong overflow weight or a misplaced macro time field.
+
+  The residual is a single global scale of 3.9e-8 — consistent across all ten
+  files, so a property of the clock rather than of the decoding. It is below
+  what the file can express: the header stores the macro time clock as a whole
+  number of femtoseconds (2048131 on this module), one LSB being 4.9e-7, more
+  than 12× coarser. Raw counter values are exact; only the conversion to
+  seconds inherits this, worth ~4 µs per 100 s.
+
+  One consequence of the format worth knowing: the QC modules run their TAC
+  independently of the macro time clock, so the micro time resolution is *not*
+  derivable from the `.spc` header (in the reference data the macro tick is
+  2.048 ns while the TAC bin is 16 ps). tttrlib assumes the TAC range SPCM
+  writes by default and replaces it with `SP_TAC_R`/`SP_ADC_RE` as soon as a
+  `.set` sidecar is found, so check `header.micro_time_resolution` when reading
+  a `.spc` that came without its `.set`.
+
+- **HMM on a product alphabet: stream x micro-time bin.** `HMM.set_bursts_micro`
+  (and `n_micro_bins` on `set_bursts_from_tttr` / `set_bursts_from_filter`) load
+  each photon as the symbol `stream * n_micro_bins + bin`, so a state is
+  constrained by *when* its photons arrive as well as by *where*. The engine's
+  recursions were already alphabet-agnostic -- they read `obs[i*p + y]` and never
+  ask what `y` means -- so this is a wider emission table, not a second code
+  path, and `n_micro_bins == 1` remains bit-identical to `set_bursts`.
+
+  What it buys is the one thing intensity alone cannot do: separate a **dark
+  acceptor from real FRET**. Both move the donor/acceptor ratio; only transfer
+  also shortens the donor lifetime. On simulated data where the two states have
+  an *identical* ratio by construction, per-photon Viterbi accuracy against the
+  known path is 0.53 (chance) on the stream alphabet and 0.77 with micro-time --
+  reproducing the numpy prototype's 0.527 / 0.782.
+
+  `HmmModel` gained `n_micro_bins` and `n_symbols()`; `n_streams()` now means the
+  detector-stream count and `n_symbols()` the width of `obs`. They are equal
+  unless a micro-time axis is set, which is why the split has to be carried
+  explicitly -- a 128-column table is 128 streams or 4 streams x 32 bins and
+  nothing in the numbers says which. `optimize` now rejects a model whose
+  emission width does not match the loaded alphabet rather than reading past the
+  end of its own table.
+
+- **`HmmEmissionSpec`** (`include/HMMEmission.h`) -- builds that emission table
+  from a per-state, per-stream **lifetime spectrum** plus a stream split:
+  `P(stream|state) * f_{state,stream}(bin)`, with `f` a multi-exponential decay
+  optionally convolved with an IRF pattern and mixed with a background shape.
+  Evaluated through `SimDecay`, so the object that draws micro-times in the
+  simulator is the object that scores them in the likelihood.
+
+  It knows no physics: there is no Forster radius here, no linker width, no
+  crosstalk matrix. A state is described by what *scoring* needs, and the map
+  from a structure onto a lifetime spectrum lives outside the library and
+  enters as a prior. That boundary is what keeps the header short.
+
+- **Parameterised emission sampling: `sample(..., emission)`.** The sampling
+  counterpart of `optimize(..., emission)`, and required on a product alphabet.
+  Left free, the emission is drawn as a categorical over every column -- the
+  degenerate family the parameterised M-step exists to avoid -- so the chain
+  wanders out of a good lifetime fit and drags the sampled paths, and hence the
+  transition counts, with it. The failure therefore shows up in the
+  **transitions**, not the emission, which is what makes it confusing to find.
+
+  Supplied, the stream split stays a conjugate Dirichlet draw and each lifetime
+  gets one **univariate slice update**, scored through the same `q_of_tau` the
+  M-step maximises so sampler and optimiser cannot drift apart. On 64 micro-time
+  bins, same wall-clock:
+
+  | emission | R-hat | ESS | 95% interval width |
+  |----------|-------|-----|--------------------|
+  | free     | 1.443 | 48  | 0.00444            |
+  | **parameterised** | **1.025** | **186** | **0.00084** |
+
+  The interval is 5.3x tighter and still covers the truth, so the free version's
+  width was the wandering emission rather than genuine uncertainty.
+
+  **Slice sampling was chosen on measurement, not principle.** Benchmarked as
+  effective samples per log-density evaluation -- the fair unit, since a slice
+  update costs several calls -- a well-tuned random-walk Metropolis wins
+  (168 vs 128) and a badly-tuned one loses by 3.6x (17 vs 62). Across step sizes
+  Metropolis spans 10x, slice 2x. Inside a Gibbs sweep the conditional's scale is
+  unknown, differs per (state, stream) and drifts as the fit moves, so the
+  untuned column is the one that applies -- and matching Metropolis's best would
+  mean carrying dual-averaging adaptation per cell. `hmm_rand::slice_sample` is
+  ~40 lines, std-only, and correct at any interval width.
+
+- **`HMM.sample` -> `HmmPosterior`: blocked Gibbs over (pi, A, B).** EM returns
+  one model; this returns a distribution over them, which is what a credible
+  interval needs and what no post-processing can recover from a point estimate.
+  Every step is conjugate, so there is nothing to tune: sample the photon-level
+  path (FFBS), sample the tick-level bridge through each gap, count, then draw
+  `theta ~ Dirichlet(counts + alpha)`. Restraint concentrations are used
+  **as-is**, not as `alpha - 1` -- the MAP M-step wants the mode, a sampler
+  wants the distribution.
+
+  `HmmPosterior` carries the raw draws plus `mean`/`sd`/`quantile`, split-Rhat
+  and ESS. On a 7500-photon dataset, 4 chains x 1000 draws seeded from an EM fit
+  reach Rhat 1.005 / ESS 539 in ~40 s and recover the generating transition
+  rates inside their 95% intervals.
+
+  Three things that look like bugs and are not, each pinned by a test:
+
+  - **The bridge is what makes the counts one-tick transitions.** FFBS gives the
+    state at each *photon*, but `trans` is the one-tick matrix, so each gap
+    needs an endpoint-conditioned draw through it. It is built without a dense
+    dt-indexed cache: only the column `A^s e_v` is ever needed, so a backward
+    recursion gives every intermediate power in `O(dt*n)` scratch. Materialising
+    matrices instead would rebuild exactly the `n^2 * dt_max` allocation the
+    engine's sparse cache exists to avoid.
+  - **Diagnostics relabel; draws do not.** Two chains each holding a *stable*
+    but opposite labelling gave a raw split-Rhat of 15.2 and a relabelled one of
+    1.75. Both chains were correct -- the raw statistic was comparing "state 0"
+    in one against a different state in the other. For exchangeable states,
+    relabelling first is what makes Rhat mean anything.
+  - **Chains disperse around the model, not from the prior.** A flat Dirichlet
+    on a transition row starts a 2-state chain near `A01 = 0.5`, which for
+    sticky data is a genuine second mode (fast switching, blurred emissions)
+    that no practical number of sweeps escapes: chains seeded that way sat at
+    `A01 ~ 0.3` against a truth of 0.005, while a chain started at the truth
+    stayed there and mixed cleanly.
+
+- **Analytic Gaussian IRF: `HmmEmissionSpec.irf_center` / `.irf_fwhm`.** A
+  photon's micro-time is the sum of the memoryless excited-state time and
+  everything the instrument adds (finite pulse width, detector jitter), so its
+  density is an exponential convolved with a Gaussian -- the
+  exponentially-modified Gaussian, after Tavakoli *et al.*'s Eq. 7. Setting a
+  centre and FWHM computes each bin's probability as a **difference of CDFs**
+  instead of convolving a sampled IRF pattern.
+
+  This is exact at any resolution: a 32-bin table equals an 8192-bin one summed
+  over the bins it merges, to round-off. The sampled-IRF route it replaces
+  carries ~1.7e-3 aliasing error at 256 bins and needs ~4096 bins to reach 1e-6.
+  The two converge as the grid is refined, which is what checks the closed form
+  against something independent of itself. `irf` (a measured pattern of
+  arbitrary shape) remains, and is now rejected if combined with `irf_fwhm` --
+  setting both would convolve the Gaussian in twice, silently.
+
+  Both the table build and the M-step objective now go through one kernel
+  (`component_bins`), so a lifetime cannot be fitted against a no-IRF shape and
+  then scored with an IRF-convolved one -- which would bias every lifetime by
+  the IRF's offset.
+
+- **Measured decay patterns: `HmmEmissionSpec.set_pattern()`.** A decay usually
+  arrives as a *measured pattern* -- a donor-only reference, a scatter pattern --
+  not as amplitudes and lifetimes, which is why `SimDecay` treats a pattern as
+  its first-class representation. Any length is accepted and aggregated onto the
+  emission axis, which is **exact** (a bin's probability is the sum of the source
+  channels in it; verified against the analytic table to 1e-17), so an
+  instrument-resolution decay can be handed over and coarsened by `build()`.
+
+  A supplied pattern is the shape, not a starting guess: neither `fit_counts` nor
+  `sample_counts` touches it, and only the stream split stays free. That is more
+  robust than fitting a lifetime, since no decay parameter is left to be
+  unidentifiable -- and it sidesteps the multi-exponential binning cost entirely.
+  **No IRF is applied to a supplied pattern**, deliberately: a measured decay
+  already contains the instrument response. Spectra and patterns can therefore be
+  mixed in one spec without the IRF being applied inconsistently.
+
+- **Refining physics against photons, via `HMM.evaluate`.** What gets refined is
+  not the pattern -- that is the free categorical again -- but the physical
+  parameter that generates it. `evaluate` returns one E-step's sufficient
+  statistics, so an external optimiser can own the M-step:
+
+      ev = eng.evaluate(model);  A = row_normalize(ev.xi);  R = refine(R, ev.gamma_obs)
+
+  The new example `plot_hmm_distance_refinement.py` runs this on a **3-state**
+  system where each state is a *distance distribution*: from a start of
+  35/55/75 A against a truth of 42/52/64, 30000 photons recover
+  **42.11 / 52.68 / 63.95 A** with the kinetics refined in the same loop
+  (k01 0.00097 vs 0.00080, k12 0.00059 vs 0.00060) and a monotone
+  log-likelihood. The engine never sees a Forster radius.
+
+  `plot_hmm_blinking_acceptor.py` pushes the same loop to the hardest case: a
+  **multi-exponential donor** quenched *homogeneously*
+  (`1/tau_i,DA = 1/tau_i + k_FRET(R)`), three conformations that are each a
+  **Gaussian distance distribution**, and an **acceptor blinking on 10 us** --
+  faster than a burst, so it toggles within the observation. 30 exponentials per
+  state, all generated from one scalar. The state space is a product
+  (conformation x photophysics) with a single shared dark state, since three
+  dark states would be emission-identical. Recovered: blink-off **0.0986/tick**
+  against 0.10, distances **41.0 / 50.6 / 60.6 A** from a clustered 45/50/58
+  start against a truth of 40/52/65, dark-state recall 0.91 / precision 0.72.
+  The 65 A state coming back short is the measurement's identifiability limit,
+  not the fit's: a dark acceptor and a distant one converge as R grows.
+
+- **Corrected: per-burst coincidence detection does not work, and the previous
+  AUC 0.87 was wrong twice over.** It came from bursts made coincident by
+  concatenating photon lists -- so they held more photons by construction, and
+  the detector was scored on how the test data were built -- and from a single
+  dataset. Re-measured against `SimEngine` ground truth (`emitting_molecule()`
+  names the emitter of each photon, so diffusion decides the overlap) and
+  replicated over independent seeds, every statistic is at chance: duration
+  **0.53 +- 0.04**, photon count **0.53 +- 0.04**, peak rate **0.47 +- 0.04** at
+  5.3% coincidence, and 0.54/0.55/0.54 at 17.7% -- no better in the crowded
+  sample, where the "clean" bursts are contaminated too. The hypothesised "rate
+  step coincident with an E change" signature is also at chance.
+
+  **Replication mattered more than the measurement.** At 5% coincidence a single
+  run holds only a handful of coincident bursts and single-run AUCs ranged
+  **0.36-0.63** across seeds -- one seed looks like a publishable detector, the
+  next is anti-correlated. `SimEngine` is deterministic unless
+  `SimIntegrator.seed_diffusion` / `seed_emission` are varied, so an earlier
+  attempt at "pooling runs" was pooling identical copies.
+
+  The recommendation changes accordingly. Discarding the longest half of all
+  bursts moves contamination only 5.3% -> 4.8%, at ~25 clean bursts lost per
+  coincident burst removed. Occupancy is the better lever but saturates
+  (0.125/0.25/0.5/1.0 -> 2.5/5.3/9.3/17.7%): halving it buys ~1.9x when crowded
+  and ~2.1x at the sparse end, and spurious switching is measurable even at the
+  lowest occupancy tried. **There is no setting at which coincidence goes away**
+  -- it is an acquisition-design problem, not an analysis one. The coincidence
+  *rate* is predictable as `1 - exp(-lambda*tau)` with `tau` the **transit**
+  time; the detected burst duration underestimates it by over an order of
+  magnitude, since a burst is only the above-threshold part of a transit.
+
+  New example `plot_hmm_coincidence.py` demonstrates the whole chain: static
+  species that appear to switch, ROC curves that hug the diagonal, and the two
+  levers on one cost axis.
+
+- **Decided: no per-state brightness read-out.** Only the *ratio* between two
+  states is identifiable, and `(photons in state)/(time in state)` was expected
+  to be safe because state and position in the focus are independent, so the PSF
+  envelope should cancel. Measured (true ratio 3.00, replicated over seeds), it
+  does not:
+
+  - with the **true tick-level path** the estimator is unbiased at every
+    switching rate (3.00-3.09), so there is no information ceiling -- what is
+    lost is attribution, since the state is known only at photons and a gap gets
+    charged to the state at its start even when the chain switched inside it;
+  - **the envelope does not cancel**, and the bias grows with focus depth:
+    2.96 flat, 2.66 at 55x, 2.19 at 1e6x -- all at *slow* switching, where the
+    attribution error is absent;
+  - fast switching adds its own collapse: 1.99 flat, 1.65 with an envelope.
+
+  The planned mitigation -- ship it behind a guard on switching rate -- would
+  have caught only the second error and left a number that looks trustworthy and
+  is 10-27% low. The tick-level bridge in `HMM.sample` does not rescue it
+  either: it conditions on endpoint states but not on the gap having contained
+  *no photons*, and using that evidence is exactly the rate-aware likelihood
+  that would attribute the PSF transit to state changes. This also corrects an
+  earlier note claiming the true path degraded with switching rate; that number
+  came from the photon-level path.
+
+- **Phasor diagnostic for a converged HMM fit** -- new example
+  `plot_hmm_phasor_diagnostic.py`, and no new API: `HMM.evaluate` already
+  returns the posterior-weighted per-state micro-time histogram (`gamma_obs`),
+  and `DecayPhasor.compute_phasor_bincounts` already computes phasors. Compare
+  the data phasor with the model's, per state.
+
+  Measured on data with a multi-exponential donor, fitted once with a
+  mono-exponential spec and once with the generating one, over 5 datasets: both
+  recover E to **0.247 / 0.700** against a truth of 0.25 / 0.70 -- so the
+  headline number gives no warning -- while the phasor distance separates them
+  **4.6x** (0.0435 +- 0.0040 vs 0.0095 +- 0.0017, no overlap). E is set by the
+  stream split; the misspecification lives in the decay shape.
+
+  It is a *relative* diagnostic: the correct model does not score zero, because
+  the distance carries sampling noise and because binning and truncation move
+  the data and model points differently. For the same reason, distance from the
+  universal semicircle is not a clean multi-exponentiality test here. The
+  likelihood still ranks the models (+91 nats); the phasor adds *which* state is
+  failing, from a statistic that never saw the model.
+
+  Sharp edge worth knowing: `DecayPhasor` divides by `g_irf^2 + s_irf^2`, so
+  passing `(0, 0)` for "no IRF" silently returns `nan`. The identity is
+  `(1, 0)`, the phasor of a delta response.
+
+- **Burst bootstrap for the maximum-likelihood path** -- new example
+  `plot_hmm_bootstrap.py`, and again **no new API**: a replicate is the same
+  dataset with its burst list resampled, and both loaders already accept a burst
+  list with duplicate rows. On 313 bursts / ~32k photons that is ~7 ms per
+  replicate with no photon data copied, so a 200-replicate interval costs
+  seconds.
+
+  Measured coverage of a nominal 95% interval (40 datasets x 100 replicates):
+  burst bootstrap **94.4% +- 1.8%**, `posterior_sd_analytic` **~63%**. The
+  analytic gap is what its own docstring predicts -- conditioning on the state
+  path drops `Var(E[theta|y,path])`, making it a lower bound at roughly half
+  width -- so it must not be quoted as an error bar.
+
+  Two floors, both measured: coverage by burst count runs 90/94/93% at 20/40/120
+  bursts, and by replicate count 89.4% at 40 versus 94.4% at 100 and at 250 --
+  so **use at least 100 replicates**. States must be ordered canonically before
+  summarising or the spread measures label switching instead of uncertainty.
+
+- **PRD-011 rewritten** as `PRDs/PRD-011-photon-hmm.md` (Done), replacing
+  `PRD-011-physics-aware-h2mm.md`. The old framing -- "make H2MM physics-aware"
+  -- was the source of most of its difficulties, and several premises were
+  contradicted by measurement. Corrected: tttrlib owns MAP/Gibbs/`evaluate` and
+  is fully self-validating (the draft said it "adds no inference engine beyond
+  MAP"); "bit-identical" replaced by 1e-10 relative; "mode blending" deleted;
+  the ELBO demoted from criterion to heuristic (and VB not shipped at all);
+  nonparametric state counting moved from out-of-scope to working (4/4 vs BIC's
+  3/4); `DecayState` replaced by `SimDecay`; "adopted by the research community"
+  replaced by CI gates. Adds the sections the draft lacked entirely --
+  multi-molecule coincidence, and the four features closed as will-not-build
+  with the measurement behind each. The PRD index also gained rows 008-011,
+  which had never been added.
+
+### Fixed
+
+- **`DecayPhasor` no longer fails silently.** The IRF correction divides by
+  `g_irf^2 + s_irf^2`, so `(0, 0)` -- the natural way to write "no IRF" -- was a
+  division by zero returning a quiet `nan` that propagated into every downstream
+  result. Invalid arguments now raise `std::invalid_argument` (`ValueError` in
+  Python) with a message naming the fix; the identity IRF phasor is `(1, 0)`,
+  and it is now the **default** for `compute_phasor_bincounts`, which previously
+  required all five arguments.
+
+  Also guarded: non-finite `g_irf`/`s_irf`, an IRF phasor too small to invert,
+  non-finite or non-positive `frequency`, negative `n_microtimes`, and a null
+  `microtimes` pointer.
+
+  **`compute_phasor` bounds-checks the caller's index selection.** It previously
+  read `microtimes[idx]` for every entry of `idxs` with no bounds check -- an
+  out-of-bounds read on a stale or mis-sized index vector.
+
+  **`CLSMImage::get_phasor` no longer uses the "too few photons" sentinel as a
+  calibration.** When the supplied IRF held too few photons, `compute_phasor`
+  returned `{-1, -1}` and `get_phasor` fed it straight back in as the IRF
+  phasor. That is not a division by zero -- its modulus is 2 -- so it sailed
+  through and rotated every pixel by 225 degrees while halving it. It now raises.
+
+  The "too few photons" sentinel `{-1, -1}` is unchanged for the
+  `compute_phasor*` return values: that is a property of the data, not a
+  mistaken call, and the two are now deliberately distinguished.
+
+- **`HmmEval.posterior_sd_analytic()`** -- a closed-form posterior width, with no
+  sampling. Conditional on the state path the posterior is Dirichlet, so the
+  E-step's expected counts give one directly. Measured against `HMM.sample` on
+  7500 photons: **364x cheaper** (0.04 s against 16.3 s), means agreeing.
+
+  It is documented, and tested, as a **lower bound on the width** -- measured
+  1.92x to 2.11x too narrow. The reason is structural:
+  `Var(theta|y) = E[Var(theta|y,path)] + Var(E[theta|y,path])`, and only the
+  conjugate term survives; uncertainty in the *path* is dropped, and there it was
+  3x larger. The factor is not a constant to divide out -- it depends on how well
+  the path is determined, and simulation-based calibration of the equivalent
+  variational approximation measured 2.3-3.4x on other data. Use it for point
+  estimates and a fast first look; use `HMM.sample` for an interval.
+
+- **`HMM.evaluate` -> `HmmEval`** -- one E-step's log-likelihood, sufficient
+  statistics (`xi`, `gamma_obs`, `prior_counts`) and score. All of it is already
+  computed inside an EM map and then discarded, so this costs exactly one
+  forward-backward pass. The statistics summarise the dataset at the *model's*
+  dimension rather than the data's, which is what lets a host drive its own
+  optimiser or sampler over an HMM submodel without re-touching photons. Counts
+  are raw -- restraints never enter, since a consumer supplying its own prior
+  would otherwise double-count.
+
+  The score is Fisher's identity, `count / parameter`, so the gradient comes
+  free from the same pass. **It is meaningful along the simplex, not off it**,
+  and the distinction is not cosmetic: `prior` and `obs` match central finite
+  differences entry by entry, but `trans` matches only in *within-row
+  differences*. The `A^dt` cache is built by `matmul_norm`, which row-normalises
+  after every composition -- a no-op for a row-stochastic matrix, but it makes
+  the likelihood invariant to scaling a row, so the off-simplex component of the
+  gradient is an artifact of that renormalisation. A finite-difference check
+  must therefore perturb `(A_ij + h, A_ik - h)` rather than one entry alone.
+  Both the correct behaviour and the artifact are pinned by tests.
+
+- **Parameterised emission M-step: `optimize(..., emission)`.** The remedy for
+  the failure documented below. Instead of freeing every column of `obs`, the
+  M-step re-fits the `HmmEmissionSpec`'s decay parameters from the expected
+  counts, and updates the spec in place so the fitted lifetimes can be read
+  back. It factorises exactly, so it costs almost nothing: with
+  `obs[i][k,b] = p_ik * f_ik(b)`, the stream split keeps the categorical
+  M-step's closed form and only the lifetime needs a bounded golden-section
+  search -- one scalar per (state, stream).
+
+  On the configuration where free EM falls from 0.775 to 0.509 per-photon
+  accuracy, this reaches **0.776 from a deliberately wrong seed** (8.0 / 0.8 ns
+  against a truth of 4.0 / 2.0), and the fitted table has no interior holes by
+  construction, since no lifetime spectrum can put a zero mid-decay.
+
+  Restraints and constraints on `obs` do not apply -- the family is itself the
+  constraint, and a prior on a *lifetime* belongs on the lifetime rather than on
+  the table it generates. SQUAREM is disabled on this path because an
+  extrapolated table need not be reachable from any parameters. Only
+  mono-exponential components are re-fitted for now; a multi-component spectrum
+  keeps its shape and contributes through the stream split.
+
+- **`SimDecay::pdf(bin)`** -- the normalised density beside the alias table. The
+  alias method samples in O(1) but cannot be read back as a density, so scoring
+  previously had no way to reuse a simulator decay.
+
+  **On counting statistics, since a fine micro-time axis invites the question.**
+  Scoring needs no Poisson term, structurally rather than approximately: the
+  likelihood is a product over photons of `P(symbol|state)` and no micro-time
+  histogram is ever formed, so there are no bin counts to carry Poisson noise.
+  Conditioned on the photon count `N`, a Poisson likelihood factorises into
+  `Poisson(N)` times exactly the per-photon categorical this engine scores.
+  Resolution is therefore a scoring-accuracy knob at no statistical cost. The
+  one piece genuinely omitted is the information in `N` itself -- state
+  **brightness** carries no likelihood weight, since macro-times only propagate
+  the chain -- and recovering it needs a state-dependent Poisson rate per gap,
+  a likelihood extension rather than a correction.
+
+  The problem appears instead in **estimation**, and it is structural rather
+  than a matter of resolution. Micro-time bins are not free parameters: they are
+  one smooth decay of about two parameters, sampled onto the TAC grid. `fit()`
+  re-estimates every column independently, which discards that and admits models
+  no decay can produce -- an exact zero in the *interior* of an exponential.
+  Measured on two states differing only in donor lifetime, per-photon decoding
+  accuracy against the known path: free `fit()` sits at chance (0.52-0.53) while
+  an `HmmEmissionSpec` table holds 0.784-0.797 across 16-1024 bins.
+
+  Worse than a search failure: started at the **exact generating model**, free
+  EM sometimes walks away from it -- three of sixteen runs over four macro-time
+  seeds and four bin counts fell from ~0.78 to ~0.51, and *not* monotonically in
+  bins (128 fine, 256 collapsed, 512 mixed, 1024 fine), so no bin count is the
+  safe one. Dirichlet restraints remove every zero -- the `log(0)` hazard really
+  does go -- and leave accuracy near chance, because the obstacle is the model
+  family, not the sparsity. `fit()` and `optimize` are now documented as unsafe
+  on a product alphabet, with the signature (interior zeros in a decay) pinned
+  by tests; the fix is the parameterised M-step, still to come.
+
 - **s2ISM** (`CLSMSuperRes.s2ism_reconstruction`) -- joint super-resolution and
   optical sectioning by adaptive maximum-likelihood deconvolution over a stack
   of axial planes, after Zunino et al., *Nat. Photonics* (2025). A real port of
@@ -164,6 +789,50 @@
   wide oversmooths and shifts the resolution by 0.25%.
 
 ### Changed
+- **`H2MM` is now `HMM`, and H2MM is what the algorithm is called.** The class,
+  its headers (`HMM.h`, `HMMSurrogate.h`), its helper types (`HmmModel`,
+  `HmmChannelMap`, `HmmStateSidecar`, `HmmSurrogate`), its constants
+  (`HMM_UNASSIGNED`) and the test/doc tree all drop the `H2` prefix. Nothing
+  else changes: `fit()` still runs the published H2MM algorithm of Pirchi et
+  al., bit for bit.
+
+  The rename is worth the churn because the class is about to hold *more than
+  one* inference path — the H2MM maximum-likelihood EM, and a Bayesian
+  physics-aware path beside it. Naming the container after one of its algorithms
+  would have made the second one look like an intruder in its own class. No
+  alias layer ships, because `H2MM` never appeared in a tagged release (the
+  newest tag is `v0.26.2`; the `0.27.0` section below is untagged), so there is
+  nothing to deprecate.
+
+  `H2MM_C` keeps its name throughout — it is a different project.
+
+- **`optimize` takes restraints and constraints, and they are different things.**
+  `HmmRestraints` are **scored**: Dirichlet concentrations on π/A/B (exactly
+  conjugate to the E-step's raw counts, so the MAP M-step is `counts + (α − 1)`
+  with no approximation) plus arbitrary `DecayFitPrior`s on decay parameters.
+  They contribute `log p(θ)` to the objective, so the fit trades them against
+  the likelihood. `HmmConstraints` are **imposed**: pinned entries of π, A or B
+  that hold exactly, are re-applied after every M-step *and* after SQUAREM's
+  extrapolation, and never enter the objective at all.
+
+  Keeping them apart is not pedantry. A hard constraint expressed as a very
+  sharp prior would be only approximately satisfied and would dump a large term
+  into the objective that swamps any comparison between models; a scored
+  restraint imposed as a constraint could not be violated by evidence that
+  contradicts it. They also arrive from different places — restraints
+  deserialised from an external physics model, constraints asserted locally by
+  whoever knows the experiment — which is why each round-trips through JSON on
+  its own.
+
+  Supplying restraints switches **every** convergence and SQUAREM accept test to
+  the penalised objective `logL + log p`; comparing marginal likelihoods there
+  would stop in the wrong place and accept steps that lower the posterior.
+  `HmmModel` gains `logpost` so the distinction is observable from Python:
+  restraints move it away from `loglik`, constraints leave it equal. With both
+  absent the MAP path is **bit-identical** to plain EM, which is what makes the
+  two paths sharing one loop safe rather than something to re-argue after every
+  change — and it is tested on both the plain and SQUAREM paths.
+
 - **One interface for every decay fit.** A fit is now built by registry name and
   called the same way whatever the model: `DecayFit2("fit23", setup, irf)`, a
   `DecayFitProblem` holding the measurement, a `DecayFitConstraints` saying what
@@ -205,7 +874,7 @@
   break. See `doc/fit-guide.rst` and the `plot_decay_fit_interface` example.
 
 ### Fixed
-- **A C++ throw from `TTTR`, `TTTRMask` or `H2MM` aborted the interpreter.**
+- **A C++ throw from `TTTR`, `TTTRMask` or `HMM` aborted the interpreter.**
   Those three `.i` files had no SWIG `%exception` handler, so an exception
   raised to report a bad argument (a mismatched array length, an unreadable
   file, a foreign msgpack payload) unwound through the wrapper and terminated
@@ -214,7 +883,7 @@
 - **`get_used_routing_channels` could return the channels the file had before
   you edited it.** `set_routing_channel_at` is public but
   `find_used_routing_channels`, which refreshes the cache it invalidates, was
-  protected — so any code that rewrote channels (as the new H2MM state split
+  protected — so any code that rewrote channels (as the new HMM state split
   does) left the accessor silently reporting stale values with no way to fix it.
   `find_used_routing_channels` is now public; the cache itself stays protected.
 - **A response sized for one channel was accepted on a multi-channel fit, and
@@ -267,13 +936,13 @@
   per-event setter costs one binding call per photon, which at photon scale is
   the dominant cost of the operation. Refreshes `used_routing_channels`, so the
   accessor cannot go stale behind it.
-- **`H2mmChannelMap::allocate` and `H2mmStateSidecar::set_arrays`** — the id
-  allocation and the sidecar format, usable without an `H2MM` engine. A caller
+- **`HmmChannelMap::allocate` and `HmmStateSidecar::set_arrays`** — the id
+  allocation and the sidecar format, usable without an `HMM` engine. A caller
   that assembled its photon streams some other way (several source files, a
   burst table, a nanotime-split stream set) can now write *this* layout and
-  *this* file rather than a second, subtly different one; `H2MM::build_channel_map`
+  *this* file rather than a second, subtly different one; `HMM::build_channel_map`
   is a thin wrapper over the former.
-- **H2MM state decoding that reports a distribution, not a winner.** Viterbi
+- **HMM state decoding that reports a distribution, not a winner.** Viterbi
   answers "what is the single most likely state sequence"; most burst analysis
   instead asks "how do the photons distribute over the states", and the argmax
   answers that badly — photons at γ = (0.7, 0.3) all land in state 0, so
@@ -282,13 +951,13 @@
   Viterbi occupancy error is **0.081** against a ground truth the two new
   decoders reproduce to **0.0006**.
 
-  `H2MM::posterior` returns the per-photon posterior **γ** as a float32
+  `HMM::posterior` returns the per-photon posterior **γ** as a float32
   `(N, n_states)` matrix — the quantity the E-step already formed and threw
   away, and the same array the reference `H2MM_C` calls `gamma`.
-  `H2MM::sample_states` draws each photon's state from its own γ row (faithful
+  `HMM::sample_states` draws each photon's state from its own γ row (faithful
   marginal, but the independent draws shatter dwells — 15103 where the truth has
   1244 — so it must not drive dwell or transition statistics), and
-  `H2MM::sample_paths` does **FFBS** (forward filtering, backward sampling),
+  `HMM::sample_paths` does **FFBS** (forward filtering, backward sampling),
   drawing whole trajectories from `P(path | data)`, which reproduces the
   marginal *and* the dwell structure (1191 dwells against a true 1244).
   Averaging over draws is multiple imputation: the spread is the decoding
@@ -557,14 +1226,14 @@
   guarded too, as it is exposed directly. See
   `test/python/decayfit/test_DecayFit23.py` (`..._decay_longer_than_irf...`,
   `..._empty_data...`).
-- **BVA and H2MM dropped the last photon of every burst.** Burst index ranges are
+- **BVA and HMM dropped the last photon of every burst.** Burst index ranges are
   inclusive `[start, stop]` everywhere they are produced — a 30-photon burst is
   reported as `[0, 29]`, and `BurstFilter` sizes it as `stop - start + 1` — but
-  `BVA::compute` and `H2MM::set_bursts_from_tttr` indexed them half-open. Both
+  `BVA::compute` and `HMM::set_bursts_from_tttr` indexed them half-open. Both
   therefore silently discarded each burst's final photon: a 5% count error on a
   20-photon burst, and a biased one, since the discarded photon is the photon
-  that ended the burst. This changes the numeric output of existing BVA and H2MM
-  analyses. The stale "half-open" wording in `BVA.h` and `H2MM.h` is corrected,
+  that ended the burst. This changes the numeric output of existing BVA and HMM
+  analyses. The stale "half-open" wording in `BVA.h` and `HMM.h` is corrected,
   and `test/python/burstfilter/test_burst_range_convention.py` now pins the
   convention across producers and consumers together — which is what the previous
   per-component tests could not do, since each agreed only with itself.
@@ -699,34 +1368,6 @@
   even.
 
 
-### Fixed
-
-- **`DecayPhasor` no longer fails silently.** The IRF correction divides by
-  `g_irf^2 + s_irf^2`, so `(0, 0)` -- the natural way to write "no IRF" -- was a
-  division by zero returning a quiet `nan` that propagated into every downstream
-  result. Invalid arguments now raise `std::invalid_argument` (`ValueError` in
-  Python) with a message naming the fix; the identity IRF phasor is `(1, 0)`,
-  and it is now the **default** for `compute_phasor_bincounts`, which previously
-  required all five arguments.
-
-  Also guarded: non-finite `g_irf`/`s_irf`, an IRF phasor too small to invert,
-  non-finite or non-positive `frequency`, negative `n_microtimes`, and a null
-  `microtimes` pointer.
-
-  **`compute_phasor` bounds-checks the caller's index selection.** It previously
-  read `microtimes[idx]` for every entry of `idxs` with no bounds check -- an
-  out-of-bounds read on a stale or mis-sized index vector.
-
-  **`CLSMImage::get_phasor` no longer uses the "too few photons" sentinel as a
-  calibration.** When the supplied IRF held too few photons, `compute_phasor`
-  returned `{-1, -1}` and `get_phasor` fed it straight back in as the IRF
-  phasor. That is not a division by zero -- its modulus is 2 -- so it sailed
-  through and rotated every pixel by 225 degrees while halving it. It now raises.
-
-  The "too few photons" sentinel `{-1, -1}` is unchanged for the
-  `compute_phasor*` return values: that is a property of the data, not a
-  mistaken call, and the two are now deliberately distinguished.
-
 ## [0.27.0] - 2026-07-17
 
 A **performance and memory** release. Confocal (CLSM/FLIM) reconstruction is
@@ -752,22 +1393,22 @@ peak memory across releases. Measured numbers: [`PERF.md`](PERF.md).
   −63% time / −12% memory; 2.6 M-pixel HT3 fill −81% time / −40% memory;
   correlation −36% time.
 - Lower-level trims (identical results, unchanged API): int32 instead of int64
-  for within-burst count / Viterbi back-pointer buffers (BVA, H2MM); skip the
-  unused macro-time buffer in BVA photon-count mode; reserve H2MM CSR/Δt and
+  for within-burst count / Viterbi back-pointer buffers (BVA, HMM); skip the
+  unused macro-time buffer in BVA photon-count mode; reserve HMM CSR/Δt and
   `write_ps_file` dataset buffers up front. `FitNExp` buffer-based overloads pass
   NumPy arrays with a single copy instead of boxing through Python lists.
   Deliberately kept: the `fit_buffers` owning-vector copy (required by `fit()`'s
   signature) and the ARGOUTVIEWM malloc handoffs (required by NumPy ownership).
 
 ### Added
-- **H2MM and BVA** C++ modules for dynamic FRET: photon-by-photon hidden Markov
-  modelling (Baum-Welch EM, SQUAREM acceleration, Viterbi) and burst variance
-  analysis, with NumPy-array burst inputs/outputs.
+- **HMM and BVA** C++ modules for dynamic FRET: photon-by-photon hidden Markov
+  modelling by the H2MM algorithm (Baum-Welch EM, SQUAREM acceleration,
+  Viterbi) and burst variance analysis, with NumPy-array burst inputs/outputs.
 - **FitNExp**: native single- and multi-exponential Poisson reconvolution fitter
   for one decay curve, with batched `fit_many` and per-pixel `fit_map` variants
   that thread across cores.
 - **Photonscore `.photons` (D7)** reader/writer and **TIFF** 2D/3D array I/O.
-- NumPy-native burst API: `TTTR.burst_search` and the BurstFilter/BVA/H2MM
+- NumPy-native burst API: `TTTR.burst_search` and the BurstFilter/BVA/HMM
   accessors return NumPy arrays and accept NumPy inputs, no list conversion.
 - Cross-version performance + peak-memory monitor (`benchmarks/bench_versions.py`,
   `make_version_plots.py`), a benchmark-backed performance guide, and

@@ -11,7 +11,7 @@ timescale, down to microseconds.
 
 This example is the ``tttrlib`` counterpart of the analysis workflow in the
 `burstH2MM <https://bursth2mm.readthedocs.io>`_ documentation, built entirely on
-``tttrlib``'s own C++ H2MM engine (:class:`tttrlib.H2MM`): simulate a known
+``tttrlib``'s own C++ H2MM engine (:class:`tttrlib.HMM`): simulate a known
 three-state kinetic system, recover it by an EM state-count scan with BIC model
 selection, decode the most-likely state path with Viterbi, and reproduce the
 central burstH2MM figures — the model-selection curve, per-state FRET states, a
@@ -32,7 +32,7 @@ STATE_COLORS = ["#4e79a7", "#59a14f", "#e15759", "#b07aa1", "#f28e2b"]
 # %%
 # A known three-state system
 # --------------------------
-# The generative model is an :class:`tttrlib.H2mmModel` — an initial-state vector
+# The generative model is an :class:`tttrlib.HmmModel` — an initial-state vector
 # ``prior``, a one-tick row-stochastic transition matrix ``trans``, and an
 # emission matrix ``obs`` giving, per state, the probability that a photon lands
 # in each stream. With two streams (donor and acceptor) the per-state apparent
@@ -54,7 +54,7 @@ obs = np.array(
         [0.20, 0.80],  # high FRET
     ]
 )
-ground_truth = tttrlib.H2mmModel(
+ground_truth = tttrlib.HmmModel(
     [1 / 3, 1 / 3, 1 / 3],
     [float(x) for x in trans.ravel()],
     [float(x) for x in obs.ravel()],
@@ -67,7 +67,7 @@ print("true FRET efficiencies:", np.round(true_E, 2))
 # ---------------
 # A burst is a list of monotonically increasing photon macro-times; the mean
 # inter-photon gap (here ~4 ticks) sets how finely the kinetics are sampled.
-# :meth:`tttrlib.H2MM.simulate_bursts` advances the hidden chain tick-by-tick
+# :meth:`tttrlib.HMM.simulate_bursts` advances the hidden chain tick-by-tick
 # along each time axis and emits a stream index per photon, so it exercises the
 # exact same propagation the fit inverts.
 
@@ -81,15 +81,15 @@ burst_times = [
     for _ in range(N_BURSTS)
 ]
 times_vv = tttrlib.VectorVectorInt64([tttrlib.VectorInt64(t.tolist()) for t in burst_times])
-sim_streams = tttrlib.H2MM.simulate_bursts(ground_truth, times_vv, 1)
+sim_streams = tttrlib.HMM.simulate_bursts(ground_truth, times_vv, 1)
 
 # %%
-# Load the photons into an H2MM engine
+# Load the photons into an HMM engine
 # ------------------------------------
 # The engine stores the bursts in a compact CSR layout keyed by the *unique*
 # inter-photon gaps, which is what makes the Baum-Welch maps fast.
 
-engine = tttrlib.H2MM()
+engine = tttrlib.HMM()
 engine.set_bursts(
     times_vv,
     tttrlib.VectorVectorInt32([tttrlib.VectorInt32(list(s)) for s in sim_streams]),
@@ -151,7 +151,7 @@ fig.tight_layout()
 # %%
 # Decode the state path (Viterbi)
 # -------------------------------
-# :meth:`tttrlib.H2MM.viterbi_path` returns the most-likely hidden state for every
+# :meth:`tttrlib.HMM.viterbi_path` returns the most-likely hidden state for every
 # photon. From that path we reconstruct *dwells* — maximal same-state runs within
 # a burst — and the transitions between them. The helper below walks the engine's
 # CSR arrays (burst offsets, per-photon stream, and the inter-photon gap slots)

@@ -1,0 +1,338 @@
+"""
+Two molecules in one burst: the confound you cannot filter out
+=============================================================
+
+The HMM models **one molecule per burst**. Freely-diffusing data violate that at
+any finite concentration, and the violation is not a mild bias: a burst holding
+two molecules is a superposition of two independent chains, and a single-chain
+model has exactly one way to explain interleaved photons from two sources —
+**rapid switching**. Coincidence manufactures the very signal the method exists
+to detect.
+
+Everything below uses **static** species. Nothing in the simulation ever changes
+state, so every transition the fit reports is an artifact by construction and
+there is no "true" switching rate to argue about.
+
+The obvious response is to detect coincident bursts and drop them. This example
+measures whether that works, using ground truth the analysis never sees:
+:class:`tttrlib.SimEngine` diffuses molecules through a focus and
+``emitting_molecule()` records which one emitted each photon, so **overlap is
+decided by the physics**, not by the script.
+
+.. warning::
+
+   An earlier version of tttrlib's documentation reported that photon count
+   separates coincident bursts at AUC 0.87. That number was wrong, and wrong in
+   an instructive way: those bursts were made coincident by *concatenating*
+   photon lists, so the coincident ones held more photons **by construction**.
+   The detector was being scored on how the test data had been built. The
+   numbers below come from the engine's own labels instead.
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import tttrlib
+
+P_LOW, P_HIGH = 0.25, 0.75          # two static species, by acceptor fraction
+COLORS = ["#4e79a7", "#59a14f", "#e15759", "#b07aa1"]
+
+
+def _vd(x):
+    return tttrlib.VectorDouble([float(v) for v in x])
+
+
+# %%
+# Simulate diffusing molecules at a chosen occupancy
+# --------------------------------------------------
+# Two species, no interconversion whatsoever — ``k_rad`` and ``k_nrad`` are both
+# zero. The only thing that changes between runs is how many molecules are in
+# the box, which is what sets how often two of them are seen at once.
+
+def simulate(population, n_windows=2_000_000, seed=1):
+    system = tttrlib.SimSystem()
+    for E in (P_LOW, P_HIGH):
+        sp = tttrlib.SimSpecies()
+        sp.D = 0.5
+        sp.q = _vd([4000 * (1 - E), 4000 * E])
+        t_ns = np.arange(256) * 0.0625
+        sp.decay = tttrlib.SimDecay.from_pattern(
+            _vd(np.exp(-t_ns / 4.0)), 0.0625, 0.0)
+        system.add_species(sp)
+    zero = np.zeros(4)
+    system.set_rate_matrices(_vd(zero), _vd(zero))      # STATIC
+    system.set_background(_vd([0.0, 0.0]))
+    system.set_box(2.0, 4.0)
+    for i in range(2):
+        system.set_population(i, population)
+
+    integrator = tttrlib.SimIntegrator()
+    integrator.dt = 1e-3
+    integrator.n_channels = 2
+    # Cap the CLOCK, not the photon count: every concentration then runs for the
+    # same acquisition time and the burst yields are directly comparable. A
+    # photon budget would stop the dense samples early and make them look like
+    # short measurements rather than crowded ones.
+    integrator.n_ph_max = 4_000_000
+    integrator.max_windows = n_windows
+    # Without this every call returns byte-identical data, so replicates would
+    # be copies and any error bar computed from them would be fiction.
+    integrator.seed_diffusion = 12345 + 7919 * seed
+    integrator.seed_emission = 54321 + 6997 * seed
+    engine = tttrlib.SimEngine(
+        system, tttrlib.SimGrid.gaussian3d(0.6, 2.0, 2.0, 4.0, 0.05, 1.0),
+        tttrlib.VectorSimGrid([]), integrator)
+    engine.run()
+    return engine
+
+
+def bursts_of(engine):
+    """Burst-search the simulated photons and label each burst by engine truth.
+
+    A burst counts as coincident when a *second* molecule contributed at least
+    10% of its photons — one stray photon from a passer-by is not the confound
+    this is about.
+    """
+    macro = np.asarray(engine.macro_window(), dtype=np.uint64)
+    molecule = np.asarray(engine.emitting_molecule())
+    channel = np.asarray(engine.channel(), dtype=np.int8)
+
+    data = tttrlib.TTTR()
+    data.append_events(macro, np.asarray(engine.micro_time(), dtype=np.uint16),
+                       channel, np.zeros(len(macro), dtype=np.int8), False, 0)
+    header = data.get_header()
+    header.set_macro_time_resolution(1e-3)
+    header.set_number_of_micro_time_channels(2048)
+    header.set_micro_time_resolution(8e-12)
+
+    bf = tttrlib.BurstFilter(data)
+    bf.set_burst_parameters(min_photons=40, window_photons=10, window_time_max=5e-3)
+    bf.find_bursts()
+    spans = np.asarray(bf.get_bursts()).reshape(-1, 2)
+
+    lab, dur, npho, peak, times, syms = [], [], [], [], [], []
+    for start, stop in spans:
+        n = stop - start + 1
+        _, share = np.unique(molecule[start:stop + 1], return_counts=True)
+        lab.append(int((share / n >= 0.10).sum() > 1))
+        t = macro[start:stop + 1].astype(float)
+        dur.append(t[-1] - t[0])
+        npho.append(n)
+        k = 10
+        peak.append((k / np.maximum(t[k:] - t[:-k], 1.0)).max() if n > k
+                    else n / max(t[-1] - t[0], 1.0))
+        times.append((t - t[0]).astype(np.int64).tolist())
+        syms.append(channel[start:stop + 1].astype(int).tolist())
+    return dict(label=np.array(lab), duration=np.array(dur, float),
+                n_photons=np.array(npho, float), peak_rate=np.array(peak, float),
+                times=times, symbols=syms,
+                # The engine stops at a photon budget, not a clock, so a denser
+                # sample runs for LESS time. Comparing burst counts between
+                # concentrations without this would compare run lengths.
+                acquisition=float(macro[-1] - macro[0]))
+
+
+POPULATIONS = (0.125, 0.25, 0.5, 1.0)
+SEEDS = (1, 2, 3, 4, 5, 6)
+N_WINDOWS = 3_000_000
+
+# Replicates, not one dataset. At 5% prevalence a single run carries only a
+# handful of coincident bursts, and every number below moves by more than the
+# effect being measured when the seed changes.
+runs = {p: [bursts_of(simulate(p, N_WINDOWS, seed=s)) for s in SEEDS]
+        for p in POPULATIONS}
+
+
+def over_seeds(values):
+    v = np.asarray(values, float)
+    return v.mean(), v.std(ddof=1) / np.sqrt(len(v))
+
+
+print(f"{len(SEEDS)} seeds per occupancy, equal acquisition time\n")
+print("population   coincident        bursts / 1e6 ticks")
+for p in POPULATIONS:
+    m, se = over_seeds([r["label"].mean() for r in runs[p]])
+    rate, _ = over_seeds([len(r["label"]) / r["acquisition"] * 1e6 for r in runs[p]])
+    print(f"{p:>10}   {m:>6.2%} +- {se:.2%}   {rate:>17.1f}")
+
+# %%
+# The damage: static molecules that appear to switch
+# --------------------------------------------------
+# Nothing in the simulation changes state, so any off-diagonal transition the
+# fit reports is manufactured by coincidence alone.
+
+def apparent_switching(run):
+    eng = tttrlib.HMM()
+    eng.set_bursts(run["times"], run["symbols"], 2)
+    A = eng.fit(2, n_restarts=4, seed=0).trans_np
+    return float(A[0, 1] + A[1, 0])          # off-diagonal mass per tick
+
+
+print("\napparent switching from data with NO dynamics at all:")
+switching = {}
+for p in POPULATIONS:
+    m, se = over_seeds([apparent_switching(r) for r in runs[p]])
+    switching[p] = m
+    coinc, _ = over_seeds([r["label"].mean() for r in runs[p]])
+    print(f"  population {p:<6} coincident {coinc:>5.1%}"
+          f"   apparent switching {m:.2e} +- {se:.0e} / tick")
+
+# %%
+# Can a coincident burst be recognised?
+# -------------------------------------
+# Every statistic anyone would reach for, scored against the engine's labels.
+# AUC is the probability that a coincident burst outscores a clean one, so 0.5
+# is chance and 1.0 is perfect separation. The **spread across seeds** is the
+# part worth reading: it is wide enough that one dataset can look like a working
+# detector by luck alone.
+
+def auc(score, label):
+    r = score.argsort().argsort().astype(float)
+    n1 = int(label.sum())
+    if n1 == 0 or n1 == len(label):
+        return np.nan
+    return (r[label == 1].mean() - (n1 - 1) / 2) / (label == 0).sum()
+
+
+STATS = ("duration", "n_photons", "peak_rate")
+print("\ndetection AUC (0.5 = chance), mean +- s.e. over seeds:")
+for p in (0.25, 1.0):
+    coinc, _ = over_seeds([r["label"].mean() for r in runs[p]])
+    print(f"  at {coinc:.1%} coincidence:")
+    for stat in STATS:
+        per_seed = [auc(r[stat], r["label"]) for r in runs[p]]
+        m, se = over_seeds(per_seed)
+        print(f"    {stat:<11} {m:.3f} +- {se:.3f}"
+              f"   (single runs ranged {np.min(per_seed):.2f}-{np.max(per_seed):.2f})")
+
+# %%
+# What selection buys, against what concentration buys
+# ----------------------------------------------------
+# Both cost yield. The fair comparison is contamination removed per unit of
+# acquisition time given up.
+
+QUANTILES = (1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3)
+keep_frac, residual = [], []
+print("\nselection at population 0.25:")
+for q in QUANTILES:
+    res, ratio = [], []
+    for r in runs[0.25]:
+        keep = r["duration"] <= np.quantile(r["duration"], q)
+        removed = r["label"].sum() - r["label"][keep].sum()
+        lost = (~keep & (r["label"] == 0)).sum()
+        res.append(r["label"][keep].mean())
+        if removed > 0:
+            ratio.append(lost / removed)
+    keep_frac.append(q)
+    residual.append(float(np.mean(res)))
+    if q in (0.8, 0.5):
+        print(f"  keep shortest {q:>4.0%} -> residual {residual[-1]:>6.2%}, "
+              f"{np.mean(ratio):>4.1f} clean bursts lost per coincident one removed")
+
+# %%
+# Plot
+# ----
+# Left: ROC curves, pooled over seeds. A useful detector bows towards the
+# top-left; these hug the diagonal, and the crowded sample hugs it harder.
+# Right: the two levers on one cost axis — contamination against the bursts
+# collected per unit acquisition time.
+
+fig, (ax_roc, ax_lever) = plt.subplots(1, 2, figsize=(10.5, 4.2))
+
+for j, stat in enumerate(STATS):
+    for p, ls, alpha in ((0.25, "-", 1.0), (1.0, ":", 0.75)):
+        lab = np.concatenate([r["label"] for r in runs[p]])
+        v = np.concatenate([r[stat] for r in runs[p]])
+        order = np.argsort(-v)
+        y = np.concatenate([[0], np.cumsum(lab[order]) / max(lab.sum(), 1)])
+        x = np.concatenate([[0], np.cumsum(1 - lab[order]) / (lab == 0).sum()])
+        ax_roc.plot(x, y, ls, lw=2, alpha=alpha, color=COLORS[j],
+                    label=f"{stat} ({lab.mean():.0%} coinc.), AUC {auc(v, lab):.2f}")
+ax_roc.plot([0, 1], [0, 1], color="0.5", lw=1.2, ls="--")
+ax_roc.text(0.54, 0.46, "chance", color="0.5", fontsize=9, rotation=38)
+ax_roc.set_xlabel("false positive rate (clean bursts discarded)")
+ax_roc.set_ylabel("true positive rate (coincident bursts caught)")
+ax_roc.set_title("Detection does not work\nsolid: sparse sample   dotted: crowded",
+                 fontsize=10, loc="left")
+ax_roc.legend(frameon=False, fontsize=7.5, loc="lower right")
+ax_roc.grid(alpha=0.25, lw=0.6)
+
+# Both levers cost yield, so plot both against bursts per unit acquisition time,
+# normalised to the densest sample (which yields the most and is dirtiest).
+rate = {p: float(np.mean([len(r["label"]) / r["acquisition"] for r in runs[p]]))
+        for p in POPULATIONS}
+base = max(rate.values())
+ax_lever.plot([rate[0.25] * f / base for f in keep_frac],
+              np.array(residual) * 100, "-o", lw=2, ms=5, color=COLORS[2],
+              label="discard long bursts (pop 0.25)")
+conc_y = [float(np.mean([r["label"].mean() for r in runs[p]])) * 100
+          for p in POPULATIONS]
+conc_e = [float(np.std([r["label"].mean() for r in runs[p]], ddof=1)
+                / np.sqrt(len(SEEDS))) * 100 for p in POPULATIONS]
+ax_lever.errorbar([rate[p] / base for p in POPULATIONS], conc_y, yerr=conc_e,
+                  fmt="-s", lw=2, ms=5, capsize=3, color=COLORS[0],
+                  label="lower the concentration")
+for p, y in zip(POPULATIONS, conc_y):
+    ax_lever.annotate(f"{p}", (rate[p] / base, y), textcoords="offset points",
+                      xytext=(6, 5), fontsize=8, color=COLORS[0])
+ax_lever.axhline(5.0, color="0.45", lw=1.2, ls="--")
+ax_lever.text(0.03, 5.3, "≈5% already invents a state", fontsize=8.5, color="0.35")
+ax_lever.set_xlabel("bursts collected per unit acquisition time (relative)")
+ax_lever.set_ylabel("residual coincidence (%)")
+ax_lever.set_ylim(0, None)
+ax_lever.set_title("Two levers, one cost axis\nneither is cheap",
+                   fontsize=10, loc="left")
+ax_lever.legend(frameon=False, fontsize=9)
+ax_lever.grid(alpha=0.25, lw=0.6)
+
+fig.tight_layout()
+plt.show()
+
+# %%
+# What this shows
+# ---------------
+# **The confound is real.** Static molecules — nothing in the simulation ever
+# changes state — produce measurable switching, and it grows with occupancy.
+# Around 5% coincidence is enough to add a state that is not there, which is
+# ordinary at typical burst concentrations.
+#
+# **Per-burst detection does not work.** Duration, photon count and peak count
+# rate all sit near AUC 0.53 — peak rate lands *below* chance in the sparse
+# sample — and none improves in the crowded one: at
+# high occupancy the "clean" bursts are contaminated too, so the contrast the
+# statistic depends on washes out and the filter fails hardest where it is most
+# needed. A statistic that ought to work does not either — a second molecule
+# joining part-way should step the count rate at the moment the apparent
+# :math:`E` changes, and that correlation also measures at chance.
+#
+# **Read the seed spread, not the mean.** At 5% coincidence single runs gave AUC
+# anywhere from 0.36 to 0.63, because a run at that prevalence holds only a
+# handful of coincident bursts. Pick the favourable seed and you have a detector
+# worth publishing; pick the other and the statistic is anti-correlated. This is
+# how the AUC 0.87 in the warning above survived: one favourable measurement, on
+# data whose confound was built in, never replicated.
+#
+# **Neither lever is cheap, and selection is the worse one.** Discarding the
+# longest half of the bursts barely moves contamination — about 5.3% to 4.8% —
+# while throwing away roughly 25 clean bursts for every coincident one removed.
+# Halving the occupancy instead, at the same doubling of acquisition time, takes
+# 17.7% to 9.3% where the sample is crowded but only 5.3% to 2.5% at the sparse
+# end. The returns diminish exactly as contamination approaches the level that
+# still matters, and spurious switching is measurable even at the lowest
+# occupancy tried. There is no setting at which coincidence goes away.
+#
+# The practical consequence is that this is an **acquisition-design** problem,
+# not an analysis one. Choose the occupancy before measuring, expect a floor,
+# and treat a marginal extra state as suspect whenever the sample was crowded.
+#
+# One thing *is* predictable even though the per-burst label is not: the
+# coincidence **rate**. Burst arrivals are Poisson, so the coincident fraction
+# is :math:`1 - e^{-\lambda \tau}` — but :math:`\tau` must be the **transit**
+# time, not the detected burst duration. A detected burst is only the
+# above-threshold part of a transit, and using its duration underestimates
+# coincidence by more than an order of magnitude. Take :math:`\tau` from the
+# FCS diffusion time.
+#
+# Where ALEX is available, stoichiometry filtering is the independent route: it
+# catches a donor-only and an acceptor-only molecule overlapping through their
+# combined :math:`S`, which none of the brightness statistics above can see.

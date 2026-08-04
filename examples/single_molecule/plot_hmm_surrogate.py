@@ -1,10 +1,10 @@
 """
-Training an H2MM surrogate (amortised neural estimator)
+Training an HMM surrogate (amortised neural estimator)
 =======================================================
 
 Photon-by-photon hidden Markov modelling (H2MM) normally recovers a model by
 iterating Baum-Welch EM on every dataset. A *surrogate* takes a different route:
-train a small neural network **once** on data simulated from the H2MM generative
+train a small neural network **once** on data simulated from the HMM generative
 model, then estimate the parameters of a real dataset in a **single forward
 pass**.
 
@@ -50,7 +50,7 @@ options.max_iter = 800
 options.early_stopping = True
 options.seed = SEED
 
-surrogate = tttrlib.H2mmSurrogate.train(
+surrogate = tttrlib.HmmSurrogate.train(
     N_STATES, N_STREAMS,
     2500,          # n_samples: more is better, with diminishing returns
     N_BURSTS, BURST_LEN, MEAN_DT,
@@ -86,8 +86,8 @@ fig.tight_layout()
 # The model is written as JSON, not as a pickle: it is human-readable, safe to
 # share, and loadable from any tttrlib binding (and from ChiSurf).
 
-surrogate.to_json_file("h2mm_surrogate_2state.json")
-reloaded = tttrlib.H2mmSurrogate.from_json_file("h2mm_surrogate_2state.json")
+surrogate.to_json_file("hmm_surrogate_2state.json")
+reloaded = tttrlib.HmmSurrogate.from_json_file("hmm_surrogate_2state.json")
 
 # %%
 # Compare with EM
@@ -98,7 +98,7 @@ reloaded = tttrlib.H2mmSurrogate.from_json_file("h2mm_surrogate_2state.json")
 
 
 def simulate(e_lo, e_hi, switch_prob, rng):
-    """Simulate a two-state kinetic dataset and load it into an H2MM engine."""
+    """Simulate a two-state kinetic dataset and load it into an HMM engine."""
     times, streams = [], []
     for _ in range(N_BURSTS):
         t = np.concatenate(
@@ -113,7 +113,7 @@ def simulate(e_lo, e_hi, switch_prob, rng):
         times.append(t)
         streams.append(s)
 
-    engine = tttrlib.H2MM()
+    engine = tttrlib.HMM()
     engine.set_bursts(
         tttrlib.VectorVectorInt64([tttrlib.VectorInt64(t.tolist()) for t in times]),
         tttrlib.VectorVectorInt32([tttrlib.VectorInt32(s.tolist()) for s in streams]),

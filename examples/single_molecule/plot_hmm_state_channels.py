@@ -1,8 +1,8 @@
 """
-H2MM state decoding: faithful distributions and how to store them
-=================================================================
+HMM state decoding: faithful distributions and how to store them
+================================================================
 
-Fitting an H2MM model tells you how many states there are. *Using* it means
+Fitting an HMM tells you how many states there are. *Using* it means
 deciding which state each photon belongs to — and which decoder is right depends
 on the question.
 
@@ -57,7 +57,7 @@ trans = np.array([[1 - K01, K01],
 obs = np.array([[0.60, 0.40],
                 [0.40, 0.60]])
 
-true_model = tttrlib.H2mmModel(list(prior.ravel()), list(trans.ravel()), list(obs.ravel()))
+true_model = tttrlib.HmmModel(list(prior.ravel()), list(trans.ravel()), list(obs.ravel()))
 print("true FRET per state:", obs[:, 1] / obs.sum(axis=1))
 print("true occupancy    :", prior)
 
@@ -79,11 +79,11 @@ times = [
     for _ in range(N_BURSTS)
 ]
 
-identity = tttrlib.H2mmModel(list(prior.ravel()), list(trans.ravel()),
+identity = tttrlib.HmmModel(list(prior.ravel()), list(trans.ravel()),
                              list(np.eye(2).ravel()))
 true_states = np.concatenate(
-    [np.asarray(s) for s in tttrlib.H2MM.simulate_bursts(identity, times, 11)])
-streams = [list(s) for s in tttrlib.H2MM.simulate_bursts(true_model, times, 11)]
+    [np.asarray(s) for s in tttrlib.HMM.simulate_bursts(identity, times, 11)])
+streams = [list(s) for s in tttrlib.HMM.simulate_bursts(true_model, times, 11)]
 
 print(f"{N_BURSTS} bursts, {sum(len(t) for t in times)} photons")
 print("simulated occupancy:", np.bincount(true_states, minlength=2) / true_states.size)
@@ -96,9 +96,9 @@ print("simulated occupancy:", np.bincount(true_states, minlength=2) / true_state
 # ``gamma``. Its rows sum to 1. Unlike a Viterbi path it is a *distribution*,
 # and its column means are an unbiased estimate of the state occupancy.
 
-engine = tttrlib.H2MM()
+engine = tttrlib.HMM()
 engine.set_bursts(times, streams, N_STREAMS)
-model = engine.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
+model = engine.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
 
 # EM has no reason to number the states the way we did, so order them by FRET
 # before comparing anything against the truth.
@@ -247,9 +247,9 @@ data.append_events(np.asarray(macro, np.uint64),
 green = tttrlib.Channel("green"); green.add_component(0, 0, 65535)
 red = tttrlib.Channel("red"); red.add_component(1, 0, 65535)
 
-eng2 = tttrlib.H2MM()
+eng2 = tttrlib.HMM()
 eng2.set_bursts_from_tttr(data, np.asarray(bounds, np.int64), [green, red], 3, 1)
-model2 = eng2.optimize(tttrlib.H2MM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
+model2 = eng2.optimize(tttrlib.HMM.factory_model(2, 2, 1e-3, 0), 400, 1e-9)
 path2, _ = eng2.jitter_path(model2, seed=7)
 
 # %%
@@ -260,7 +260,7 @@ path2, _ = eng2.jitter_path(model2, seed=7)
 # record field a few bits wide. So the used source ids compress to ``0..k-1``
 # and the ``(stream, state)`` pairs are allocated immediately after, densely.
 # The result is one PTU holding every photon, in which each state is an ordinary
-# channel selection — no downstream tool has to know H2MM exists.
+# channel selection — no downstream tool has to know an HMM was involved.
 #
 # The budget is the *container's* record field: PTU stores 6 channel bits
 # (0..63). Narrower formats truncate silently, which is why the target is fixed
@@ -288,7 +288,7 @@ sidecar = eng2.state_sidecar(path2, model2, "jitter", 7, cmap)
 
 tmp = tempfile.mkdtemp()
 ptu_path = os.path.join(tmp, "decoded.ptu")
-sidecar_path = os.path.join(tmp, "decoded_h2mm_states.msgpack")
+sidecar_path = os.path.join(tmp, "decoded_hmm_states.msgpack")
 split.write(ptu_path, "PTU")
 sidecar.write(sidecar_path)
 print(f"PTU      {os.path.getsize(ptu_path):>9d} bytes ({data.size()} photons)")
@@ -302,7 +302,7 @@ print(f"sidecar  {os.path.getsize(sidecar_path):>9d} bytes")
 # histogram. That equivalence is the contract between the two paths.
 
 reread = tttrlib.TTTR(ptu_path, "PTU")
-back = tttrlib.H2mmStateSidecar.read(sidecar_path)
+back = tttrlib.HmmStateSidecar.read(sidecar_path)
 print(f"sidecar says: decoder={back.decoder!r} seed={back.seed} "
       f"n_states={back.n_states}")
 
