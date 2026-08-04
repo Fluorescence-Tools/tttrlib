@@ -14,6 +14,7 @@
 #include "SimIntegrator.h"
 #include "SimMicrotimeEncoder.h"
 #include "SimEngine.h"
+#include "SimKinetics.h"
 %}
 
 %include "stdint.i"
@@ -30,6 +31,9 @@
                                              double, double, double, double, double, double);
 
 %include "SimRandom.h"
+
+// Continuous-time Markov kinetics on its own — no photons, no focus, no box.
+%include "SimKinetics.h"
 
 %include "SimDecay.h"
 %template(VectorSimDecay) std::vector<tttrlib::SimDecay>;
