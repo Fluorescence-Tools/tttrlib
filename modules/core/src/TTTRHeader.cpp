@@ -3,6 +3,8 @@
 #include "TTTRRange.h"
 #include "TTTRHeader.h"
 #include "TTTRTags.h"
+#include "io_sm.h"
+#include "io_carlzeiss.h"
 #include "FileCheck.h"
 #include "Verbose.h"
 
@@ -565,136 +567,11 @@ bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* head
 }
 
 
-size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
-
-    add_tag(j, TTTRRecordType, (int) SM_RECORD_TYPE, tyInt8);
-
-    // Helper lambda to read and swap endianness
-    auto read_and_swap = [&](auto& value) {
-        fread(&value, sizeof(value), 1, file);
-        SwapEndian(value);
-    };
-
-    // Helper lambda to read a string with its size
-    auto read_string = [&](const std::string& tag_name) {
-        uint32_t size;
-        read_and_swap(size);
-        char* buffer = new char[size];
-        fread(buffer, sizeof(char), size, file);
-        add_tag(j, tag_name, buffer, tyAnsiString);
-        delete[] buffer;
-    };
-    sm_header_t header;  // Use only the 'header' structure
-
-    // Read and swap the version
-    read_and_swap(header.version);
-    add_tag(j, "version", (int) header.version, tyInt8);
-
-    read_string("comment");
-    read_string("simple");
-
-    read_and_swap(header.pointer1);
-    add_tag(j, "pointer1", (int) header.pointer1, tyInt8);
-
-    read_string("file_section_type");
-
-    read_and_swap(header.magic1);
-    add_tag(j, "magic1", (int) header.magic1, tyInt8);
-    read_and_swap(header.magic2);
-    add_tag(j, "magic2", (int) header.magic2, tyInt8);
-
-    read_string("col1_name");
-    read_and_swap(header.col1_resolution);
-    add_tag(j, "col1_resolution", (double) header.col1_resolution, tyFloat8);
-    read_and_swap(header.col1_offset);
-    add_tag(j, "col1_offset", (double) header.col1_offset, tyFloat8);
-    read_and_swap(header.col1_bho);
-    add_tag(j, "col1_bho", (int) header.col1_bho, tyInt8);
-
-    // Read the column 2 information
-    read_string("col2_name");
-    read_and_swap(header.col2_resolution);
-    add_tag(j, "col2_resolution", (double) header.col2_resolution, tyFloat8);
-    read_and_swap(header.col2_offset);
-    add_tag(j, "col2_offset", (double) header.col2_offset, tyFloat8);
-    read_and_swap(header.col2_bho);
-    add_tag(j, "col2_bho", (int) header.col2_bho, tyInt8);
-
-    read_string("col3_name");
-    read_and_swap(header.col3_resolution);
-    add_tag(j, "col3_resolution", (double) header.col3_resolution, tyFloat8);
-    read_and_swap(header.col3_offset);
-    add_tag(j, "col3_offset", (double) header.col3_offset, tyFloat8);
-
-    // Read the number of channels
-    int32_t num_channels;
-    read_and_swap(num_channels);
-    add_tag(j, "num_channels", (int) num_channels, tyInt8);
-
-    header.channel_labels.resize(num_channels);
-    for (int32_t i = 0; i < num_channels; ++i) {
-        uint32_t size;
-        fread(&size, sizeof(size), 1, file);
-        SwapEndian(size);
-        fseek(file, size, SEEK_CUR);
-    }
-
-    add_tag(j, TTTRTagGlobRes, (double) header.col2_resolution, tyFloat8);
-
-    // Return the current file position, which is the cursor
-    return ftell64(file);
-}
 
 
 
-size_t TTTRHeader::read_cz_confocor3_header(
-        std::FILE *fpin,
-        nlohmann::json &data,
-        bool rewind
-) {
-    if(rewind) std::fseek(fpin, 0, SEEK_SET);
-    cz_confocor3_settings_t rec;
-    fread(&rec, sizeof(rec),1, fpin);
 
-    float frequency_float = rec.bits.frequency;
-    double mt_clk = 1. / frequency_float;
 
-    // Convert each element to hexadecimal and concatenate them
-    std::stringstream ss;
-    for (int i = 0; i < 4; i++) {
-        ss << std::hex << std::setw(8) << std::setfill('0') << rec.bits.measure_id[i];
-    }
-    size_t total_length = ss.str().length() + 1;
-    char* hex_measure_id = new char[total_length];
-    std::strcpy(hex_measure_id, ss.str().c_str());
-
-    int measurement_position = rec.bits.measurement_position;
-    int kinetic_index = rec.bits.kinetic_index;
-    int repetition_number = rec.bits.repetition_number;
-    int channel_nbr = rec.bits.channel - 48;
-
-    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
-    // Convert ASCII channel number to int
-    add_tag(data, TTTRRecordType, (int) CZ_RECORD_TYPE_CONFOCOR3, tyInt8);
-    add_tag(data, "channel", channel_nbr, tyInt8);
-    add_tag(data, "measure_id", hex_measure_id, tyAnsiString);
-    add_tag(data, "measurement_position", measurement_position + 1, tyInt8);
-    add_tag(data, "kinetic_index", kinetic_index + 1, tyInt8);
-    add_tag(data, "repetition_number", repetition_number + 1, tyInt8);
-    add_tag(data, TTTRTagBits, 32, tyInt8);
-if (is_verbose()) {
-    std::clog << "-- Confocor3 header reader " << std::endl;
-    std::clog << "-- frequency_float: " << frequency_float << std::endl;
-    std::clog << "-- measure_id_string: " << hex_measure_id << std::endl;
-    std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
-    std::clog << "-- channel_nbr: " << channel_nbr << std::endl;
-    std::clog << "-- measurement_position: " << measurement_position << std::endl;
-    std::clog << "-- kinetic_index: " << kinetic_index << std::endl;
-    std::clog << "-- repetition_number: " << repetition_number << std::endl;
-    std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
-}
-    return static_cast<size_t>(ftell64(fpin));
-}
 
 
 size_t TTTRHeader::read_ht3_header(
@@ -1478,126 +1355,10 @@ if (is_verbose()) {
 }
 
 
-void TTTRHeader::write_sm_header(std::string fn, TTTRHeader* header, std::string modes){
-if (is_verbose()) {
-    std::clog << "-- WRITE_SM_HEADER" << std::endl;
-}
-    nlohmann::json &json = header->json_data();
-    auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_number() ? (int32_t) v.get<double>() : d;
-    };
-    auto tag_double = [&json](const std::string &name, double d) -> double {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_number() ? v.get<double>() : d;
-    };
-    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_string() ? v.get<std::string>() : d;
-    };
-
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
-    if (fp == nullptr) {
-        std::cerr << "ERROR: Cannot write SM header to file: " << fn << std::endl;
-        return;
-    }
-
-    // All values are stored big-endian (see read_sm_header)
-    auto write_swapped = [&fp](auto value) {
-        SwapEndian(value);
-        fwrite(&value, sizeof(value), 1, fp);
-    };
-    // Strings are stored as a 32-bit big-endian length followed by the
-    // characters including a terminating null byte
-    auto write_string = [&](const std::string &s) {
-        uint32_t size = (uint32_t) s.size() + 1;
-        write_swapped(size);
-        fwrite(s.c_str(), sizeof(char), size, fp);
-    };
-
-    write_swapped((uint32_t) tag_int("version", 1));
-    write_string(tag_string("comment", "tttrlib"));
-    write_string(tag_string("simple", ""));
-    write_swapped((uint32_t) tag_int("pointer1", 0));
-    write_string(tag_string("file_section_type", ""));
-    write_swapped((uint32_t) tag_int("magic1", 0));
-    write_swapped((uint32_t) tag_int("magic2", 0));
-
-    double global_res = tag_double(TTTRTagGlobRes, 1.0);
-    write_string(tag_string("col1_name", ""));
-    write_swapped(tag_double("col1_resolution", 1.0));
-    write_swapped(tag_double("col1_offset", 0.0));
-    write_swapped((uint32_t) tag_int("col1_bho", 0));
-    // The macro time resolution is stored as the column-2 resolution
-    write_string(tag_string("col2_name", ""));
-    write_swapped(tag_double("col2_resolution", global_res));
-    write_swapped(tag_double("col2_offset", 0.0));
-    write_swapped((uint32_t) tag_int("col2_bho", 0));
-    write_string(tag_string("col3_name", ""));
-    write_swapped(tag_double("col3_resolution", 1.0));
-    write_swapped(tag_double("col3_offset", 0.0));
-
-    // Channel labels are skipped on reading and hence not retained;
-    // write zero channel labels to keep the header self-consistent.
-    write_swapped((int32_t) 0);
-    fclose(fp);
-}
 
 
-void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, std::string modes){
-if (is_verbose()) {
-    std::clog << "-- WRITE_CZ_CONFOCOR3_HEADER" << std::endl;
-}
-    nlohmann::json &json = header->json_data();
-    auto tag_int = [&json](const std::string &name, int32_t d) -> int32_t {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_number() ? (int32_t) v.get<double>() : d;
-    };
-    auto tag_double = [&json](const std::string &name, double d) -> double {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_number() ? v.get<double>() : d;
-    };
-    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_string() ? v.get<std::string>() : d;
-    };
 
-    cz_confocor3_settings_t settings;
-    std::memset(&settings, 0, sizeof(settings));
-    const char* ident = "Carl Zeiss ConfoCor3 - raw data";
-    std::strncpy(settings.bits.Ident, ident, sizeof(settings.bits.Ident) - 1);
-    // channel number is stored as an ASCII digit (see read_cz_confocor3_header)
-    settings.bits.channel = '0' + (tag_int("channel", 1) & 0xFF);
-    // measure_id is stored as a 32-character hex string tag
-    std::string measure_id = tag_string("measure_id", "");
-    for (int i = 0; i < 4; i++) {
-        if (measure_id.size() >= (size_t)(i + 1) * 8) {
-            settings.bits.measure_id[i] = (uint32_t) std::stoul(
-                    measure_id.substr(i * 8, 8), nullptr, 16);
-        }
-    }
-    // the reader reports these one-based
-    settings.bits.measurement_position = (uint32_t) std::max(0, tag_int("measurement_position", 1) - 1);
-    settings.bits.kinetic_index = (uint32_t) std::max(0, tag_int("kinetic_index", 1) - 1);
-    settings.bits.repetition_number = (uint32_t) std::max(0, tag_int("repetition_number", 1) - 1);
-    // the macro time clock is stored as a frequency
-    double mt_clk = tag_double(TTTRTagGlobRes, 1.0);
-    settings.bits.frequency = (uint32_t) std::llround(1.0 / mt_clk);
 
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
-    if (fp == nullptr) {
-        std::cerr << "ERROR: Cannot write CZ header to file: " << fn << std::endl;
-        return;
-    }
-    fwrite(&settings, sizeof(settings), 1, fp);
-    fclose(fp);
-}
 
 
 
@@ -1658,4 +1419,24 @@ nlohmann::json TTTRHeader::get_tag(const nlohmann::json &json_data,
 
 int TTTRHeader::find_tag(nlohmann::json &json_data, const std::string &name, int idx) {
     return tttrlib::io::find_tag(json_data, name, idx);
+}
+
+// --- vendor header readers/writers, now owned by their io_* modules ---------
+// Declarations stay on TTTRHeader: they are public static API that the Java and
+// Python bindings both expose. Only the implementations moved.
+
+size_t TTTRHeader::read_sm_header(FILE* file, nlohmann::json &j) {
+    return tttrlib::io::read_sm_header(file, j);
+}
+
+void TTTRHeader::write_sm_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_sm_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+size_t TTTRHeader::read_cz_confocor3_header(std::FILE *fpin, nlohmann::json &data, bool rewind) {
+    return tttrlib::io::read_cz_confocor3_header(fpin, data, rewind);
+}
+
+void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_cz_confocor3_header(std::move(fn), header->json_data(), std::move(modes));
 }

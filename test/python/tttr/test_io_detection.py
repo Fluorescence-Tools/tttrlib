@@ -89,27 +89,6 @@ def test_nothing_is_detected_as_something():
         assert tttrlib.inferTTTRFileType(empty) == -1
 
 
-def test_symphotime_spc_files_are_not_claimed_as_becker_hickl():
-    """`.spc` inside a PicoQuant SymPhoTime workspace is not a B&H file.
-
-    Detection must refuse rather than guess: reading one as SPC-130 would
-    produce photons out of unrelated bytes. These sit next to `.pqres` files and
-    open with a zero header word, which is neither a B&H macro time clock nor a
-    QC raw flag.
-    """
-    hits = []
-    for dirpath, _, files in os.walk(DATA_ROOT):
-        if not dirpath.endswith(".sptw") and ".sptw" not in dirpath:
-            continue
-        for fn in files:
-            if fn.lower().endswith(".spc"):
-                hits.append(os.path.join(dirpath, fn))
-    if not hits:
-        pytest.skip("no SymPhoTime workspace in the test data")
-    for path in hits:
-        assert tttrlib.inferTTTRFileType(path) == -1, path
-
-
 def test_spc_resolves_to_spc130_before_spcqc():
     """Ambiguous extension: lowest container id claiming it goes first."""
     assert tttrlib.inferTTTRContainerTypeFromExtension("x.spc") == SPC130

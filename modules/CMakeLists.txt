@@ -27,6 +27,8 @@
 add_subdirectory(util)
 add_subdirectory(io)
 add_subdirectory(io_photonscore)
+add_subdirectory(io_sm)
+add_subdirectory(io_carlzeiss)
 add_subdirectory(opt)
 add_subdirectory(hist)
 add_subdirectory(imageio)

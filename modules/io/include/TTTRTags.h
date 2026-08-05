@@ -25,7 +25,22 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include <string>
+
 #include "TTTRHeaderTypes.h"
+
+// some important Tag Idents (TTagHead.Ident) that we will need to read the most common content of a PTU file
+// check the output of this program and consult the tag dictionary if you need more
+const std::string TTTRTagRes = "MeasDesc_Resolution";              // Resolution for the Dtime (T3 Only) - in seconds
+const std::string TTTRTagGlobRes = "MeasDesc_GlobalResolution";    // Global Resolution of TimeTag(T2) /NSync (T3) - in seconds
+const std::string TTTRSyncRate = "SyncRate";                       // SyncRate - in Hz
+const std::string TTTRNMicroTimes = "MeasDesc_NumberMicrotimes";   // The number of micro time channels
+const std::string TTTRRecordType = "MeasDesc_RecordType";         // Internal record type (see tttrlib record type identifier definitions)
+const std::string TTTRContainerType = "MeasDesc_ContainerType";   // Internal container type (see tttrlib record type identifier definitions)
+const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
+const std::string TTTRTagBits = "TTResultFormat_BitsPerRecord";    // Bits per TTTR record
+const std::string TTTRTagNumRecords = "TTResult_NumberOfRecords";  // Number of TTTR records in the file
+const std::string FileTagEnd = "Header_End";                       // Always appended as last tag (BLOCKEND)
 
 namespace tttrlib {
 namespace io {

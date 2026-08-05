@@ -32,54 +32,19 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include "ByteOrder.h"
+#include "TTTRTags.h"
 #include "Histogram.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
 #include "TTTRHeaderTypes.h"
 
-// some important Tag Idents (TTagHead.Ident) that we will need to read the most common content of a PTU file
-// check the output of this program and consult the tag dictionary if you need more
-const std::string TTTRTagRes = "MeasDesc_Resolution";              // Resolution for the Dtime (T3 Only) - in seconds
-const std::string TTTRTagGlobRes = "MeasDesc_GlobalResolution";    // Global Resolution of TimeTag(T2) /NSync (T3) - in seconds
-const std::string TTTRSyncRate = "SyncRate";                       // SyncRate - in Hz
-const std::string TTTRNMicroTimes = "MeasDesc_NumberMicrotimes";   // The number of micro time channels
-const std::string TTTRRecordType = "MeasDesc_RecordType";         // Internal record type (see tttrlib record type identifier definitions)
-const std::string TTTRContainerType = "MeasDesc_ContainerType";   // Internal container type (see tttrlib record type identifier definitions)
-const std::string TTTRTagTTTRRecType = "TTResultFormat_TTTRRecType";
-const std::string TTTRTagBits = "TTResultFormat_BitsPerRecord";    // Bits per TTTR record
-const std::string TTTRTagNumRecords = "TTResult_NumberOfRecords";  // Number of TTTR records in the file
-const std::string FileTagEnd = "Header_End";                       // Always appended as last tag (BLOCKEND)
+// The tag-name constants moved to io/TTTRTags.h, which this header includes:
+// they are data, and every vendor header reader needs them.
 
 
-/**
- * Swaps the endianness of a given value.
- *
- * This function takes a reference to a value of any type `T` and swaps its byte order
- * between little-endian and big-endian formats. It uses a union to access the raw bytes
- * of the value and reverses the byte order using `std::reverse_copy`.
- *
- * @tparam T The type of the value whose endianness is to be swapped. Must be trivially
- *            copyable and have a defined byte size.
- * @param val A reference to the value whose endianness is to be swapped. The value is
- *            modified in-place.
- *
- * Example:
- *
- * int32_t original = 0x12345678;
- * SwapEndian(original);
- * // original now contains 0x78563412
- */
-template <typename T>
-void SwapEndian(T &val) {
-    union U {
-        T val;
-        std::array<std::uint8_t, sizeof(T)> raw;
-    } src, dst;
-
-    src.val = val;
-    std::reverse_copy(src.raw.begin(), src.raw.end(), dst.raw.begin());
-    val = dst.val;
-}
+// SwapEndian moved to util/ByteOrder.h -- it is a generic byte-swap and every
+// big-endian format reader needs it. Included below, so this is not an API change.
 
 
 class TTTRHeader {

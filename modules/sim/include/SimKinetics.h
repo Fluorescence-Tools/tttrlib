@@ -139,6 +139,96 @@ inline std::vector<double> sim_occupation_fractions(
     return out;
 }
 
+/*!
+ * \brief State of the chain at each of a set of observation times.
+ *
+ * The companion to \ref sim_occupation_fractions, for when the question is not
+ * how long a window spent in each state but *which state it was in* at the
+ * moments something was observed -- a photon arriving, say. The chain is walked
+ * by the same Gillespie construction and read off at each time.
+ *
+ * Times must be ascending and are absolute, not gaps. A photon-by-photon
+ * analysis has them already.
+ *
+ * @param k row-major source->target rates, `n_states * n_states`; diagonal ignored.
+ * @param n_states number of states.
+ * @param times ascending observation times, in the reciprocal of the rate unit.
+ * @param p0 initial state distribution; empty means uniform.
+ * @param seed RNG seed.
+ * @return one state index per entry of `times`.
+ */
+inline std::vector<int> sim_state_at_times(
+    const std::vector<double>& k,
+    int n_states,
+    const std::vector<double>& times,
+    const std::vector<double>& p0,
+    uint64_t seed)
+{
+    if (n_states < 1)
+        throw std::invalid_argument("sim_state_at_times: n_states must be positive");
+    if (int(k.size()) != n_states * n_states)
+        throw std::invalid_argument(
+            "sim_state_at_times: rate matrix must have n_states * n_states entries");
+    if (!p0.empty() && int(p0.size()) != n_states)
+        throw std::invalid_argument(
+            "sim_state_at_times: p0 must have one entry per state");
+
+    std::vector<double> exit(n_states, 0.0);
+    for (int i = 0; i < n_states; ++i) {
+        double s = 0.0;
+        for (int j = 0; j < n_states; ++j)
+            if (j != i && k[size_t(i) * n_states + j] > 0.0)
+                s += k[size_t(i) * n_states + j];
+        exit[i] = s;
+    }
+
+    std::vector<double> start(n_states, 0.0);
+    double total = 0.0;
+    for (int i = 0; i < n_states; ++i) {
+        total += p0.empty() ? 1.0 : (p0[i] > 0.0 ? p0[i] : 0.0);
+        start[i] = total;
+    }
+    if (!(total > 0.0))
+        throw std::invalid_argument("sim_state_at_times: p0 has no positive weight");
+
+    tttrlib::SimRandom rng{uint32_t(seed)};
+    const double u = rng.random0i1e() * total;
+    int state = n_states - 1;
+    for (int i = 0; i < n_states; ++i)
+        if (u < start[i]) { state = i; break; }
+
+    std::vector<int> out;
+    out.reserve(times.size());
+    double clock = 0.0, next = 0.0;
+    bool armed = false;
+    for (double t : times) {
+        for (;;) {
+            const double rate = exit[state];
+            if (!(rate > 0.0)) break;
+            if (!armed) {
+                next = clock - std::log(rng.random0e1e()) / rate;
+                armed = true;
+            }
+            if (next >= t) break;
+            clock = next;
+            armed = false;
+            double r = rng.random0i1e() * rate;
+            int target = state;
+            for (int j = 0; j < n_states; ++j) {
+                if (j == state) continue;
+                const double kij = k[size_t(state) * n_states + j];
+                if (kij <= 0.0) continue;
+                r -= kij;
+                if (r <= 0.0) { target = j; break; }
+                target = j;
+            }
+            state = target;
+        }
+        out.push_back(state);
+    }
+    return out;
+}
+
 }  // namespace SimKinetics
 }  // namespace tttrlib
 
