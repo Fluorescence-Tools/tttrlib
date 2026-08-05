@@ -276,9 +276,53 @@ Windows, so no extra setup is needed. Full instructions and usage:
 
 ## Supported file formats
 
-- PicoQuant: PicoHarp, TimeHarp, HydraHarp (`ptu`, `ht3`, T2/T3)
-- Becker & Hickl: `spc132`, `spc630` in 256 and 4096 mode
-- Photon-HDF5: open photon-data format
+🟢 works · 🟡 partial, see note · 🔴 not supported
+
+| Format | Extension | Read | Write | Identified from contents | Notes |
+|---|---|:--:|:--:|:--:|---|
+| PicoQuant PTU | `.ptu` | 🟢 | 🟢 | 🟢 | PicoHarp, TimeHarp, HydraHarp; 8 T2/T3 record encodings |
+| PicoQuant HT3 | `.ht3` | 🟢 | 🟢 | 🟢 | HydraHarp v1/v2, plus SF macro-time compression |
+| Becker & Hickl SPC-130 | `.spc` | 🟢 | 🟢 | 🟢 | |
+| Becker & Hickl SPC-600 (256) | `.spc` | 🟢 | 🟢 | 🟡 | must be named: not distinguishable from other `.spc` by content |
+| Becker & Hickl SPC-600 (4096) | `.spc` | 🟢 | 🟢 | 🟡 | as above |
+| Becker & Hickl SPC-QC | `.spc` | 🟢 | 🟢 | 🟢 | QC-x04 and QC-x06; reads the `.set` sidecar for TAC range and imaging geometry |
+| Photon-HDF5 | `.h5` `.hdf5` | 🟢 | 🟢 | 🟢 | stores decoded arrays, so any record encoding is acceptable |
+| Zeiss ConfoCor3 | `.raw` | 🟢 | 🟢 | 🟢 | |
+| Single-molecule (SM) | `.sm` | 🟢 | 🟢 | 🟡 | accepted on extension alone; the contents are not checked |
+| Photonscore LINCam | `.photons` | 🟢 | 🟢 | 🟢 | D7; `x`/`y` positions are carried as marker events |
+| BrightEyes-TTM | `.ttr` | 🔴 | 🔴 | 🔴 | planned. A bare `uint16` stream with no header or magic, so it can never be identified from contents; needs per-channel TDC calibration |
+| FLIM LABS `STT1` | `.bin` | 🟡 | 🔴 | 🟡 | planned. The format is fully specified, but **no example file is published anywhere**, so a reader cannot be verified against real data — see below |
+
+Every supported container round-trips: writing photons into any of them and
+reading them back returns identical arrival times. Micro times survive only
+where the target format can hold them — SPC-130 and SPC-QC have 12 bits,
+SPC-600 (256) has 8, ConfoCor3 has 1 and SM has none — so transcoding into a
+narrower container is lossy by construction rather than by defect.
+
+Detection uses the extension as a hint, not an answer. Every format claiming the
+extension is tried in turn and asked to recognise the contents; if none does,
+every format that can identify itself from bytes is asked. A correctly formatted
+file with an unhelpful name, or no extension at all, is still identified.
+
+### FLIM LABS
+
+FLIM LABS writes four different `.bin` formats and only one of them is a photon
+stream. `SP01` (binned decay curves), `SPF1` (phasors), `IT02` (intensity
+traces) and `FCS1` (correlation curves) are analysis products — there are no
+photons left in them, so tttrlib has nothing to read them into. Only `STT1`, the
+spectroscopy time tagger, is a TTTR container.
+
+Its layout is known exactly: `STT1` magic, a little-endian `u32` header length,
+a JSON header carrying the enabled channels and the laser period, then 17-byte
+records of `{u8 event, f64 micro time (ns), f64 macro time (ns)}` which are
+**not** sorted by arrival time. Event codes 70, 76 and 80 are ASCII `F`, `L` and
+`P` for frame, line and pixel; anything else is a channel index.
+
+What is missing is data. No `STT1` file is published in any FLIM LABS
+repository, and the PyPI package that writes them is a Windows-only driver for
+their FPGA hardware. If you have an `STT1` file and can share it, please open an
+issue — that is the one thing standing between the specification and a tested
+reader.
 
 ## Feedback and contributions
 
