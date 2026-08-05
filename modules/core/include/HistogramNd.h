@@ -28,6 +28,7 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
@@ -470,16 +471,152 @@ private:
             std::memcpy(*out, v.data(), v.size() * sizeof(double));
     }
 
+    /*!
+     * One axis, reduced to the numbers an affine bin lookup needs.
+     *
+     * Axis::index switches on the axis kind for every value of every axis. That
+     * is the right shape for a description and the wrong one for an inner loop:
+     * with two axes and ten million points it is twenty million jump-table
+     * dispatches, and it made the general fill twice as slow as boost's while
+     * the specialised histogram2D was faster than it. Axes that are plain
+     * ranges -- which is nearly all of them -- collapse to this instead.
+     */
+    /// Ranks above this fall back to the general Axis::index path. Nothing
+    /// real histograms in nine dimensions.
+    static constexpr int kMaxFastRank = 8;
+
+    struct FastAxis {
+        double offset = 0.0, inv_width = 1.0;
+        int n = 0, shift = 0, stride = 1;
+        bool has_under = false, has_over = false;
+    };
+
+    /// True when every axis is a plain untransformed range, so FastAxis applies.
+    bool all_axes_affine() const {
+        for (const Axis& a : axes_) {
+            if (a.kind() != AxisKind::Regular) return false;
+            if (a.options().circular || a.options().growth) return false;
+        }
+        return true;
+    }
+
+    std::vector<FastAxis> fast_axes() const {
+        const std::vector<int> strides = compute_strides();
+        std::vector<FastAxis> f(axes_.size());
+        for (std::size_t d = 0; d < axes_.size(); d++) {
+            const Axis& a = axes_[d];
+            f[d].offset = a.lo();
+            f[d].inv_width = a.size() / (a.hi() - a.lo());
+            f[d].n = a.size();
+            f[d].has_under = a.options().underflow;
+            f[d].has_over = a.options().overflow;
+            f[d].shift = f[d].has_under ? 1 : 0;
+            f[d].stride = strides[d];
+        }
+        return f;
+    }
+
     template<typename Get>
     void fill_with(Get get, long long n_points, const double* weights, int n_threads) {
         if (n_points <= 0) return;
         grow_to_fit(get, n_points);
 
         const int r = rank();
-        std::vector<int> strides = compute_strides();
+        const int n_cells = static_cast<int>(values_.size());
 
-        // The flat cell for a point, or -1 when any axis has no bin for it.
-        auto cell_of = [&](long long i) -> int {
+        // Variance needs a second accumulator per cell, and the shared fast
+        // paths accumulate one array. Two passes over the same partition would
+        // desynchronise from them for no gain, so the weighted-variance fill is
+        // its own serial loop -- it is the rarer case, and the pairing of a
+        // value with its variance matters more than its speed.
+        if (track_variance_) {
+            const std::vector<int> strides = compute_strides();
+            for (long long i = 0; i < n_points; i++) {
+                int flat = 0;
+                bool ok = true;
+                for (int d = 0; d < r && ok; d++) {
+                    const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
+                    if (slot < 0) ok = false; else flat += slot * strides[d];
+                }
+                if (!ok) continue;
+                const double w = weights ? weights[i] : 1.0;
+                values_[flat] += w;
+                variances_[flat] += w * w;
+            }
+            return;
+        }
+
+        // Rank 1 and 2 over plain ranges get their own closures, with the axis
+        // constants captured BY VALUE. Reading them through a pointer into a
+        // heap vector costs a load per axis per point, which the compiler
+        // cannot hoist because it cannot prove the vector is not aliased by the
+        // histogram being written -- and that alone made the general fill 1.4x
+        // slower than boost's while the arithmetic was identical.
+        if (all_axes_affine() && r > 2 && r <= kMaxFastRank) {
+            // Rank 3 and above, still over plain ranges. The axis constants go
+            // into a fixed-size array captured BY VALUE for the same reason as
+            // below -- read through a pointer they cost a load per axis per
+            // point, and a 3-D fill was 2x slower than boost's that way.
+            const std::vector<FastAxis> fa = fast_axes();
+            std::array<FastAxis, kMaxFastRank> a{};
+            for (int d = 0; d < r; d++) a[d] = fa[d];
+            dispatch_fill(n_points, n_cells, weights, n_threads,
+                          [a, r, get](long long i) -> int {
+                int flat = 0;
+                for (int d = 0; d < r; d++) {
+                    const FastAxis& ad = a[d];
+                    const int idx = static_cast<int>(
+                            std::floor((get(d, i) - ad.offset) * ad.inv_width));
+                    int s;
+                    if (idx < 0) { if (!ad.has_under) return -1; s = 0; }
+                    else if (idx >= ad.n) { if (!ad.has_over) return -1; s = ad.n + ad.shift; }
+                    else s = idx + ad.shift;
+                    flat += s * ad.stride;
+                }
+                return flat;
+            });
+            return;
+        }
+        if (all_axes_affine() && (r == 1 || r == 2)) {
+            const std::vector<FastAxis> fa = fast_axes();
+            if (r == 1) {
+                const FastAxis a = fa[0];
+                dispatch_fill(n_points, n_cells, weights, n_threads,
+                              [a, get](long long i) -> int {
+                    const int idx = static_cast<int>(
+                            std::floor((get(0, i) - a.offset) * a.inv_width));
+                    if (idx < 0) return a.has_under ? 0 : -1;
+                    if (idx >= a.n) return a.has_over ? (a.n + a.shift) * a.stride : -1;
+                    return (idx + a.shift) * a.stride;
+                });
+            } else {
+                const FastAxis a0 = fa[0], a1 = fa[1];
+                dispatch_fill(n_points, n_cells, weights, n_threads,
+                              [a0, a1, get](long long i) -> int {
+                    const int i0 = static_cast<int>(
+                            std::floor((get(0, i) - a0.offset) * a0.inv_width));
+                    int s0;
+                    if (i0 < 0) { if (!a0.has_under) return -1; s0 = 0; }
+                    else if (i0 >= a0.n) { if (!a0.has_over) return -1; s0 = a0.n + a0.shift; }
+                    else s0 = i0 + a0.shift;
+                    const int i1 = static_cast<int>(
+                            std::floor((get(1, i) - a1.offset) * a1.inv_width));
+                    int s1;
+                    if (i1 < 0) { if (!a1.has_under) return -1; s1 = 0; }
+                    else if (i1 >= a1.n) { if (!a1.has_over) return -1; s1 = a1.n + a1.shift; }
+                    else s1 = i1 + a1.shift;
+                    return s0 * a0.stride + s1 * a1.stride;
+                });
+            }
+            return;
+        }
+
+        // Everything else -- transformed, categorical, circular, growing, or
+        // rank 3 and above -- goes through Axis::index, which is general and
+        // slower and is not on anybody's inner loop.
+        const std::vector<int> strides = compute_strides();
+        dispatch_fill(n_points, n_cells, weights, n_threads,
+                      [&](long long i) -> int {
             int flat = 0;
             for (int d = 0; d < r; d++) {
                 const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
@@ -487,35 +624,22 @@ private:
                 flat += slot * strides[d];
             }
             return flat;
-        };
+        });
+    }
 
-
-        const int n_cells = static_cast<int>(values_.size());
+    /// Pick a fill strategy for `cell_of` and run it. \see Histogram.h
+    template<typename CellFn>
+    void dispatch_fill(long long n_points, int n_cells, const double* weights,
+                       int n_threads, CellFn cell_of) {
         const unsigned threads = histogram_fill_threads(n_points, n_cells, n_threads);
-
-        // Variance needs a second accumulator per cell, and the shared fast
-        // paths accumulate one array. Two passes over the same partition would
-        // desynchronise from them for no gain, so the weighted-variance fill is
-        // its own serial loop -- it is the rarer case and correctness of the
-        // pairing matters more than its speed.
-        if (track_variance_) {
-            for (long long i = 0; i < n_points; i++) {
-                const int c = cell_of(i);
-                if (c < 0) continue;
-                const double w = weights ? weights[i] : 1.0;
-                values_[c] += w;
-                variances_[c] += w * w;
-            }
-            return;
-        }
-
+        double* out0 = values_.data();
         if (threads > 1) {
             if (histogram_should_partition(n_cells, threads)) {
-                histogram_partitioned_fill(values_.data(), n_cells, n_points, threads,
+                histogram_partitioned_fill(out0, n_cells, n_points, threads,
                                            weights, weights != nullptr, cell_of);
             } else {
                 histogram_parallel_fill(
-                        values_.data(), n_cells, n_points, threads,
+                        out0, n_cells, n_points, threads,
                         [&](long long a, long long b, double* out) {
                             for (long long i = a; i < b; i++) {
                                 const int c = cell_of(i);
@@ -527,7 +651,7 @@ private:
         }
         for (long long i = 0; i < n_points; i++) {
             const int c = cell_of(i);
-            if (c >= 0) values_[c] += weights ? weights[i] : 1.0;
+            if (c >= 0) out0[c] += weights ? weights[i] : 1.0;
         }
     }
 
