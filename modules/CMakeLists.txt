@@ -26,6 +26,7 @@
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
 add_subdirectory(util)
 add_subdirectory(io)
+add_subdirectory(io_photonscore)
 add_subdirectory(opt)
 add_subdirectory(hist)
 add_subdirectory(imageio)

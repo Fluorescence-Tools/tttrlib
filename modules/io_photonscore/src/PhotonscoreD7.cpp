@@ -6,7 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "FileCheck.h" // open_file (Unicode-safe), fseek64/ftell64
+#include "FileIO.h"    // open_file (Unicode-safe), fseek64/ftell64
 
 namespace photonscore {
 
