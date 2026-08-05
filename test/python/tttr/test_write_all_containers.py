@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(not DATA_AVAILABLE, reason="test data not availa
 # number is the largest micro time the container can hold.
 NARROW_MICRO_TIME = {
     "SPC-130": 4095, "SPC-600_256": 255, "SPC-600_4096": 4095,
-    "SPC-QC": 4095, "CZ-RAW": 1, "SM": 0,
+    "SPC-QC": 4095, "CZ-RAW": 1, "SM": 0, "BRIGHTEYES-TTR": 255,
 }
 
 

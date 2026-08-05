@@ -45,8 +45,7 @@ def test_registered_as_a_container(ttr_path):
     assert entry["container_type"] == BE_TTR
     assert entry["extensions"] == ".ttr"
     assert entry["can_read"] is True
-    # Nothing to write yet, and the format has no header to put anything in.
-    assert entry["can_write"] is False
+    assert entry["can_write"] is True
 
 
 def test_never_identified_from_contents(ttr_path):
@@ -143,6 +142,49 @@ def test_one_line_clock_is_not_read_as_alternating_start_stop(data):
                           (data.routing_channels == MARKER_LINE)).sum())
     img = _clsm(data)
     assert img.n_lines > 0.9 * n_line_markers
+
+
+def test_round_trips_through_its_own_writer(data, tmp_path):
+    """Every event array, bit for bit, markers included.
+
+    The counter in the file is 16 bits and the reader recovers absolute time by
+    counting decreases, so a stream starting hundreds of millions of ticks in
+    only survives if the writer walks the counter up from zero.
+    """
+    out = str(tmp_path / "rt.ttr")
+    assert data.write(out, "BRIGHTEYES-TTR")
+    back = tttrlib.TTTR(out, "BRIGHTEYES-TTR")
+
+    assert back.n_valid_events == data.n_valid_events
+    for name in ("macro_times", "micro_times", "routing_channels", "event_types"):
+        assert np.array_equal(np.asarray(getattr(back, name)),
+                              np.asarray(getattr(data, name))), name
+
+
+def test_the_written_file_still_reconstructs_the_image(data, ttr_path, tmp_path):
+    """Markers are edges in the file, so they are the part a writer loses."""
+    if "512x512" not in os.path.basename(ttr_path):
+        pytest.skip("geometry assertion is specific to the 512x512 sample")
+    out = str(tmp_path / "rt.ttr")
+    data.write(out, "BRIGHTEYES-TTR")
+    img = _clsm(tttrlib.TTTR(out, "BRIGHTEYES-TTR"),
+                use_pixel_markers=True, marker_pixel=MARKER_PIXEL)
+    assert (img.n_frames, img.n_lines, img.n_pixel) == (1, 512, 512)
+
+
+def test_refuses_what_the_format_cannot_hold(data, tmp_path):
+    """A marker that is not the pixel, line or frame clock has no field.
+
+    Refusing beats writing a file that quietly lacks it.
+    """
+    sel = tttrlib.TTTR(data, np.arange(1000, dtype=np.int32))
+    et = np.asarray(sel.event_types).astype(np.int8)
+    ch = np.asarray(sel.routing_channels).astype(np.int8)
+    et[0], ch[0] = 1, 9          # a marker on a channel the format has no bit for
+    bad = tttrlib.TTTR()
+    bad.append_events(np.asarray(sel.macro_times).astype(np.uint64),
+                      np.asarray(sel.micro_times).astype(np.uint16), ch, et)
+    assert not bad.write(str(tmp_path / "bad.ttr"), "BRIGHTEYES-TTR")
 
 
 def test_matches_the_official_libttp_reader(ttr_path, data):

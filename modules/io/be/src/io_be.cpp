@@ -221,5 +221,187 @@ TtrData read_ttr(const std::string& filename, const TtrParams& params) {
     return out;
 }
 
+namespace {
+
+/*!
+ * Emits the word stream, and owns the one piece of state that makes a ``.ttr``
+ * writable at all: the coarse counter.
+ *
+ * The counter in the file is 16 bits and the reader recovers absolute time by
+ * counting decreases, so the writer can only ever step it forward by less than
+ * one wrap at a time. kStepAdvance is 65535 rather than 65536 for exactly that
+ * reason -- a stride of a full wrap leaves the written value unchanged, the
+ * reader sees no decrease, and the wrap is lost.
+ *
+ * Starting the stream at counter 0 is what makes the absolute offset survive:
+ * the reader's first record fixes cumulative = step, so a file whose first
+ * event is at tick 2.9e9 must be walked up to from zero.
+ */
+class TtrWriter {
+public:
+    TtrWriter(FILE* f, int n_channels) : f_(f), n_channels_(n_channels) {}
+
+    /// Advance the counter to \p macro, emitting empty records as needed.
+    void advance_to(uint64_t macro) {
+        // Unsigned arithmetic below: a macro time that went backwards would
+        // wrap the difference to ~2^64 and the loop would try to write 2.8e14
+        // records rather than fail.
+        if (macro < cumulative_) {
+            throw std::runtime_error("BrightEyes-TTM: macro times must not decrease");
+        }
+        while (macro - cumulative_ >= kStepWrap) {
+            cumulative_ += kStepAdvance;
+            emit_record();
+        }
+        cumulative_ = macro;
+    }
+
+    void add_photon(int channel, uint16_t micro) {
+        if (channel < 0 || channel >= n_channels_) {
+            throw std::runtime_error(
+                "BrightEyes-TTM: no channel " + std::to_string(channel) +
+                " on a " + std::to_string(n_channels_) + "-element device");
+        }
+        // 8-bit TDC payload; saturate rather than alias.
+        photons_.emplace_back(channel, static_cast<int>(std::min<uint16_t>(micro, 255)));
+    }
+
+    void add_marker(int channel) {
+        switch (channel) {
+            case TtrData::MARKER_PIXEL: pixel_ = true; break;
+            // Line and frame are edges in the file, not levels. Asking for a
+            // second one while the enable is still asserted means the enable has
+            // to fall first, which costs a record -- free, since it carries no
+            // events and does not move the counter.
+            case TtrData::MARKER_LINE:
+                if (line_) { flush(); }
+                line_ = true;
+                break;
+            case TtrData::MARKER_FRAME:
+                if (frame_) { flush(); }
+                frame_ = true;
+                break;
+            default:
+                throw std::runtime_error(
+                    "BrightEyes-TTM: marker channel " + std::to_string(channel) +
+                    " is not the pixel, line or frame clock (1, 2, 3)");
+        }
+    }
+
+    /// Write out everything accumulated for the current tick.
+    void flush() {
+        if (photons_.empty() && !pixel_ && !line_ && !frame_) return;
+        emit_record();
+    }
+
+private:
+    static constexpr uint64_t kStepAdvance = kStepWrap - 1;
+
+    void put(uint16_t w) {
+        const unsigned char bytes[2] = {
+            static_cast<unsigned char>(w & 0xFF),
+            static_cast<unsigned char>((w >> 8) & 0xFF)
+        };
+        if (std::fwrite(bytes, 1, 2, f_) != 2) {
+            throw std::runtime_error("BrightEyes-TTM: short write");
+        }
+    }
+
+    void emit_record() {
+        // A line or frame marker is a RISING edge of an enable that the reader
+        // compares against the previous record. Two in a row therefore need the
+        // enable to fall in between, or the second one simply is not there. The
+        // dropping record carries no events and does not move the counter, so
+        // inserting it changes nothing else.
+        if ((line_ && emitted_line_) || (frame_ && emitted_frame_)) {
+            const bool line = line_, frame = frame_, pixel = pixel_;
+            auto photons = std::move(photons_);
+            photons_.clear();
+            line_ = frame_ = pixel_ = false;
+            emit_words();
+            photons_ = std::move(photons);
+            line_ = line; frame_ = frame; pixel_ = pixel;
+        }
+        emit_words();
+    }
+
+    void emit_words() {
+        // The laser reference goes in as code 0, so a photon's micro time is
+        // its own payload. The file has no absolute phase to preserve -- a micro
+        // time here is already a difference against the laser -- so any other
+        // reference would only be subtracted back out on the next read.
+        if (!photons_.empty()) {
+            put(static_cast<uint16_t>(0x8000 | (kIdLaser << 8)));
+            for (const auto& p : photons_) {
+                put(static_cast<uint16_t>(0x8000 | (p.first << 8) | p.second));
+            }
+        }
+        const uint32_t step = static_cast<uint32_t>(cumulative_ % kStepWrap);
+        // ID 126 carries scan_enable, which is the FRAME clock, and ID 127
+        // line_enable, which is the LINE clock. The names read the other way
+        // round; the vendor decoder does not.
+        const int a = static_cast<int>(step & 0x7F)         | (pixel_ ? 0x80 : 0);
+        const int b = static_cast<int>((step >> 7) & 0x7F)  | (frame_ ? 0x80 : 0);
+        const int c = static_cast<int>((step >> 14) & 0x7F) | (line_  ? 0x80 : 0);
+        put(static_cast<uint16_t>(0x8000 | (kIdStepA << 8) | a));
+        put(static_cast<uint16_t>(0x8000 | (kIdStepB << 8) | b));
+        put(static_cast<uint16_t>(0x8000 | (kIdStepC << 8) | c));
+
+        emitted_line_ = line_;
+        emitted_frame_ = frame_;
+        photons_.clear();
+        pixel_ = line_ = frame_ = false;
+    }
+
+    FILE* f_;
+    int n_channels_;
+    uint64_t cumulative_ = 0;
+    std::vector<std::pair<int, int>> photons_;
+    bool pixel_ = false, line_ = false, frame_ = false;
+    /// Enable levels of the record last written, which is what the reader
+    /// compares against to find an edge.
+    bool emitted_line_ = false, emitted_frame_ = false;
+};
+
+}  // namespace
+
+void write_ttr(const std::string& filename,
+               const uint64_t* macro_times,
+               const uint16_t* micro_times,
+               const int8_t* routing_channels,
+               const int8_t* event_types,
+               std::size_t n_events,
+               const TtrParams& params) {
+    FILE* f = open_file(filename, "wb");
+    if (f == nullptr) throw std::runtime_error("cannot open for writing: " + filename);
+
+    try {
+        TtrWriter w(f, params.n_channels);
+        std::size_t i = 0;
+        while (i < n_events) {
+            const uint64_t macro = macro_times[i];
+            w.advance_to(macro);
+
+            // Everything at this tick goes into one record. Photons first, then
+            // the scanner clocks, because that is the order a record decodes in.
+            std::size_t j = i;
+            for (; j < n_events && macro_times[j] == macro; ++j) {
+                if (event_types[j] == 0) {
+                    w.add_photon(routing_channels[j], micro_times[j]);
+                }
+            }
+            for (std::size_t k = i; k < j; ++k) {
+                if (event_types[k] != 0) w.add_marker(routing_channels[k]);
+            }
+            w.flush();
+            i = j;
+        }
+    } catch (...) {
+        std::fclose(f);
+        throw;
+    }
+    std::fclose(f);
+}
+
 }  // namespace io
 }  // namespace tttrlib

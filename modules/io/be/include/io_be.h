@@ -139,6 +139,49 @@ TtrStats scan_ttr(const std::string& filename, const TtrParams& params = {});
 /// Decode \p filename into per-event arrays.
 TtrData read_ttr(const std::string& filename, const TtrParams& params = {});
 
+/*!
+ * \brief Encode per-event arrays as a ``.ttr`` stream and write it.
+ *
+ * \section ttr_write_exact What survives, exactly
+ *
+ * Macro times, to the tick, including the absolute offset. The counter in the
+ * file is 16 bits and the reader unwraps it by counting decreases, so the
+ * writer emits empty records -- records the hardware itself emits whenever a
+ * sample clock ticks and nothing happens -- to carry the counter across every
+ * gap larger than one wrap. A file that begins 2.9e9 ticks in costs about 44000
+ * of them, which is six words each.
+ *
+ * Routing channels, and the number of events.
+ *
+ * \section ttr_write_lossy What does not
+ *
+ * Micro times are saturated to 8 bits, because that is the width of the TDC
+ * payload. Saturation rather than truncation, matching the other narrow
+ * containers: a photon that arrived late reads as late, instead of aliasing
+ * back to early.
+ *
+ * Order within a single macro tick is normalised to photons, then pixel, line
+ * and frame markers -- the order a record is decoded in. Events at the same
+ * tick have no defined order in the format, so there is nothing to preserve.
+ *
+ * \section ttr_write_refuse What it refuses
+ *
+ * A photon on a channel the device does not have (outside
+ * ``0..n_channels-1``), or a marker that is not the pixel, line or frame clock.
+ * There is no field for either, and writing a file that quietly lacks them is
+ * worse than not writing one.
+ *
+ * \throws std::runtime_error if the file cannot be written, or if the events
+ *         cannot be represented.
+ */
+void write_ttr(const std::string& filename,
+               const uint64_t* macro_times,
+               const uint16_t* micro_times,
+               const int8_t* routing_channels,
+               const int8_t* event_types,
+               std::size_t n_events,
+               const TtrParams& params = {});
+
 }  // namespace io
 }  // namespace tttrlib
 

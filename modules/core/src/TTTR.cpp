@@ -864,6 +864,20 @@ int TTTR::read_ps_file(const char *fn) {
     return 1;
 }
 
+bool TTTR::write_ttr_file(const std::string& filename, TTTRHeader* hdr) {
+    (void) hdr;   // a .ttr has no header
+    try {
+        tttrlib::io::TtrParams params;   // instrument defaults; see io_be.h
+        tttrlib::io::write_ttr(filename, macro_times, micro_times,
+                               routing_channels, event_types,
+                               n_valid_events, params);
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR in TTTR::write_ttr_file: " << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}
+
 bool TTTR::write_ps_file(const std::string& filename, TTTRHeader* hdr) {
     if (hdr == nullptr) hdr = this->header;
 
@@ -2957,6 +2971,11 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     // datasets from the marker stream and write a D7 container.
     if(container_type == PS_PHOTONS_CONTAINER){
         return write_ps_file(filename, header);
+    }
+    // BrightEyes-TTM ".ttr" is a bare word stream with no header at all, so it
+    // shares nothing with the header + records path below.
+    if(container_type == BE_TTR_CONTAINER){
+        return write_ttr_file(filename, header);
     }
 
     int record_type = header->get_tttr_record_type();

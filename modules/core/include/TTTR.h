@@ -624,6 +624,19 @@ public:
     bool write_ps_file(const std::string& filename, TTTRHeader* header = nullptr);
 
     /*!
+     * \brief Write a BrightEyes-TTM raw (.ttr) stream. See io_be.h.
+     *
+     * There is no header to write, so the parameter exists only to match the
+     * other writers; nothing is read from it. What survives the round trip, and
+     * what does not, is documented on tttrlib::io::write_ttr.
+     *
+     * \param filename Output filename.
+     * \param header   Ignored; a .ttr has nowhere to put it.
+     * \return true on success, false on failure.
+     */
+    bool write_ttr_file(const std::string& filename, TTTRHeader* header = nullptr);
+
+    /*!
      * \brief Reads a specified number of records from the file.
      *
      * Reads 'n_rec' records from the file. If 'n_rec' is not specified, all records in the file

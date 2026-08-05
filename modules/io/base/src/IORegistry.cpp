@@ -136,7 +136,7 @@ std::vector<FileFormat> builtin_formats() {
     ttr.detectable = false;
     ttr.record_types = {BE_RECORD_TYPE_TTR};
     ttr.default_record_type = BE_RECORD_TYPE_TTR;
-    ttr.can_write = false;
+    ttr.can_write = true;
     f.push_back(ttr);
 
     for (auto& fmt : f) {

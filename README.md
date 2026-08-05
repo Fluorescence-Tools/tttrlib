@@ -290,14 +290,17 @@ Windows, so no extra setup is needed. Full instructions and usage:
 | [Zeiss ConfoCor3](doc/formats/zeiss-confocor3.rst) | `.raw` | 🟢 | 🟢 | 🟢 | [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/cz) |
 | [Single-molecule (SM)](doc/formats/single-molecule-sm.rst) | `.sm` | 🟢 | 🟢 | 🟢 | · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/sm) |
 | [Photonscore LINCam](doc/formats/photonscore-lincam.rst) | `.photons` | 🟢 | 🟢 | 🟢 | D7; `x`/`y` positions are carried as marker events · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/photonscore) |
-| [BrightEyes-TTM](doc/formats/brighteyes-ttm.rst) | `.ttr` | 🔴 | 🔴 | 🔴 | planned. A bare `uint16` stream with no header or magic, so it can never be identified from contents; needs per-channel TDC calibration · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/brighteyes) |
+| [BrightEyes-TTM](doc/formats/brighteyes-ttm.rst) | `.ttr` | 🟢 | 🟢 | 🔴 | must be named: a bare `uint16` stream with no header or magic, so it can never be identified from contents. Micro times are 8-bit TDC codes, uncalibrated · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/brighteyes) |
 | [FLIM LABS `STT1`](doc/formats/flim-labs-stt1.rst) | `.bin` | 🟡 | 🔴 | 🟡 | planned. The format is fully specified, but **no example file is published anywhere**, so a reader cannot be verified against real data — see below · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/flimlabs) |
 
 Every supported container round-trips: writing photons into any of them and
 reading them back returns identical arrival times. Micro times survive only
 where the target format can hold them — SPC-130 and SPC-QC have 12 bits,
 SPC-600 (256) has 8, ConfoCor3 has 1 and SM has none — so transcoding into a
-narrower container is lossy by construction rather than by defect.
+narrower container is lossy by construction rather than by defect. A
+BrightEyes `.ttr` holds 8 bits, and additionally carries only the pixel, line
+and frame clocks, so a marker that is none of those is refused rather than
+silently dropped.
 
 Detection uses the extension as a hint, not an answer. Every format claiming the
 extension is tried in turn and asked to recognise the contents; if none does,
