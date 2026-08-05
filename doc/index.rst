@@ -104,6 +104,7 @@ Documentation
    workflows
    tttr-core
    file-formats
+   formats/index
    burst-analysis
    hmm-bva
    hmm-state-decoding

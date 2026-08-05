@@ -23,6 +23,11 @@ Round-trip fidelity in tttrlib is defined on these decoded arrays, not on the
 raw byte stream: a written file may pack overflow records differently than the
 original, but reading it back yields identical arrays.
 
+.. seealso::
+
+   :doc:`formats/index` -- one page per container: what it is, how it is laid
+   out, which record encodings it carries, and where to find a real file of it.
+
 Supported file types
 --------------------
 

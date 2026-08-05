@@ -278,20 +278,20 @@ Windows, so no extra setup is needed. Full instructions and usage:
 
 🟢 works · 🟡 partial, see note · 🔴 not supported
 
-| Format | Extension | Read | Write | Identified from contents | Notes |
+| Format | Extension | Read | Write | Identified from contents | Notes · sample data |
 |---|---|:--:|:--:|:--:|---|
-| PicoQuant PTU | `.ptu` | 🟢 | 🟢 | 🟢 | PicoHarp, TimeHarp, HydraHarp; 8 T2/T3 record encodings |
-| PicoQuant HT3 | `.ht3` | 🟢 | 🟢 | 🟢 | HydraHarp v1/v2, plus SF macro-time compression |
-| Becker & Hickl SPC-130 | `.spc` | 🟢 | 🟢 | 🟢 | |
-| Becker & Hickl SPC-600 (256) | `.spc` | 🟢 | 🟢 | 🟡 | must be named: not distinguishable from other `.spc` by content |
-| Becker & Hickl SPC-600 (4096) | `.spc` | 🟢 | 🟢 | 🟡 | as above |
-| Becker & Hickl SPC-QC | `.spc` | 🟢 | 🟢 | 🟢 | QC-x04 and QC-x06; reads the `.set` sidecar for TAC range and imaging geometry |
-| Photon-HDF5 | `.h5` `.hdf5` | 🟢 | 🟢 | 🟢 | stores decoded arrays, so any record encoding is acceptable |
-| Zeiss ConfoCor3 | `.raw` | 🟢 | 🟢 | 🟢 | |
-| Single-molecule (SM) | `.sm` | 🟢 | 🟢 | 🟡 | accepted on extension alone; the contents are not checked |
-| Photonscore LINCam | `.photons` | 🟢 | 🟢 | 🟢 | D7; `x`/`y` positions are carried as marker events |
-| BrightEyes-TTM | `.ttr` | 🔴 | 🔴 | 🔴 | planned. A bare `uint16` stream with no header or magic, so it can never be identified from contents; needs per-channel TDC calibration |
-| FLIM LABS `STT1` | `.bin` | 🟡 | 🔴 | 🟡 | planned. The format is fully specified, but **no example file is published anywhere**, so a reader cannot be verified against real data — see below |
+| [PicoQuant PTU](doc/formats/picoquant-ptu.rst) | `.ptu` | 🟢 | 🟢 | 🟢 | PicoHarp, TimeHarp, HydraHarp; 8 T2/T3 record encodings · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/pq/ptu) |
+| [PicoQuant HT3](doc/formats/picoquant-ht3.rst) | `.ht3` | 🟢 | 🟢 | 🟢 | HydraHarp v1/v2, plus SF macro-time compression · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/pq/ht3) |
+| [Becker & Hickl SPC-130](doc/formats/becker-hickl-spc.rst) | `.spc` | 🟢 | 🟢 | 🟢 | [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/bh) |
+| [Becker & Hickl SPC-600 (256)](doc/formats/becker-hickl-spc.rst) | `.spc` | 🟢 | 🟢 | 🟡 | must be named: not distinguishable from other `.spc` by content · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/bh) |
+| [Becker & Hickl SPC-600 (4096)](doc/formats/becker-hickl-spc.rst) | `.spc` | 🟢 | 🟢 | 🟡 | as above · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/bh) |
+| [Becker & Hickl SPC-QC](doc/formats/becker-hickl-spc.rst) | `.spc` | 🟢 | 🟢 | 🟢 | QC-x04 and QC-x06; reads the `.set` sidecar for TAC range and imaging geometry · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/bh) |
+| [Photon-HDF5](doc/formats/photon-hdf5.rst) | `.h5` `.hdf5` | 🟢 | 🟢 | 🟢 | stores decoded arrays, so any record encoding is acceptable · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/hdf) |
+| [Zeiss ConfoCor3](doc/formats/zeiss-confocor3.rst) | `.raw` | 🟢 | 🟢 | 🟢 | [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/cz) |
+| [Single-molecule (SM)](doc/formats/single-molecule-sm.rst) | `.sm` | 🟢 | 🟢 | 🟡 | accepted on extension alone; the contents are not checked · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/sm) |
+| [Photonscore LINCam](doc/formats/photonscore-lincam.rst) | `.photons` | 🟢 | 🟢 | 🟢 | D7; `x`/`y` positions are carried as marker events · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/photonscore) |
+| [BrightEyes-TTM](doc/formats/brighteyes-ttm.rst) | `.ttr` | 🔴 | 🔴 | 🔴 | planned. A bare `uint16` stream with no header or magic, so it can never be identified from contents; needs per-channel TDC calibration · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/brighteyes) |
+| [FLIM LABS `STT1`](doc/formats/flim-labs-stt1.rst) | `.bin` | 🟡 | 🔴 | 🟡 | planned. The format is fully specified, but **no example file is published anywhere**, so a reader cannot be verified against real data — see below · [files](https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/flimlabs) |
 
 Every supported container round-trips: writing photons into any of them and
 reading them back returns identical arrival times. Micro times survive only
