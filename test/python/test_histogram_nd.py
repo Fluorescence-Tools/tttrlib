@@ -333,3 +333,35 @@ def test_a_sample_needs_a_profile_histogram():
     h = tttrlib.HistogramNd(_axes(tttrlib.Axis.regular(4, 0.0, 4.0)))
     with pytest.raises(TypeError):
         h.fill_profile(np.array([1.0]), sample=np.array([1.0]))
+
+
+# --- non-finite input -------------------------------------------------------
+
+@pytest.mark.parametrize("rank", [1, 2, 3])
+def test_nan_and_inf_match_boost(rank):
+    """NaN is not below the axis and not on it. boost puts it in the overflow
+    bin; so does tttrlib, or the same data gives two different histograms.
+
+    This was wrong and undefined: the fast path cast floor(NaN) to int, which
+    is UB, and on this machine came out as 0 -- so every NaN was silently
+    counted in the first bin.
+    """
+    x = np.array([0.5, np.nan, 1.5, np.inf, -np.inf, 2.5])
+    y = np.array([0.5, 0.5, np.nan, 0.5, 0.5, 0.5])
+    z = np.array([0.5, 0.5, 0.5, np.nan, 0.5, 0.5])
+    cols = [x, y, z][:rank]
+
+    h = tttrlib.HistogramNd(_axes(*[tttrlib.Axis.regular(4, 0.0, 4.0)] * rank))
+    h.fill(*cols)
+    b = bh.Histogram(*[bh.axis.Regular(4, 0, 4) for _ in range(rank)])
+    b.fill(*cols)
+
+    assert np.array_equal(h.view(flow=True), b.view(flow=True))
+    assert h.sum(True) == len(x), "nothing may be lost, not even NaN"
+
+
+def test_nan_on_a_log_axis_is_not_counted_as_data():
+    x = np.array([2.0, np.nan, 0.0, -1.0, 500.0])
+    h = tttrlib.HistogramNd(_axes(tttrlib.Axis.log(3, 1.0, 1000.0)))
+    h.fill(x)
+    assert h.sum(False) == 2.0, "only 2.0 and 500.0 are on the axis"

@@ -259,6 +259,10 @@ public:
             }
 
             default: {   // Regular, Log, Sqrt, Pow -- all affine after transform
+                // NaN is not below the axis, it is not on it either. boost puts
+                // it in the overflow bin and so does this, so a fill of the same
+                // data agrees bin for bin. -inf underflows, +inf overflows.
+                if (x != x) return n_;
                 if (!std::isfinite(x)) return x > 0 ? n_ : AXIS_UNDERFLOW;
                 const double t = transform(x);
                 if (!std::isfinite(t)) return AXIS_UNDERFLOW;
@@ -735,6 +739,26 @@ private:
         double offset = 0.0, inv_width = 1.0;
         int n = 0, shift = 0, stride = 1;
         bool has_under = false, has_over = false;
+
+        /*!
+         * The storage slot for `v`, or -1 when there is no bin for it.
+         *
+         * The range is checked BEFORE the conversion to int, not after. Casting
+         * floor(NaN) to int is undefined behaviour, and on this machine it came
+         * out as 0 -- so every NaN in the data was silently counted in the first
+         * bin, which is both wrong and a disagreement with boost. NaN is neither
+         * below the axis nor on it; boost puts it in the overflow bin and so
+         * does this.
+         */
+        inline int slot_of(double v) const {
+            const double f = std::floor((v - offset) * inv_width);
+            if (f >= 0.0 && f < static_cast<double>(n)) {
+                return static_cast<int>(f) + shift;
+            }
+            if (f != f) return has_over ? n + shift : -1;      // NaN
+            if (f < 0.0) return has_under ? 0 : -1;
+            return has_over ? n + shift : -1;
+        }
     };
 
     /// True when every axis is a plain untransformed range, so FastAxis applies.
@@ -811,12 +835,8 @@ private:
                 int flat = 0;
                 for (int d = 0; d < r; d++) {
                     const FastAxis& ad = a[d];
-                    const int idx = static_cast<int>(
-                            std::floor((get(d, i) - ad.offset) * ad.inv_width));
-                    int s;
-                    if (idx < 0) { if (!ad.has_under) return -1; s = 0; }
-                    else if (idx >= ad.n) { if (!ad.has_over) return -1; s = ad.n + ad.shift; }
-                    else s = idx + ad.shift;
+                    const int s = ad.slot_of(get(d, i));
+                    if (s < 0) return -1;
                     flat += s * ad.stride;
                 }
                 return flat;
@@ -829,28 +849,17 @@ private:
                 const FastAxis a = fa[0];
                 dispatch_fill(n_points, n_cells, weights, n_threads,
                               [a, get](long long i) -> int {
-                    const int idx = static_cast<int>(
-                            std::floor((get(0, i) - a.offset) * a.inv_width));
-                    if (idx < 0) return a.has_under ? 0 : -1;
-                    if (idx >= a.n) return a.has_over ? (a.n + a.shift) * a.stride : -1;
-                    return (idx + a.shift) * a.stride;
+                    const int s = a.slot_of(get(0, i));
+                    return s < 0 ? -1 : s * a.stride;
                 });
             } else {
                 const FastAxis a0 = fa[0], a1 = fa[1];
                 dispatch_fill(n_points, n_cells, weights, n_threads,
                               [a0, a1, get](long long i) -> int {
-                    const int i0 = static_cast<int>(
-                            std::floor((get(0, i) - a0.offset) * a0.inv_width));
-                    int s0;
-                    if (i0 < 0) { if (!a0.has_under) return -1; s0 = 0; }
-                    else if (i0 >= a0.n) { if (!a0.has_over) return -1; s0 = a0.n + a0.shift; }
-                    else s0 = i0 + a0.shift;
-                    const int i1 = static_cast<int>(
-                            std::floor((get(1, i) - a1.offset) * a1.inv_width));
-                    int s1;
-                    if (i1 < 0) { if (!a1.has_under) return -1; s1 = 0; }
-                    else if (i1 >= a1.n) { if (!a1.has_over) return -1; s1 = a1.n + a1.shift; }
-                    else s1 = i1 + a1.shift;
+                    const int s0 = a0.slot_of(get(0, i));
+                    if (s0 < 0) return -1;
+                    const int s1 = a1.slot_of(get(1, i));
+                    if (s1 < 0) return -1;
                     return s0 * a0.stride + s1 * a1.stride;
                 });
             }
