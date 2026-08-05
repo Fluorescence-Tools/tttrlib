@@ -124,6 +124,77 @@ def fill(self, *columns, **kwargs):
     return self
 
 
+def fill_profile(self, *columns, **kwargs):
+    """Add points carrying a sample, for a Mean or WeightedMean histogram.
+
+    :param columns: one array per axis
+    :param sample: the value being averaged, one per point
+    :param weight: per-point weights (WeightedMean only)
+
+    The bin ends up holding the mean of ``sample`` over the points that landed
+    in it. ``mean()`` and ``mean_variance()`` read it back.
+    """
+    np = _np_hist
+    sample = kwargs.pop("sample", None)
+    weight = kwargs.pop("weight", None)
+    if kwargs:
+        raise TypeError("unexpected keyword arguments: %s" % sorted(kwargs))
+    if sample is None:
+        raise TypeError("fill_profile needs a sample=")
+    if not self.is_profile():
+        raise TypeError("this histogram does not accumulate a mean; build it "
+                        "with HistStorage_Mean or HistStorage_WeightedMean")
+
+    cols = [np.ascontiguousarray(c, dtype=np.float64) for c in columns]
+    if len(cols) != self.rank():
+        raise ValueError("expected %d columns, got %d" % (self.rank(), len(cols)))
+    s = np.ascontiguousarray(sample, dtype=np.float64)
+    w = None if weight is None else np.ascontiguousarray(weight, dtype=np.float64)
+
+    if self.rank() == 1:
+        if w is None:
+            self.fill_1d_sample(cols[0], s)
+        else:
+            self.fill_1d_sample_weighted(cols[0], s, w)
+    elif self.rank() == 2:
+        if w is None:
+            self.fill_2d_sample(cols[0], cols[1], s)
+        else:
+            self.fill_2d_sample_weighted(cols[0], cols[1], s, w)
+    else:
+        raise NotImplementedError("profiles are supported for rank 1 and 2")
+    return self
+
+
+def mean(self, flow=False):
+    """The per-bin mean of a profile histogram."""
+    a = self.get_means().reshape(_hist_shape(self))
+    return a if flow else a[_hist_interior(self)]
+
+
+def mean_variance(self, flow=False):
+    """Variance OF THE MEAN -- the squared standard error, for error bars.
+
+    This is what boost-histogram's ``variances()`` returns for a profile. It is
+    the sample variance divided by the count again; ``sample_variance()`` gives
+    the other one.
+    """
+    a = self.get_mean_variances().reshape(_hist_shape(self))
+    return a if flow else a[_hist_interior(self)]
+
+
+def sample_variance(self, flow=False):
+    """How spread out the samples in each bin were. \see mean_variance"""
+    a = self.get_sample_variances().reshape(_hist_shape(self))
+    return a if flow else a[_hist_interior(self)]
+
+
+def counts(self, flow=False):
+    """Entries per bin (Mean), or the sum of weights (WeightedMean)."""
+    a = self.get_counts().reshape(_hist_shape(self))
+    return a if flow else a[_hist_interior(self)]
+
+
 def to_numpy(self, flow=False):
     """`(values, edges_0, edges_1, ...)`, the shape numpy.histogramdd returns."""
     return (self.view(flow),) + tuple(a.edges for a in self.axes)

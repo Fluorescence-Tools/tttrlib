@@ -22,7 +22,8 @@
     (const double* edges, int n_edges),
     (const double* x, int n_x),
     (const double* y, int n_y),
-    (const double* weights, int n_weights)
+    (const double* weights, int n_weights),
+    (const double* sample, int n_sample)
 }
 %apply (int* IN_ARRAY1, int DIM1) {
     (const int* values, int n_values),
@@ -63,6 +64,7 @@
 %clear (const double* x, int n_x);
 %clear (const double* y, int n_y);
 %clear (const double* weights, int n_weights);
+%clear (const double* sample, int n_sample);
 %clear (const int* values, int n_values);
 %clear (const int* keep, int n_keep);
 %clear (const double* data, int n_rows, int n_cols);

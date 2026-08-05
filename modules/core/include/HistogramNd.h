@@ -84,6 +84,21 @@ struct AxisOptions {
     }
 };
 
+/*!
+ * \brief What a bin accumulates.
+ *
+ * Counts and Weight answer "how much landed here". Mean and WeightedMean
+ * answer a different question -- "what was the average VALUE of something else
+ * for the points that landed here" -- which is a profile, not a histogram, and
+ * is the reason a fill can carry a sample as well as a weight.
+ */
+enum class HistStorage {
+    Counts,        ///< sum of 1
+    Weight,        ///< sum of w, and of w^2 so the result has an error bar
+    Mean,          ///< count, mean of the sample, and its variance
+    WeightedMean   ///< as Mean, weighted
+};
+
 /// Returned by Axis::index for a value below the axis.
 constexpr int AXIS_UNDERFLOW = -1;
 
@@ -368,9 +383,23 @@ public:
     HistogramNd() = default;
 
     explicit HistogramNd(std::vector<Axis> axes, bool track_variance = false)
-            : axes_(std::move(axes)), track_variance_(track_variance) {
+            : axes_(std::move(axes)),
+              storage_(track_variance ? HistStorage::Weight : HistStorage::Counts),
+              track_variance_(track_variance) {
         if (axes_.empty()) throw std::invalid_argument("a histogram needs at least one axis");
         reset_storage();
+    }
+
+    HistogramNd(std::vector<Axis> axes, HistStorage storage)
+            : axes_(std::move(axes)), storage_(storage),
+              track_variance_(storage != HistStorage::Counts) {
+        if (axes_.empty()) throw std::invalid_argument("a histogram needs at least one axis");
+        reset_storage();
+    }
+
+    HistStorage storage() const { return storage_; }
+    bool is_profile() const {
+        return storage_ == HistStorage::Mean || storage_ == HistStorage::WeightedMean;
     }
 
     // --- description ------------------------------------------------------
@@ -468,6 +497,89 @@ public:
         fill(cols, std::min(std::min(n_x, n_y), n_weights), weights, n_threads);
     }
 
+    /*!
+     * \brief Add points carrying a SAMPLE, for a profile histogram.
+     *
+     * The bin accumulates the mean of `sample` over the points that landed in
+     * it, rather than how many there were. What a caller wants when the
+     * question is "what is the average lifetime at this position", where a
+     * count answers nothing.
+     *
+     * Serial on purpose. Welford's update is a read-modify-write of three
+     * numbers per bin whose result depends on the order they are applied in,
+     * so it cannot be split across private copies and summed the way a count
+     * can. Correct beats fast for the rarer operation.
+     */
+    void fill_1d_sample(const double* x, int n_x,
+                        const double* sample, int n_sample) {
+        if (rank() != 1) throw std::invalid_argument("fill_1d_sample: rank is not 1");
+        const double* cols[1] = {x};
+        fill_sample(cols, std::min(n_x, n_sample), sample, nullptr);
+    }
+
+    /// \see fill_1d_sample. Separate from the unweighted form for the same
+    /// reason fill_1d is: a binding folds (pointer, length) into one array
+    /// parameter, leaving no spelling of "no array" to default to.
+    void fill_1d_sample_weighted(const double* x, int n_x,
+                                 const double* sample, int n_sample,
+                                 const double* weights, int n_weights) {
+        if (rank() != 1) throw std::invalid_argument("fill_1d_sample: rank is not 1");
+        const double* cols[1] = {x};
+        fill_sample(cols, std::min(std::min(n_x, n_sample), n_weights), sample, weights);
+    }
+
+    /// \see fill_1d_sample
+    void fill_2d_sample(const double* x, int n_x, const double* y, int n_y,
+                        const double* sample, int n_sample) {
+        if (rank() != 2) throw std::invalid_argument("fill_2d_sample: rank is not 2");
+        const double* cols[2] = {x, y};
+        fill_sample(cols, std::min(std::min(n_x, n_y), n_sample), sample, nullptr);
+    }
+
+    /// \see fill_1d_sample_weighted
+    void fill_2d_sample_weighted(const double* x, int n_x, const double* y, int n_y,
+                                 const double* sample, int n_sample,
+                                 const double* weights, int n_weights) {
+        if (rank() != 2) throw std::invalid_argument("fill_2d_sample: rank is not 2");
+        const double* cols[2] = {x, y};
+        fill_sample(cols, std::min(std::min(std::min(n_x, n_y), n_sample), n_weights),
+                    sample, weights);
+    }
+
+    /*!
+     * \brief The per-bin mean of a profile, into a caller-owned array.
+     *
+     * For a non-profile histogram this is just the bin value.
+     */
+    void get_means(double** out, int* n) const { copy_out(values_, out, n); }
+
+    /*!
+     * \brief The SAMPLE variance of the values that landed in each bin.
+     *
+     * How spread out the samples were: sum of squared deviations over
+     * count-1. A bin with fewer than two entries has none and reports 0
+     * rather than dividing by zero.
+     */
+    void get_sample_variances(double** out, int* n) const {
+        copy_out(derived_variance(/*of_the_mean=*/false), out, n);
+    }
+
+    /*!
+     * \brief The variance OF THE MEAN -- the squared standard error.
+     *
+     * The sample variance divided by the count again. This is the one to put
+     * an error bar on a profile point with, and it is what boost-histogram's
+     * `variances()` returns for a Mean or WeightedMean storage; the two differ
+     * by a factor of the count, which is large, so the distinction is worth the
+     * two method names.
+     */
+    void get_mean_variances(double** out, int* n) const {
+        copy_out(derived_variance(/*of_the_mean=*/true), out, n);
+    }
+
+    /// Profiles: the entry count (Mean) or the sum of weights (WeightedMean).
+    void get_counts(double** out, int* n) const { copy_out(counts_, out, n); }
+
     // --- output, for language bindings ------------------------------------
 
     /*!
@@ -534,6 +646,65 @@ public:
     }
 
 private:
+    /// Welford, and its weighted form. One pass, numerically stable, and the
+    /// reason a profile fill cannot be parallelised the way a count fill is.
+    void fill_sample(const double* const* columns, long long n_points,
+                     const double* sample, const double* weights) {
+        if (!is_profile())
+            throw std::invalid_argument("a sample needs a Mean or WeightedMean histogram");
+        const int r = rank();
+        const std::vector<int> strides = compute_strides();
+        for (long long i = 0; i < n_points; i++) {
+            int flat = 0;
+            bool ok = true;
+            for (int d = 0; d < r && ok; d++) {
+                const int slot = axes_[d].slot(axes_[d].index(columns[d][i]));
+                if (slot < 0) ok = false; else flat += slot * strides[d];
+            }
+            if (!ok) continue;
+            const double s = sample[i];
+            if (storage_ == HistStorage::Mean) {
+                counts_[flat] += 1.0;
+                const double delta = s - values_[flat];
+                values_[flat] += delta / counts_[flat];
+                variances_[flat] += delta * (s - values_[flat]);
+            } else {
+                const double w = weights ? weights[i] : 1.0;
+                counts_[flat] += w;
+                aux_[flat] += w * w;
+                if (counts_[flat] != 0.0) {
+                    const double delta = s - values_[flat];
+                    values_[flat] += w * delta / counts_[flat];
+                    variances_[flat] += w * delta * (s - values_[flat]);
+                }
+            }
+        }
+    }
+
+    std::vector<double> derived_variance(bool of_the_mean) const {
+        std::vector<double> v(values_.size(), 0.0);
+        for (std::size_t i = 0; i < v.size(); i++) {
+            if (storage_ == HistStorage::Mean) {
+                if (counts_[i] > 1.0) {
+                    v[i] = variances_[i] / (counts_[i] - 1.0);
+                    if (of_the_mean) v[i] /= counts_[i];
+                }
+            } else if (storage_ == HistStorage::WeightedMean) {
+                const double sw = counts_[i];
+                if (sw > 0.0) {
+                    const double eff = sw - aux_[i] / sw;
+                    if (eff > 0.0) {
+                        v[i] = variances_[i] / eff;
+                        if (of_the_mean) v[i] /= sw;
+                    }
+                }
+            } else if (i < variances_.size()) {
+                v[i] = variances_[i];
+            }
+        }
+        return v;
+    }
+
     void check_cols(int n_cols) const {
         if (n_cols != rank())
             throw std::invalid_argument("fill_rows: column count is not the rank");
@@ -905,6 +1076,8 @@ public:
     void reset() {
         std::fill(values_.begin(), values_.end(), 0.0);
         std::fill(variances_.begin(), variances_.end(), 0.0);
+        std::fill(counts_.begin(), counts_.end(), 0.0);
+        std::fill(aux_.begin(), aux_.end(), 0.0);
     }
 
     /*!
@@ -993,6 +1166,8 @@ private:
         for (const Axis& a : axes_) n *= static_cast<std::size_t>(a.extent());
         values_.assign(n, 0.0);
         variances_.assign(track_variance_ ? n : 0, 0.0);
+        counts_.assign(is_profile() ? n : 0, 0.0);
+        aux_.assign(storage_ == HistStorage::WeightedMean ? n : 0, 0.0);
     }
 
     std::vector<int> compute_strides() const {
@@ -1057,6 +1232,11 @@ private:
     std::vector<Axis> axes_;
     std::vector<double> values_;
     std::vector<double> variances_;
+    /// Profiles only: the running count (Mean) or sum of weights (WeightedMean).
+    std::vector<double> counts_;
+    /// WeightedMean only: the sum of squared weights.
+    std::vector<double> aux_;
+    HistStorage storage_ = HistStorage::Counts;
     bool track_variance_ = false;
 
     template<typename Get>

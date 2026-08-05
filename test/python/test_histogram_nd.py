@@ -268,3 +268,68 @@ def test_threads_do_not_change_the_answer():
             ref = v
         else:
             assert np.array_equal(v, ref), f"{threads} threads disagreed"
+
+
+# --- profiles (Mean / WeightedMean storage) ---------------------------------
+
+def test_mean_profile_matches_boost():
+    """A profile answers "what was the average VALUE here", not "how many"."""
+    rng = np.random.default_rng(31)
+    x = rng.uniform(0, 10, 4000)
+    s = rng.normal(5.0, 2.0, 4000)
+
+    h = tttrlib.HistogramNd(_axes(tttrlib.Axis.regular(8, 0.0, 10.0)),
+                            tttrlib.HistStorage_Mean)
+    h.fill_profile(x, sample=s)
+
+    b = bh.Histogram(bh.axis.Regular(8, 0, 10), storage=bh.storage.Mean())
+    b.fill(x, sample=s)
+    v = b.view()
+
+    assert np.allclose(h.mean(), v["value"])
+    assert np.allclose(h.counts(), v["count"])
+    assert np.allclose(h.mean_variance(), b.variances())
+    # boost's variances() is the variance OF THE MEAN; the sample variance is
+    # the same thing times the count, and both are available.
+    assert np.allclose(h.sample_variance(), v["_sum_of_deltas_squared"] / (v["count"] - 1))
+
+
+def test_weighted_mean_profile_matches_boost():
+    rng = np.random.default_rng(32)
+    x = rng.uniform(0, 10, 4000)
+    s = rng.normal(5.0, 2.0, 4000)
+    w = rng.uniform(0.5, 2.0, 4000)
+
+    h = tttrlib.HistogramNd(_axes(tttrlib.Axis.regular(8, 0.0, 10.0)),
+                            tttrlib.HistStorage_WeightedMean)
+    h.fill_profile(x, sample=s, weight=w)
+
+    b = bh.Histogram(bh.axis.Regular(8, 0, 10), storage=bh.storage.WeightedMean())
+    b.fill(x, sample=s, weight=w)
+    v = b.view()
+
+    assert np.allclose(h.mean(), v["value"])
+    assert np.allclose(h.counts(), v["sum_of_weights"])
+    assert np.allclose(h.mean_variance(), b.variances())
+
+
+def test_2d_profile_matches_boost():
+    rng = np.random.default_rng(33)
+    x, y = rng.uniform(0, 10, 3000), rng.uniform(0, 10, 3000)
+    s = rng.normal(1.0, 0.5, 3000)
+
+    h = tttrlib.HistogramNd(_axes(tttrlib.Axis.regular(5, 0.0, 10.0),
+                                  tttrlib.Axis.regular(4, 0.0, 10.0)),
+                            tttrlib.HistStorage_Mean)
+    h.fill_profile(x, y, sample=s)
+
+    b = bh.Histogram(bh.axis.Regular(5, 0, 10), bh.axis.Regular(4, 0, 10),
+                     storage=bh.storage.Mean())
+    b.fill(x, y, sample=s)
+    assert np.allclose(h.mean(), b.view()["value"])
+
+
+def test_a_sample_needs_a_profile_histogram():
+    h = tttrlib.HistogramNd(_axes(tttrlib.Axis.regular(4, 0.0, 4.0)))
+    with pytest.raises(TypeError):
+        h.fill_profile(np.array([1.0]), sample=np.array([1.0]))
