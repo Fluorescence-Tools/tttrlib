@@ -103,3 +103,82 @@ def test_integer_data_works_too():
     h = np.zeros(len(ex) * len(ey), dtype=np.float64)
     tttrlib.histogram2D_int(x, y, np.ones(len(x)), ex, ey, h, "lin", "lin", False)
     assert h.sum() == 3.0
+
+
+def test_matches_numpy_bin_for_bin(sample):
+    """Faster is only worth anything if it is also right.
+
+    tttrlib's `n_bins` is the number of BINS and bin i starts at edges[i], so
+    the equivalent numpy call needs one more edge appended.
+    """
+    x, y = sample
+    ex, ey = np.linspace(0, 10, 33), np.linspace(0, 10, 17)
+    h = _hist2d(x, y, ex, ey)
+    wx, wy = ex[1] - ex[0], ey[1] - ey[0]
+    ref, _, _ = np.histogram2d(
+        x, y,
+        bins=[np.concatenate([ex, [ex[-1] + wx]]),
+              np.concatenate([ey, [ey[-1] + wy]])])
+    assert np.array_equal(h, ref)
+
+
+def test_1d_does_not_write_past_the_last_bin():
+    """Regression: the bound was `<= n_bins`, so a value one bin above the top
+    edge indexed hist[n_bins] -- and callers size hist to exactly n_bins."""
+    edges = np.linspace(0.0, 10.0, 11)
+    for v in (11.0, 11.9, 1e6):
+        buf = np.zeros(20, dtype=np.float64)
+        tttrlib.histogram1D_double(np.array([v]), np.ones(1), edges, buf,
+                                   "lin", False)
+        assert buf.sum() == 0.0, f"{v} was binned into index {np.nonzero(buf)[0]}"
+
+
+# --- the range forms: "64 bins from 0 to 100" without an edges array ---------
+
+def test_range_forms_match_the_edge_forms(sample):
+    """A front end has a bin count and a range, not an array of edges."""
+    x, y = sample
+    nb = 33
+    edges = np.zeros(nb)
+    tttrlib.make_bin_edges_double(edges, 0.0, 10.0, False)
+    assert np.allclose(edges, np.linspace(0, 10, nb))
+
+    a = np.zeros(nb)
+    tttrlib.histogram1D_double(x, np.ones_like(x), edges, a, "lin", False)
+    b = np.zeros(nb)
+    tttrlib.histogram1D_range_double(x, np.ones_like(x), 0.0, 10.0, nb, b,
+                                     False, False)
+    assert np.array_equal(a, b)
+
+    nx, ny = 17, 9
+    ex, ey = np.zeros(nx), np.zeros(ny)
+    tttrlib.make_bin_edges_double(ex, 0.0, 10.0, False)
+    tttrlib.make_bin_edges_double(ey, 0.0, 10.0, False)
+    h2 = np.zeros(nx * ny)
+    tttrlib.histogram2D_double(x, y, np.ones_like(x), ex, ey, h2, "lin", "lin", False)
+    r2 = np.zeros(nx * ny)
+    tttrlib.histogram2D_range_double(x, y, np.ones_like(x), 0.0, 10.0, nx,
+                                     0.0, 10.0, ny, r2, False, False, False)
+    assert np.array_equal(h2, r2)
+
+
+def test_a_log_range_gives_geometric_edges():
+    e = np.zeros(4)
+    tttrlib.make_bin_edges_double(e, 1.0, 1000.0, True)
+    assert np.allclose(e, [1.0, 10.0, 100.0, 1000.0])
+
+
+def test_thread_count_does_not_change_the_answer(sample):
+    """Private per-thread histograms summed at the end must give what one
+    thread gives, whatever the split."""
+    x, y = sample
+    ex, ey = np.linspace(0, 10, 33), np.linspace(0, 10, 17)
+    ref = None
+    for threads in (1, 2, 3, 8):
+        h = np.zeros(len(ex) * len(ey))
+        tttrlib.histogram2D_double(x, y, np.ones_like(x), ex, ey, h,
+                                   "lin", "lin", False, threads)
+        if ref is None:
+            ref = h
+        else:
+            assert np.array_equal(h, ref), f"{threads} threads disagreed"

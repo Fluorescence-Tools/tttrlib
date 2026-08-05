@@ -42,6 +42,11 @@
 %apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1 ) {
     (double** hist, int* dim)
 }
+// make_bin_edges WRITES its array, so it needs INPLACE rather than IN. Its
+// parameter is named edges_out for exactly that reason -- see the note above.
+%apply (double* INPLACE_ARRAY1, int DIM1) {
+    (double* edges_out, int n_edges_out)
+}
 
 %include "Histogram.h"
 %include "HistogramAxis.h"
@@ -50,6 +55,11 @@
 %template(histogram1D_double) histogram1D<double>;
 %template(histogram2D_int) histogram2D<int>;
 %template(histogram2D_double) histogram2D<double>;
+// Range forms: "64 bins from 0 to 100" without building the edge array. What a
+// plotting front end actually has.
+%template(histogram1D_range_double) histogram1D_range<double>;
+%template(histogram2D_range_double) histogram2D_range<double>;
+%template(make_bin_edges_double) make_bin_edges<double>;
 %template(doubleAxis) HistogramAxis<double>;
 %template(doubleHistogram) Histogram<double>;
 

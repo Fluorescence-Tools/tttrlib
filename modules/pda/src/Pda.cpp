@@ -8,6 +8,7 @@
 #include "pocketfft/pocketfft_hdronly.h"
 #include <complex>
 #include <cmath>
+#include "HistogramAxis.h"   // HistogramBinning -- one binning rule, not two
 
 // Runtime AVX/FMA control (CPU detection + TTTRLIB_USE_AVX/FMA env overrides).
 static bool g_pda_use_avx = tttrlib::cpu_features::get_avx_enabled();
@@ -187,7 +188,6 @@ if (is_verbose()) {
     std::clog << "-- n_bins: " << n_bins << std::endl;
     std::clog << "-- log_x: " << log_x << std::endl;
 }
-    auto Nbinsf = (double) n_bins;
     if(
         !species_amplitudes.empty() && !probabilities_ch1.empty()
     ){
@@ -220,19 +220,20 @@ if (is_verbose()) {
     int first_photon = skip_zero_photon;
 
     // build histogram
-    double bin_width = log_x ?
+    //
+    // The binning is hist's, not a second copy of it. PDA's bins are CENTRED on
+    // the x values it reports back -- shifting them by half a bin would move
+    // every point in a published PDA plot -- which is why HistogramBinning has
+    // that convention rather than PDA having its own log/linear arithmetic.
+    const HistogramBinning<double> axis =
+            HistogramBinning<double>::centered(x_min, x_max, n_bins, log_x);
+    const double bin_width = log_x ?
                        (log(x_max) - log(x_min)) / ((double) n_bins - 1) :
                        (x_max - x_min) / ((double) n_bins - 1.);
-    double inverse_bin_width = 1. / bin_width;
-    double xmincorr = log_x ?
-                      log(x_min) - 0.5 * bin_width :
-                      x_min - 0.5 * bin_width;
 if (is_verbose()) {
     std::clog << "-- n_max: " << n_max << std::endl;
     std::clog << "-- n_min: " << n_min << std::endl;
     std::clog << "-- bin_width: " << bin_width << std::endl;
-    std::clog << "-- inverse_bin_width: " << inverse_bin_width << std::endl;
-    std::clog << "-- xmincorr: " << xmincorr << std::endl;
 }
 
     int ch1, ch2, first_ch2, bin;
@@ -257,12 +258,9 @@ if (is_verbose()) {
         for (ch1 = first_photon; ch1 <= n_max; ch1++) {
             first_ch2 = ch1 > n_min ? 1 : n_min - ch1;
             for (ch2 = first_ch2; ch2 <= n_max - ch1; ch2++) {
-                double x = log_x ?
-                    log(_histogram_function->run(ch1, ch2)):
-                    _histogram_function->run(ch1, ch2);
-                double binf = std::floor((x - xmincorr) * inverse_bin_width);
-                if ((binf < Nbinsf) && (binf >= 0.)){
-                    _hist1d_bin_cache[ch2 * (n_max + 1) + ch1] = (int) binf;
+                const int bin_idx = axis.bin_of(_histogram_function->run(ch1, ch2));
+                if (bin_idx >= 0) {
+                    _hist1d_bin_cache[ch2 * (n_max + 1) + ch1] = bin_idx;
                 }
             }
         }
