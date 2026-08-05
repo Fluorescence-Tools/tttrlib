@@ -258,6 +258,35 @@ public:
             default: break;
         }
     }
+    /*!
+     * \brief Size the column and hand out its buffer.
+     *
+     * For a loader that knows where each of its pieces belongs and wants to
+     * write them straight into place. That is the difference between a parser
+     * that produces the column and one that produces something which is then
+     * copied into the column -- at a hundred million rows the copy is the
+     * dominant cost and the peak is twice what it needs to be.
+     *
+     * Bool and String have no raw buffer here on purpose: bool is bit-packed,
+     * so two writers can collide inside one word, and a string needs its
+     * dictionary. Both take a staging array and one pass at the end.
+     */
+    void resize(std::size_t n) {
+        n_ = n;
+        switch (type_) {
+            case ColumnType::Float64: f64_.assign(n, 0.0); break;
+            case ColumnType::Float32: f32_.assign(n, 0.0f); break;
+            case ColumnType::Int64:   i64_.assign(n, 0); break;
+            case ColumnType::Int32:   i32_.assign(n, 0); break;
+            case ColumnType::String:  codes_.assign(n, 0); break;
+            case ColumnType::Bool:    bits_.assign(n, false); break;
+        }
+    }
+    double* f64_data() { return f64_.data(); }
+    float* f32_data() { return f32_.data(); }
+    long long* i64_data() { return reinterpret_cast<long long*>(i64_.data()); }
+    int* codes_data() { return reinterpret_cast<int*>(codes_.data()); }
+
     /// Append raw values of the column's own type, without an intermediate copy.
     void append_f64(const double* v, std::size_t n) { f64_.insert(f64_.end(), v, v + n); n_ = f64_.size(); }
     void append_f32(const float* v, std::size_t n) { f32_.insert(f32_.end(), v, v + n); n_ = f32_.size(); }
