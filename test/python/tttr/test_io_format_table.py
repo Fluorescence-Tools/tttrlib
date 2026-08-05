@@ -17,13 +17,25 @@ def test_names_match_the_container_name_table():
 
 
 def test_container_ints_are_the_historical_ones():
-    """0-999 belong to built-in formats permanently; user code stored these."""
-    expected = {
+    """0-999 belong to built-in formats permanently; user code stored these.
+
+    A new format may be added -- it takes the next free int. What may never
+    happen is one of the existing numbers moving, or a new format landing on a
+    number somebody already has on disk.
+    """
+    historical = {
         "PTU": 0, "HT3": 1, "SPC-130": 2, "SPC-600_256": 3, "SPC-600_4096": 4,
         "PHOTON-HDF5": 5, "CZ-RAW": 6, "SM": 7, "PHOTONS": 8, "SPC-QC": 9,
     }
     got = {n: e["container_type"] for n, e in tttrlib.registry("file_container").items()}
-    assert got == expected
+    for name, container_type in historical.items():
+        assert name in got, f"{name} disappeared from the format table"
+        assert got[name] == container_type, f"{name} changed container int"
+    assert len(set(got.values())) == len(got), f"duplicate container ints: {got}"
+    for name, container_type in got.items():
+        if name not in historical:
+            assert container_type >= len(historical), \
+                f"{name} took {container_type}, which is a historical int"
 
 
 def test_every_builtin_format_is_marked_stable():

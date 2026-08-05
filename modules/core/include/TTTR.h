@@ -603,6 +603,9 @@ public:
      */
     int read_ps_file(const char *fn);
 
+    /*! Read a BrightEyes-TTM raw (.ttr) stream. See io_be.h. */
+    int read_ttr_file(const char *fn);
+
     /*!
      * \brief Writes the TTTR data to a Photonscore ".photons" (D7) file.
      *

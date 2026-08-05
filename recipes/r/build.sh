@@ -41,7 +41,7 @@ ROOT="$(pwd)"
 # to be discovered rather than spelled out -- extracting a module would
 # otherwise break this build with "file not found" on a header that moved.
 MODULE_INCDIRS=""
-for d in "${ROOT}"/modules/*/include; do
+for d in "${ROOT}"/modules/*/include "${ROOT}"/modules/*/*/include; do
   [ -d "$d" ] && MODULE_INCDIRS="${MODULE_INCDIRS} -I${d}"
 done
 INCDIRS="-I${ROOT}/include -I${ROOT}/src${MODULE_INCDIRS} -I${ROOT}/thirdparty -I${ROOT}/thirdparty/nlohmann_json/include -I${ROOT}/thirdparty/HighFive/include -I${PREFIX}/include"

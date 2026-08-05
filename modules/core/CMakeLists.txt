@@ -45,7 +45,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchMaxTree.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  io io_photonscore io_sm io_carlzeiss io_beckerhickl io_picoquant util hist
+    DEPENDS  io io_ps io_sm io_cz io_bh io_pq io_be util hist
     EXTERNAL_DEPS tttrlib::json tttrlib::highfive
     SWIG_INTERFACES TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
                     Channel.i FileCheck.i

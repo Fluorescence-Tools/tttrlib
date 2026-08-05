@@ -1,25 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# io -- what tttrlib knows about file formats, as data.
+# The I/O layer. Everything here is "a thing that reads or writes a file";
+# nothing here knows what a photon stream is used for. See README.md.
 #
-# Below `core`, not above it: a format description is data, and describing a
-# format must not require the photon-stream data model. TTTRFormat.h includes
-# <string> and <vector>; TTTRHeaderTypes.h is 53 #defines. That is the whole
-# dependency surface, which is what lets a format module stay cheap and what
-# lets the same shape be mirrored across a C plugin ABI later.
-#
-# The point of the module is the table. The same knowledge -- which container is
-# called what, which extension it uses, which record types are valid in it --
-# was written out six times in six shapes across five files, with nothing
-# keeping them in step. Adding the Photonscore reader took eleven edits across
-# five files, none of which the compiler would have caught.
-tttrlib_add_module(
-    NAME     io
-    SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/IORegistry.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/FileIO.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRTags.cpp"
-    HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util
-    EXTERNAL_DEPS tttrlib::json
-    TEST_DIR test/python/tttr
-)
+# `base` is the format-agnostic half -- the registry, the header/tag model, the
+# raw file access -- and every vendor module below depends on it and on nothing
+# else. Declaration order is dependency order, so base comes first.
+add_subdirectory(base)    # registry, headers/tags, raw file access
+
+add_subdirectory(pq)      # PicoQuant PTU, HT3 (incl. _sf macro-time compression)
+add_subdirectory(bh)      # Becker & Hickl SPC-130, SPC-600, SPC-QC, .set sidecar
+add_subdirectory(cz)      # Zeiss ConfoCor3 raw
+add_subdirectory(sm)      # Single-molecule .sm
+add_subdirectory(ps)      # Photonscore LINCam .photons
+add_subdirectory(be)      # BrightEyes-TTM .ttr
+add_subdirectory(image)   # TIFF arrays -- file I/O, but not a TTTR container

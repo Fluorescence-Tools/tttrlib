@@ -201,11 +201,20 @@ function(tttrlib_finalize_modules)
     get_property(claimed GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES)
     get_property(modules GLOBAL PROPERTY TTTRLIB_MODULE_LIST)
 
-    # Everything that must be built: what is still in src/, plus what extracted
-    # modules have taken into modules/<name>/src/.
-    file(GLOB_RECURSE all_sources
-            "${CMAKE_SOURCE_DIR}/src/*.cpp"
-            "${CMAKE_SOURCE_DIR}/modules/*/src/*.cpp")
+    # Everything that must be built: what is still in src/, plus what the
+    # modules have taken into modules/<name>/src/ -- at any depth, because the
+    # format modules are nested one level further under modules/io/.
+    #
+    # The depth matters more than it looks. A fixed modules/*/src/*.cpp pattern
+    # stops seeing a module the moment it is moved a level down, and the failure
+    # is silent in the worst way: the sources vanish from `all_sources`, so they
+    # are not "unclaimed" either and the check still passes while covering less.
+    # Moving the io_* modules under io/ dropped the count from 73 to 67 without
+    # a word.
+    file(GLOB_RECURSE all_sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
+    file(GLOB_RECURSE module_sources "${CMAKE_SOURCE_DIR}/modules/*.cpp")
+    list(APPEND all_sources ${module_sources})
+    list(REMOVE_DUPLICATES all_sources)
 
     set(duplicates "")
     set(seen "")

@@ -4,9 +4,9 @@
 #include "TTTRHeader.h"
 #include "TTTRTags.h"
 #include "io_sm.h"
-#include "io_carlzeiss.h"
-#include "io_beckerhickl.h"
-#include "io_picoquant.h"
+#include "io_cz.h"
+#include "io_bh.h"
+#include "io_pq.h"
 #include "FileCheck.h"
 #include "Verbose.h"
 

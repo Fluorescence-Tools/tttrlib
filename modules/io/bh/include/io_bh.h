@@ -3,7 +3,7 @@
 #define TTTRLIB_IO_BECKERHICKL_H
 
 /*!
- * \file io_beckerhickl.h
+ * \file io_bh.h
  * \brief Becker & Hickl SPC containers: SPC-130, SPC-600 and SPC-QC.
  *
  * All four share the ".spc" extension and a 4-byte header, which is why

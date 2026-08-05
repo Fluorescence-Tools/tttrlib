@@ -20,20 +20,14 @@
 #   sim                     the simulator (depends on nothing above util)
 #   nn                      feed-forward network, for the HMM surrogate
 #   hmm                     photon-by-photon HMMs -- the top of the graph
-#   io_image, pda, superres, localization
+#   io/{pq,bh,cz,sm,ps,be,image}, pda, superres, localization
 #
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
 add_subdirectory(util)
-add_subdirectory(io)
-add_subdirectory(io_photonscore)
-add_subdirectory(io_sm)
-add_subdirectory(io_carlzeiss)
-add_subdirectory(io_beckerhickl)
-add_subdirectory(io_picoquant)
+add_subdirectory(io)   # declares `io` and, beneath it, one module per format
 add_subdirectory(opt)
 add_subdirectory(hist)
-add_subdirectory(io_image)
 add_subdirectory(sim)
 add_subdirectory(localization)
 add_subdirectory(core)

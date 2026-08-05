@@ -3,7 +3,7 @@
 #define TTTRLIB_IO_CARLZEISS_H
 
 /*!
- * \file io_carlzeiss.h
+ * \file io_cz.h
  * \brief The Zeiss ConfoCor3 raw container's header.
  *
  * The file opens with an ASCII banner -- "Carl Zeiss ConfoCor3 - raw data file

@@ -43,7 +43,7 @@ changing `core` can break anything downstream of it:
 
 ```bash
 pytest test/ --modules sim           # the simulator and what depends on it
-pytest test/ --modules pda,imageio
+pytest test/ --modules pda,io_image
 ```
 
 The expansion is deliberately generous. A run that is slightly too wide costs
@@ -58,7 +58,7 @@ Run the full suite before merging, and after the last change of a phase.
 | directory | what it covers | module(s) |
 |---|---|---|
 | `tttr/` | photon-stream data model, readers, writers, transcoding | core, hist |
-| `clsm/` | confocal imaging, super-resolution, ISM | imaging, superres, localization, imageio |
+| `clsm/` | confocal imaging, super-resolution, ISM | imaging, superres, localization, io_image |
 | `correlator/` | correlation / FCS | imaging |
 | `decayfit/` | decay fitting, convolution, priors | decay, opt |
 | `burstfilter/` | burst search, selection, filtering | burst, core |

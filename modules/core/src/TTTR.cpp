@@ -15,6 +15,7 @@
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
+#include "io_be.h"
 #include "TTTRMask.h"
 #include "FileCheck.h"
 #include "PhotonscoreD7.h"
@@ -696,6 +697,53 @@ int TTTR::read_sm_file(const char *filename){
 
 }
 
+/*!
+ * \brief Read a BrightEyes-TTM raw stream into the standard event arrays.
+ *
+ * The decode lives in io_be; this turns its output into tttrlib's
+ * internal representation, so everything downstream -- selections, correlation,
+ * CLSMImage -- works on a .ttr exactly as it would on a PTU.
+ *
+ * Two things are worth knowing about the result:
+ *
+ * - Macro times are in sample-clock ticks (240 MHz by default), not in the
+ *   units of any other container. A .ttr carries no clock, so this is the only
+ *   honest choice; the resolution tag records what was assumed.
+ * - Micro times are raw TDC codes unless a calibration is supplied. The payload
+ *   is a tapped-delay-line code whose bins are unequal, so scaling it by a
+ *   single number would produce a plausible-looking wrong lifetime.
+ */
+int TTTR::read_ttr_file(const char *fn) {
+    tttrlib::io::TtrParams params;   // instrument defaults; see io_be.h
+    tttrlib::io::TtrData d;
+    try {
+        d = tttrlib::io::read_ttr(std::string(fn ? fn : ""), params);
+    } catch (const std::exception &e) {
+        std::cerr << "Error reading .ttr file: " << e.what() << std::endl;
+        return 0;
+    }
+
+    header = new TTTRHeader(BE_TTR_CONTAINER);
+    header->set_tttr_record_type(BE_RECORD_TYPE_TTR);
+    // The sample clock is an assumption, so it is written down rather than left
+    // implicit: a reader of the header can see what the macro times mean.
+    header->set_macro_time_resolution(1.0 / (params.sysclk_MHz * 1e6));
+    header->set_number_of_micro_time_channels(256);   // 8-bit TDC code
+
+    const size_t n = d.event_types.size();
+    allocate_memory_for_records(n);
+    for (size_t i = 0; i < n; ++i) {
+        set_macro_time_at(i, static_cast<unsigned long long>(d.macro_times[i]));
+        micro_times[i] = d.micro_times[i];
+        routing_channels[i] = d.routing_channels[i];
+        event_types[i] = d.event_types[i];
+    }
+    n_records_read = n;
+    n_valid_events = n;
+    return 1;
+}
+
+
 int TTTR::read_ps_file(const char *fn) {
     std::string path(fn ? fn : "");
 
@@ -1138,6 +1186,8 @@ if (is_verbose()) {
         read_sm_file(fn);
     } else if (container_type == PS_PHOTONS_CONTAINER) {
         read_ps_file(fn);
+    } else if (container_type == BE_TTR_CONTAINER) {
+        read_ttr_file(fn);
     } else {
         read_records_file(fn, container_type);
     }

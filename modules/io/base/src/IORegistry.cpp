@@ -125,6 +125,20 @@ std::vector<FileFormat> builtin_formats() {
     qc.can_write = true;
     f.push_back(qc);
 
+    FileFormat ttr;
+    ttr.name = "BRIGHTEYES-TTR";
+    ttr.container_type = BE_TTR_CONTAINER;
+    ttr.label = "BrightEyes-TTM raw";
+    ttr.extensions = {"ttr"};
+    // A bare uint16 stream: no header, no magic, nothing to sniff. It can only
+    // ever be reached by extension or by being named, so it takes no part in
+    // content detection -- any file at all would "match".
+    ttr.detectable = false;
+    ttr.record_types = {BE_RECORD_TYPE_TTR};
+    ttr.default_record_type = BE_RECORD_TYPE_TTR;
+    ttr.can_write = false;
+    f.push_back(ttr);
+
     for (auto& fmt : f) {
         if (fmt.summary.empty()) fmt.summary = "TTTR container: " + fmt.label;
     }
@@ -190,14 +204,26 @@ int IORegistry::container_type_from_extension(const std::string& filename) {
 }
 
 int IORegistry::infer_container_type(const std::string& filename) {
-    for (const FileFormat* f : by_extension(extension_of(filename))) {
+    const std::string ext = extension_of(filename);
+    const auto claimants = by_extension(ext);
+    for (const FileFormat* f : claimants) {
         if (!f->detectable) continue;          // never identified from a file
         if (f->sniff == nullptr) return f->container_type;   // extension is enough
         if (f->sniff(filename)) return f->container_type;
     }
 
-    // Nothing claimed the extension, or nothing claiming it recognised the
-    // contents. Ask every format that can identify itself from bytes.
+    // If some format claims this extension, stop here. Its sniffers declined,
+    // and that is an answer: a ".spc" whose contents are not Becker & Hickl is
+    // unrecognised, not an invitation to try everything else.
+    //
+    // This matters most for formats that cannot be sniffed at all. A .ttr is a
+    // bare uint16 stream, so it is registered as not detectable -- and probing
+    // the other sniffers against one found that Becker & Hickl's SPC-QC
+    // structural check accepts it, reporting a BrightEyes file as SPC-QC.
+    if (!claimants.empty()) return -1;
+
+    // Nothing claims the extension. Now ask every format that can identify
+    // itself from bytes.
     //
     // The extension is a hint, not the answer: a correctly formatted file with
     // an unexpected name -- or no extension at all -- was previously
@@ -209,10 +235,8 @@ int IORegistry::infer_container_type(const std::string& filename) {
     // deliberate exceptions intact: "SM" is accepted on its extension alone and
     // must not start matching arbitrary files, and the SPC-600 variants are not
     // identifiable from content at all.
-    const std::string ext = extension_of(filename);
     for (const FileFormat& f : formats()) {
         if (!f.detectable || f.sniff == nullptr) continue;
-        if (f.has_extension(ext)) continue;                       // already tried
         if (f.sniff(filename)) return f.container_type;
     }
     return -1;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "io_picoquant.h"
+#include "io_pq.h"
 
 #include <nlohmann/json.hpp>
 

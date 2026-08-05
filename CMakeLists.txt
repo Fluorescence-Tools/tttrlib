@@ -488,9 +488,12 @@ IF(BUILD_LIBRARY)
   # include/tttrlib/ exactly as the ones still in include/ do, so a C++ consumer
   # sees one directory and #include <tttrlib/TiffArrayIO.h> keeps working no
   # matter which module owns it.
-  FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES true
+  # LIST_DIRECTORIES must stay FALSE here: GLOB_RECURSE with it ON returns every
+  # directory it walked through, matching pattern or not, and INSTALL(PUBLIC_HEADER)
+  # rejects a directory outright.
+  FILE(GLOB_RECURSE HEADERS_FILES LIST_DIRECTORIES false
           "${CMAKE_SOURCE_DIR}/include/*.h*"
-          "${CMAKE_SOURCE_DIR}/modules/*/include/*.h*")
+          "${CMAKE_SOURCE_DIR}/modules/*.h*")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Shared PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
   SET_TARGET_PROPERTIES(${PROJECT_NAME}Static PROPERTIES PUBLIC_HEADER "${HEADERS_FILES}")
 

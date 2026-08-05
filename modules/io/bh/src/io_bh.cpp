@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#include "io_beckerhickl.h"
+#include "io_bh.h"
 
 #include <nlohmann/json.hpp>
 

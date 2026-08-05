@@ -3,7 +3,7 @@
 #define TTTRLIB_IO_PICOQUANT_H
 
 /*!
- * \file io_picoquant.h
+ * \file io_pq.h
  * \brief PicoQuant PTU and HT3 containers.
  *
  * PTU is a tagged format -- the header is a list of typed name/value entries,

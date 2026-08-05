@@ -42,7 +42,7 @@ MODULE_TEST_GROUPS = {
                      "correlator", "decayfit", "pda", "hmm"],
     "hist":         ["tttr", "misc"],
     "opt":          ["decayfit"],
-    "imageio":      ["clsm"],
+    "io_image":      ["clsm"],
     "sim":          ["simulation", "hmm"],
     "pda":          ["pda"],
     "superres":     ["clsm"],
