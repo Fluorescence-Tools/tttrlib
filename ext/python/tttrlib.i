@@ -143,6 +143,7 @@ def experimental(cls):
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
+%include "HistogramNd.i"
 
 /* Correlation of data */
 %include "Correlator.i"

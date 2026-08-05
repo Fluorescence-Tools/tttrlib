@@ -49,7 +49,7 @@ tttrlib_add_module(
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  io io_ps io_sm io_cz io_bh io_pq io_be io_hdf5 util
     EXTERNAL_DEPS tttrlib::json
-    SWIG_INTERFACES Histogram.i TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
+    SWIG_INTERFACES Histogram.i HistogramNd.i TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
                     Channel.i FileCheck.i
     TEST_DIR test/python/tttr
 )
