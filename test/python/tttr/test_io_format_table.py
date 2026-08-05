@@ -39,3 +39,48 @@ def test_every_builtin_format_is_marked_stable():
 ])
 def test_extensions_are_unchanged(name, ext):
     assert tttrlib.registry("file_container")[name]["extensions"] == ext
+
+
+# --- the four dispatchers now derived from the same table -------------------
+
+@pytest.mark.parametrize("filename,expected", [
+    ("x.ptu", 0), ("x.ht3", 1), ("x.spc", 2), ("x.h5", 5), ("x.hdf5", 5),
+    ("x.raw", 6), ("x.sm", 7), ("x.photons", 8),
+    ("x.nope", -1), ("no-extension-at-all", -1),
+])
+def test_extension_to_container_is_unchanged(filename, expected):
+    """`.spc` resolves to SPC-130 (2) because it is the lowest id claiming it."""
+    assert tttrlib.inferTTTRContainerTypeFromExtension(filename) == expected
+
+
+@pytest.mark.parametrize("container,expected", [
+    (0, "ptu"), (1, "ht3"),
+    (2, "spc"), (3, "spc"), (4, "spc"), (9, "spc"),
+    (5, "hdf5"),          # listed as ".h5,.hdf5" but written as "hdf5"
+    (6, "raw"), (7, "sm"), (8, "photons"),
+    (999, ""),
+])
+def test_canonical_write_extension_is_unchanged(container, expected):
+    assert tttrlib.tttrContainerCanonicalExtension(container) == expected
+
+
+@pytest.mark.parametrize("name,records,default", [
+    # PTU accepts every PicoQuant encoding EXCEPT SF-HT3: that compression
+    # exists only in HT3 containers, which is the one asymmetry in the rules.
+    ("PTU",          [2, 4, 1, 3, 6, 5, 12, 13],     4),
+    ("HT3",          [2, 4, 1, 3, 6, 5, 12, 13, 14], 4),
+    ("SPC-130",      [7],      7),
+    ("SPC-600_256",  [8],      8),
+    ("SPC-600_4096", [9],      9),
+    ("SPC-QC",       [15, 16], 15),
+    ("CZ-RAW",       [10],     10),
+    ("SM",           [11],     11),
+    # Photon-HDF5 stores decoded arrays, so any encoding is acceptable and none
+    # is canonical -- an empty list means "any".
+    ("PHOTON-HDF5",  [],      -1),
+    ("PHOTONS",      [],      -1),
+])
+def test_record_type_rules_are_unchanged(name, records, default):
+    entry = tttrlib.registry("file_container")[name]
+    assert sorted(entry["record_types"]) == sorted(records)
+    assert entry["default_record_type"] == default

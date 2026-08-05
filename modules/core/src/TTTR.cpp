@@ -2812,70 +2812,21 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
  * @return
  */
 bool valid_container_record_pair(int container_type, int record_type){
-    if(
-            (container_type == PQ_PTU_CONTAINER) ||
-            (container_type == PQ_HT3_CONTAINER)
-            ){
-        switch (record_type) {
-            case PQ_RECORD_TYPE_HHT2v1:
-            case PQ_RECORD_TYPE_HHT3v2:
-            case PQ_RECORD_TYPE_HHT2v2:
-            case PQ_RECORD_TYPE_HHT3v1:
-            case PQ_RECORD_TYPE_PHT2:
-            case PQ_RECORD_TYPE_PHT3:
-            case PQ_RECORD_TYPE_GENERIC_T3:
-            case PQ_RECORD_TYPE_GENERIC_T2:
-                return true;
-            case PQ_RECORD_TYPE_SF_HT3:
-                // SF compression exists only for HT3 containers
-                return container_type == PQ_HT3_CONTAINER;
-            default:
-                return false;
-        }
-    } else if(container_type == BH_SPC130_CONTAINER){
-        return record_type == BH_RECORD_TYPE_SPC130;
-    } else if(container_type == BH_SPCQC_CONTAINER){
-        return (record_type == BH_RECORD_TYPE_SPCQC_X04) ||
-               (record_type == BH_RECORD_TYPE_SPCQC_X06);
-    } else if(container_type == BH_SPC600_256_CONTAINER){
-        return record_type == BH_RECORD_TYPE_SPC600_256;
-    } else if(container_type == BH_SPC600_4096_CONTAINER){
-        return record_type == BH_RECORD_TYPE_SPC600_4096;
-    } else if(container_type == CZ_CONFOCOR3_CONTAINER){
-        return record_type == CZ_RECORD_TYPE_CONFOCOR3;
-    } else if(container_type == SM_CONTAINER){
-        return record_type == SM_RECORD_TYPE;
-    } else if(container_type == PHOTON_HDF_CONTAINER){
-        // Photon-HDF5 stores decoded arrays; any record type is acceptable
-        return true;
-    }
-    return false;
+    // Was a 35-line if/else chain restating what the format table already says.
+    // Photon-HDF5 stores decoded arrays rather than records, so it accepts any
+    // record type -- expressed as an empty record_types list.
+    const auto* f = tttrlib::IORegistry::by_container_type(container_type);
+    return f != nullptr && f->accepts_record_type(record_type);
 }
 
 /*!
  * Canonical record type used when transcoding into a container whose header
- * does not carry a (valid) record type for it.
+ * does not carry a (valid) record type for it. -1 when the format does not need
+ * one, which is true of Photon-HDF5 and of Photonscore.
  */
 static int default_record_type_for_container(int container_type){
-    switch (container_type) {
-        case PQ_PTU_CONTAINER:
-        case PQ_HT3_CONTAINER:
-            return PQ_RECORD_TYPE_HHT3v2;
-        case BH_SPC130_CONTAINER:
-            return BH_RECORD_TYPE_SPC130;
-        case BH_SPCQC_CONTAINER:
-            return BH_RECORD_TYPE_SPCQC_X04;
-        case BH_SPC600_256_CONTAINER:
-            return BH_RECORD_TYPE_SPC600_256;
-        case BH_SPC600_4096_CONTAINER:
-            return BH_RECORD_TYPE_SPC600_4096;
-        case CZ_CONFOCOR3_CONTAINER:
-            return CZ_RECORD_TYPE_CONFOCOR3;
-        case SM_CONTAINER:
-            return SM_RECORD_TYPE;
-        default:
-            return -1;
-    }
+    const auto* f = tttrlib::IORegistry::by_container_type(container_type);
+    return f ? f->default_record_type : -1;
 }
 
 /*!

@@ -40,6 +40,14 @@ json file_container_entries() {
         entry["container_type"] = f.container_type;
         entry["can_read"] = f.can_read;
         entry["can_write"] = f.can_write;
+        // The record encodings valid inside this container, and the one used
+        // when transcoding into it. An empty list means "any", which is true of
+        // Photon-HDF5: it stores decoded arrays rather than records. This was
+        // only expressed inside an if/else chain in TTTR.cpp before, so a caller
+        // choosing a transcode target had no way to ask.
+        entry["record_types"] = f.record_types;
+        entry["default_record_type"] = f.default_record_type;
+        entry["canonical_extension"] = f.write_extension();
         // Tells a consumer which container ints are safe to persist. Built-in
         // formats own 0-999 permanently; a plugin's id is session-local, so for
         // those the NAME is the stable identifier.

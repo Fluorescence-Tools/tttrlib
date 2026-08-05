@@ -66,6 +66,29 @@ struct FileFormat {
     /// which is exactly why sniffing exists.
     std::vector<std::string> extensions;
 
+    /// Extension used when tttrlib writes this format and has to choose one.
+    /// Not simply extensions[0]: Photon-HDF5 is listed as ".h5,.hdf5" but
+    /// writes "hdf5". Defaults to extensions[0] when left empty.
+    std::string canonical_extension;
+
+    /*!
+     * \brief Recognise this format from the file's contents.
+     *
+     * Registered by whoever owns the reader, so the format table does not have
+     * to reach up a layer to call it. A null sniffer means one of two things,
+     * distinguished by \ref detectable:
+     *   - detectable: accept on the extension alone. Only "SM" does this, and
+     *     it is what the hand-written dispatcher did -- isSMFile() exists but
+     *     was never called from it.
+     *   - not detectable: never identified from a file at all. SPC-600_256 and
+     *     SPC-600_4096 claim ".spc" but were never candidates; the caller has
+     *     to name them.
+     */
+    bool (*sniff)(const std::string& filename) = nullptr;
+
+    /// Whether this format takes part in content-based detection. See \ref sniff.
+    bool detectable = true;
+
     /// Record encodings valid inside this container. Empty means "any", which
     /// is true of Photon-HDF5: it stores decoded arrays, not records.
     std::vector<int> record_types;
@@ -91,6 +114,12 @@ struct FileFormat {
     bool has_extension(const std::string& extension) const {
         for (const auto& e : extensions) if (e == extension) return true;
         return false;
+    }
+
+    /// The extension to write with; see \ref canonical_extension.
+    std::string write_extension() const {
+        if (!canonical_extension.empty()) return canonical_extension;
+        return extensions.empty() ? std::string() : extensions.front();
     }
 };
 
@@ -131,6 +160,34 @@ public:
      * feature.
      */
     static bool add(const FileFormat& format);
+
+    /*!
+     * \brief Attach a content sniffer to an already-registered format.
+     *
+     * The predicates that recognise a PTU or an HT3 by its bytes are public API
+     * in their own right and live with the readers, a layer above this table.
+     * Rather than have the table reach up for them -- which would put the
+     * photon-stream data model underneath a plain description of a format --
+     * that layer hands them down here on first use.
+     */
+    static bool set_sniffer(const std::string& name,
+                            bool (*sniff)(const std::string&));
+
+    /*!
+     * \brief Identify the format of \p filename: extension, then contents.
+     *
+     * Candidates are tried in ascending container_type order, which is not an
+     * arbitrary choice -- it is what makes ".spc" try SPC-130 (2) before
+     * SPC-QC (9), reproducing the hand-written dispatcher exactly instead of by
+     * coincidence. Returns the container id, or -1.
+     */
+    static int infer_container_type(const std::string& filename);
+
+    /// Container id for \p filename's extension alone, without reading it. -1 if none.
+    static int container_type_from_extension(const std::string& filename);
+
+    /// Lowercased extension of \p filename without the dot, or "".
+    static std::string extension_of(const std::string& filename);
 };
 
 }  // namespace tttrlib

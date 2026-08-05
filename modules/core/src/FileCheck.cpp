@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "FileCheck.h"
+#include "TTTRFormat.h"
+
+#include <mutex>
 
 
 // ------------------------- UTF helpers -------------------------
@@ -241,96 +244,47 @@ bool isCZConfocor3File(const std::string& filename) {
 /**
  * @brief Infers the type of a TTTR file based on its content.
  */
+namespace {
+
+/*!
+ * \brief Hand the content sniffers down to the format table, once.
+ *
+ * The predicates above are public API and belong with the readers; the table is
+ * a layer beneath them and must not reach up. So the direction is inverted:
+ * this layer registers what it can do. On first use rather than from a static
+ * initialiser -- an unreferenced initialiser is exactly what the linker drops
+ * out of libtttrlib_static.a, which has already bitten this project once.
+ *
+ * "SM" is absent on purpose. isSMFile() exists, but inferTTTRFileType() never
+ * called it: a ".sm" file was accepted on its extension alone. Registering it
+ * would reject files that load today.
+ */
+void ensure_sniffers() {
+    static std::once_flag once;
+    std::call_once(once, [] {
+        using tttrlib::IORegistry;
+        IORegistry::set_sniffer("PTU",         &isPTUFile);
+        IORegistry::set_sniffer("HT3",         &isHT3File);
+        IORegistry::set_sniffer("SPC-130",     &isBH132File);
+        IORegistry::set_sniffer("SPC-QC",      &isBHSPCQCFile);
+        IORegistry::set_sniffer("PHOTON-HDF5", &isHDF5File);
+        IORegistry::set_sniffer("CZ-RAW",      &isCZConfocor3File);
+        IORegistry::set_sniffer("PHOTONS",     &isPhotonsFile);
+    });
+}
+
+}  // namespace
+
 int inferTTTRFileType(const char* fn) {
-    std::string filename(fn ? fn : "");
-
-    auto to_lowercase = [](std::string s) {
-        std::transform(s.begin(), s.end(), s.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        return s;
-    };
-
-    auto dot = filename.rfind('.');
-    if (dot != std::string::npos) {
-        std::string extension = to_lowercase(filename.substr(dot + 1));
-
-        if (extension == "sm") {
-            return SM_CONTAINER;
-
-        } else if (extension == "photons") {
-            if (isPhotonsFile(filename)) {
-                return PS_PHOTONS_CONTAINER;
-            }
-
-        } else if (extension == "spc") {
-            if (isBH132File(filename)) {
-                return BH_SPC130_CONTAINER;
-            }
-            if (isBHSPCQCFile(filename)) {
-                return BH_SPCQC_CONTAINER;
-            }
-
-        } else if (extension == "ht3") {
-            if (isHT3File(filename)) {
-                return PQ_HT3_CONTAINER;
-            }
-
-        } else if (extension == "ptu") {
-            if (isPTUFile(filename)) {
-                return PQ_PTU_CONTAINER;
-            }
-
-        } else if (extension == "hdf5" || extension == "h5") {
-            if (isHDF5File(filename)) {
-                return PHOTON_HDF_CONTAINER;
-            }
-
-        } else if (extension == "raw") {
-            if (isCZConfocor3File(filename)) {
-                return CZ_CONFOCOR3_CONTAINER;
-            }
-        }
-    }
-
-    // Unknown/unsupported
-    return -1;
+    ensure_sniffers();
+    return tttrlib::IORegistry::infer_container_type(fn ? fn : "");
 }
 
 int inferTTTRContainerTypeFromExtension(const std::string& fn) {
-    auto to_lowercase = [](std::string s) {
-        std::transform(s.begin(), s.end(), s.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        return s;
-    };
-
-    auto dot = fn.rfind('.');
-    if (dot == std::string::npos) return -1;
-    std::string extension = to_lowercase(fn.substr(dot + 1));
-
-    if (extension == "ptu")  return PQ_PTU_CONTAINER;
-    if (extension == "ht3")  return PQ_HT3_CONTAINER;
-    if (extension == "spc")  return BH_SPC130_CONTAINER;
-    if (extension == "hdf5" || extension == "h5") return PHOTON_HDF_CONTAINER;
-    if (extension == "raw")  return CZ_CONFOCOR3_CONTAINER;
-    if (extension == "sm")   return SM_CONTAINER;
-    if (extension == "photons") return PS_PHOTONS_CONTAINER;
-
-    // Unknown/unsupported extension
-    return -1;
+    return tttrlib::IORegistry::container_type_from_extension(fn);
 }
 
 std::string tttrContainerCanonicalExtension(int container_type) {
-    switch (container_type) {
-        case PQ_PTU_CONTAINER:           return "ptu";
-        case PQ_HT3_CONTAINER:           return "ht3";
-        case BH_SPC130_CONTAINER:
-        case BH_SPC600_256_CONTAINER:
-        case BH_SPC600_4096_CONTAINER:
-        case BH_SPCQC_CONTAINER:    return "spc";
-        case PHOTON_HDF_CONTAINER:       return "hdf5";
-        case CZ_CONFOCOR3_CONTAINER:     return "raw";
-        case SM_CONTAINER:               return "sm";
-        case PS_PHOTONS_CONTAINER:       return "photons";
-        default:                         return "";
-    }
+    const auto* f = tttrlib::IORegistry::by_container_type(container_type);
+    return f ? f->write_extension() : std::string();
 }

@@ -3,6 +3,7 @@
 #include "TTTRHeaderTypes.h"   // the container and record-type constants
 
 #include <algorithm>
+#include <cctype>
 #include <mutex>
 
 namespace tttrlib {
@@ -59,6 +60,9 @@ std::vector<FileFormat> builtin_formats() {
     spc256.name = "SPC-600_256";
     spc256.container_type = BH_SPC600_256_CONTAINER;
     spc256.label = "Becker & Hickl SPC-600 (256)";
+    // Claims ".spc" but was never a candidate for detection: the dispatcher
+    // tried only SPC-130 and SPC-QC for that extension. A caller has to name it.
+    spc256.detectable = false;
     spc256.record_types = {BH_RECORD_TYPE_SPC600_256};
     spc256.default_record_type = BH_RECORD_TYPE_SPC600_256;
     f.push_back(spc256);
@@ -67,6 +71,7 @@ std::vector<FileFormat> builtin_formats() {
     spc4096.name = "SPC-600_4096";
     spc4096.container_type = BH_SPC600_4096_CONTAINER;
     spc4096.label = "Becker & Hickl SPC-600 (4096)";
+    spc4096.detectable = false;   // as SPC-600_256
     spc4096.record_types = {BH_RECORD_TYPE_SPC600_4096};
     spc4096.default_record_type = BH_RECORD_TYPE_SPC600_4096;
     f.push_back(spc4096);
@@ -76,6 +81,7 @@ std::vector<FileFormat> builtin_formats() {
     hdf5.container_type = PHOTON_HDF_CONTAINER;
     hdf5.label = "Photon-HDF5";
     hdf5.extensions = {"h5", "hdf5"};
+    hdf5.canonical_extension = "hdf5";   // tttrContainerCanonicalExtension() wrote "hdf5"
     // Photon-HDF5 stores decoded arrays, so any record type is acceptable and
     // none is canonical -- empty means "any".
     hdf5.can_write = true;
@@ -96,6 +102,10 @@ std::vector<FileFormat> builtin_formats() {
     sm.container_type = SM_CONTAINER;
     sm.label = "Single-molecule (SM)";
     sm.extensions = {"sm"};
+    // No sniffer, on purpose: isSMFile() exists but inferTTTRFileType() never
+    // called it -- a ".sm" file was accepted on its extension alone. Wiring the
+    // predicate up here would reject files that load today.
+    sm.sniff = nullptr;
     sm.record_types = {SM_RECORD_TYPE};
     sm.default_record_type = SM_RECORD_TYPE;
     sm.can_write = true;
@@ -158,6 +168,38 @@ std::vector<const FileFormat*> IORegistry::by_extension(const std::string& exten
         return a->container_type < b->container_type;
     });
     return out;
+}
+
+bool IORegistry::set_sniffer(const std::string& name,
+                             bool (*sniff)(const std::string&)) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    for (auto& f : table()) {
+        if (f.name == name) { f.sniff = sniff; return true; }
+    }
+    return false;
+}
+
+std::string IORegistry::extension_of(const std::string& filename) {
+    const auto dot = filename.rfind('.');
+    if (dot == std::string::npos) return {};
+    std::string ext = filename.substr(dot + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return ext;
+}
+
+int IORegistry::container_type_from_extension(const std::string& filename) {
+    const auto candidates = by_extension(extension_of(filename));
+    return candidates.empty() ? -1 : candidates.front()->container_type;
+}
+
+int IORegistry::infer_container_type(const std::string& filename) {
+    for (const FileFormat* f : by_extension(extension_of(filename))) {
+        if (!f->detectable) continue;          // never identified from a file
+        if (f->sniff == nullptr) return f->container_type;   // extension is enough
+        if (f->sniff(filename)) return f->container_type;
+    }
+    return -1;
 }
 
 bool IORegistry::add(const FileFormat& format) {
