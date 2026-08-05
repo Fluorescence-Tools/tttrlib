@@ -13,7 +13,13 @@
 # to the planned order recorded in modules/MODULE-DEBT.md.
 tttrlib_add_module(
     NAME     burst
-    SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstFilter.cpp"
+    SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRBurstSearch.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstConfidence.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchBayesianBlocks.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchKalman.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchMaxTree.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchRegistry.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstFilter.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstFeature.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstFeatureExtractor.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BVA.cpp"
@@ -21,6 +27,6 @@ tttrlib_add_module(
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util core
     EXTERNAL_DEPS tttrlib::json
-    SWIG_INTERFACES BurstFilter.i BurstFeature.i BurstFeatureExtractor.i BVA.i TwoCDE.i
+    SWIG_INTERFACES BurstSignificance.i BurstFilter.i BurstFeature.i BurstFeatureExtractor.i BVA.i TwoCDE.i
     TEST_DIR test/python/burstfilter
 )

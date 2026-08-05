@@ -14,6 +14,11 @@
 #
 # Closed against everything above core: nothing here includes a header owned by
 # decay, burst, hmm or nn. That is what made it extractable in one step.
+# `superres` and `localization` were separate modules and are folded in here.
+# Both take an image and give back a better one -- pixel reassignment for the
+# first, single-molecule fitting for the second -- and neither was ever used
+# without the imaging it operates on. Two one-file modules whose only dependent
+# was this one is a boundary that cost a library and bought nothing.
 tttrlib_add_module(
     NAME     imaging
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/CLSMImage.cpp"
@@ -24,9 +29,11 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/CorrelatorCurve.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/CorrelatorPhotonStream.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayPhasor.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/CLSMSuperRes.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/ImageLocalization.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util core
-    EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
-    SWIG_INTERFACES CLSM.i Correlator.i DecayPhasor.i
+    EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft tttrlib::eigen tttrlib::autodiff
+    SWIG_INTERFACES CLSM.i Correlator.i DecayPhasor.i CLSMSuperRes.i Localization.i
     TEST_DIR test/python/clsm
 )

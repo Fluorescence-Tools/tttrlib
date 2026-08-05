@@ -15,15 +15,11 @@
 # Two things here are core's only by accident of ownership, and both are
 # recorded debt:
 #
-#   * The burst SEARCHES. Five translation units define `TTTR::` methods
-#     outside TTTR.cpp, because TTTR.h publishes the whole burst-search API as
-#     its own methods. They are implementations of core's own class, so they
-#     cannot live anywhere else -- and they drag BurstSignificance.h and the
-#     BurstSearch*.h headers in with them. What is left over (BurstFilter,
-#     BurstFeature, BVA, TwoCDE) is genuinely separable and becomes `burst`.
-#     Exit: free functions taking `const TTTR&`, with the methods kept as
-#     forwarders and SWIG %extend re-attaching them to the Python proxy, so the
-#     API does not change.
+# The burst searches USED to be here, and are not any more: see
+# modules/burst/src/TTTRBurstSearch.cpp. They stay declared as TTTR methods,
+# because that is the public interface in three languages, but a member function
+# may be defined in any translation unit that sees the class -- so the
+# implementations live in `burst` and core contains no burst-search code at all.
 #
 #   * The FORMAT readers. PhotonscoreD7 and the HDF5 paths inside TTTR.cpp are
 #     here because the reader interface does not exist yet. Splitting them into
@@ -42,11 +38,6 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Channel.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FileCheck.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MicrotimeLinearization.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstConfidence.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchBayesianBlocks.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchKalman.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchMaxTree.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  io io_ps io_sm io_cz io_bh io_pq io_be io_hdf5 util
     EXTERNAL_DEPS tttrlib::json
