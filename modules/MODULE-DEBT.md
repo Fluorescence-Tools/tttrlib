@@ -21,7 +21,7 @@ rejects outright between shared libraries:
 
 `nn` has the same shape. The general rule: **nothing above `core` can come out
 while `core` is still inside the residual module**, because the residual sits on
-both ends of every edge. Order actually used: `imageio`, `opt`, `hist`, `sim`,
+both ends of every edge. Order actually used: `io_image`, `opt`, `hist`, `sim`,
 `pda`, `superres`, `localization`, `util`, `core`, `imaging`, `registry`,
 `decay`, then `burst`, `nn`, `hmm`, `graph`.
 
@@ -40,7 +40,7 @@ links (`libtttrlib_static.a`), and changing their artefact names would break bot
 
 They build from `TTTRLIB_CLAIMED_SOURCES` -- the same list
 `tttrlib_finalize_modules()` validates -- and **not** from a glob of `src/`. That
-is not a stylistic choice. Extracting `imageio` moved `TiffArrayIO.cpp` out of
+is not a stylistic choice. Extracting `io_image` moved `TiffArrayIO.cpp` out of
 `src/`, and while the glob still configured, built, linked and passed every test,
 `libtttrlib_static.a` had quietly lost the TIFF symbols: nothing in the test
 suite links that archive, and the R package that does link it was only being
@@ -83,7 +83,7 @@ generates the `.def` file.
 **Exit:** `TTTRLIB_<MOD>_EXPORT` macros at *class* granularity -- needed anyway
 for typeinfo and vtables across `.so` boundaries, for the accepted `friend`
 relationships, and for the `read_tiff<T>`/`write_tiff<T>` instantiations (which
-also need `extern template`). Annotate `imageio` and `pda` first, `core` last.
+also need `extern template`). Annotate `io_image` and `pda` first, `core` last.
 
 ## 6. Known cross-module reach-ins, to resolve as the modules land
 

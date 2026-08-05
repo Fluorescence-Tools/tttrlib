@@ -53,20 +53,47 @@ bool isHDF5File(const std::string& filename) {
 
 // Function to check if the file is an SM file
 bool isSMFile(const std::string& filename) {
-    uint64_t first_value = 0;
+    // The SM header is BIG-endian and begins with a uint32 version of 2,
+    // followed by two length-prefixed strings ("comment", then "simple").
+    //
+    // This used to read a native-endian uint64 and compare it to 2, which is
+    // wrong twice over: the field is 32 bits, and the file is big-endian. On a
+    // little-endian machine the first eight bytes of a real SM file read as
+    // 33554432, so the predicate rejected every genuine .sm file -- which is
+    // why detection accepted ".sm" on the extension alone and never called it.
     FILE* file = open_file(filename, "rb");
     if (!file) return false;
 
-    std::rewind(file);
-    size_t read_size = std::fread(&first_value, sizeof(first_value), 1, file);
-    std::fclose(file);
+    auto read_be32 = [&](uint32_t& out) -> bool {
+        unsigned char b[4];
+        if (std::fread(b, 1, 4, file) != 4) return false;
+        out = (uint32_t(b[0]) << 24) | (uint32_t(b[1]) << 16) |
+              (uint32_t(b[2]) << 8)  |  uint32_t(b[3]);
+        return true;
+    };
 
-    // A short read means "not this format", not an error. These predicates are
-    // asked speculatively -- detection now probes every sniffer when the
-    // extension does not resolve -- so a message here would print once per
-    // format for every file that is simply something else.
-    if (read_size != 1) return false;
-    return (first_value == 2);
+    // A counted string: a big-endian length, then that many bytes, which must
+    // be printable. Two of them in a row is what makes this a real check rather
+    // than a one-word coincidence.
+    auto skip_counted_string = [&](bool require_printable) -> bool {
+        uint32_t n = 0;
+        if (!read_be32(n)) return false;
+        if (n > 4096) return false;                 // implausible for a header field
+        for (uint32_t i = 0; i < n; ++i) {
+            const int c = std::fgetc(file);
+            if (c == EOF) return false;
+            if (require_printable && (c < 0x20 || c > 0x7E)) return false;
+        }
+        return true;
+    };
+
+    std::rewind(file);
+    uint32_t version = 0;
+    const bool ok = read_be32(version) && version == 2 &&
+                    skip_counted_string(false) &&   // comment, often empty
+                    skip_counted_string(true);      // e.g. "Simple"
+    std::fclose(file);
+    return ok;
 }
 
 // Function to check if the file is a PTU file
@@ -216,9 +243,10 @@ namespace {
  * initialiser -- an unreferenced initialiser is exactly what the linker drops
  * out of libtttrlib_static.a, which has already bitten this project once.
  *
- * "SM" is absent on purpose. isSMFile() exists, but inferTTTRFileType() never
- * called it: a ".sm" file was accepted on its extension alone. Registering it
- * would reject files that load today.
+ * "SM" is registered now. It was not, because isSMFile() rejected every real
+ * .sm file -- it compared a native-endian uint64 against 2 where the format has
+ * a big-endian uint32 -- so wiring it up would have broken files that loaded.
+ * With the predicate fixed, ".sm" is checked like every other format.
  */
 void ensure_sniffers() {
     static std::once_flag once;
@@ -231,6 +259,7 @@ void ensure_sniffers() {
         IORegistry::set_sniffer("PHOTON-HDF5", &isHDF5File);
         IORegistry::set_sniffer("CZ-RAW",      &isCZConfocor3File);
         IORegistry::set_sniffer("PHOTONS",     &isPhotonsFile);
+        IORegistry::set_sniffer("SM",          &isSMFile);
     });
 }
 

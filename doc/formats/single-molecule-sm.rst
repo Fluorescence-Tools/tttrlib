@@ -26,9 +26,15 @@ One encoding.
 Notes
 -----
 
-``.sm`` files are accepted on their extension alone -- the contents
-are not checked. ``isSMFile()`` exists and could be wired into detection, but
-doing so would start rejecting files that load today.
+``.sm`` files are recognised from their contents: a big-endian ``uint32``
+version of 2, followed by two length-prefixed strings whose lengths are
+plausible and whose text is printable.
+
+``isSMFile()`` used to read a native-endian ``uint64`` and compare it to 2. The
+field is 32 bits and the format is big-endian, so on a little-endian machine the
+first eight bytes of a real SM file read as 33554432 and the predicate rejected
+every genuine file -- which is why detection fell back to trusting the
+extension. With that fixed the check is real.
 
 Reference data
 --------------

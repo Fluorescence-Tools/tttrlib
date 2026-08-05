@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# imageio -- TIFF I/O for 2D and 3D numeric arrays.
+# io_image -- TIFF I/O for 2D and 3D numeric arrays.
 #
 # A genuine leaf: TiffArrayIO.h includes <string> and <cstdint> and nothing
 # else, and no other tttrlib header includes it. That makes it the right first
@@ -12,7 +12,7 @@
 # without TIFF support simply not configure this module.
 
 tttrlib_add_module(
-    NAME     imageio
+    NAME     io_image
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/TiffArrayIO.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     SWIG_INTERFACES Tiff.i

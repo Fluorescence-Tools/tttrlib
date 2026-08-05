@@ -102,10 +102,6 @@ std::vector<FileFormat> builtin_formats() {
     sm.container_type = SM_CONTAINER;
     sm.label = "Single-molecule (SM)";
     sm.extensions = {"sm"};
-    // No sniffer, on purpose: isSMFile() exists but inferTTTRFileType() never
-    // called it -- a ".sm" file was accepted on its extension alone. Wiring the
-    // predicate up here would reject files that load today.
-    sm.sniff = nullptr;
     sm.record_types = {SM_RECORD_TYPE};
     sm.default_record_type = SM_RECORD_TYPE;
     sm.can_write = true;
