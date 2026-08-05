@@ -438,7 +438,7 @@ public:
     void fill(const double* const* columns, long long n_points,
               const double* weights = nullptr, int n_threads = 0) {
         fill_with([&](int d, long long i) { return columns[d][i]; },
-                  n_points, weights, n_threads);
+                  [](long long) { return true; }, n_points, weights, n_threads);
     }
 
     /*!
@@ -452,7 +452,7 @@ public:
         check_cols(n_cols);
         const int nc = n_cols;
         fill_with([data, nc](int d, long long i) { return data[i * nc + d]; },
-                  n_rows, nullptr, n_threads);
+                  [](long long) { return true; }, n_rows, nullptr, n_threads);
     }
 
     /// \see fill_rows
@@ -461,6 +461,7 @@ public:
         check_cols(n_cols);
         const int nc = n_cols;
         fill_with([data, nc](int d, long long i) { return data[i * nc + d]; },
+                  [](long long) { return true; },
                   std::min<long long>(n_rows, n_weights), weights, n_threads);
     }
 
@@ -583,6 +584,118 @@ public:
 
     /// Profiles: the entry count (Mean) or the sum of weights (WeightedMean).
     void get_counts(double** out, int* n) const { copy_out(counts_, out, n); }
+
+    /*!
+     * \brief Fill from an arbitrary accessor, skipping rows `keep` rejects.
+     *
+     * Public and templated so a caller holding columns in their own types --
+     * float32, int32, dictionary codes -- can fill without converting them to
+     * double first. `get(d, i)` returns the value of axis `d` for row `i`;
+     * `keep(i)` returns false for a row that should not be counted, which is
+     * how a selection and a validity mask are applied without inventing a
+     * sentinel value that later gets binned by accident.
+     */
+    template<typename Get, typename Keep>
+    void fill_with(Get get, Keep keep, long long n_points,
+                   const double* weights, int n_threads) {
+        if (n_points <= 0) return;
+        grow_to_fit(get, n_points);
+
+        const int r = rank();
+        const int n_cells = static_cast<int>(values_.size());
+
+        // Variance needs a second accumulator per cell, and the shared fast
+        // paths accumulate one array. Two passes over the same partition would
+        // desynchronise from them for no gain, so the weighted-variance fill is
+        // its own serial loop -- it is the rarer case, and the pairing of a
+        // value with its variance matters more than its speed.
+        if (track_variance_) {
+            const std::vector<int> strides = compute_strides();
+            for (long long i = 0; i < n_points; i++) {
+                if (!keep(i)) continue;
+                int flat = 0;
+                bool ok = true;
+                for (int d = 0; d < r && ok; d++) {
+                    const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
+                    if (slot < 0) ok = false; else flat += slot * strides[d];
+                }
+                if (!ok) continue;
+                const double w = weights ? weights[i] : 1.0;
+                values_[flat] += w;
+                variances_[flat] += w * w;
+            }
+            return;
+        }
+
+        // Rank 1 and 2 over plain ranges get their own closures, with the axis
+        // constants captured BY VALUE. Reading them through a pointer into a
+        // heap vector costs a load per axis per point, which the compiler
+        // cannot hoist because it cannot prove the vector is not aliased by the
+        // histogram being written -- and that alone made the general fill 1.4x
+        // slower than boost's while the arithmetic was identical.
+        if (all_axes_affine() && r > 2 && r <= kMaxFastRank) {
+            // Rank 3 and above, still over plain ranges. The axis constants go
+            // into a fixed-size array captured BY VALUE for the same reason as
+            // below -- read through a pointer they cost a load per axis per
+            // point, and a 3-D fill was 2x slower than boost's that way.
+            const std::vector<FastAxis> fa = fast_axes();
+            std::array<FastAxis, kMaxFastRank> a{};
+            for (int d = 0; d < r; d++) a[d] = fa[d];
+            dispatch_fill(n_points, n_cells, weights, n_threads,
+                          [a, r, get, keep](long long i) -> int {
+                if (!keep(i)) return -1;
+                int flat = 0;
+                for (int d = 0; d < r; d++) {
+                    const FastAxis& ad = a[d];
+                    const int s = ad.slot_of(get(d, i));
+                    if (s < 0) return -1;
+                    flat += s * ad.stride;
+                }
+                return flat;
+            });
+            return;
+        }
+        if (all_axes_affine() && (r == 1 || r == 2)) {
+            const std::vector<FastAxis> fa = fast_axes();
+            if (r == 1) {
+                const FastAxis a = fa[0];
+                dispatch_fill(n_points, n_cells, weights, n_threads,
+                              [a, get, keep](long long i) -> int {
+                    if (!keep(i)) return -1;
+                    const int s = a.slot_of(get(0, i));
+                    return s < 0 ? -1 : s * a.stride;
+                });
+            } else {
+                const FastAxis a0 = fa[0], a1 = fa[1];
+                dispatch_fill(n_points, n_cells, weights, n_threads,
+                              [a0, a1, get, keep](long long i) -> int {
+                    if (!keep(i)) return -1;
+                    const int s0 = a0.slot_of(get(0, i));
+                    if (s0 < 0) return -1;
+                    const int s1 = a1.slot_of(get(1, i));
+                    if (s1 < 0) return -1;
+                    return s0 * a0.stride + s1 * a1.stride;
+                });
+            }
+            return;
+        }
+
+        // Everything else -- transformed, categorical, circular, growing, or
+        // rank 3 and above -- goes through Axis::index, which is general and
+        // slower and is not on anybody's inner loop.
+        const std::vector<int> strides = compute_strides();
+        dispatch_fill(n_points, n_cells, weights, n_threads,
+                      [&](long long i) -> int {
+            if (!keep(i)) return -1;
+            int flat = 0;
+            for (int d = 0; d < r; d++) {
+                const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
+                if (slot < 0) return -1;
+                flat += slot * strides[d];
+            }
+            return flat;
+        });
+    }
 
     // --- output, for language bindings ------------------------------------
 
@@ -784,102 +897,6 @@ private:
             f[d].stride = strides[d];
         }
         return f;
-    }
-
-    template<typename Get>
-    void fill_with(Get get, long long n_points, const double* weights, int n_threads) {
-        if (n_points <= 0) return;
-        grow_to_fit(get, n_points);
-
-        const int r = rank();
-        const int n_cells = static_cast<int>(values_.size());
-
-        // Variance needs a second accumulator per cell, and the shared fast
-        // paths accumulate one array. Two passes over the same partition would
-        // desynchronise from them for no gain, so the weighted-variance fill is
-        // its own serial loop -- it is the rarer case, and the pairing of a
-        // value with its variance matters more than its speed.
-        if (track_variance_) {
-            const std::vector<int> strides = compute_strides();
-            for (long long i = 0; i < n_points; i++) {
-                int flat = 0;
-                bool ok = true;
-                for (int d = 0; d < r && ok; d++) {
-                    const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
-                    if (slot < 0) ok = false; else flat += slot * strides[d];
-                }
-                if (!ok) continue;
-                const double w = weights ? weights[i] : 1.0;
-                values_[flat] += w;
-                variances_[flat] += w * w;
-            }
-            return;
-        }
-
-        // Rank 1 and 2 over plain ranges get their own closures, with the axis
-        // constants captured BY VALUE. Reading them through a pointer into a
-        // heap vector costs a load per axis per point, which the compiler
-        // cannot hoist because it cannot prove the vector is not aliased by the
-        // histogram being written -- and that alone made the general fill 1.4x
-        // slower than boost's while the arithmetic was identical.
-        if (all_axes_affine() && r > 2 && r <= kMaxFastRank) {
-            // Rank 3 and above, still over plain ranges. The axis constants go
-            // into a fixed-size array captured BY VALUE for the same reason as
-            // below -- read through a pointer they cost a load per axis per
-            // point, and a 3-D fill was 2x slower than boost's that way.
-            const std::vector<FastAxis> fa = fast_axes();
-            std::array<FastAxis, kMaxFastRank> a{};
-            for (int d = 0; d < r; d++) a[d] = fa[d];
-            dispatch_fill(n_points, n_cells, weights, n_threads,
-                          [a, r, get](long long i) -> int {
-                int flat = 0;
-                for (int d = 0; d < r; d++) {
-                    const FastAxis& ad = a[d];
-                    const int s = ad.slot_of(get(d, i));
-                    if (s < 0) return -1;
-                    flat += s * ad.stride;
-                }
-                return flat;
-            });
-            return;
-        }
-        if (all_axes_affine() && (r == 1 || r == 2)) {
-            const std::vector<FastAxis> fa = fast_axes();
-            if (r == 1) {
-                const FastAxis a = fa[0];
-                dispatch_fill(n_points, n_cells, weights, n_threads,
-                              [a, get](long long i) -> int {
-                    const int s = a.slot_of(get(0, i));
-                    return s < 0 ? -1 : s * a.stride;
-                });
-            } else {
-                const FastAxis a0 = fa[0], a1 = fa[1];
-                dispatch_fill(n_points, n_cells, weights, n_threads,
-                              [a0, a1, get](long long i) -> int {
-                    const int s0 = a0.slot_of(get(0, i));
-                    if (s0 < 0) return -1;
-                    const int s1 = a1.slot_of(get(1, i));
-                    if (s1 < 0) return -1;
-                    return s0 * a0.stride + s1 * a1.stride;
-                });
-            }
-            return;
-        }
-
-        // Everything else -- transformed, categorical, circular, growing, or
-        // rank 3 and above -- goes through Axis::index, which is general and
-        // slower and is not on anybody's inner loop.
-        const std::vector<int> strides = compute_strides();
-        dispatch_fill(n_points, n_cells, weights, n_threads,
-                      [&](long long i) -> int {
-            int flat = 0;
-            for (int d = 0; d < r; d++) {
-                const int slot = axes_[d].slot(axes_[d].index(get(d, i)));
-                if (slot < 0) return -1;
-                flat += slot * strides[d];
-            }
-            return flat;
-        });
     }
 
     /// Pick a fill strategy for `cell_of` and run it. \see Histogram.h

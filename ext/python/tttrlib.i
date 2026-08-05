@@ -144,6 +144,7 @@ def experimental(cls):
 
 %include "Histogram.i"
 %include "HistogramNd.i"
+%include "DataStore.i"
 
 /* Correlation of data */
 %include "Correlator.i"
