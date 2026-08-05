@@ -24,12 +24,6 @@
 
 #include <any>
 
-#ifdef BUILD_PHOTON_HDF
-// Forward declarations only -- HighFive::Group appears in a private
-// declaration below; the real headers are included in TTTRHeader.cpp.
-#include <highfive/bits/H5_definitions.hpp>
-#endif
-
 #include <nlohmann/json_fwd.hpp>
 
 #include "ByteOrder.h"
@@ -50,11 +44,6 @@
 class TTTRHeader {
 
     friend class TTTR;
-
-private:
-#ifdef BUILD_PHOTON_HDF
-    void process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name);
-#endif
 
 protected:
 

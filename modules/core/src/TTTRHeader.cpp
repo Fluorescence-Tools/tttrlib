@@ -9,13 +9,7 @@
 #include "io_pq.h"
 #include "FileCheck.h"
 #include "Verbose.h"
-
-#ifdef BUILD_PHOTON_HDF
-#include <highfive/H5File.hpp>
-#include <highfive/H5Group.hpp>
-#include <highfive/H5DataSet.hpp>
-#include <highfive/H5DataType.hpp>
-#endif
+#include "io_hdf5.h"
 
 #include <nlohmann/json.hpp>
 
@@ -316,149 +310,72 @@ void TTTRHeader::set_json(std::string json_string){
 
 
 
-#ifdef BUILD_PHOTON_HDF
-// Helper function to process datasets in a given group
-void TTTRHeader::process_hdf5_group_datasets(const HighFive::Group& group, const std::string group_name) {
-    // Get all objects in the group
-    auto object_names = group.listObjectNames();
-    for (const auto& obj_name : object_names) {
-if (is_verbose()) {
-        std::cout << "Processing object: " << obj_name << std::endl;
-}
+/*!
+ * \brief Read the Photon-HDF5 metadata groups into tags.
+ *
+ * The HDF5 half lives in io_hdf5 and comes back as a flat list of values, so
+ * nothing here knows what a HighFive::Group is. That is the point: this header
+ * had to forward-declare one for a single private method, which put an HDF5
+ * toolchain on the include path of every consumer of the photon-stream data
+ * model.
+ *
+ * Metadata is reported rather than mapped -- Photon-HDF5 does not fix the names
+ * or types under /setup and /identity -- so whatever the file carries is kept as
+ * a "<group>.<name>" tag, and the four values tttrlib does understand are
+ * additionally promoted to their canonical tag names.
+ */
+int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
+    if (!tttrlib::io::photon_hdf5_available()) return -1;
 
-        // Check if the object is a dataset
-        if (group.getObjectType(obj_name) != HighFive::ObjectType::Dataset) {
-if (is_verbose()) {
-            std::cout << obj_name << " is not a dataset. Skipping." << std::endl;
-}
-            continue;
-        }
+    const auto values = tttrlib::io::read_photon_hdf5_metadata(std::string(fn ? fn : ""));
+    json_data()["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
 
-        // Open the dataset
-        auto dataset = group.getDataSet(obj_name);
-        auto datatype = dataset.getDataType();
-        auto dataspace = dataset.getSpace();
-        auto dims = dataspace.getDimensions();
-
-if (is_verbose()) {
-        std::cout << "datatype in hdf: " << datatype.string() << std::endl;
-        std::cout << "dims.size(): " << dims.size() << std::endl;
-}
-
-        // Process scalar or vector data
-        if (dims.empty() || dims.size() == 1) {
-            bool is_scalar = dims.empty() || dims[0] == 1;
-            if (datatype == HighFive::AtomicType<int8_t>() || datatype == HighFive::AtomicType<uint8_t>() ||
-                datatype == HighFive::AtomicType<int16_t>() || datatype == HighFive::AtomicType<uint16_t>() ||
-                datatype == HighFive::AtomicType<int32_t>() || datatype == HighFive::AtomicType<uint32_t>() ||
-                datatype == HighFive::AtomicType<int64_t>() || datatype == HighFive::AtomicType<uint64_t>()) {
-
-                if (is_scalar) {
-                    int value;
-                    dataset.read(value);
-if (is_verbose()) {
-                    std::cout << obj_name << " (int): " << value << std::endl;
-}
-                    add_tag(json_data(), group_name + "." + obj_name, value, tyInt8, 0);
-                } else {
-                    std::vector<int> values;
-                    dataset.read(values);
-if (is_verbose()) {
-                    std::cout << obj_name << " (int vector): ";
-                    for (size_t idx = 0; idx < values.size(); ++idx) {
-                        std::cout << values[idx] << " ";
-                    }
-                    std::cout << std::endl;
-}
-                    for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data(), group_name + "." + obj_name, values[idx], tyInt8, static_cast<int>(idx));
-                    }
-                }
-            } else if (datatype == HighFive::AtomicType<float>() || datatype == HighFive::AtomicType<double>()) {
-                if (is_scalar) {
-                    double value;
-                    dataset.read(value);
-                    add_tag(json_data(), group_name + "." + obj_name, value, tyFloat8, 0);
-                } else {
-                    std::vector<double> values;
-                    dataset.read(values);
-if (is_verbose()) {
-                    std::cout << obj_name << " (float vector): ";
-                    for (size_t idx = 0; idx < values.size(); ++idx) {
-                        std::cout << values[idx] << " ";
-                    }
-                    std::cout << std::endl;
-}
-                    for (size_t idx = 0; idx < values.size(); ++idx) {
-                        add_tag(json_data(), group_name + "." + obj_name, values[idx], tyFloat8, static_cast<int>(idx));
-                    }
-                }
-            } else {
-                std::string value;
-                dataset.read(value);
-
-                // Allocate memory and copy string data
-                char* allocated_str = new char[value.size() + 2];
-                std::strcpy(allocated_str, value.c_str());
-
-                add_tag(json_data(), group_name + "." + obj_name, allocated_str, tyAnsiString, 0);
-
-                // Free allocated memory
-                delete[] allocated_str;
+    for (const auto& v : values) {
+        // Root-level fields (description, acquisition_duration) have no group,
+        // and a leading dot is not a name.
+        const std::string name = v.group.empty() ? v.name : v.group + "." + v.name;
+        switch (v.kind) {
+            case tttrlib::io::Hdf5Value::Kind::Int:
+                add_tag(json_data(), name, (int) v.i, tyInt8, v.index);
+                break;
+            case tttrlib::io::Hdf5Value::Kind::Float:
+                add_tag(json_data(), name, v.d, tyFloat8, v.index);
+                break;
+            case tttrlib::io::Hdf5Value::Kind::String: {
+                // add_tag takes std::any and does any_cast<char*>, so a
+                // `const char*` is a different type and throws bad_any_cast --
+                // which the TTTR constructor's catch(...) then reports as
+                // "container type not supported". A mutable buffer it is.
+                std::vector<char> buf(v.s.begin(), v.s.end());
+                buf.push_back('\0');
+                add_tag(json_data(), name, buf.data(), tyAnsiString, v.index);
+                break;
             }
-        } else {
-if (is_verbose()) {
-            std::cerr << "Unsupported number of dimensions: " << dims.size() << " for " << obj_name << std::endl;
-}
         }
     }
-}
 
-int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
-    try {
-if (is_verbose()) {
-        std::cout << "Opening file: " << fn << std::endl;
-}
-        // Open the HDF5 file using HighFive
-        HighFive::File file(fn, HighFive::File::ReadOnly);
-
-if (is_verbose()) {
-        std::cout << "File opened successfully." << std::endl;
-}
-        json_data()["MeasDesc_ContainerType"] = PHOTON_HDF_CONTAINER;
-
-        if (file.exist("/setup")) {
-            process_hdf5_group_datasets(file.getGroup("/setup"), "setup");
-        }
-        if (file.exist("/identity")) {
-            process_hdf5_group_datasets(file.getGroup("/identity"), "identity");
-        }
-        if (file.exist("/photon_data/timestamps_specs")) {
-            process_hdf5_group_datasets(file.getGroup("/photon_data/timestamps_specs"), "timestamps_specs");
-            double v = get_tag(json_data(), "timestamps_specs.timestamps_unit")["value"];
-            add_tag(json_data(), TTTRTagGlobRes, v, tyFloat8);
-        }
-        if (file.exist("/photon_data/nanotimes_specs")) {
-            process_hdf5_group_datasets(file.getGroup("/photon_data/nanotimes_specs"), "nanotimes_specs");
-            int v1 = get_tag(json_data(), "nanotimes_specs.tcspc_num_bins")["value"];
-            add_tag(json_data(), TTTRNMicroTimes, v1, tyInt8);
-            double v2 = get_tag(json_data(), "nanotimes_specs.tcspc_unit")["value"];
-            add_tag(json_data(), TTTRTagRes, v2, tyFloat8);
-        }
-        return 0; // Return success
-    } catch (const HighFive::Exception& err) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return -1; // Return error
+    // Promote the values that mean something to the rest of tttrlib. Guarded
+    // individually: a file may carry one specs group and not the other.
+    //
+    // The explicit index 0 matters. find_tag matches the stored idx exactly and
+    // defaults to -1, so the default finds nothing for a scalar stored at 0 --
+    // unlike get_tag, whose -1 does match. Leaving it out silently skipped the
+    // promotion and every Photon-HDF5 file read back with a macro time
+    // resolution of -1.
+    if (find_tag(json_data(), "timestamps_specs.timestamps_unit", 0) >= 0) {
+        double v = get_tag(json_data(), "timestamps_specs.timestamps_unit")["value"];
+        add_tag(json_data(), TTTRTagGlobRes, v, tyFloat8);
     }
+    if (find_tag(json_data(), "nanotimes_specs.tcspc_num_bins", 0) >= 0) {
+        int v = get_tag(json_data(), "nanotimes_specs.tcspc_num_bins")["value"];
+        add_tag(json_data(), TTTRNMicroTimes, v, tyInt8);
+    }
+    if (find_tag(json_data(), "nanotimes_specs.tcspc_unit", 0) >= 0) {
+        double v = get_tag(json_data(), "nanotimes_specs.tcspc_unit")["value"];
+        add_tag(json_data(), TTTRTagRes, v, tyFloat8);
+    }
+    return 0;
 }
-#else
-
-int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
-    (void) fn;
-    return -1;
-}
-
-#endif
 
 
 

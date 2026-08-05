@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTR.h"
 
-#ifdef BUILD_PHOTON_HDF
-#include <highfive/H5File.hpp>
-#include <highfive/H5Group.hpp>
-#include <highfive/H5DataSet.hpp>
-#include <highfive/H5DataType.hpp>
-#endif
-
 #include <nlohmann/json.hpp>
 
 #include "BurstSearchBayesianBlocks.h"
@@ -16,6 +9,7 @@
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
 #include "io_be.h"
+#include "io_hdf5.h"
 #include "TTTRMask.h"
 #include "FileCheck.h"
 #include "PhotonscoreD7.h"
@@ -315,237 +309,71 @@ void TTTR::find_used_routing_channels() {
     }
 }
 
+/*!
+ * \brief Read a Photon-HDF5 file into the standard event arrays.
+ *
+ * The decode lives in io_hdf5; this turns its output into tttrlib's internal
+ * representation. Photon-HDF5 stores decoded arrays rather than an instrument's
+ * record encoding, so nothing here resembles a record parser -- the whole job is
+ * copying, and honouring macro time compression while doing it.
+ */
 int TTTR::read_hdf_file(const char *fn) {
-#ifdef BUILD_PHOTON_HDF
+    if (!tttrlib::io::photon_hdf5_available()) {
+        std::cerr << "Not built with Photon HDF interface." << std::endl;
+        return 1;
+    }
     header = new TTTRHeader();
     header->read_photon_hdf5_setup(fn);
 
-    /* handles */
-    hid_t ds_microtime = -1, ds_n_sync_pulses = -1, ds_routing_channels = -1;
-    hid_t space = -1;
-
-    /* dataset and chunk dimensions */
-    hsize_t dims[1] = {0};
-
-    /* open file */
-    hid_t hdf5_file = H5Fopen(fn, H5F_ACC_RDONLY, H5P_DEFAULT);
-    if (hdf5_file < 0) {
-        std::cerr << "Error: Unable to open file: " << fn << std::endl;
+    tttrlib::io::PhotonHdf5Photons p;
+    try {
+        p = tttrlib::io::read_photon_hdf5_photons(std::string(fn ? fn : ""));
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-
-    /* Check and handle /photon_data/timestamps */
-    if (H5Lexists(hdf5_file, "/photon_data/timestamps", H5P_DEFAULT) > 0) {
-        ds_n_sync_pulses = H5Dopen(hdf5_file, "/photon_data/timestamps", H5P_DEFAULT);
-        space = H5Dget_space(ds_n_sync_pulses);
-
-        // Allocate memory
-        H5Sget_simple_extent_dims(space, dims, nullptr);
-        n_valid_events = dims[0];
-        n_records_in_file = dims[0];
-        allocate_memory_for_records(n_valid_events);
-        
-        // Read into temporary buffer if compression is enabled
-        if (macro_time_compression_enabled) {
-            unsigned long long* temp_macro_times = (unsigned long long*) malloc(n_valid_events * sizeof(unsigned long long));
-            H5Dread(
-                    ds_n_sync_pulses,
-                    H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                    temp_macro_times
-            );
-            // Copy to compressed storage using set_macro_time_at
-            for (size_t i = 0; i < n_valid_events; i++) {
-                set_macro_time_at(i, temp_macro_times[i]);
-            }
-            free(temp_macro_times);
-        } else {
-            H5Dread(
-                    ds_n_sync_pulses,
-                    H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                    macro_times
-            );
-        }
-        H5Sclose(space);
-        H5Dclose(ds_n_sync_pulses);
-    } else {
-        std::cerr << "Warning: /photon_data/timestamps not found. Filling macro_times with zeros." << std::endl;
-        if (macro_time_compression_enabled) {
-            for (size_t i = 0; i < n_records_in_file; i++) {
-                set_macro_time_at(i, 0);
-            }
-        } else {
-            std::fill(macro_times, macro_times + n_records_in_file, 0);
-        }
+    if (!p.has_timestamps) {
+        std::cerr << "Warning: /photon_data/timestamps not found." << std::endl;
         return 1;
     }
-
-    /* Check and handle /photon_data/detectors */
-    if (H5Lexists(hdf5_file, "/photon_data/detectors", H5P_DEFAULT) > 0) {
-        ds_routing_channels = H5Dopen(hdf5_file, "/photon_data/detectors", H5P_DEFAULT);
-        space = H5Dget_space(ds_routing_channels);
-        H5Sget_simple_extent_dims(space, dims, nullptr);
-        H5Dread(
-                ds_routing_channels,
-                H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                routing_channels
-        );
-        H5Sclose(space);
-        H5Dclose(ds_routing_channels);
-    } else {
-        std::cerr << "Warning: /photon_data/detectors not found. Filling routing_channels with zeros." << std::endl;
-        std::fill(routing_channels, routing_channels + n_records_in_file, 0);
+    if (!p.has_detectors) {
+        std::cerr << "Warning: /photon_data/detectors not found. "
+                     "Filling routing_channels with zeros." << std::endl;
+    }
+    if (!p.has_nanotimes) {
+        std::cerr << "Warning: /photon_data/nanotimes not found. "
+                     "Filling micro_times with zeros." << std::endl;
     }
 
-    /* Check and handle /photon_data/nanotimes */
-    if (H5Lexists(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT) > 0) {
-        ds_microtime = H5Dopen(hdf5_file, "/photon_data/nanotimes", H5P_DEFAULT);
-        space = H5Dget_space(ds_microtime);
-        H5Sget_simple_extent_dims(space, dims, nullptr);
-        // Memory already allocated at line 256, don't reallocate
-        H5Dread(
-                ds_microtime,
-                H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                micro_times
-        );
-        H5Sclose(space);
-        H5Dclose(ds_microtime);
-    } else {
-        std::cerr << "Warning: /photon_data/nanotimes not found. Filling micro_times with zeros." << std::endl;
-        std::fill(micro_times, micro_times + n_records_in_file, 0);
+    const size_t n = p.size();
+    n_valid_events = n;
+    n_records_in_file = n;
+    allocate_memory_for_records(n);
+    for (size_t i = 0; i < n; ++i) {
+        // set_macro_time_at rather than a memcpy: with macro time compression
+        // enabled the array is not a flat list of ticks.
+        set_macro_time_at(i, p.macro_times[i]);
+        routing_channels[i] = p.routing_channels[i];
+        micro_times[i] = p.micro_times[i];
     }
-
-    /* Close the file */
-    H5Fclose(hdf5_file);
     return 0;
-
-#else
-    std::cerr << "Not built with Photon HDF interface." << std::endl;
-    return 1;
-#endif
 }
 
-
-#ifdef BUILD_PHOTON_HDF
-
 bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
-    // Layout follows the Photon-HDF5 specification (v0.5), see
-    // https://photon-hdf5.org/ and the phconvert reference implementation.
     if(header == nullptr) header = this->header;
-
-    hid_t file = H5Fcreate(fn.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    if (file < 0) {
-        std::cerr << "ERROR: Cannot create HDF5 file: " << fn << std::endl;
+    if (!tttrlib::io::photon_hdf5_available()) {
+        std::cerr << "Not built with Photon HDF interface." << std::endl;
         return false;
     }
 
-    // Helper: write a 1D dataset
-    auto write_dataset = [](hid_t loc, const char* name, hid_t file_type,
-                            hid_t mem_type, hsize_t n, const void* data) {
-        hid_t space = H5Screate_simple(1, &n, nullptr);
-        hid_t ds = H5Dcreate2(loc, name, file_type, space,
-                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        if (n > 0) H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-        H5Dclose(ds);
-        H5Sclose(space);
-    };
-    // Helper: write a scalar dataset
-    auto write_scalar = [](hid_t loc, const char* name, hid_t file_type,
-                           hid_t mem_type, const void* data) {
-        hid_t space = H5Screate(H5S_SCALAR);
-        hid_t ds = H5Dcreate2(loc, name, file_type, space,
-                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-        H5Dclose(ds);
-        H5Sclose(space);
-    };
-    auto write_scalar_int = [&write_scalar](hid_t loc, const char* name, int v) {
-        write_scalar(loc, name, H5T_STD_I32LE, H5T_NATIVE_INT32, &v);
-    };
-    // Helper: write a scalar string dataset (fixed-length ASCII)
-    auto write_string = [](hid_t loc, const char* name, const std::string &s) {
-        hid_t str_type = H5Tcopy(H5T_C_S1);
-        H5Tset_size(str_type, std::max<size_t>(1, s.size()));
-        H5Tset_strpad(str_type, H5T_STR_NULLPAD);
-        hid_t space = H5Screate(H5S_SCALAR);
-        hid_t ds = H5Dcreate2(loc, name, str_type, space,
-                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-        H5Dwrite(ds, str_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, s.c_str());
-        H5Dclose(ds);
-        H5Sclose(space);
-        H5Tclose(str_type);
-    };
-    // Helper: attach a string attribute to the root node
-    auto write_root_attribute = [&file](const char* name, const std::string &s) {
-        hid_t str_type = H5Tcopy(H5T_C_S1);
-        H5Tset_size(str_type, std::max<size_t>(1, s.size()));
-        hid_t space = H5Screate(H5S_SCALAR);
-        hid_t attr = H5Acreate2(file, name, str_type, space,
-                                H5P_DEFAULT, H5P_DEFAULT);
-        H5Awrite(attr, str_type, s.c_str());
-        H5Aclose(attr);
-        H5Sclose(space);
-        H5Tclose(str_type);
-    };
+    tttrlib::io::PhotonHdf5Setup setup;
+    setup.timestamps_unit = header->get_macro_time_resolution();
+    setup.tcspc_unit = header->get_micro_time_resolution();
+    setup.tcspc_num_bins = (int) header->get_number_of_micro_time_channels();
 
-    const std::string format_name = "Photon-HDF5";
-    const std::string format_version = "0.5";
-    const std::string format_url = "http://photon-hdf5.org/";
-    write_root_attribute("format_name", format_name);
-    write_root_attribute("format_version", format_version);
-    write_root_attribute("format_url", format_url);
-
-    hid_t g_photon_data = H5Gcreate2(
-            file, "/photon_data", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-    // Photon arrays: timestamps (uint64), detectors (int8), nanotimes (uint16)
-    hsize_t n = (hsize_t) n_valid_events;
-    std::vector<unsigned long long> timestamps(n_valid_events);
-    for (size_t i = 0; i < n_valid_events; i++) {
-        timestamps[i] = get_macro_time_at(i);
-    }
-    write_dataset(g_photon_data, "timestamps", H5T_STD_U64LE,
-                  H5T_NATIVE_UINT64, n, timestamps.data());
-    write_dataset(g_photon_data, "detectors", H5T_STD_I8LE,
-                  H5T_NATIVE_INT8, n, routing_channels);
-    write_dataset(g_photon_data, "nanotimes", H5T_STD_U16LE,
-                  H5T_NATIVE_UINT16, n, micro_times);
-
-    // Specs groups so the header (resolutions, number of micro time
-    // channels) can be reconstructed on reading
-    hid_t g_ts_specs = H5Gcreate2(
-            g_photon_data, "timestamps_specs",
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    double timestamps_unit = header->get_macro_time_resolution();
-    write_scalar(g_ts_specs, "timestamps_unit", H5T_IEEE_F64LE,
-                 H5T_NATIVE_DOUBLE, &timestamps_unit);
-    H5Gclose(g_ts_specs);
-
-    hid_t g_nt_specs = H5Gcreate2(
-            g_photon_data, "nanotimes_specs",
-            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    double tcspc_unit = header->get_micro_time_resolution();
-    int tcspc_num_bins = (int) header->get_number_of_micro_time_channels();
-    write_scalar(g_nt_specs, "tcspc_unit", H5T_IEEE_F64LE,
-                 H5T_NATIVE_DOUBLE, &tcspc_unit);
-    write_scalar_int(g_nt_specs, "tcspc_num_bins", tcspc_num_bins);
-    H5Gclose(g_nt_specs);
-
-    H5Gclose(g_photon_data);
-
-    // ---- mandatory root fields ----------------------------------------
-    write_string(file, "description", "TTTR data written by tttrlib");
-    double acquisition_duration = 0.0;
-    if (n_valid_events > 0) {
-        acquisition_duration = (double) (
-                timestamps[n_valid_events - 1] - timestamps[0]) * timestamps_unit;
-    }
-    write_scalar(file, "acquisition_duration", H5T_IEEE_F64LE,
-                 H5T_NATIVE_DOUBLE, &acquisition_duration);
-
-    // ---- /setup (mandatory fields) --------------------------------------
     // Values read from a source Photon-HDF5 file are preserved (the header
-    // reader stores them as "setup.<name>" tags); single-spot defaults are
-    // used otherwise.
+    // reader stores them as "setup.<name>" tags); single-spot defaults are used
+    // otherwise, so a round trip does not quietly re-describe the instrument.
     auto setup_tag_int = [&header](const char* name, int d) -> int {
         std::string tag_name = std::string("setup.") + name;
         if (TTTRHeader::find_tag(header->json_data(), tag_name, 0) < 0) return d;
@@ -554,52 +382,26 @@ bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
         if (v.is_number()) return (int) v.get<double>();
         return d;
     };
-    hid_t g_setup = H5Gcreate2(file, "/setup", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     std::unordered_set<signed char> channels(
             routing_channels, routing_channels + n_valid_events);
-    write_scalar_int(g_setup, "num_pixels",
-                     setup_tag_int("num_pixels", std::max<int>(1, (int) channels.size())));
-    write_scalar_int(g_setup, "num_spots", setup_tag_int("num_spots", 1));
-    write_scalar_int(g_setup, "num_spectral_ch", setup_tag_int("num_spectral_ch", 1));
-    write_scalar_int(g_setup, "num_polarization_ch", setup_tag_int("num_polarization_ch", 1));
-    write_scalar_int(g_setup, "num_split_ch", setup_tag_int("num_split_ch", 1));
-    signed char modulated = (signed char) setup_tag_int("modulated_excitation", 0);
-    signed char lifetime = (signed char) setup_tag_int("lifetime", 1);
-    signed char alternated = (signed char) setup_tag_int("excitation_alternated", 0);
-    write_scalar(g_setup, "modulated_excitation", H5T_STD_I8LE,
-                 H5T_NATIVE_INT8, &modulated);
-    write_scalar(g_setup, "lifetime", H5T_STD_I8LE, H5T_NATIVE_INT8, &lifetime);
-    write_dataset(g_setup, "excitation_alternated", H5T_STD_I8LE,
-                  H5T_NATIVE_INT8, 1, &alternated);
-    H5Gclose(g_setup);
+    setup.num_pixels = setup_tag_int("num_pixels", std::max<int>(1, (int) channels.size()));
+    setup.num_spots = setup_tag_int("num_spots", 1);
+    setup.num_spectral_ch = setup_tag_int("num_spectral_ch", 1);
+    setup.num_polarization_ch = setup_tag_int("num_polarization_ch", 1);
+    setup.num_split_ch = setup_tag_int("num_split_ch", 1);
+    setup.modulated_excitation = setup_tag_int("modulated_excitation", 0) != 0;
+    setup.lifetime = setup_tag_int("lifetime", 1) != 0;
+    setup.excitation_alternated = setup_tag_int("excitation_alternated", 0) != 0;
 
-    // ---- /identity ------------------------------------------------------
-    hid_t g_identity = H5Gcreate2(file, "/identity", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    write_string(g_identity, "format_name", format_name);
-    write_string(g_identity, "format_version", format_version);
-    write_string(g_identity, "format_url", format_url);
-    write_string(g_identity, "software", "tttrlib");
-    write_string(g_identity, "software_version", "");
-    std::time_t now = std::time(nullptr);
-    char time_buffer[32];
-    std::strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S",
-                  std::localtime(&now));
-    write_string(g_identity, "creation_time", time_buffer);
-    H5Gclose(g_identity);
+    // get_macro_time_at rather than the raw array, for the same reason the
+    // reader uses set_macro_time_at.
+    std::vector<uint64_t> timestamps(n_valid_events);
+    for (size_t i = 0; i < n_valid_events; i++) timestamps[i] = get_macro_time_at(i);
 
-    H5Fclose(file);
-    return true;
+    return tttrlib::io::write_photon_hdf5(
+            fn, timestamps.data(), routing_channels, micro_times,
+            n_valid_events, setup);
 }
-
-#else
-
-bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
-    (void) fn; (void) header;
-    std::cerr << "Not built with Photon HDF interface." << std::endl;
-    return false;
-}
-
-#endif
 
 
 int TTTR::read_sm_file(const char *filename){
@@ -1241,21 +1043,12 @@ if (is_verbose()) {
         // Calculate keyframes
         n_keyframes = (n_rec + keyframe_interval - 1) / keyframe_interval;
         
-        if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-            macro_times_compressed = (uint32_t*) malloc(n_rec * sizeof(uint32_t));
-            macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
-            micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
-            routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
-            event_types = (signed char*) malloc(n_rec * sizeof(signed char));
-        } else {
-            #ifdef BUILD_PHOTON_HDF
-            macro_times_compressed = (uint32_t*) H5allocate_memory(n_rec * sizeof(uint32_t), false);
-            macro_time_keyframes = (unsigned long long*) H5allocate_memory(n_keyframes * sizeof(unsigned long long), false);
-            micro_times = (unsigned short*) H5allocate_memory(n_rec * sizeof(unsigned short), false);
-            routing_channels = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
-            event_types = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
-            #endif
-        }
+        macro_times_compressed = (uint32_t*) malloc(n_rec * sizeof(uint32_t));
+        macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
+        micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
+        routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
+        event_types = (signed char*) malloc(n_rec * sizeof(signed char));
+        
         macro_times = nullptr;
         macro_time_compression_enabled = true;
         
@@ -1268,19 +1061,11 @@ if (is_verbose()) {
 }
     } else {
         // Normal allocation (uncompressed)
-        if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-            macro_times = (unsigned long long*) malloc(n_rec * sizeof(unsigned long long));
-            micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
-            routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
-            event_types = (signed char*) malloc(n_rec * sizeof(signed char));
-        } else {
-            #ifdef BUILD_PHOTON_HDF
-            macro_times = (unsigned long long*) H5allocate_memory(n_rec * sizeof(unsigned long long), false);
-            micro_times = (unsigned short*) H5allocate_memory(n_rec * sizeof(unsigned short), false);
-            routing_channels = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
-            event_types = (signed char*) H5allocate_memory(n_rec * sizeof(signed char), false);
-            #endif
-        }
+        macro_times = (unsigned long long*) malloc(n_rec * sizeof(unsigned long long));
+        micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
+        routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
+        event_types = (signed char*) malloc(n_rec * sizeof(signed char));
+        
         macro_times_compressed = nullptr;
         macro_time_keyframes = nullptr;
         macro_time_compression_enabled = false;
@@ -1291,36 +1076,19 @@ if (is_verbose()) {
 
 void TTTR::deallocate_memory_of_records(){
 
-    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-        free(macro_times);
-        free(routing_channels);
-        free(micro_times);
-        free(event_types);
-        if(macro_times_compressed != nullptr) {
-            free(macro_times_compressed);
-            macro_times_compressed = nullptr;
-        }
-        if(macro_time_keyframes != nullptr) {
-            free(macro_time_keyframes);
-            macro_time_keyframes = nullptr;
-        }
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        H5free_memory(macro_times);
-        H5free_memory(routing_channels);
-        H5free_memory(micro_times);
-        H5free_memory(event_types);
-        if(macro_times_compressed != nullptr) {
-            H5free_memory(macro_times_compressed);
-            macro_times_compressed = nullptr;
-        }
-        if(macro_time_keyframes != nullptr) {
-            H5free_memory(macro_time_keyframes);
-            macro_time_keyframes = nullptr;
-        }
-        H5garbage_collect();
-        #endif
+    free(macro_times);
+    free(routing_channels);
+    free(micro_times);
+    free(event_types);
+    if(macro_times_compressed != nullptr) {
+        free(macro_times_compressed);
+        macro_times_compressed = nullptr;
     }
+    if(macro_time_keyframes != nullptr) {
+        free(macro_time_keyframes);
+        macro_time_keyframes = nullptr;
+    }
+    
     capacity = 0;
     n_keyframes = 0;
 }
@@ -1351,55 +1119,19 @@ if (is_verbose()) {
     std::clog << "-- Reallocating memory from " << capacity << " to " << new_capacity << " TTTR records." << std::endl;
 }
     
-    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_times = (unsigned long long*) realloc(
-                macro_times, new_capacity * sizeof(unsigned long long)
-        );
-        micro_times = (unsigned short*) realloc(
-                micro_times, new_capacity * sizeof(unsigned short)
-        );
-        routing_channels = (signed char*) realloc(
-                routing_channels, new_capacity * sizeof(signed char)
-        );
-        event_types = (signed char*) realloc(
-                event_types, new_capacity * sizeof(signed char)
-        );
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        // HDF5 memory cannot be reallocated, so we need to allocate new and copy
-        unsigned long long* new_macro = (unsigned long long*) H5allocate_memory(
-                new_capacity * sizeof(unsigned long long), false
-        );
-        unsigned short* new_micro = (unsigned short*) H5allocate_memory(
-                new_capacity * sizeof(unsigned short), false
-        );
-        signed char* new_routing = (signed char*) H5allocate_memory(
-                new_capacity * sizeof(signed char), false
-        );
-        signed char* new_event = (signed char*) H5allocate_memory(
-                new_capacity * sizeof(signed char), false
-        );
-        
-        // Copy old data
-        if(capacity > 0) {
-            memcpy(new_macro, macro_times, capacity * sizeof(unsigned long long));
-            memcpy(new_micro, micro_times, capacity * sizeof(unsigned short));
-            memcpy(new_routing, routing_channels, capacity * sizeof(signed char));
-            memcpy(new_event, event_types, capacity * sizeof(signed char));
-            
-            // Free old memory
-            H5free_memory(macro_times);
-            H5free_memory(micro_times);
-            H5free_memory(routing_channels);
-            H5free_memory(event_types);
-        }
-        
-        macro_times = new_macro;
-        micro_times = new_micro;
-        routing_channels = new_routing;
-        event_types = new_event;
-        #endif
-    }
+    macro_times = (unsigned long long*) realloc(
+            macro_times, new_capacity * sizeof(unsigned long long)
+    );
+    micro_times = (unsigned short*) realloc(
+            micro_times, new_capacity * sizeof(unsigned short)
+    );
+    routing_channels = (signed char*) realloc(
+            routing_channels, new_capacity * sizeof(signed char)
+    );
+    event_types = (signed char*) realloc(
+            event_types, new_capacity * sizeof(signed char)
+    );
+    
     
     capacity = new_capacity;
 }
@@ -1706,53 +1438,19 @@ void TTTR::shrink_to_fit(){
         return;
     }
     
-    if(tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_times = (unsigned long long*) realloc(
-                macro_times, n_valid_events * sizeof(unsigned long long)
-        );
-        micro_times = (unsigned short*) realloc(
-                micro_times, n_valid_events * sizeof(unsigned short)
-        );
-        routing_channels = (signed char*) realloc(
-                routing_channels, n_valid_events * sizeof(signed char)
-        );
-        event_types = (signed char*) realloc(
-                event_types, n_valid_events * sizeof(signed char)
-        );
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        // HDF5 memory cannot be reallocated, so we need to allocate new and copy
-        unsigned long long* new_macro = (unsigned long long*) H5allocate_memory(
-                n_valid_events * sizeof(unsigned long long), false
-        );
-        unsigned short* new_micro = (unsigned short*) H5allocate_memory(
-                n_valid_events * sizeof(unsigned short), false
-        );
-        signed char* new_routing = (signed char*) H5allocate_memory(
-                n_valid_events * sizeof(signed char), false
-        );
-        signed char* new_event = (signed char*) H5allocate_memory(
-                n_valid_events * sizeof(signed char), false
-        );
-        
-        // Copy data
-        memcpy(new_macro, macro_times, n_valid_events * sizeof(unsigned long long));
-        memcpy(new_micro, micro_times, n_valid_events * sizeof(unsigned short));
-        memcpy(new_routing, routing_channels, n_valid_events * sizeof(signed char));
-        memcpy(new_event, event_types, n_valid_events * sizeof(signed char));
-        
-        // Free old memory
-        H5free_memory(macro_times);
-        H5free_memory(micro_times);
-        H5free_memory(routing_channels);
-        H5free_memory(event_types);
-        
-        macro_times = new_macro;
-        micro_times = new_micro;
-        routing_channels = new_routing;
-        event_types = new_event;
-        #endif
-    }
+    macro_times = (unsigned long long*) realloc(
+            macro_times, n_valid_events * sizeof(unsigned long long)
+    );
+    micro_times = (unsigned short*) realloc(
+            micro_times, n_valid_events * sizeof(unsigned short)
+    );
+    routing_channels = (signed char*) realloc(
+            routing_channels, n_valid_events * sizeof(signed char)
+    );
+    event_types = (signed char*) realloc(
+            event_types, n_valid_events * sizeof(signed char)
+    );
+    
     
     capacity = n_valid_events;
 }
@@ -3514,22 +3212,12 @@ void TTTR::compress_macro_times() {
 
     // Allocate keyframe storage
     if (macro_time_keyframes != nullptr) {
-        if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-            free(macro_time_keyframes);
-        } else {
-            #ifdef BUILD_PHOTON_HDF
-            H5free_memory(macro_time_keyframes);
-            #endif
-        }
+        free(macro_time_keyframes);
+        
     }
 
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        macro_time_keyframes = (unsigned long long*) H5allocate_memory(n_keyframes * sizeof(unsigned long long), false);
-        #endif
-    }
+    macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
+    
 
     // Store keyframes (every keyframe_interval-th event)
     for (size_t i = 0; i < n_keyframes; i++) {
@@ -3544,22 +3232,12 @@ void TTTR::compress_macro_times() {
 
     // Allocate compressed storage
     if (macro_times_compressed != nullptr) {
-        if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-            free(macro_times_compressed);
-        } else {
-            #ifdef BUILD_PHOTON_HDF
-            H5free_memory(macro_times_compressed);
-            #endif
-        }
+        free(macro_times_compressed);
+        
     }
 
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_times_compressed = (uint32_t*) malloc(capacity * sizeof(uint32_t));
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        macro_times_compressed = (uint32_t*) H5allocate_memory(capacity * sizeof(uint32_t), false);
-        #endif
-    }
+    macro_times_compressed = (uint32_t*) malloc(capacity * sizeof(uint32_t));
+    
 
     // Compress: store deltas relative to keyframes
     size_t warnings = 0;
@@ -3595,15 +3273,9 @@ void TTTR::compress_macro_times() {
     }
 
     // Free the original 64-bit storage
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        free(macro_times);
-        macro_times = nullptr;
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        H5free_memory(macro_times);
-        macro_times = nullptr;
-        #endif
-    }
+    free(macro_times);
+    macro_times = nullptr;
+    
 
     macro_time_compression_enabled = true;
 
@@ -3625,13 +3297,8 @@ void TTTR::decompress_macro_times() {
     }
 
     // Allocate 64-bit storage
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        macro_times = (unsigned long long*) malloc(capacity * sizeof(unsigned long long));
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        macro_times = (unsigned long long*) H5allocate_memory(capacity * sizeof(unsigned long long), false);
-        #endif
-    }
+    macro_times = (unsigned long long*) malloc(capacity * sizeof(unsigned long long));
+    
 
     // Decompress: reconstruct absolute times from keyframes + deltas
     for (size_t i = 0; i < n_valid_events; i++) {
@@ -3641,15 +3308,9 @@ void TTTR::decompress_macro_times() {
     }
 
     // Free compressed storage
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        free(macro_times_compressed);
-        free(macro_time_keyframes);
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        H5free_memory(macro_times_compressed);
-        H5free_memory(macro_time_keyframes);
-        #endif
-    }
+    free(macro_times_compressed);
+    free(macro_time_keyframes);
+    
     macro_times_compressed = nullptr;
     macro_time_keyframes = nullptr;
     n_keyframes = 0;
@@ -3983,22 +3644,11 @@ void TTTR::merge(const TTTR& other, unsigned long long offset_macro_time, int ch
     signed char* new_event_types = nullptr;
     
     // Allocate memory for new arrays using appropriate allocator
-    if (tttr_container_type != PHOTON_HDF_CONTAINER) {
-        new_macro_times = (unsigned long long*) malloc(new_total_events * sizeof(unsigned long long));
-        new_micro_times = (unsigned short*) malloc(new_total_events * sizeof(unsigned short));
-        new_routing_channels = (signed char*) malloc(new_total_events * sizeof(signed char));
-        new_event_types = (signed char*) malloc(new_total_events * sizeof(signed char));
-    } else {
-        #ifdef BUILD_PHOTON_HDF
-        new_macro_times = (unsigned long long*) H5allocate_memory(new_total_events * sizeof(unsigned long long), false);
-        new_micro_times = (unsigned short*) H5allocate_memory(new_total_events * sizeof(unsigned short), false);
-        new_routing_channels = (signed char*) H5allocate_memory(new_total_events * sizeof(signed char), false);
-        new_event_types = (signed char*) H5allocate_memory(new_total_events * sizeof(signed char), false);
-        #else
-        std::cerr << "Error: PHOTON_HDF_CONTAINER set but HDF5 support not built" << std::endl;
-        return;
-        #endif
-    }
+    new_macro_times = (unsigned long long*) malloc(new_total_events * sizeof(unsigned long long));
+    new_micro_times = (unsigned short*) malloc(new_total_events * sizeof(unsigned short));
+    new_routing_channels = (signed char*) malloc(new_total_events * sizeof(signed char));
+    new_event_types = (signed char*) malloc(new_total_events * sizeof(signed char));
+    
     
     if (!new_macro_times || !new_micro_times || !new_routing_channels || !new_event_types) {
         std::cerr << "Error: Failed to allocate memory for merge operation" << std::endl;

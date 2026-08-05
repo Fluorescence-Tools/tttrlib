@@ -18,7 +18,16 @@ creating a cycle.
 | [`sm/`](sm) | `tttrlib_io_sm` | Single-molecule `.sm` |
 | [`ps/`](ps) | `tttrlib_io_ps` | Photonscore LINCam `.photons` (D7) |
 | [`be/`](be) | `tttrlib_io_be` | BrightEyes-TTM `.ttr` |
+| [`hdf5/`](hdf5) | `tttrlib_io_hdf5` | Photon-HDF5 v0.5 — decoded arrays, not a record encoding |
 | [`image/`](image) | `tttrlib_io_image` | TIFF 2D/3D arrays — file I/O, but not a TTTR container |
+
+`hdf5` is where HighFive and `<hdf5.h>` stop. Before it existed,
+`TTTRHeader.h` forward-declared `HighFive::Group` for a single private method,
+so imaging, correlation and fitting all needed an HDF5 toolchain on their
+include path to compile a header that has nothing to do with HDF5.
+`BUILD_PHOTON_HDF` stays project-wide — core reads it to decide whether to offer
+the container — but it is carried by `tttrlib::build_config` as a capability
+flag, and only this module links `tttrlib::highfive`.
 
 Every vendor module depends on `base` and on nothing else. They do not depend on
 each other, and none of them depends on `core`: the dependency arrow runs

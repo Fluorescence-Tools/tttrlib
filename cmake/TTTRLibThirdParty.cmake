@@ -69,8 +69,14 @@ endif()
 add_library(tttrlib::eigen ALIAS tttrlib_eigen)
 
 # --- HighFive / HDF5 ----------------------------------------------------------
-# The only consumer is the Photon-HDF5 reader. Naming it here is what will let
-# io_hdf5 be the only module that pays for HDF5 on its compile line.
+# The only consumer is io_hdf5, and it is now the only module that pays for HDF5
+# on its compile line.
+#
+# BUILD_PHOTON_HDF is deliberately NOT defined here. It answers "was this build
+# configured with Photon-HDF5 support", which is a project-wide fact that core
+# needs in order to offer the container at all -- and it must not drag the HDF5
+# headers along with the answer. It lives on build_config below; the include
+# path and the link libraries stay here.
 _tttrlib_define_interface(tttrlib_highfive)
 if(BUILD_PHOTON_HDF)
     if(TARGET HighFive::HighFive)
@@ -81,7 +87,6 @@ if(BUILD_PHOTON_HDF)
             target_link_libraries(tttrlib_highfive INTERFACE HDF5::HDF5)
         endif()
     endif()
-    target_compile_definitions(tttrlib_highfive INTERFACE BUILD_PHOTON_HDF)
 endif()
 add_library(tttrlib::highfive ALIAS tttrlib_highfive)
 
@@ -100,6 +105,13 @@ target_compile_definitions(tttrlib_build_config INTERFACE
         _LIBCPP_ENABLE_CXX17_REMOVED_FEATURES)
 if(VERBOSE_TTTRLIB)
     target_compile_definitions(tttrlib_build_config INTERFACE VERBOSE_TTTRLIB)
+endif()
+# Whether the build has Photon-HDF5 support. A capability flag, not an include
+# path: core reads it to decide whether to offer the container, and must be able
+# to do so without an HDF5 toolchain in reach. Only io_hdf5 links
+# tttrlib::highfive and includes the headers.
+if(BUILD_PHOTON_HDF)
+    target_compile_definitions(tttrlib_build_config INTERFACE BUILD_PHOTON_HDF)
 endif()
 # OpenMP belongs here because it is genuinely project-wide: the top-level
 # CMakeLists puts ${OpenMP_CXX_FLAGS} into CMAKE_CXX_FLAGS, so *every*
