@@ -3,6 +3,17 @@
 ## [Unreleased]
 
 ### Added
+- **TIFF I/O carries an axis order** — a TIFF is a flat page sequence, so six
+  pages cannot say whether they are six frames or two frames in three colours.
+  `TiffInfo` now exposes the first page's `ImageDescription` tag and `write_tiff`
+  accepts one, which the Python layer uses to read and write ImageJ hyperstack
+  metadata: `imwrite(path, array, axes="TCYX")` stores the split, `imread`
+  restores the N-D shape, and the new `tiff_metadata(path)` reports axes, shape
+  and dtype without decoding pixels. Arrays of more than three dimensions are no
+  longer rejected. Files written this way are byte-compatible with what
+  ImageJ/Fiji and `tifffile` read, and a description that disagrees with the page
+  count on disk is ignored rather than used to reshape the pixels into the wrong
+  grid.
 - **ImageJ/Fiji plugin rebuilt on SciJava** — the two IJ1 `PlugIn` classes became
   SciJava `Command`s, so every command is now macro-recordable, scriptable from
   Groovy/Jython, headless-capable and unit-testable. New commands: *Show TTTR

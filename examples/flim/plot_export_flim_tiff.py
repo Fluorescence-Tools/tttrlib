@@ -18,6 +18,12 @@ Two calls do everything:
   ``"none"``, ``"lzw"`` (default), ``"packbits"`` or ``"deflate"``.
 * ``tttrlib.imread(path)`` - read a TIFF back, auto-detecting the pixel type and
   returning a NumPy array (2-D for a single page, 3-D for a stack).
+
+A TIFF is a flat sequence of pages, which is a problem as soon as a measurement
+has both frames *and* colours: six pages cannot say whether they are six time
+points or two time points in three channels. ``imwrite(..., axes="TCYX")``
+records that split as ImageJ hyperstack metadata, ``imread`` restores the shape,
+and ``tiff_metadata(path)`` reports it without decoding any pixels.
 """
 
 #%%
@@ -100,6 +106,33 @@ info = tttrlib.tiff_info(str(out_dir / "intensity_stack.tif"))
 print("stack on disk          :",
       (info.n_frames, info.height, info.width),
       tttrlib.tiff_dtype(str(out_dir / "intensity_stack.tif")))
+
+#%%
+# Keeping frames and colours apart: a hyperstack
+# ----------------------------------------------
+# The measurement has two detection channels. Filling one CLSM image per channel
+# gives a ``(frames, channels, lines, pixels)`` array - four dimensions, where a
+# plain TIFF only has pages. Naming the axes on write stores the split, so the
+# file reads back as the same 4-D array instead of as ``frames x channels``
+# anonymous pages, and ImageJ opens it as a hyperstack with a channel slider.
+per_channel = np.stack(
+    [tttrlib.CLSMImage(data, fill=True, channels=(ch,)).intensity for ch in (0, 1)],
+    axis=1,  # (frames, channels, lines, pixels)
+)
+print("per-channel stack:", per_channel.shape, per_channel.dtype)
+
+hyperstack_path = out_dir / "intensity_hyperstack.tif"
+tttrlib.imwrite(hyperstack_path, per_channel, axes="TCYX")
+
+meta = tttrlib.tiff_metadata(hyperstack_path)
+print("axes on disk     :", meta["axes"], meta["shape"], meta["dtype"])
+
+hyperstack_back = tttrlib.imread(hyperstack_path)
+print("shape preserved  :", hyperstack_back.shape == per_channel.shape)
+print("round-trip exact :", np.array_equal(hyperstack_back, per_channel))
+
+# Without the axis labels the same pixels would come back as one flat page axis:
+print("pages on disk    :", tttrlib.tiff_info(str(hyperstack_path)).n_frames)
 
 #%%
 # Visualise what was exported

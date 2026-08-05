@@ -41,6 +41,12 @@ struct TiffInfo {
     int height   = 0;              ///< rows (image length), equal across pages
     int width    = 0;              ///< columns (image width), equal across pages
     TiffDType dtype = TiffDType::Unknown; ///< native pixel type of the first page
+    /// Raw ImageDescription tag of the first page, "" when absent. A flat page
+    /// count cannot say whether six pages are 2 frames x 3 colours or 6 frames;
+    /// ImageJ writes that split here as "channels=3\nframes=2\n...", so the
+    /// language wrappers parse it into an axis order. Kept as the raw string:
+    /// the tag is also used for free-form text by other writers.
+    std::string description;
 };
 
 /// Read only the header of \p path (no pixel decoding).
@@ -62,10 +68,14 @@ void read_tiff(const std::string& path, T** output, int* dim1, int* dim2, int* d
 /// Write a row-major (n_frames, height, width) array as a (possibly multi-page)
 /// TIFF. \p compression is one of "none", "lzw" (default), "packbits" or
 /// "deflate"/"zip" (the last requires libtiff built WITH_TIFF_ZLIB).
+/// \p description, when non-empty, is stored as the ImageDescription tag of the
+/// first page - that is where an ImageJ hyperstack records how the flat page
+/// sequence splits into channels / slices / frames.
 template <typename T>
 void write_tiff(const std::string& path, T* data,
                 int n_frames, int height, int width,
-                const std::string& compression = "lzw");
+                const std::string& compression = "lzw",
+                const std::string& description = "");
 
 } // namespace tttrlib
 

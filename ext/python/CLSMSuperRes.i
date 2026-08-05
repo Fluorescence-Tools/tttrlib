@@ -144,13 +144,7 @@ def _temporal_combine(stack, mode="AVG"):
 
 def _read_tiff(filename):
     """Read a TIFF stack as a float64 array."""
-    try:
-        import tifffile
-    except ImportError as e:
-        raise RuntimeError(
-            f"Reading {filename} needs the 'tifffile' package"
-        ) from e
-    return np.ascontiguousarray(tifffile.imread(str(filename)), dtype=np.float64)
+    return np.ascontiguousarray(imread(str(filename)), dtype=np.float64)
 
 
 def _as_detector_cube(data):

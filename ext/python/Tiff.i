@@ -94,28 +94,146 @@ _TIFF_WRITERS = {
 }
 
 
+# ---- ImageJ hyperstack metadata --------------------------------------------
+# A TIFF is a flat sequence of pages, so six pages cannot say by themselves
+# whether they are six time points or two time points in three colours. ImageJ
+# records that split as plain "key=value" lines in the ImageDescription tag of
+# the first page, and every microscopy tool that writes stacks follows it. The
+# C++ layer carries the tag verbatim; the axis bookkeeping lives here.
+#
+# The page order of a hyperstack is fixed: channel varies fastest, then slice,
+# then frame - so the pages reshape to (frames, slices, channels, h, w), and
+# axes with a single element are dropped.
+
+#: ImageJ writer version stamped into the ImageDescription tag. ImageJ only
+#: checks that the key exists, but readers reject a description without it.
+_IMAGEJ_VERSION = "1.54f"
+
+#: ImageJ dimension keys, slowest-varying page axis first, with their labels.
+_IMAGEJ_DIMS = (("frames", "T"), ("slices", "Z"), ("channels", "C"))
+
+
+def _parse_imagej(description, n_pages):
+    """Return ``(axes, shape)`` for the leading page axes, or ``None``.
+
+    ``shape`` covers only the page axes (Y/X are appended by the caller).
+    Returns ``None`` when *description* is not ImageJ metadata, or when it
+    describes a page count other than *n_pages* - a stale or truncated
+    description must not silently reshape the pixels into the wrong grid.
+    """
+    if not description or "ImageJ" not in description:
+        return None
+    fields = {}
+    for line in description.splitlines():
+        key, sep, value = line.partition("=")
+        if sep:
+            fields[key.strip()] = value.strip()
+    if "ImageJ" not in fields:
+        return None
+    axes, shape = "", []
+    for key, label in _IMAGEJ_DIMS:
+        try:
+            size = int(fields.get(key, 1))
+        except ValueError:
+            return None
+        if size > 1:
+            axes += label
+            shape.append(size)
+    product = 1
+    for size in shape:
+        product *= size
+    if product != n_pages:
+        return None
+    return axes, tuple(shape)
+
+
+def _imagej_description(axes, shape):
+    """Format ImageJ ImageDescription lines for a stack of *shape* with *axes*."""
+    sizes = {label: 1 for _, label in _IMAGEJ_DIMS}
+    pages = 1
+    for label, size in zip(axes[:-2], shape[:-2]):
+        sizes[label] = int(size)
+        pages *= int(size)
+    lines = ["ImageJ=" + _IMAGEJ_VERSION, "images=%d" % pages]
+    for key, label in _IMAGEJ_DIMS:
+        if sizes[label] > 1:
+            lines.append("%s=%d" % (key, sizes[label]))
+    lines += ["hyperstack=true", "mode=grayscale", "loop=false"]
+    return "\n".join(lines)
+
+
+def tiff_metadata(path):
+    """Describe the layout of a TIFF file without decoding its pixels.
+
+    Returns a dict with ``axes`` (a label per dimension: ``T`` frames, ``Z``
+    slices, ``C`` channels, ``I`` an unlabelled page index, ``Y``/``X`` the
+    image plane), ``shape``, ``dtype`` and the raw ``description`` tag. A file
+    without ImageJ metadata is reported as ``"YX"`` (single page) or ``"IYX"``.
+
+    Parameters
+    ----------
+    path : str or os.PathLike
+        TIFF file to inspect.
+
+    Returns
+    -------
+    dict
+        ``{"axes": str, "shape": tuple, "dtype": str, "description": str}``.
+    """
+    info = tiff_info(_os.fspath(path))
+    plane = (info.height, info.width)
+    parsed = _parse_imagej(info.description, info.n_frames)
+    if parsed is not None:
+        axes, shape = parsed
+    elif info.n_frames > 1:
+        axes, shape = "I", (info.n_frames,)
+    else:
+        axes, shape = "", ()
+    return {
+        "axes": axes + "YX",
+        "shape": shape + plane,
+        "dtype": tiff_dtype_name(info.dtype),
+        "description": info.description,
+    }
+
+
 def imread(path, squeeze=True):
     """Read a TIFF file into a NumPy array, auto-detecting the pixel type.
 
     A single-page file returns a 2-D ``(height, width)`` array; a multi-page
     file returns a 3-D ``(n_frames, height, width)`` array (set ``squeeze=False``
-    to always get 3-D). The array dtype matches the file's native pixel type;
-    ``int8``/``int16`` are promoted to ``int32``. ``path`` may be a string or any
-    ``os.PathLike`` (e.g. ``pathlib.Path``).
+    to always get 3-D). A file carrying ImageJ hyperstack metadata is reshaped
+    to the frames/slices/channels grid that metadata declares, so a six-page
+    two-frame three-colour stack reads back as ``(2, 3, height, width)`` rather
+    than as six anonymous pages; :func:`tiff_metadata` names those axes. The
+    array dtype matches the file's native pixel type; ``int8``/``int16`` are
+    promoted to ``int32``. ``path`` may be a string or any ``os.PathLike``.
     """
     path = _os.fspath(path)
-    name = tiff_dtype(path)
+    info = tiff_info(path)
+    name = tiff_dtype_name(info.dtype)
     reader = _TIFF_READERS.get(name)
     if reader is None:
         raise TypeError("unsupported TIFF pixel type: %r" % name)
     arr = reader(path)
-    if squeeze and arr.shape[0] == 1:
+    parsed = _parse_imagej(info.description, arr.shape[0])
+    if parsed is not None:
+        arr = arr.reshape(parsed[1] + arr.shape[1:])
+    elif squeeze and arr.shape[0] == 1:
         arr = arr[0]
     return arr
 
 
-def imwrite(path, data, compression="lzw"):
-    """Write a 2-D or 3-D NumPy array to a (multi-page) TIFF file.
+def imwrite(path, data, compression="lzw", axes=None):
+    """Write a NumPy array to a (multi-page) TIFF file.
+
+    A 2-D array is one page and a 3-D array is a page per leading index. Arrays
+    with more dimensions - and any array whose leading axes you want *named* -
+    are written as an ImageJ hyperstack: pass ``axes`` as a label string ending
+    in ``"YX"``, using ``T`` for frames, ``Z`` for slices and ``C`` for
+    channels (for example ``"TCYX"``). :func:`imread` restores that shape.
+    Without ``axes``, an array of more than three dimensions takes the last
+    labels of ``"TZCYX"``.
 
     The array's dtype selects the on-disk pixel type. ``compression`` is one of
     ``"none"``, ``"lzw"`` (default), ``"packbits"`` or ``"deflate"`` (deflate
@@ -125,10 +243,27 @@ def imwrite(path, data, compression="lzw"):
     """
     path = _os.fspath(path)
     a = _np.ascontiguousarray(data)
+    if a.ndim < 2:
+        raise ValueError("imwrite expects an array of at least 2 dimensions, got %dD" % a.ndim)
+    if axes is None and a.ndim > 3:
+        axes = "TZCYX"[-a.ndim:]
+    description = ""
+    if axes is not None:
+        axes = str(axes).upper()
+        if len(axes) != a.ndim:
+            raise ValueError("axes %r does not match a %dD array" % (axes, a.ndim))
+        if not axes.endswith("YX"):
+            raise ValueError("axes %r must end in 'YX' (the image plane)" % axes)
+        unknown = set(axes[:-2]) - {label for _, label in _IMAGEJ_DIMS}
+        if unknown:
+            raise ValueError("axes %r uses labels %s; only T, Z and C name pages"
+                             % (axes, "".join(sorted(unknown))))
+        if a.ndim > 2:
+            description = _imagej_description(axes, a.shape)
     if a.ndim == 2:
         a = a[_np.newaxis, ...]
-    elif a.ndim != 3:
-        raise ValueError("imwrite expects a 2-D or 3-D array, got %dD" % a.ndim)
+    elif a.ndim > 3:
+        a = a.reshape((-1,) + a.shape[-2:])
     writer = _TIFF_WRITERS.get(a.dtype.name)
     if writer is None:
         kind = a.dtype.kind
@@ -140,7 +275,7 @@ def imwrite(path, data, compression="lzw"):
             a, writer = a.astype(_np.uint32), _tiff_write_u32
         else:
             raise TypeError("unsupported array dtype for TIFF: %s" % a.dtype)
-        a = _np.ascontiguousarray(a)
-    writer(path, a, compression)
+    a = _np.ascontiguousarray(a)
+    writer(path, a, compression, description)
 %}
 #endif

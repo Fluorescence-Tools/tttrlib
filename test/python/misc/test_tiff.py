@@ -111,7 +111,112 @@ def test_read_missing_file_raises(tmp_path):
         tttrlib.imread(str(tmp_path / "does_not_exist.tif"))
 
 
-def test_imwrite_rejects_4d(tmp_path):
+def test_imwrite_rejects_1d(tmp_path):
     path = str(tmp_path / "bad.tif")
     with pytest.raises(ValueError):
-        tttrlib.imwrite(path, np.zeros((2, 3, 4, 5), dtype=np.uint8))
+        tttrlib.imwrite(path, np.zeros(8, dtype=np.uint8))
+
+
+# ---- ImageJ hyperstack metadata --------------------------------------------
+# A TIFF is a flat page sequence, so six pages cannot say on their own whether
+# they are six frames or two frames in three colours. These tests pin the
+# axis bookkeeping that carries the difference through a round-trip.
+
+
+def test_plain_stack_has_unlabelled_page_axis(tmp_path):
+    path = str(tmp_path / "plain.tif")
+    tttrlib.imwrite(path, _sample(np.uint16, (5, 8, 9)))
+    meta = tttrlib.tiff_metadata(path)
+    assert meta["axes"] == "IYX"
+    assert meta["shape"] == (5, 8, 9)
+    assert meta["dtype"] == "uint16"
+
+
+def test_single_page_axes(tmp_path):
+    path = str(tmp_path / "single.tif")
+    tttrlib.imwrite(path, _sample(np.float32, (8, 9)))
+    assert tttrlib.tiff_metadata(path)["axes"] == "YX"
+
+
+@pytest.mark.parametrize(
+    "axes, shape",
+    [
+        ("CYX", (3, 8, 9)),
+        ("TYX", (4, 8, 9)),
+        ("TCYX", (2, 3, 8, 9)),
+        ("ZCYX", (3, 2, 8, 9)),
+        ("TZCYX", (2, 3, 4, 8, 9)),
+    ],
+)
+def test_hyperstack_round_trip(tmp_path, axes, shape):
+    path = str(tmp_path / "hs.tif")
+    arr = _sample(np.float32, shape)
+    tttrlib.imwrite(path, arr, axes=axes)
+    meta = tttrlib.tiff_metadata(path)
+    assert meta["axes"] == axes
+    assert meta["shape"] == shape
+    back = tttrlib.imread(path)
+    assert back.shape == shape
+    np.testing.assert_array_equal(back, arr)
+
+
+def test_hyperstack_page_order_is_channel_fastest(tmp_path):
+    # ImageJ's page order is fixed: channel varies fastest, then slice, then
+    # frame. A reader that reshaped in any other order would still return the
+    # right *shape*, so check which pixels landed where.
+    path = str(tmp_path / "order.tif")
+    arr = np.arange(2 * 3 * 4 * 5, dtype=np.float32).reshape(2, 3, 4, 5)
+    tttrlib.imwrite(path, arr, axes="TCYX")
+    flat = tttrlib._tiff_read_f32(path)
+    assert flat.shape == (6, 4, 5)
+    np.testing.assert_array_equal(flat[1], arr[0, 1])  # 2nd page = t0, c1
+    np.testing.assert_array_equal(flat[3], arr[1, 0])  # 4th page = t1, c0
+
+
+def test_more_than_3d_defaults_to_trailing_axis_labels(tmp_path):
+    path = str(tmp_path / "nd.tif")
+    arr = _sample(np.uint16, (2, 3, 8, 9))
+    tttrlib.imwrite(path, arr)  # no axes= given
+    assert tttrlib.tiff_metadata(path)["axes"] == "ZCYX"
+    np.testing.assert_array_equal(tttrlib.imread(path), arr)
+
+
+@pytest.mark.parametrize(
+    "axes, shape",
+    [
+        ("TCY", (2, 3, 8, 9)),    # does not end in the image plane
+        ("TCYX", (3, 8, 9)),      # length disagrees with ndim
+        ("SYX", (3, 8, 9)),       # S is not a page label
+    ],
+)
+def test_imwrite_rejects_bad_axes(tmp_path, axes, shape):
+    with pytest.raises(ValueError):
+        tttrlib.imwrite(str(tmp_path / "bad.tif"), np.zeros(shape, np.uint8), axes=axes)
+
+
+def test_description_disagreeing_with_page_count_is_ignored(tmp_path):
+    # A description claiming a grid that does not multiply out to the pages on
+    # disk is stale or truncated. Reshaping to it would silently scramble the
+    # stack, so the file must read back flat instead.
+    path = str(tmp_path / "stale.tif")
+    arr = _sample(np.uint16, (5, 8, 9))
+    tttrlib._tiff_write_u16(path, arr, "lzw", "ImageJ=1.54f\nimages=6\nchannels=3\nframes=2\n")
+    assert tttrlib.tiff_metadata(path)["axes"] == "IYX"
+    np.testing.assert_array_equal(tttrlib.imread(path), arr)
+
+
+def test_free_text_description_is_preserved_and_not_parsed(tmp_path):
+    # ImageDescription is also used for free-form text; it must not be mistaken
+    # for a layout, and it must survive being read back.
+    path = str(tmp_path / "text.tif")
+    arr = _sample(np.uint8, (3, 8, 9))
+    tttrlib._tiff_write_u8(path, arr, "lzw", "acquired on setup B")
+    meta = tttrlib.tiff_metadata(path)
+    assert meta["description"] == "acquired on setup B"
+    assert meta["axes"] == "IYX"
+
+
+def test_squeeze_false_keeps_single_page_3d(tmp_path):
+    path = str(tmp_path / "one.tif")
+    tttrlib.imwrite(path, _sample(np.uint16, (8, 9)))
+    assert tttrlib.imread(path, squeeze=False).shape == (1, 8, 9)

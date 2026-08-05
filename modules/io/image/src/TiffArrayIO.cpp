@@ -274,7 +274,8 @@ template <> uint16_t sample_format_of<double>()   { return SAMPLEFORMAT_IEEEFP; 
 template <typename T>
 void write_tiff_impl(const std::string& path, T* data,
                      int n_frames, int height, int width,
-                     const std::string& compression) {
+                     const std::string& compression,
+                     const std::string& description) {
     const uint16_t sample_format = sample_format_of<T>();
     if (!data) throw std::invalid_argument("tiff: null input data");
     if (n_frames <= 0 || height <= 0 || width <= 0)
@@ -324,6 +325,12 @@ void write_tiff_impl(const std::string& path, T* data,
             TIFFSetField(tif, TIFFTAG_PAGENUMBER,
                          static_cast<uint16_t>(d), static_cast<uint16_t>(n_frames));
         }
+        // ImageJ reads the hyperstack layout from the first page only, and
+        // repeating it on every page is what makes a stack open as N separate
+        // images there.
+        if (d == 0 && !description.empty()) {
+            TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION, description.c_str());
+        }
 
         const T* frame = data + static_cast<size_t>(d) * height * width;
         for (int r = 0; r < height; ++r) {
@@ -356,6 +363,10 @@ TiffInfo tiff_info(const std::string& path) {
     info.height   = static_cast<int>(h);
     info.width    = static_cast<int>(w);
     info.dtype    = to_dtype(nf);
+    const char* desc = nullptr;
+    if (TIFFGetField(f.tif, TIFFTAG_IMAGEDESCRIPTION, &desc) && desc) {
+        info.description = desc;
+    }
     return info;
 }
 
@@ -371,8 +382,9 @@ void read_tiff(const std::string& path, T** output, int* dim1, int* dim2, int* d
 template <typename T>
 void write_tiff(const std::string& path, T* data,
                 int n_frames, int height, int width,
-                const std::string& compression) {
-    write_tiff_impl<T>(path, data, n_frames, height, width, compression);
+                const std::string& compression,
+                const std::string& description) {
+    write_tiff_impl<T>(path, data, n_frames, height, width, compression, description);
 }
 
 // Explicit instantiations - one binding entry point per pixel type. The single
@@ -385,12 +397,12 @@ template void read_tiff<int32_t> (const std::string&, int32_t**,  int*, int*, in
 template void read_tiff<float>   (const std::string&, float**,    int*, int*, int*);
 template void read_tiff<double>  (const std::string&, double**,   int*, int*, int*);
 
-template void write_tiff<uint8_t> (const std::string&, uint8_t*,  int, int, int, const std::string&);
-template void write_tiff<uint16_t>(const std::string&, uint16_t*, int, int, int, const std::string&);
-template void write_tiff<uint32_t>(const std::string&, uint32_t*, int, int, int, const std::string&);
-template void write_tiff<int32_t> (const std::string&, int32_t*,  int, int, int, const std::string&);
-template void write_tiff<float>   (const std::string&, float*,    int, int, int, const std::string&);
-template void write_tiff<double>  (const std::string&, double*,   int, int, int, const std::string&);
+template void write_tiff<uint8_t> (const std::string&, uint8_t*,  int, int, int, const std::string&, const std::string&);
+template void write_tiff<uint16_t>(const std::string&, uint16_t*, int, int, int, const std::string&, const std::string&);
+template void write_tiff<uint32_t>(const std::string&, uint32_t*, int, int, int, const std::string&, const std::string&);
+template void write_tiff<int32_t> (const std::string&, int32_t*,  int, int, int, const std::string&, const std::string&);
+template void write_tiff<float>   (const std::string&, float*,    int, int, int, const std::string&, const std::string&);
+template void write_tiff<double>  (const std::string&, double*,   int, int, int, const std::string&, const std::string&);
 
 } // namespace tttrlib
 
@@ -408,7 +420,8 @@ std::string tiff_dtype(const std::string&)    { tiff_disabled(); return {}; }
 template <typename T>
 void read_tiff(const std::string&, T**, int*, int*, int*) { tiff_disabled(); }
 template <typename T>
-void write_tiff(const std::string&, T*, int, int, int, const std::string&) { tiff_disabled(); }
+void write_tiff(const std::string&, T*, int, int, int, const std::string&,
+                const std::string&) { tiff_disabled(); }
 
 template void read_tiff<uint8_t> (const std::string&, uint8_t**,  int*, int*, int*);
 template void read_tiff<uint16_t>(const std::string&, uint16_t**, int*, int*, int*);
@@ -417,12 +430,12 @@ template void read_tiff<int32_t> (const std::string&, int32_t**,  int*, int*, in
 template void read_tiff<float>   (const std::string&, float**,    int*, int*, int*);
 template void read_tiff<double>  (const std::string&, double**,   int*, int*, int*);
 
-template void write_tiff<uint8_t> (const std::string&, uint8_t*,  int, int, int, const std::string&);
-template void write_tiff<uint16_t>(const std::string&, uint16_t*, int, int, int, const std::string&);
-template void write_tiff<uint32_t>(const std::string&, uint32_t*, int, int, int, const std::string&);
-template void write_tiff<int32_t> (const std::string&, int32_t*,  int, int, int, const std::string&);
-template void write_tiff<float>   (const std::string&, float*,    int, int, int, const std::string&);
-template void write_tiff<double>  (const std::string&, double*,   int, int, int, const std::string&);
+template void write_tiff<uint8_t> (const std::string&, uint8_t*,  int, int, int, const std::string&, const std::string&);
+template void write_tiff<uint16_t>(const std::string&, uint16_t*, int, int, int, const std::string&, const std::string&);
+template void write_tiff<uint32_t>(const std::string&, uint32_t*, int, int, int, const std::string&, const std::string&);
+template void write_tiff<int32_t> (const std::string&, int32_t*,  int, int, int, const std::string&, const std::string&);
+template void write_tiff<float>   (const std::string&, float*,    int, int, int, const std::string&, const std::string&);
+template void write_tiff<double>  (const std::string&, double*,   int, int, int, const std::string&, const std::string&);
 
 } // namespace tttrlib
 
