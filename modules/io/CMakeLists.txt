@@ -17,7 +17,9 @@ tttrlib_add_module(
     NAME     io
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/IORegistry.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FileIO.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRTags.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
+    EXTERNAL_DEPS tttrlib::json
     TEST_DIR test/python/tttr
 )
