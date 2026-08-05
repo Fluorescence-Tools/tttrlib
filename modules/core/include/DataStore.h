@@ -165,6 +165,41 @@ public:
     }
     std::size_t nbytes() const { return words_.size() * sizeof(std::uint64_t); }
 
+    /// Raw words, for building a mask 64 rows at a time rather than bit by bit.
+    std::uint64_t* words() { return words_.data(); }
+    const std::uint64_t* words() const { return words_.data(); }
+    std::size_t n_words() const { return words_.size(); }
+
+    // --- set algebra ------------------------------------------------------
+    //
+    // A selection is built by combining conditions, and doing it on bits works
+    // 64 rows at a time. The alternative -- a bool array per condition, ORed
+    // with numpy -- moves 64x the memory and is what this exists to replace.
+
+    void and_with(const BitMask& o) {
+        const std::size_t n = std::min(words_.size(), o.words_.size());
+        for (std::size_t i = 0; i < n; i++) words_[i] &= o.words_[i];
+        for (std::size_t i = n; i < words_.size(); i++) words_[i] = 0;
+    }
+    void or_with(const BitMask& o) {
+        const std::size_t n = std::min(words_.size(), o.words_.size());
+        for (std::size_t i = 0; i < n; i++) words_[i] |= o.words_[i];
+        trim();
+    }
+    /// Clear every bit that is set in `o`.
+    void andnot_with(const BitMask& o) {
+        const std::size_t n = std::min(words_.size(), o.words_.size());
+        for (std::size_t i = 0; i < n; i++) words_[i] &= ~o.words_[i];
+    }
+    void invert() {
+        for (std::uint64_t& w : words_) w = ~w;
+        trim();
+    }
+    bool any() const {
+        for (std::uint64_t w : words_) if (w != 0) return true;
+        return false;
+    }
+
     /// Set from a byte-per-row array, which is what numpy hands over.
     void from_bytes(const unsigned char* b, std::size_t n) {
         assign(n, false);
@@ -178,6 +213,12 @@ public:
     }
 
 private:
+    /// Clear the bits past n_ in the last word, so count() and any() cannot see
+    /// bits that are not rows.
+    void trim() {
+        if (n_ % 64 && !words_.empty()) words_.back() &= (1ULL << (n_ % 64)) - 1ULL;
+    }
+
     std::size_t n_ = 0;
     std::vector<std::uint64_t> words_;
 };
@@ -495,6 +536,20 @@ public:
         return 0.0;
     }
 
+    // Raw typed pointers, for a scan that wants the column in its own type
+    // rather than one double at a time through a switch.
+    const double* f64_ptr() const { return f64_.data(); }
+    const float* f32_ptr() const { return f32_.data(); }
+    const std::int64_t* i64_ptr() const { return i64_.data(); }
+    const std::int32_t* i32_ptr() const { return i32_.data(); }
+    const short* i16_ptr() const { return i16_.data(); }
+    const signed char* i8_ptr() const { return i8_.data(); }
+    const unsigned long long* u64_ptr() const { return u64_.data(); }
+    const unsigned int* u32_ptr() const { return u32_.data(); }
+    const unsigned short* u16_ptr() const { return u16_.data(); }
+    const unsigned char* u8_ptr() const { return u8_.data(); }
+    const std::int32_t* codes_ptr() const { return codes_.data(); }
+
     /// Zero-copy views, valid while the column is alive and unmodified.
     void get_f64_view(double** view, int* n) {
         *view = f64_.empty() ? nullptr : f64_.data(); *n = static_cast<int>(f64_.size());
@@ -793,6 +848,132 @@ public:
         return row_mask_.empty() || row_mask_.test(i);
     }
 
+    // --- building a selection ---------------------------------------------
+
+private:
+    /*!
+     * Evaluate `p` over a typed column, writing 64 results at a time.
+     *
+     * The obvious loop -- value_at(i) then mask.set(i, ...) -- costs a switch on
+     * the column type and a read-modify-write of a word for EVERY row, and
+     * measured four times slower than the numpy expression it is meant to
+     * replace. Reading the column in its own type and accumulating a word in a
+     * register before storing it once is what makes it cheaper instead: the
+     * scan becomes bound by reading the column, which is the least any
+     * implementation can do.
+     */
+    template<typename T, typename Pred>
+    static void scan_typed(const T* v, std::size_t n, BitMask& m, Pred p) {
+        std::uint64_t* w = m.words();
+        const std::size_t nw = m.n_words();
+        // Branchless, and that is the whole trick. `if (p(v[i])) bits |= ...`
+        // is a branch on a comparison over unsorted measurement data, so it
+        // mispredicts about half the time -- which on data this size costs more
+        // than the comparison, the load and the store put together. Turning the
+        // predicate into a 0 or 1 and shifting it leaves a loop with no branches
+        // at all, which the compiler can also unroll.
+        const std::size_t full = n / 64;
+        for (std::size_t k = 0; k < full; k++) {
+            const T* q = v + k * 64;
+            std::uint64_t bits = 0;
+            for (int i = 0; i < 64; i++) {
+                bits |= static_cast<std::uint64_t>(p(q[i]) ? 1 : 0) << i;
+            }
+            w[k] = bits;
+        }
+        if (full < nw) {                       // the partial last word
+            std::uint64_t bits = 0;
+            for (std::size_t i = full * 64; i < n; i++) {
+                bits |= static_cast<std::uint64_t>(p(v[i]) ? 1 : 0) << (i - full * 64);
+            }
+            w[full] = bits;
+            for (std::size_t k = full + 1; k < nw; k++) w[k] = 0;
+        }
+    }
+
+    /// Dispatch `p` over whatever type the column holds. One switch per COLUMN.
+    template<typename Pred>
+    void scan_column(const Column& c, BitMask& m, Pred p) const {
+        const std::size_t n = std::min(n_rows_, c.size());
+        switch (c.type()) {
+            case ColumnType::Float64: scan_typed(c.f64_ptr(), n, m, p); break;
+            case ColumnType::Float32: scan_typed(c.f32_ptr(), n, m, p); break;
+            case ColumnType::Int64:   scan_typed(c.i64_ptr(), n, m, p); break;
+            case ColumnType::Int32:   scan_typed(c.i32_ptr(), n, m, p); break;
+            case ColumnType::Int16:   scan_typed(c.i16_ptr(), n, m, p); break;
+            case ColumnType::Int8:    scan_typed(c.i8_ptr(), n, m, p); break;
+            case ColumnType::UInt64:  scan_typed(c.u64_ptr(), n, m, p); break;
+            case ColumnType::UInt32:  scan_typed(c.u32_ptr(), n, m, p); break;
+            case ColumnType::UInt16:  scan_typed(c.u16_ptr(), n, m, p); break;
+            case ColumnType::UInt8:   scan_typed(c.u8_ptr(), n, m, p); break;
+            case ColumnType::String:  scan_typed(c.codes_ptr(), n, m, p); break;
+            case ColumnType::Bool: {
+                for (std::size_t i = 0; i < n; i++) m.set(i, p(c.value_at(i) != 0.0));
+                break;
+            }
+        }
+        // A column that says a value is missing cannot satisfy any condition.
+        if (c.has_mask()) m.and_with(c.mask());
+    }
+
+public:
+
+    /// How a new condition combines with the selection already there.
+    enum class Combine { Replace, And, Or, AndNot };
+
+    /*!
+     * \brief Select the rows whose value in column `col` lies in [lo, hi).
+     *
+     * Evaluated in C++ over the column's own type -- a float32 column is
+     * compared as float32 -- and written straight into the bit-packed
+     * selection. The pattern this replaces is a bool array per condition,
+     * combined with numpy and then turned into an index array: eight times the
+     * memory for the mask, plus a second array of indices, plus the copy that
+     * fancy-indexing makes.
+     *
+     * Rows the column marks invalid are never selected: "not measured" cannot
+     * satisfy a range.
+     */
+    void select_range(int col, double lo, double hi, Combine how = Combine::Replace) {
+        BitMask m(n_rows_, false);
+        scan_column(column(col), m, [lo, hi](auto v) {
+            const double d = static_cast<double>(v);
+            return d >= lo && d < hi;
+        });
+        apply(m, how);
+    }
+
+    /// Select the rows whose value in `col` equals `value`. For categories and
+    /// integer columns, where a range is the wrong question.
+    void select_equal(int col, double value, Combine how = Combine::Replace) {
+        BitMask m(n_rows_, false);
+        scan_column(column(col), m,
+                    [value](auto v) { return static_cast<double>(v) == value; });
+        apply(m, how);
+    }
+
+    /// Select the rows where every listed column has a finite, valid value.
+    void select_finite(const std::vector<int>& cols, Combine how = Combine::Replace) {
+        BitMask acc(n_rows_, true);
+        for (int ci : cols) {
+            BitMask m(n_rows_, false);
+            scan_column(column(ci), m,
+                        [](auto v) { return std::isfinite(static_cast<double>(v)); });
+            acc.and_with(m);
+        }
+        apply(acc, how);
+    }
+
+    /// Everything selected.
+    void select_all() { row_mask_.clear(); }
+    /// Nothing selected.
+    void select_none() { row_mask_.assign(n_rows_, false); }
+    /// Flip the selection.
+    void invert_selection() {
+        if (row_mask_.empty()) { select_none(); return; }
+        row_mask_.invert();
+    }
+
     /// Total bytes held, so a caller can size a cache.
     std::size_t nbytes() const {
         std::size_t b = row_mask_.nbytes();
@@ -801,6 +982,16 @@ public:
     }
 
 private:
+    void apply(BitMask& m, Combine how) {
+        if (row_mask_.empty() && how != Combine::Replace) row_mask_.assign(n_rows_, true);
+        switch (how) {
+            case Combine::Replace: row_mask_ = m; break;
+            case Combine::And:     row_mask_.and_with(m); break;
+            case Combine::Or:      row_mask_.or_with(m); break;
+            case Combine::AndNot:  row_mask_.andnot_with(m); break;
+        }
+    }
+
     std::vector<Column> columns_;
     std::size_t n_rows_ = 0;
     BitMask row_mask_;

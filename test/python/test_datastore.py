@@ -176,3 +176,92 @@ def test_weighting_by_a_column(store):
 def test_histogram_of_an_unknown_column_raises(store):
     with pytest.raises(KeyError):
         store.histogram("nope")
+
+
+# --- selections -------------------------------------------------------------
+
+def test_where_narrows_the_selection():
+    rng = np.random.default_rng(4)
+    n = 10000
+    E = rng.uniform(0, 1, n)
+    S = rng.uniform(0, 1, n)
+    s = tttrlib.DataStore()
+    s.set_n_rows(n)
+    s.add("E", E)
+    s.add("S", S)
+
+    s.where("E", 0.2, 0.8)
+    assert s.n_selected() == int(((E >= 0.2) & (E < 0.8)).sum())
+
+    s.where("S", 0.3, 0.7, how="and")
+    expected = ((E >= 0.2) & (E < 0.8)) & ((S >= 0.3) & (S < 0.7))
+    assert s.n_selected() == int(expected.sum())
+    assert np.array_equal(s.selection(), expected)
+
+
+def test_selection_combinators():
+    x = np.arange(100, dtype=np.float64)
+    s = tttrlib.DataStore()
+    s.set_n_rows(100)
+    s.add("x", x)
+
+    s.where("x", 0, 50).where("x", 40, 60, how="or")
+    assert s.n_selected() == 60
+
+    s.where("x", 0, 50).where("x", 40, 60, how="andnot")
+    assert s.n_selected() == 40, "andnot removes the overlap"
+
+    s.select_all()
+    assert s.n_selected() == 100
+    s.invert_selection()
+    assert s.n_selected() == 0
+
+
+def test_where_equals_for_categories():
+    s = tttrlib.DataStore()
+    s.set_n_rows(6)
+    s.add("label", ["a", "b", "a", "c", "a", "b"])
+    codes = {lab: i for i, lab in enumerate(s["label"].labels())}
+    s.where("label", equals=codes["a"])
+    assert s.n_selected() == 3
+
+
+def test_a_missing_value_satisfies_no_condition():
+    s = tttrlib.DataStore()
+    s.set_n_rows(5)
+    s.add("x", np.array([1.0, np.nan, 2.0, np.inf, 3.0]))
+    s["x"].mask_non_finite()
+    s.where("x", 0.0, 10.0)
+    assert s.n_selected() == 3, "NaN and inf cannot be inside a range"
+
+
+def test_where_finite_drops_unmeasured_rows():
+    s = tttrlib.DataStore()
+    s.set_n_rows(5)
+    s.add("a", np.array([1.0, np.nan, 3.0, 4.0, 5.0]))
+    s.add("b", np.array([1.0, 2.0, 3.0, np.inf, 5.0]))
+    s.select_all()
+    s.where_finite(["a", "b"])
+    assert s.n_selected() == 3
+
+
+def test_a_selection_restricts_the_histogram():
+    rng = np.random.default_rng(5)
+    n = 20000
+    x = rng.uniform(0, 10, n)
+    s = tttrlib.DataStore()
+    s.set_n_rows(n)
+    s.add("x", x)
+    s.where("x", 2.0, 6.0)
+    h = s.histogram("x", bins=8, range=[(0.0, 10.0)])
+    assert h.sum(True) == s.n_selected()
+
+
+def test_selection_is_bit_packed():
+    n = 1_000_000
+    s = tttrlib.DataStore()
+    s.set_n_rows(n)
+    s.add("x", np.zeros(n, dtype=np.float32))
+    s.where("x", -1.0, 1.0)
+    # one bit per row, not one byte
+    assert s.nbytes() - s["x"].nbytes() < n / 8 + 4096

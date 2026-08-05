@@ -61,6 +61,56 @@ def select(self, mask):
     return self
 
 
+def where(self, column, lo=None, hi=None, equals=None, how="replace"):
+    """Narrow the selection by a condition on one column.
+
+    :param lo, hi: keep rows with lo <= value < hi
+    :param equals: keep rows equal to this value
+    :param how: "replace", "and", "or", "andnot"
+
+    Evaluated in C++ over the column's own type and written into the bit-packed
+    selection, 64 rows to a word. The pattern this replaces -- a bool array per
+    condition, combined with numpy, then flatnonzero, then fancy indexing --
+    moves eight times the memory for the mask alone, and then copies the rows.
+
+    Chainable::
+
+        store.where("E", 0.2, 0.8).where("S", 0.3, 0.7, how="and")
+    """
+    modes = {
+        "replace": DataStore.Combine_Replace,
+        "and": DataStore.Combine_And,
+        "or": DataStore.Combine_Or,
+        "andnot": DataStore.Combine_AndNot,
+    }
+    if how not in modes:
+        raise ValueError("how must be one of %s" % sorted(modes))
+    i = self.find(column) if isinstance(column, str) else int(column)
+    if i < 0:
+        raise KeyError("no column named %r" % column)
+    if equals is not None:
+        self.select_equal(i, float(equals), modes[how])
+    else:
+        if lo is None or hi is None:
+            raise TypeError("give lo and hi, or equals")
+        self.select_range(i, float(lo), float(hi), modes[how])
+    return self
+
+
+def where_finite(self, columns=None, how="and"):
+    """Drop rows where any of `columns` is missing or non-finite."""
+    modes = {
+        "replace": DataStore.Combine_Replace,
+        "and": DataStore.Combine_And,
+        "or": DataStore.Combine_Or,
+        "andnot": DataStore.Combine_AndNot,
+    }
+    names = self.names if columns is None else columns
+    idx = VectorInt32([self.find(n) if isinstance(n, str) else int(n) for n in names])
+    self.select_finite(idx, modes[how])
+    return self
+
+
 def selection(self):
     """The current row selection as a bool array, or None."""
     if not self.has_row_mask():
