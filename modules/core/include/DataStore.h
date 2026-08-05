@@ -225,6 +225,45 @@ public:
         n_ = codes_.size();
     }
 
+    /*!
+     * \brief Install a dictionary and codes wholesale.
+     *
+     * For a bulk loader that already knows the distinct values. push_string does
+     * a hash lookup per row, which is right when values arrive one at a time and
+     * catastrophic when a million of them arrive at once: merging per-block
+     * dictionaries this way turned a million lookups into one per distinct
+     * value.
+     */
+    void set_dictionary(const std::vector<std::string>& dict) {
+        type_ = ColumnType::String;
+        dictionary_ = dict;
+        lookup_.clear();
+        for (std::size_t i = 0; i < dictionary_.size(); i++)
+            lookup_.emplace(dictionary_[i], static_cast<int>(i));
+    }
+    /// \see set_dictionary. Codes must index into it.
+    void set_codes(const int* v, int n) {
+        type_ = ColumnType::String;
+        codes_.assign(v, v + n);
+        n_ = codes_.size();
+    }
+    /// Room for `n` elements of the column's own type, for an appending loader.
+    void reserve(std::size_t n) {
+        switch (type_) {
+            case ColumnType::Float64: f64_.reserve(n); break;
+            case ColumnType::Float32: f32_.reserve(n); break;
+            case ColumnType::Int64:   i64_.reserve(n); break;
+            case ColumnType::Int32:   i32_.reserve(n); break;
+            case ColumnType::String:  codes_.reserve(n); break;
+            default: break;
+        }
+    }
+    /// Append raw values of the column's own type, without an intermediate copy.
+    void append_f64(const double* v, std::size_t n) { f64_.insert(f64_.end(), v, v + n); n_ = f64_.size(); }
+    void append_f32(const float* v, std::size_t n) { f32_.insert(f32_.end(), v, v + n); n_ = f32_.size(); }
+    void append_i64(const long long* v, std::size_t n) { i64_.insert(i64_.end(), v, v + n); n_ = i64_.size(); }
+    void append_codes(const int* v, std::size_t n) { codes_.insert(codes_.end(), v, v + n); n_ = codes_.size(); }
+
     // --- reading ----------------------------------------------------------
 
     const std::vector<std::string>& dictionary() const { return dictionary_; }

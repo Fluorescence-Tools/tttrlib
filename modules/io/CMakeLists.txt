@@ -16,3 +16,4 @@ add_subdirectory(ps)      # Photonscore LINCam .photons
 add_subdirectory(be)      # BrightEyes-TTM .ttr
 add_subdirectory(hdf5)    # Photon-HDF5 v0.5 -- decoded arrays, not a record encoding
 add_subdirectory(image)   # TIFF arrays -- file I/O, but not a TTTR container
+add_subdirectory(csv)     # CSV -> DataStore. Depends on core; see its CMakeLists.
