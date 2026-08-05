@@ -14,6 +14,11 @@
 %apply (float* IN_ARRAY1, int DIM1)     { (const float* v, int n) }
 %apply (long long* IN_ARRAY1, int DIM1) { (const long long* v, int n) }
 %apply (int* IN_ARRAY1, int DIM1)       { (const int* v, int n) }
+%apply (short* IN_ARRAY1, int DIM1)     { (const short* v, int n) }
+%apply (signed char* IN_ARRAY1, int DIM1) { (const signed char* v, int n) }
+%apply (unsigned long long* IN_ARRAY1, int DIM1) { (const unsigned long long* v, int n) }
+%apply (unsigned int* IN_ARRAY1, int DIM1) { (const unsigned int* v, int n) }
+%apply (unsigned short* IN_ARRAY1, int DIM1) { (const unsigned short* v, int n) }
 %apply (unsigned char* IN_ARRAY1, int DIM1) {
     (const unsigned char* v, int n),
     (const unsigned char* m, int n)
@@ -29,12 +34,20 @@
 %apply (float** ARGOUTVIEW_ARRAY1, int* DIM1)     { (float** view, int* n) }
 %apply (long long** ARGOUTVIEW_ARRAY1, int* DIM1) { (long long** view, int* n) }
 %apply (int** ARGOUTVIEW_ARRAY1, int* DIM1)       { (int** view, int* n) }
+%apply (short** ARGOUTVIEW_ARRAY1, int* DIM1)     { (short** view, int* n) }
+%apply (signed char** ARGOUTVIEW_ARRAY1, int* DIM1) { (signed char** view, int* n) }
+%apply (unsigned long long** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned long long** view, int* n) }
+%apply (unsigned int** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned int** view, int* n) }
+%apply (unsigned short** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned short** view, int* n) }
+%apply (unsigned char** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned char** view, int* n) }
 
 // %extend must come BEFORE the header it extends...
 %extend tttrlib::data::Column { %pythoncode "./ext/python/Column.py" }
 %extend tttrlib::data::DataStore { %pythoncode "./ext/python/DataStore.py" }
 
 %include "DataStore.h"
+
+%template(DataStoreInfoVector) std::vector<tttrlib::data::DataStoreInfo>;
 
 // ...and the module-level support AFTER it, because it names the generated
 // enum constants at import time and they do not exist until the header has
@@ -57,3 +70,9 @@
 %clear (float** view, int* n);
 %clear (long long** view, int* n);
 %clear (int** view, int* n);
+%clear (short** view, int* n);
+%clear (signed char** view, int* n);
+%clear (unsigned long long** view, int* n);
+%clear (unsigned int** view, int* n);
+%clear (unsigned short** view, int* n);
+%clear (unsigned char** view, int* n);

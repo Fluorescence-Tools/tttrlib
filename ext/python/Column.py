@@ -20,6 +20,18 @@ def numpy(self):
         return _ds_wrap(self, self.get_i64_view())
     if t == ColumnType_Int32:
         return _ds_wrap(self, self.get_i32_view())
+    if t == ColumnType_Int16:
+        return _ds_wrap(self, self.get_i16_view())
+    if t == ColumnType_Int8:
+        return _ds_wrap(self, self.get_i8_view())
+    if t == ColumnType_UInt64:
+        return _ds_wrap(self, self.get_u64_view())
+    if t == ColumnType_UInt32:
+        return _ds_wrap(self, self.get_u32_view())
+    if t == ColumnType_UInt16:
+        return _ds_wrap(self, self.get_u16_view())
+    if t == ColumnType_UInt8:
+        return _ds_wrap(self, self.get_u8_view())
     if t == ColumnType_Bool:
         out = _np_ds.empty(self.size(), dtype=bool)
         for i in range(self.size()):
@@ -67,7 +79,19 @@ def set_numpy(self, values):
             self.push_string(str(s))
         return self
     name = a.dtype.name
-    if name == "float32":
+    if name == "int8":
+        self.set_i8(np.ascontiguousarray(a, dtype=np.int8))
+    elif name == "int16":
+        self.set_i16(np.ascontiguousarray(a, dtype=np.int16))
+    elif name == "uint64":
+        self.set_u64(np.ascontiguousarray(a, dtype=np.uint64))
+    elif name == "uint32":
+        self.set_u32(np.ascontiguousarray(a, dtype=np.uint32))
+    elif name == "uint16":
+        self.set_u16(np.ascontiguousarray(a, dtype=np.uint16))
+    elif name == "uint8":
+        self.set_u8(np.ascontiguousarray(a, dtype=np.uint8))
+    elif name == "float32":
         self.set_f32(np.ascontiguousarray(a, dtype=np.float32))
     elif name == "int32":
         self.set_i32(np.ascontiguousarray(a, dtype=np.int32))

@@ -1007,6 +1007,15 @@ if (is_verbose()) {
     } else {
         read_records_file(fn, container_type);
     }
+
+    // A reader allocates for the record count in the file and then finds fewer
+    // events, because an overflow or an invalid record is not one. That slack
+    // used to be invisible -- every getter reports n_valid_events -- but the
+    // event store reports its columns honestly, so a photon table would have
+    // shown a tail of zeros with no way to tell them from data. Trimming here
+    // costs nothing: the vectors keep their capacity, only their length changes.
+    shrink_to_fit();
+
 if (is_verbose()) {
     std::clog << "-- Resulting number of TTTR entries: " << n_valid_events << std::endl;
     if (macro_time_compression_enabled) {
@@ -1030,65 +1039,99 @@ std::string TTTR::get_filename() {
     return std::string(filename);
 }
 
+/*!
+ * \brief Point the raw event arrays at the store's column buffers.
+ *
+ * Every resize of a column can move its buffer, and every hot loop in the
+ * library holds one of these pointers, so this is called after anything that
+ * changes a column's size. Nothing here allocates.
+ */
+void TTTR::sync_event_pointers() {
+    auto col = [&](int i) -> tttrlib::data::Column* {
+        return i >= 0 ? &events_.column(i) : nullptr;
+    };
+    tttrlib::data::Column* c;
+    macro_times = (c = col(col_macro_time_)) != nullptr ? c->u64_data() : nullptr;
+    macro_times_compressed = (c = col(col_macro_delta_)) != nullptr ? c->u32_data() : nullptr;
+    micro_times = (c = col(col_micro_time_)) != nullptr ? c->u16_data() : nullptr;
+    routing_channels = (c = col(col_routing_channel_)) != nullptr ? c->i8_data() : nullptr;
+    event_types = (c = col(col_event_type_)) != nullptr ? c->i8_data() : nullptr;
+}
+
 void TTTR::allocate_memory_for_records(size_t n_rec){
 if (is_verbose()) {
     std::clog << "-- Allocating memory for " << n_rec << " TTTR records." << std::endl;
 }
-    
-    // If auto-compression is enabled AND not disabled for this instance, allocate compressed storage
-    if (auto_compress_on_read && macro_time_compression_enabled && n_rec > 0) {
+    // One columnar table, four columns, named. The types are the types the
+    // stream is made of -- a routing channel is one byte and a micro time is
+    // two -- and widening them would multiply the largest arrays in the library
+    // for nothing.
+    events_ = tttrlib::data::DataStore();
+    // Labelled so it is identifiable in the registry listing. A session ends up
+    // holding several of these -- the file, the bursts from it, a localisation
+    // table -- and "12 GB in four stores" is only actionable if you can tell
+    // which one is which.
+    events_.set_label(filename.empty() ? std::string("TTTR") : ("TTTR: " + filename));
+    events_.set_n_rows(n_rec);
+    col_macro_time_ = -1; col_micro_time_ = -1;
+    col_routing_channel_ = -1; col_event_type_ = -1; col_macro_delta_ = -1;
+
+    const bool compress = auto_compress_on_read && macro_time_compression_enabled && n_rec > 0;
+    if (compress) {
 if (is_verbose()) {
         std::clog << "-- Allocating compressed storage (32-bit deltas + keyframes)" << std::endl;
 }
-        // Calculate keyframes
         n_keyframes = (n_rec + keyframe_interval - 1) / keyframe_interval;
-        
-        macro_times_compressed = (uint32_t*) malloc(n_rec * sizeof(uint32_t));
+        col_macro_delta_ = events_.add_column("macro_time_delta", tttrlib::data::ColumnType::UInt32);
+        events_.column(col_macro_delta_).resize_uninitialized(n_rec);
+        // The keyframes are not a per-event column -- there is one per
+        // keyframe_interval events -- so they stay a plain allocation.
         macro_time_keyframes = (unsigned long long*) malloc(n_keyframes * sizeof(unsigned long long));
-        micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
-        routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
-        event_types = (signed char*) malloc(n_rec * sizeof(signed char));
-        
-        macro_times = nullptr;
         macro_time_compression_enabled = true;
-        
+    } else {
+        col_macro_time_ = events_.add_column("macro_time", tttrlib::data::ColumnType::UInt64);
+        events_.column(col_macro_time_).resize_uninitialized(n_rec);
+        macro_time_keyframes = nullptr;
+        macro_time_compression_enabled = false;
+    }
+    col_micro_time_ = events_.add_column("micro_time", tttrlib::data::ColumnType::UInt16);
+    col_routing_channel_ = events_.add_column("routing_channel", tttrlib::data::ColumnType::Int8);
+    col_event_type_ = events_.add_column("event_type", tttrlib::data::ColumnType::Int8);
+    events_.column(col_micro_time_).resize_uninitialized(n_rec);
+    events_.column(col_routing_channel_).resize_uninitialized(n_rec);
+    events_.column(col_event_type_).resize_uninitialized(n_rec);
+
+    sync_event_pointers();
+    capacity = n_rec;
+
 if (is_verbose()) {
+    if (compress) {
         size_t compressed_size = n_rec * sizeof(uint32_t) + n_keyframes * sizeof(unsigned long long);
         size_t uncompressed_size = n_rec * sizeof(unsigned long long);
         std::clog << "-- Compressed storage: " << (compressed_size / 1024.0 / 1024.0) << " MB" << std::endl;
         std::clog << "-- vs Uncompressed: " << (uncompressed_size / 1024.0 / 1024.0) << " MB" << std::endl;
         std::clog << "-- Saved: " << ((uncompressed_size - compressed_size) / 1024.0 / 1024.0) << " MB" << std::endl;
-}
-    } else {
-        // Normal allocation (uncompressed)
-        macro_times = (unsigned long long*) malloc(n_rec * sizeof(unsigned long long));
-        micro_times = (unsigned short*) malloc(n_rec * sizeof(unsigned short));
-        routing_channels = (signed char*) malloc(n_rec * sizeof(signed char));
-        event_types = (signed char*) malloc(n_rec * sizeof(signed char));
-        
-        macro_times_compressed = nullptr;
-        macro_time_keyframes = nullptr;
-        macro_time_compression_enabled = false;
     }
-    
-    capacity = n_rec;
+}
 }
 
 void TTTR::deallocate_memory_of_records(){
+    // The event arrays belong to the store and are released with it. Only the
+    // keyframes are separately owned, because there is one per interval rather
+    // than one per event and they are not a column.
+    events_ = tttrlib::data::DataStore();
+    col_macro_time_ = -1; col_micro_time_ = -1;
+    col_routing_channel_ = -1; col_event_type_ = -1; col_macro_delta_ = -1;
+    macro_times = nullptr;
+    macro_times_compressed = nullptr;
+    micro_times = nullptr;
+    routing_channels = nullptr;
+    event_types = nullptr;
 
-    free(macro_times);
-    free(routing_channels);
-    free(micro_times);
-    free(event_types);
-    if(macro_times_compressed != nullptr) {
-        free(macro_times_compressed);
-        macro_times_compressed = nullptr;
-    }
     if(macro_time_keyframes != nullptr) {
         free(macro_time_keyframes);
         macro_time_keyframes = nullptr;
     }
-    
     capacity = 0;
     n_keyframes = 0;
 }
@@ -1119,20 +1162,16 @@ if (is_verbose()) {
     std::clog << "-- Reallocating memory from " << capacity << " to " << new_capacity << " TTTR records." << std::endl;
 }
     
-    macro_times = (unsigned long long*) realloc(
-            macro_times, new_capacity * sizeof(unsigned long long)
-    );
-    micro_times = (unsigned short*) realloc(
-            micro_times, new_capacity * sizeof(unsigned short)
-    );
-    routing_channels = (signed char*) realloc(
-            routing_channels, new_capacity * sizeof(signed char)
-    );
-    event_types = (signed char*) realloc(
-            event_types, new_capacity * sizeof(signed char)
-    );
-    
-    
+    // grow(), not resize(): the existing events have to survive. The store owns
+    // the buffers, so this is a vector growth rather than a realloc, and the raw
+    // pointers have to be taken again afterwards because a growth can move them.
+    for (int c : {col_macro_time_, col_macro_delta_, col_micro_time_,
+                  col_routing_channel_, col_event_type_}) {
+        if (c >= 0) events_.column(c).grow(new_capacity);
+    }
+    events_.set_n_rows(new_capacity);
+    sync_event_pointers();
+
     capacity = new_capacity;
 }
 
@@ -1438,20 +1477,19 @@ void TTTR::shrink_to_fit(){
         return;
     }
     
-    macro_times = (unsigned long long*) realloc(
-            macro_times, n_valid_events * sizeof(unsigned long long)
-    );
-    micro_times = (unsigned short*) realloc(
-            micro_times, n_valid_events * sizeof(unsigned short)
-    );
-    routing_channels = (signed char*) realloc(
-            routing_channels, n_valid_events * sizeof(signed char)
-    );
-    event_types = (signed char*) realloc(
-            event_types, n_valid_events * sizeof(signed char)
-    );
-    
-    
+    // A reader allocates for the record count in the file and then finds fewer
+    // valid events, because an overflow or an invalid record is not one. truncate
+    // keeps the events and drops the tail.
+    for (int c : {col_macro_time_, col_macro_delta_, col_micro_time_,
+                  col_routing_channel_, col_event_type_}) {
+        if (c >= 0) events_.column(c).truncate(n_valid_events);
+    }
+    events_.set_n_rows(n_valid_events);
+    // truncate() shortens without reallocating, so the buffers do not move --
+    // but taking the pointers again is free and makes the invariant hold
+    // whatever truncate does later.
+    sync_event_pointers();
+
     capacity = n_valid_events;
 }
 
@@ -3230,13 +3268,16 @@ void TTTR::compress_macro_times() {
         }
     }
 
-    // Allocate compressed storage
-    if (macro_times_compressed != nullptr) {
-        free(macro_times_compressed);
-        
+    // The deltas are a column, added to the store rather than malloc'd. The
+    // uncompressed macro times are dropped from the store at the end, which is
+    // what actually returns the memory -- freeing the pointer would be freeing
+    // a std::vector's buffer and aborts.
+    if (col_macro_delta_ < 0) {
+        col_macro_delta_ = events_.add_column("macro_time_delta",
+                                              tttrlib::data::ColumnType::UInt32);
     }
-
-    macro_times_compressed = (uint32_t*) malloc(capacity * sizeof(uint32_t));
+    events_.column(col_macro_delta_).resize_uninitialized(capacity);
+    sync_event_pointers();
     
 
     // Compress: store deltas relative to keyframes
@@ -3272,9 +3313,18 @@ void TTTR::compress_macro_times() {
         std::cerr << "Consider using a smaller keyframe interval." << std::endl;
     }
 
-    // Free the original 64-bit storage
-    free(macro_times);
-    macro_times = nullptr;
+    // Drop the uncompressed column. Removing it from the store is what frees
+    // the 64-bit macro times; there is nothing here to free by hand.
+    if (col_macro_time_ >= 0) {
+        const int removed = col_macro_time_;
+        events_.remove_column(removed);
+        col_macro_time_ = -1;
+        // Removing a column shifts down only the indices AFTER it.
+        auto after = [&](int& c) { if (c > removed) c -= 1; };
+        after(col_macro_delta_); after(col_micro_time_);
+        after(col_routing_channel_); after(col_event_type_);
+        sync_event_pointers();
+    }
     
 
     macro_time_compression_enabled = true;
@@ -3296,9 +3346,15 @@ void TTTR::decompress_macro_times() {
         std::clog << "-- Decompressing macro times for " << n_valid_events << " events." << std::endl;
     }
 
-    // Allocate 64-bit storage
-    macro_times = (unsigned long long*) malloc(capacity * sizeof(unsigned long long));
-    
+    // The 64-bit macro times come back as a column. The delta column is
+    // removed at the end, which is what frees them -- the deltas belong to the
+    // store, and calling free on that pointer aborts.
+    if (col_macro_time_ < 0) {
+        col_macro_time_ = events_.add_column("macro_time",
+                                             tttrlib::data::ColumnType::UInt64);
+    }
+    events_.column(col_macro_time_).resize_uninitialized(capacity);
+    sync_event_pointers();
 
     // Decompress: reconstruct absolute times from keyframes + deltas
     for (size_t i = 0; i < n_valid_events; i++) {
@@ -3307,11 +3363,16 @@ void TTTR::decompress_macro_times() {
         macro_times[i] = keyframe + (unsigned long long)macro_times_compressed[i];
     }
 
-    // Free compressed storage
-    free(macro_times_compressed);
+    if (col_macro_delta_ >= 0) {
+        events_.remove_column(col_macro_delta_);
+        const int removed = col_macro_delta_;
+        col_macro_delta_ = -1;
+        auto after = [&](int& c) { if (c > removed) c -= 1; };
+        after(col_macro_time_); after(col_micro_time_);
+        after(col_routing_channel_); after(col_event_type_);
+        sync_event_pointers();
+    }
     free(macro_time_keyframes);
-    
-    macro_times_compressed = nullptr;
     macro_time_keyframes = nullptr;
     n_keyframes = 0;
 

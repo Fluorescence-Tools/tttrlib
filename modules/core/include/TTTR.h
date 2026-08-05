@@ -28,6 +28,7 @@
 
 #include "Histogram.h"
 #include "TTTRHeader.h"
+#include "DataStore.h"
 #include "FileCheck.h"
 #include "TTTRRecordReader.h"
 #include "TTTRRecordTypes.h"
@@ -273,6 +274,56 @@ private:
     uint64_t TTTRRecord;
 
 private:
+    /*!
+     * \brief Where the event arrays actually live.
+     *
+     * TTTR is a view onto a columnar table, not the owner of six mallocs. The
+     * pointers below point INTO this store's column buffers; they are not
+     * separately allocated and must not be freed.
+     *
+     * The point is not tidiness. It is that a photon stream and a burst table
+     * are the same kind of thing -- typed columns of the same length, with a
+     * selection over them -- and having one representation means a selection,
+     * an extra computed per-photon quantity, or a histogram over any of it works
+     * the same way for both. The raw pointers stay because every hot loop in the
+     * library indexes them directly and none of that changes.
+     *
+     * Any operation that resizes the store invalidates the pointers, so all of
+     * them go through \ref sync_event_pointers.
+     */
+    tttrlib::data::DataStore events_;
+
+    /// Column indices in \ref events_, or -1 before the first allocation.
+    int col_macro_time_ = -1;
+    int col_micro_time_ = -1;
+    int col_routing_channel_ = -1;
+    int col_event_type_ = -1;
+    int col_macro_delta_ = -1;
+
+    /// Re-point the raw arrays at the store's buffers. Must be called after
+    /// anything that resizes a column.
+    void sync_event_pointers();
+
+public:
+    /*!
+     * \brief The columnar table the events live in.
+     *
+     * The photons ARE a data store: four typed columns of the same length. This
+     * hands it over so the same things that work on a burst table work on a
+     * photon stream -- a selection, an extra computed per-photon column, a
+     * histogram over any of it -- without a conversion step.
+     *
+     * The reference is into this object. A Python caller gets the lifetime
+     * chain enforced for them; a C++ caller must not outlive the TTTR.
+     */
+    tttrlib::data::DataStore& data() { return events_; }
+    const tttrlib::data::DataStore& data() const { return events_; }
+
+    /// Bytes the event arrays occupy.
+    size_t get_used_memory() const { return events_.nbytes(); }
+
+private:
+
     /// The number of sync pulses (PRIVATE - use get/set_macro_time_at)
     unsigned long long *macro_times;
 

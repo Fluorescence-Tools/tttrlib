@@ -47,6 +47,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -56,12 +57,52 @@
 namespace tttrlib {
 namespace data {
 
+/*!
+ * \brief An allocator whose vectors do not zero what they are about to overwrite.
+ *
+ * `std::vector<T>::resize` value-initialises, so growing a buffer for a reader
+ * that is about to write every element writes it twice: once with zeros and
+ * once with the data. On a 28-million-event file that is 458 MB of pointless
+ * stores, and it is exactly what the malloc this replaced did not do.
+ *
+ * Only reachable through \ref Column::resize_uninitialized, which says what it
+ * does. \ref Column::resize still zeroes, because a general table should.
+ */
+template<typename T>
+struct DefaultInitAllocator : std::allocator<T> {
+    using std::allocator<T>::allocator;
+
+    template<typename U>
+    struct rebind { using other = DefaultInitAllocator<U>; };
+
+    template<typename U, typename... Args>
+    void construct(U* p, Args&&... args) {
+        ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
+    }
+    template<typename U>
+    void construct(U* p) {
+        ::new(static_cast<void*>(p)) U;      // default-init: scalars left alone
+    }
+};
+
+template<typename T>
+using RawVector = std::vector<T, DefaultInitAllocator<T>>;
+
 /// What a column holds. String is stored but never binned -- see \ref Column.
 enum class ColumnType {
     Float64,
     Float32,
     Int64,
     Int32,
+    // The narrow integer types exist because the photon stream is made of them:
+    // a routing channel is one byte and a micro time is two, and widening them
+    // to int64 would quadruple the largest arrays in the library for nothing.
+    Int16,
+    Int8,
+    UInt64,
+    UInt32,
+    UInt16,
+    UInt8,
     Bool,
     String
 };
@@ -73,6 +114,12 @@ inline int column_type_size(ColumnType t) {
         case ColumnType::Float32: return 4;
         case ColumnType::Int64:   return 8;
         case ColumnType::Int32:   return 4;
+        case ColumnType::Int16:   return 2;
+        case ColumnType::Int8:    return 1;
+        case ColumnType::UInt64:  return 8;
+        case ColumnType::UInt32:  return 4;
+        case ColumnType::UInt16:  return 2;
+        case ColumnType::UInt8:   return 1;
         case ColumnType::Bool:    return 1;   // bit-packed; see Column::nbytes
         case ColumnType::String:  return 4;   // the code; the dictionary is extra
     }
@@ -171,6 +218,9 @@ public:
     void shrink_to_fit() {
         f64_.shrink_to_fit(); f32_.shrink_to_fit();
         i64_.shrink_to_fit(); i32_.shrink_to_fit();
+        i16_.shrink_to_fit(); i8_.shrink_to_fit();
+        u64_.shrink_to_fit(); u32_.shrink_to_fit();
+        u16_.shrink_to_fit(); u8_.shrink_to_fit();
         codes_.shrink_to_fit(); dictionary_.shrink_to_fit();
     }
 
@@ -182,6 +232,12 @@ public:
             case ColumnType::Float32: b = f32_.capacity() * 4; break;
             case ColumnType::Int64:   b = i64_.capacity() * 8; break;
             case ColumnType::Int32:   b = i32_.capacity() * 4; break;
+            case ColumnType::Int16:   b = i16_.capacity() * 2; break;
+            case ColumnType::Int8:    b = i8_.capacity(); break;
+            case ColumnType::UInt64:  b = u64_.capacity() * 8; break;
+            case ColumnType::UInt32:  b = u32_.capacity() * 4; break;
+            case ColumnType::UInt16:  b = u16_.capacity() * 2; break;
+            case ColumnType::UInt8:   b = u8_.capacity(); break;
             case ColumnType::Bool:    b = bits_.nbytes(); break;
             case ColumnType::String:
                 b = codes_.capacity() * 4;
@@ -201,6 +257,12 @@ public:
     void set_f32(const float* v, int n) { f32_.assign(v, v + n); n_ = n; type_ = ColumnType::Float32; }
     void set_i64(const long long* v, int n) { i64_.assign(v, v + n); n_ = n; type_ = ColumnType::Int64; }
     void set_i32(const int* v, int n) { i32_.assign(v, v + n); n_ = n; type_ = ColumnType::Int32; }
+    void set_i16(const short* v, int n) { i16_.assign(v, v + n); n_ = n; type_ = ColumnType::Int16; }
+    void set_i8(const signed char* v, int n) { i8_.assign(v, v + n); n_ = n; type_ = ColumnType::Int8; }
+    void set_u64(const unsigned long long* v, int n) { u64_.assign(v, v + n); n_ = n; type_ = ColumnType::UInt64; }
+    void set_u32(const unsigned int* v, int n) { u32_.assign(v, v + n); n_ = n; type_ = ColumnType::UInt32; }
+    void set_u16(const unsigned short* v, int n) { u16_.assign(v, v + n); n_ = n; type_ = ColumnType::UInt16; }
+    void set_u8(const unsigned char* v, int n) { u8_.assign(v, v + n); n_ = n; type_ = ColumnType::UInt8; }
     void set_bool(const unsigned char* v, int n) { bits_.from_bytes(v, n); n_ = n; type_ = ColumnType::Bool; }
 
     /*!
@@ -254,6 +316,12 @@ public:
             case ColumnType::Float32: f32_.reserve(n); break;
             case ColumnType::Int64:   i64_.reserve(n); break;
             case ColumnType::Int32:   i32_.reserve(n); break;
+            case ColumnType::Int16:   i16_.reserve(n); break;
+            case ColumnType::Int8:    i8_.reserve(n); break;
+            case ColumnType::UInt64:  u64_.reserve(n); break;
+            case ColumnType::UInt32:  u32_.reserve(n); break;
+            case ColumnType::UInt16:  u16_.reserve(n); break;
+            case ColumnType::UInt8:   u8_.reserve(n); break;
             case ColumnType::String:  codes_.reserve(n); break;
             default: break;
         }
@@ -278,11 +346,107 @@ public:
             case ColumnType::Float32: f32_.assign(n, 0.0f); break;
             case ColumnType::Int64:   i64_.assign(n, 0); break;
             case ColumnType::Int32:   i32_.assign(n, 0); break;
+            case ColumnType::Int16:   i16_.assign(n, 0); break;
+            case ColumnType::Int8:    i8_.assign(n, 0); break;
+            case ColumnType::UInt64:  u64_.assign(n, 0); break;
+            case ColumnType::UInt32:  u32_.assign(n, 0); break;
+            case ColumnType::UInt16:  u16_.assign(n, 0); break;
+            case ColumnType::UInt8:   u8_.assign(n, 0); break;
             case ColumnType::String:  codes_.assign(n, 0); break;
             case ColumnType::Bool:    bits_.assign(n, false); break;
         }
     }
+    /*!
+     * \brief Size the column WITHOUT initialising it.
+     *
+     * For a reader that is about to write every element. resize() zeroes first,
+     * which on a large file is a full extra pass over the memory; this is what
+     * the malloc it replaced did. Anything not written is whatever was in the
+     * page, so a caller that does not fill the column must use resize().
+     */
+    void resize_uninitialized(std::size_t n) {
+        n_ = n;
+        switch (type_) {
+            case ColumnType::Float64: f64_.resize(n); break;
+            case ColumnType::Float32: f32_.resize(n); break;
+            case ColumnType::Int64:   i64_.resize(n); break;
+            case ColumnType::Int32:   i32_.resize(n); break;
+            case ColumnType::Int16:   i16_.resize(n); break;
+            case ColumnType::Int8:    i8_.resize(n); break;
+            case ColumnType::UInt64:  u64_.resize(n); break;
+            case ColumnType::UInt32:  u32_.resize(n); break;
+            case ColumnType::UInt16:  u16_.resize(n); break;
+            case ColumnType::UInt8:   u8_.resize(n); break;
+            case ColumnType::String:  codes_.resize(n); break;
+            case ColumnType::Bool:    bits_.assign(n, false); break;
+        }
+    }
+
+    /*!
+     * Grow to `n`, KEEPING what is already there.
+     *
+     * resize() clears, which is what a loader filling a column wants; this is
+     * what a container growing one wants. Two names because getting the wrong
+     * one silently loses data rather than failing.
+     */
+    void grow(std::size_t n) {
+        if (n < n_) return;
+        n_ = n;
+        switch (type_) {
+            case ColumnType::Float64: f64_.resize(n, 0.0); break;
+            case ColumnType::Float32: f32_.resize(n, 0.0f); break;
+            case ColumnType::Int64:   i64_.resize(n, 0); break;
+            case ColumnType::Int32:   i32_.resize(n, 0); break;
+            case ColumnType::Int16:   i16_.resize(n, 0); break;
+            case ColumnType::Int8:    i8_.resize(n, 0); break;
+            case ColumnType::UInt64:  u64_.resize(n, 0); break;
+            case ColumnType::UInt32:  u32_.resize(n, 0); break;
+            case ColumnType::UInt16:  u16_.resize(n, 0); break;
+            case ColumnType::UInt8:   u8_.resize(n, 0); break;
+            case ColumnType::String:  codes_.resize(n, 0); break;
+            case ColumnType::Bool:    { BitMask b(n, false);
+                                        for (std::size_t i = 0; i < std::min(n, bits_.size()); i++)
+                                            b.set(i, bits_.test(i));
+                                        bits_ = b; break; }
+        }
+    }
+
+    /*!
+     * Keep the first `n` elements and drop the rest, without reallocating.
+     *
+     * For a reader that allocated for the record count in the file and then
+     * found fewer valid events -- which is every TTTR reader, because invalid
+     * and overflow records are not events.
+     */
+    void truncate(std::size_t n) {
+        if (n > n_) return;
+        n_ = n;
+        // ONLY the active type. Resizing all of them looks harmless because the
+        // others are empty -- and it is the opposite: resize() on an empty
+        // vector GROWS it, so every column allocated and zeroed one array per
+        // type it does not hold. It cost 60% of the test suite's runtime.
+        switch (type_) {
+            case ColumnType::Float64: f64_.resize(n); break;
+            case ColumnType::Float32: f32_.resize(n); break;
+            case ColumnType::Int64:   i64_.resize(n); break;
+            case ColumnType::Int32:   i32_.resize(n); break;
+            case ColumnType::Int16:   i16_.resize(n); break;
+            case ColumnType::Int8:    i8_.resize(n); break;
+            case ColumnType::UInt64:  u64_.resize(n); break;
+            case ColumnType::UInt32:  u32_.resize(n); break;
+            case ColumnType::UInt16:  u16_.resize(n); break;
+            case ColumnType::UInt8:   u8_.resize(n); break;
+            case ColumnType::String:  codes_.resize(n); break;
+            case ColumnType::Bool:    break;   // bit-packed; n_ is the length
+        }
+    }
     double* f64_data() { return f64_.data(); }
+    short* i16_data() { return i16_.data(); }
+    signed char* i8_data() { return i8_.data(); }
+    unsigned long long* u64_data() { return u64_.data(); }
+    unsigned int* u32_data() { return u32_.data(); }
+    unsigned short* u16_data() { return u16_.data(); }
+    unsigned char* u8_data() { return u8_.data(); }
     float* f32_data() { return f32_.data(); }
     long long* i64_data() { return reinterpret_cast<long long*>(i64_.data()); }
     int* codes_data() { return reinterpret_cast<int*>(codes_.data()); }
@@ -296,7 +460,7 @@ public:
     // --- reading ----------------------------------------------------------
 
     const std::vector<std::string>& dictionary() const { return dictionary_; }
-    const std::vector<std::int32_t>& codes() const { return codes_; }
+    const RawVector<std::int32_t>& codes() const { return codes_; }
 
     const std::string& string_at(std::size_t i) const {
         static const std::string empty;
@@ -316,6 +480,15 @@ public:
             case ColumnType::Float32: return static_cast<double>(f32_[i]);
             case ColumnType::Int64:   return static_cast<double>(i64_[i]);
             case ColumnType::Int32:   return static_cast<double>(i32_[i]);
+            case ColumnType::Int16:   return static_cast<double>(i16_[i]);
+            case ColumnType::Int8:    return static_cast<double>(i8_[i]);
+            // Above 2^53 a uint64 does not survive a double. Macro times reach
+            // that on long acquisitions, so a caller that needs them exactly
+            // must take the typed view rather than value_at.
+            case ColumnType::UInt64:  return static_cast<double>(u64_[i]);
+            case ColumnType::UInt32:  return static_cast<double>(u32_[i]);
+            case ColumnType::UInt16:  return static_cast<double>(u16_[i]);
+            case ColumnType::UInt8:   return static_cast<double>(u8_[i]);
             case ColumnType::Bool:    return bits_.test(i) ? 1.0 : 0.0;
             case ColumnType::String:  return static_cast<double>(codes_[i]);
         }
@@ -336,6 +509,24 @@ public:
     void get_i32_view(int** view, int* n) {
         *view = i32_.empty() ? nullptr : reinterpret_cast<int*>(i32_.data());
         *n = static_cast<int>(i32_.size());
+    }
+    void get_i16_view(short** view, int* n) {
+        *view = i16_.empty() ? nullptr : i16_.data(); *n = static_cast<int>(i16_.size());
+    }
+    void get_i8_view(signed char** view, int* n) {
+        *view = i8_.empty() ? nullptr : i8_.data(); *n = static_cast<int>(i8_.size());
+    }
+    void get_u64_view(unsigned long long** view, int* n) {
+        *view = u64_.empty() ? nullptr : u64_.data(); *n = static_cast<int>(u64_.size());
+    }
+    void get_u32_view(unsigned int** view, int* n) {
+        *view = u32_.empty() ? nullptr : u32_.data(); *n = static_cast<int>(u32_.size());
+    }
+    void get_u16_view(unsigned short** view, int* n) {
+        *view = u16_.empty() ? nullptr : u16_.data(); *n = static_cast<int>(u16_.size());
+    }
+    void get_u8_view(unsigned char** view, int* n) {
+        *view = u8_.empty() ? nullptr : u8_.data(); *n = static_cast<int>(u8_.size());
     }
     void get_codes_view(int** view, int* n) {
         *view = codes_.empty() ? nullptr : reinterpret_cast<int*>(codes_.data());
@@ -372,17 +563,92 @@ private:
     ColumnType type_ = ColumnType::Float64;
     std::size_t n_ = 0;
 
-    std::vector<double> f64_;
-    std::vector<float> f32_;
-    std::vector<std::int64_t> i64_;
-    std::vector<std::int32_t> i32_;
+    RawVector<double> f64_;
+    RawVector<float> f32_;
+    RawVector<std::int64_t> i64_;
+    RawVector<std::int32_t> i32_;
+    RawVector<short> i16_;
+    RawVector<signed char> i8_;
+    RawVector<unsigned long long> u64_;
+    RawVector<unsigned int> u32_;
+    RawVector<unsigned short> u16_;
+    RawVector<unsigned char> u8_;
     BitMask bits_;                       // Bool columns
 
     std::vector<std::string> dictionary_;
     std::map<std::string, int> lookup_;
-    std::vector<std::int32_t> codes_;
+    RawVector<std::int32_t> codes_;
 
     BitMask mask_;                       // validity
+};
+
+/*!
+ * \brief What one live store is, for the registry.
+ */
+struct DataStoreInfo {
+    int id = 0;
+    std::string label;
+    std::size_t n_rows = 0;
+    int n_columns = 0;
+    std::size_t nbytes = 0;
+    std::size_t n_selected = 0;
+};
+
+class DataStore;
+
+/*!
+ * \brief Every store currently alive in the process.
+ *
+ * A session accumulates these without meaning to: a TTTR file is one, the
+ * bursts extracted from it are another, an SMLM localisation table a third, and
+ * each is potentially most of the memory in the process. Without somewhere to
+ * look, "why is this using 12 GB" has no answer short of a profiler.
+ *
+ * Stores register themselves and deregister on destruction, so the list is
+ * always what is actually there rather than what someone remembered to record.
+ * It holds raw pointers deliberately -- a registry that kept the stores alive
+ * would be the leak it exists to diagnose.
+ */
+class DataStoreRegistry {
+public:
+    /*!
+     * The one registry in the process.
+     *
+     * Defined in DataStore.cpp, NOT inline here. A function-local static in an
+     * inline function is merged across translation units only when the symbol
+     * is exported, and the Python extension is built with hidden visibility --
+     * so core and the extension each got their own registry, and a TTTR created
+     * through one was invisible to a listing taken through the other. It looked
+     * exactly like the registration not happening.
+     */
+    static DataStoreRegistry& instance();
+
+    int add(DataStore* s) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const int id = ++next_id_;
+        stores_.emplace_back(id, s);
+        return id;
+    }
+    void remove(int id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (std::size_t i = 0; i < stores_.size(); i++) {
+            if (stores_[i].first == id) { stores_.erase(stores_.begin() + i); return; }
+        }
+    }
+    /// Snapshot of what is live. Defined after DataStore, which it inspects.
+    std::vector<DataStoreInfo> list() const;
+    std::size_t total_bytes() const;
+    /// Number of live stores.
+    std::size_t size() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return stores_.size();
+    }
+
+private:
+    DataStoreRegistry() = default;
+    mutable std::mutex mutex_;
+    std::vector<std::pair<int, DataStore*>> stores_;
+    int next_id_ = 0;
 };
 
 /*!
@@ -394,7 +660,66 @@ private:
  */
 class DataStore {
 public:
-    DataStore() = default;
+    /*!
+     * Registration is per INSTANCE, including copies.
+     *
+     * A copy is a second table holding a second lot of memory, and the registry
+     * exists to show exactly that. Move transfers the identity instead, because
+     * a moved-from store holds nothing.
+     */
+    DataStore() { id_ = DataStoreRegistry::instance().add(this); }
+    explicit DataStore(std::string label) : label_(std::move(label)) {
+        id_ = DataStoreRegistry::instance().add(this);
+    }
+    ~DataStore() { if (id_ != 0) DataStoreRegistry::instance().remove(id_); }
+
+    DataStore(const DataStore& o)
+            : columns_(o.columns_), n_rows_(o.n_rows_), row_mask_(o.row_mask_),
+              label_(o.label_) {
+        id_ = DataStoreRegistry::instance().add(this);
+    }
+    DataStore& operator=(const DataStore& o) {
+        if (this != &o) {
+            columns_ = o.columns_; n_rows_ = o.n_rows_;
+            row_mask_ = o.row_mask_; label_ = o.label_;
+        }
+        return *this;                       // keeps its own registry identity
+    }
+    DataStore(DataStore&& o) noexcept
+            : columns_(std::move(o.columns_)), n_rows_(o.n_rows_),
+              row_mask_(std::move(o.row_mask_)), label_(std::move(o.label_)) {
+        o.n_rows_ = 0;
+        id_ = DataStoreRegistry::instance().add(this);
+    }
+    DataStore& operator=(DataStore&& o) noexcept {
+        if (this != &o) {
+            columns_ = std::move(o.columns_); n_rows_ = o.n_rows_;
+            row_mask_ = std::move(o.row_mask_); label_ = std::move(o.label_);
+            o.n_rows_ = 0;
+        }
+        return *this;
+    }
+
+    /// Registry identity. Stable for the life of this instance.
+    int id() const { return id_; }
+    /// What this store is, for someone reading the registry listing.
+    const std::string& label() const { return label_; }
+    void set_label(std::string s) { label_ = std::move(s); }
+
+    /*!
+     * \brief Drop every column and free the memory, keeping the object.
+     *
+     * For a caller who knows a table is finished with but cannot drop the
+     * handle -- a cache eviction, a plot that has been closed. Views handed out
+     * before this DO keep their own memory alive, because they hold a reference
+     * to the column; what is freed is this store's claim on it.
+     */
+    void release() {
+        columns_.clear();
+        columns_.shrink_to_fit();
+        row_mask_.clear();
+        n_rows_ = 0;
+    }
 
     std::size_t n_rows() const { return n_rows_; }
     int n_columns() const { return static_cast<int>(columns_.size()); }
@@ -425,6 +750,17 @@ public:
         if (find(name) >= 0) throw std::invalid_argument("duplicate column " + name);
         columns_.emplace_back(name, type);
         return static_cast<int>(columns_.size()) - 1;
+    }
+
+    /*!
+     * \brief Drop a column and free it.
+     *
+     * Indices of the columns after it shift down by one, which is the price of
+     * keeping them contiguous; a caller holding indices must adjust them.
+     */
+    void remove_column(int i) {
+        if (i < 0 || i >= n_columns()) return;
+        columns_.erase(columns_.begin() + i);
     }
 
     /*!
@@ -468,7 +804,45 @@ private:
     std::vector<Column> columns_;
     std::size_t n_rows_ = 0;
     BitMask row_mask_;
+    std::string label_;
+    int id_ = 0;
 };
+
+inline std::vector<DataStoreInfo> DataStoreRegistry::list() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<DataStoreInfo> out;
+    out.reserve(stores_.size());
+    for (const auto& kv : stores_) {
+        const DataStore* s = kv.second;
+        DataStoreInfo i;
+        i.id = kv.first;
+        i.label = s->label();
+        i.n_rows = s->n_rows();
+        i.n_columns = s->n_columns();
+        i.nbytes = s->nbytes();
+        i.n_selected = s->n_selected();
+        out.push_back(i);
+    }
+    return out;
+}
+
+inline std::size_t DataStoreRegistry::total_bytes() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::size_t b = 0;
+    for (const auto& kv : stores_) b += kv.second->nbytes();
+    return b;
+}
+
+/// Every store currently alive, largest first.
+inline std::vector<DataStoreInfo> live_data_stores() {
+    std::vector<DataStoreInfo> v = DataStoreRegistry::instance().list();
+    std::sort(v.begin(), v.end(),
+              [](const DataStoreInfo& a, const DataStoreInfo& b) { return a.nbytes > b.nbytes; });
+    return v;
+}
+
+/// Total bytes held by every live store.
+inline std::size_t live_data_store_bytes() { return DataStoreRegistry::instance().total_bytes(); }
 
 /*!
  * \brief Fill a histogram from store columns.
