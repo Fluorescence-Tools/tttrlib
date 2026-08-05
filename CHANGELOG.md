@@ -13,7 +13,9 @@
   longer rejected. Files written this way are byte-compatible with what
   ImageJ/Fiji and `tifffile` read, and a description that disagrees with the page
   count on disk is ignored rather than used to reshape the pixels into the wrong
-  grid.
+  grid. `imwrite` also takes `resolution=(x, y)` and `metadata={"spacing": …,
+  "unit": …}`, which together give a z-stack a physical voxel size — ImageJ needs
+  both halves, the tags for x/y and the description for z.
 - **ImageJ/Fiji plugin rebuilt on SciJava** — the two IJ1 `PlugIn` classes became
   SciJava `Command`s, so every command is now macro-recordable, scriptable from
   Groovy/Jython, headless-capable and unit-testable. New commands: *Show TTTR

@@ -147,8 +147,13 @@ def _parse_imagej(description, n_pages):
     return axes, tuple(shape)
 
 
-def _imagej_description(axes, shape):
-    """Format ImageJ ImageDescription lines for a stack of *shape* with *axes*."""
+def _imagej_description(axes, shape, extra=None):
+    """Format ImageJ ImageDescription lines for a stack of *shape* with *axes*.
+
+    *extra* adds further ImageJ fields verbatim - ``spacing`` (the z step) and
+    ``unit`` (its name, e.g. ``"um"``) are the ones that give a stack a physical
+    voxel size, alongside the x/y resolution tags.
+    """
     sizes = {label: 1 for _, label in _IMAGEJ_DIMS}
     pages = 1
     for label, size in zip(axes[:-2], shape[:-2]):
@@ -159,6 +164,10 @@ def _imagej_description(axes, shape):
         if sizes[label] > 1:
             lines.append("%s=%d" % (key, sizes[label]))
     lines += ["hyperstack=true", "mode=grayscale", "loop=false"]
+    for key, value in (extra or {}).items():
+        if key in ("ImageJ", "images") or any(key == k for k, _ in _IMAGEJ_DIMS):
+            raise ValueError("metadata key %r is derived from the array, not set" % key)
+        lines.append("%s=%s" % (key, value))
     return "\n".join(lines)
 
 
@@ -224,7 +233,7 @@ def imread(path, squeeze=True):
     return arr
 
 
-def imwrite(path, data, compression="lzw", axes=None):
+def imwrite(path, data, compression="lzw", axes=None, resolution=None, metadata=None):
     """Write a NumPy array to a (multi-page) TIFF file.
 
     A 2-D array is one page and a 3-D array is a page per leading index. Arrays
@@ -234,6 +243,12 @@ def imwrite(path, data, compression="lzw", axes=None):
     channels (for example ``"TCYX"``). :func:`imread` restores that shape.
     Without ``axes``, an array of more than three dimensions takes the last
     labels of ``"TZCYX"``.
+
+    ``resolution`` is an ``(x, y)`` pair in *pixels per unit* - the reciprocal
+    of the pixel size - and ``metadata`` adds further ImageJ fields, of which
+    ``spacing`` (the z step) and ``unit`` (what the numbers are in, e.g.
+    ``"um"``) are what give a stack a physical voxel size. ImageJ needs both:
+    the tags carry x/y, the description carries z and the unit name.
 
     The array's dtype selects the on-disk pixel type. ``compression`` is one of
     ``"none"``, ``"lzw"`` (default), ``"packbits"`` or ``"deflate"`` (deflate
@@ -245,7 +260,7 @@ def imwrite(path, data, compression="lzw", axes=None):
     a = _np.ascontiguousarray(data)
     if a.ndim < 2:
         raise ValueError("imwrite expects an array of at least 2 dimensions, got %dD" % a.ndim)
-    if axes is None and a.ndim > 3:
+    if axes is None and (a.ndim > 3 or metadata):
         axes = "TZCYX"[-a.ndim:]
     description = ""
     if axes is not None:
@@ -258,8 +273,11 @@ def imwrite(path, data, compression="lzw", axes=None):
         if unknown:
             raise ValueError("axes %r uses labels %s; only T, Z and C name pages"
                              % (axes, "".join(sorted(unknown))))
-        if a.ndim > 2:
-            description = _imagej_description(axes, a.shape)
+        if a.ndim > 2 or metadata:
+            description = _imagej_description(axes, a.shape, metadata)
+    x_res = y_res = 0.0
+    if resolution is not None:
+        x_res, y_res = (float(v) for v in resolution)
     if a.ndim == 2:
         a = a[_np.newaxis, ...]
     elif a.ndim > 3:
@@ -276,6 +294,6 @@ def imwrite(path, data, compression="lzw", axes=None):
         else:
             raise TypeError("unsupported array dtype for TIFF: %s" % a.dtype)
     a = _np.ascontiguousarray(a)
-    writer(path, a, compression, description)
+    writer(path, a, compression, description, x_res, y_res)
 %}
 #endif

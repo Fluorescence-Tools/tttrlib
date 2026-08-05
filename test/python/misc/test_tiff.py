@@ -216,6 +216,29 @@ def test_free_text_description_is_preserved_and_not_parsed(tmp_path):
     assert meta["axes"] == "IYX"
 
 
+def test_voxel_size_metadata_round_trips(tmp_path):
+    # A z-stack is only a volume if the reader knows the voxel size: x/y live in
+    # the resolution tags, z and the unit name in the description. Writing one
+    # without the other gives a stack that measures wrong in ImageJ.
+    path = str(tmp_path / "voxel.tif")
+    arr = _sample(np.float32, (5, 8, 9))
+    tttrlib.imwrite(path, arr, axes="ZYX", resolution=(25.0, 25.0),
+                    metadata={"spacing": 0.1, "unit": "um"})
+    description = tttrlib.tiff_metadata(path)["description"]
+    assert "spacing=0.1" in description
+    assert "unit=um" in description
+    assert tttrlib.tiff_metadata(path)["axes"] == "ZYX"
+    np.testing.assert_array_equal(tttrlib.imread(path), arr)
+
+
+def test_metadata_cannot_override_derived_keys(tmp_path):
+    # channels/slices/frames come from the array; a caller-supplied value that
+    # disagreed would make the file unreadable by its own reader.
+    with pytest.raises(ValueError):
+        tttrlib.imwrite(str(tmp_path / "bad.tif"), np.zeros((2, 4, 5), np.uint8),
+                        axes="ZYX", metadata={"slices": 7})
+
+
 def test_squeeze_false_keeps_single_page_3d(tmp_path):
     path = str(tmp_path / "one.tif")
     tttrlib.imwrite(path, _sample(np.uint16, (8, 9)))

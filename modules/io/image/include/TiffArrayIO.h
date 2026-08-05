@@ -71,11 +71,16 @@ void read_tiff(const std::string& path, T** output, int* dim1, int* dim2, int* d
 /// \p description, when non-empty, is stored as the ImageDescription tag of the
 /// first page - that is where an ImageJ hyperstack records how the flat page
 /// sequence splits into channels / slices / frames.
+/// \p x_resolution / \p y_resolution, when positive, are written as the
+/// resolution tags in *pixels per unit* (so 1/pixel_size), with the resolution
+/// unit left unspecified - the ImageJ convention, which names the unit in the
+/// description instead.
 template <typename T>
 void write_tiff(const std::string& path, T* data,
                 int n_frames, int height, int width,
                 const std::string& compression = "lzw",
-                const std::string& description = "");
+                const std::string& description = "",
+                double x_resolution = 0.0, double y_resolution = 0.0);
 
 } // namespace tttrlib
 
