@@ -5,6 +5,8 @@
 #include "TTTRTags.h"
 #include "io_sm.h"
 #include "io_carlzeiss.h"
+#include "io_beckerhickl.h"
+#include "io_picoquant.h"
 #include "FileCheck.h"
 #include "Verbose.h"
 
@@ -287,284 +289,14 @@ void TTTRHeader::set_json(std::string json_string){
 }
 
 
-size_t TTTRHeader::read_bh132_header(
-        std::FILE *fpin,
-        nlohmann::json &data,
-        bool rewind
-){
-    if(rewind) std::fseek(fpin, 0, SEEK_SET);
-    bh_spc132_header_t rec;
-    fread(&rec, sizeof(rec),1, fpin);
-    double mt_clk = (double) rec.bits.macro_time_clock / 10.0e9; // divide by 10.0e9 to get units of seconds
-    double mi_clk = mt_clk / 4096.0;
-    add_tag(data, TTTRTagRes, mi_clk, tyFloat8);
-    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
-    add_tag(data, TTTRNMicroTimes, 4096, tyInt8);
-    add_tag(data, TTTRTagBits, 32, tyInt8);
-
-if (is_verbose()) {
-    std::clog << "-- BH132 header reader " << std::endl;
-    std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
-    std::clog << "-- micro_time_resolution: " << mi_clk << std::endl;
-}
-    return 4;
-}
 
 
-size_t TTTRHeader::read_bh_spcqc_header(
-        std::FILE *fpin,
-        nlohmann::json &data,
-        bool rewind
-){
-    if(rewind) std::fseek(fpin, 0, SEEK_SET);
-    bh_spcqc_header_t rec;
-    fread(&rec, sizeof(rec),1, fpin);
 
-    // The femto flag selects the unit of the 22 bit clock field. Without it the
-    // QC modules could not express their clock at all: 2.048131 ns needs
-    // femtoseconds, and the classic 0.1 ns unit would round it to 2.0 ns. When
-    // the flag is clear the classic unit applies, which is also the only way
-    // the field can reach into the microsecond range.
-    double mt_clk = (double) rec.bits.macro_time_clock *
-                    (rec.bits.femto ? 1e-15 : 1e-10);
-    // The TAC of the QC modules is not slaved to the macro time clock, so the
-    // micro time resolution cannot be computed from mt_clk. Assume the TAC range
-    // SPCM writes by default; read_bh_set_file overrides it from SP_TAC_R /
-    // SP_ADC_RE whenever the .set sidecar is available.
-    double mi_clk = BH_SPCQC_DEFAULT_TAC_RANGE / (double) BH_SPCQC_N_MICRO_TIMES;
-    add_tag(data, TTTRTagRes, mi_clk, tyFloat8);
-    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
-    add_tag(data, TTTRNMicroTimes, (int) BH_SPCQC_N_MICRO_TIMES, tyInt8);
-    add_tag(data, TTTRTagBits, 32, tyInt8);
-    // Keep the flags: the routing width is needed to split a decoded channel
-    // back into input channel and router signal on write, and the marker flag
-    // records whether the file was written in imaging mode.
-    add_tag(data, "BH_SPCQC_RoutingBits", (int) rec.bits.n_routing_bits, tyInt8);
-    add_tag(data, "BH_SPCQC_HasMarkers", (int) rec.bits.markers, tyInt8);
-    add_tag(data, "BH_SPCQC_FemtoClock", (int) rec.bits.femto, tyInt8);
-    // Six input channels widen the channel field into bit 30, which is a record
-    // selector in the QC-x04 layout -- the two cannot share a decoder.
-    add_tag(data, TTTRRecordType,
-            rec.bits.six_channel ? BH_RECORD_TYPE_SPCQC_X06
-                                 : BH_RECORD_TYPE_SPCQC_X04, tyInt8);
 
-if (is_verbose()) {
-    std::clog << "-- BH SPC-QC header reader " << std::endl;
-    std::clog << "-- macro_time_resolution: " << mt_clk
-              << (rec.bits.femto ? " (femto units)" : " (0.1 ns units)") << std::endl;
-    std::clog << "-- micro_time_resolution: " << mi_clk << " (default, see .set)" << std::endl;
-    std::clog << "-- routing bits: " << rec.bits.n_routing_bits << std::endl;
-    std::clog << "-- record layout: " << (rec.bits.six_channel ? "QC-x06" : "QC-x04") << std::endl;
-}
-    return 4;
-}
 
 
 // Minimal, dependency-free base64 codec used to carry the raw (largely binary)
 // BH .set file through text-only header tags such as a PTU ANSI-string tag.
-static std::string bh_base64_encode(const std::string& in){
-    static const char* T =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    std::string out;
-    out.reserve(((in.size() + 2) / 3) * 4);
-    size_t i = 0;
-    while (i + 2 < in.size()){
-        unsigned n = ((unsigned char)in[i] << 16) |
-                     ((unsigned char)in[i+1] << 8) |
-                     ((unsigned char)in[i+2]);
-        out.push_back(T[(n >> 18) & 0x3F]);
-        out.push_back(T[(n >> 12) & 0x3F]);
-        out.push_back(T[(n >> 6) & 0x3F]);
-        out.push_back(T[n & 0x3F]);
-        i += 3;
-    }
-    if (i < in.size()){
-        unsigned n = ((unsigned char)in[i] << 16);
-        bool two = (i + 1 < in.size());
-        if (two) n |= ((unsigned char)in[i+1] << 8);
-        out.push_back(T[(n >> 18) & 0x3F]);
-        out.push_back(T[(n >> 12) & 0x3F]);
-        out.push_back(two ? T[(n >> 6) & 0x3F] : '=');
-        out.push_back('=');
-    }
-    return out;
-}
-
-static std::string bh_base64_decode(const std::string& in){
-    auto val = [](unsigned char c) -> int {
-        if (c >= 'A' && c <= 'Z') return c - 'A';
-        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-        if (c >= '0' && c <= '9') return c - '0' + 52;
-        if (c == '+') return 62;
-        if (c == '/') return 63;
-        return -1; // padding or whitespace
-    };
-    std::string out;
-    out.reserve((in.size() / 4) * 3);
-    int buf = 0, bits = 0;
-    for (unsigned char c : in){
-        int v = val(c);
-        if (v < 0) continue; // skip '=' and any stray whitespace
-        buf = (buf << 6) | v;
-        bits += 6;
-        if (bits >= 8){
-            bits -= 8;
-            out.push_back((char)((buf >> bits) & 0xFF));
-        }
-    }
-    return out;
-}
-
-bool TTTRHeader::read_bh_set_file(const std::string& filename) {
-    std::ifstream f(filename, std::ios::binary);
-    if (!f.is_open()) {
-        return false;
-    }
-
-    // Preserve the full .set verbatim so a .spc+.set -> .ptu -> .spc+.set
-    // conversion keeps every BH setting, not just the imaging keys tttrlib
-    // interprets below. Real .set files are mostly binary (a binary preamble
-    // plus text blocks), so the bytes are base64-encoded to ride safely through
-    // text-only header tags (e.g. a PTU ANSI string) and are decoded back by
-    // write_bh_set_file.
-    std::stringstream buffer;
-    buffer << f.rdbuf();
-    std::string raw = buffer.str();
-    if (!raw.empty()) {
-        std::string b64 = bh_base64_encode(raw);
-        add_tag(json_data(), "BH_SPC_SetFile",
-                const_cast<char*>(b64.c_str()), tyAnsiString);
-    }
-
-    // TAC range and ADC resolution; only used for the SPC-QC modules, whose
-    // 4 byte .spc header cannot carry the micro time resolution (see below)
-    double tac_range = 0.0;
-    int adc_resolution = 0;
-
-    std::istringstream text(raw);
-    std::string line;
-    while (std::getline(text, line)) {
-        // Remove leading/trailing whitespace
-        size_t start = line.find_first_not_of(" \t\r\n");
-        if (start == std::string::npos) continue;
-        size_t end = line.find_last_not_of(" \t\r\n");
-        line = line.substr(start, end - start + 1);
-
-        if (line.empty() || line[0] == '*') {
-            continue;
-        }
-
-        // Parse BH .set file format: "#SP [KEY,TYPE,VALUE]"
-        // Example: "#SP [SP_IMG_X,I,512]"
-        if (line.rfind("#SP [", 0) == 0) {
-            size_t bracket_start = line.find('[');
-            size_t bracket_end = line.find(']');
-            if (bracket_start != std::string::npos && bracket_end != std::string::npos && bracket_end > bracket_start) {
-                std::string content = line.substr(bracket_start + 1, bracket_end - bracket_start - 1);
-
-                // Split by commas: "SP_IMG_X,I,512" -> key, type, value
-                size_t first_comma = content.find(',');
-                size_t last_comma = content.rfind(',');
-
-                if (first_comma != std::string::npos && last_comma != std::string::npos && last_comma > first_comma) {
-                    std::string key = content.substr(0, first_comma);
-                    std::string val = content.substr(last_comma + 1);
-
-                    try {
-                        if (key == "SP_IMG_X") {
-                            add_tag(json_data(), "ImgHdr_PixX", std::stoi(val), tyInt8);
-                        } else if (key == "SP_IMG_Y") {
-                            add_tag(json_data(), "ImgHdr_PixY", std::stoi(val), tyInt8);
-                        } else if (key == "SP_PIX_CLK") {
-                            int use_pixel_clock = (std::stoi(val) == 1) ? 1 : 0;
-                            add_tag(json_data(), "BH_UsePixelClock", use_pixel_clock, tyInt8);
-                        } else if (key == "SP_TAC_R") {
-                            tac_range = std::stod(val);
-                        } else if (key == "SP_ADC_RE") {
-                            adc_resolution = std::stoi(val);
-                        }
-                    } catch (const std::exception& e) {
-                        #ifdef VERBOSE_TTTRLIB
-                        std::clog << "-- BH .set parse warning: skipping line with invalid value: " 
-                                  << e.what() << std::endl;
-                        #endif
-                    } catch (...) {
-                        #ifdef VERBOSE_TTTRLIB
-                        std::clog << "-- BH .set parse warning: skipping line with unknown error" << std::endl;
-                        #endif
-                    }
-                }
-            }
-        }
-    }
-
-    // The SPC-QC modules run the TAC independently of the macro time clock, so
-    // the micro time resolution is not derivable from the .spc header. The .set
-    // is the only place it is recorded; use it to replace the default assumed
-    // by read_bh_spcqc_header.
-    if(get_tttr_container_type() == BH_SPCQC_CONTAINER &&
-       tac_range > 0.0 && adc_resolution > 0){
-        add_tag(json_data(), TTTRTagRes, tac_range / (double) adc_resolution, tyFloat8);
-        add_tag(json_data(), TTTRNMicroTimes, adc_resolution, tyInt8);
-    }
-
-    // Record that this is a BH SPC CLSM image so the reconstruction routine can
-    // be picked automatically even after the data is transcoded to another
-    // container (e.g. PTU). The frame/line markers are byte-preserved by the
-    // record writers, so the BH_SPC130 routine reconstructs the image exactly
-    // from any container. The hint rides along as a normal header tag.
-    if(find_tag(json_data(), "ImgHdr_PixX") >= 0){
-        add_tag(json_data(), "BH_SPC_ReadingRoutine",
-                const_cast<char*>("BH_SPC130"), tyAnsiString);
-    }
-    return true;
-}
-
-
-bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* header){
-    nlohmann::json &json = header->json_data();
-
-    // Preferred path: an original .set was captured on read (directly or via a
-    // PTU round trip). Re-emit it byte-for-byte so all BH settings are
-    // preserved. The content is stored base64-encoded (see read_bh_set_file).
-    if(find_tag(json, "BH_SPC_SetFile") >= 0){
-        std::string b64 = get_tag(json, "BH_SPC_SetFile")["value"];
-        std::string raw = bh_base64_decode(b64);
-        if(!raw.empty()){
-            std::ofstream f(filename, std::ios::binary);
-            if(!f.is_open()) return false;
-            f.write(raw.data(), (std::streamsize) raw.size());
-            return true;
-        }
-    }
-
-    // Fallback: synthesize a minimal .set from the imaging geometry when no
-    // original was preserved (e.g. imaging tags set programmatically).
-    bool has_x = find_tag(json, "ImgHdr_PixX") >= 0;
-    bool has_y = find_tag(json, "ImgHdr_PixY") >= 0;
-    if(!has_x && !has_y) return false;
-
-    std::ofstream f(filename);
-    if(!f.is_open()) return false;
-
-    // Header block; lines starting with '*' are comments to the reader.
-    f << "*SET_FILE created by tttrlib\n";
-    f << "*BLOCK 1 SYS_PARA\n";
-    if(has_x){
-        int v = get_tag(json, "ImgHdr_PixX")["value"];
-        f << "#SP [SP_IMG_X,I," << v << "]\n";
-    }
-    if(has_y){
-        int v = get_tag(json, "ImgHdr_PixY")["value"];
-        f << "#SP [SP_IMG_Y,I," << v << "]\n";
-    }
-    if(find_tag(json, "BH_UsePixelClock") >= 0){
-        int v = get_tag(json, "BH_UsePixelClock")["value"];
-        f << "#SP [SP_PIX_CLK,I," << (v ? 1 : 0) << "]\n";
-    }
-    f << "*END\n";
-    return true;
-}
 
 
 
@@ -574,121 +306,15 @@ bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* head
 
 
 
-size_t TTTRHeader::read_ht3_header(
-        std::FILE *fpin,
-        nlohmann::json &data,
-        bool rewind
-) {
-if (is_verbose()) {
-    std::clog << "-- READ_HT3_HEADER" << std::endl;
-}
-    if(rewind) std::fseek(fpin, 0, SEEK_SET);
-    // Header of HT3 file
-    pq_ht3_Header_t ht3_header_begin;
-    fread(&ht3_header_begin, 1, sizeof(ht3_header_begin), fpin);
-    // Versions 1.0 (HHT3v1 / PicoHarp) and 2.0 (HHT3v2) are supported;
-    // warn only for genuinely unknown format versions.
-    if((strncmp(ht3_header_begin.FormatVersion, "1.0", 3) != 0) &&
-       (strncmp(ht3_header_begin.FormatVersion, "2.0", 3) != 0)){
-        std::cerr << "WARNING: Unknown HT3 format version '"
-                  << std::string(ht3_header_begin.FormatVersion, 3)
-                  << "' - only versions 1.0 and 2.0 are supported." << std::endl;
-    }
-    add_tag(data, "Ident", ht3_header_begin.Ident);
-    add_tag(data, "FormatVersion", ht3_header_begin.FormatVersion);
-    add_tag(data, "CreatorName", ht3_header_begin.CreatorName);
-    add_tag(data, "CreatorVersion", ht3_header_begin.CreatorVersion);
-    add_tag(data, "FileTime", ht3_header_begin.FileTime);
-    add_tag(data, "Comment", ht3_header_begin.CommentField);
-    add_tag(data, "NumberOfCurves", ht3_header_begin.NumberOfCurves, tyInt8);
-    add_tag(data, TTTRTagBits, ht3_header_begin.BitsPerRecord, tyInt8);
-    add_tag(data, "ActiveCurve", ht3_header_begin.ActiveCurve, tyInt8);
-    add_tag(data, "MeasurementMode", ht3_header_begin.MeasurementMode, tyInt8);
-    add_tag(data, "SubMode", ht3_header_begin.SubMode, tyInt8);
-    add_tag(data, "Binning", ht3_header_begin.Binning, tyInt8);
-    add_tag(data, "Resolution", ht3_header_begin.Resolution, tyFloat8);
-    add_tag(data, "Offset", ht3_header_begin.Offset, tyInt8);
-    add_tag(data, "AquisitionTime", ht3_header_begin.AquisitionTime, tyInt8);
-    add_tag(data, "StopAt", (int) ht3_header_begin.StopAt, tyInt8);
-    add_tag(data, "StopOnOvfl", (bool) ht3_header_begin.StopOnOvfl, tyBool8);
-    add_tag(data, "Restart", (bool) ht3_header_begin.Restart, tyBool8);
-    add_tag(data, "DispLinLog", (bool) ht3_header_begin.DispLinLog, tyBool8);
-    add_tag(data, "DispTimeFrom", ht3_header_begin.DispTimeFrom, tyInt8);
-    add_tag(data, "DispTimeTo", ht3_header_begin.DispTimeTo, tyInt8);
-    add_tag(data, "DispCountsFrom", ht3_header_begin.DispCountsFrom, tyInt8);
-    add_tag(data, "DispCountsTo", ht3_header_begin.DispCountsTo, tyInt8);
 
-    pq_ht3_ChannelHeader_t channel_settings;
-    for(int i=0; i<ht3_header_begin.InpChansPresent; i++){
-        if(fread(&channel_settings, 1, sizeof(channel_settings), fpin) == sizeof(channel_settings)){
-            add_tag(data, "InputCFDLevel", channel_settings.InputCFDLevel, tyInt8, i);
-            add_tag(data, "InputCFDZeroCross", channel_settings.InputCFDZeroCross, tyInt8, i);
-            add_tag(data, "InputOffset", channel_settings.InputOffset, tyInt8, i);
-            add_tag(data, "InputRate", channel_settings.InputRate, tyInt8, i);
-        }
-    }
 
-    // pq_ht3_TTModeHeader_t
-    pq_ht3_TTModeHeader_t tt_mode_hdr;
-    fread(&tt_mode_hdr, 1, sizeof(tt_mode_hdr), fpin);
-    add_tag(data, "SyncRate", tt_mode_hdr.SyncRate, tyInt8);
-    add_tag(data, "StopAfter", tt_mode_hdr.StopAfter, tyInt8);
-    add_tag(data, "StopReason", tt_mode_hdr.StopReason, tyInt8);
-    add_tag(data, "ImgHdrSize", tt_mode_hdr.ImgHdrSize, tyInt8);
-    add_tag(data, "nRecords", (int) tt_mode_hdr.nRecords, tyInt8);
 
-    // ImgHdr
-//    fseek(fpin, (long) tt_mode_hdr.ImgHdrSize, SEEK_CUR);
-    int ImgHdrSize = tt_mode_hdr.ImgHdrSize;
-    if(ImgHdrSize > 0){
-        auto imgHdr_array = (int32_t*) calloc(ImgHdrSize, sizeof(int32_t));
-        fread(imgHdr_array, sizeof(int32_t), ImgHdrSize, fpin);
-        std::vector<int32_t> v;
-        for (int i=0; i<ImgHdrSize; i++) {
-            v.emplace_back(imgHdr_array[i]);
-        };
-        free(imgHdr_array);
-        add_tag(data, "ImgHdr", v, tyBinaryBlob);
-        add_tag(data, "ImgHdr", v, tyBinaryBlob);
 
-        add_tag(data, "ImgHdr_Frame", v[2] + 1, tyInt8);
-        add_tag(data, "ImgHdr_LineStart", v[3], tyInt8);
-        add_tag(data, "ImgHdr_LineStop", v[4], tyInt8);
-        add_tag(data, "ImgHdr_PixX", v[6], tyInt8);
-        add_tag(data, "ImgHdr_PixY", v[7], tyInt8);
-    }
 
-    double resolution = std::max(1.0, ht3_header_begin.Resolution) * 1e-12;
-    add_tag(data, TTTRTagRes, resolution, tyFloat8);
 
-    // TODO: add identification of HydraHarp HHT3v1 files
-if (is_verbose()) {
-    std::clog << "FormatVersion:-" << get_tag(data, "FormatVersion")["value"] << "-" << std::endl;
-}
-    if (get_tag(data, "Ident")["value"] == "HydraHarp") {
-        if(get_tag(data, "FormatVersion")["value"] == "1.0"){
-if (is_verbose()) {
-            std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v1" << std::endl;
-}
-            add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v1, tyInt8);
-        } else{
-if (is_verbose()) {
-            std::clog << "Record reader:" << "PQ_RECORD_TYPE_HHT3v2" << std::endl;
-}
-            add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_HHT3v2, tyInt8);
-        }
-    } else {
-if (is_verbose()) {
-        std::clog << "Record reader:" << "PQ_RECORD_TYPE_PHT3" << std::endl;
-}
-        add_tag(data, TTTRRecordType, (int) PQ_RECORD_TYPE_PHT3, tyInt8);
-    }
-    // Effective number of micro time channels
-    // TODO: divide by binning factor
-    add_tag(data, TTTRNMicroTimes, (int) 32768 / std::max(1, ht3_header_begin.Binning), tyInt8);
-    //return 880; // guessed by inspecting several ht3 files
-    return static_cast<size_t>(ftell64(fpin));
-}
+
+
+
 
 #ifdef BUILD_PHOTON_HDF
 // Helper function to process datasets in a given group
@@ -834,144 +460,7 @@ int TTTRHeader::read_photon_hdf5_setup(const char *fn) {
 
 #endif
 
-size_t TTTRHeader::read_ptu_header(
-        std::FILE *fpin,
-        int &tttr_record_type,
-        nlohmann::json &json_data,
-        bool rewind
-) {
-if (is_verbose()) {
-    std::clog << "-- TTTRHeader::read_ptu_header" << std::endl;
-}
-    /// The version of the PTU file
-    char version[8];
-    char Magic[8];
-    if(rewind) std::fseek(fpin, 0, SEEK_SET);
 
-    // variables for reading
-    uint64_t tmp;
-    char buffer_out[1024];
-    char *AnsiBuffer;
-    wchar_t *WideBuffer;
-    std::string strFromChar;
-    tag_head_t TagHead;
-    uint64_t file_type = 0;
-    double *b; std::vector<double> vec;
-
-    // read the header
-    fread(&Magic, 1, sizeof(Magic), fpin);
-    if (strncmp(Magic, "PQTTTR", 6) != 0) {
-        throw std::string("\nWrong Magic, this is not a PTU file.");
-    }
-
-    tmp = fread(&version, 1, sizeof(version), fpin);
-    if (tmp != sizeof(version)) {
-        throw std::string("\nerror reading header, aborted.");
-    }
-    sprintf(buffer_out, "%s", version);
-    json_data["Tag Version"] = buffer_out;
-
-if (is_verbose()) {
-    std::clog << "PTU ID:" << Magic << std::endl;
-    std::clog << "Tag version:" << json_data["Tag Version"] << std::endl;
-    std::clog << "Reading keys..." << std::endl;
-}
-    do {
-        uint64_t Result;
-        Result = fread(&TagHead, 1, sizeof(TagHead), fpin);
-        if (Result != sizeof(TagHead))
-            throw std::string("Incomplete File.");
-        if (TTTRTagTTTRRecType == TagHead.Ident)
-            file_type = TagHead.TagValue;
-        std::string key = TagHead.Ident;
-if (is_verbose()) {
-        std::clog << key << ":" << TagHead.Typ << ":" << TagHead.TagValue << ";" << std::endl;
-}
-        if (FileTagEnd != TagHead.Ident) {
-            if (TagHead.Typ == tyEmpty8) {
-                add_tag(json_data, key, nullptr, TagHead.Typ, TagHead.Idx);
-            } else if (TagHead.Typ == tyBool8) {
-                add_tag(json_data, key, *(bool *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-            } else if (TagHead.Typ == tyInt8 || TagHead.Typ == tyBitSet64 || TagHead.Typ == tyColor8) {
-                add_tag(json_data, key, *(int *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-            } else if (TagHead.Typ == tyFloat8) {
-                add_tag(json_data, key, *(double *) &(TagHead.TagValue), TagHead.Typ, TagHead.Idx);
-            } else if (TagHead.Typ == tyTDateTime) {
-                double time = *(double *) &(TagHead.TagValue); time -= 25569; time *= 86400;
-                add_tag(json_data, key, time, TagHead.Typ, TagHead.Idx);
-            } else if (TagHead.Typ == tyFloat8Array) {
-                b = (double *) calloc((size_t) TagHead.TagValue, 1);
-                fread(b, 1, (size_t) TagHead.TagValue, fpin);
-                vec.assign(b, b + TagHead.TagValue);
-                add_tag(json_data, key, vec, TagHead.Typ, TagHead.Idx);
-                free(b);
-            } else if (TagHead.Typ == tyAnsiString) {
-                AnsiBuffer = (char *) calloc((size_t) TagHead.TagValue, 1);
-                Result = fread(AnsiBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                if (Result != TagHead.TagValue) {
-                    free(AnsiBuffer);
-                    throw std::string("Incomplete File.");
-                }
-                add_tag(json_data, key, AnsiBuffer, TagHead.Typ, TagHead.Idx);
-                free(AnsiBuffer);
-            } else if (TagHead.Typ == tyWideString) {
-                size_t buffer_size = TagHead.TagValue;
-                WideBuffer = (wchar_t *) calloc((size_t) buffer_size, 1);
-                Result = fread(WideBuffer, 1, (size_t) TagHead.TagValue, fpin);
-                if (Result != TagHead.TagValue) {
-                    free(WideBuffer);
-                    throw std::string("Incomplete File");
-                } else{
-                    add_tag(json_data, key, WideBuffer, TagHead.Typ, TagHead.Idx);
-                    free(WideBuffer);
-                }
-            } else if (TagHead.Typ == tyBinaryBlob) {
-                std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
-                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
-            } else {
-                throw std::string("Illegal Type identifier! Broken file?");
-            }
-        }
-    } while (FileTagEnd != TagHead.Ident);
-
-    if (file_type == rtPicoHarpT2) {
-        tttr_record_type = PQ_RECORD_TYPE_PHT2;
-    } else if (file_type == rtPicoHarpT3) {
-        tttr_record_type = PQ_RECORD_TYPE_PHT3;
-    } else if (file_type == rtHydraHarpT2) {
-        tttr_record_type = PQ_RECORD_TYPE_HHT2v1;
-    } else if (file_type == rtMultiHarpT2) {
-        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T2;
-    } else if (
-            file_type == rtHydraHarp2T2 ||
-            file_type == rtTimeHarp260NT2 ||
-            file_type == rtTimeHarp260PT2
-    ) {
-        tttr_record_type = PQ_RECORD_TYPE_HHT2v2;
-    } else if (file_type == rtHydraHarpT3) {
-        tttr_record_type = PQ_RECORD_TYPE_HHT3v1;
-    } else if (file_type == rtMultiHarpT3) {
-        tttr_record_type = PQ_RECORD_TYPE_GENERIC_T3;
-    } else if (
-            file_type == rtHydraHarp2T3 ||
-            file_type == rtTimeHarp260NT3 ||
-            file_type == rtTimeHarp260PT3
-    ) {
-        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
-    } else {
-        std::cerr << "PTU file with undefined TTTRTagTTTRRecType." << std::endl;
-        tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
-    }
-
-    try {
-        int bining_factor = get_tag(json_data, "MeasDesc_BinningFactor")["value"];
-        if (bining_factor < 1) bining_factor = 1;
-        add_tag(json_data, TTTRNMicroTimes, 32768 / bining_factor, tyInt8, true);
-    } catch (...) {
-        std::cerr << "ERROR: MeasDesc_BinningFactor not found." << std::endl;
-}
-    return static_cast<size_t>(ftell64(fpin));
-}
 
 void TTTRHeader::ensure_minimal_tags(
         TTTRHeader* header, int container_type, size_t n_records){
@@ -1010,349 +499,18 @@ void TTTRHeader::ensure_minimal_tags(
     }
 }
 
-void TTTRHeader::write_spc132_header(
-        std::string fn, TTTRHeader* header, std::string mode){
-    // write header
-    bh_spc132_header_t head;
-    head.allbits = 0;
-    head.bits.unused = 0;
-    head.bits.invalid = true;
-
-    nlohmann::json tag = get_tag(header->json_data(), TTTRTagGlobRes);
-    head.bits.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
-
-    FILE* fp = fopen(fn.c_str(), mode.c_str());
-    fwrite(&head, 4, 1, fp);
-    fclose(fp);
-}
-
-
-void TTTRHeader::write_spcqc_header(
-        std::string fn, TTTRHeader* header, std::string mode){
-    bh_spcqc_header_t head;
-    head.allbits = 0;
-    head.bits.unused = 0;
-    head.bits.invalid = true;
-    head.bits.raw = 1;  // QC .spc files are always raw, never processed
-
-    // The clock field is only 22 bit wide, so femtoseconds top out at 4.19 ns.
-    // That covers every QC module, but not a macro clock inherited from another
-    // container (a 50 ns PTU sync period needs 5e7 fs). Fall back to the classic
-    // 0.1 ns unit in that case rather than truncating.
-    const unsigned kClockMax = (1u << 22) - 1;
-    double mt_clk = get_tag(header->json_data(), TTTRTagGlobRes)["value"];
-    double femto_clock = mt_clk * 1e15;
-    if (femto_clock <= (double) kClockMax) {
-        head.bits.femto = 1;
-        head.bits.macro_time_clock = (unsigned) (femto_clock + 0.5);
-    } else {
-        head.bits.femto = 0;
-        double coarse = mt_clk * 1e10;
-        head.bits.macro_time_clock =
-                (unsigned) (coarse < (double) kClockMax ? coarse + 0.5 : kClockMax);
-    }
-
-    // Preserve the routing width and marker flag when they came from a QC file;
-    // the record writer splits the channel on exactly this width, so the two
-    // have to agree -- including the default for data that came from elsewhere
-    // (see TTTR::spcqc_routing_shift).
-    int idx = find_tag(header->json_data(), "BH_SPCQC_RoutingBits");
-    head.bits.n_routing_bits = (idx >= 0)
-            ? ((unsigned) (int) header->json_data()["tags"][idx]["value"] & 0xF)
-            : (unsigned) BH_SPCQC_CH_SHIFT;
-    idx = find_tag(header->json_data(), "BH_SPCQC_HasMarkers");
-    if (idx >= 0) head.bits.markers =
-            (unsigned) ((int) header->json_data()["tags"][idx]["value"] ? 1 : 0);
-
-    // The channel field of the QC-x06 layout reaches into bit 30, so the reader
-    // has to be told which layout the records use.
-    head.bits.six_channel =
-            (header->get_tttr_record_type() == BH_RECORD_TYPE_SPCQC_X06) ? 1 : 0;
-
-    FILE* fp = fopen(fn.c_str(), mode.c_str());
-    fwrite(&head, 4, 1, fp);
-    fclose(fp);
-}
-
-
-void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::string modes){
-    if (is_verbose()) {
-    std::clog << "TTTRHeader::write_ptu_header" << std::endl;
-}
-    // Check for existing file
-    // if(boost::filesystem::exists(fn)){
-    //     std::clog << "WARNING: File exists" << fn << "." << std::endl;
-    // }
-    std::ifstream f(fn);
-    if(f.good()){
-        std::clog << "WARNING: File exists" << fn << "." << std::endl;
-    }
-
-    // write header information that is not in header tags
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
-    // Write identifier for PTU files
-    char version[8]; std::string version_str;
-    char Magic[8] = "PQTTTR";
-    fwrite(&Magic, 1, sizeof(Magic), fp);
-    try {
-        // A "Tag Version" written by add_tag/set_string_tag lives in the tag
-        // list; the PTU reader stores it as a top-level json key. Prefer the
-        // tag-list value so programmatically built headers are honoured.
-        int idx = find_tag(header->json_data(), "Tag Version");
-        if (idx >= 0)
-            version_str = get_tag(header->json_data(), "Tag Version")["value"];
-        else
-            version_str = header->json_data()["Tag Version"];
-    } catch (...) {
-        std::clog << "WARNING: No PTU version defined in header using default" << std::endl;
-        version_str = "0      ";
-    }
-    strcpy(version, version_str.c_str());
-    fwrite(&version, sizeof(version), 1, fp);
-    // write header tags
-    // variables for writing
-    double tmp_d;
-    uint64_t tmp_i;
-    uint64_t tmp_s;
-    std::string tmp_str;
-    std::wstring tmp_wstr;
-    // Flag to check if the header end tag was written
-    bool header_end_written = false;
-    for(auto &it: header->json_data()["tags"].items()){
-        auto tag = it.value();
-if (is_verbose()) {
-        std::clog << tag << std::endl;
-}
-        tag_head_t TagHead;
-        tmp_str.clear();
-        tmp_str = tag["name"];
-        memset(TagHead.Ident, 0, 32);
-        strcpy(TagHead.Ident, tmp_str.c_str());
-        TagHead.Idx = tag["idx"];
-        TagHead.Typ = tag["type"];
-        if(tmp_str == FileTagEnd)
-            header_end_written = true;
-        switch (TagHead.Typ) {
-            // In these cases the tags have the same number of bits
-            case tyTDateTime:
-                tmp_d = tag["value"];
-                tmp_d /= 86400.0; tmp_d += 25569.0;
-                TagHead.TagValue = *(uint64_t *) &(tmp_d);
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                break;
-            case tyEmpty8:
-                TagHead.TagValue = 0;
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                break;
-            case tyBool8:
-                TagHead.TagValue = (int) tag["value"];
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                break;
-            case tyInt8:
-            case tyBitSet64:
-            case tyColor8:
-                TagHead.TagValue = tag["value"];
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                break;
-            case tyFloat8:
-                tmp_d = tag["value"];
-                TagHead.TagValue = *(uint64_t *) &(tmp_d);
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                break;
-            // Arrays need to be treated differently
-            case tyFloat8Array:
-                // write the tag that defines the type and the size of the
-                // following data
-                tmp_s = tag["value"].size();
-                TagHead.TagValue = *(uint64_t *) &(tmp_s);
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                // write the data
-                for(auto &it_vec: tag["value"].items()){
-                    tmp_i = *(uint64_t *) &it_vec.value();
-                    fwrite(&tmp_i, 1, sizeof(uint64_t), fp);
-                }
-                break;
-            case tyAnsiString:
-                // write tag that marks the beginning of tyAnsiString
-                tmp_str = tag["value"];
-                tmp_str.resize(tmp_str.length() + tmp_str.length() % 32);
-                TagHead.TagValue = tmp_str.length();
-                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-                fwrite(tmp_str.c_str(), 1, TagHead.TagValue, fp);
-                break;
-            case tyWideString:
-                std::cerr << "ERROR: writing of tyWideString currently not supported" << std::endl;
-//                // write tag that marks the beginning of tyAnsiString
-//                tmp_wstr = tag["value"];
-//                TagHead.TagValue = tmp_str.size() * sizeof(wchar_t);
-//                fwrite(&TagHead, sizeof(TagHead), 1, fp);
-//                WideBuffer = (wchar_t*) malloc(TagHead.TagValue);
-//                wcscpy(WideBuffer, tmp_wstr.c_str());
-//                fwrite(WideBuffer, sizeof(wchar_t), tmp_str.size(), fp);
-//                free(WideBuffer);
-                break;
-            case tyBinaryBlob:
-                std::cerr << "ERROR: writing of tyBinaryBlob currently not supported" << std::endl;
-                break;
-            default:
-                throw std::string("Tag type not supported");
-        }
-    }
-    if(!header_end_written){
-if (is_verbose()) {
-        std::clog << "Header_End is missing. Adding Header_End to tag list." << std::endl;
-}
-        tag_head_t TagHead;
-        TagHead.TagValue = 0;
-        strcpy(TagHead.Ident, FileTagEnd.c_str());
-        TagHead.Idx = -1;
-        fwrite(&TagHead, sizeof(TagHead), 1, fp);
-    }
-    fclose(fp);
-}
 
 
 
 
-void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes){
-if (is_verbose()) {
-    std::clog << "-- WRITE_HT3_HEADER" << std::endl;
-}
-    nlohmann::json &json = header->json_data();
 
-    // Tag lookup helpers with defaults (get_tag returns a NONE tag when a
-    // tag is missing, e.g. when transcoding from another container)
-    auto tag_int = [&json](const std::string &name, int32_t d, int idx = -1) -> int32_t {
-        if (TTTRHeader::find_tag(json, name, idx) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name, idx)["value"];
-        if (v.is_boolean()) return (int32_t) v.get<bool>();
-        if (v.is_number()) return (int32_t) v.get<double>();
-        return d;
-    };
-    auto tag_double = [&json](const std::string &name, double d) -> double {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_number() ? v.get<double>() : d;
-    };
-    auto tag_string = [&json](const std::string &name, const std::string &d) -> std::string {
-        if (TTTRHeader::find_tag(json, name) < 0) return d;
-        auto v = TTTRHeader::get_tag(json, name)["value"];
-        return v.is_string() ? v.get<std::string>() : d;
-    };
-    auto copy_str = [](char* dst, size_t dst_size, const std::string &src) {
-        std::memset(dst, 0, dst_size);
-        std::strncpy(dst, src.c_str(), dst_size - 1);
-    };
 
-    // Ident and FormatVersion are dictated by the record type actually being
-    // written, NOT inherited from the source header. The reader selects
-    // HHT3v1/HHT3v2/PHT3 from these two fields, so a stale value silently
-    // mislabels the file.
-    //
-    // This was a real corruption, not a theoretical one. Transcoding an
-    // SF-compressed source to plain HHT3v2 kept the source's "1.0", so the
-    // reader chose HHT3v1 and then ran SF detection -- and an HHT3v2 overflow
-    // record, which legitimately carries a count, looks exactly like an SF one.
-    // Every macro time after the first overflow came back multiplied. The
-    // event count matched, which is what made it worth guarding against.
-    int record_type = header->get_tttr_record_type();
-    std::string required_ident = "HydraHarp";
-    std::string required_version = "2.0";
-    if (record_type == PQ_RECORD_TYPE_HHT3v1 ||
-        record_type == PQ_RECORD_TYPE_SF_HT3) {
-        // SF-compressed files keep the HydraHarp v1 header; the SF record
-        // stream is detected from the overflow record payloads on reading.
-        required_version = "1.0";
-    } else if (record_type == PQ_RECORD_TYPE_PHT3) {
-        required_ident = "PicoHarp 300";
-    }
 
-    pq_ht3_Header_t ht3_header;
-    std::memset(&ht3_header, 0, sizeof(ht3_header));
-    copy_str(ht3_header.Ident, sizeof(ht3_header.Ident), required_ident);
-    copy_str(ht3_header.FormatVersion, sizeof(ht3_header.FormatVersion), required_version);
-    copy_str(ht3_header.CreatorName, sizeof(ht3_header.CreatorName), tag_string("CreatorName", "tttrlib"));
-    copy_str(ht3_header.CreatorVersion, sizeof(ht3_header.CreatorVersion), tag_string("CreatorVersion", ""));
-    copy_str(ht3_header.FileTime, sizeof(ht3_header.FileTime), tag_string("FileTime", ""));
-    ht3_header.CRLF[0] = '\r'; ht3_header.CRLF[1] = '\n';
-    copy_str(ht3_header.CommentField, sizeof(ht3_header.CommentField), tag_string("Comment", ""));
 
-    ht3_header.NumberOfCurves = tag_int("NumberOfCurves", 0);
-    ht3_header.BitsPerRecord = tag_int(TTTRTagBits, 32);
-    ht3_header.ActiveCurve = tag_int("ActiveCurve", 0);
-    ht3_header.MeasurementMode = tag_int("MeasurementMode", 3);
-    ht3_header.SubMode = tag_int("SubMode", 0);
-    // The reader reconstructs the number of micro time channels as
-    // 32768 / Binning; derive a default Binning from the number of micro
-    // time channels when the Binning tag is absent.
-    int n_micro = tag_int(TTTRNMicroTimes, 32768);
-    int default_binning = n_micro > 0 ? std::max(1, 32768 / n_micro) : 1;
-    ht3_header.Binning = tag_int("Binning", default_binning);
-    // Resolution is stored in ps; TTTRTagRes is in seconds
-    ht3_header.Resolution = tag_double("Resolution", tag_double(TTTRTagRes, 1e-12) * 1e12);
-    ht3_header.Offset = tag_int("Offset", 0);
-    ht3_header.AquisitionTime = tag_int("AquisitionTime", 0);
-    ht3_header.StopAt = (uint32_t) tag_int("StopAt", 0);
-    ht3_header.StopOnOvfl = tag_int("StopOnOvfl", 0);
-    ht3_header.Restart = tag_int("Restart", 0);
-    ht3_header.DispLinLog = tag_int("DispLinLog", 0);
-    ht3_header.DispTimeFrom = tag_int("DispTimeFrom", 0);
-    ht3_header.DispTimeTo = tag_int("DispTimeTo", 0);
-    ht3_header.DispCountsFrom = tag_int("DispCountsFrom", 0);
-    ht3_header.DispCountsTo = tag_int("DispCountsTo", 0);
 
-    // Channel headers: count the per-channel tags written by the reader
-    int n_channels = 0;
-    while (TTTRHeader::find_tag(json, "InputRate", n_channels) >= 0) n_channels++;
-    ht3_header.InpChansPresent = n_channels;
 
-    // TT mode header; the record count is derived from the file size on
-    // reading, nRecords is informational.
-    // The macro time calibration of HT3 files is carried by SyncRate
-    // (resolution = 1 / SyncRate); when transcoding from a container that
-    // stores the global resolution as a tag, derive SyncRate from it so the
-    // calibration survives the conversion.
-    int default_sync_rate = 0;
-    double glob_res = tag_double(TTTRTagGlobRes, -1.0);
-    if (glob_res > 0) {
-        default_sync_rate = (int) std::llround(1.0 / glob_res);
-    }
-    pq_ht3_TTModeHeader_t tt_mode_hdr;
-    std::memset(&tt_mode_hdr, 0, sizeof(tt_mode_hdr));
-    tt_mode_hdr.SyncRate = tag_int("SyncRate", default_sync_rate);
-    tt_mode_hdr.StopAfter = tag_int("StopAfter", 0);
-    tt_mode_hdr.StopReason = tag_int("StopReason", 0);
-    tt_mode_hdr.nRecords = (uint64_t) tag_int("nRecords", 0);
 
-    // Imaging header blob (marker/scan configuration for CLSM files)
-    std::vector<int32_t> img_hdr;
-    if (TTTRHeader::find_tag(json, "ImgHdr") >= 0) {
-        auto v = TTTRHeader::get_tag(json, "ImgHdr")["value"];
-        if (v.is_array()) img_hdr = v.get<std::vector<int32_t>>();
-    }
-    tt_mode_hdr.ImgHdrSize = (int32_t) img_hdr.size();
 
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
-    if (fp == nullptr) {
-        std::cerr << "ERROR: Cannot write HT3 header to file: " << fn << std::endl;
-        return;
-    }
-    fwrite(&ht3_header, sizeof(ht3_header), 1, fp);
-    pq_ht3_ChannelHeader_t channel_header;
-    for (int i = 0; i < n_channels; i++) {
-        std::memset(&channel_header, 0, sizeof(channel_header));
-        channel_header.InputCFDLevel = tag_int("InputCFDLevel", 0, i);
-        channel_header.InputCFDZeroCross = tag_int("InputCFDZeroCross", 0, i);
-        channel_header.InputOffset = tag_int("InputOffset", 0, i);
-        channel_header.InputRate = tag_int("InputRate", 0, i);
-        fwrite(&channel_header, sizeof(channel_header), 1, fp);
-    }
-    fwrite(&tt_mode_hdr, sizeof(tt_mode_hdr), 1, fp);
-    if (!img_hdr.empty()) {
-        fwrite(img_hdr.data(), sizeof(int32_t), img_hdr.size(), fp);
-    }
-    fclose(fp);
-}
 
 
 
@@ -1439,4 +597,45 @@ size_t TTTRHeader::read_cz_confocor3_header(std::FILE *fpin, nlohmann::json &dat
 
 void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, std::string modes) {
     tttrlib::io::write_cz_confocor3_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+size_t TTTRHeader::read_bh132_header(std::FILE *fpin, nlohmann::json &data, bool rewind) {
+    return tttrlib::io::read_bh132_header(fpin, data, rewind);
+}
+
+size_t TTTRHeader::read_bh_spcqc_header(std::FILE *fpin, nlohmann::json &data, bool rewind) {
+    return tttrlib::io::read_bh_spcqc_header(fpin, data, rewind);
+}
+
+bool TTTRHeader::read_bh_set_file(const std::string& filename) {
+    return tttrlib::io::read_bh_set_file(filename, json_data());
+}
+
+bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* header) {
+    return tttrlib::io::write_bh_set_file(filename, header->json_data());
+}
+
+void TTTRHeader::write_spc132_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_spc132_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+void TTTRHeader::write_spcqc_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_spcqc_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+size_t TTTRHeader::read_ptu_header(std::FILE *fpin, int &tttr_record_type,
+                                   nlohmann::json &data, bool rewind) {
+    return tttrlib::io::read_ptu_header(fpin, tttr_record_type, data, rewind);
+}
+
+size_t TTTRHeader::read_ht3_header(std::FILE *fpin, nlohmann::json &data, bool rewind) {
+    return tttrlib::io::read_ht3_header(fpin, data, rewind);
+}
+
+void TTTRHeader::write_ptu_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_ptu_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+void TTTRHeader::write_ht3_header(std::string fn, TTTRHeader* header, std::string modes) {
+    tttrlib::io::write_ht3_header(std::move(fn), header->json_data(), std::move(modes));
 }
