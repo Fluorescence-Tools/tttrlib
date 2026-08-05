@@ -216,4 +216,94 @@ void histogram1D(
 }
 
 
+/*!
+ * \brief Find the bin for one value on one axis, or -1 if it falls outside.
+ *
+ * Split out of histogram1D so the two-dimensional case cannot drift from the
+ * one-dimensional one: an event belongs in bin (i, j) exactly when it would
+ * have landed in bin i of a 1D histogram over x and bin j of one over y.
+ */
+template<typename T>
+inline int histogram_bin_of(T value, T *bin_edges, int n_bins,
+                            bool is_lin, bool is_log10) {
+    if (is_lin || is_log10) {
+        T lower, upper;
+        if (is_log10) {
+            if (value <= 0) return -1;      // log10 of a non-positive value
+            lower = std::log10(bin_edges[0]);
+            upper = std::log10(bin_edges[n_bins - 1]);
+            value = std::log10(value);
+        } else {
+            lower = bin_edges[0];
+            upper = bin_edges[n_bins - 1];
+        }
+        const T bin_width = (upper - lower) / (n_bins - 1);
+        const int idx = calc_bin_idx(lower, bin_width, value);
+        return (idx >= 0 && idx < n_bins) ? idx : -1;
+    }
+    const int idx = search_bin_idx(value, bin_edges, n_bins);
+    return (idx > 0 && idx < n_bins) ? idx : -1;
+}
+
+
+/*!
+ * \brief Two-dimensional histogram of paired values.
+ *
+ * Each axis is binned exactly as histogram1D bins its one, and independently:
+ * the two may use different bin counts and different axis types, so a
+ * lifetime-versus-intensity plot can be linear in one and logarithmic in the
+ * other without the caller pre-transforming anything.
+ *
+ * The output is row-major with x as the slow axis, i.e. `hist[i * n_bins_y + j]`
+ * is the count for x-bin i and y-bin j. That is what numpy reshapes to
+ * `(n_bins_x, n_bins_y)` without a copy.
+ *
+ * Pairs are dropped when EITHER coordinate falls outside its axis. Clamping
+ * them to the edge bins instead would pile everything outside the range onto
+ * the border, which reads as structure that is not in the data.
+ *
+ * @tparam T value type of the two data arrays
+ * @param data_x, n_data_x first coordinate of each pair
+ * @param data_y, n_data_y second coordinate; must be the same length as data_x
+ * @param weights, n_weights per-pair weights, used only when use_weights is true
+ * @param bin_edges_x, n_bins_x bin edges of the x axis, in ascending order
+ * @param bin_edges_y, n_bins_y bin edges of the y axis, in ascending order
+ * @param hist, n_hist output, n_bins_x * n_bins_y entries, added to (not cleared)
+ * @param axis_type_x, axis_type_y "lin", "log10", or anything else for a search
+ *        over arbitrary edges
+ * @param use_weights add weights[i] instead of 1
+ */
+template<typename T>
+void histogram2D(
+        T *data_x, int n_data_x,
+        T *data_y, int n_data_y,
+        double *weights, int n_weights,
+        T *bin_edges_x, int n_bins_x,
+        T *bin_edges_y, int n_bins_y,
+        double *hist, int n_hist,
+        const char *axis_type_x,
+        const char *axis_type_y,
+        bool use_weights
+) {
+    // A shorter y array would otherwise be read past its end for every pair
+    // beyond it -- silently, and with plausible-looking output.
+    const int n = std::min(n_data_x, n_data_y);
+    if (n_hist < n_bins_x * n_bins_y) return;
+
+    const bool x_is_log10 = !strcmp(axis_type_x, "log10");
+    const bool x_is_lin   = !strcmp(axis_type_x, "lin");
+    const bool y_is_log10 = !strcmp(axis_type_y, "log10");
+    const bool y_is_lin   = !strcmp(axis_type_y, "lin");
+
+    for (int i = 0; i < n; i++) {
+        const int ix = histogram_bin_of(data_x[i], bin_edges_x, n_bins_x, x_is_lin, x_is_log10);
+        if (ix < 0) continue;
+        const int iy = histogram_bin_of(data_y[i], bin_edges_y, n_bins_y, y_is_lin, y_is_log10);
+        if (iy < 0) continue;
+        hist[ix * n_bins_y + iy] +=
+                (use_weights && i < n_weights) ? weights[i] : 1;
+    }
+}
+
+
 #endif //TTTRLIB_HISTOGRAM_H
