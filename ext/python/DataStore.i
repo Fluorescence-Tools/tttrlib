@@ -15,6 +15,14 @@
 %apply (long long* IN_ARRAY1, int DIM1) { (const long long* v, int n) }
 %apply (int* IN_ARRAY1, int DIM1)       { (const int* v, int n) }
 %apply (short* IN_ARRAY1, int DIM1)     { (const short* v, int n) }
+// Polygon vertices and a painted mask, for the drawn regions.
+%apply (double* IN_ARRAY1, int DIM1) {
+    (const double* xs, int n_xs),
+    (const double* ys, int n_ys)
+}
+%apply (unsigned char* IN_ARRAY2, int DIM1, int DIM2) {
+    (const unsigned char* image, int nx, int ny)
+}
 %apply (signed char* IN_ARRAY1, int DIM1) { (const signed char* v, int n) }
 %apply (unsigned long long* IN_ARRAY1, int DIM1) { (const unsigned long long* v, int n) }
 %apply (unsigned int* IN_ARRAY1, int DIM1) { (const unsigned int* v, int n) }

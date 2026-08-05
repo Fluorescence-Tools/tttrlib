@@ -891,6 +891,43 @@ private:
         }
     }
 
+    /*!
+     * Evaluate a predicate on a PAIR of columns, word at a time.
+     *
+     * The two-dimensional counterpart of scan_column, and what a region drawn
+     * on a scatter plot needs. Both columns are read in their own type; the
+     * predicate sees doubles because that is what a shape is defined in.
+     */
+    template<typename Pred>
+    void scan_xy(const Column& cx, const Column& cy, BitMask& m, Pred p) const {
+        const std::size_t n = std::min(n_rows_, std::min(cx.size(), cy.size()));
+        std::uint64_t* w = m.words();
+        const std::size_t nw = m.n_words();
+        const std::size_t full = n / 64;
+        for (std::size_t k = 0; k < full; k++) {
+            std::uint64_t bits = 0;
+            const std::size_t base = k * 64;
+            for (int i = 0; i < 64; i++) {
+                bits |= static_cast<std::uint64_t>(
+                        p(cx.value_at(base + i), cy.value_at(base + i)) ? 1 : 0) << i;
+            }
+            w[k] = bits;
+        }
+        if (full < nw) {
+            std::uint64_t bits = 0;
+            for (std::size_t i = full * 64; i < n; i++) {
+                bits |= static_cast<std::uint64_t>(p(cx.value_at(i), cy.value_at(i)) ? 1 : 0)
+                        << (i - full * 64);
+            }
+            w[full] = bits;
+            for (std::size_t k = full + 1; k < nw; k++) w[k] = 0;
+        }
+        // A point whose position is unknown cannot be shown to be inside a
+        // shape, and admitting it would quietly widen every selection.
+        if (cx.has_mask()) m.and_with(cx.mask());
+        if (cy.has_mask()) m.and_with(cy.mask());
+    }
+
     /// Dispatch `p` over whatever type the column holds. One switch per COLUMN.
     template<typename Pred>
     void scan_column(const Column& c, BitMask& m, Pred p) const {
@@ -962,6 +999,109 @@ public:
             acc.and_with(m);
         }
         apply(acc, how);
+    }
+
+    // --- regions -----------------------------------------------------------
+    //
+    // The shapes a user draws on a scatter plot: a rectangle, an ellipse, a
+    // lasso, a painted mask. Evaluated here rather than in the front end
+    // because the data is here -- the alternative is handing out two columns,
+    // testing them elsewhere, and handing back a mask the size of the table.
+
+    /// Rows inside the axis-aligned rectangle [x0, x1) x [y0, y1).
+    void select_rectangle(int col_x, int col_y, double x0, double y0,
+                          double x1, double y1, Combine how = Combine::Replace) {
+        if (x1 < x0) std::swap(x0, x1);
+        if (y1 < y0) std::swap(y0, y1);
+        BitMask m(n_rows_, false);
+        scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
+            return x >= x0 && x < x1 && y >= y0 && y < y1;
+        });
+        apply(m, how);
+    }
+
+    /*!
+     * Rows inside an ellipse centred at (cx, cy) with semi-axes (rx, ry),
+     * rotated by `angle` radians.
+     *
+     * The rotation is folded into two constants so the inner test is a pair of
+     * multiply-adds and a comparison -- no trigonometry per point.
+     */
+    void select_ellipse(int col_x, int col_y, double cx, double cy,
+                        double rx, double ry, double angle = 0.0,
+                        Combine how = Combine::Replace) {
+        const double ca = std::cos(-angle), sa = std::sin(-angle);
+        const double irx = rx != 0.0 ? 1.0 / rx : 0.0;
+        const double iry = ry != 0.0 ? 1.0 / ry : 0.0;
+        BitMask m(n_rows_, false);
+        scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
+            const double dx = x - cx, dy = y - cy;
+            const double u = (dx * ca - dy * sa) * irx;
+            const double v = (dx * sa + dy * ca) * iry;
+            return u * u + v * v <= 1.0;
+        });
+        apply(m, how);
+    }
+
+    /*!
+     * Rows inside a polygon, by the crossing-number rule.
+     *
+     * A lasso has a hundred vertices and the test is O(vertices) per point, so
+     * the bounding box is checked first: a drawn region covers a small part of
+     * the plane, most points fail four comparisons and never touch the edge
+     * loop, and that is the difference between this being usable and not.
+     */
+    void select_polygon(int col_x, int col_y,
+                        const double* xs, int n_xs, const double* ys, int n_ys,
+                        Combine how = Combine::Replace) {
+        const int nv = std::min(n_xs, n_ys);
+        BitMask m(n_rows_, false);
+        if (nv < 3) { apply(m, how); return; }
+
+        double bx0 = xs[0], bx1 = xs[0], by0 = ys[0], by1 = ys[0];
+        for (int i = 1; i < nv; i++) {
+            bx0 = std::min(bx0, xs[i]); bx1 = std::max(bx1, xs[i]);
+            by0 = std::min(by0, ys[i]); by1 = std::max(by1, ys[i]);
+        }
+        scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
+            if (x < bx0 || x > bx1 || y < by0 || y > by1) return false;
+            bool in = false;
+            for (int i = 0, j = nv - 1; i < nv; j = i++) {
+                if ((ys[i] > y) != (ys[j] > y) &&
+                    x < (xs[j] - xs[i]) * (y - ys[i]) / (ys[j] - ys[i]) + xs[i]) {
+                    in = !in;
+                }
+            }
+            return in;
+        });
+        apply(m, how);
+    }
+
+    /*!
+     * Rows whose (x, y) falls on a set pixel of a painted mask.
+     *
+     * `image` is `nx * ny` bytes in row-major order covering
+     * [x0, x1) x [y0, y1). One multiply-add and a load per point, whatever the
+     * shape painted -- which is why an arbitrary drawing is no more expensive
+     * than a rectangle.
+     */
+    void select_mask_image(int col_x, int col_y,
+                           const unsigned char* image, int nx, int ny,
+                           double x0, double y0, double x1, double y1,
+                           Combine how = Combine::Replace) {
+        BitMask m(n_rows_, false);
+        if (image == nullptr || nx < 1 || ny < 1 || x1 <= x0 || y1 <= y0) {
+            apply(m, how);
+            return;
+        }
+        const double sx = nx / (x1 - x0), sy = ny / (y1 - y0);
+        scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
+            const int ix = static_cast<int>((x - x0) * sx);
+            const int iy = static_cast<int>((y - y0) * sy);
+            if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) return false;
+            return image[static_cast<std::size_t>(iy) * nx + ix] != 0;
+        });
+        apply(m, how);
     }
 
     /// Everything selected.

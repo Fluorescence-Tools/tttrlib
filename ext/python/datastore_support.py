@@ -93,3 +93,29 @@ def data_store_report():
     out.append("%s total %.1f MB in %d stores"
                % (" " * (width + 5), live_data_store_bytes() / 1e6, len(rows)))
     return "\n".join(out)
+
+
+# --- selection helpers -------------------------------------------------------
+#
+# Module scope, not inside %extend: a %pythoncode file lands in the CLASS
+# namespace, so anything defined there is a method and is invisible by name from
+# inside another method. This has now caught me twice.
+
+
+def _ds_mode(how):
+    modes = {
+        "replace": DataStore.Combine_Replace,
+        "and": DataStore.Combine_And,
+        "or": DataStore.Combine_Or,
+        "andnot": DataStore.Combine_AndNot,
+    }
+    if how not in modes:
+        raise ValueError("how must be one of %s" % sorted(modes))
+    return modes[how]
+
+
+def _ds_col(store, c):
+    i = store.find(c) if isinstance(c, str) else int(c)
+    if i < 0:
+        raise KeyError("no column named %r" % c)
+    return i

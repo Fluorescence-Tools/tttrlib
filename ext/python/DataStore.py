@@ -77,37 +77,74 @@ def where(self, column, lo=None, hi=None, equals=None, how="replace"):
 
         store.where("E", 0.2, 0.8).where("S", 0.3, 0.7, how="and")
     """
-    modes = {
-        "replace": DataStore.Combine_Replace,
-        "and": DataStore.Combine_And,
-        "or": DataStore.Combine_Or,
-        "andnot": DataStore.Combine_AndNot,
-    }
-    if how not in modes:
-        raise ValueError("how must be one of %s" % sorted(modes))
-    i = self.find(column) if isinstance(column, str) else int(column)
-    if i < 0:
-        raise KeyError("no column named %r" % column)
+    i = _ds_col(self, column)
     if equals is not None:
-        self.select_equal(i, float(equals), modes[how])
+        self.select_equal(i, float(equals), _ds_mode(how))
     else:
         if lo is None or hi is None:
             raise TypeError("give lo and hi, or equals")
-        self.select_range(i, float(lo), float(hi), modes[how])
+        self.select_range(i, float(lo), float(hi), _ds_mode(how))
+    return self
+
+
+def region(self, x, y, kind="rectangle", how="replace", invert=False, **kw):
+    """Select the rows inside a region drawn on the (x, y) plane.
+
+    :param x, y: the two columns the region was drawn on
+    :param kind: "rectangle", "ellipse", "polygon" or "mask"
+    :param how: "replace", "and", "or", "andnot"
+    :param invert: select what is OUTSIDE the region instead
+
+    ==========  ============================================================
+    kind        keywords
+    ==========  ============================================================
+    rectangle   x0, y0, x1, y1
+    ellipse     cx, cy, rx, ry, angle (radians, default 0)
+    polygon     xs, ys -- the vertices
+    mask        image (2-D bool/uint8), x0, y0, x1, y1 -- the extent it covers
+    ==========  ============================================================
+
+    Evaluated over the columns in place. The alternative -- handing two columns
+    to the front end, testing them there, and handing back a mask the size of
+    the whole table -- is what this exists to avoid.
+    """
+    np = _np_ds
+    ix, iy = _ds_col(self, x), _ds_col(self, y)
+    # An inverted region is "not inside", so it is evaluated normally and the
+    # combination is what changes -- there is no second scan.
+    mode = _ds_mode("replace" if invert else how)
+
+    if kind == "rectangle":
+        self.select_rectangle(ix, iy, float(kw["x0"]), float(kw["y0"]),
+                              float(kw["x1"]), float(kw["y1"]), mode)
+    elif kind == "ellipse":
+        self.select_ellipse(ix, iy, float(kw["cx"]), float(kw["cy"]),
+                            float(kw["rx"]), float(kw["ry"]),
+                            float(kw.get("angle", 0.0)), mode)
+    elif kind == "polygon":
+        xs = np.ascontiguousarray(kw["xs"], dtype=np.float64)
+        ys = np.ascontiguousarray(kw["ys"], dtype=np.float64)
+        self.select_polygon(ix, iy, xs, ys, mode)
+    elif kind == "mask":
+        img = np.ascontiguousarray(np.asarray(kw["image"]) != 0, dtype=np.uint8)
+        self.select_mask_image(ix, iy, img, float(kw["x0"]), float(kw["y0"]),
+                               float(kw["x1"]), float(kw["y1"]), mode)
+    else:
+        raise ValueError("kind must be rectangle, ellipse, polygon or mask")
+
+    if invert:
+        self.invert_selection()
+        if how != "replace":
+            raise NotImplementedError(
+                "invert with how=%r needs two masks; invert the region instead" % how)
     return self
 
 
 def where_finite(self, columns=None, how="and"):
     """Drop rows where any of `columns` is missing or non-finite."""
-    modes = {
-        "replace": DataStore.Combine_Replace,
-        "and": DataStore.Combine_And,
-        "or": DataStore.Combine_Or,
-        "andnot": DataStore.Combine_AndNot,
-    }
     names = self.names if columns is None else columns
-    idx = VectorInt32([self.find(n) if isinstance(n, str) else int(n) for n in names])
-    self.select_finite(idx, modes[how])
+    idx = VectorInt32([_ds_col(self, n) for n in names])
+    self.select_finite(idx, _ds_mode(how))
     return self
 
 
