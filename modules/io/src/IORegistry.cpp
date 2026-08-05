@@ -199,6 +199,26 @@ int IORegistry::infer_container_type(const std::string& filename) {
         if (f->sniff == nullptr) return f->container_type;   // extension is enough
         if (f->sniff(filename)) return f->container_type;
     }
+
+    // Nothing claimed the extension, or nothing claiming it recognised the
+    // contents. Ask every format that can identify itself from bytes.
+    //
+    // The extension is a hint, not the answer: a correctly formatted file with
+    // an unexpected name -- or no extension at all -- was previously
+    // undetectable, however unambiguous its contents. This costs a few header
+    // reads and only ever turns a -1 into an answer, because a format that
+    // claimed the extension has already been tried and declined above.
+    //
+    // Only formats with a real sniffer take part. That is what keeps the two
+    // deliberate exceptions intact: "SM" is accepted on its extension alone and
+    // must not start matching arbitrary files, and the SPC-600 variants are not
+    // identifiable from content at all.
+    const std::string ext = extension_of(filename);
+    for (const FileFormat& f : formats()) {
+        if (!f.detectable || f.sniff == nullptr) continue;
+        if (f.has_extension(ext)) continue;                       // already tried
+        if (f.sniff(filename)) return f.container_type;
+    }
     return -1;
 }
 

@@ -116,10 +116,11 @@ bool isSMFile(const std::string& filename) {
     size_t read_size = std::fread(&first_value, sizeof(first_value), 1, file);
     std::fclose(file);
 
-    if (read_size != 1) {
-        std::cerr << "Error reading the file: " << filename << std::endl;
-        return false;
-    }
+    // A short read means "not this format", not an error. These predicates are
+    // asked speculatively -- detection now probes every sniffer when the
+    // extension does not resolve -- so a message here would print once per
+    // format for every file that is simply something else.
+    if (read_size != 1) return false;
     return (first_value == 2);
 }
 
@@ -132,8 +133,7 @@ bool isPTUFile(const std::string& filename) {
     std::rewind(file);
     size_t read_size = std::fread(Magic, 1, sizeof(Magic), file);
 
-    if (read_size != sizeof(Magic)) {
-        std::cerr << "Error reading the Magic header: " << filename << std::endl;
+    if (read_size != sizeof(Magic)) {   // too short to be a PTU: not an error
         std::fclose(file);
         return false;
     }
@@ -224,6 +224,22 @@ bool isCZConfocor3File(const std::string& filename) {
     std::fclose(file);
 
     if (read_size != 1) return false;
+
+    // A ConfoCor3 raw file opens with an ASCII banner:
+    //   "Carl Zeiss ConfoCor3 - raw data file - version 3.000 - Channel 1"
+    // The settings struct overlays that text -- `channel` is an ASCII digit, and
+    // read_cz_confocor3_header() subtracts 48 from it -- so the range checks
+    // below are really being applied to characters. They reject genuine files:
+    // every ConfoCor3 file in the test data was undetected until this check
+    // existed. Match the banner, which is what actually identifies the format.
+    static const char kMagic[] = "Carl Zeiss ConfoCor3";
+    if (sizeof(rec) >= sizeof(kMagic) - 1 &&
+        std::memcmp(&rec, kMagic, sizeof(kMagic) - 1) == 0) {
+        return true;
+    }
+
+    // Fall through to the original structural heuristics, so anything that was
+    // recognised before still is.
 
     float frequency_float = static_cast<float>(rec.bits.frequency);
     double mt_clk = (frequency_float != 0.0f) ? (1.0 / frequency_float) : 0.0;
