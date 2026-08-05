@@ -11,8 +11,10 @@
 #
 #   util                    verbosity, SIMD dispatch, RNG facades, bit ops
 #   opt (header-only)       L-BFGS
-#   hist                    histograms
-#   core                    the photon-stream data model -- TTTR and friends
+#   core                    the photon-stream data model -- TTTR and friends,
+#                           plus histograms: binning a photon property is as basic
+#                           as the properties themselves, and everything above
+#                           core does it
 #   registry                capability descriptions, by name
 #   imaging                 CLSM + correlator + phasor (co-located; mutual friends)
 #   decay                   decay fitting (does NOT depend on core)
@@ -27,7 +29,6 @@
 add_subdirectory(util)
 add_subdirectory(io)   # declares `io` and, beneath it, one module per format
 add_subdirectory(opt)
-add_subdirectory(hist)
 add_subdirectory(sim)
 add_subdirectory(localization)
 add_subdirectory(core)

@@ -31,7 +31,9 @@
 #     reason this layering matters at all.
 tttrlib_add_module(
     NAME     core
-    SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTR.cpp"
+    SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Histogram.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/HistogramAxis.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTR.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRHeader.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRMask.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRRange.cpp"
@@ -45,9 +47,9 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchMaxTree.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BurstSearchRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  io io_ps io_sm io_cz io_bh io_pq io_be io_hdf5 util hist
+    DEPENDS  io io_ps io_sm io_cz io_bh io_pq io_be io_hdf5 util
     EXTERNAL_DEPS tttrlib::json
-    SWIG_INTERFACES TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
+    SWIG_INTERFACES Histogram.i TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
                     Channel.i FileCheck.i
     TEST_DIR test/python/tttr
 )

@@ -64,6 +64,18 @@
 
 
 /*!
+ * True when private per-thread copies would exceed the scratch budget, so the
+ * partitioned strategy should be used instead. See histogram_partitioned_fill.
+ */
+inline bool histogram_should_partition(long long n_bins, unsigned n_threads) {
+    if (n_threads < 2) return false;
+    const long long scratch =
+            (n_threads - 1) * n_bins * static_cast<long long>(sizeof(double));
+    return scratch > TTTRLIB_HIST_PARALLEL_BUDGET_BYTES;
+}
+
+
+/*!
  * \brief How many threads to fill with, or 1 to stay on the serial path.
  *
  * \param n_requested 0 to decide from the data, 1 to force serial, or an
@@ -83,16 +95,10 @@ inline unsigned histogram_fill_threads(long long n_points, long long n_bins,
     // One chunk per thread, but never so many that a chunk is trivial.
     const long long max_useful = n_points / (TTTRLIB_HIST_PARALLEL_MIN_POINTS / 4);
     if (max_useful < 2) return 1;
-    long long n = std::min<long long>(hw, max_useful);
-    // ... and never more private copies than the scratch budget allows. The
-    // floor of 2 matters: without it a histogram larger than the whole budget
-    // falls all the way back to serial, which is far worse than a couple of
-    // copies -- a 1024x1024 fill went from 31 ms to 46 ms that way.
-    const long long bytes_each = n_bins * static_cast<long long>(sizeof(double));
-    if (bytes_each > 0) {
-        n = std::min(n, std::max<long long>(
-                2, TTTRLIB_HIST_PARALLEL_BUDGET_BYTES / bytes_each));
-    }
+    // No cap by histogram size: a histogram too large to replicate is filled by
+    // partitioning instead of by fewer threads. See histogram_should_partition.
+    (void) n_bins;
+    const long long n = std::min<long long>(hw, max_useful);
     return n < 2 ? 1 : static_cast<unsigned>(n);
 }
 
@@ -114,6 +120,110 @@ inline unsigned histogram_fill_threads(long long n_points, long long n_bins,
 #ifndef TTTRLIB_HIST_CHUNK_POINTS
 #define TTTRLIB_HIST_CHUNK_POINTS 65536
 #endif
+
+
+/// Run `body(t)` on `n_threads` threads, t in [0, n_threads), and join.
+template<typename Fn>
+inline void histogram_run_threads(unsigned n_threads, Fn body) {
+    std::vector<std::thread> workers;
+    workers.reserve(n_threads - 1);
+    for (unsigned t = 1; t < n_threads; t++) workers.emplace_back([&, t] { body(t); });
+    body(0);
+    for (auto& w : workers) w.join();
+}
+
+
+/*!
+ * \brief Fill a LARGE histogram in parallel without replicating it.
+ *
+ * The private-copy strategy below is the right one while the copies stay
+ * cache-resident, and the wrong one when they do not: eight private copies of a
+ * 1024x1024 histogram are 64 MB, and obtaining, zeroing and summing them costs
+ * more than the threading saves.
+ *
+ * boost-histogram's answer is to not replicate at all -- batch the points,
+ * compute their bin indices in parallel, and scatter into one shared histogram
+ * SERIALLY (detail/fill_n.hpp, "Parallelization options" B). That removes the
+ * scratch but leaves the scatter, which is the expensive half, on one thread.
+ *
+ * The same file describes a better option C and does not implement it: partition
+ * the indices so that each thread owns a disjoint set of bins, and then the
+ * scatter parallelises with no synchronisation at all, because two threads can
+ * never touch the same cell. That is what this does. Each thread's share of the
+ * histogram is n_cells/n_threads, so for the sizes where replication fails the
+ * scatter target is back to being cache-resident -- which is the whole reason
+ * replication worked in the first place.
+ *
+ * The cost is that every point is written once more and read once more, to get
+ * it into its owner's bucket. That is streaming traffic, and it buys turning a
+ * cache-missing scatter into a cache-hitting one.
+ *
+ * \param cell_of maps a point index to a flat cell index, or -1 to drop it
+ */
+template<typename CellFn>
+inline void histogram_partitioned_fill(
+        double* hist, int n_cells, long long n_points, unsigned n_threads,
+        const double* weights, bool use_weights, CellFn cell_of) {
+    const unsigned owners = n_threads;
+    const long long cells_per_owner =
+            (static_cast<long long>(n_cells) + owners - 1) / owners;
+
+    // Buckets are reused across batches, so the allocation happens once.
+    std::vector<std::vector<int>> bucket_cells(
+            static_cast<std::size_t>(n_threads) * owners);
+    std::vector<std::vector<double>> bucket_weights(
+            use_weights ? static_cast<std::size_t>(n_threads) * owners : 0);
+
+    // Batched so the buckets stay bounded regardless of how many points there
+    // are: a hundred million points would otherwise mean 400 MB of indices.
+    const long long batch = 1LL << 22;
+    for (long long start = 0; start < n_points; start += batch) {
+        const long long stop = std::min(start + batch, n_points);
+        const long long n = stop - start;
+
+        histogram_run_threads(n_threads, [&](unsigned t) {
+            for (unsigned o = 0; o < owners; o++) {
+                const std::size_t k = static_cast<std::size_t>(t) * owners + o;
+                bucket_cells[k].clear();
+                if (use_weights) bucket_weights[k].clear();
+            }
+            // Hoisted: the bucket vectors for THIS thread are contiguous, so
+            // the inner loop indexes an array rather than walking back into the
+            // outer vector every point.
+            std::vector<int>* my_cells = &bucket_cells[static_cast<std::size_t>(t) * owners];
+            std::vector<double>* my_weights =
+                    use_weights ? &bucket_weights[static_cast<std::size_t>(t) * owners] : nullptr;
+            const long long a = start + (n * t) / n_threads;
+            const long long b = start + (n * (t + 1)) / n_threads;
+            for (long long i = a; i < b; i++) {
+                const int c = cell_of(i);
+                if (c < 0) continue;
+                // Integer division, measured against a reciprocal multiply and
+                // found no slower -- the loop is bound by the memory it touches,
+                // not by this.
+                unsigned o = static_cast<unsigned>(c / cells_per_owner);
+                if (o >= owners) o = owners - 1;
+                my_cells[o].push_back(c);
+                if (use_weights) my_weights[o].push_back(weights[i]);
+            }
+        });
+
+        // Owner o writes only cells in its own range, so no two threads ever
+        // touch the same cell and no synchronisation is needed.
+        histogram_run_threads(n_threads, [&](unsigned o) {
+            for (unsigned t = 0; t < n_threads; t++) {
+                const std::size_t k = static_cast<std::size_t>(t) * owners + o;
+                const std::vector<int>& cs = bucket_cells[k];
+                if (use_weights) {
+                    const std::vector<double>& ws = bucket_weights[k];
+                    for (std::size_t j = 0; j < cs.size(); j++) hist[cs[j]] += ws[j];
+                } else {
+                    for (std::size_t j = 0; j < cs.size(); j++) hist[cs[j]] += 1.0;
+                }
+            }
+        });
+    }
+}
 
 
 /*!
@@ -363,7 +473,13 @@ void histogram1D(
         }
     };
     if (n_threads > 1) {
-        histogram_parallel_fill(hist, limit, n_data, n_threads, fill_chunk);
+        if (histogram_should_partition(limit, n_threads)) {
+            histogram_partitioned_fill(
+                    hist, limit, n_data, n_threads, weights, use_weights,
+                    [&](long long i) { return axis.bin_of(data[i]); });
+        } else {
+            histogram_parallel_fill(hist, limit, n_data, n_threads, fill_chunk);
+        }
         return;
     }
 
@@ -438,7 +554,20 @@ void histogram2D(
         }
     };
     if (n_threads > 1) {
-        histogram_parallel_fill(hist, n_cells, n, n_threads, fill_chunk);
+        if (histogram_should_partition(n_cells, n_threads)) {
+            histogram_partitioned_fill(
+                    hist, n_cells, n, n_threads, weights,
+                    use_weights && n_weights >= n,
+                    [&](long long i) {
+                        const int ix = ax.bin_of(data_x[i]);
+                        if (ix < 0) return -1;
+                        const int iy = ay.bin_of(data_y[i]);
+                        if (iy < 0) return -1;
+                        return ix * n_bins_y + iy;
+                    });
+        } else {
+            histogram_parallel_fill(hist, n_cells, n, n_threads, fill_chunk);
+        }
         return;
     }
 
