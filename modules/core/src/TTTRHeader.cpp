@@ -1384,25 +1384,33 @@ if (is_verbose()) {
         std::strncpy(dst, src.c_str(), dst_size - 1);
     };
 
-    // Defaults consistent with the record type actually written, so the
-    // file reads back with the correct record decoder (the reader selects
-    // HHT3v1/HHT3v2/PHT3 from Ident and FormatVersion).
+    // Ident and FormatVersion are dictated by the record type actually being
+    // written, NOT inherited from the source header. The reader selects
+    // HHT3v1/HHT3v2/PHT3 from these two fields, so a stale value silently
+    // mislabels the file.
+    //
+    // This was a real corruption, not a theoretical one. Transcoding an
+    // SF-compressed source to plain HHT3v2 kept the source's "1.0", so the
+    // reader chose HHT3v1 and then ran SF detection -- and an HHT3v2 overflow
+    // record, which legitimately carries a count, looks exactly like an SF one.
+    // Every macro time after the first overflow came back multiplied. The
+    // event count matched, which is what made it worth guarding against.
     int record_type = header->get_tttr_record_type();
-    std::string default_ident = "HydraHarp";
-    std::string default_version = "2.0";
+    std::string required_ident = "HydraHarp";
+    std::string required_version = "2.0";
     if (record_type == PQ_RECORD_TYPE_HHT3v1 ||
         record_type == PQ_RECORD_TYPE_SF_HT3) {
         // SF-compressed files keep the HydraHarp v1 header; the SF record
-        // stream is detected from the overflow record payloads on reading
-        default_version = "1.0";
+        // stream is detected from the overflow record payloads on reading.
+        required_version = "1.0";
     } else if (record_type == PQ_RECORD_TYPE_PHT3) {
-        default_ident = "PicoHarp 300";
+        required_ident = "PicoHarp 300";
     }
 
     pq_ht3_Header_t ht3_header;
     std::memset(&ht3_header, 0, sizeof(ht3_header));
-    copy_str(ht3_header.Ident, sizeof(ht3_header.Ident), tag_string("Ident", default_ident));
-    copy_str(ht3_header.FormatVersion, sizeof(ht3_header.FormatVersion), tag_string("FormatVersion", default_version));
+    copy_str(ht3_header.Ident, sizeof(ht3_header.Ident), required_ident);
+    copy_str(ht3_header.FormatVersion, sizeof(ht3_header.FormatVersion), required_version);
     copy_str(ht3_header.CreatorName, sizeof(ht3_header.CreatorName), tag_string("CreatorName", "tttrlib"));
     copy_str(ht3_header.CreatorVersion, sizeof(ht3_header.CreatorVersion), tag_string("CreatorVersion", ""));
     copy_str(ht3_header.FileTime, sizeof(ht3_header.FileTime), tag_string("FileTime", ""));

@@ -2864,6 +2864,21 @@ bool TTTR::write(std::string filename, const char* container_type, TTTRHeader* h
 
 bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     if(header == nullptr) header = this->header;
+
+    // Writing must not change the object being written.
+    //
+    // Further down, the target container and record type are stamped into the
+    // header and any missing tags are filled in. Doing that to `this->header`
+    // leaves the object describing the file just written, so a second write to
+    // a different container starts from the wrong description -- and the result
+    // is not an error but a silently corrupt file. Writing HT3 after PTU
+    // emitted HHT3v2 records under a header the reader then resolved as
+    // SF-compressed, so every macro time after the first overflow was expanded
+    // with the wrong rule. The event count matched, which is exactly what makes
+    // it worth guarding against.
+    TTTRHeader header_copy(*header);
+    header = &header_copy;
+
     // Determine the container type already associated with the data.
     int source_type = header->get_tttr_container_type();
     if(source_type < 0) source_type = this->tttr_container_type;
