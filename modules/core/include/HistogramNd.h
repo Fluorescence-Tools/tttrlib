@@ -263,6 +263,34 @@ public:
         return idx + shift;
     }
 
+    /*!
+     * \brief The n+1 edges of the axis, into a caller-owned array.
+     *
+     * A front end that asked for "64 bins from 0 to 100" still has to label the
+     * axis it got, and reconstructing the edges by hand is where a half-bin
+     * shift gets in. For Category and Boolean the "edges" are the bin numbers,
+     * because those axes have no width.
+     */
+    void get_edges(double** out, int* n) const {
+        *n = n_ + 1;
+        *out = static_cast<double*>(std::malloc((n_ + 1) * sizeof(double)));
+        if (*out == nullptr) return;
+        for (int i = 0; i < n_; i++) (*out)[i] = bin_lower(i);
+        (*out)[n_] = bin_upper(n_ - 1);
+    }
+    void get_centers(double** out, int* n) const {
+        *n = n_;
+        *out = static_cast<double*>(std::malloc(std::max(1, n_) * sizeof(double)));
+        if (*out == nullptr) return;
+        for (int i = 0; i < n_; i++) (*out)[i] = bin_center(i);
+    }
+    void get_widths(double** out, int* n) const {
+        *n = n_;
+        *out = static_cast<double*>(std::malloc(std::max(1, n_) * sizeof(double)));
+        if (*out == nullptr) return;
+        for (int i = 0; i < n_; i++) (*out)[i] = bin_upper(i) - bin_lower(i);
+    }
+
     /// Can this axis grow to include `x`? See AxisOptions::growth.
     bool needs_growth(double x) const {
         if (!opt_.growth) return false;
@@ -441,6 +469,53 @@ public:
     }
 
     // --- output, for language bindings ------------------------------------
+
+    /*!
+     * \brief The value buffer itself, not a copy.
+     *
+     * Zero copy: a language binding wraps this pointer, so a 1024x1024
+     * histogram costs nothing to look at rather than 8 MB. Reshaping to
+     * \ref shape and slicing the flow bins off are both views in numpy, so the
+     * whole read path stays copy-free.
+     *
+     * \section nd_view_safety What keeps this safe
+     *
+     * Two things can invalidate the pointer, and both are handled rather than
+     * documented away:
+     *
+     * - The histogram being destroyed while a view is alive. The Python wrapper
+     *   keeps a reference to the owner ON the array it hands back, so the owner
+     *   cannot be collected first.
+     * - The buffer being reallocated. Only one operation does that -- a fill on
+     *   an axis declared with growth -- and \ref can_view reports it, so a
+     *   caller can be handed a copy instead. Nothing else resizes: reset, add
+     *   and scale work in place, and slice, rebin and project return new
+     *   histograms rather than modifying this one.
+     */
+    void get_values_view(double** view, int* n) {
+        if (!can_view()) { *view = nullptr; *n = 0; return; }
+        *view = values_.data();
+        *n = static_cast<int>(values_.size());
+    }
+    /// \see get_values_view
+    void get_variances_view(double** view, int* n) {
+        if (!can_view() || variances_.empty()) { *view = nullptr; *n = 0; return; }
+        *view = variances_.data();
+        *n = static_cast<int>(variances_.size());
+    }
+
+    /*!
+     * \brief Whether a zero-copy view can be handed out safely.
+     *
+     * False when any axis can grow, because the next fill may reallocate the
+     * buffer out from under a view that has already been handed out -- and
+     * there is no way to reach back and invalidate a numpy array. A copy is
+     * cheap next to a dangling pointer.
+     */
+    bool can_view() const {
+        for (const Axis& a : axes_) if (a.options().growth) return false;
+        return true;
+    }
 
     /// Values including flow bins, as a fresh malloc'd array the caller owns.
     void get_values(double** out, int* n) const { copy_out(values_, out, n); }
@@ -791,8 +866,127 @@ public:
         return out;
     }
 
+    /*!
+     * \brief Keep bins [begin, end) of axis `dim`, discarding the rest.
+     *
+     * What was cut off is added to the flow bins rather than dropped, so
+     * `sum(true)` is unchanged -- a slice that loses counts is a crop, and
+     * boost distinguishes them for the same reason. \see crop
+     */
+    HistogramNd slice(int dim, int begin, int end) const {
+        return sliced(dim, begin, end, /*keep_outside=*/true);
+    }
+
+    /// Like \ref slice, but what falls outside is discarded, flow included.
+    HistogramNd crop(int dim, int begin, int end) const {
+        return sliced(dim, begin, end, /*keep_outside=*/false);
+    }
+
+    /*!
+     * \brief Restrict axis `dim` to the bins overlapping [lo, hi).
+     *
+     * The value form of \ref slice: a caller who knows the range of interest
+     * should not have to convert it to bin indices and get the rounding right.
+     */
+    HistogramNd shrink(int dim, double lo, double hi) const {
+        if (dim < 0 || dim >= rank()) throw std::invalid_argument("shrink: axis out of range");
+        const Axis& a = axes_[dim];
+        int begin = a.index(lo);
+        int end = a.index(hi);
+        if (begin == AXIS_UNDERFLOW) begin = 0;
+        if (end == AXIS_UNDERFLOW) end = 0;
+        if (begin > a.size()) begin = a.size();
+        if (end >= a.size()) end = a.size(); else end += 1;
+        if (end <= begin) throw std::invalid_argument("shrink: empty range");
+        return slice(dim, begin, end);
+    }
+
+    /// Zero every bin, keeping the axes.
+    void reset() {
+        std::fill(values_.begin(), values_.end(), 0.0);
+        std::fill(variances_.begin(), variances_.end(), 0.0);
+    }
+
+    /*!
+     * \brief Add another histogram bin by bin.
+     *
+     * The axes must match exactly. Adding histograms with different binning is
+     * not a merge, it is a mistake that happens to typecheck.
+     */
+    void add(const HistogramNd& other) {
+        if (other.values_.size() != values_.size())
+            throw std::invalid_argument("add: histograms have different shapes");
+        for (std::size_t i = 0; i < values_.size(); i++) values_[i] += other.values_[i];
+        if (track_variance_ && other.track_variance_)
+            for (std::size_t i = 0; i < variances_.size(); i++)
+                variances_[i] += other.variances_[i];
+    }
+
+    /// Multiply every bin by `factor`. Variances scale by the square.
+    void scale(double factor) {
+        for (double& v : values_) v *= factor;
+        for (double& v : variances_) v *= factor * factor;
+    }
+
 private:
     friend class HistogramNdAccess;
+
+    HistogramNd sliced(int dim, int begin, int end, bool keep_outside) const {
+        if (dim < 0 || dim >= rank()) throw std::invalid_argument("slice: axis out of range");
+        const Axis& a = axes_[dim];
+        if (begin < 0 || end > a.size() || end <= begin)
+            throw std::invalid_argument("slice: range outside the axis");
+
+        std::vector<Axis> na = axes_;
+        na[dim] = sub_axis(a, begin, end);
+        HistogramNd out(na, track_variance_);
+
+        const std::vector<int> strides = compute_strides();
+        const std::vector<int> out_strides = out.compute_strides();
+        std::vector<int> slots(rank(), 0);
+        const int shift = a.options().underflow ? 1 : 0;
+        for (std::size_t c = 0; c < values_.size(); c++) {
+            std::size_t rest = c;
+            for (int d = 0; d < rank(); d++) {
+                slots[d] = static_cast<int>(rest / strides[d]);
+                rest %= strides[d];
+            }
+            const int idx = slots[dim] - shift;
+            int new_idx;
+            if (idx >= begin && idx < end) new_idx = idx - begin;
+            else if (!keep_outside) continue;
+            else new_idx = (idx < begin) ? AXIS_UNDERFLOW : (end - begin);
+            const int new_slot = out.axes_[dim].slot(new_idx);
+            if (new_slot < 0) continue;
+            int oc = 0;
+            for (int d = 0; d < rank(); d++)
+                oc += (d == dim ? new_slot : slots[d]) * out_strides[d];
+            out.values_[oc] += values_[c];
+            if (track_variance_) out.variances_[oc] += variances_[c];
+        }
+        return out;
+    }
+
+    static Axis sub_axis(const Axis& a, int begin, int end) {
+        AxisOptions o = a.options();
+        const int n = end - begin;
+        switch (a.kind()) {
+            case AxisKind::Regular:
+                return Axis::regular(n, a.bin_lower(begin), a.bin_upper(end - 1), o, a.label());
+            case AxisKind::Log:
+                return Axis::log(n, a.bin_lower(begin), a.bin_upper(end - 1), o, a.label());
+            case AxisKind::Integer:
+                return Axis::integer(static_cast<int>(a.lo()) + begin,
+                                     static_cast<int>(a.lo()) + end, o, a.label());
+            default: {
+                std::vector<double> edges;
+                edges.reserve(n + 1);
+                for (int i = begin; i < end; i++) edges.push_back(a.bin_lower(i));
+                edges.push_back(a.bin_upper(end - 1));
+                return Axis::variable(edges.data(), static_cast<int>(edges.size()), o, a.label());
+            }
+        }
+    }
 
     void reset_storage() {
         std::size_t n = 1;
