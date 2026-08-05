@@ -80,6 +80,71 @@ def test_scanner_markers_match_the_acquisition_geometry(data, ttr_path):
     assert int((ch == MARKER_FRAME).sum()) == 1
 
 
+def _clsm(data, **kw):
+    return tttrlib.CLSMImage(
+        tttr_data=data,
+        marker_frame_start=[MARKER_FRAME],
+        marker_line_start=MARKER_LINE,
+        marker_line_stop=MARKER_LINE,   # one line clock, no separate stop
+        marker_event_type=1,
+        n_pixel_per_line=512,
+        **kw,
+    )
+
+
+def test_reconstructs_a_square_image_from_the_pixel_clock(data, ttr_path):
+    """.ttr -> TTTR -> CLSMImage, which is the whole point of reading it.
+
+    The scanner pulses one line clock per line and never says where a line
+    ends, so start-to-start pairing loses the last line. The pixel clock does
+    know: it ticks to the end of that line and stops.
+    """
+    if "512x512" not in os.path.basename(ttr_path):
+        pytest.skip("geometry assertion is specific to the 512x512 sample")
+
+    img = _clsm(data, use_pixel_markers=True, marker_pixel=MARKER_PIXEL)
+    assert (img.n_frames, img.n_lines, img.n_pixel) == (1, 512, 512)
+
+    a = np.asarray(img.intensity)
+    assert a.shape == (1, 512, 512)
+    # Nearly every photon lands somewhere; the rest fall before the first pixel
+    # clock or after the last, where there is no pixel to put them in.
+    n_photons = int((data.event_types == 0).sum())
+    assert a.sum() > 0.99 * n_photons
+    assert a.sum() <= n_photons
+
+
+def test_the_reconstruction_is_an_image_and_not_a_shuffle(data, ttr_path):
+    """Line count alone cannot tell a picture from scrambled rows."""
+    if "512x512" not in os.path.basename(ttr_path):
+        pytest.skip("geometry assertion is specific to the 512x512 sample")
+
+    a = np.asarray(_clsm(data, use_pixel_markers=True,
+                         marker_pixel=MARKER_PIXEL).intensity)[0].astype(float)
+
+    def corr(x, y):
+        x, y = x.ravel() - x.mean(), y.ravel() - y.mean()
+        return float((x * y).sum() / np.sqrt((x * x).sum() * (y * y).sum()))
+
+    # Real structure is correlated across both axes. Rows in the wrong order
+    # would keep the column correlation and destroy the row correlation, which
+    # is exactly what an off-by-one in the line pairing produces.
+    assert corr(a[:-1], a[1:]) > 0.5
+    assert corr(a[:, :-1], a[:, 1:]) > 0.5
+
+
+def test_one_line_clock_is_not_read_as_alternating_start_stop(data):
+    """marker_line_start == marker_line_stop means start-only, not pairs.
+
+    Read as (start, stop) pairs it yields half the lines and silently discards
+    the photons of every other one.
+    """
+    n_line_markers = int(((data.event_types == 1) &
+                          (data.routing_channels == MARKER_LINE)).sum())
+    img = _clsm(data)
+    assert img.n_lines > 0.9 * n_line_markers
+
+
 def test_matches_the_official_libttp_reader(ttr_path, data):
     """Photon for photon, against the vendor's own decoder."""
     libttp_ttp = pytest.importorskip("libttp.ttp", reason="libttp not installed")

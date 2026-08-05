@@ -531,17 +531,26 @@ void CLSMImage::determine_number_of_lines() {
     if (settings.n_lines > 0) {
         n_lines = settings.n_lines;
     } else {
-        // Determine from frames: find the most common line count
+        // Determine from frames: find the most common line count.
+        //
+        // Frames with no lines at all are not evidence of anything. One always
+        // exists when the stream does not begin on a frame marker, because the
+        // leading stub from event 0 to the first marker becomes a frame; it is
+        // not a frame anybody scanned. Counting it made a single-frame
+        // acquisition tie 0 against the real line count.
         std::map<size_t, int> line_count_histogram;
         for (auto &f: frames) {
+            if (f->lines.empty()) continue;
             line_count_histogram[f->lines.size()]++;
         }
-        
-        // Find the most frequently occurring line count
+
+        // Find the most frequently occurring line count. On a tie, take the
+        // larger: a truncated or partial frame has fewer lines than a whole one,
+        // never more, so the larger count is the one that describes the scan.
         n_lines = 0;
         int max_count = 0;
         for (auto &pair : line_count_histogram) {
-            if (pair.second > max_count) {
+            if (pair.second >= max_count) {
                 max_count = pair.second;
                 n_lines = pair.first;
             }
@@ -1081,11 +1090,37 @@ std::vector<int> CLSMImage::get_frame_edges(
             }
         }
     } else {
+        // A frame marker that shares its macro time with the line and pixel
+        // markers opening the same frame is simultaneous with them; which of
+        // the three the decoder emits first is an artefact, not a measurement.
+        // Back the frame edge up over any markers in the same tick so the first
+        // line is inside the frame it belongs to. Without this the first line
+        // clock lands in the leading stub frame and its whole line of photons is
+        // dropped -- a 512-line BrightEyes scan reconstructed as 511.
+        //
+        // The walk stops at the first non-marker event, so no photon ever
+        // changes frame: only marker ordering within one tick is corrected.
+        auto walk_back_over_simultaneous_markers = [&](int i_event) {
+            unsigned long long t = tttr->get_macro_time_at(i_event);
+            int j = i_event;
+            while (j > start_event &&
+                   event_types[j - 1] == marker_event_type &&
+                   tttr->get_macro_time_at(j - 1) == t) {
+                j--;
+            }
+            return j;
+        };
         for (int i_event = start_event; i_event < stop_event; i_event++) {
             if (event_types[i_event] == marker_event_type) {
                 signed char rc = routing_channels[i_event];
                 if (frame_marker_lookup_i8[static_cast<unsigned char>(rc)]) {
-                    frame_edges.emplace_back(i_event);
+                    int edge = walk_back_over_simultaneous_markers(i_event);
+                    // Never let the correction collide with the previous edge.
+                    if (frame_edges.empty() || edge > frame_edges.back()) {
+                        frame_edges.emplace_back(edge);
+                    } else {
+                        frame_edges.emplace_back(i_event);
+                    }
                 }
             }
         }
@@ -1120,7 +1155,8 @@ std::vector<int> CLSMImage::get_line_edges(
     int start_event, int stop_event,
     int marker_line_start, int marker_line_stop,
     int marker_event_type,
-    int reading_routine
+    int reading_routine,
+    int marker_pixel
 ) {
     if (is_verbose()) {
         std::clog << "CLSMImage::get_line_edges" << std::endl;
@@ -1186,14 +1222,17 @@ std::vector<int> CLSMImage::get_line_edges(
         }
     }
 
-    // Handle single-marker mode (only start markers, no stop markers)
-    // This is common for B&H SPC files where line markers indicate line starts only
-    if (marker_line_start != marker_line_stop && !line_edges.empty()) {
-        // Check if we only have start markers by verifying count
-        // If we have N line markers but they're all starts (no stops found),
-        // we need to convert them to (start, stop) pairs where each line
-        // runs from one start to the next
-
+    // Handle single-marker mode (only start markers, no stop markers).
+    // Common for B&H SPC, and for any scanner that pulses one line clock per
+    // line rather than gating a level for the line's duration.
+    //
+    // marker_line_start == marker_line_stop is the same situation stated
+    // differently: one channel carries the line clock, so the collection loop
+    // above found only starts. Without this the edges fall through untouched and
+    // are read as (start, stop) pairs -- silently keeping every *other* line and
+    // discarding the photons in between. BrightEyes-TTM reconstructed at half
+    // its line count that way, with nothing to indicate it.
+    if (!line_edges.empty()) {
         // Count how many are starts vs stops
         size_t start_count = 0;
         size_t stop_count = 0;
@@ -1206,18 +1245,43 @@ std::vector<int> CLSMImage::get_line_edges(
         for (int idx : line_edges) {
             if (event_types[idx] == marker_event_sc) {
                 if (routing_channels[idx] == marker_start_sc) start_count++;
-                else if (routing_channels[idx] == marker_stop_sc) stop_count++;
+                else if (marker_line_stop != marker_line_start &&
+                         routing_channels[idx] == marker_stop_sc) stop_count++;
             }
         }
 
-        // If all markers are starts (no stops found), convert to pairs
-        // N start markers define N-1 lines (each line runs from marker[i] to marker[i+1])
+        // If all markers are starts (no stops found), convert to pairs.
+        // N start markers define N-1 lines, each running from marker[i] to
+        // marker[i+1] -- and the Nth line is lost, because nothing in the
+        // stream says where it ends.
         if (stop_count == 0 && start_count > 1) {
             std::vector<int> paired_edges;
-            paired_edges.reserve((start_count - 1) * 2);
-            for (size_t i = 0; i < line_edges.size() - 1; i++) {
+            paired_edges.reserve(start_count * 2);
+            for (size_t i = 0; i + 1 < line_edges.size(); i++) {
                 paired_edges.emplace_back(line_edges[i]);      // line start
                 paired_edges.emplace_back(line_edges[i + 1]);  // line stop = next start
+            }
+
+            // The pixel clock knows where the last line ends even though the
+            // line clock does not: it keeps ticking to the end of that line and
+            // then stops. Closing the last line at its final pixel marker
+            // recovers a line that start-to-start pairing has to throw away --
+            // for a 512-line frame that is the difference between 511 lines and
+            // a square image.
+            if (marker_pixel >= 0) {
+                signed char marker_pixel_sc = static_cast<signed char>(marker_pixel);
+                int last_start = line_edges.back();
+                int last_pixel = -1;
+                for (int i_event = last_start + 1; i_event < stop_event; i_event++) {
+                    if (event_types[i_event] == marker_event_sc &&
+                        routing_channels[i_event] == marker_pixel_sc) {
+                        last_pixel = i_event;
+                    }
+                }
+                if (last_pixel > last_start) {
+                    paired_edges.emplace_back(last_start);
+                    paired_edges.emplace_back(last_pixel);
+                }
             }
             return paired_edges;
         }
@@ -1491,7 +1555,8 @@ void CLSMImage::create_lines() {
                 settings.marker_line_start,
                 settings.marker_line_stop,
                 settings.marker_event_type,
-                settings.reading_routine
+                settings.reading_routine,
+                settings.use_pixel_markers ? settings.marker_pixel : -1
             );
         } else {
             long line_duration = tttr->header->get_line_duration();

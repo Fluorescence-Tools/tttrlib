@@ -1527,6 +1527,12 @@ public:
      *                               (default is 15).
      * @param reading_routine       Type of reading routine, e.g., CLSM_SP8
      *                               (default is CLSM_SP8).
+     * @param marker_pixel           Routing channel of the pixel clock, or -1 for
+     *                               none (default). Only consulted when the
+     *                               hardware emits line starts without stops: the
+     *                               pixel clock is then what closes the final
+     *                               line, which start-to-start pairing alone has
+     *                               to discard.
      * @return                       Vector of TTTR indices corresponding to line edges.
      */
     static std::vector<int> get_line_edges(
@@ -1534,7 +1540,8 @@ public:
         int start_event, int stop_event,
         int marker_line_start = 1, int marker_line_stop = 2,
         int marker_event_type = 15,
-        int reading_routine = CLSM_SP8
+        int reading_routine = CLSM_SP8,
+        int marker_pixel = -1
     );
 
 
