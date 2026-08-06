@@ -191,19 +191,58 @@ class Tests(unittest.TestCase):
             conv_stop=14,
             dt=dt
         )
-        ref = np.array([0.13579708, 0.12913168, 0.12279343, 0.1167663,  0.11103499, 0.105585,
-                        0.10040251, 0.0960508,  0.12840442, 0.50553797, 1.31410034, 1.83556925,
-                        1.85250385, 1.76495806, 1.67832765, 1.59594937, 1.51761451, 1.4431246,
-                        1.37229093, 1.30493402, 1.24088322, 1.17997627, 1.12205885, 1.06698422,
-                        1.01461284, 0.96481204, 0.91745564, 0.87242366, 0.82960201, 0.7888822,
-                        0.75016106, 0.7133405,  0.67832721, 0.6450325 , 0.61337202, 0.58326554,
-                        0.5546368,  0.52741326, 0.50152594, 0.47690927, 0.45350087, 0.43124144,
-                        0.41007458, 0.38994666, 0.37080669, 0.35260619, 0.33529902, 0.31884136,
-                        0.30319149, 0.28830978, 0.27415851, 0.26070184, 0.24790567, 0.23573758,
-                        0.22416674, 0.21316384, 0.202701,   0.19275172, 0.18329078, 0.17429422,
-                        0.16573924, 0.15760417, 0.1498684,  0.14251232])
+        # Regenerated 2026-08-06. The previous array predated the fix to the
+        # wrap-around tail in fconv_per_cs (the decay step used to be taken
+        # *before* the bin-0 contribution, placing the value belonging to bin
+        # period_n+1 into bin 0), so it pinned the buggy output and this test had
+        # been failing ever since the fix. Three independent checks agree on the
+        # values below: driving the same non-periodic trapezoid recursion with the
+        # IRF repeated over 4000 periods and reading off the steady state matches
+        # to 4.4e-16; fconv_per (which never carried the error) matches to
+        # 2.2e-16 -- it is in fact bit-identical to this test file's own
+        # test_fconv_per reference; and test_dfa_kernel.py pins the same recursion
+        # against the spectral backend. The old array differed by 7.0e-3.
+        ref = np.array([0.14280653, 0.13579708, 0.12913168, 0.12279343, 0.11676630, 0.11103499,
+                        0.10558500, 0.10097891, 0.13309064, 0.50999418, 1.31833782, 1.83959874,
+                        1.85633556, 1.76860169, 1.68179244, 1.59924410, 1.52074752, 1.44610384,
+                        1.37512393, 1.30762796, 1.24344494, 1.18241225, 1.12437526, 1.06918693,
+                        1.01670744, 0.96680383, 0.91934967, 0.87422472, 0.83131467, 0.79051079,
+                        0.75170972, 0.71481314, 0.67972757, 0.64636413, 0.61463828, 0.58446966,
+                        0.55578181, 0.52850207, 0.50256131, 0.47789382, 0.45443709, 0.43213171,
+                        0.41092115, 0.39075168, 0.37157220, 0.35333412, 0.33599122, 0.31949958,
+                        0.30381741, 0.28890497, 0.27472449, 0.26124004, 0.24841745, 0.23622424,
+                        0.22462951, 0.21360390, 0.20311946, 0.19314964, 0.18366917, 0.17465403,
+                        0.16608139, 0.15792953, 0.15017779, 0.14280653])
 
         np.testing.assert_array_almost_equal(ref, model_fconv_per_cs)
+
+    def test_fconv_per_cs_agrees_with_fconv_per(self):
+        """Cross-check the two periodic convolutions against each other.
+
+        `fconv_per_cs` is `fconv_per` plus a convolution stop, so once the IRF is
+        zero beyond `conv_stop` the two must agree exactly. This is what the pinned
+        arrays alone could not catch: when the wrap-around tail in the `_cs`
+        variants was off by one bin, its stale reference array simply pinned the
+        wrong answer while `fconv_per`'s stayed right. Covers both the scalar
+        (numexp = 1) and the SIMD (numexp >= 2) kernels.
+        """
+        period = 13.0
+        irf, time_axis = model_irf(
+            n_channels=32, period=period, irf_position_p=2.0,
+            irf_position_s=2.0, irf_width=0.15
+        )
+        irf[irf < 0.001] = 0.0
+        dt = time_axis[1] - time_axis[0]
+
+        for spectrum in (np.array([1.0, 4.1]),                                 # scalar path
+                         np.array([0.4, 4.1, 0.3, 1.7, 0.2, 0.6, 0.1, 9.0])):  # SIMD path
+            cs = np.zeros_like(irf)
+            tttrlib.fconv_per_cs(fit=cs, irf=irf, x=spectrum, period=period,
+                                 stop=-1, conv_stop=14, dt=dt)
+            per = np.zeros_like(irf)
+            tttrlib.fconv_per(fit=per, irf=irf, x=spectrum, period=period,
+                              start=0, stop=-1, dt=dt)
+            np.testing.assert_allclose(cs, per, rtol=0, atol=1e-12)
 
     def test_sconv(self):
         period = 12.0
