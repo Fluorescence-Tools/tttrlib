@@ -11,6 +11,7 @@ Table Of Contents
     languages
     r-package
     imagej-plugin
+    javascript-package
     user_guide
     glossary
     auto_examples/index

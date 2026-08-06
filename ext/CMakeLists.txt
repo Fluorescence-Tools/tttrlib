@@ -370,6 +370,124 @@ IF(BUILD_R_INTERFACE)
     UNSET(CMAKE_SWIG_FLAGS)
 ENDIF()
 
+IF(BUILD_JAVASCRIPT_INTERFACE)
+    MESSAGE(STATUS "Building JavaScript (Node-API) interface")
+
+    # Node supplies the headers through two npm packages rather than a system
+    # include directory: node-api-headers has the C API (node_api.h), and
+    # node-addon-api has the C++ wrapper (napi.h) that the SWIG -napi backend
+    # generates against. Ask node for their locations rather than guessing.
+    FIND_PROGRAM(NODE_EXECUTABLE NAMES node nodejs REQUIRED)
+    MESSAGE(STATUS "NODE_EXECUTABLE: ${NODE_EXECUTABLE}")
+
+    # Resolve from ext/js/pkg, whose package.json declares both as dependencies,
+    # so `npm install` there is the single documented setup step.
+    SET(JS_PKG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/js/pkg)
+    # path.resolve() because node-addon-api reports include_dir RELATIVE to the
+    # current directory ("node_modules/node-addon-api"); handing that to
+    # include_directories() silently resolves against the build tree and the
+    # compiler then cannot find napi.h.
+    execute_process(
+            COMMAND ${NODE_EXECUTABLE} -p "require('path').resolve(require('node-api-headers').include_dir)"
+            WORKING_DIRECTORY ${JS_PKG_DIR}
+            OUTPUT_VARIABLE NODE_API_HEADERS_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE _node_api_headers_res
+            ERROR_QUIET)
+    execute_process(
+            COMMAND ${NODE_EXECUTABLE} -p "require('path').resolve(require('node-addon-api').include_dir)"
+            WORKING_DIRECTORY ${JS_PKG_DIR}
+            OUTPUT_VARIABLE NODE_ADDON_API_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE _node_addon_api_res
+            ERROR_QUIET)
+    IF(NOT _node_api_headers_res EQUAL 0 OR NOT _node_addon_api_res EQUAL 0)
+        MESSAGE(FATAL_ERROR
+                "node-api-headers / node-addon-api not found. Run `npm install` in "
+                "${JS_PKG_DIR} before configuring with -DBUILD_JAVASCRIPT_INTERFACE=ON.")
+    ENDIF()
+    MESSAGE(STATUS "node-api-headers: ${NODE_API_HEADERS_DIR}")
+    MESSAGE(STATUS "node-addon-api:   ${NODE_ADDON_API_DIR}")
+    INCLUDE_DIRECTORIES(${NODE_API_HEADERS_DIR} ${NODE_ADDON_API_DIR})
+
+    SET(JS_MODULE_NAME tttrlibJs)
+    SET_SOURCE_FILES_PROPERTIES(js/tttrlib.i PROPERTIES
+            CPLUSPLUS ON
+            SWIG_MODULE_NAME tttrlib)
+
+    # js/tttrlib.i re-includes the shared fragments that live in ext/python, and
+    # ext/js supplies jsarrays.i and js_shared_ptr.i.
+    SET(CMAKE_SWIG_FLAGS -napi
+            -I${CMAKE_CURRENT_SOURCE_DIR}/python
+            -I${CMAKE_CURRENT_SOURCE_DIR}/js
+            ${TTTRLIB_SWIG_INT64_FLAG})
+
+    file(GLOB JS_SWIG_DEPS
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
+            "${CMAKE_CURRENT_SOURCE_DIR}/js/*.i")
+    # See the Python block: SWIG_MODULE_DEPENDS is not read by UseSWIG.
+    set(SWIG_MODULE_${JS_MODULE_NAME}_EXTRA_DEPS ${JS_SWIG_DEPS})
+    set_property(SOURCE js/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
+
+    SWIG_ADD_LIBRARY(
+            ${JS_MODULE_NAME}
+            TYPE MODULE
+            LANGUAGE javascript
+            SOURCES js/tttrlib.i
+    )
+    tttrlib_link_all_modules(${JS_MODULE_NAME})
+
+    # require() loads "tttrlib.node" -- no "lib" prefix, and the .node suffix is
+    # what Node's loader looks for. Node-API's ABI stability means this one
+    # binary serves every Node >= 12.17, which is the whole reason for -napi
+    # over the V8 backend.
+    SET_TARGET_PROPERTIES(${JS_MODULE_NAME} PROPERTIES
+            OUTPUT_NAME tttrlib
+            PREFIX ""
+            SUFFIX ".node"
+            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/js-pkg)
+
+    # NAPI_VERSION 8 is Node 12.22/14.17+ and covers BigInt64Array (needed for
+    # macro times) and external ArrayBuffers. NAPI_CPP_EXCEPTIONS is not
+    # optional: the generated wrapper's error paths throw Napi::Error, and
+    # without it node-addon-api compiles those into abort().
+    TARGET_COMPILE_DEFINITIONS(${JS_MODULE_NAME} PRIVATE
+            NAPI_VERSION=8
+            NAPI_CPP_EXCEPTIONS
+            BUILDING_NODE_EXTENSION)
+
+    TARGET_LINK_LIBRARIES(
+            ${JS_MODULE_NAME}
+            ${HDF5_LIBRARIES}
+            ${CMAKE_THREAD_LIBS_INIT}
+    )
+    IF(OpenMP_CXX_FOUND)
+        TARGET_LINK_LIBRARIES(${JS_MODULE_NAME} OpenMP::OpenMP_CXX)
+    ENDIF()
+
+    # Node resolves the addon's own undefined symbols (napi_*) against the host
+    # process at load time; there is no import library to link against, and on
+    # macOS the linker must be told so explicitly.
+    IF(APPLE)
+        SET_TARGET_PROPERTIES(${JS_MODULE_NAME} PROPERTIES
+                LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+    ENDIF()
+
+    # The module libraries sit next to the addon in js-pkg/, the same layout the
+    # npm package ships, so @loader_path / $ORIGIN finds them.
+    tttrlib_set_sibling_rpath(${JS_MODULE_NAME})
+
+    # Keep the SWIG runtime type table private (see the Python block for why).
+    TARGET_COMPILE_DEFINITIONS(${JS_MODULE_NAME} PRIVATE SWIG_TYPE_TABLE=tttrlib)
+
+    # Stage the JavaScript package next to the built addon so `node test/js/...`
+    # works straight out of the build directory.
+    FILE(COPY ${JS_PKG_DIR}/index.js ${JS_PKG_DIR}/index.d.ts ${JS_PKG_DIR}/package.json
+         DESTINATION ${CMAKE_BINARY_DIR}/js-pkg)
+
+    UNSET(CMAKE_SWIG_FLAGS)
+ENDIF()
+
 IF(BUILD_JAVA_INTERFACE)
     MESSAGE(STATUS "Building Java interface")
     FIND_PACKAGE(JNI REQUIRED)

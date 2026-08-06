@@ -8,17 +8,31 @@ using json = nlohmann::json;
 // BurstFeatureExtractor is included in the main tttrlib module; no separate %module here.
 // Rely on shared STL and numpy typemaps from misc_types.i included by tttrlib.i.
 
+// SWIG_exception_fail must not appear in an %extend BODY. It expands to a
+// language-specific raise, and the Node-API spelling needs the `env` that only
+// exists inside the generated wrapper -- an %extend body is a free-standing
+// SWIGINTERN function compiled before it. Throwing and translating in an
+// %exception (which IS wrapper code) is the portable form and keeps Python's
+// ValueError, since std::invalid_argument maps to SWIG_ValueError below.
+%exception {
+    try {
+        $action
+    } catch (const std::invalid_argument& e) {
+        SWIG_exception(SWIG_ValueError, e.what());
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    }
+}
+
 %include "BurstFeatureExtractor.h"
 
 %extend tttrlib::BurstFeatureExtractor {
     // Convenience constructor that accepts a shared_ptr<BurstFilter>
     BurstFeatureExtractor(std::shared_ptr<tttrlib::BurstFilter> bf) {
         if (!bf) {
-            SWIG_exception_fail(SWIG_ValueError, "BurstFilter is null");
+            throw std::invalid_argument("BurstFilter is null");
         }
         return new tttrlib::BurstFeatureExtractor(*bf);
-        fail:
-        return (tttrlib::BurstFeatureExtractor*)0;
     }
 
     std::string to_json_string() const {
@@ -111,3 +125,6 @@ using json = nlohmann::json;
     %}
 #endif
 }
+
+// Scoped to this header and its %extend only.
+%exception;

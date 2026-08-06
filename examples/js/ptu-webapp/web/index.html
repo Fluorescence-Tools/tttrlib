@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tttrlib — TTTR file viewer</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>tttrlib</h1>
+    <p class="sub">TTTR file viewer — reading through the JavaScript binding, computing in C++</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <label for="file">File</label>
+      <div class="row">
+        <select id="file"><option value="">loading…</option></select>
+        <button id="open" disabled>Open</button>
+      </div>
+      <p id="root" class="hint"></p>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section id="results" hidden>
+      <div class="panel">
+        <h2>Summary</h2>
+        <dl id="summary"></dl>
+      </div>
+
+      <div class="panel">
+        <h2>Time trace</h2>
+        <p class="hint">Binned in C++, one point per bin — the browser never receives the photon stream.</p>
+        <canvas id="trace" width="900" height="220"></canvas>
+        <div id="legend" class="legend"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Micro-time decay</h2>
+        <p class="hint">Full micro-time histogram, log counts.</p>
+        <canvas id="decay" width="900" height="220"></canvas>
+      </div>
+
+      <div class="panel">
+        <h2>Header</h2>
+        <p class="hint">Every tag the file carries, as tttrlib parsed it.</p>
+        <pre id="header"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -67,6 +67,7 @@ OPTION(BUILD_PYTHON_INTERFACE "Build Python interface" ON)
 OPTION(BUILD_PYTHON_DOCS "Build documentation of SWIG Python interface" OFF)
 OPTION(BUILD_R_INTERFACE "Build R interface" OFF)
 OPTION(BUILD_JAVA_INTERFACE "Build Java interface" OFF)
+OPTION(BUILD_JAVASCRIPT_INTERFACE "Build JavaScript (Node-API) interface" OFF)
 OPTION(VERBOSE_TTTRLIB "Verbose tttrlib build" OFF)
 
 # Build-turnaround switches. Neither changes what is produced for a release
@@ -446,6 +447,11 @@ INCLUDE(TTTRLibThirdParty)
 # of src/, on purpose.
 INCLUDE(TTTRLibModule)
 ADD_SUBDIRECTORY(modules)
+
+# The example drop-in plugin. Opt-in (-DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON) and
+# deliberately not linked against tttrlib: it exists so the plugin path can be
+# tested end to end rather than only described.
+ADD_SUBDIRECTORY(examples/plugin)
 
 # Module headers, for the targets declared BELOW this line only.
 #

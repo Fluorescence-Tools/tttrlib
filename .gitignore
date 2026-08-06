@@ -124,3 +124,15 @@ ext/java/imagej/src/main/resources/native/
 ext/java/pkg/target/
 ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java
 ext/java/pkg/src/main/resources/native/
+
+# JavaScript binding: npm's dependency tree, and the built addon plus the module
+# libraries staged next to it. `npm install --prefix ext/js/pkg` fetches the
+# Node-API headers; the .node is a build artefact of BUILD_JAVASCRIPT_INTERFACE.
+node_modules/
+build-js/
+ext/js/pkg/*.node
+ext/js/pkg/*.dylib
+ext/js/pkg/*.so
+ext/js/pkg/*.so.*
+ext/js/pkg/*.dll
+ext/js/pkg/package-lock.json

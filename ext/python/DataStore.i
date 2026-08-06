@@ -50,8 +50,17 @@
 %apply (unsigned char** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned char** view, int* n) }
 
 // %extend must come BEFORE the header it extends...
+// %pythoncode is a Python-only directive. The other bindings (R, Java) never
+// reached it because they wrap a subset; the JavaScript module wraps the whole
+// Python surface, so every such block now needs the guard. The JavaScript
+// equivalents of these conveniences live in ext/js/pkg/index.js.
+#ifdef SWIGPYTHON
 %extend tttrlib::data::Column { %pythoncode "./ext/python/Column.py" }
+#endif  // SWIGPYTHON
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::data::DataStore { %pythoncode "./ext/python/DataStore.py" }
+#endif  // SWIGPYTHON
 
 %include "DataStore.h"
 
@@ -61,7 +70,10 @@
 // enum constants at import time and they do not exist until the header has
 // been wrapped. (The methods above only name them when called, so their order
 // does not matter.)
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %pythoncode "./ext/python/datastore_support.py"
+#endif  // SWIGPYTHON
 
 // std::vector<int> and std::vector<std::string> are already templated in
 // misc_types.i as VectorInt32 / VectorString. Declaring them again is silently

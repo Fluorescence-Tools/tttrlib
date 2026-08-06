@@ -1,0 +1,98 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+/* No framework and no build step: this file is the whole design system. */
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfc;
+  --panel: #ffffff;
+  --ink: #14161a;
+  --muted: #666e7a;
+  --line: #e2e5ea;
+  --accent: #2f6fdb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --panel: #1b1e24;
+    --ink: #e8eaee;
+    --muted: #99a1ad;
+    --line: #2b3038;
+    --accent: #6ea2ff;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 1.5rem 3rem;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+header { max-width: 60rem; margin: 0 auto; padding: 2rem 0 1rem; }
+h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.01em; }
+h2 { margin: 0 0 .5rem; font-size: 1rem; }
+.sub, .hint { color: var(--muted); margin: .25rem 0 0; font-size: .875rem; }
+.hint { margin-bottom: .75rem; }
+
+main { max-width: 60rem; margin: 0 auto; display: grid; gap: 1rem; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+label { display: block; font-weight: 600; margin-bottom: .35rem; font-size: .875rem; }
+
+.row { display: flex; gap: .5rem; }
+select {
+  flex: 1;
+  min-width: 0;               /* a long file name must not push the button out */
+  padding: .45rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+button {
+  padding: .45rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:disabled { opacity: .5; cursor: default; }
+
+.status { margin: .75rem 0 0; font-size: .875rem; min-height: 1.25rem; }
+.status.error { color: #c0392b; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.25rem; margin: 0; }
+dt { color: var(--muted); font-size: .875rem; }
+dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+canvas { width: 100%; height: auto; display: block; }
+
+.legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .5rem; font-size: .8125rem; }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.legend i { width: .75rem; height: .75rem; border-radius: 2px; display: inline-block; }
+
+pre {
+  margin: 0;
+  max-height: 22rem;
+  overflow: auto;             /* a header is arbitrarily long; scroll it, don't stretch the page */
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: .75rem;
+  font-size: .8125rem;
+}
+
+#results { display: grid; gap: 1rem; }

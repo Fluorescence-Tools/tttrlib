@@ -83,7 +83,17 @@ std::string registry_category_json(const std::string& category) {
 
 std::vector<std::string> registry_categories() {
     std::vector<std::string> out;
-    for (const auto& item : build().items()) out.push_back(item.key());
+    // `build()` must be bound to a named object first. Writing
+    // `for (auto& item : build().items())` compiles and returns nothing:
+    // items() hands back an iteration_proxy holding a REFERENCE to the json,
+    // and a range-for lifetime-extends only the range expression itself (the
+    // proxy), not the temporary the proxy points at. The json is destroyed at
+    // the end of the full expression and the loop iterates a dangling object --
+    // which is why this function returned an empty list in every binding while
+    // registry_json(), built from the same call, returned five categories.
+    const json root = build();
+    out.reserve(root.size());
+    for (const auto& item : root.items()) out.push_back(item.key());
     return out;
 }
 

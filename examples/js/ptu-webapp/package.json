@@ -1,0 +1,15 @@
+{
+  "name": "tttrlib-ptu-webapp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A minimal web viewer for TTTR files, built on the tttrlib JavaScript binding",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "license": "BSD-3-Clause"
+}

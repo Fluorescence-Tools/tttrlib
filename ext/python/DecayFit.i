@@ -22,7 +22,12 @@ using json = nlohmann::json;
 
 %include <std_string.i>
 %include <std_vector.i>
+#ifdef SWIGJAVASCRIPT
+// SWIG 4.2 ships no shared_ptr library for the Node-API backend; misc_types.i
+// has already pulled in ext/js/js_shared_ptr.i, which supplies it.
+#else
 %include <std_shared_ptr.i>
+#endif
 
 // std::vector<std::string> is what the registry-driven name helpers return.
 %template(VectorString) std::vector<std::string>;

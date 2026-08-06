@@ -9,6 +9,11 @@
 
 %include "io_csv.h"
 
+// %pythoncode is a Python-only directive. The other bindings (R, Java) never
+// reached it because they wrap a subset; the JavaScript module wraps the whole
+// Python surface, so every such block now needs the guard. The JavaScript
+// equivalents of these conveniences live in ext/js/pkg/index.js.
+#ifdef SWIGPYTHON
 %pythoncode %{
 def read_csv(filename, delimiter=",", quote='"', has_header=True,
              use_float32=False, threads=0, block_size=16 << 20,
@@ -45,3 +50,4 @@ def read_csv(filename, delimiter=",", quote='"', has_header=True,
     read_csv_into(store, filename, o)
     return store
 %}
+#endif  // SWIGPYTHON

@@ -41,6 +41,11 @@
 %include "SimSpecies.h"
 %template(VectorSimSpecies) std::vector<tttrlib::SimSpecies>;
 
+// %pythoncode is a Python-only directive. The other bindings (R, Java) never
+// reached it because they wrap a subset; the JavaScript module wraps the whole
+// Python surface, so every such block now needs the guard. The JavaScript
+// equivalents of these conveniences live in ext/js/pkg/index.js.
+#ifdef SWIGPYTHON
 // Thin numpy PSF builders (convenience only; wrap the C++ fillers). PRD-008.
 %extend tttrlib::SimGrid {
     %pythoncode %{
@@ -87,6 +92,7 @@
                                               extent_z, spacing, amplitude)
     %}
 }
+#endif  // SWIGPYTHON
 
 %include "SimGrid.h"
 
@@ -105,6 +111,8 @@ namespace tttrlib {
     int sim_simd_lanes();
 }
 
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::SimRandomV {
     %pythoncode %{
     def normals(self, n):
@@ -118,10 +126,13 @@ namespace tttrlib {
         return out
     %}
 }
+#endif  // SWIGPYTHON
 
 %template(VectorSimGrid) std::vector<tttrlib::SimGrid>;
 
 %include "SimVectorGrid.h"
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::SimVectorGrid {
     %pythoncode %{
         @staticmethod
@@ -142,6 +153,7 @@ namespace tttrlib {
                 float(x0), float(y0), float(z0))
     %}
 }
+#endif  // SWIGPYTHON
 
 %include "SimSystem.h"
 %include "SimScanner.h"
@@ -149,6 +161,8 @@ namespace tttrlib {
 %include "SimMicrotimeEncoder.h"
 
 // Thin ergonomic layer on the driver (convenience only). PRD-008.
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::SimEngine {
     %pythoncode %{
         @staticmethod
@@ -354,6 +368,7 @@ namespace tttrlib {
                 os.remove(path)
     %}
 }
+#endif  // SWIGPYTHON
 
 // Translate C++ exceptions (e.g. from_json / constructor config validation such as a
 // q_alex row-count mismatch) into Python exceptions instead of terminating the interpreter.
@@ -387,6 +402,8 @@ namespace tttrlib {
 // The properties SWIG generates are ordinary Python property objects, so they can be
 // rewrapped: the getter is untouched, and the setter coerces whatever it is given --
 // list, tuple, NumPy array of any dtype, scalar -- into the vector type first.
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %pythoncode %{
 def _sim_as_vector_double(value):
     """Coerce a sequence, NumPy array or scalar into a VectorDouble."""
@@ -434,3 +451,4 @@ _sim_numpy_property(SimSpecies, "q", _sim_as_vector_double)
 _sim_numpy_property(SimSpecies, "q_alex", _sim_as_vector_double_2d)
 _sim_numpy_property(SimGrid, "data", _sim_as_vector_double)
 %}
+#endif  // SWIGPYTHON

@@ -9,17 +9,25 @@
 %include "stl.i";
 %include "typemaps.i";
 %include "std_string.i";
-#ifndef SWIGR
-%include "std_wstring.i";  // SWIG's R library ships no std_wstring.i
+#if !defined(SWIGR) && !defined(SWIGJAVASCRIPT)
+%include "std_wstring.i";  // SWIG's R and JavaScript libraries ship no std_wstring.i
 #endif
 %include "std_map.i";
 %include "std_vector.i";
-#ifndef SWIGR
-%include "std_set.i";      // SWIG's R library ships no std_set.i
+#if !defined(SWIGR) && !defined(SWIGJAVASCRIPT)
+%include "std_set.i";      // SWIG's R and JavaScript libraries ship no std_set.i
 #endif
-%include "std_list.i";
+#ifndef SWIGJAVASCRIPT
+%include "std_list.i";     // SWIG's JavaScript library ships no std_list.i
+#endif
 %include "std_pair.i"; // tttrlib.Correlator.get_tttr
+#ifdef SWIGJAVASCRIPT
+// SWIG 4.2 ships no boost_shared_ptr.i for the Node-API backend; ext/js supplies
+// the missing SWIG_SHARED_PTR_TYPEMAPS so %shared_ptr() works there too.
+%include "js_shared_ptr.i";
+#else
 %include "std_shared_ptr.i";
+#endif
 
 %include "cpointer.i"
 %include "attribute.i"
@@ -38,11 +46,13 @@ import_array();
 %include "rarrays.i"
 #elif defined(SWIGJAVA)
 %include "jarrays.i"
+#elif defined(SWIGJAVASCRIPT)
+%include "jsarrays.i"
 #endif
 
 // Templates
-#ifndef SWIGR
-%template(SetInt32) std::set<int>;  // std::set unsupported by SWIG's R library
+#if !defined(SWIGR) && !defined(SWIGJAVASCRIPT)
+%template(SetInt32) std::set<int>;  // std::set unsupported by SWIG's R and JavaScript libraries
 #endif
 
 // Vector templates
@@ -66,9 +76,10 @@ import_array();
 
 
 
-// swig::from is provided by the Python and R std_vector runtimes but not by Java;
-// exclude these overrides for Java so it uses the default std::vector wrapping.
-#ifndef SWIGJAVA
+// swig::from is provided by the Python and R std_vector runtimes but not by Java
+// or JavaScript; exclude these overrides there so they use the default
+// std::vector wrapping (JavaScript overrides it in ext/js/jsarrays.i instead).
+#if !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT)
 %typemap(out) std::vector< long long,std::allocator< long long > > * {
 $result = swig::from(static_cast<std::vector< long long,std::allocator< long long > > >(*($1)));
 }

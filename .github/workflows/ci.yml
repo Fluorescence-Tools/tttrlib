@@ -157,6 +157,74 @@ jobs:
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
         run: mvn -B -f ext/java/pkg test
 
+  # ── Build & test the JavaScript interface (Node-API + jsarrays.i) ─────────
+
+  build_test_js_lnx:
+    name: Build & test JavaScript interface (lnx)
+    needs: swig_multilang
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+      # SWIG's Node-API backend generates against node-addon-api's napi.h, which
+      # is an npm package rather than a system header.
+      - name: Install Node-API headers
+        run: npm install --prefix ext/js/pkg
+      - name: Configure and build the addon
+        run: |
+          cmake -S . -B build-js -G Ninja \
+            -DBUILD_PYTHON_INTERFACE=OFF \
+            -DBUILD_JAVASCRIPT_INTERFACE=ON \
+            -DBUILD_LIBRARY=ON \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-js --target tttrlibJs
+      - name: Download reference test data
+        run: |
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
+          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+            https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+            https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
+      # The canonical cross-language values in
+      # test/js/cross_language_reference.test.mjs are the same ones the Python, R
+      # and Java suites assert. A failure there is a binding bug, never a stale
+      # constant.
+      - name: Run JavaScript tests
+        env:
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+        run: node --test test/js/
+      # The reference application is the binding's only non-trivial consumer;
+      # a smoke request keeps its worker/route wiring from rotting unnoticed.
+      - name: Smoke-test the example web application
+        env:
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+        run: |
+          node examples/js/ptu-webapp/server.mjs &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          for _ in $(seq 30); do
+            curl -sf http://127.0.0.1:8030/api/files >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8030/api/registry | head -c 200
+          curl -sf "http://127.0.0.1:8030/api/open?path=pq/ptu/pq_ptu_hh_t3.ptu&bins=100" \
+            | node -e "
+                let s=''; process.stdin.on('data',d=>s+=d).on('end',()=>{
+                  const r=JSON.parse(s);
+                  if (!(r.nEvents > 0)) { console.error('no events:', s.slice(0,200)); process.exit(1); }
+                  console.log('opened', r.nEvents, 'events');
+                });"
+
   # ── ImageJ/Fiji plugin: build per-OS JNI native, assemble & release the JAR ──
 
   imagej_native:

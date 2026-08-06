@@ -102,7 +102,26 @@ CMAKE_ARGS="-DWITH_OPENMP=ON" pip install -e .
 | `WITH_OPENMP` | ON | OpenMP parallelization |
 | `BUILD_PHOTON_HDF` | ON | Photon-HDF5 support |
 | `BUILD_PYTHON_INTERFACE` | ON | Python bindings |
+| `BUILD_R_INTERFACE` | OFF | R bindings |
+| `BUILD_JAVA_INTERFACE` | OFF | Java (JNI) bindings |
+| `BUILD_JAVASCRIPT_INTERFACE` | OFF | JavaScript (Node-API) bindings |
 | `VERBOSE_TTTRLIB` | OFF | Verbose build output |
+
+### JavaScript bindings
+
+Needs SWIG ≥ 4.2 (its Node-API backend) and the Node-API headers, which come
+from npm rather than the system:
+
+```bash
+npm install --prefix ext/js/pkg
+cmake -S . -B build -DBUILD_JAVASCRIPT_INTERFACE=ON
+cmake --build build -j
+node --test test/js/
+```
+
+The addon lands in `build/js-pkg/tttrlib.node`, which `ext/js/pkg/index.js`
+finds without installing anything. Node-API's stable ABI means one binary per
+platform serves every Node ≥ 12.17.
 
 ## 📦 Pip Wheel Building
 

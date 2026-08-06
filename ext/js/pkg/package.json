@@ -1,0 +1,43 @@
+{
+  "name": "tttrlib",
+  "version": "0.0.0",
+  "description": "Read, correlate and analyse time-tagged time-resolved (TTTR) single-molecule and FLIM data — the tttrlib C++ core, for Node.js",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "engines": {
+    "node": ">=12.17.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "tttrlib.node",
+    "*.dylib",
+    "*.so",
+    "*.so.*",
+    "*.dll",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test ../../../test/js/"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "node-api-headers": "^1.1.0"
+  },
+  "keywords": [
+    "tttr",
+    "flim",
+    "fcs",
+    "single-molecule",
+    "fluorescence",
+    "ptu",
+    "picoquant",
+    "becker-hickl",
+    "photon-counting"
+  ],
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluorescence-tools/tttrlib.git"
+  }
+}

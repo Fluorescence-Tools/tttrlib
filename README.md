@@ -22,13 +22,16 @@ time-resolved (TTTR) photon data. It reads PicoQuant, Becker & Hickl, and
 Photon-HDF5 files through one vendor-independent API.
 
 The core is written in **C++** for speed and exposed through **one shared SWIG
-interface** to three languages, all from the same engine:
+interface** to four languages, all from the same engine:
 
 - **Python** — the primary, most-tested binding; native NumPy arrays, integrates
   with SciPy/Matplotlib/Jupyter.
 - **R** — native R vectors; see [doc/r-package.rst](doc/r-package.rst).
 - **Java** — clean 64-bit `long` macro times; ships an
   [ImageJ/Fiji plugin](doc/imagej-plugin.rst).
+- **JavaScript (Node.js)** — a Node-API addon covering the same surface as
+  Python; TypedArrays, with 64-bit values as `BigInt` so macro times stay exact.
+  See [doc/javascript-package.rst](doc/javascript-package.rst).
 
 It runs on **Linux, macOS (Intel + Apple silicon), and Windows**, with
 prebuilt packages (pip wheels, conda) for all three. Photon-stream operations
@@ -40,10 +43,12 @@ tttrlib is intended for time-resolved fluorescence spectroscopy and imaging
 workflows, including confocal single-molecule analysis, FCS/FCCS correlation,
 fluorescence decay analysis, FLIM, CLSM, and image scanning microscopy.
 
-> **Binding maturity:** the Python binding is the most thoroughly tested. The R
-> and Java bindings share the same tested C++ core but their language-specific
-> layers have lighter test coverage — we are working to mirror the Python tests
-> in R and Java (plan:
+> **Binding maturity:** the Python binding is the most thoroughly tested.
+> JavaScript wraps the same full surface and is verified against the same
+> cross-language reference values. The R and Java bindings share the same tested
+> C++ core but wrap a smaller slice of the API and their language-specific layers
+> have lighter test coverage — we are working to mirror the Python tests
+> everywhere (plan:
 > [PRDs/PRD-001-cross-language-test-parity.md](PRDs/PRD-001-cross-language-test-parity.md)). Please report
 > any binding-specific issues.
 
@@ -171,6 +176,19 @@ from-source build: **[doc/r-package.rst](doc/r-package.rst)**.
 The Java binding ships as an ImageJ/Fiji plugin — a single cross-platform JAR
 you drop into `plugins/`. See the [ImageJ / Fiji plugin](#imagej--fiji-plugin)
 section below and **[doc/imagej-plugin.rst](doc/imagej-plugin.rst)**.
+
+### JavaScript / Node.js
+
+```bash
+npm install tttrlib
+```
+
+A Node-API addon (Node ≥ 12.17) covering the same surface as Python. Photon
+arrays are TypedArrays and 64-bit values are `BigInt`, so macro times stay exact.
+Full instructions, conventions and limitations:
+**[doc/javascript-package.rst](doc/javascript-package.rst)**. A small web viewer
+built on it lives in
+[`examples/js/ptu-webapp/`](examples/js/ptu-webapp/README.md).
 
 Legacy 32-bit platforms and Python 2.7 are not supported.
 

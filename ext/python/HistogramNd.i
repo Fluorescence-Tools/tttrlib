@@ -52,10 +52,22 @@
 // Module-level support (numpy import, the owning-view ndarray subclass, the
 // shape/flow helpers). Must be at module scope: a %pythoncode file inside
 // %extend lands in the class namespace, where a method cannot see it by name.
+// %pythoncode is a Python-only directive. The other bindings (R, Java) never
+// reached it because they wrap a subset; the JavaScript module wraps the whole
+// Python surface, so every such block now needs the guard. The JavaScript
+// equivalents of these conveniences live in ext/js/pkg/index.js.
+#ifdef SWIGPYTHON
 %pythoncode "./ext/python/hist_support.py"
+#endif  // SWIGPYTHON
 
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::hist::Axis { %pythoncode "./ext/python/Axis.py" }
+#endif  // SWIGPYTHON
+// Python-only; see the note above.
+#ifdef SWIGPYTHON
 %extend tttrlib::hist::HistogramNd { %pythoncode "./ext/python/HistogramNd.py" }
+#endif  // SWIGPYTHON
 
 %include "HistogramNd.h"
 %template(AxisVector) std::vector<tttrlib::hist::Axis>;
