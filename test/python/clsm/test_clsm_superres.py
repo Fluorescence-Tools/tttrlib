@@ -14,8 +14,12 @@ import pytest
 
 import tttrlib
 
-# Path to standard test file
-PTU_FILE = "tttr-data/imaging/pq/Microtime200_TH260/beads.ptu"
+# Centralized test settings — resolves to an absolute path under the data root. A bare
+# relative path here made `os.path.exists` depend on pytest's working directory, so these
+# tests silently skipped whenever the suite was not invoked from the repository root.
+from test_settings import settings  # type: ignore
+
+PTU_FILE = settings["microtime_th260_beads_filename"]
 
 
 def _gaussian_spot(ny, nx, cy, cx, sigma, amplitude=1.0):
