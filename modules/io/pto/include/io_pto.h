@@ -31,7 +31,15 @@
 #include <string>
 #include <vector>
 
+#ifndef SWIG
+#include <functional>
+#endif
+
 #include "DataStore.h"
+
+/// Photon data comes back as one of these. Declared rather than included: the
+/// container knows nothing about photons, and only \ref pto_read_events does.
+class TTTR;
 
 namespace tttrlib {
 namespace io {
@@ -165,6 +173,63 @@ void pto_mark_sidecar(PtoFile& file, std::uint64_t uid, std::uint64_t primary);
 /// Read a `dstore` object back. \throws std::runtime_error if it is not one.
 void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out);
 
+/*!
+ * \brief \see pto_read_store, but only the named columns.
+ *
+ * The reason \ref read_store_into grew an overload taking both a region and a
+ * column subset. An embedded store is always a region, so before that existed a
+ * caller reading one had to take every column of it -- which is exactly the
+ * all-or-nothing the container exists to avoid.
+ *
+ * Two columns out of a four-gigabyte table costs two seeks; the group tree comes
+ * back whole either way, being the directory.
+ */
+void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out,
+                    const std::vector<std::string>& columns);
+
+/*!
+ * \brief \see pto_read_store, for a window of rows as well as of columns.
+ *
+ * What a table viewer needs: paging a million-row burst table otherwise decodes
+ * a million rows to show fifty. An empty `columns` means all of them.
+ */
+void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out,
+                    const std::vector<std::string>& columns,
+                    std::uint64_t first_row, std::uint64_t n_rows);
+
+/*!
+ * \brief Where a `dstore` object's payload lies, ready to be read.
+ *
+ * The seam between the container and \ref io_store.h, made namable: a caller
+ * with its own reason to reach a store hands the returned `offset` and `size`
+ * to any of the region-taking \ref read_store_into overloads. Everything below
+ * is this plus one call.
+ *
+ * \throws std::runtime_error if there is no such object, or it is not a store.
+ */
+PtoObject pto_store_region(const PtoFile& file, std::uint64_t uid);
+
+/// An embedded store's column names, without reading a single column.
+/// Empty if the object is not a `dstore`.
+std::vector<std::string> pto_store_columns(const PtoFile& file, std::uint64_t uid,
+                                           const std::string& group = "");
+
+/// An embedded store's group paths, without reading any data.
+std::vector<std::string> pto_store_groups(const PtoFile& file, std::uint64_t uid);
+
+/*!
+ * \brief One entry of a cue table: where an event ordinal sits in a payload.
+ *
+ * Advisory, always. A cue that is wrong must cost a slower decode and never a
+ * wrong answer, which is why a reader seeks to the nearest cue *at or before*
+ * what it wants and decodes forward from there.
+ */
+struct PtoCue {
+    std::uint64_t event = 0;        ///< event ordinal within the payload
+    std::uint64_t offset = 0;       ///< byte offset into the payload
+    std::uint64_t time = 0;         ///< macro time at that event, 0 if unrecorded
+};
+
 
 /*!
  * \brief A PTO file, open for reading or for writing.
@@ -243,8 +308,65 @@ public:
     /// may want to remember that something was there.
     bool remove(std::uint64_t uid);
 
+    /*!
+     * \brief Add an object whose payload is a file on disk.
+     *
+     * The mirror image of \ref extract, and the way in for something too big to
+     * hold: \ref add takes a pointer and a length, so embedding a four-gigabyte
+     * instrument file through it means having four gigabytes in hand first --
+     * in Python, a `bytes` object the size of the file.
+     *
+     * This is not a second code path. \ref add already writes the header and
+     * then streams the payload after it; this sizes the payload with
+     * `std::filesystem::file_size` and replaces that one write with a block
+     * loop. Same header, same slot bookkeeping, same bytes on disk.
+     *
+     * \return 0 if the path is missing or unreadable, or on a write failure;
+     *         see \ref error.
+     */
+    std::uint64_t add_file(const std::string& kind, const std::string& encoding,
+                           const std::string& name, const std::string& path,
+                           std::uint64_t reserve = 0);
+
     /// The payload. \throws std::runtime_error if there is no such object.
     std::vector<unsigned char> read(std::uint64_t uid) const;
+
+    /*!
+     * \brief `n` bytes of a payload, starting `at` bytes into it.
+     *
+     * The binding-facing half of \ref read_at: a caller pages through a payload
+     * at whatever granularity suits, instead of materialising all of it to look
+     * at part of it. Reads short at the end of the payload rather than
+     * throwing, like a file read does.
+     *
+     * \throws std::runtime_error if there is no such object.
+     */
+    std::vector<unsigned char> read(std::uint64_t uid, std::uint64_t at,
+                                    std::size_t n) const;
+
+#ifndef SWIG
+    /*!
+     * \brief `n` bytes of a payload into a caller's buffer, no copy in between.
+     *
+     * \return how many bytes were actually read -- short at the end of the
+     *         payload, and 0 for an object that is not there.
+     */
+    std::size_t read_at(std::uint64_t uid, std::uint64_t at,
+                        void* into, std::size_t n) const;
+
+    /*!
+     * \brief Hand a payload to a sink in blocks, never holding it whole.
+     *
+     * The way to stream an object somewhere that is not a file -- a socket, a
+     * hash, a decoder. \ref extract is this with a file-writing sink, which is
+     * what it already was internally.
+     *
+     * \param sink called with each block in order; returning false stops the
+     *        copy and makes this return false.
+     */
+    bool stream(std::uint64_t uid,
+                const std::function<bool(const void*, std::size_t)>& sink) const;
+#endif
 
     /*!
      * \brief Write an object's payload out as a file of its own.
@@ -305,6 +427,37 @@ public:
      */
     bool commit();
 
+    // -- cues -----------------------------------------------------------------
+
+    /*!
+     * \brief Index a photon payload: where every `every_n_events`-th event is.
+     *
+     * A pass over the payload's records, decoding nothing into memory but a
+     * chunk at a time, that records the byte offset and macro time of every
+     * n-th event. Written into the container's `Cues` element on the next
+     * \ref commit.
+     *
+     * Not done on every write, and never automatically: a container with no
+     * cues is fully valid and a reader that finds none decodes from the start,
+     * exactly as before this existed.
+     *
+     * Spacing is the caller's. One cue per 10\f$^6\f$ events on a 10\f$^9\f$-event
+     * stream is a thousand cues, a few tens of kilobytes, and bounds any
+     * subsequent decode to 10\f$^6\f$ records.
+     *
+     * \return how many cues were built; 0 if the object holds no record stream
+     *         this build can decode, or on failure -- see \ref error.
+     */
+    std::uint64_t build_cues(std::uint64_t uid, std::uint64_t every_n_events);
+
+    /// The cue table for an object, ascending by event. Empty when it has none.
+    std::vector<PtoCue> cues(std::uint64_t uid) const;
+
+    /// Drop an object's cues. They are also dropped when the object is removed
+    /// or its payload replaced, because a cue into bytes that changed is worse
+    /// than no cue at all.
+    void clear_cues(std::uint64_t uid);
+
     /// The free space in the file. For tests, and for deciding whether a file
     /// has accumulated enough holes to be worth compacting.
     std::vector<PtoExtent> free_extents() const;
@@ -325,7 +478,31 @@ private:
                                        std::uint64_t);   // defaults: see above
     friend bool pto_update_store(PtoFile&, std::uint64_t, const data::DataStore&);
     friend void pto_read_store(const PtoFile&, std::uint64_t, data::DataStore&);
+    // The rest of the store entry points need no friendship: they go through
+    // pto_store_region and filename(), which is the whole point of it existing.
+    friend PtoObject pto_store_region(const PtoFile&, std::uint64_t);
 };
+
+/*!
+ * \brief Read a range of events out of a photon object, into a TTTR.
+ *
+ * Uses the object's cues to seek: the nearest cue at or before `first_event`
+ * says where the decode starts, and the nearest one at or after the end says
+ * where it stops. Without cues this decodes the whole payload and slices it --
+ * correct, and no faster than opening the whole thing, which is the right way
+ * for an advisory index to be absent.
+ *
+ * `spec` is a container path, optionally naming an object after a `|`:
+ * `run.pto|m001.ptu`. `n_events` of 0 means "to the end of the payload".
+ *
+ * The same range is reachable through the reader-parameter mechanism, which is
+ * what a binding will normally use and what \ref PtoFile registers a schema
+ * for: `TTTR::set_container_parameters(R"({"first_event": 0, "n_events": 100})")`.
+ *
+ * \return 1 on success, 0 on failure.
+ */
+int pto_read_events(const std::string& spec, std::uint64_t first_event,
+                    std::uint64_t n_events, ::TTTR* out);
 
 /// True for a file that begins with an EBML header whose DocType is "pto".
 /// Silent on any input, including a missing file.

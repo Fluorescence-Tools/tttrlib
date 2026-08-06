@@ -211,6 +211,14 @@ Used with Matroska's IDs and Matroska's meaning:
      - 0x447A
      - string
      - As Matroska. Default ``"und"``.
+   * - ``Cues``
+     - 0x1C53BB6B
+     - master
+     - Top-level. An index *into* payloads. :ref:`pto_cues`.
+   * - ``CuePoint``
+     - 0xBB
+     - master
+     - One entry of it.
    * - ``Void``
      - 0xEC
      - binary
@@ -308,6 +316,22 @@ prefix makes a PTO extension obvious in a hex dump.
      - 0x1E54F029
      - binary
      - An array, as two's-complement ``i64``, big-endian.
+   * - ``PtoCueUID``
+     - 0x1E54F030
+     - uint
+     - In ``CuePoint``: the ``FileUID`` of the object this entry indexes.
+   * - ``PtoCueEvent``
+     - 0x1E54F031
+     - uint
+     - The event ordinal, counted from 0 within that payload.
+   * - ``PtoCueOffset``
+     - 0x1E54F032
+     - uint
+     - Where that event starts, in bytes from the start of ``FileData``.
+   * - ``PtoCueTime``
+     - 0x1E54F033
+     - uint
+     - The macro time at that event. Optional, and absent means 0.
    * - ``PtoAnnotations``
      - 0x1E54F100
      - master
@@ -350,7 +374,7 @@ The EBML Header
 Standard, with::
 
     DocType            = "pto"
-    DocTypeVersion     = 1
+    DocTypeVersion     = 2
     DocTypeReadVersion = 1
     EBMLMaxIDLength    = 4
     EBMLMaxSizeLength  = 8
@@ -358,6 +382,11 @@ Standard, with::
 A reader must refuse a file whose ``DocTypeReadVersion`` exceeds what it
 implements, and must accept a higher ``DocTypeVersion``, skipping what it does
 not know.
+
+``DocTypeVersion`` is 2 because :ref:`pto_cues` exist. The read version stays 1,
+which is the whole point of the distinction: cues are a new element ID inside a
+new master, a 1.0 reader skips both by size, and the file it gets is the file it
+would have got anyway -- one it has to decode from the start.
 
 File shape
 ----------
@@ -726,6 +755,104 @@ It **should** write ``FileData`` last with an over-wide size VINT, reserve
 ``Void`` after payloads it expects to grow, and write ``MuxingApp`` and
 ``DateUTC`` so a file can be traced to what made it.
 
+A ``FileUID`` is a uint64 and a reader must treat it as one. tttrlib **mints**
+53-bit uids, and that is a writer's choice rather than a rule: two of its four
+bindings represent every integer as a double, so a larger uid comes back from
+JavaScript or R as a different number, and an identity that does not survive
+being handed to the caller is not an identity.
+
+Reading part of one
+-------------------
+
+The container exists so a multi-gigabyte payload is cheap to keep beside a table
+that gets recomputed, and that has to hold on the read side too. Every entry
+point below reads its part and not the whole:
+
+.. code-block:: python
+
+    f = tttrlib.PtoFile()
+    f.open("run.pto")
+
+    # what is in the embedded table, without decoding a single column
+    tttrlib.pto_store_columns(f, uid)
+
+    # two columns of a four-gigabyte table: two seeks
+    tttrlib.pto_store(f, uid, columns=["Tau", "n_photons"])
+
+    # rows 500 000-500 050 of it, which is what a table viewer asks for
+    tttrlib.pto_store(f, uid, first_row=500_000, n_rows=50)
+
+    # 4 KiB of any payload, at any offset -- short at the end, like a file read
+    f.read(uid, at=1 << 20, n=4096)
+
+    # events 10^6 .. 10^6+1000 of an embedded photon stream, via its cues
+    tttrlib.pto_events("run.pto|m001.ptu", 1_000_000, 1000)
+
+and on the way in, ``add_file`` embeds a file without holding it:
+
+.. code-block:: python
+
+    f.add_file("photons", "ptu", "m001.ptu", "/data/m001.ptu")
+
+The same range is reachable through the reader-parameter mechanism, which is
+what makes it work from every binding and from anything that opens a file by
+name alone::
+
+    TTTR("run.pto|m001.ptu", "PTO", '{"first_event": 1000, "n_events": 500}')
+
+.. _pto_cues:
+
+Cues
+----
+
+An index *into* a payload: "event 10\ :sup:`9` starts at byte X". Without one,
+reaching the middle of an embedded photon stream means decoding everything
+before it, which is the read-side version of the all-or-nothing the container
+exists to avoid.
+
+``Cues`` is a top-level child of ``Segment``, uses Matroska's ID for the same
+reason everything else here does — the job is Matroska's, an index that says
+where in a stream something is — and holds ``CuePoint`` masters::
+
+    Cues                  0x1C53BB6B   master, top level
+      CuePoint            0xBB         master
+        PtoCueUID         0x1E54F030   uint   which object this indexes
+        PtoCueEvent       0x1E54F031   uint   event ordinal
+        PtoCueOffset      0x1E54F032   uint   byte offset into FileData
+        PtoCueTime        0x1E54F033   uint   macro time there, optional
+
+What sits inside a ``CuePoint`` is PTO's, because Matroska's cues address a
+timecode in a track and these address an event ordinal in a payload.
+
+Four rules, and the first is the one that matters:
+
+**A cue is advisory.** A reader seeks to the nearest cue *at or before* the
+event it wants and decodes forward from there. A cue that is wrong then costs a
+slower decode and can never cost a wrong answer. Nothing may be returned on the
+strength of a cue alone.
+
+**Cues are written on demand, never automatically.** Building them is a pass
+over a payload, so it is a thing a caller asks for
+(:cpp:func:`tttrlib::io::PtoFile::build_cues`) when the payload is going to be
+read in pieces often enough to be worth it. A container with no ``Cues``
+element is fully valid.
+
+**Spacing is the writer's choice.** One cue per 10\ :sup:`6` events on a
+10\ :sup:`9`-event stream is a thousand cues — a few tens of kilobytes — and
+bounds any subsequent decode to 10\ :sup:`6` records.
+
+**A cue dies with the bytes it indexes.** Removing an object or replacing its
+payload drops its cues. Compaction does not: it moves a payload without
+changing a byte inside one, so an offset into it is still an offset into it.
+
+``PtoCueTime`` is what makes a decode from a cue produce the same macro times as
+a decode from the start. The overflow count at a byte offset is not recoverable
+from the records there — it is the sum of every overflow record before it — so a
+reader that starts at a cue gets macro times short by exactly that. The cue's
+own macro time closes the gap: the first event decoded is the cue's event, and
+the difference between what it should be and what it came out as applies to
+every event after it.
+
 Why not tar, zip, or HDF5
 -------------------------
 
@@ -759,9 +886,6 @@ Anticipated and deliberately unspecified in 1.0, so that adding them is a
   but a CRC over eight gigabytes of ``FileData`` costs more on every open than
   the container saves. It belongs behind an explicit verify, with its own
   element.
-- **Cues.** Matroska's ``Cues`` (0x1C53BB6B), repurposed as an index *into* a
-  payload — "event 10\ :sup:`9` starts at byte X" — for seeking within a photon
-  stream without decoding it.
 - **External payloads.** An object whose ``FileData`` is replaced by a URI, for
   data too large to embed.
 - **Signing.** A signature over the live ``SeekHead``, which covers the file

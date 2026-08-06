@@ -5,9 +5,15 @@
 #include "TTTR.h"
 #include "TTTRFormat.h"
 
+#include "TTTRRecordReader.h"
+
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
+#include <functional>
 #include <random>
 #include <stdexcept>
 
@@ -52,6 +58,10 @@ const std::uint32_t kFileName     = 0x466E;
 const std::uint32_t kFileMedia    = 0x4660;
 const std::uint32_t kFileData     = 0x465C;
 const std::uint32_t kFileUID      = 0x46AE;
+/// FileUID is rewritten in place when an object moves, so it is always
+/// written in eight octets: a narrower replacement would shorten the
+/// element and shift every sibling after it.
+const int kUidOctets = 8;
 const std::uint32_t kTags         = 0x1254C367;
 const std::uint32_t kTag          = 0x7373;
 const std::uint32_t kTargets      = 0x63C0;
@@ -62,6 +72,8 @@ const std::uint32_t kTagString    = 0x4487;
 const std::uint32_t kTagBinary    = 0x4485;
 const std::uint32_t kVoid         = 0xEC;
 const std::uint32_t kCRC32        = 0xBF;
+const std::uint32_t kCues         = 0x1C53BB6B;
+const std::uint32_t kCuePoint     = 0xBB;
 
 const std::uint32_t kPtoKind        = 0x1E54F001;
 const std::uint32_t kPtoEncoding    = 0x1E54F002;
@@ -78,6 +90,10 @@ const std::uint32_t kPtoTagUID      = 0x1E54F026;
 const std::uint32_t kPtoTagUIDs     = 0x1E54F027;
 const std::uint32_t kPtoTagFloats   = 0x1E54F028;
 const std::uint32_t kPtoTagInts     = 0x1E54F029;
+const std::uint32_t kPtoCueUID      = 0x1E54F030;
+const std::uint32_t kPtoCueEvent    = 0x1E54F031;
+const std::uint32_t kPtoCueOffset   = 0x1E54F032;
+const std::uint32_t kPtoCueTime     = 0x1E54F033;
 const std::uint32_t kPtoAnnotations = 0x1E54F100;
 const std::uint32_t kPtoAnnotation  = 0x1E54F101;
 const std::uint32_t kPtoAnnTarget   = 0x1E54F102;
@@ -159,6 +175,22 @@ struct Buf {
 
     void uint_elem(std::uint32_t id, std::uint64_t v) {
         const int n = uint_octets(v);
+        put_id(id); put_size(n); be(v, n);
+    }
+
+    /*!
+     * An unsigned integer written in a fixed number of octets, so the element
+     * has the same length whatever the value is.
+     *
+     * Needed wherever an element is **rewritten in place**. `uint_elem` packs
+     * to the smallest width that holds the value, which is right for a value
+     * written once; it is wrong for one that is written again later, because a
+     * smaller replacement leaves the tail of the old element behind and every
+     * following child is then read from the wrong offset. That is a silent
+     * corruption, not a failure: the next parse simply finds an empty
+     * PtoEncoding.
+     */
+    void uint_elem_fixed(std::uint32_t id, std::uint64_t v, int n) {
         put_id(id); put_size(n); be(v, n);
     }
     void int_elem(std::uint32_t id, long long v) {
@@ -306,10 +338,20 @@ private:
     std::FILE* f_ = nullptr;
 };
 
+/*!
+ * \brief A fresh object identity: 53 random bits, never zero.
+ *
+ * 53 and not 64, and the reason is not the format -- ``FileUID`` is a uint64 and
+ * stays one. It is that two of the four bindings represent every integer as a
+ * double, so a uid above 2^53 comes back from JavaScript or R as a *different
+ * number*, and an identity that does not survive being handed to the caller is
+ * not an identity. 9x10^15 values leaves the collision probability for a
+ * container with a million objects around 10^-4.
+ */
 std::uint64_t random_uid() {
     static std::mt19937_64 rng(std::random_device{}());
     std::uint64_t v = 0;
-    while (v == 0) v = rng();
+    while (v == 0) v = rng() >> 11;
     return v;
 }
 
@@ -339,6 +381,11 @@ struct PtoFile::Impl {
     std::vector<PtoTag> tags;
     std::vector<PtoAnnotation> notes;
 
+    /// One cue, plus the object it indexes. Flat rather than a map per uid:
+    /// there are thousands of these at most and they are written as a flat list.
+    struct CueEntry { std::uint64_t uid; PtoCue cue; };
+    std::vector<CueEntry> cuepoints;
+
     struct Slot {
         PtoObject meta;
         std::uint64_t elem_at = 0;      ///< the Attachments element header
@@ -356,6 +403,7 @@ struct PtoFile::Impl {
     std::uint64_t info_at = 0, info_bytes = 0;
     std::uint64_t tags_at = 0, tags_bytes = 0;
     std::uint64_t notes_at = 0, notes_bytes = 0;
+    std::uint64_t cues_at = 0, cues_bytes = 0;
 
     std::vector<std::pair<std::uint64_t, std::uint64_t> > freelist;
 
@@ -538,6 +586,108 @@ struct PtoFile::Impl {
         return e;
     }
 
+    /*!
+     * \brief The cue table, as Matroska's `Cues` holding Matroska's `CuePoint`s.
+     *
+     * The element ID is Matroska's because the job is Matroska's: an index that
+     * says where in a stream something is. What sits inside a CuePoint is ours,
+     * since Matroska's cues address a timecode in a track and these address an
+     * event ordinal in a payload.
+     */
+    Buf build_cuepoints() const {
+        Buf all;
+        for (std::size_t k = 0; k < cuepoints.size(); k++) {
+            const CueEntry& c = cuepoints[k];
+            Buf one;
+            one.uint_elem(kPtoCueUID, c.uid);
+            one.uint_elem(kPtoCueEvent, c.cue.event);
+            one.uint_elem(kPtoCueOffset, c.cue.offset);
+            if (c.cue.time != 0) one.uint_elem(kPtoCueTime, c.cue.time);
+            all.master(kCuePoint, one);
+        }
+        Buf e;
+        e.master(kCues, all);
+        return e;
+    }
+
+    /// Forget an object's cues. Anything that moves or rewrites a payload has
+    /// to: a cue into bytes that changed is worse than no cue at all.
+    void drop_cues(std::uint64_t uid) {
+        std::vector<CueEntry> keep;
+        for (std::size_t k = 0; k < cuepoints.size(); k++)
+            if (cuepoints[k].uid != uid) keep.push_back(cuepoints[k]);
+        if (keep.size() != cuepoints.size()) { cuepoints.swap(keep); dirty = true; }
+    }
+
+    /*!
+     * \brief Lay down one object: the header, then `n` payload bytes from `emit`.
+     *
+     * The one place an object is written. `emit` is handed the file positioned
+     * at the payload and writes exactly `n` bytes -- from a caller's buffer for
+     * \ref PtoFile::add, from another file for \ref PtoFile::add_file. The
+     * header is written first precisely so the payload can be streamed after
+     * it, and a gigabyte never goes through a buffer either way.
+     *
+     * \return the new object's uid, or 0.
+     */
+    std::uint64_t emit_object(const std::string& kind, const std::string& encoding,
+                              const std::string& name, std::uint64_t n,
+                              std::uint64_t reserve,
+                              const std::function<bool(File&)>& emit) {
+        err.clear();
+        if (!writable) { fail("opened read-only"); return 0; }
+
+        Slot s;
+        s.meta.uid = random_uid();
+        s.meta.kind = kind;
+        s.meta.encoding = encoding;
+        s.meta.name = name;
+        s.meta.size = n;
+
+        Buf head;
+        head.uint_elem_fixed(kFileUID, s.meta.uid, kUidOctets);
+        head.text_elem(kPtoKind, kind);
+        head.text_elem(kPtoEncoding, encoding);
+        if (!name.empty()) head.text_elem(kFileName, name);
+
+        const std::uint64_t att_payload =
+                head.b.size() + id_octets(kFileData) + kWideSize + n;
+        const std::uint64_t att_total = id_octets(kAttachedFile) + kWideSize + att_payload;
+        const std::uint64_t elem_total = id_octets(kAttachments) + kWideSize + att_total;
+
+        if (reserve != 0 && reserve < kMinVoid) reserve = kMinVoid;
+        const std::uint64_t at = allocate(elem_total + reserve);
+
+        Buf prefix;
+        prefix.put_id(kAttachments);
+        prefix.put_size(att_total, kWideSize);
+        prefix.put_id(kAttachedFile);
+        prefix.put_size(att_payload, kWideSize);
+        prefix.raw(head.b.data(), head.b.size());
+        prefix.put_id(kFileData);
+        prefix.put_size(n, kWideSize);
+
+        s.elem_at = at;
+        s.elem_bytes = elem_total;
+        s.seg_size_at = at + id_octets(kAttachments);
+        s.att_size_at = s.seg_size_at + kWideSize + id_octets(kAttachedFile);
+        s.data_size_at = at + prefix.b.size() - kWideSize;
+        s.meta.offset = at + prefix.b.size();
+
+        if (!f.at(at, prefix.b.data(), prefix.b.size()) || !emit(f)) {
+            fail(err.empty() ? "write failed" : err);
+            return 0;
+        }
+        if (reserve != 0 && !write_void(at + elem_total, reserve)) return 0;
+        s.slack_at = reserve ? at + elem_total : 0;
+        s.slack_bytes = reserve;
+        s.meta.capacity = n + reserve;
+
+        slots.push_back(s);
+        dirty = true;
+        return s.meta.uid;
+    }
+
     /// Rewrite one of the three metadata elements, in place if it still fits.
     bool place(const Buf& e, std::uint64_t* at, std::uint64_t* bytes) {
         const std::uint64_t need = e.b.size();
@@ -559,9 +709,10 @@ struct PtoFile::Impl {
 
     Buf build_seekhead(std::uint64_t gen) const {
         Buf seeks;
-        struct { std::uint32_t id; std::uint64_t at; } top[3] = {
-            {kInfo, info_at}, {kTags, tags_at}, {kPtoAnnotations, notes_at}};
-        for (int i = 0; i < 3; i++) {
+        struct { std::uint32_t id; std::uint64_t at; } top[4] = {
+            {kInfo, info_at}, {kTags, tags_at}, {kPtoAnnotations, notes_at},
+            {kCues, cues_at}};
+        for (int i = 0; i < 4; i++) {
             if (top[i].at == 0) continue;
             Buf s;
             Buf idb;
@@ -675,7 +826,9 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
         c.uint_elem(kEBMLMaxIDLength, 4);
         c.uint_elem(kEBMLMaxSizeLen, 8);
         c.text_elem(kDocType, "pto");
-        c.uint_elem(kDocTypeVersion, 1);
+        // 2 since cues exist; the READ version stays 1, because a cue is an
+        // element a 1.0 reader skips by size and is none the worse for missing.
+        c.uint_elem(kDocTypeVersion, 2);
         c.uint_elem(kDocTypeReadVer, 1);
         head.master(kEBML, c);
     }
@@ -764,8 +917,9 @@ bool PtoFile::open(const std::string& filename, bool writable) {
     m.tags.clear();
     m.notes.clear();
     m.freelist.clear();
-    m.info_at = m.tags_at = m.notes_at = 0;
-    m.info_bytes = m.tags_bytes = m.notes_bytes = 0;
+    m.cuepoints.clear();
+    m.info_at = m.tags_at = m.notes_at = m.cues_at = 0;
+    m.info_bytes = m.tags_bytes = m.notes_bytes = m.cues_bytes = 0;
 
     // EBML header, and the DocType that says this is ours.
     std::uint32_t id = 0;
@@ -1029,6 +1183,27 @@ bool PtoFile::open(const std::string& filename, bool writable) {
                 }
                 m.notes.push_back(a);
             }
+        } else if (c.id == kCues) {
+            m.cues_at = c.at; m.cues_bytes = c.total;
+            while (in.element(&eid, &ed, &en)) {
+                if (eid != kCuePoint) continue;
+                Impl::CueEntry e;
+                e.uid = 0;
+                Cursor cc{ed, static_cast<std::size_t>(en), 0};
+                std::uint32_t xid;
+                const unsigned char* xd;
+                std::uint64_t xn;
+                while (cc.element(&xid, &xd, &xn)) {
+                    switch (xid) {
+                        case kPtoCueUID: e.uid = get_uint(xd, xn); break;
+                        case kPtoCueEvent: e.cue.event = get_uint(xd, xn); break;
+                        case kPtoCueOffset: e.cue.offset = get_uint(xd, xn); break;
+                        case kPtoCueTime: e.cue.time = get_uint(xd, xn); break;
+                        default: break;
+                    }
+                }
+                if (e.uid != 0) m.cuepoints.push_back(e);
+            }
         } else {
             // Something a newer writer put here. Left where it is, untouched.
         }
@@ -1095,58 +1270,38 @@ std::uint64_t PtoFile::find(const std::string& name) const {
 std::uint64_t PtoFile::add(const std::string& kind, const std::string& encoding,
                            const std::string& name, const unsigned char* data,
                            std::size_t n, std::uint64_t reserve) {
+    return p_->emit_object(kind, encoding, name, n, reserve,
+                           [data, n](File& f) { return f.write(data, n); });
+}
+
+std::uint64_t PtoFile::add_file(const std::string& kind, const std::string& encoding,
+                                const std::string& name, const std::string& path,
+                                std::uint64_t reserve) {
     Impl& m = *p_;
     m.err.clear();
-    if (!m.writable) { m.fail("opened read-only"); return 0; }
 
-    Impl::Slot s;
-    s.meta.uid = random_uid();
-    s.meta.kind = kind;
-    s.meta.encoding = encoding;
-    s.meta.name = name;
-    s.meta.size = n;
+    std::error_code ec;
+    const std::uintmax_t n =
+            std::filesystem::file_size(std::filesystem::u8path(path), ec);
+    if (ec) { m.fail("cannot size " + path + ": " + ec.message()); return 0; }
 
-    // Everything but the payload, so the header can be written and the payload
-    // streamed after it -- a gigabyte never goes through a buffer.
-    Buf head;
-    head.uint_elem(kFileUID, s.meta.uid);
-    head.text_elem(kPtoKind, kind);
-    head.text_elem(kPtoEncoding, encoding);
-    if (!name.empty()) head.text_elem(kFileName, name);
+    File in;
+    if (!in.open(path, "rb")) { m.fail("cannot open " + path); return 0; }
 
-    const std::uint64_t att_payload = head.b.size() + id_octets(kFileData) + kWideSize + n;
-    const std::uint64_t att_total = id_octets(kAttachedFile) + kWideSize + att_payload;
-    const std::uint64_t elem_total = id_octets(kAttachments) + kWideSize + att_total;
-
-    if (reserve != 0 && reserve < kMinVoid) reserve = kMinVoid;
-    const std::uint64_t at = m.allocate(elem_total + reserve);
-
-    Buf prefix;
-    prefix.put_id(kAttachments);
-    prefix.put_size(att_total, kWideSize);
-    prefix.put_id(kAttachedFile);
-    prefix.put_size(att_payload, kWideSize);
-    prefix.raw(head.b.data(), head.b.size());
-    prefix.put_id(kFileData);
-    prefix.put_size(n, kWideSize);
-
-    s.elem_at = at;
-    s.elem_bytes = elem_total;
-    s.seg_size_at = at + id_octets(kAttachments);
-    s.att_size_at = s.seg_size_at + kWideSize + id_octets(kAttachedFile);
-    s.data_size_at = at + prefix.b.size() - kWideSize;
-    s.meta.offset = at + prefix.b.size();
-
-    if (!m.f.at(at, prefix.b.data(), prefix.b.size()) ||
-        !m.f.write(data, n)) { m.fail("write failed"); return 0; }
-    if (reserve != 0 && !m.write_void(at + elem_total, reserve)) return 0;
-    s.slack_at = reserve ? at + elem_total : 0;
-    s.slack_bytes = reserve;
-    s.meta.capacity = n + reserve;
-
-    m.slots.push_back(s);
-    m.dirty = true;
-    return s.meta.uid;
+    // The only difference from add: where the bytes come from. In blocks, so
+    // embedding a four-gigabyte instrument file costs a megabyte of memory.
+    return m.emit_object(kind, encoding, name, n, reserve, [&](File& out) {
+        std::vector<unsigned char> chunk(1u << 20);
+        std::uint64_t left = n;
+        while (left > 0) {
+            const std::size_t take =
+                    static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
+            if (!in.read(chunk.data(), take)) return m.fail("could not read " + path);
+            if (!out.write(chunk.data(), take)) return m.fail("write failed");
+            left -= take;
+        }
+        return true;
+    });
 }
 
 bool PtoFile::update(std::uint64_t uid, const unsigned char* data, std::size_t n) {
@@ -1155,6 +1310,8 @@ bool PtoFile::update(std::uint64_t uid, const unsigned char* data, std::size_t n
     if (!m.writable) return m.fail("opened read-only");
     Impl::Slot* s = m.find(uid);
     if (s == nullptr) return m.fail("no object with that uid");
+    // Whatever the old cues pointed at is about to stop being there.
+    m.drop_cues(uid);
 
     // Patching a size where it lies only works if it was written wide enough to
     // hold a bigger number. A file from a writer that packed its sizes tightly
@@ -1214,7 +1371,7 @@ bool PtoFile::update(std::uint64_t uid, const unsigned char* data, std::size_t n
     fresh->meta.rows = old.rows;
     // The uid is inside the element, so it has to be rewritten there too.
     Buf u;
-    u.uint_elem(kFileUID, keep_uid);
+    u.uint_elem_fixed(kFileUID, keep_uid, kUidOctets);
     const std::uint64_t uid_at = fresh->att_size_at + kWideSize;
     if (!m.f.at(uid_at, u.b.data(), u.b.size())) return m.fail("write failed");
     m.dirty = true;
@@ -1229,6 +1386,7 @@ bool PtoFile::remove(std::uint64_t uid) {
         if (m.slots[i].meta.uid != uid) continue;
         m.release(m.slots[i].elem_at, m.slots[i].elem_bytes + m.slots[i].slack_bytes);
         m.slots.erase(m.slots.begin() + i);
+        m.drop_cues(uid);
         m.dirty = true;
         return true;
     }
@@ -1247,28 +1405,63 @@ std::vector<unsigned char> PtoFile::read(std::uint64_t uid) const {
     return out;
 }
 
-bool PtoFile::extract(std::uint64_t uid, const std::string& filename) const {
+std::size_t PtoFile::read_at(std::uint64_t uid, std::uint64_t at,
+                             void* into, std::size_t n) const {
+    Impl& m = *p_;
+    const Impl::Slot* s = m.find(uid);
+    if (s == nullptr || at >= s->meta.size || n == 0) return 0;
+    // Short at the end rather than an error, because that is what a read of a
+    // file does and a payload is a file that happens to live inside another.
+    const std::uint64_t left = s->meta.size - at;
+    const std::size_t take = n < left ? n : static_cast<std::size_t>(left);
+    m.f.flush();
+    if (!m.f.seek(s->meta.offset + at) || !m.f.read(into, take)) return 0;
+    return take;
+}
+
+bool PtoFile::stream(std::uint64_t uid,
+                     const std::function<bool(const void*, std::size_t)>& sink) const {
     Impl& m = *p_;
     m.err.clear();
     const Impl::Slot* s = m.find(uid);
     if (s == nullptr) return m.fail("no object with that uid");
-
-    File out;
-    if (!out.open(filename, "wb")) return m.fail("cannot create " + filename);
+    m.f.flush();
     if (!m.f.seek(s->meta.offset)) return m.fail("cannot reach the payload");
 
-    // In blocks, so an eight-gigabyte stream costs eight gigabytes of disk and
-    // a few kilobytes of memory rather than both.
+    // In blocks, so an eight-gigabyte stream costs a megabyte of memory
+    // whatever the sink does with it.
     std::vector<unsigned char> chunk(1u << 20);
     std::uint64_t left = s->meta.size;
     while (left > 0) {
         const std::size_t take =
                 static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
-        if (!m.f.read(chunk.data(), take) || !out.write(chunk.data(), take))
-            return m.fail("could not copy the payload of " + std::to_string(uid));
+        if (!m.f.read(chunk.data(), take))
+            return m.fail("could not read the payload of " + std::to_string(uid));
+        if (!sink(chunk.data(), take)) return false;
         left -= take;
     }
     return true;
+}
+
+std::vector<unsigned char> PtoFile::read(std::uint64_t uid, std::uint64_t at,
+                                         std::size_t n) const {
+    if (p_->find(uid) == nullptr) throw std::runtime_error("no object with that uid");
+    std::vector<unsigned char> out(n);
+    out.resize(read_at(uid, at, out.empty() ? nullptr : out.data(), n));
+    return out;
+}
+
+bool PtoFile::extract(std::uint64_t uid, const std::string& filename) const {
+    Impl& m = *p_;
+    m.err.clear();
+    if (m.find(uid) == nullptr) return m.fail("no object with that uid");
+
+    File out;
+    if (!out.open(filename, "wb")) return m.fail("cannot create " + filename);
+    return stream(uid, [&](const void* block, std::size_t n) {
+        if (out.write(block, n)) return true;
+        return m.fail("could not copy the payload of " + std::to_string(uid));
+    });
 }
 
 std::vector<std::string> PtoFile::disassemble(const std::string& directory) const {
@@ -1322,6 +1515,17 @@ void PtoFile::add_annotation(const PtoAnnotation& note) {
 }
 void PtoFile::clear_annotations() { p_->notes.clear(); p_->dirty = true; }
 
+std::vector<PtoCue> PtoFile::cues(std::uint64_t uid) const {
+    std::vector<PtoCue> out;
+    for (std::size_t i = 0; i < p_->cuepoints.size(); i++)
+        if (p_->cuepoints[i].uid == uid) out.push_back(p_->cuepoints[i].cue);
+    std::sort(out.begin(), out.end(),
+              [](const PtoCue& a, const PtoCue& b) { return a.event < b.event; });
+    return out;
+}
+
+void PtoFile::clear_cues(std::uint64_t uid) { p_->drop_cues(uid); }
+
 std::vector<PtoExtent> PtoFile::free_extents() const {
     std::vector<PtoExtent> out;
     out.reserve(p_->freelist.size());
@@ -1349,6 +1553,9 @@ bool PtoFile::commit() {
     Buf notes = m.build_notes();
     if (!m.notes.empty() || m.notes_at != 0)
         if (!m.place(notes, &m.notes_at, &m.notes_bytes)) return false;
+    Buf cues = m.build_cuepoints();
+    if (!m.cuepoints.empty() || m.cues_at != 0)
+        if (!m.place(cues, &m.cues_at, &m.cues_bytes)) return false;
 
     if (!m.patch_segment_size()) return m.fail("write failed");
     m.f.flush();
@@ -1382,12 +1589,15 @@ bool PtoFile::compact(const std::string& to) {
         s->meta.uid = o.uid;
         s->meta.rows = o.rows;
         Buf u;
-        u.uint_elem(kFileUID, o.uid);
+        u.uint_elem_fixed(kFileUID, o.uid, kUidOctets);
         if (!out.p_->f.at(s->att_size_at + kWideSize, u.b.data(), u.b.size()))
             return m.fail("write failed");
     }
     out.set_tags(m.tags);
     for (std::size_t i = 0; i < m.notes.size(); i++) out.add_annotation(m.notes[i]);
+    // Cues survive: they address a byte offset INTO a payload, and compaction
+    // moves payloads without changing one of them.
+    out.p_->cuepoints = m.cuepoints;
     return out.commit() ? true : m.fail(out.error());
 }
 
@@ -1410,7 +1620,7 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     s.meta.rows = store.n_rows();
 
     Buf head;
-    head.uint_elem(kFileUID, s.meta.uid);
+    head.uint_elem_fixed(kFileUID, s.meta.uid, kUidOctets);
     head.text_elem(kPtoKind, kind);
     head.text_elem(kPtoEncoding, "dstore");
     if (!name.empty()) head.text_elem(kFileName, name);
@@ -1497,15 +1707,55 @@ void pto_mark_sidecar(PtoFile& file, std::uint64_t uid, std::uint64_t primary) {
     file.add_tag(t);
 }
 
-void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out) {
+PtoObject pto_store_region(const PtoFile& file, std::uint64_t uid) {
     const PtoFile::Impl& m = *file.p_;
     const PtoFile::Impl::Slot* s = m.find(uid);
     if (s == nullptr) throw std::runtime_error("no object with that uid");
     if (s->meta.encoding != "dstore")
         throw std::runtime_error("object " + std::to_string(uid) + " is encoded as '" +
                                  s->meta.encoding + "', not 'dstore'");
+    // Not incidental: a store added in this session may still be in the stdio
+    // buffer, and the store reader opens the path again rather than sharing
+    // this handle.
     const_cast<File&>(m.f).flush();
-    read_store_into(out, m.path, s->meta.offset, s->meta.size);
+    return s->meta;
+}
+
+void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out) {
+    const PtoObject o = pto_store_region(file, uid);
+    read_store_into(out, file.filename(), o.offset, o.size);
+}
+
+void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out,
+                    const std::vector<std::string>& columns) {
+    const PtoObject o = pto_store_region(file, uid);
+    read_store_into(out, file.filename(), o.offset, o.size, columns);
+}
+
+void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out,
+                    const std::vector<std::string>& columns,
+                    std::uint64_t first_row, std::uint64_t n_rows) {
+    const PtoObject o = pto_store_region(file, uid);
+    read_store_into(out, file.filename(), o.offset, o.size, columns, first_row, n_rows);
+}
+
+std::vector<std::string> pto_store_columns(const PtoFile& file, std::uint64_t uid,
+                                           const std::string& group) {
+    try {
+        const PtoObject o = pto_store_region(file, uid);
+        return store_columns(file.filename(), o.offset, o.size, group);
+    } catch (const std::exception&) {
+        return std::vector<std::string>();
+    }
+}
+
+std::vector<std::string> pto_store_groups(const PtoFile& file, std::uint64_t uid) {
+    try {
+        const PtoObject o = pto_store_region(file, uid);
+        return store_groups(file.filename(), o.offset, o.size);
+    } catch (const std::exception&) {
+        return std::vector<std::string>();
+    }
 }
 
 // --- probing --------------------------------------------------------------------
@@ -1616,6 +1866,215 @@ bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
                               sidecar_text(file, o.uid)) != 0;
 }
 
+}  // namespace
+
+// --- cues, and positioning in a photon stream ---------------------------------
+
+std::uint64_t PtoFile::build_cues(std::uint64_t uid, std::uint64_t every_n_events) {
+    Impl& m = *p_;
+    m.err.clear();
+    const Impl::Slot* s = m.find(uid);
+    if (s == nullptr) { m.fail("no object with that uid"); return 0; }
+    if (every_n_events == 0) { m.fail("a cue spacing of zero indexes nothing"); return 0; }
+    const int container = container_for(s->meta.encoding);
+    if (container < 0) {
+        m.fail("object " + std::to_string(uid) + " is encoded as '" + s->meta.encoding +
+               "', which is not a record stream this build can index");
+        return 0;
+    }
+    const std::uint64_t payload_at = s->meta.offset, payload_bytes = s->meta.size;
+    m.f.flush();
+
+    // The header says how wide a record is and how to decode one; nothing else
+    // is read here, and no events are materialised.
+    TTTR probe;
+    if (!probe.open_embedded(m.path.c_str(), container, payload_at, payload_bytes,
+                             sidecar_text(*this, uid))) {
+        m.fail("could not read the header of object " + std::to_string(uid));
+        return 0;
+    }
+    const std::size_t width = probe.get_header()->get_bytes_per_record();
+    const std::uint64_t records_at = probe.get_records_begin();
+    const std::uint64_t n_records = probe.n_records_in_file;
+    const int record_type = probe.get_tttr_record_type();
+    if (width == 0 || n_records == 0) { m.fail("the object holds no records"); return 0; }
+
+    File in;
+    if (!in.open(m.path, "rb") || !in.seek(records_at))
+        { m.fail("cannot reach the records of " + std::to_string(uid)); return 0; }
+
+    const std::size_t kChunk = 1u << 16;
+    std::vector<signed char> raw(kChunk * width);
+    std::vector<unsigned long long> macro(kChunk);
+    std::vector<unsigned short> micro(kChunk);
+    std::vector<signed char> chan(kChunk), type(kChunk);
+
+    std::vector<Impl::CueEntry> made;
+    std::uint64_t overflow = 0, events = 0, next_cue = 0, done = 0;
+    while (done < n_records) {
+        const std::size_t take =
+                static_cast<std::size_t>(n_records - done < kChunk ? n_records - done : kChunk);
+        if (!in.read(raw.data(), take * width)) break;
+
+        // Whole chunk first: if no cue falls in it, the per-record walk below is
+        // wasted work, and on a 10^9-event stream at one cue per 10^6 that is
+        // the overwhelming majority of chunks.
+        const std::uint64_t overflow_before = overflow;
+        std::size_t valid = 0;
+        if (!dispatch_process_records_batch(record_type, raw.data(), take, width,
+                                            overflow, macro.data(), micro.data(),
+                                            chan.data(), type.data(), valid)) {
+            m.fail("this build cannot decode record type " + std::to_string(record_type));
+            return 0;
+        }
+        if (events + valid <= next_cue) { events += valid; done += take; continue; }
+
+        // A cue lands in here somewhere, so walk it a record at a time to find
+        // which record made which event.
+        overflow = overflow_before;
+        for (std::size_t r = 0; r < take; r++) {
+            std::size_t one = 0;
+            dispatch_process_records_batch(record_type, raw.data() + r * width, 1, width,
+                                           overflow, macro.data(), micro.data(),
+                                           chan.data(), type.data(), one);
+            if (one == 0) continue;
+            if (events == next_cue) {
+                Impl::CueEntry e;
+                e.uid = uid;
+                e.cue.event = events;
+                e.cue.offset = records_at + (done + r) * width - payload_at;
+                e.cue.time = macro[0];
+                made.push_back(e);
+                next_cue += every_n_events;
+            }
+            events++;
+        }
+        done += take;
+    }
+
+    m.drop_cues(uid);
+    for (std::size_t i = 0; i < made.size(); i++) m.cuepoints.push_back(made[i]);
+    m.dirty = true;
+    return made.size();
+}
+
+namespace {
+
+/*!
+ * \brief The cue at or before `event`, and the one at or after `end`.
+ *
+ * "At or before" is the whole discipline: a cue is advisory, so a decode starts
+ * no later than the truth and walks forward to it. A cue that is wrong then
+ * costs time and cannot cost correctness.
+ */
+void bracket(const std::vector<PtoCue>& cues, std::uint64_t first, std::uint64_t end,
+             PtoCue* from, bool* have_from, std::uint64_t* stop_at) {
+    *have_from = false;
+    *stop_at = 0;
+    for (std::size_t i = 0; i < cues.size(); i++) {
+        if (cues[i].event <= first && (!*have_from || cues[i].event > from->event)) {
+            *from = cues[i];
+            *have_from = true;
+        }
+    }
+    if (end == 0) return;
+    for (std::size_t i = 0; i < cues.size(); i++) {
+        if (cues[i].event >= end && (*stop_at == 0 || cues[i].offset < *stop_at))
+            *stop_at = cues[i].offset;
+    }
+}
+
+/*!
+ * \brief Trim a decoded TTTR down to events [`skip`, `skip` + `want`).
+ *
+ * A decode that started at a cue overshoots at both ends by construction; this
+ * is where the caller's actual range is cut out of it.
+ */
+void keep_range(TTTR* t, std::uint64_t skip, std::uint64_t want) {
+    const std::size_t have = t->size();
+    if (skip == 0 && (want == 0 || want >= have)) return;
+    const std::size_t from = skip < have ? static_cast<std::size_t>(skip) : have;
+    const std::size_t left = have - from;
+    const std::size_t take = (want == 0 || want > left) ? left : static_cast<std::size_t>(want);
+    std::vector<int> keep(take);
+    for (std::size_t i = 0; i < take; i++) keep[i] = static_cast<int>(from + i);
+    TTTR cut(*t, keep.empty() ? nullptr : keep.data(), static_cast<int>(keep.size()), false);
+    t->copy_from(cut, true);
+}
+
+}  // namespace
+
+int pto_read_events(const std::string& spec, std::uint64_t first_event,
+                    std::uint64_t n_events, ::TTTR* out) {
+    const std::string path = subfile_path(spec);
+    const std::string selector = subfile_selector(spec);
+
+    PtoFile file;
+    if (!file.open(path)) {
+        std::cerr << "pto: " << file.error() << std::endl;
+        return 0;
+    }
+
+    const std::vector<PtoObject> all = file.objects();
+    const PtoObject* chosen = nullptr;
+    for (std::size_t i = 0; i < all.size(); i++) {
+        if (!holds_photons(all[i])) continue;
+        if (!selector.empty() && all[i].name != selector &&
+            std::to_string(all[i].uid) != selector) continue;
+        chosen = &all[i];
+        break;
+    }
+    if (chosen == nullptr) {
+        std::cerr << "pto: " << path << " holds no photon data"
+                  << (selector.empty() ? "" : " called '" + selector + "'") << std::endl;
+        return 0;
+    }
+
+    const int container = container_for(chosen->encoding);
+    const std::uint64_t end = n_events == 0 ? 0 : first_event + n_events;
+    const std::vector<PtoCue> cues = file.cues(chosen->uid);
+
+    // A dstore payload is not a record stream, and a container with no cues has
+    // nothing to seek by. Both decode the whole object and slice it -- correct,
+    // and exactly as slow as it was before cues existed.
+    PtoCue from;
+    bool have_from = false;
+    std::uint64_t stop_at = 0;
+    if (container >= 0) bracket(cues, first_event, end, &from, &have_from, &stop_at);
+    if (container < 0 || !have_from || from.event == 0) {
+        if (!read_one(file, path, *chosen, out)) return 0;
+        keep_range(out, first_event, n_events);
+        out->find_used_routing_channels();
+        return 1;
+    }
+
+    const std::uint64_t records_at = chosen->offset + from.offset;
+    const std::uint64_t records_end = stop_at == 0 ? 0 : chosen->offset + stop_at;
+    if (!out->read_embedded_range(path.c_str(), container, chosen->offset, chosen->size,
+                                  records_at, records_end,
+                                  sidecar_text(file, chosen->uid)))
+        return 0;
+
+    /*
+     * The overflow count at the cue is not in the records, so a decode that
+     * starts there reports macro times short by however many overflows came
+     * before. The cue's own macro time is what closes that gap: the first event
+     * decoded IS the cue's event, so the difference between what it should be
+     * and what it came out as applies to every event after it.
+     */
+    if (out->size() > 0 && from.time > out->get_macro_time_at(0)) {
+        const unsigned long long delta = from.time - out->get_macro_time_at(0);
+        const std::size_t n = out->size();
+        for (std::size_t i = 0; i < n; i++)
+            out->set_macro_time_at(i, out->get_macro_time_at(i) + delta);
+    }
+    keep_range(out, first_event - from.event, n_events);
+    out->find_used_routing_channels();
+    return 1;
+}
+
+namespace {
+
 /*!
  * \brief Read the photon data of a container into a TTTR. \see FileFormat::read_into.
  *
@@ -1632,6 +2091,21 @@ int read_pto_into_tttr(void*, const char* spec_c, void* tttr) {
     const std::string spec = spec_c == nullptr ? "" : spec_c;
     const std::string path = subfile_path(spec);
     const std::string selector = subfile_selector(spec);
+
+    // A range asked for through the reader-parameter mechanism, which is how a
+    // binding reaches pto_read_events without a TTTR constructor that would be
+    // ambiguous with the four it already has.
+    {
+        const std::string params = out->get_container_parameters();
+        if (params.find_first_not_of(" \t\r\n") != std::string::npos) {
+            const nlohmann::json j = nlohmann::json::parse(params, nullptr, false);
+            if (j.is_object() && (j.contains("first_event") || j.contains("n_events"))) {
+                const std::uint64_t first = j.value("first_event", std::uint64_t(0));
+                const std::uint64_t n = j.value("n_events", std::uint64_t(0));
+                return pto_read_events(spec, first, n, out);
+            }
+        }
+    }
 
     PtoFile file;
     if (!file.open(path)) {
@@ -1688,6 +2162,23 @@ struct RegisterPto {
         f.extensions.push_back("pto");
         f.canonical_extension = "pto";
         f.sniff = [](const std::string& fn) { return is_pto_file(fn); };
+        // The one container that takes a range, because it is the one that can
+        // be indexed. See PtoFile::build_cues; without cues these still work
+        // and cost a full decode.
+        f.parameters_schema = R"({
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "first_event": {
+      "type": "integer", "title": "First event", "default": 0, "minimum": 0,
+      "description": "Skip this many events of the photon object before reading. With cues built over the object the decode starts at the nearest cue at or before it; without them the payload is decoded whole and sliced."
+    },
+    "n_events": {
+      "type": "integer", "title": "Events to read", "default": 0, "minimum": 0,
+      "description": "How many events to read, or 0 for all of them from first_event on."
+    }
+  }
+})";
         f.can_read = true;
         f.can_write = false;
         IORegistry::add(f);
