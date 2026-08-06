@@ -8,6 +8,8 @@
 #include "pocketfft/pocketfft_hdronly.h"
 #include <complex>
 #include <cmath>
+#include <algorithm>
+#include <cstring>
 #include "HistogramAxis.h"   // HistogramBinning -- one binning rule, not two
 
 // Runtime AVX/FMA control (CPU detection + TTTRLIB_USE_AVX/FMA env overrides).
@@ -78,6 +80,11 @@ static double pda_dot_neon(const double* a, const double* b, size_t n) {
 
 // Runtime-dispatched dot product (AVX+FMA on x86, NEON on AArch64, scalar
 // fallback everywhere).
+//
+// conv_pF runs this per output cell rather than sweeping kernel-tap-outermost
+// over whole rows. Tap-outer was measured and is ~1.25x SLOWER: it stores every
+// output element once per tap, where the dot keeps the accumulator in a
+// register and stores once. Do not "optimize" it back.
 static inline double pda_dot(const double* a, const double* b, size_t n) {
 #if TTTRLIB_COMPILE_AVX
     if (g_pda_use_avx && g_pda_use_fma) return pda_dot_avx(a, b, n);
@@ -104,10 +111,9 @@ static inline void pda_propagate_row(double* cur, const double* pre, size_t row,
     }
 }
 
-// Computes one species' contribution to the FgFr matrix: binomially splits
-// pF over the two channels with per-channel probability p and accumulates
-// with amplitude a. tmp is caller-provided (Nmax+1)^2 scratch; every element
-// read is written first, so it needs no re-zeroing between species.
+// One species' contribution to FgFr: binomial split of pF, scaled by a.
+// tmp is (Nmax+1)^2 scratch, reused across calls -- see the zeroing note below.
+// Layout everywhere here: M[ch1 * (Nmax+1) + ch2], row is channel 1.
 static void pda_accumulate_species(
         std::vector<double>& FgFr,
         std::vector<double>& tmp,
@@ -115,23 +121,29 @@ static void pda_accumulate_species(
         const std::vector<double>& pF,
         unsigned int Nmax
 ) {
+    if (a == 0.0) return;   // contributes nothing
+    // Row r holds entries 0..r, but propagating row r+1 reads pre[r+1] -- one
+    // past the diagonal, which must read as zero. Zero that single slot per
+    // row instead of re-zeroing the whole (Nmax+1)^2 buffer.
     tmp[0] = 1.;
-    // Propagate the probabilities to other matrix rows
+    if (Nmax >= 1) tmp[1] = 0.;
     for (size_t row = 1; row <= Nmax; row++) {
         // marks beginning of current and previous matrix row
         size_t row_offset_cur = (row + 0) * (Nmax + 1);
         size_t row_offset_pre = (row - 1) * (Nmax + 1);
         tmp[row_offset_cur + 0] = tmp[row_offset_pre + 0] * p;
         pda_propagate_row(&tmp[row_offset_cur], &tmp[row_offset_pre], row, p);
+        if (row < Nmax) tmp[row_offset_cur + row + 1] = 0.;
     }
-    for (size_t row = 0; row < Nmax; row++) {
+    // Scatter each binomial row onto the anti-diagonal ch1 + ch2 == row.
+    // Both bounds inclusive -- red < Nmax drops the all-red corner.
+    for (size_t row = 0; row <= Nmax; row++) {
+        const double w = a * pF[row];
+        if (w == 0.0) continue;   // empty photon-count bin
+        const double* src = &tmp[row * (Nmax + 1)];
         for (size_t red = 0; red <= row; red++)
-            FgFr[(row - red) * (Nmax + 1) + red] +=
-                    tmp[row * (Nmax + 1) + red] * a * pF[row];
+            FgFr[(row - red) * (Nmax + 1) + red] += src[red] * w;
     }
-    for (size_t red = 0; red < Nmax; red++)
-        FgFr[(Nmax - red) * (Nmax + 1) + red] +=
-                tmp[Nmax * (Nmax + 1) + red] * a * pF[Nmax];
 }
 
 static int good_fft_size(int Nmax);
@@ -141,7 +153,7 @@ static int good_fft_size(int Nmax);
 // For every row r of `in` computes conv(in[r,:], kernel) and writes result k
 // to out[(Nmax+1)*k + r] (transposed, matching conv_pF's access pattern),
 // restricted to the triangle k + r <= Nmax.
-static void pda_conv_rows_fft(
+static void pda_conv_fft(
         std::vector<double>& out,
         const std::vector<double>& in,
         const std::vector<double>& kernel,
@@ -159,14 +171,16 @@ static void pda_conv_rows_fft(
     for (size_t row = 0; row < n; row++) {
         std::fill(buf.begin(), buf.end(), std::complex<double>(0.0, 0.0));
         const double* src = &in[n * row];
-        for (size_t i = 0; i < n; i++) buf[i] = src[i];
+        // Only i + row <= Nmax is populated; the rest of the row is scratch.
+        // An FFT smears a stray NaN there across every output bin.
+        for (size_t i = 0; i + row <= Nmax; i++) buf[i] = src[i];
         pocketfft::c2c(shape, stride, stride, axes, true, buf.data(), buf.data(), 1.0);
         for (size_t i = 0; i < M; i++) buf[i] *= K[i];
         pocketfft::c2c(shape, stride, stride, axes, false, buf.data(), buf.data(), 1.0 / M);
         for (size_t k = 0; k + row <= Nmax; k++) {
             // clamp spectral round-off: probabilities must stay non-negative
             // (downstream MLE takes log of these values)
-            double v = buf[k].real();
+            const double v = buf[k].real();
             out[n * k + row] = v < 0.0 ? 0.0 : v;
         }
     }
@@ -200,17 +214,14 @@ if (is_verbose()) {
                          "differ in size - did not update S1S2!";
         }
     }
-    if(s1s2.empty()){
-        if (is_verbose()) {
-            std::clog << "-- Using model s1s2 matrix! " << std::endl;
-        }
-        s1s2 = _S1S2;
-    } else {
-        if (is_verbose()) {
-            std::clog << "-- Using input s1s2 matrix! " << std::endl;
-        }
+    // Bind, don't copy -- 723 kB at Nmax=300, once per fit iteration.
+    if(s1s2.empty() && !_is_valid_sgsr) evaluate();
+    const std::vector<double>& src = s1s2.empty() ? _S1S2 : s1s2;
+    if (is_verbose()) {
+        std::clog << (s1s2.empty() ? "-- Using model s1s2 matrix! "
+                                   : "-- Using input s1s2 matrix! ") << std::endl;
     }
-    int n_max = (int) std::sqrt(s1s2.size()) - 1;
+    int n_max = (int) std::sqrt((double) src.size()) - 1;
 
     (*n_histogram_x) = n_bins;
     (*n_histogram_y) = n_bins;
@@ -236,49 +247,116 @@ if (is_verbose()) {
     std::clog << "-- bin_width: " << bin_width << std::endl;
 }
 
-    int ch1, ch2, first_ch2, bin;
     // histogram X
-    for (bin = 0; bin < n_bins; bin++)
+    for (int bin = 0; bin < n_bins; bin++)
         (*histogram_x)[bin] = log_x ?
                               exp(log(x_min) + bin_width * (double) bin) :
                               x_min + bin_width * (double) bin;
-    // histogram Y
-    for (bin = 0; bin < n_bins; bin++) (*histogram_y)[bin] = 0.;
+    build_hist1d_cache(axis, n_max, n_min, first_photon, x_max, x_min,
+                       n_bins, log_x, skip_zero_photon);
+    project_s1s2(src, n_max, n_min, first_photon, n_bins, *histogram_y);
+}
+
+
+void Pda::build_hist1d_cache(
+        const HistogramBinning<double>& axis,
+        int n_max, int n_min, int first_photon,
+        double x_max, double x_min, int n_bins, bool log_x,
+        bool skip_zero_photon
+) {
     // The callback value of a cell (ch1, ch2) is independent of the model
     // amplitudes/probabilities, so the target bin of every visited cell is
     // cached across calls (fit iterations). set_callback and any change of
     // the binning parameters invalidate the cache.
-    bool cache_ok = _hist1d_valid
+    if (_hist1d_valid
             && _hist1d_xmax == x_max && _hist1d_xmin == x_min
             && _hist1d_nbins == n_bins && _hist1d_logx == log_x
             && _hist1d_nmax == n_max && _hist1d_nmin == n_min
-            && _hist1d_skip == skip_zero_photon;
-    if (!cache_ok) {
-        _hist1d_bin_cache.assign((size_t)(n_max + 1) * (n_max + 1), -1);
-        for (ch1 = first_photon; ch1 <= n_max; ch1++) {
-            first_ch2 = ch1 > n_min ? 1 : n_min - ch1;
-            for (ch2 = first_ch2; ch2 <= n_max - ch1; ch2++) {
-                const int bin_idx = axis.bin_of(_histogram_function->run(ch1, ch2));
-                if (bin_idx >= 0) {
-                    _hist1d_bin_cache[ch2 * (n_max + 1) + ch1] = bin_idx;
-                }
-            }
-        }
-        _hist1d_xmax = x_max; _hist1d_xmin = x_min;
-        _hist1d_nbins = n_bins; _hist1d_logx = log_x;
-        _hist1d_nmax = n_max; _hist1d_nmin = n_min;
-        _hist1d_skip = skip_zero_photon;
-        _hist1d_valid = true;
-    }
-    for (ch1 = first_photon; ch1 <= n_max; ch1++) {
-        first_ch2 = ch1 > n_min ? 1 : n_min - ch1;
-        for (ch2 = first_ch2; ch2 <= n_max - ch1; ch2++) {
-            bin = _hist1d_bin_cache[ch2 * (n_max + 1) + ch1];
-            if (bin >= 0) {
-                (*histogram_y)[bin] += s1s2[ch2 * (n_max + 1) + ch1];
-            }
+            && _hist1d_skip == skip_zero_photon) return;
+    // Visit cells with n_min <= ch1 + ch2 <= n_max, both channels non-zero if
+    // skipping. max() so ch1 == n_min obeys skip_zero_photon too.
+    //
+    // COMPACT: one entry per visited cell in row-major visit order, not one
+    // per matrix cell. Off-axis cells get bin n_bins, a trash slot, so the
+    // projection has no branch and both its streams are contiguous.
+    _hist1d_bins.clear();
+    _hist1d_bins.reserve((size_t)(n_max + 1) * (n_max + 2) / 2);
+    for (int ch1 = first_photon; ch1 <= n_max; ch1++) {
+        for (int ch2 = std::max(first_photon, n_min - ch1); ch2 <= n_max - ch1; ch2++) {
+            const int bin_idx = axis.bin_of(_histogram_function->run(ch1, ch2));
+            _hist1d_bins.push_back(bin_idx >= 0 ? bin_idx : n_bins);
         }
     }
+    _hist1d_xmax = x_max; _hist1d_xmin = x_min;
+    _hist1d_nbins = n_bins; _hist1d_logx = log_x;
+    _hist1d_nmax = n_max; _hist1d_nmin = n_min;
+    _hist1d_skip = skip_zero_photon;
+    _hist1d_valid = true;
+}
+
+
+void Pda::project_s1s2(
+        const std::vector<double>& src,
+        int n_max, int n_min, int first_photon, int n_bins,
+        double* out
+) const {
+    // Row is ch1, as the model matrix is built. Reading this transposed
+    // mirrors the projected axis (E <-> 1 - E).
+    std::vector<double> acc(n_bins + 1, 0.0);   // last slot is the trash bin
+    const int* bins = _hist1d_bins.data();
+    for (int ch1 = first_photon; ch1 <= n_max; ch1++) {
+        const int first_ch2 = std::max(first_photon, n_min - ch1);
+        const int len = n_max - ch1 - first_ch2 + 1;
+        if (len <= 0) continue;
+        const double* s = &src[(size_t) ch1 * (n_max + 1) + first_ch2];
+        for (int k = 0; k < len; k++) acc[bins[k]] += s[k];
+        bins += len;
+    }
+    std::memcpy(out, acc.data(), (size_t) n_bins * sizeof(double));
+}
+
+
+void Pda::get_1dhistogram_per_species(
+        double **histogram_x, int *n_histogram_x,
+        double **output, int *n_output1, int *n_output2,
+        double x_max, double x_min, int n_bins, bool log_x,
+        int n_min, bool skip_zero_photon
+) {
+    const int n_species = (int) _probability_ch1.size();
+    const unsigned int Nmax = get_max_number_of_photons();
+    const int n_max = (int) Nmax;
+    if(pF.size() < Nmax + 1) pF.resize(Nmax + 1, 0.0);
+    n_min = n_min < 0 ? (int) _n_2d_min : n_min;
+    const int first_photon = skip_zero_photon;
+
+    const HistogramBinning<double> axis =
+            HistogramBinning<double>::centered(x_min, x_max, n_bins, log_x);
+    const double bin_width = log_x ?
+                       (log(x_max) - log(x_min)) / ((double) n_bins - 1) :
+                       (x_max - x_min) / ((double) n_bins - 1.);
+    *n_histogram_x = n_bins;
+    *histogram_x = (double*) calloc(sizeof(double), n_bins);
+    for (int bin = 0; bin < n_bins; bin++)
+        (*histogram_x)[bin] = log_x ?
+                              exp(log(x_min) + bin_width * (double) bin) :
+                              x_min + bin_width * (double) bin;
+
+    build_hist1d_cache(axis, n_max, n_min, first_photon, x_max, x_min,
+                       n_bins, log_x, skip_zero_photon);
+
+    *n_output1 = n_species;
+    *n_output2 = n_bins;
+    auto* rows = (double*) calloc((size_t) std::max(1, n_species) * n_bins, sizeof(double));
+    std::vector<double> one_s1s2((size_t)(Nmax + 1) * (Nmax + 1));
+    std::vector<double> one_amp(1, 1.0), one_p(1, 0.0);
+    for (int i = 0; i < n_species; i++) {
+        one_p[0] = _probability_ch1[i];
+        std::fill(one_s1s2.begin(), one_s1s2.end(), 0.0);
+        S1S2_pF(one_s1s2, pF, Nmax, _bg_ch1, _bg_ch2, one_p, one_amp);
+        project_s1s2(one_s1s2, n_max, n_min, first_photon, n_bins,
+                     rows + (size_t) i * n_bins);
+    }
+    *output = rows;
 }
 
 
@@ -289,23 +367,21 @@ if (is_verbose()) {
 }
     std::fill(_S1S2.begin(), _S1S2.end(), 0.0);
     auto Nmax = get_max_number_of_photons();
+    // Short inputs are zero-padded, not rejected. Warn on cerr, not cout.
     if(pF.size() < Nmax + 1){
-        std::cout << "WARNING pF array too short. Appending zeros" << std::endl;
-        while(pF.size() < Nmax + 1){
-            pF.emplace_back(0.0);
-        }
+        std::cerr << "WARNING: Pda pF array shorter than hist2d_nmax + 1. "
+                     "Appending zeros." << std::endl;
+        pF.resize(Nmax + 1, 0.0);
     }
     if(_probability_ch1.size() < _amplitudes.size()){
-        std::cout << "WARNING probability array too short. Appending zeros" << std::endl;
-        while(_probability_ch1.size() < _amplitudes.size()){
-            _probability_ch1.emplace_back(0.0);
-        }
+        std::cerr << "WARNING: Pda probability array shorter than the amplitude "
+                     "array. Appending zeros." << std::endl;
+        _probability_ch1.resize(_amplitudes.size(), 0.0);
     }
     if(_amplitudes.size() < _probability_ch1.size()){
-        std::cout << "WARNING amplitude array too short. Appending zeros" << std::endl;
-        while(_amplitudes.size() < _probability_ch1.size()){
-            _amplitudes.emplace_back(0.0);
-        }
+        std::cerr << "WARNING: Pda amplitude array shorter than the probability "
+                     "array. Appending zeros." << std::endl;
+        _amplitudes.resize(_probability_ch1.size(), 0.0);
     }
 if (is_verbose()) {
     std::clog << "-- Computing S1S2 matrix" << std::endl;
@@ -339,17 +415,33 @@ void Pda::conv_pF(
         double background_ch2
 ) {
     const size_t n = Nmax + 1;
-    std::vector<double> tmp(n * n, 0.0);
+    // Both passes only ever touch the triangle green + red <= Nmax, and each
+    // writes a cell before reading it, so tmp needs no zeroing -- just size.
+    static thread_local std::vector<double> tmp;
+    if (tmp.size() < n * n) tmp.resize(n * n);
+    // n, not Nmax: poisson_0toN writes return_dim entries, and 0..Nmax is
+    // Nmax+1 of them. Passing Nmax zeroes the last tap of the kernel.
     std::vector<double> bg(n, 0.0);
-    poisson_0toN(bg, 0, background_ch1, Nmax);
+    poisson_0toN(bg, 0, background_ch1, (int) n);
     std::vector<double> br(n, 0.0);
-    poisson_0toN(br, 0, background_ch2, Nmax);
+    poisson_0toN(br, 0, background_ch2, (int) n);
 
     // Effective support of the Poisson kernels: terms beyond T are < 1e-15
     // and numerically irrelevant, so the convolutions are truncated there
     // (O(Nmax^2 T) instead of O(Nmax^3)). The tail is monotone past the mode.
+    // Safe here because the operand is a probability <= 1; it would NOT be for
+    // a likelihood ratio, where the discarded terms can dominate.
     size_t Tr = Nmax; while (Tr > 0 && br[Tr] < 1e-15) Tr--;
     size_t Tg = Nmax; while (Tg > 0 && bg[Tg] < 1e-15) Tg--;
+
+    // For very wide kernels (large backgrounds) the FFT convolution,
+    // O(Nmax^2 log Nmax), beats the truncated direct method.
+    const size_t fft_crossover = std::max<size_t>(64, Nmax / 5);
+
+#ifdef _OPENMP
+    bool use_omp = tttrlib::cpu_features::get_openmp_enabled() && Nmax >= 64;
+    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
+#endif
 
     // Reversed kernels so both dot-product operands ascend contiguously:
     // br[red - i] == br_rev[(Nmax - red) + i]
@@ -359,19 +451,10 @@ void Pda::conv_pF(
         bg_rev[i] = bg[Nmax - i];
     }
 
-    // For very wide kernels (large backgrounds) the FFT row convolution,
-    // O(Nmax^2 log Nmax), beats the truncated direct method.
-    const size_t fft_crossover = std::max<size_t>(64, Nmax / 5);
-
-#ifdef _OPENMP
-    bool use_omp = tttrlib::cpu_features::get_openmp_enabled() && Nmax >= 64;
-    int num_threads = tttrlib::cpu_features::get_openmp_num_threads();
-#endif
-
     // pass 1: convolve each F1F2 row (fixed green) with the ch2 background,
     // writing transposed into tmp
     if (Tr > fft_crossover) {
-        pda_conv_rows_fft(tmp, F1F2, br, Nmax);
+        pda_conv_fft(tmp, F1F2, br, Nmax);
     } else {
 #ifdef _OPENMP
         #pragma omp parallel for schedule(static, 1) num_threads(num_threads) if(use_omp)
@@ -388,7 +471,7 @@ void Pda::conv_pF(
     }
     // pass 2: convolve each tmp row (fixed red) with the ch1 background
     if (Tg > fft_crossover) {
-        pda_conv_rows_fft(S1S2, tmp, bg, Nmax);
+        pda_conv_fft(S1S2, tmp, bg, Nmax);
     } else {
 #ifdef _OPENMP
         #pragma omp parallel for schedule(static, 1) num_threads(num_threads) if(use_omp)
@@ -416,9 +499,12 @@ void Pda::S1S2_pF(
         std::vector<double> &amplitudes // corresponding amplitudes
 ){
     /*** F1F2: matrix, F1F2(i,j) = p(F1 = i, F2 = j) ***/
-    size_t matrix_elements = (Nmax + 1) * (Nmax + 1);
-    std::vector<double> FgFr(matrix_elements, 0.0);
-    std::vector<double> tmp(matrix_elements, 0.0);
+    size_t matrix_elements = (size_t)(Nmax + 1) * (Nmax + 1);
+    // Scratch kept between calls -- 1.4 MB of malloc traffic per call at
+    // Nmax=300 otherwise. Only FgFr needs re-zeroing.
+    static thread_local std::vector<double> FgFr, tmp;
+    FgFr.assign(matrix_elements, 0.0);
+    if (tmp.size() < matrix_elements) tmp.resize(matrix_elements);
     for(size_t pg_idx = 0; pg_idx < p_ch1.size(); pg_idx++) {
         auto p = p_ch1[pg_idx];
         auto a = amplitudes[pg_idx];
@@ -610,9 +696,15 @@ static void fftc2D_AA(std::vector<double>& AxA, const std::vector<double>& A,
 /// \param p0_wanted Target probability threshold (typically 1e-15)
 /// \return Convolution order (1 = no correction, >1 = correction needed)
 /// \note order=1 means no correction is needed
-/// \note order=50 means significant multi-molecule correction
+/// \note The ratio exceeds 1 only when p0 < p0_wanted, so with the usual
+///       p0_wanted = 1e-15 a correction is almost never requested.
+/// \note p0 outside (0, 1) is rejected: log(0) is -inf and casting the
+///       resulting infinity to int is undefined behaviour.
 static int pF_conv_order(double p0, double p0_wanted) {
-    return (int)std::ceil(std::log(p0) / std::log(p0_wanted));
+    if (!(p0 > 0.0) || !(p0 < 1.0)) return 1;   // also catches NaN
+    const double order = std::ceil(std::log(p0) / std::log(p0_wanted));
+    if (!std::isfinite(order) || order < 1.0) return 1;
+    return (int) std::min(order, 1024.0);       // cap the FFT power
 }
 
 /// \brief Optimized S1S2 computation with OpenMP parallelization and FFT correction.
@@ -636,7 +728,11 @@ static int pF_conv_order(double p0, double p0_wanted) {
 /// \param p_ch1[in] Vector of green detection probabilities for each species
 /// \param amplitudes[in] Vector of amplitudes (fractions) for each species
 ///
-/// \note Automatically applies FFT correction when pF[0] > 1e-15
+/// \note The multi-molecule correction is NOT an optimization: it changes the
+///       model. It engages only when pF[0] < 1e-15 -- i.e. when the chance of
+///       observing zero fluorescence photons is negligible -- and for every
+///       ordinary pF this path is dead and the result is bit-comparable to
+///       S1S2_pF. Do not rely on it silently; it is kept for compatibility.
 /// \note Thread-safe with OpenMP critical sections
 /// \note Falls back to single-threaded when OpenMP unavailable
 void Pda::S1S2_pF_optimized(
@@ -649,14 +745,20 @@ void Pda::S1S2_pF_optimized(
         std::vector<double> &amplitudes // corresponding amplitudes
 ){
     /*** F1F2: matrix, F1F2(i,j) = p(F1 = i, F2 = j) ***/
-    size_t matrix_elements = (Nmax + 1) * (Nmax + 1);
+    size_t matrix_elements = (size_t)(Nmax + 1) * (Nmax + 1);
     std::vector<double> FgFr(matrix_elements, 0.0);
 
 #ifdef _OPENMP
-    #pragma omp parallel
+    // One species means nothing to distribute, and fork/join plus the
+    // (Nmax+1)^2 reduction costs more than it saves.
+    const bool use_omp = tttrlib::cpu_features::get_openmp_enabled() &&
+                         p_ch1.size() > 1;
+    #pragma omp parallel if(use_omp) num_threads(tttrlib::cpu_features::get_openmp_num_threads())
     {
-        std::vector<double> tmp(matrix_elements, 0.0);
-        std::vector<double> FgFr_local(matrix_elements, 0.0);
+        // Allocated once per worker thread, not once per call.
+        static thread_local std::vector<double> tmp, FgFr_local;
+        if (tmp.size() < matrix_elements) tmp.resize(matrix_elements);
+        FgFr_local.assign(matrix_elements, 0.0);
 
         #pragma omp for
         for(int pg_idx = 0; pg_idx < (int)p_ch1.size(); pg_idx++) {
@@ -677,7 +779,8 @@ void Pda::S1S2_pF_optimized(
     }
 #else
     {
-        std::vector<double> tmp(matrix_elements, 0.0);
+        static thread_local std::vector<double> tmp;
+        if (tmp.size() < matrix_elements) tmp.resize(matrix_elements);
         for(int pg_idx = 0; pg_idx < (int)p_ch1.size(); pg_idx++) {
             auto p = p_ch1[pg_idx];
             auto a = amplitudes[pg_idx];
@@ -750,58 +853,54 @@ if (is_verbose()) {
     std::clog << "-- minimum_time_window_length: " << minimum_time_window_length << std::endl;
     std::clog << "-- minimum_number_of_photons_in_time_window: " << minimum_number_of_photons << std::endl;
 }
-    auto tmp_s1s2 = (double*) calloc(
-            (maximum_number_of_photons + 1) * (maximum_number_of_photons + 1),
-            sizeof(double)
-    );
-    for(int i=0; i< (maximum_number_of_photons + 1) * (maximum_number_of_photons + 1); i++) tmp_s1s2[i]=0.0;
-    auto tmp_ps = (double*) calloc(
-            (maximum_number_of_photons + 1) * 2, sizeof(double)
-    );
-    for(int i=0; i< (maximum_number_of_photons + 1) * 2; i++) tmp_ps[i]=0.0;
+    const int n_dim = maximum_number_of_photons + 1;
+    // calloc zeroes -- the explicit re-zeroing loops here were dead work.
+    auto tmp_s1s2 = (double*) calloc((size_t) n_dim * n_dim, sizeof(double));
+    auto tmp_ps = (double*) calloc((size_t) n_dim, sizeof(double));
     std::vector<int> tmp_tttr_indices;
-    int *tws; int n_tw;
+    int *tws = nullptr; int n_tw = 0;
     tttr_data->get_time_window_ranges(
             &tws, &n_tw,
             minimum_time_window_length,
             minimum_number_of_photons
     );
-    signed char* routing_channels; int n_routing_channels;
-    tttr_data->get_routing_channel(
-            &routing_channels, &n_routing_channels
-    );
+    // tws is interleaved [start_0, stop_0, start_1, ...], so window w is the
+    // pair at 2w/2w+1. tws[w], tws[w+1] reads a stop as the next start.
+    const size_t n_windows = (size_t) (n_tw / 2);
 if (is_verbose()) {
-    std::clog << "-- Number of time windows: " << n_tw / 2 << std::endl;
-    std::clog << "-- Getting routing channels... " << std::endl;
+    std::clog << "-- Number of time windows: " << n_windows << std::endl;
     std::clog << "-- Counting photons... " << std::endl;
 }
-    int n_tttr = 0;
-    for(size_t i=0; i<n_tw/2; i++){
-        size_t start = tws[i + 0];
-        size_t stop = tws[i + 1];
+    for(size_t w = 0; w < n_windows; w++){
+        const size_t start = (size_t) tws[2 * w + 0];
+        const size_t stop  = (size_t) tws[2 * w + 1];
         int n_ch1 = 0;
         int n_ch2 = 0;
-        size_t j;
-        for(j=start; j<stop; j++){
-            short channel = routing_channels[j];
-            for(auto &c: channels_1) n_ch1 += (c==channel);
-            for(auto &c: channels_2) n_ch2 += (c==channel);
+        for(size_t j = start; j < stop; j++){
+            // Direct read -- get_routing_channel mallocs a copy of the file.
+            const signed char channel = tttr_data->get_routing_channel_at(j);
+            for(auto &c: channels_1) n_ch1 += (c == channel);
+            for(auto &c: channels_2) n_ch2 += (c == channel);
         }
-        size_t n_photons = static_cast<size_t>(n_ch1 + n_ch2);
+        const int n_photons = n_ch1 + n_ch2;
         if(
-                n_photons < static_cast<size_t>(minimum_number_of_photons) ||
-                n_photons > static_cast<size_t>(maximum_number_of_photons)
+                n_photons < minimum_number_of_photons ||
+                n_photons > maximum_number_of_photons
         ) continue;
-        tmp_tttr_indices.emplace_back(static_cast<int>(j)); n_tttr++;
-        tmp_s1s2[n_ch2 * (maximum_number_of_photons + 1) + n_ch1] += 1.0;
+        // start/stop pairs, as documented. The old code pushed the leftover
+        // scan variable (the stop), which alone identifies no photons.
+        tmp_tttr_indices.emplace_back(static_cast<int>(start));
+        tmp_tttr_indices.emplace_back(static_cast<int>(stop));
+        tmp_s1s2[(size_t) n_ch1 * n_dim + n_ch2] += 1.0;   // row is ch1
         tmp_ps[n_photons] += 1.0;
     }
-    *tttr_indices = (int*) malloc(tmp_tttr_indices.size() * sizeof(int));
+    free(tws);
+    *tttr_indices = (int*) malloc(std::max<size_t>(1, tmp_tttr_indices.size()) * sizeof(int));
     memcpy(*tttr_indices, tmp_tttr_indices.data(), tmp_tttr_indices.size() * sizeof(int));
-    *n_tttr_indices = n_tttr;
+    *n_tttr_indices = static_cast<int>(tmp_tttr_indices.size());
     *ps = tmp_ps;
-    *dim_ps = (maximum_number_of_photons + 1);
+    *dim_ps = n_dim;
     *s1s2 = tmp_s1s2;
-    *dim1 = (maximum_number_of_photons + 1);
-    *dim2 = (maximum_number_of_photons + 1);
+    *dim1 = n_dim;
+    *dim2 = n_dim;
 }

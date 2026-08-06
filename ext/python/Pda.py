@@ -6,7 +6,12 @@ PDA_OPTIMIZED = 1
 
 def histogram_function(self, cb):
     # type: (Callable) -> None
-    """Set the callback function that is used to compute 1D histograms
+    """Set the callback that reduces an (S1, S2) cell to a 1D observable.
+
+    The callback is called as ``cb(ch1, ch2)`` with the photon counts in
+    channel 1 and channel 2, in that order, and returns the x value the cell
+    contributes to. For a proximity ratio Sr / (Sg + Sr) with channel 1 green,
+    that is ``lambda ch1, ch2: ch2 / (ch1 + ch2)``.
 
     :param cb: the callback function
     :return: None
@@ -67,19 +72,22 @@ def s1s2(self):
     return self.get_S1S2_matrix()
 
 def __repr__(self):
-    return 'Pda("n_species: %s")' % (
-        len(self.get_amplitudes())
+    return 'Pda(n_species=%d, hist2d_nmin=%d, hist2d_nmax=%d)' % (
+        len(self.get_amplitudes()), self.hist2d_nmin, self.hist2d_nmax
     )
 
 def __str__(self):
-    s = "Pda: \n"
-    s += "Number of species: %d \n" % len(self.get_amplitudes())
-    s += "Probability spectrum: %s \n" % self.spectrum_ch1()
-    s += "Background Channel 1:" + self.background_ch1
-    s += "Background Channel 2:" + self.background_ch2
-    s += "Histogram 2D valid:" + self.hist2d_valid
-    s += "Maximum number of photons:" + self.hist2d_nmax
-    s += "Minimum number of photons:" + self.hist2d_nmin
-    s += "P(F):" + self.pf
+    # Every line below used to concatenate str + float and raise TypeError,
+    # so str(pda) never worked at all.
+    s = "Pda:\n"
+    s += "Number of species: %d\n" % len(self.get_amplitudes())
+    s += "Species amplitudes: %s\n" % self.species_amplitudes
+    s += "Probabilities ch1: %s\n" % self.probabilities_ch1
+    s += "Background ch1: %s\n" % self.background_ch1
+    s += "Background ch2: %s\n" % self.background_ch2
+    s += "Histogram 2D valid: %s\n" % self.hist2d_valid
+    s += "Maximum number of photons: %s\n" % self.hist2d_nmax
+    s += "Minimum number of photons: %s\n" % self.hist2d_nmin
+    s += "P(F): %s\n" % self.pf
     return s
 

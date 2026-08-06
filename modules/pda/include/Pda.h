@@ -6,9 +6,12 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <cstring>
+#include <cstdlib>
 
 #include "TTTR.h"
 #include "PdaCallback.h"
+#include "HistogramAxis.h"   // HistogramBinning, shared with the hist module
 
 enum PdaImplementation {
     PDA_DEFAULT,     ///< The default, original implementation
@@ -17,6 +20,20 @@ enum PdaImplementation {
 
 /// \class Pda
 /// \brief Photon Distribution Analysis class for computing histograms.
+///
+/// \par Matrix index convention
+/// Every (Nmax+1) x (Nmax+1) photon-count matrix produced or consumed by this
+/// class -- the model matrix from evaluate()/get_S1S2_matrix(), the
+/// experimental matrix from compute_experimental_histograms(), and the
+/// optional `s1s2` input of get_1dhistogram() -- is stored row-major with
+///
+///     M[ch1 * (Nmax + 1) + ch2] == p(S1 == ch1, S2 == ch2)
+///
+/// so the ROW index is channel 1 (green in a FRET experiment) and the COLUMN
+/// index is channel 2 (red). Feeding a transposed matrix in still runs and
+/// still produces a plausible-looking histogram -- it simply mirrors the
+/// projected axis (E <-> 1 - E), which is why the convention is spelled out
+/// here rather than left implicit.
 class Pda {
 
 private:
@@ -28,11 +45,13 @@ private:
     /// The selected PDA implementation
     PdaImplementation _implementation = PdaImplementation::PDA_DEFAULT;
 
-    /// Cache for get_1dhistogram: target bin per S1S2 cell (-1 = out of
-    /// range). The callback value of a cell only depends on the callback and
-    /// the binning parameters, so it is reused across calls (fit iterations)
-    /// and rebuilt when the callback or any binning parameter changes.
-    std::vector<int> _hist1d_bin_cache;
+    /// Cache for get_1dhistogram: target bin of each VISITED S1S2 cell, in
+    /// row-major visit order (compact, not one entry per matrix cell).
+    /// Off-axis cells are mapped to bin n_bins, a trash slot, so the
+    /// accumulation needs no per-cell test. The callback value of a cell only
+    /// depends on the callback and the binning parameters, so this is reused
+    /// across calls (fit iterations) and rebuilt when either changes.
+    std::vector<int> _hist1d_bins;
     bool _hist1d_valid = false;
     double _hist1d_xmax = 0.0, _hist1d_xmin = 0.0;
     int _hist1d_nbins = -1, _hist1d_nmax = -1, _hist1d_nmin = -1;
@@ -43,6 +62,21 @@ private:
 
     /// Amplitudes of the species
     std::vector<double> _amplitudes;
+
+    /// Fills _hist1d_bins for the given axis, unless it is already current.
+    void build_hist1d_cache(
+            const HistogramBinning<double>& axis,
+            int n_max, int n_min, int first_photon,
+            double x_max, double x_min, int n_bins, bool log_x,
+            bool skip_zero_photon
+    );
+
+    /// Sparse mat-vec of the cached projection against one S1S2 matrix.
+    void project_s1s2(
+            const std::vector<double>& src,
+            int n_max, int n_min, int first_photon, int n_bins,
+            double* out
+    ) const;
 
 
 protected:
@@ -110,7 +144,13 @@ public:
     ~Pda() {
         delete _histogram_function;
     }
-    
+
+    /// Pda owns _histogram_function and a PdaCallback cannot be cloned, so a
+    /// copy would double-free it.
+    Pda(const Pda&) = delete;
+    Pda& operator=(const Pda&) = delete;
+
+
     /*!
      * \brief Appends a species to the Pda object.
      *
@@ -170,6 +210,10 @@ public:
      * @param cb[in] Object that computes the value on a 1D histogram.
      */
     void set_callback(PdaCallback* cb){
+        // Pda takes ownership; bindings hand over a disowned director.
+        // Without the delete every assignment leaks the previous callback.
+        if(cb == _histogram_function) return;
+        delete _histogram_function;
         _histogram_function = cb;
         _hist1d_valid = false;
     }
@@ -197,17 +241,20 @@ public:
 
     /*!
      * Returns the S1S2 matrix that contains the photon counts in the two
-     * channels
+     * channels.
+     *
+     * The matrix is recomputed first if any model parameter changed since the
+     * last evaluate(). Row is channel 1, column is channel 2 -- see the class
+     * documentation for the index convention.
      *
      * @param output[out] the S1S2 matrix
-     * @param n_output1[out] dimension 1 of the matrix
-     * @param n_output2[out] dimension 2 of the matrix
+     * @param n_output1[out] dimension 1 of the matrix (channel 1)
+     * @param n_output2[out] dimension 2 of the matrix (channel 2)
      */
     void get_S1S2_matrix(double **output, int *n_output1, int *n_output2){
         if(!_is_valid_sgsr) evaluate();
         auto* t = (double *) malloc(_S1S2.size() * sizeof(double));
-        for(unsigned int i = 0; i < _S1S2.size(); i++) 
-            t[i] = _S1S2[i];
+        std::memcpy(t, _S1S2.data(), _S1S2.size() * sizeof(double));
         *output = t;
         *n_output1 = int (_n_2d_max + 1);
         *n_output2 = int (_n_2d_max + 1);
@@ -323,10 +370,12 @@ if (is_verbose()) {
      * @param n_bins[in] Number of histogram bins.
      * @param log_x[in] If set to true (default is true), x-axis values are
      * logarithmically spaced; otherwise, linear spacing.
-     * @param s1s2[in] Optional input for the S1S2 matrix. If nullptr (default), the
-     * Pda object's S1S2 matrix is used for computation. If not nullptr and both
-     * n_histogram_x and n_histogram_y > 0, this input is used as the S1S2 matrix.
-     * Input matrix must be quadratic.
+     * @param s1s2[in] Optional input for the S1S2 matrix. If empty (default), the
+     * Pda object's own S1S2 matrix is used, re-evaluating the model first if any
+     * parameter changed since the last evaluate(). If non-empty, this matrix is
+     * projected instead and the model is left untouched. The matrix must be
+     * square and laid out row-is-channel-1 (see the class documentation);
+     * passing its transpose mirrors the resulting axis.
      * @param n_min[in] Minimum number of photons in the histogram. If -1 (default),
      * the number set when the Pda object was instantiated is used.
      * @param skip_zero_photon[in] When true, only s1s2 matrix elements i,j (i>0 and
@@ -349,6 +398,31 @@ if (is_verbose()) {
     );
 
     /*!
+     * \brief One projected 1D histogram per species, each at amplitude 1.
+     *
+     * The projection is a fixed linear map and the model is linear in the
+     * species amplitudes, so the full histogram is just
+     * `amplitudes @ rows`. For a fit that varies only the amplitudes -- the
+     * usual species-fraction fit -- that turns an O(hist2d_nmax^2) re-evaluation
+     * per iteration into an O(n_species * n_bins) dot product. Call this once,
+     * then reweight; recall it when `probabilities_ch1`, `pF`, the background
+     * or the binning change.
+     *
+     * @param histogram_x[out] Histogram X-axis, `n_bins` long.
+     * @param n_histogram_x[out] Dimension of the X-axis.
+     * @param output[out] Row-major `(n_species, n_bins)` matrix of projections.
+     * @param n_output1[out] Number of species.
+     * @param n_output2[out] Number of bins.
+     * @param x_max,x_min,n_bins,log_x,n_min,skip_zero_photon As get_1dhistogram.
+     */
+    void get_1dhistogram_per_species(
+            double **histogram_x, int *n_histogram_x,
+            double **output, int *n_output1, int *n_output2,
+            double x_max=1000.0, double x_min=0.01, int n_bins=81,
+            bool log_x=true, int n_min=-1, bool skip_zero_photon=true
+    );
+
+    /*!
      * \brief Computes experimental histograms.
      *
      * This static method computes experimental histograms based on the provided TTTR data.
@@ -359,8 +433,11 @@ if (is_verbose()) {
      * @param dim2[out] Output dimension 2 of the S1S2 matrix.
      * @param ps[out] Output PS matrix.
      * @param dim_ps[out] Output dimension of the PS matrix.
-     * @param tttr_indices[out] Output TTTR indices.
-     * @param n_tttr_indices[out] Output number of TTTR indices.
+     * @param tttr_indices[out] Interleaved start/stop event indices of the time
+     * windows that were counted, i.e. [start_0, stop_0, start_1, stop_1, ...].
+     * Window w covers the half-open event range [start_w, stop_w).
+     * @param n_tttr_indices[out] Length of `tttr_indices` (twice the number of
+     * accepted time windows).
      * @param channels_1[in] Routing channel numbers used for the first channel in
      * the S1S2 matrix. Photons with this channel number are counted and increment
      * values in the S1S2 matrix.
@@ -371,8 +448,12 @@ if (is_verbose()) {
      * S1S2 matrix.
      * @param minimum_number_of_photons[in] Minimum number of photons in a time window
      * and in the S1S2 matrix.
-     * @param minimum_time_window_length[in] Minimum length of a time window in
-     * milliseconds.
+     * @param minimum_time_window_length[in] Minimum length of a time window, in the
+     * same physical unit as the macro-time resolution reported by the TTTR header
+     * (milliseconds for the formats that record it in ms).
+     *
+     * @note The returned matrix uses the same row-is-channel-1 layout as the
+     * model matrix, so it can be handed straight to get_1dhistogram().
      */
     static void compute_experimental_histograms(
         TTTR* tttr_data,
