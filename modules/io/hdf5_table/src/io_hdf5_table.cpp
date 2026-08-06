@@ -991,6 +991,17 @@ void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
 
     if (!path.empty()) H5Gclose(group);
     H5Fclose(file);
+
+    // Nothing at all -- no columns and no groups -- is a group that does not
+    // hold a table, and it has to be distinguishable from a table that
+    // legitimately has none of its rows. It used to come back as an empty
+    // store, so a caller that trusted the result opened a foreign file, saw a
+    // table with nothing in it, and reported success.
+    //
+    // A table with columns and no rows does NOT come through here, which is the
+    // whole point: zero rows is an answer, zero columns is a refusal.
+    if (out.n_columns() == 0 && out.n_groups() == 0)
+        throw std::runtime_error("no table in " + group_name + " of " + filename);
 }
 
 

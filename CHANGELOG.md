@@ -3,6 +3,55 @@
 ## [Unreleased]
 
 ### Added
+- **A `DataStore` is a tree.** It gains named child groups, each a full store
+  with its own columns, row count, selection, masks and label — because that is
+  the shape the data has: an imaging run is a `results` table of one row per
+  pixel plus a one-row `meta` saying where it came from. `add_group`,
+  `ensure_group`, `group`, `group_names`, `group_paths`, `remove_group`,
+  `clear_groups`, and `store.groups` in Python. `store["name"]` is still a
+  column and always will be; groups have their own accessors so nothing has to
+  guess which you meant. A store with no groups is unchanged in memory and on
+  disk, and `find()` — the hot lookup — does not gain a single instruction.
+- **A native store file, `.dstore`.** `save_store` / `load_store` write a store
+  and read it back unchanged: column order, dtypes, dictionary-encoded text,
+  validity masks, labels, the group tree, and the row selection, which is saved
+  rather than applied. It has no external dependency, so a build with
+  `BUILD_PHOTON_HDF=OFF` can persist a `DataStore` — which by any other route it
+  cannot. Against *uncompressed* HDF5 it is a wash on bulk I/O and the docs say
+  so; against compressed HDF5 a 1M-row write goes from 2.09 s to 0.008 s, and
+  reading one column of four costs 0.0002 s rather than 0.008 s.
+- **`hdf5_table_groups`, `hdf5_table_has`, `hdf5_table_remove`** — ask a file
+  what tables it holds, or drop one. Silent on any input, including files that
+  are not HDF5, because probing is a normal thing to do.
+- **`Hdf5WriteMode`** on `write_hdf5_table`, and whole-tree HDF5 read and write.
+
+### Fixed
+- **A gated wide integer went through a `double` and came back changed.**
+  Writing a store *with a row selection* to HDF5 gathered every column into a
+  `vector<double>`, so an `Int64` or `UInt64` above 2^53 was written as a
+  different number — `2**53+1` became `2**53`. Macro times, event indices and
+  pixel numbers all land in that range. The same column written without a
+  selection was correct, which is why it went unnoticed.
+- **Writing a second group to an HDF5 file destroyed the first.**
+  `write_hdf5_table` truncated the whole file on every call, so `/results`
+  followed by `/meta` left only `/meta` — and both calls returned `true`.
+
+### Changed
+- **`write_hdf5_table` defaults to `Hdf5WriteMode::Update`**, keeping groups it
+  is not writing, instead of truncating the file. For any file this library has
+  produced the two are indistinguishable; what changes is the two broken cases
+  above, plus a file that exists and is not HDF5, which is now refused rather
+  than destroyed. Pass `Hdf5WriteMode::Truncate` to mean the old behaviour.
+- **HDF5 compression defaults to 0 rather than 4.** Level 4 costs roughly thirty
+  times the write to save eight percent of the size, on files written once and
+  read repeatedly.
+- **`read_hdf5_table` throws when a group holds no table**, instead of returning
+  an empty store. Zero rows is an answer; zero columns is a refusal, and the two
+  were indistinguishable. `read_hdf5_table_columns` still returns an empty list
+  for those cases — it is the cheap predicate and callers already read empty as
+  "not ours".
+- `DataStore::release()` now drops groups as well as columns, so `nbytes()`
+  really does reach zero.
 - **`PdaBurstLikelihood` — K-channel burst-wise PDA, so three-colour PDA is a
   tttrlib method rather than a NumPy loop in a downstream package.** `Pda` fits a
   binned 1-D projection of a dense `(hist2d_nmax+1)²` count matrix, and that
@@ -85,6 +134,21 @@
   `ext/js/js_shared_ptr.i` and the package README: an object constructed in
   JavaScript and handed to C++ that stores a `std::shared_ptr` is passed with a
   null deleter, so C++ holding it does not extend its life.
+- **`std::map` returns become plain JavaScript objects.** Python's `std_map.i`
+  gives a dict; the Node-API one wraps a map as an opaque proxy with
+  `.get()`/`.size()`, the way the Java backend does — so
+  `BurstFeatureExtractor.get_burst_channel_photons()` came back as a handle a
+  caller had to loop over by hand. Keys become strings (JavaScript object keys
+  are, and that is the shape either binding's JSON already produces) and values
+  go through the same conversions as everywhere else, so a map of vectors yields
+  TypedArrays. Out only: no wrapped API takes a map as a parameter.
+- **Lifetime and GC tests** (`test/js/lifetime.test.mjs`) — a `shared_ptr` result
+  outliving the object that produced it, surviving that object's collection,
+  thousands of proxies of the same object releasing cleanly, `.slice()` detaching
+  a view from C++-owned memory, and a crude leak check over 200 file reads. This
+  is the risk PRD-016 flags as worst, because it fails by segfault rather than by
+  exception. Run with `--expose-gc`; the GC-forcing cases skip without it rather
+  than pass vacuously.
 - **A minimal web viewer for TTTR files** — `examples/js/ptu-webapp/` opens a PTU
   (or HT3, SPC, Photon-HDF5, ...) and shows its header, time trace and micro-time
   decay in a browser, with no Python anywhere. One file of server, one page of

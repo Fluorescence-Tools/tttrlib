@@ -355,10 +355,28 @@ def test_the_group_order_is_insertion_order(tmp_path):
 
 
 def test_with_groups_false_reads_only_the_table(tmp_path):
+    """The escape hatch: this group's own columns, as before there was a tree."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(5)
+    s.add("own", np.arange(5.0))
+    s.add_group("meta").set_n_rows(1)
+    s.group("meta").add("source", np.zeros(1))
+
+    path = str(tmp_path / "flat.h5")
+    assert tttrlib.write_hdf5(path, s)
+
+    flat = tttrlib.read_hdf5(path, "/", with_groups=False)
+    assert flat.names == ["own"] and flat.n_groups() == 0
+    assert tttrlib.read_hdf5(path).n_groups() == 1
+
+
+def test_with_groups_false_on_a_group_that_is_only_a_container_throws(tmp_path):
+    """Consistent with the rule rather than an exception to it: the root here
+    holds no table, and asking for its table alone is asking for nothing."""
     path = str(tmp_path / "tree.h5")
     tttrlib.write_hdf5(path, imaging_tree())
-    flat = tttrlib.read_hdf5(path, "/", with_groups=False)
-    assert flat.n_groups() == 0
+    with pytest.raises(Exception, match="no table"):
+        tttrlib.read_hdf5(path, "/", with_groups=False)
 
 
 def test_a_group_name_needing_encoding_comes_back(tmp_path):
@@ -445,6 +463,58 @@ def test_the_two_formats_agree_on_the_imaging_shape(tmp_path):
     for group in s.group_paths():
         assert a.group(group).names == b.group(group).names, group
         assert a.group(group).n_rows() == b.group(group).n_rows(), group
+
+
+# -- saying no ----------------------------------------------------------------
+
+def test_a_group_holding_no_table_throws_rather_than_reading_as_empty(tmp_path):
+    """Zero rows is an answer; zero columns is a refusal.
+
+    Reading a group with no datasets used to give back an empty DataStore,
+    which is indistinguishable from a table that legitimately has no rows. A
+    caller that trusted it opened a foreign file, saw an empty table, and
+    reported success.
+    """
+    h5py = pytest.importorskip("h5py")
+    path = str(tmp_path / "nothing.h5")
+    with h5py.File(path, "w") as f:
+        f.create_dataset("image", data=np.zeros((4, 4)))    # not a column
+        f.create_group("empty")
+
+    with pytest.raises(Exception, match="no table"):
+        tttrlib.read_hdf5(path)
+    with pytest.raises(Exception, match="no table"):
+        tttrlib.read_hdf5(path, "/empty")
+
+
+def test_a_table_with_no_rows_still_reads(tmp_path):
+    """The case the throw must not swallow."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(0)
+    s.add("x", np.array([], dtype=np.float64))
+    path = str(tmp_path / "empty.h5")
+    assert tttrlib.write_hdf5(path, s)
+
+    back = tttrlib.read_hdf5(path)
+    assert back.n_rows() == 0 and back.names == ["x"]
+
+
+def test_a_root_holding_only_groups_still_reads(tmp_path):
+    """No columns of its own, but it is not nothing."""
+    path = str(tmp_path / "container.h5")
+    tttrlib.write_hdf5(path, table(4), group="/results")
+    back = tttrlib.read_hdf5(path)
+    assert back.n_columns() == 0 and back.group_names() == ["results"]
+
+
+def test_read_hdf5_table_columns_still_answers_with_an_empty_list(tmp_path):
+    """The cheap predicate keeps its contract: callers already read empty as
+    "not ours", and it is what they probe with before opening anything."""
+    missing = str(tmp_path / "nope.h5")
+    text = tmp_path / "notes.txt"
+    text.write_bytes(b"not hdf5")
+    assert list(tttrlib.read_hdf5_table_columns(missing)) == []
+    assert list(tttrlib.read_hdf5_table_columns(str(text))) == []
 
 
 def test_the_selection_still_applies_per_group(tmp_path):
