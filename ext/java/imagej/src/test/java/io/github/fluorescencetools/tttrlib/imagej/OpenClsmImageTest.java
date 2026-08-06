@@ -23,6 +23,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Headless {@link OpenClsmImage} test.
@@ -37,6 +38,10 @@ class OpenClsmImageTest {
     private static final long REF_SUM = 3364714L;
     private static final int REF_MAX = 26;
 
+    // PRD-004 single-frame PTU, pinned by the Python reference test.
+    private static final int SF_LINES = 652, SF_PIXEL = 256;
+    private static final long SF_SUM = 713854L;
+
     private static Context context;
 
     private static String dataRoot() {
@@ -46,6 +51,11 @@ class OpenClsmImageTest {
 
     private static File clsmFile() {
         return new File(dataRoot(), "imaging/pq/ht3/pq_ht3_clsm.ht3");
+    }
+
+    /** PRD-004: a SymPhoTime PTU with line markers but no frame marker. */
+    private static File singleFramePtuFile() {
+        return new File(dataRoot(), "imaging/pq/PicoHarp_SymPhoTime/Example_PTU_PicoHarp.ptu");
     }
 
     @BeforeAll
@@ -61,8 +71,12 @@ class OpenClsmImageTest {
     }
 
     private static Dataset runReader(Map<String, Object> extra) throws Exception {
+        return runReader(clsmFile(), extra);
+    }
+
+    private static Dataset runReader(File file, Map<String, Object> extra) throws Exception {
         final Map<String, Object> params = new HashMap<>();
-        params.put("file", clsmFile());
+        params.put("file", file);
         params.put("channelGroups", "0");
         params.put("microTimeRanges", "");
         params.put("intensity", true);
@@ -121,6 +135,32 @@ class OpenClsmImageTest {
         assertEquals(DatasetBuilder.PIE_AXIS, d.axis(4).type());
         assertEquals(1, d.dimension(2), "CHANNEL (one group)");
         assertEquals(2, d.dimension(4), "PIE (two windows)");
+    }
+
+    /**
+     * PRD-004: a PTU whose header declares a frame marker the stream never emits
+     * used to open as an empty stack ("no image" in the plugin). It must now
+     * reconstruct the single full-span frame -- 652 real scan lines, not the
+     * nominal ImgHdr_PixY = 256.
+     */
+    @Test
+    void singleFramePtuOpensInsteadOfShowingNoImage() throws Exception {
+        final File f = singleFramePtuFile();
+        assumeTrue(f.exists(), "single-frame PTU test file not available");
+
+        final Map<String, Object> extra = new HashMap<>();
+        extra.put("channelGroups", "1");  // the photons are on routing channel 1
+        final Dataset d = runReader(f, extra);
+        assertNotNull(d, "intensity Dataset");
+
+        assertEquals(SF_PIXEL, d.dimension(0), "X");
+        assertEquals(SF_LINES, d.dimension(1), "Y (salvaged line count)");
+        assertEquals(1, d.dimension(3), "TIME (one synthesized frame)");
+
+        long sum = 0;
+        final Cursor<RealType<?>> c = d.cursor();
+        while (c.hasNext()) sum += (long) c.next().getRealDouble();
+        assertEquals(SF_SUM, sum, "intensity sum");
     }
 
     @Test
