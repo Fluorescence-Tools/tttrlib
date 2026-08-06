@@ -41,6 +41,14 @@ std::size_t read_bh_spcqc_header(FILE* fpin, nlohmann::json& data, bool rewind =
  */
 bool read_bh_set_file(const std::string& filename, nlohmann::json& data);
 
+/*!
+ * \brief \see read_bh_set_file, for a sidecar the caller already has.
+ *
+ * A .spc embedded in a container has no directory to look in, so whoever
+ * unpacked it hands the bytes over instead of a path.
+ */
+bool parse_bh_set(const std::string& content, nlohmann::json& data);
+
 /// Write a ".set" sidecar from the imaging tags in \p data; false if there are none.
 bool write_bh_set_file(const std::string& filename, nlohmann::json& data);
 

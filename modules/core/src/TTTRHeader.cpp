@@ -45,16 +45,22 @@ if (is_verbose()) {
 TTTRHeader::TTTRHeader(
         std::FILE *fpin,
         int tttr_container_type,
-        bool close_file
+        bool close_file,
+        std::uint64_t base
         ) : TTTRHeader(tttr_container_type)
 {
+    // An embedded container starts at `base`, so the readers are positioned
+    // there and told not to rewind. They report header_end with ftell, which is
+    // absolute, so everything downstream needs no further adjustment.
+    const bool rewind = base == 0;
+    if (!rewind) std::fseek(fpin, static_cast<long>(base), SEEK_SET);
 if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader - Opening file" << std::endl;
     std::clog << "reading header" << std::endl;
 }
     int tttr_record_type;
     if(tttr_container_type == PQ_PTU_CONTAINER){
-        header_end = read_ptu_header(fpin, tttr_record_type, json_data());
+        header_end = read_ptu_header(fpin, tttr_record_type, json_data(), rewind);
         int RecordType = get_tag(json_data(), "TTResultFormat_TTTRRecType")["value"];
         switch (RecordType)
         {
@@ -90,14 +96,14 @@ if (is_verbose()) {
                 tttr_record_type = PQ_RECORD_TYPE_HHT3v2;
         }
     } else if(tttr_container_type == CZ_CONFOCOR3_CONTAINER) {
-        header_end = read_cz_confocor3_header(fpin, json_data());
+        header_end = read_cz_confocor3_header(fpin, json_data(), rewind);
         tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else if(tttr_container_type == SM_CONTAINER){
         header_end = read_sm_header(fpin, json_data());
         tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     }
     else if(tttr_container_type == PQ_HT3_CONTAINER){
-        header_end = read_ht3_header(fpin, json_data());
+        header_end = read_ht3_header(fpin, json_data(), rewind);
         tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else if(tttr_container_type == BH_SPC600_256_CONTAINER){
         header_end = 0;
@@ -112,10 +118,10 @@ if (is_verbose()) {
         add_tag(json_data(), TTTRTagBits, 48, tyInt8);
         tttr_record_type = BH_RECORD_TYPE_SPC600_4096;
     } else if(tttr_container_type == BH_SPC130_CONTAINER){
-        header_end = read_bh132_header(fpin, json_data());
+        header_end = read_bh132_header(fpin, json_data(), rewind);
         tttr_record_type = BH_RECORD_TYPE_SPC130;
     } else if(tttr_container_type == BH_SPCQC_CONTAINER){
-        header_end = read_bh_spcqc_header(fpin, json_data());
+        header_end = read_bh_spcqc_header(fpin, json_data(), rewind);
         // QC-x04 and QC-x06 differ in the channel width; the header picks one
         tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else{
@@ -526,6 +532,10 @@ size_t TTTRHeader::read_bh_spcqc_header(std::FILE *fpin, nlohmann::json &data, b
 
 bool TTTRHeader::read_bh_set_file(const std::string& filename) {
     return tttrlib::io::read_bh_set_file(filename, json_data());
+}
+
+bool TTTRHeader::parse_bh_set(const std::string& content) {
+    return tttrlib::io::parse_bh_set(content, json_data());
 }
 
 bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* header) {

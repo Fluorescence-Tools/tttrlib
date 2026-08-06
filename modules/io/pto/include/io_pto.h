@@ -232,6 +232,42 @@ public:
     /// The payload. \throws std::runtime_error if there is no such object.
     std::vector<unsigned char> read(std::uint64_t uid) const;
 
+    /*!
+     * \brief Write an object's payload out as a file of its own.
+     *
+     * The way back out of the container: a measurement is saved as one `.pto`
+     * holding the original instrument file and everything computed from it, and
+     * this is how the instrument file becomes a `.ptu` again for something that
+     * only reads those.
+     *
+     * Copied in blocks, so the payload is never held whole -- extracting an
+     * eight-gigabyte stream costs eight gigabytes of disk and a few kilobytes
+     * of memory.
+     *
+     * \return false if there is no such object, or the file could not be
+     *         written; see \ref error.
+     */
+    bool extract(std::uint64_t uid, const std::string& filename) const;
+
+    /*!
+     * \brief Take the container apart: every object out into a directory.
+     *
+     * The way back to separate files. A measurement saved as one `.pto` holding
+     * the instrument file and everything computed from it becomes a `.ptu` and
+     * a table again, for tools that read only those.
+     *
+     * Sidecars land beside what they belong to, under their own names, which is
+     * what a Becker & Hickl `.spc` needs: its reader looks for the `.set` next
+     * to it on disk, and would otherwise silently read half a header.
+     *
+     * Each object is named by its \ref PtoObject::name, or by its UID when it has none
+     * -- and when two share a name, the later ones get the UID as well, because
+     * a name is a label and nothing stops two objects having the same one.
+     *
+     * \return the paths written, in object order. Empty if nothing could be.
+     */
+    std::vector<std::string> disassemble(const std::string& directory) const;
+
     // -- metadata ---------------------------------------------------------------
 
     std::vector<PtoTag> tags() const;

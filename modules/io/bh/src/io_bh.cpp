@@ -151,16 +151,19 @@ bool read_bh_set_file(const std::string& filename, nlohmann::json &data) {
     if (!f.is_open()) {
         return false;
     }
+    std::stringstream whole;
+    whole << f.rdbuf();
+    return parse_bh_set(whole.str(), data);
+}
 
+bool parse_bh_set(const std::string& content, nlohmann::json &data) {
     // Preserve the full .set verbatim so a .spc+.set -> .ptu -> .spc+.set
     // conversion keeps every BH setting, not just the imaging keys tttrlib
     // interprets below. Real .set files are mostly binary (a binary preamble
     // plus text blocks), so the bytes are base64-encoded to ride safely through
     // text-only header tags (e.g. a PTU ANSI string) and are decoded back by
     // write_bh_set_file.
-    std::stringstream buffer;
-    buffer << f.rdbuf();
-    std::string raw = buffer.str();
+    const std::string& raw = content;
     if (!raw.empty()) {
         std::string b64 = bh_base64_encode(raw);
         add_tag(data, "BH_SPC_SetFile",

@@ -381,7 +381,18 @@ private:
      * \param container_type The container type (see TTTRHeaderTypes.h).
      * \return 1 on success, 0 otherwise.
      */
-    int read_records_file(const char *fn, int container_type);
+    int read_records_file(const char *fn, int container_type,
+                          std::uint64_t base = 0, std::uint64_t region_bytes = 0);
+
+    /*!
+     * \brief A .set sidecar supplied by the caller rather than found on disk.
+     *
+     * A Becker &amp; Hickl .spc carries half its header in a .set file beside it,
+     * and \ref read_bh_set_sidecar looks for one next to the .spc. That works
+     * for a .spc that is a file, and not for one embedded in a container -- so
+     * a caller that has the sidecar already hands it over here instead.
+     */
+    std::string bh_set_text;
 
     /*!
      * \brief For BH SPC files: parse an optional ".set" sidecar file located
@@ -709,6 +720,27 @@ public:
     int read_plugin_file(const char *fn, int container_type);
 
     /*!
+     * \brief Read a record-stream container that begins partway into a file.
+     *
+     * For a container embedded in something bigger -- a PTU inside a PTO -- so
+     * that opening it costs no copy, no temporary file and no unpacking. The
+     * header is parsed at `base` and the records stop after `bytes` rather than
+     * at the end of the file, which is what keeps the reader from walking on
+     * into whatever the outer container put next.
+     *
+     * Applies to the record-stream formats: PTU, HT3, SPC-130/600/QC, CZ-RAW,
+     * SM. The rest -- Photon-HDF5, Photonscore, BrightEyes, FLIM LABS, plugins
+     * -- read by path and cannot yet be read in place.
+     *
+     * \param set_text a Becker &amp; Hickl .set sidecar, for an embedded .spc that
+     *        cannot look for one on disk. Ignored by every other format.
+     * \return 1 on success, 0 on failure.
+     */
+    int read_embedded(const char *fn, int container_type,
+                      unsigned long long base, unsigned long long bytes,
+                      const std::string& set_text = "");
+
+    /*!
      * \brief Writes the TTTR data to a Photonscore ".photons" (D7) file.
      *
      * Reconstructs the position/photon datasets from the flat stream: each
@@ -850,12 +882,17 @@ public:
      * @param fp The file pointer to the TTTR file.
      * @param offset The offset for calculating the number of records.
      * @param bytes_per_record The number of bytes per record.
+     * @param end_bound Where the records stop, or 0 for the end of the file.
+     *        Not the same thing once the container is embedded in something
+     *        bigger: a PTU inside a PTO is followed by the rest of the PTO, and
+     *        reading to EOF would take the container apart as if it were data.
      * @return Returns the calculated number of records.
      */
     static size_t get_number_of_records_by_file_size(
         std::FILE *fp,
         size_t offset,
-        size_t bytes_per_record
+        size_t bytes_per_record,
+        size_t end_bound = 0
     );
 
     /*!

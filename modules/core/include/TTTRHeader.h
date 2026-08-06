@@ -244,7 +244,14 @@ public:
      * @param tttr_container_type the container type
      *
      */
-    TTTRHeader(std::FILE *fpin, int tttr_container_type=0, bool close_file=false);
+    /*!
+     * \param base where the container starts in the file. Zero for a file that
+     *        is the container; non-zero when it is embedded in something bigger,
+     *        such as a PTO. The header readers seek to it rather than to the
+     *        start of the file, and `header_end` comes back absolute either way.
+     */
+    TTTRHeader(std::FILE *fpin, int tttr_container_type=0, bool close_file=false,
+               std::uint64_t base=0);
     TTTRHeader(std::string fn, int tttr_container_type=0);
 
     /// Out of line: `json_data_` points at an incomplete type here.
@@ -349,6 +356,8 @@ public:
      * @return true if parsing succeeded, false otherwise
      */
     bool read_bh_set_file(const std::string& filename);
+    /// \see read_bh_set_file, for a sidecar supplied as bytes.
+    bool parse_bh_set(const std::string& content);
 
     /*!
      * @brief Writes a Becker & Hickl .set sidecar file with imaging parameters.

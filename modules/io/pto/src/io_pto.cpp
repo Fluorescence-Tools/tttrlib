@@ -1242,6 +1242,49 @@ std::vector<unsigned char> PtoFile::read(std::uint64_t uid) const {
     return out;
 }
 
+bool PtoFile::extract(std::uint64_t uid, const std::string& filename) const {
+    Impl& m = *p_;
+    m.err.clear();
+    const Impl::Slot* s = m.find(uid);
+    if (s == nullptr) return m.fail("no object with that uid");
+
+    File out;
+    if (!out.open(filename, "wb")) return m.fail("cannot create " + filename);
+    if (!m.f.seek(s->meta.offset)) return m.fail("cannot reach the payload");
+
+    // In blocks, so an eight-gigabyte stream costs eight gigabytes of disk and
+    // a few kilobytes of memory rather than both.
+    std::vector<unsigned char> chunk(1u << 20);
+    std::uint64_t left = s->meta.size;
+    while (left > 0) {
+        const std::size_t take =
+                static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
+        if (!m.f.read(chunk.data(), take) || !out.write(chunk.data(), take))
+            return m.fail("could not copy the payload of " + std::to_string(uid));
+        left -= take;
+    }
+    return true;
+}
+
+std::vector<std::string> PtoFile::disassemble(const std::string& directory) const {
+    std::vector<std::string> written;
+    std::vector<std::string> used;
+    const std::string sep = directory.empty() ? "" : "/";
+    for (std::size_t i = 0; i < p_->slots.size(); i++) {
+        const PtoObject& o = p_->slots[i].meta;
+        std::string name = o.name;
+        if (name.empty()) name = std::to_string(o.uid);
+        // A name is a label, and two objects may share one. The first keeps it.
+        if (std::find(used.begin(), used.end(), name) != used.end())
+            name = std::to_string(o.uid) + "-" + name;
+        used.push_back(name);
+        const std::string path = directory + sep + name;
+        if (!extract(o.uid, path)) return std::vector<std::string>();
+        written.push_back(path);
+    }
+    return written;
+}
+
 // --- metadata ---------------------------------------------------------------------
 
 std::string PtoFile::title() const { return p_->title; }

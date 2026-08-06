@@ -1197,6 +1197,12 @@ void TTTR::alex_to_microtime(unsigned long alex_period, int period_shift) {
 }
 
 void TTTR::read_bh_set_sidecar() {
+    // Handed to us -- an embedded .spc has no directory to look in.
+    if (!bh_set_text.empty()) {
+        if (header->parse_bh_set(bh_set_text) && is_verbose())
+            std::clog << "-- Parsed a BH .set supplied by the caller" << std::endl;
+        return;
+    }
     // Try to find a .set file with the same base name as the .spc file
     std::string set_filename;
     if (filename.size() >= 4) {
@@ -1339,10 +1345,11 @@ static bool detect_sf_ht3_records(std::FILE* fp, size_t records_begin) {
     return is_sf;
 }
 
-int TTTR::read_records_file(const char *fn, int container_type) {
+int TTTR::read_records_file(const char *fn, int container_type,
+                            std::uint64_t base, std::uint64_t region_bytes) {
     fp = open_file(std::string(fn), "rb");
     if (fp == nullptr) return 0;
-    header = new TTTRHeader(fp, container_type);
+    header = new TTTRHeader(fp, container_type, false, base);
 
     // BH SPC files may come with a .set sidecar file that holds the settings
     if (container_type == BH_SPC130_CONTAINER ||
@@ -1367,7 +1374,8 @@ if (is_verbose()) {
         }
     }
     n_records_in_file = get_number_of_records_by_file_size(
-            fp, header->header_end, header->get_bytes_per_record());
+            fp, header->header_end, header->get_bytes_per_record(),
+            region_bytes == 0 ? 0 : base + region_bytes);
 if (is_verbose()) {
     std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
     std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
@@ -1383,6 +1391,20 @@ if (is_verbose()) {
         compact_spcqc_routing_channels();
     }
     return 1;
+}
+
+int TTTR::read_embedded(const char *fn, int container_type,
+                        unsigned long long base, unsigned long long bytes,
+                        const std::string& set_text) {
+    filename = fn;
+    tttr_container_type = container_type;
+    bh_set_text = set_text;
+    const int ok = read_records_file(fn, container_type, base, bytes);
+    if (ok) {
+        find_used_routing_channels();
+        shrink_to_fit();
+    }
+    return ok;
 }
 
 int TTTR::read_file(const char *fn, int container_type) {
@@ -2049,7 +2071,9 @@ std::shared_ptr<TTTR> TTTR::select(int *selection, int n_selection) {
 }
 
 
-size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, size_t bytes_per_record){
+size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset,
+                                                size_t bytes_per_record,
+                                                size_t end_bound){
     size_t n_records_in_file;
     // Use 64-bit file I/O to support files > 2GB on Windows
     // the position of the first record in the file
@@ -2068,6 +2092,11 @@ size_t TTTR::get_number_of_records_by_file_size(std::FILE *fp, size_t offset, si
         }
         return 0;
     }
+    // An embedded container ends where its payload ends, not where the file
+    // does. Without this the records would run on into whatever the outer
+    // container put next.
+    if (end_bound != 0 && static_cast<int64_t>(end_bound) < fileSize)
+        fileSize = static_cast<int64_t>(end_bound);
     // calculate the number of records based on the size of the file
     // and the bytes per record
     if (fileSize < static_cast<int64_t>(offset)) {
