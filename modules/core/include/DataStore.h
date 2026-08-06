@@ -703,8 +703,18 @@ struct DataStoreInfo {
     std::string label;
     std::size_t n_rows = 0;
     int n_columns = 0;
+    /// The whole tree: this store's columns plus every group under it.
     std::size_t nbytes = 0;
     std::size_t n_selected = 0;
+    /*!
+     * Direct children, so a root that looks empty is not mistaken for one.
+     *
+     * Only a count. A per-group breakdown belongs to
+     * `DataStore.memory_report()`, which is where a caller who wants it is
+     * already looking -- putting one here would mean allocating a second vector
+     * per store while the registry mutex is held.
+     */
+    int n_groups = 0;
 };
 
 class DataStore;
@@ -1661,8 +1671,9 @@ inline std::vector<DataStoreInfo> DataStoreRegistry::list() const {
         i.label = s->label();
         i.n_rows = s->n_rows();
         i.n_columns = s->n_columns();
-        i.nbytes = s->nbytes();
+        i.nbytes = s->nbytes();          // the whole tree; groups are not listed
         i.n_selected = s->n_selected();
+        i.n_groups = s->n_groups();
         out.push_back(i);
     }
     return out;

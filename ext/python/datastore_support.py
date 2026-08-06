@@ -75,6 +75,9 @@ def data_stores():
             "bytes": i.nbytes,
             "MB": round(i.nbytes / 1e6, 1),
             "selected": i.n_selected,
+            # Direct children. Their bytes are already in "bytes" -- the
+            # registry lists roots, and a root reports its whole tree.
+            "groups": i.n_groups,
         }
         for i in live_data_stores()
     ]
@@ -86,10 +89,12 @@ def data_store_report():
     if not rows:
         return "no data stores"
     width = max(len(r["label"]) or 1 for r in rows)
-    out = ["%-4s %-*s %12s %8s %10s" % ("id", width, "label", "rows", "cols", "MB")]
+    out = ["%-4s %-*s %12s %8s %7s %10s"
+           % ("id", width, "label", "rows", "cols", "groups", "MB")]
     for r in rows:
-        out.append("%-4d %-*s %12d %8d %10.1f"
-                   % (r["id"], width, r["label"] or "-", r["rows"], r["columns"], r["MB"]))
+        out.append("%-4d %-*s %12d %8d %7d %10.1f"
+                   % (r["id"], width, r["label"] or "-", r["rows"], r["columns"],
+                      r["groups"], r["MB"]))
     out.append("%s total %.1f MB in %d stores"
                % (" " * (width + 5), live_data_store_bytes() / 1e6, len(rows)))
     return "\n".join(out)

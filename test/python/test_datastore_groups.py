@@ -278,6 +278,17 @@ def test_a_group_is_not_a_second_registry_entry():
     assert s.group("a").id() == 0
 
 
+def test_the_listing_says_how_many_groups_a_store_has():
+    """Otherwise a root holding a gigabyte in two groups reads as an empty
+    store with a mysterious size."""
+    s = tttrlib.DataStore("tree")
+    s.add_group("a")
+    s.add_group("b")
+    entry = [e for e in tttrlib.data_stores() if e["id"] == s.id()][0]
+    assert entry["groups"] == 2 and entry["rows"] == 0 and entry["columns"] == 0
+    assert "groups" in tttrlib.data_store_report()
+
+
 def test_the_root_entry_reports_the_tree_total():
     s = tttrlib.DataStore("with a group")
     g = s.add_group("big")
