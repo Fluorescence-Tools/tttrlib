@@ -15,6 +15,7 @@
 #include <unordered_map>
 
 #include "FileIO.h"
+#include "decimal_exact.h"
 
 #ifndef _WIN32
 #include <fcntl.h>
@@ -73,16 +74,25 @@ bool parse_double(const char* p, std::size_t n, double& out) {
     unsigned long long mant = 0;
     int digits = 0, exp10 = 0;
     bool any = false;
+    // A leading zero carries no precision and must not be charged against the
+    // nineteen digits the mantissa can hold -- 0.00035338058920092875 spends
+    // three of them on the zeros and then loses its last digit off the end,
+    // which is a wrong answer rather than a slow one.
     for (; i < n && p[i] >= '0' && p[i] <= '9'; i++) {
-        if (digits < 19) { mant = mant * 10ULL + static_cast<unsigned>(p[i] - '0'); digits++; }
-        else exp10++;                                    // beyond precision, scale instead
+        const unsigned d = static_cast<unsigned>(p[i] - '0');
         any = true;
+        if (mant == 0 && d == 0) continue;               // leading zero
+        if (digits < 19) { mant = mant * 10ULL + d; digits++; }
+        else exp10++;                                    // beyond precision, scale instead
     }
     if (i < n && p[i] == '.') {
         i++;
         for (; i < n && p[i] >= '0' && p[i] <= '9'; i++) {
-            if (digits < 19) { mant = mant * 10ULL + static_cast<unsigned>(p[i] - '0'); digits++; exp10--; }
+            const unsigned d = static_cast<unsigned>(p[i] - '0');
             any = true;
+            // A zero before the first significant digit still shifts the point.
+            if (mant == 0 && d == 0) { exp10--; continue; }
+            if (digits < 19) { mant = mant * 10ULL + d; digits++; exp10--; }
         }
     }
     if (!any) goto slow;
@@ -99,13 +109,49 @@ bool parse_double(const char* p, std::size_t n, double& out) {
         exp10 += eneg ? -e : e;
     }
     if (i != n) goto slow;
-    {
-        double v = static_cast<double>(mant);
-        // std::pow once rather than a loop: one rounding, not exp10 of them.
-        if (exp10 != 0) v *= std::pow(10.0, static_cast<double>(exp10));
+    /*
+     * Clinger's conditions, and they are not a nicety. The mantissa has to be
+     * a double exactly and the power of ten has to be one too; then the single
+     * multiply (or divide -- 10^-3 is not representable, so a negative
+     * exponent must not be turned into a multiplication by an inexact
+     * reciprocal) is the only rounding, and it lands on the double strtod
+     * would give.
+     *
+     * Outside them the naive mant * pow(10, exp10) is a rounding too many --
+     * which is a ulp on a seventeen-digit mantissa, and everything at the ends
+     * of the range: pow(10, -327) is zero, so 1.234e-310 parsed that way is
+     * zero, and a large mantissa times a large power is an infinity where the
+     * value is finite. Those go the slow way, which is what it is for.
+     */
+    if (decimal::clinger_applies(mant, -exp10)) {
+        const double v = decimal::clinger_value(mant, -exp10);
         out = neg ? -v : v;
         return true;
     }
+#ifdef TTTRLIB_CSV_HAVE_INT128
+    /*
+     * Sixteen and seventeen digits: past Clinger, and the values a writer
+     * produces when it is not rounding. The division below is a rounding too
+     * many, so it is a CANDIDATE rather than an answer -- but the integer
+     * comparison can then say exactly whether that candidate is the double
+     * this decimal parses to, and if it is off it is off by an adjacent
+     * double. Two neighbours are enough; anything else goes the slow way.
+     */
+    if (mant < (1ULL << 57) && exp10 <= 0 && exp10 >= -19) {
+        const int k = -exp10;
+        const double guess = static_cast<double>(mant) / decimal::kPow10[k];
+        if (std::isfinite(guess) && guess > 0.0) {
+            for (int adj = 0; adj < 3; adj++) {
+                const double c = adj == 0 ? guess
+                        : std::nextafter(guess, adj == 1 ? 0.0 : HUGE_VAL);
+                if (decimal::reads_back(c, mant, k)) {
+                    out = neg ? -c : c;
+                    return true;
+                }
+            }
+        }
+    }
+#endif
 slow: {
         char buf[512];
         if (n >= sizeof(buf)) return false;
@@ -114,7 +160,13 @@ slow: {
         char* end = nullptr;
         errno = 0;
         const double v = std::strtod(buf, &end);
-        if (end != buf + n || errno == ERANGE) return false;
+        if (end != buf + n) return false;
+        // ERANGE covers both ends and they are not the same answer. Overflow
+        // gives HUGE_VAL, which is not the number that was written, so the
+        // field is not a real and the column is text. Underflow gives the
+        // correctly rounded subnormal or zero, which IS the answer -- and
+        // rejecting it would turn a column holding one 1e-320 into text.
+        if (errno == ERANGE && (v == HUGE_VAL || v == -HUGE_VAL)) return false;
         out = v;
         return true;
     }

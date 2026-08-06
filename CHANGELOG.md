@@ -57,6 +57,13 @@
 - **`Hdf5WriteMode`** on `write_hdf5_table`, and whole-tree HDF5 read and write.
 
 ### Fixed
+- **The CSV reader returned a different number than it was given.**
+  `mant * pow(10, exp10)` is one rounding too many: 32% of doubles came back a
+  ulp out, and anything past about 1e-310 came back as zero, because
+  `pow(10, -327)` underflows. Leading zeros were also charged against the
+  nineteen digits the mantissa can hold, so `0.00035338058920092875` lost its
+  last digit. Ordinary data reads at the same speed as before; only the values
+  that need it take the slower exact path.
 - **A zero-length `TypedArray` was refused by the JavaScript binding** as having
   "the wrong element type". An empty `ArrayBuffer` has a null data pointer, and
   the borrow reported that null as a type error — so writing a zero-row table,
