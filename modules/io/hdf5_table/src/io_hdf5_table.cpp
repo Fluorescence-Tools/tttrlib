@@ -163,6 +163,30 @@ void read_string_column(hid_t ds, hid_t type, data::Column& column, std::size_t 
     H5Tclose(mem);
 }
 
+/*!
+ * \brief The attribute that turns a column of integers back into text.
+ *
+ * A text column is dictionary-encoded in the store -- the distinct labels once,
+ * plus an int32 code per row -- and writing it as one string per row throws
+ * that away at the file boundary. On a burst table the difference is the whole
+ * comparison: a million rows drawn from four labels cost 4 MB as codes and
+ * 44 MB as strings, which is what put a written store *past* the DataFrame it
+ * replaces rather than under it.
+ *
+ * So the codes are the dataset and the dictionary is an attribute on it. The
+ * file stays self-describing -- everything needed to read the column is on the
+ * column -- and a reader that ignores the attribute still gets a valid integer
+ * column of category codes rather than nothing.
+ */
+const char* kDictionaryAttribute = "dictionary";
+
+/// Whether an object carries a named attribute at all, which is not the same
+/// question as whether it carries a non-empty one: a text column with no rows
+/// has an empty dictionary and is still a text column.
+bool has_attribute(hid_t obj, const char* attribute) {
+    return H5Aexists(obj, attribute) > 0;
+}
+
 /// A string-list attribute, or empty when the object does not carry one.
 std::vector<std::string> read_string_attribute(hid_t obj, const char* attribute) {
     std::vector<std::string> out;
@@ -189,6 +213,41 @@ std::vector<std::string> read_string_attribute(hid_t obj, const char* attribute)
 /// The `columns` attribute, if the writer left one.
 std::vector<std::string> declared_order(hid_t group) {
     return read_string_attribute(group, "columns");
+}
+
+/// Whether a column type is one an integer dataset reads back as, i.e. one that
+/// could be carrying dictionary codes. \see kDictionaryAttribute.
+bool is_integer_type(data::ColumnType type) {
+    switch (type) {
+        case data::ColumnType::Int64:  case data::ColumnType::Int32:
+        case data::ColumnType::Int16:  case data::ColumnType::Int8:
+        case data::ColumnType::UInt64: case data::ColumnType::UInt32:
+        case data::ColumnType::UInt16: case data::ColumnType::UInt8:
+            return true;
+        default:
+            return false;
+    }
+}
+
+/*!
+ * \brief The dictionary codes of a text column, or nothing.
+ *
+ * Answers "no" -- so the caller reads the dataset as the integers it literally
+ * holds -- when a code does not index the dictionary. That is a corrupt or
+ * foreign file rather than a text column, and taking it as text would build a
+ * column whose every access is out of bounds. Asked *before* the column is
+ * created, because the answer is what decides its type.
+ */
+bool read_codes(hid_t ds, const std::vector<std::string>& dictionary,
+                std::size_t n, std::vector<std::int32_t>* out) {
+    out->assign(n, 0);
+    if (n > 0 && H5Dread(ds, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                         out->data()) < 0)
+        return false;
+    const std::int32_t limit = static_cast<std::int32_t>(dictionary.size());
+    for (std::int32_t code : *out)
+        if (code < 0 || code >= limit) return false;
+    return true;
 }
 
 /*!
@@ -348,9 +407,29 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
                             (first || n == n_rows);
         if (usable) {
             if (first) { n_rows = n; first = false; }
-            const int index = out.add_column(name, column_type);
+            // Codes plus a dictionary attribute is a text column. Both have to
+            // be read before the column exists, because whether they are
+            // consistent is what decides the column's type.
+            std::vector<std::string> dictionary;
+            std::vector<std::int32_t> codes;
+            bool encoded = is_integer_type(column_type) &&
+                           has_attribute(ds, kDictionaryAttribute);
+            if (encoded) {
+                dictionary = read_string_attribute(ds, kDictionaryAttribute);
+                encoded = read_codes(ds, dictionary, n, &codes);
+                if (!encoded)
+                    std::cerr << "hdf5 table: " << name
+                              << " has a dictionary attribute its values do not "
+                                 "index; reading it as integers" << std::endl;
+            }
+
+            const int index = out.add_column(
+                name, encoded ? data::ColumnType::String : column_type);
             data::Column& column = out.column(index);
-            if (column_type == data::ColumnType::String) {
+            if (encoded) {
+                column.set_dictionary(dictionary);
+                column.set_codes(codes.data(), static_cast<int>(n));
+            } else if (column_type == data::ColumnType::String) {
                 read_string_column(ds, type, column, n);
             } else {
                 read_numeric_column(ds, column, column_type, n);
@@ -599,17 +678,28 @@ bool write_table_into(hid_t dest, const data::DataStore& store, int compression)
         bool ok = true;
 
         if (column.type() == data::ColumnType::String) {
-            std::vector<std::string> values(n_out);
-            for (std::size_t i = 0; i < n_out; i++)
-                values[i] = column.string_at(gate.source(i));
-            std::vector<const char*> pointers(n_out);
-            for (std::size_t i = 0; i < n_out; i++) pointers[i] = values[i].c_str();
-            const hid_t vlen = H5Tcopy(H5T_C_S1);
-            H5Tset_size(vlen, H5T_VARIABLE);
-            H5Tset_cset(vlen, H5T_CSET_UTF8);
-            ok = write_column_dataset(dest, stored, vlen, vlen, n_out,
-                                      pointers.data(), 0);
-            H5Tclose(vlen);
+            // The codes, not the labels. \see kDictionaryAttribute. Ungated,
+            // that is the column's own buffer and there is nothing to gather.
+            const data::RawVector<std::int32_t>& source_codes = column.codes();
+            std::vector<std::int32_t> gathered;
+            if (gate.gated) {
+                gathered.resize(n_out);
+                for (std::size_t i = 0; i < n_out; i++)
+                    gathered[i] = source_codes[gate.source(i)];
+            }
+            ok = write_column_dataset(
+                dest, stored, H5T_STD_I32LE, H5T_NATIVE_INT32, n_out,
+                gate.gated ? gathered.data() : source_codes.data(), compression);
+            if (ok) {
+                const hid_t ds = H5Dopen2(dest, stored.c_str(), H5P_DEFAULT);
+                if (ds < 0) {
+                    ok = write_failed("reopen for its dictionary", stored);
+                } else {
+                    ok = write_string_attribute(ds, kDictionaryAttribute,
+                                                column.dictionary());
+                    H5Dclose(ds);
+                }
+            }
         } else if (!gate.gated && column.type() != data::ColumnType::Bool &&
                    column.data_ptr() != nullptr) {
             // The whole column, straight out of its buffer.

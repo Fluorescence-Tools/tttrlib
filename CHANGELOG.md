@@ -26,6 +26,18 @@
 - **`Hdf5WriteMode`** on `write_hdf5_table`, and whole-tree HDF5 read and write.
 
 ### Fixed
+- **A text column went into HDF5 as one string per row**, throwing away the
+  encoding at the file boundary — which is the one place a written store lost to
+  the DataFrame it replaces. The dataset is now the `int32` codes and the labels
+  are a `dictionary` attribute on it, so the file stays self-describing and a
+  reader that ignores the attribute still gets valid category codes rather than
+  nothing. Measured on a 1M-row burst table with one four-label text column:
+  **96.0 MB → 60.0 MB**, against pandas' 72.6 MB — from above that file to below
+  it — with the write 0.185 s → **0.037 s** and the read 0.191 s → **0.011 s**.
+  Both older layouts still read: variable-length strings (what this wrote until
+  now, and what every other producer writes) and fixed-width ones. Codes that do
+  not index their dictionary are read as the integers they literally are, rather
+  than as a text column whose every access is out of bounds.
 - **A gated wide integer went through a `double` and came back changed.**
   Writing a store *with a row selection* to HDF5 gathered every column into a
   `vector<double>`, so an `Int64` or `UInt64` above 2^53 was written as a

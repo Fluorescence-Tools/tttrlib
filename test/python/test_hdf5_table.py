@@ -264,3 +264,118 @@ def test_the_table_histograms_without_being_converted(store, tmp_path):
     h = back.histogram("f64", bins=16, range=[(-3.0, 3.0)])
     reference, _ = np.histogram(store["f64"].numpy(), bins=16, range=(-3.0, 3.0))
     assert np.array_equal(h.view(), reference)
+
+
+# --- a text column keeps its dictionary through the file -----------------------
+#
+# Writing one string per row throws away the encoding at the file boundary, and
+# on a burst table that is the whole comparison: a million rows drawn from four
+# labels are 4 MB of codes and 44 MB of strings. Measured on that table, storing
+# the codes took the file from 96.0 MB to 60.0 MB -- from *above* the DataFrame
+# it replaces (72.6 MB) to below it -- and the read from 0.191 s to 0.011 s.
+
+
+def test_a_text_column_is_stored_as_codes_and_a_dictionary(store, tmp_path):
+    """The layout, not just the round trip: what makes the file small is that
+    the labels are in an attribute and the rows are int32 codes."""
+    h5py = pytest.importorskip("h5py")
+    path = tmp_path / "t.h5"
+    assert tttrlib.write_hdf5(str(path), store)
+
+    with h5py.File(str(path), "r") as f:
+        text = f["text"]
+        assert text.dtype == np.int32
+        labels = [s.decode() if isinstance(s, bytes) else s
+                  for s in text.attrs["dictionary"]]
+        assert sorted(labels) == sorted({"label %d" % (i % 11) for i in range(N)})
+        assert set(text[:]) <= set(range(len(labels)))
+
+
+def test_a_text_column_survives_the_file(store, tmp_path):
+    path = tmp_path / "t.h5"
+    assert tttrlib.write_hdf5(str(path), store)
+    back = tttrlib.read_hdf5(str(path))
+
+    assert back["text"].dtype == "str"
+    assert list(back["text"].numpy()) == list(store["text"].numpy())
+
+
+def test_a_dictionary_encoded_column_is_much_smaller(tmp_path):
+    """The measurement the change exists for, in miniature: repeated labels cost
+    a code each rather than a string each."""
+    n = 20_000
+    s = tttrlib.DataStore()
+    s.add("text", np.array(["Green", "Red", "Yellow", "Blue"] * (n // 4), dtype=object))
+    path = tmp_path / "codes.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+    # 4 bytes a row plus a four-label dictionary, against ~6 bytes of string
+    # plus a 16-byte variable-length descriptor a row.
+    assert path.stat().st_size < n * 6
+
+
+def test_a_selection_writes_the_labels_of_the_rows_it_kept(tmp_path):
+    """The gathered path. The dictionary goes out whole -- an unused label costs
+    nothing -- but the codes must be the selected rows' own."""
+    s = tttrlib.DataStore()
+    s.add("text", np.array(["a", "b", "c", "d"], dtype=object))
+    s.set_row_mask(np.array([False, True, False, True]))
+    path = tmp_path / "gated.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back.n_rows() == 2
+    assert list(back["text"].numpy()) == ["b", "d"]
+
+
+def test_a_text_column_with_no_rows_is_still_a_text_column(tmp_path):
+    """An empty dictionary is not a missing one. Reading this back as integers
+    would change a column's type on a table that merely has nothing in it."""
+    s = tttrlib.DataStore()
+    s.add("text", np.array([], dtype=object))
+    path = tmp_path / "empty.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back["text"].dtype == "str"
+
+
+def test_a_masked_text_column_keeps_both(store, tmp_path):
+    """The mask is written beside the codes, the same as for any other column."""
+    valid = np.ones(N, dtype=np.uint8)
+    valid[3] = 0
+    store["text"].set_mask(valid)
+    path = tmp_path / "t.h5"
+    assert tttrlib.write_hdf5(str(path), store)
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back["text"].dtype == "str"
+    assert not back["text"].valid(3)
+    assert back["text"].valid(4)
+
+
+def test_variable_length_strings_written_by_something_else_still_read(tmp_path):
+    """The layout this library wrote until the codes replaced it, and the one
+    every other HDF5 producer writes. It has to stay readable."""
+    h5py = pytest.importorskip("h5py")
+    path = tmp_path / "vlen.h5"
+    with h5py.File(str(path), "w") as f:
+        f.create_dataset("label", data=np.array(["red", "green", "blue"], dtype=object),
+                         dtype=h5py.string_dtype())
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back.n_rows() == 3
+    assert list(back["label"].numpy()) == ["red", "green", "blue"]
+
+
+def test_codes_that_do_not_index_their_dictionary_read_as_integers(tmp_path):
+    """A named decline. Taking these as text would build a column whose every
+    access is out of bounds, so the dataset is read as what it literally holds."""
+    h5py = pytest.importorskip("h5py")
+    path = tmp_path / "bad.h5"
+    with h5py.File(str(path), "w") as f:
+        ds = f.create_dataset("label", data=np.array([0, 7, 1], dtype=np.int32))
+        ds.attrs["dictionary"] = np.array(["red", "green"], dtype=object)
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back["label"].dtype == "int32"
+    np.testing.assert_array_equal(back["label"].numpy(), [0, 7, 1])
