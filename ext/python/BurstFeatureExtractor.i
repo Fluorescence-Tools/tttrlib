@@ -126,5 +126,30 @@ using json = nlohmann::json;
 #endif
 }
 
-// Scoped to this header and its %extend only.
-%exception;
+// Restore the project's standard handler rather than clearing it.
+//
+// A bare `%exception;` does not "end the scope" -- it removes the handler for
+// EVERYTHING SWIG parses afterwards. The window that opened here ran from
+// BurstFeature.i to HmmSurrogate.i (BVA, TwoCDE, the HMMs, NeuralNet), until
+// MicrotimeLinearization.i happened to install a global one again.
+//
+// Python survived that because SWIG-Python catches std::exception by default.
+// Node-API does not: an untranslated C++ exception reaching the boundary
+// TERMINATES THE PROCESS --
+//     libc++abi: terminating due to uncaught exception of type
+//     std::runtime_error: BurstFeature: unknown stream 'donor'
+// which is what `new BVA(bf).compute()` did before its streams were set.
+//
+// HistogramNd.i already warns about this: "Adding a duplicate is harmless;
+// ending it with `%exception;` is not."
+%exception {
+    try {
+        $action
+    } catch (const std::invalid_argument& e) {
+        SWIG_exception(SWIG_ValueError, e.what());
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    } catch (...) {
+        SWIG_exception(SWIG_UnknownError, "Unknown exception");
+    }
+}

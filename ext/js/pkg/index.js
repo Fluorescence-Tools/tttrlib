@@ -486,6 +486,133 @@ if (native.SimEngine && typeof native.SimEngine.from_json === 'function') {
 }
 
 // ---------------------------------------------------------------------------
+// Analysis conveniences: the JavaScript half of the %pythoncode blocks
+// ---------------------------------------------------------------------------
+//
+// Python gets these from `%pythoncode` in the shared .i files, which no other
+// backend reaches. The C++ underneath is wrapped for JavaScript already -- what
+// was missing is the same shorthand, so a caller had to know that a simulated
+// photon stream is seven parallel accessors rather than one call.
+//
+// Each is written against the same C++ the Python version calls, so the two
+// answer identically by construction rather than by coincidence.
+
+if (native.SimEngine) {
+  /**
+   * The photon stream as an object of typed arrays -- the counterpart of
+   * Python's SimEngine.photons().
+   *
+   * Without this the simulator can be run but not read: the seven channels are
+   * separate accessors, and nothing said they were parallel arrays over the
+   * same events.
+   *
+   * @returns {{macroWindow, arrivalTime, channel, microTime, species, molecule, eventType}}
+   *   `species === n_species` marks background; `eventType` is 0 for a photon
+   *   and 1 for a marker.
+   */
+  native.SimEngine.prototype.photons = function () {
+    return {
+      macroWindow: this.macro_window(),
+      arrivalTime: this.arrival_time(),
+      channel: this.channel(),
+      microTime: this.micro_time(),
+      species: this.emitting_species(),
+      molecule: this.emitting_molecule(),
+      eventType: this.event_type(),
+    };
+  };
+}
+
+// BVA and TwoCDE both derive from BurstFeature, so `result` is defined once on
+// each -- the prototype chain SWIG builds does not always carry it across.
+for (const cls of ['BVA', 'TwoCDE', 'BurstFeatureExtractor']) {
+  const C = native[cls];
+  if (!C || typeof C.prototype.get_result !== 'function') continue;
+  /** Per-burst feature value, NaN where undefined. Python: `.result`. */
+  Object.defineProperty(C.prototype, 'result', {
+    get() { return this.get_result(); },
+    configurable: true,
+  });
+}
+
+if (native.BVA) {
+  /** Per-burst mean proximity ratio. Python: `.proximity_ratio_mean`. */
+  Object.defineProperty(native.BVA.prototype, 'proximityRatioMean', {
+    get() { return this.get_proximity_ratio_mean(); },
+    configurable: true,
+  });
+  /** Per-burst proximity-ratio standard deviation. */
+  Object.defineProperty(native.BVA.prototype, 'proximityRatioStd', {
+    get() { return this.get_proximity_ratio_std(); },
+    configurable: true,
+  });
+}
+
+if (native.TwoCDE) {
+  /** Per-burst 2CDE value, NaN where undefined. Python: `.two_cde`. */
+  Object.defineProperty(native.TwoCDE.prototype, 'twoCde', {
+    get() { return this.get_result(); },
+    configurable: true,
+  });
+}
+
+if (native.HMM) {
+  /**
+   * Per-photon Viterbi state path and its ICL score.
+   * @returns {{path, icl: number}}
+   */
+  native.HMM.prototype.viterbiPath = function (model) {
+    const [path, icl] = this.viterbi(model);
+    return { path, icl: Number(icl) };
+  };
+
+  /**
+   * Per-photon posterior state probabilities -- a distribution over states for
+   * each photon, not the winner-takes-all assignment Viterbi reports.
+   * @returns {{gamma, nUnderflow: number}}
+   */
+  native.HMM.prototype.gamma = function (model) {
+    const [g, nUnderflow] = this.posterior(model);
+    return { gamma: g, nUnderflow: Number(nUnderflow) };
+  };
+
+  /**
+   * Draw each photon's state independently from its gamma row. Faithful per
+   * photon, but the draws are independent so the path fragments -- use
+   * ffbsPaths() for dwell times or transition counts.
+   * @returns {{path, nUnderflow: number}}
+   */
+  native.HMM.prototype.jitterPath = function (model, seed = 0) {
+    const [path, nUnderflow] = this.sample_states(model, seed);
+    return { path, nUnderflow: Number(nUnderflow) };
+  };
+
+  /** Whole trajectories drawn from P(path | data), by forward-backward sampling. */
+  native.HMM.prototype.ffbsPaths = function (model, seed = 0, nSamples = 1) {
+    return this.sample_paths(model, seed, nSamples);
+  };
+}
+
+if (native.NeuralNet) {
+  /** The weight matrix of layer `i`, as rows of n_in. Python: `layer_weights(i)`. */
+  native.NeuralNet.prototype.layerWeights = function (i) {
+    const layer = this.get_layers().get(i);
+    const flat = layer.weight;
+    const nIn = Number(layer.n_in);
+    const rows = [];
+    for (let r = 0; r < Number(layer.n_out); r++) {
+      rows.push(Float64Array.from(flat.slice(r * nIn, (r + 1) * nIn)));
+    }
+    return rows;
+  };
+
+  /** The bias vector of layer `i`. Python: `layer_bias(i)`. */
+  native.NeuralNet.prototype.layerBias = function (i) {
+    return this.get_layers().get(i).bias;
+  };
+}
+
+// ---------------------------------------------------------------------------
 exported.registry = registry;
 
 /**

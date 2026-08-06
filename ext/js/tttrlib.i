@@ -33,9 +33,35 @@
 // no GIL here, so it expands to nothing.
 %define TTTRLIB_NOGIL(Method) %enddef
 
-// Node-API converts a thrown C++ exception into a JavaScript exception on its
-// own, but only for exceptions that escape the wrapper. The shared fragments
-// install %exception blocks that call SWIG_exception(); those work unchanged.
+// A C++ exception that reaches the Node-API boundary untranslated does NOT
+// become a JavaScript exception -- it terminates the process:
+//
+//     libc++abi: terminating due to uncaught exception of type
+//     std::runtime_error: BurstFeature: unknown stream 'donor'
+//
+// which is what `new BVA(bf).compute()` used to do before the streams were
+// configured. Python survives the same call because it raises a RuntimeError.
+//
+// The shared fragments do install %exception blocks, but they are scoped: the
+// one in BurstFeatureExtractor.i ends with a bare `%exception;`, and the global
+// one lives in MicrotimeLinearization.i, which is included AFTER BVA.i and
+// TwoCDE.i -- so those two, among others, were left bare.
+//
+// This installs the handler FIRST, so it covers everything that follows. A
+// later per-file %exception still overrides it for its own scope, which is what
+// those blocks are for.
+%include <exception.i>
+%exception {
+    try {
+        $action
+    } catch (const std::invalid_argument& e) {
+        SWIG_exception(SWIG_ValueError, e.what());
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    } catch (...) {
+        SWIG_exception(SWIG_UnknownError, "Unknown exception");
+    }
+}
 
 // Shared C++ core -- identical %include list to ext/python/tttrlib.i.
 %include "info.h"
@@ -72,6 +98,8 @@
 // took; test/js/conformance.test.mjs runs the PRD-019 group-tree cases through
 // it. This list is again identical to ext/python/tttrlib.i's.
 %include "Hdf5Table.i"
+%include "StoreFile.i"
+%include "Pto.i"
 
 /* Correlation of data */
 %include "Correlator.i"

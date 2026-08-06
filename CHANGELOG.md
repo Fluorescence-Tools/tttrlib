@@ -33,6 +33,13 @@
   fewer, and an exact 128-bit integer comparison decides sixteen and seventeen.
   Both answer "cannot decide" outside their range rather than guessing, and the
   reader decides by the same two rules, so the two directions cannot disagree.
+- **The analysis outputs reach JavaScript.** `SimEngine.photons()`,
+  `BVA.result` / `.proximityRatioMean` / `.proximityRatioStd`, `TwoCDE.twoCde`,
+  `HMM.viterbiPath()` / `.gamma()` / `.jitterPath()` / `.ffbsPaths()` and
+  `NeuralNet.layerWeights()` / `.layerBias()` — the shorthand Python gets from
+  `%pythoncode`, which no other backend reaches. The C++ underneath was already
+  wrapped, so a simulation could be run from JavaScript but its photons could
+  not be read: they are seven parallel accessors, and nothing said so.
 - **A cross-language conformance suite.** `test/conformance/` holds one
   committed case list — 67 cases over thirteen areas — that Python, R, Java
   and JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
@@ -91,6 +98,14 @@
 - **`Hdf5WriteMode`** on `write_hdf5_table`, and whole-tree HDF5 read and write.
 
 ### Fixed
+- **A C++ exception could terminate the Node process** instead of becoming a
+  JavaScript error. `BurstFeatureExtractor.i` ended its `%exception` block with
+  a bare `%exception;`, meaning to scope it — but that clears the handler for
+  everything SWIG parses afterwards, which left `BurstFeature`, `BVA`,
+  `TwoCDE`, the HMMs, `NeuralNet` and `HmmSurrogate` with none. Python survived
+  on SWIG-Python's built-in `std::exception` fallback; Node-API has no such
+  fallback and aborted. The handler is now restored rather than cleared, which
+  fixes R and Java over the same range.
 - **The CSV reader returned a different number than it was given.**
   `mant * pow(10, exp10)` is one rounding too many: 32% of doubles came back a
   ulp out, and anything past about 1e-310 came back as zero, because
