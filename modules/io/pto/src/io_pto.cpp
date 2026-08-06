@@ -1545,9 +1545,20 @@ std::string lowered(std::string s) {
     return s;
 }
 
-/// The container id an encoding reads as, or -1.
+/*!
+ * \brief The container id an encoding reads as, or -1.
+ *
+ * A tttrlib container NAME is tried first, so a writer that knows exactly what
+ * it embedded can say so: four different formats claim the extension "spc", and
+ * an SPC-QC stored as "spc" would come back as an SPC-130 -- readable, wrong,
+ * and silent about it. The extension names below stay for a file somebody wrote
+ * by hand, where "ptu" is the obvious thing to put.
+ */
 int container_for(const std::string& encoding) {
     const std::string e = lowered(encoding);
+    const std::vector<FileFormat>& all = IORegistry::formats();
+    for (std::size_t i = 0; i < all.size(); i++)
+        if (lowered(all[i].name) == e) return all[i].container_type;
     for (std::size_t i = 0; i < sizeof(kReadable) / sizeof(kReadable[0]); i++) {
         if (e != kReadable[i].encoding) continue;
         const FileFormat* f = IORegistry::by_name(kReadable[i].container);

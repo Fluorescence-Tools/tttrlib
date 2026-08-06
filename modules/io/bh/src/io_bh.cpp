@@ -95,7 +95,10 @@ if (is_verbose()) {
     std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
     std::clog << "-- micro_time_resolution: " << mi_clk << std::endl;
 }
-    return 4;
+    // Where the header ENDS, not how long it is. The two are the same number
+    // for a file that is a container and different for one embedded in
+    // something bigger, and every other header reader here returns the former.
+    return static_cast<std::size_t>(std::ftell(fpin));
 }
 
 size_t read_bh_spcqc_header(
@@ -143,7 +146,10 @@ if (is_verbose()) {
     std::clog << "-- routing bits: " << rec.bits.n_routing_bits << std::endl;
     std::clog << "-- record layout: " << (rec.bits.six_channel ? "QC-x06" : "QC-x04") << std::endl;
 }
-    return 4;
+    // Where the header ENDS, not how long it is. The two are the same number
+    // for a file that is a container and different for one embedded in
+    // something bigger, and every other header reader here returns the former.
+    return static_cast<std::size_t>(std::ftell(fpin));
 }
 
 bool read_bh_set_file(const std::string& filename, nlohmann::json &data) {
