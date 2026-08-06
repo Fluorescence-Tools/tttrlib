@@ -185,6 +185,76 @@ def test_an_empty_table(tmp_path):
     assert back.n_rows() == 0 and back.names == ["x"]
 
 
+def test_compression_changes_the_file_and_not_the_contents(store, tmp_path):
+    """Compression is a storage decision, so it must be invisible on the way back.
+
+    Pinned because the level is about to change: level 4 costs roughly thirty
+    times the write for eight percent of the size, on tables that are written
+    once and read many times.
+    """
+    none, most = tmp_path / "c0.h5", tmp_path / "c9.h5"
+    assert tttrlib.write_hdf5(str(none), store, compression=0)
+    assert tttrlib.write_hdf5(str(most), store, compression=9)
+
+    a, b = tttrlib.read_hdf5(str(none)), tttrlib.read_hdf5(str(most))
+    assert a.names == b.names == store.names
+    for name in store.names:
+        if name == "text":
+            continue
+        assert a[name].numpy().dtype == b[name].numpy().dtype, name
+        np.testing.assert_array_equal(a[name].numpy(), b[name].numpy())
+
+
+def test_a_bool_column_comes_back_as_uint8(tmp_path):
+    """A known gap, pinned so it is visible rather than folklore.
+
+    HDF5 has no boolean; the writer stores a byte per row as U8LE and the
+    reader has no way to tell that byte apart from a real uint8 column. Fixing
+    it needs somewhere in the file to say "this was a bool", which is a format
+    change and its own decision. Until then, a round trip widens the type --
+    the values are right, `dtype` is not.
+    """
+    s = tttrlib.DataStore()
+    s.set_n_rows(6)
+    s.add("flag", np.array([True, False, True, True, False, True]))
+
+    path = tmp_path / "flag.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+    back = tttrlib.read_hdf5(str(path))
+
+    np.testing.assert_array_equal(back["flag"].numpy().astype(bool),
+                                  s["flag"].numpy().astype(bool))
+    assert back["flag"].numpy().dtype == np.uint8, "if this now says bool, the gap closed"
+
+
+def test_a_fixed_length_string_column_written_by_something_else(tmp_path):
+    """NumPy's "S8" is a fixed-width dataset, not the variable-length one we write.
+
+    A file from h5py or a MATLAB export arrives this way, and the trailing NULs
+    are padding rather than content -- read as-is they end up inside the string.
+    """
+    h5py = pytest.importorskip("h5py")
+    path = tmp_path / "fixed.h5"
+    with h5py.File(str(path), "w") as f:
+        f.create_dataset("label", data=np.array([b"red", b"green", b"blue"], dtype="S8"))
+
+    back = tttrlib.read_hdf5(str(path))
+    assert back.n_rows() == 3
+    assert [back["label"].numpy()[i] for i in range(3)] == ["red", "green", "blue"]
+
+
+def test_the_by_value_read_returns_the_same_table(store, tmp_path):
+    """read_hdf5_table is the overload the bindings avoid -- it copies the table
+    at the moment it is largest -- but it is public and nothing covered it."""
+    path = tmp_path / "t.h5"
+    assert tttrlib.write_hdf5(str(path), store)
+
+    back = tttrlib.read_hdf5_table(str(path))
+    assert back.n_rows() == N
+    assert [back.column(i).name() for i in range(back.n_columns())] == store.names
+    np.testing.assert_array_equal(back["f64"].numpy(), store["f64"].numpy())
+
+
 def test_the_table_histograms_without_being_converted(store, tmp_path):
     """The point of the whole exercise: what comes off disk is what the
     histogram fills out of."""
