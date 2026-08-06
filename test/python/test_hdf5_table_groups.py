@@ -172,6 +172,117 @@ def test_no_temporary_group_is_left_behind(tmp_path):
         assert sorted(f.keys()) == ["results"]
 
 
+def test_hdf5_table_groups_lists_them_in_file_order(tmp_path):
+    """Not alphabetical: a listing that reorders is a listing that cannot be
+    used to rebuild what the file held."""
+    path = str(tmp_path / "listing.h5")
+    tttrlib.write_hdf5(path, table(3), group="/zulu")
+    tttrlib.write_hdf5(path, table(3), group="/alpha")
+    tttrlib.write_hdf5(path, table(3), group="/mike")
+    assert list(tttrlib.hdf5_table_groups(path)) == ["/alpha", "/mike", "/zulu"]
+
+
+def test_a_root_table_with_a_group_beside_it_lists_as_both(tmp_path):
+    """The imaging layout. Sub-groups are not datasets, so a group holding a
+    table AND a child is still a table."""
+    path = str(tmp_path / "both.h5")
+    tttrlib.write_hdf5(path, table(64))
+    tttrlib.write_hdf5(path, table(1, name="source"), group="/meta")
+    assert list(tttrlib.hdf5_table_groups(path)) == ["/", "/meta"]
+
+
+def test_nested_groups_are_reached(tmp_path):
+    path = str(tmp_path / "deep.h5")
+    tttrlib.write_hdf5(path, table(3), group="/a/b")
+    tttrlib.write_hdf5(path, table(3), group="/a/c/d")
+    assert list(tttrlib.hdf5_table_groups(path)) == ["/a/b", "/a/c/d"]
+
+
+def test_a_group_that_only_holds_other_groups_is_not_a_table(tmp_path):
+    path = str(tmp_path / "container.h5")
+    tttrlib.write_hdf5(path, table(3), group="/a/b")
+    assert "/a" not in list(tttrlib.hdf5_table_groups(path))
+    assert tttrlib.hdf5_table_has(path, "/a") is False
+    assert tttrlib.hdf5_table_has(path, "/a/b") is True
+
+
+def test_a_foreign_file_is_empty_and_silent(tmp_path, capfd):
+    """Probing is a normal thing for a caller to do, so it must not narrate."""
+    text = tmp_path / "notes.txt"
+    text.write_bytes(b"not hdf5 at all\n")
+    missing = tmp_path / "nope.h5"
+
+    for p in (text, missing):
+        assert list(tttrlib.hdf5_table_groups(str(p))) == []
+        assert tttrlib.hdf5_table_has(str(p)) is False
+        assert tttrlib.hdf5_table_remove(str(p), "/x") is False
+
+    out, err = capfd.readouterr()
+    assert out == "" and err == "", "a query printed something"
+
+
+def test_an_hdf5_file_with_no_table_in_it(tmp_path, capfd):
+    """A valid HDF5 file that is not ours -- a 2-D dataset, which is not a
+    column -- answers no rather than failing."""
+    h5py = pytest.importorskip("h5py")
+    path = str(tmp_path / "foreign.h5")
+    with h5py.File(path, "w") as f:
+        f.create_dataset("image", data=np.zeros((4, 4)))
+        f.create_group("empty")
+
+    assert list(tttrlib.hdf5_table_groups(path)) == []
+    assert tttrlib.hdf5_table_has(path) is False
+    capfd.readouterr()
+
+
+def test_a_ragged_group_is_not_a_table(tmp_path):
+    """1-D datasets of different lengths are not columns of one table. The
+    reader still salvages what it can; the predicate says no."""
+    h5py = pytest.importorskip("h5py")
+    path = str(tmp_path / "ragged.h5")
+    with h5py.File(path, "w") as f:
+        f.create_dataset("a", data=np.arange(5.0))
+        f.create_dataset("b", data=np.arange(3.0))
+    assert tttrlib.hdf5_table_has(path) is False
+    assert list(tttrlib.hdf5_table_groups(path)) == []
+
+
+def test_hdf5_table_has_agrees_with_hdf5_table_groups(tmp_path):
+    path = str(tmp_path / "agree.h5")
+    tttrlib.write_hdf5(path, table(8))
+    tttrlib.write_hdf5(path, table(2), group="/meta")
+    tttrlib.write_hdf5(path, table(3), group="/a/b")
+
+    listed = list(tttrlib.hdf5_table_groups(path))
+    assert sorted(listed) == ["/", "/a/b", "/meta"]
+    for group in listed:
+        assert tttrlib.hdf5_table_has(path, group) is True
+    for absent in ("/a", "/nope", "/meta/deeper"):
+        assert tttrlib.hdf5_table_has(path, absent) is False
+
+
+def test_remove_drops_one_group_and_keeps_the_others(tmp_path):
+    path = str(tmp_path / "remove.h5")
+    tttrlib.write_hdf5(path, table(8), group="/results")
+    tttrlib.write_hdf5(path, table(2), group="/meta")
+
+    assert tttrlib.hdf5_table_remove(path, "/results") is True
+    assert list(tttrlib.hdf5_table_groups(path)) == ["/meta"]
+    assert tttrlib.hdf5_table_remove(path, "/results") is False, "already gone"
+
+
+def test_remove_at_the_root_drops_the_table_and_keeps_the_children(tmp_path):
+    """The root cannot be unlinked, so removing it means removing what it
+    holds -- and its sub-groups are their own tables."""
+    path = str(tmp_path / "rootremove.h5")
+    tttrlib.write_hdf5(path, table(8))
+    tttrlib.write_hdf5(path, table(2, name="source"), group="/meta")
+
+    assert tttrlib.hdf5_table_remove(path, "/") is True
+    assert list(tttrlib.hdf5_table_groups(path)) == ["/meta"]
+    assert tttrlib.read_hdf5(path, "/meta").n_rows() == 2
+
+
 def test_the_selection_still_applies_per_group(tmp_path):
     """Gating is per store, so two groups written from two gated stores each
     carry their own subset."""

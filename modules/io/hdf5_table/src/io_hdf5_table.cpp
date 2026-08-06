@@ -41,6 +41,13 @@ bool write_hdf5_table(const std::string&, const data::DataStore&,
     return false;
 }
 
+// The queries are silent even here. A caller probes with these to find out
+// whether a file is worth opening, often in a loop, and a predicate that
+// narrates is a predicate nobody can use.
+std::vector<std::string> hdf5_table_groups(const std::string&) { return {}; }
+bool hdf5_table_has(const std::string&, const std::string&) { return false; }
+bool hdf5_table_remove(const std::string&, const std::string&) { return false; }
+
 
 #else
 
@@ -208,6 +215,35 @@ std::vector<std::string> dataset_names(hid_t group) {
         out.push_back(name);
     }
     return out;
+}
+
+/// Every link in the group that is itself a group, in the order HDF5 lists
+/// them. \see dataset_names for why this opens rather than asks.
+std::vector<std::string> subgroup_names(hid_t group) {
+    std::vector<std::string> out;
+    H5G_info_t info;
+    if (H5Gget_info(group, &info) < 0) return out;
+    for (hsize_t i = 0; i < info.nlinks; i++) {
+        const ssize_t len = H5Lget_name_by_idx(group, ".", H5_INDEX_NAME, H5_ITER_INC,
+                                               i, nullptr, 0, H5P_DEFAULT);
+        if (len <= 0) continue;
+        std::string name(static_cast<std::size_t>(len), '\0');
+        H5Lget_name_by_idx(group, ".", H5_INDEX_NAME, H5_ITER_INC, i,
+                           &name[0], static_cast<std::size_t>(len) + 1, H5P_DEFAULT);
+        const hid_t child = H5Gopen2(group, name.c_str(), H5P_DEFAULT);
+        if (child < 0) continue;
+        H5Gclose(child);
+        out.push_back(name);
+    }
+    return out;
+}
+
+/// The scratch group a replacement writes into. Never part of the answer to
+/// what a file holds -- if one is ever visible, a write died mid-flight.
+const char* kTempPrefix = "__tttrlib_tmp__";
+
+bool is_temp_name(const std::string& name) {
+    return name.compare(0, std::strlen(kTempPrefix), kTempPrefix) == 0;
 }
 
 const char* kMaskSuffix = "__mask";
@@ -659,7 +695,7 @@ hid_t lcpl_intermediate() {
 /// A name no caller would choose, free in this group.
 std::string free_temp_name(hid_t parent) {
     for (int i = 0; i < 1000; i++) {
-        std::string name = "__tttrlib_tmp__" + std::to_string(i);
+        std::string name = std::string(kTempPrefix) + std::to_string(i);
         if (H5Lexists(parent, name.c_str(), H5P_DEFAULT) <= 0) return name;
     }
     return std::string();
@@ -755,6 +791,90 @@ bool replace_whole_file(const std::string& filename, const data::DataStore& stor
     return ok;
 }
 
+/*!
+ * \brief Does this group hold a table?
+ *
+ * At least one 1-D dataset, and every 1-D dataset the same length. Sub-groups
+ * are not datasets and are ignored, so a root table with a `/meta` group beside
+ * it is still a table -- that is the imaging layout and it has to work.
+ *
+ * A `__mask` sidecar is counted in the length check but does not by itself make
+ * a group a table: a group holding nothing but masks describes columns that are
+ * not there.
+ */
+bool group_is_table(hid_t group) {
+    bool any_column = false, any_length = false;
+    hsize_t length = 0;
+    for (const std::string& name : dataset_names(group)) {
+        const hid_t ds = H5Dopen2(group, name.c_str(), H5P_DEFAULT);
+        if (ds < 0) continue;
+        const hid_t space = H5Dget_space(ds);
+        hsize_t dims[1] = {0};
+        const int rank = H5Sget_simple_extent_ndims(space);
+        if (rank == 1) H5Sget_simple_extent_dims(space, dims, nullptr);
+        H5Sclose(space);
+        H5Dclose(ds);
+        if (rank != 1) continue;
+
+        if (!any_length) { any_length = true; length = dims[0]; }
+        else if (dims[0] != length) return false;
+        if (!is_mask_name(name)) any_column = true;
+    }
+    return any_column;
+}
+
+/*!
+ * \brief The child groups, in the order the file says.
+ *
+ * The `groups` attribute where there is one, then anything else by name. The
+ * merge matters for a file something else has added a group to: ours keep their
+ * order and the newcomer lands after them, rather than the whole listing
+ * falling back to alphabetical.
+ */
+std::vector<std::string> ordered_subgroups(hid_t group) {
+    std::vector<std::string> found = subgroup_names(group);
+    std::vector<std::string> out;
+    for (const std::string& declared : read_string_attribute(group, "groups")) {
+        const auto it = std::find(found.begin(), found.end(), declared);
+        if (it == found.end()) continue;
+        out.push_back(*it);
+        found.erase(it);
+    }
+    out.insert(out.end(), found.begin(), found.end());
+    out.erase(std::remove_if(out.begin(), out.end(), is_temp_name), out.end());
+    return out;
+}
+
+/// Every group at or under this one that holds a table, depth first.
+void collect_tables(hid_t group, const std::string& path,
+                    std::vector<std::string>& out) {
+    if (group_is_table(group)) out.push_back(path.empty() ? "/" : path);
+    for (const std::string& name : ordered_subgroups(group)) {
+        const hid_t child = H5Gopen2(group, name.c_str(), H5P_DEFAULT);
+        if (child < 0) continue;
+        collect_tables(child, path + "/" + name, out);
+        H5Gclose(child);
+    }
+}
+
+/// Open the file for a question. Negative for anything that is not one of ours
+/// to read, and silent about it: probing is a normal thing for a caller to do.
+hid_t open_for_query(const std::string& filename) {
+    if (!file_exists(filename) || !looks_like_hdf5(filename)) return -1;
+    return H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+}
+
+/// The table in a group -- its datasets and its `columns` attribute -- leaving
+/// any sub-group alone. What "remove" means at the root, which cannot itself be
+/// unlinked.
+bool clear_table(hid_t group) {
+    bool ok = true;
+    for (const std::string& name : dataset_names(group))
+        if (H5Ldelete(group, name.c_str(), H5P_DEFAULT) < 0) ok = false;
+    if (H5Aexists(group, "columns") > 0 && H5Adelete(group, "columns") < 0) ok = false;
+    return ok;
+}
+
 }  // namespace
 
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
@@ -783,6 +903,51 @@ bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
     if (file < 0) return write_failed(keep ? "open for writing" : "create", filename);
 
     const bool ok = replace_group(file, path, store, compression);
+    H5Fclose(file);
+    return ok;
+}
+
+std::vector<std::string> hdf5_table_groups(const std::string& filename) {
+    const QuietHdf5 quiet;
+    std::vector<std::string> out;
+    const hid_t file = open_for_query(filename);
+    if (file < 0) return out;
+    collect_tables(file, std::string(), out);
+    H5Fclose(file);
+    return out;
+}
+
+bool hdf5_table_has(const std::string& filename, const std::string& group_name) {
+    const QuietHdf5 quiet;
+    const hid_t file = open_for_query(filename);
+    if (file < 0) return false;
+
+    const std::string path = normalise_group(group_name);
+    const hid_t group = path.empty() ? file
+                                     : H5Gopen2(file, path.c_str(), H5P_DEFAULT);
+    const bool ok = group >= 0 && group_is_table(group);
+    if (group >= 0 && !path.empty()) H5Gclose(group);
+    H5Fclose(file);
+    return ok;
+}
+
+bool hdf5_table_remove(const std::string& filename, const std::string& group_name) {
+    const QuietHdf5 quiet;
+    if (!file_exists(filename) || !looks_like_hdf5(filename)) return false;
+    const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+    if (file < 0) return false;
+
+    const std::string path = normalise_group(group_name);
+    bool ok;
+    if (path.empty()) {
+        // The root cannot be unlinked, so removing it means removing the table
+        // it holds. Its sub-groups are their own tables and are left alone.
+        ok = group_is_table(file) && clear_table(file);
+    } else {
+        ok = H5Lexists(file, path.c_str(), H5P_DEFAULT) > 0 &&
+             H5Ldelete(file, path.c_str(), H5P_DEFAULT) >= 0;
+    }
+    if (ok) H5Fflush(file, H5F_SCOPE_GLOBAL);
     H5Fclose(file);
     return ok;
 }

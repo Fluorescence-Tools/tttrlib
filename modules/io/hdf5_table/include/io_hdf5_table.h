@@ -123,6 +123,36 @@ bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
                       const std::string& group = "/", int compression = 0,
                       Hdf5WriteMode mode = Hdf5WriteMode::Update);
 
+/*!
+ * \brief What tables does this file hold?
+ *
+ * Full paths, in file order, `"/"` for a table at the root. A group holds a
+ * table when it has at least one 1-D dataset and every 1-D dataset in it is the
+ * same length; sub-groups are ignored, so a root table with a `/meta` group
+ * beside it lists as both.
+ *
+ * Answers rather than complains: a file that is not HDF5, one written as a
+ * data frame, or one with no table anywhere gives an empty vector and prints
+ * nothing. Probing a foreign file is a normal thing for a caller to do.
+ */
+std::vector<std::string> hdf5_table_groups(const std::string& filename);
+
+/// Whether one particular group holds a table. Agrees with
+/// \ref hdf5_table_groups for every group, and is silent on any input.
+bool hdf5_table_has(const std::string& filename, const std::string& group = "/");
+
+/*!
+ * \brief Drop a group and everything under it.
+ *
+ * False when the file is not ours, the group is not there, or it could not be
+ * removed. At the root -- which cannot be unlinked -- this removes the table
+ * the root holds and leaves its sub-groups, each of which is its own table.
+ *
+ * \note HDF5 does not shrink when something is deleted; the space stays in the
+ *       file. `h5repack` reclaims it.
+ */
+bool hdf5_table_remove(const std::string& filename, const std::string& group);
+
 }  // namespace io
 }  // namespace tttrlib
 
