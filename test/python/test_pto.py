@@ -834,6 +834,7 @@ def test_a_ranged_event_read_matches_the_full_decode(container):
     )
 
 
+@pytest.mark.slow
 def test_a_cue_offset_really_is_where_that_event_starts(container):
     """Criterion 11, and the only honest way to check it: decode from the cue's
     own offset and see whether the first event that comes out is the cue's own
@@ -1032,6 +1033,29 @@ def test_embedding_a_gigabyte_does_not_hold_it_in_memory(tmp_path):
 
 @pytest.mark.slow
 @needs_data
+def test_taking_a_gigabyte_back_out_does_not_hold_it_either(tmp_path):
+    """Criterion 6, and the read side of the one above. `extract` is now
+    `stream` with a file-writing sink, so this is what bounds `stream`."""
+    if not BIG_PTU.exists():
+        pytest.skip("no multi-gigabyte fixture")
+    path = str(tmp_path / "big.pto")
+    f = tttrlib.PtoFile()
+    f.create(path)
+    uid = f.add_file("tttr_photon_stream", "ptu", BIG_PTU.name, str(BIG_PTU))
+    assert f.commit(), f.error()
+
+    out = str(tmp_path / "back.ptu")
+    before = _rss_mb()
+    assert f.extract(uid, out), f.error()
+    grew = _rss_mb() - before
+    f.close()
+
+    assert os.path.getsize(out) == BIG_PTU.stat().st_size
+    assert grew < 256, f"extracting grew RSS by {grew:.0f} MB"
+
+
+@pytest.mark.slow
+@needs_data
 def test_a_column_subset_of_a_large_store_does_not_materialise_it(tmp_path):
     """Criterion 2, as memory rather than as a stopwatch."""
     path = str(tmp_path / "wide.pto")
@@ -1056,6 +1080,46 @@ def test_a_column_subset_of_a_large_store_does_not_materialise_it(tmp_path):
     # One column is ~32 MB; the whole store is ~160 MB.
     assert grew < 120, f"reading one of five columns grew RSS by {grew:.0f} MB"
     g.close()
+
+
+def test_two_columns_of_a_wide_store_read_under_one_percent_of_it(tmp_path):
+    """Criterion 2 as it is actually stated: instrumented read volume, not a
+    stopwatch and not RSS.
+
+    A timer on a warm page cache measures the cache, and RSS measures what was
+    allocated rather than what was fetched. The claim is that the reader *did
+    not touch* those bytes, and only a counter on the reads themselves can make
+    it. `store_bytes_read` is that counter.
+    """
+    path = str(tmp_path / "verywide.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path), f.error()
+    n, columns = 20_000, 256
+    s = tttrlib.DataStore("t")
+    s.set_n_rows(n)
+    for k in range(columns):
+        s.add("c%03d" % k, np.arange(n, dtype=np.float64) + k)
+    uid = tttrlib.pto_add_store(f, "burst_table", "wide", s)
+    assert f.commit(), f.error()
+    f.close()
+    del s
+
+    g = tttrlib.PtoFile()
+    assert g.open(path), g.error()
+
+    before = tttrlib.store_bytes_read()
+    tttrlib.pto_store(g, uid)
+    whole = tttrlib.store_bytes_read() - before
+
+    before = tttrlib.store_bytes_read()
+    two = tttrlib.pto_store(g, uid, columns=["c001", "c200"])
+    subset = tttrlib.store_bytes_read() - before
+
+    assert two.names == ["c001", "c200"]
+    np.testing.assert_array_equal(two["c200"].numpy(),
+                                  np.arange(n, dtype=np.float64) + 200)
+    assert subset < whole / 100, \
+        "two of %d columns read %d of %d bytes" % (columns, subset, whole)
 
 
 def test_every_file_uid_is_written_in_eight_octets(container):
@@ -1132,3 +1196,93 @@ def test_an_object_keeps_its_metadata_across_a_relocation(container):
     assert (after.kind, after.encoding, after.name) == (kind, encoding, name)
     assert tttrlib.pto_store(g, uid).n_rows() == 400_000
     g.close()
+
+
+# -- malformed input ------------------------------------------------------------
+#
+# A Data Size is read out of the file, so in a damaged or hostile one it is
+# whatever the file says -- including a number far larger than the file itself.
+# Everything sized from it has to be bounded by what the file can contain before
+# a byte of it is believed. Found by sweeping single-byte corruptions through a
+# valid container: two of them took the reader out with the out-of-memory killer
+# rather than reporting a damaged file.
+
+
+def _corrupt(path, tmp_path, offset, value):
+    data = bytearray(path.read_bytes())
+    data[offset] = value
+    out = tmp_path / "corrupt.pto"
+    out.write_bytes(bytes(data))
+    return out
+
+
+@pytest.fixture
+def small_container(tmp_path):
+    path = tmp_path / "small.pto"
+    f = tttrlib.PtoFile()
+    assert f.create(str(path), "malformed")
+    tttrlib.pto_add_store(f, "burst_table", "t", _table(50), 4096)
+    f.add("attachment", "raw", "blob", b"x" * 4096)
+    assert f.commit(), f.error()
+    f.close()
+    return path
+
+
+def test_a_size_larger_than_the_file_is_refused(small_container, tmp_path):
+    """The specific shape that killed the process: a Data Size that claims more
+    than the file holds, believed far enough to allocate from."""
+    data = small_container.read_bytes()
+    seg_id = data.find(b"\x18\x53\x80\x67")
+    assert seg_id > 0, "no Segment"
+    size_at = seg_id + 4                       # the wide, eight-octet size VINT
+
+    broken = bytearray(data)
+    broken[size_at] = 0x01                     # keep the 8-octet marker
+    broken[size_at + 1 : size_at + 8] = b"\xff" * 7   # ~2^56 bytes of Segment
+    out = tmp_path / "huge.pto"
+    out.write_bytes(bytes(broken))
+
+    f = tttrlib.PtoFile()
+    assert f.open(str(out)) is False, "a Segment larger than the file was accepted"
+    assert f.error()
+
+
+def test_no_single_byte_corruption_takes_the_reader_down(small_container, tmp_path):
+    """Swept in-process on purpose: if this regresses the failure is an
+    out-of-memory kill, and a dead test process is the right amount of loud."""
+    size = small_container.stat().st_size
+    for offset in range(0, min(size, 300)):
+        for value in (0x00, 0x01, 0xFF):
+            path = _corrupt(small_container, tmp_path, offset, value)
+            f = tttrlib.PtoFile()
+            try:
+                if f.open(str(path)):
+                    f.n_objects()
+                    for o in f.objects():
+                        try:
+                            f.read(o.uid)
+                        except Exception:
+                            pass
+                    f.tags()
+            except Exception:
+                pass                            # refusing is fine; dying is not
+            finally:
+                f.close()
+
+
+def test_a_header_declaring_wider_ids_than_we_parse_is_refused(small_container, tmp_path):
+    """EBMLMaxIDLength/EBMLMaxSizeLength say how wide this document's ids and
+    sizes may be. A reader built for four and eight cannot walk more, and
+    reading a five-octet id as a four-octet one yields a plausible wrong answer
+    rather than a failure."""
+    data = bytearray(small_container.read_bytes())
+    at = data.find(b"\x42\xf2")                # EBMLMaxIDLength
+    assert at > 0, "no EBMLMaxIDLength in the header"
+    assert data[at + 2] == 0x81, "expected a one-octet value"
+    data[at + 3] = 5
+    out = tmp_path / "wide.pto"
+    out.write_bytes(bytes(data))
+
+    f = tttrlib.PtoFile()
+    assert f.open(str(out)) is False
+    assert "wider" in f.error()

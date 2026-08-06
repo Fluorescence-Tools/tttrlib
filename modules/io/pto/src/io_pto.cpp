@@ -894,6 +894,18 @@ bool read_element(File& f, std::uint64_t at, std::uint32_t* id,
     for (int k = 1; k < slen; k++) n = (n << 8) | sz[k];
     if (n == ((1ULL << (7 * slen)) - 1)) return false;
 
+    // A Data Size is read out of the file, so it is whatever the file says --
+    // including, in a corrupted or hostile one, a number far larger than the
+    // file itself. Everything sized from it has to be bounded by what the file
+    // can actually contain before a byte of it is believed: allocating first
+    // and discovering the truncation on the read is how a one-byte corruption
+    // becomes an out-of-memory kill rather than "this file is damaged".
+    //
+    // This is the rule libebml carries SafeReadIOCallback for, applied at the
+    // only place PTO sizes an allocation from untrusted input.
+    const std::uint64_t end = f.length();
+    if (n > end || at > end - n || at + len + slen + n > end) return false;
+
     *id = v;
     *total = len + slen + n;
     if (size_at) *size_at = at + len;
@@ -934,14 +946,29 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         std::uint64_t n;
         std::string doctype;
         std::uint64_t read_version = 1;
+        std::uint64_t max_id = 4;
+        std::uint64_t max_size = 8;
         while (c.element(&cid, &d, &n)) {
             if (cid == kDocType) doctype = get_text(d, n);
             else if (cid == kDocTypeReadVer) read_version = get_uint(d, n);
+            else if (cid == kEBMLMaxIDLength) max_id = get_uint(d, n);
+            else if (cid == kEBMLMaxSizeLen) max_size = get_uint(d, n);
         }
         if (doctype != "pto") return m.fail(filename + " is not a PTO file");
         if (read_version > 1)
             return m.fail(filename + " needs a newer PTO reader (DocTypeReadVersion "
                           + std::to_string(read_version) + ")");
+        // The header declares how wide an Element ID and a Data Size may be in
+        // this document, and the parser below is built for PTO's four and
+        // eight. A file declaring more is not one this reader can walk -- it
+        // would read a five-octet id as a four-octet one and then interpret the
+        // remainder as a size, which is a plausible-looking wrong answer rather
+        // than a failure. Refusing is the only honest response, and it is what
+        // RFC 8794 asks a reader to do with a header it cannot satisfy.
+        if (max_id > 4 || max_size > 8)
+            return m.fail(filename + " declares EBMLMaxIDLength " +
+                          std::to_string(max_id) + " / EBMLMaxSizeLength " +
+                          std::to_string(max_size) + ", wider than this reader parses");
     }
 
     std::uint64_t seg_at = total;
@@ -2162,9 +2189,12 @@ struct RegisterPto {
         f.extensions.push_back("pto");
         f.canonical_extension = "pto";
         f.sniff = [](const std::string& fn) { return is_pto_file(fn); };
-        // The one container that takes a range, because it is the one that can
-        // be indexed. See PtoFile::build_cues; without cues these still work
-        // and cost a full decode.
+        // Readable in pieces, but by EVENT rather than by record: a PTO holds
+        // whole containers and stores, not a record stream of its own, so the
+        // record range the fixed-width containers take does not apply here.
+        // See PtoFile::build_cues; without cues these still work and cost a
+        // full decode.
+        f.ranged_reads = true;
         f.parameters_schema = R"({
   "type": "object",
   "additionalProperties": false,
