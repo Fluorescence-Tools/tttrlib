@@ -65,6 +65,7 @@
 %include "HistogramNd.i"
 %include "DataStore.i"
 %include "CsvReader.i"
+%include "CsvWriter.i"
 // The columnar HDF5 reader has landed in the Python module, which is what the
 // note here used to be waiting for. ext/js/pkg/index.js already exposed
 // readHdf5()/writeHdf5() behind a feature check, so adding this line is all it

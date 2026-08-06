@@ -146,6 +146,7 @@ def experimental(cls):
 %include "HistogramNd.i"
 %include "DataStore.i"
 %include "CsvReader.i"
+%include "CsvWriter.i"
 %include "Hdf5Table.i"
 %include "StoreFile.i"
 %include "Pto.i"

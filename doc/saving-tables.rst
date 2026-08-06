@@ -3,32 +3,43 @@ Saving a table
 
 A :class:`DataStore` is tttrlib's columnar table: named columns that keep their
 own dtype, optional per-column validity masks, dictionary-encoded text, and a
-row selection. There are two ways to put one on disk, and they exist for
+row selection. There are three ways to put one on disk, and they exist for
 different reasons.
 
 .. list-table::
    :header-rows: 1
-   :widths: 18 41 41
+   :widths: 14 29 29 28
 
    * -
      - native ``.dstore``
      - HDF5
+     - CSV
    * - what it is for
      - speed and exact fidelity
      - interoperability
+     - the lowest common denominator
    * - use it when
      - tttrlib writes it and tttrlib reads it: caches, checkpoints,
        intermediate results
      - anything else has to read it: h5py, pandas, PyTables, MATLAB
+     - a spreadsheet, R, a plotting script, or a collaborator who will not
+       install anything
    * - call
      - :func:`save_store` / :func:`load_store`
      - :func:`write_hdf5` / :func:`read_hdf5`
+     - :func:`write_csv` / :func:`read_csv`
    * - needs HDF5
      - no
      - yes
+     - no
+   * - keeps dtypes
+     - exactly
+     - all but bool
+     - no — they are inferred back from the text
 
-Both round-trip the whole tree: group names, order, nesting, column order,
-dtypes, dictionary columns and validity masks.
+The first two round-trip the whole tree: group names, order, nesting, column
+order, dtypes, dictionary columns and validity masks. CSV is one flat table and
+keeps the values, not the types.
 
 The native file
 ---------------
@@ -97,6 +108,101 @@ deflate is CPU-bound and this has no deflate. Reading one column of four takes
 So the reasons to reach for it are: it is much faster than *compressed* HDF5, it
 reads a single column without touching the others, it preserves things HDF5
 cannot, and it works in a build without HDF5 at all.
+
+CSV
+---
+
+The format that loses the most and travels the furthest. One table, one file,
+no tree:
+
+.. code-block:: python
+
+    tttrlib.write_csv("run.csv", store)
+    tttrlib.write_csv("run.csv", store.group("results"))   # a sub-table
+    text = tttrlib.write_csv(None, store)                  # ...or as a string
+
+    back = tttrlib.read_csv("run.csv")
+
+Only the **selected** rows are written when the store is gated, the same as
+:func:`write_hdf5` and for the same reason — exporting a subset should not need
+an intermediate table. Pass ``selected_only=False`` for all of them.
+
+What a round trip keeps, and what it cannot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Values, column names, and order survive. Types do not, because the reader
+infers them from the text and the text does not say how many bytes a number was
+held in: an ``int8`` column comes back ``int64``, a ``float32`` comes back
+``float64``.
+
+* **A double lands on the same double.** Each one is written as the shortest
+  text that reads back as itself — ``0.1`` stays ``0.1`` rather than becoming
+  ``0.10000000000000001`` or, worse, a different number.
+* **Missing values survive** as an empty field, which :func:`read_csv` takes
+  back as missing. One exception: a table of a *single* column writes an empty
+  line for a missing value, and an empty line is a blank line to every CSV
+  reader there is. Give ``na_rep="NA"`` when a lone column has gaps.
+* **Text that looks numeric comes back numeric.** Quoting does not prevent this,
+  here or in Arrow. ``read_csv(..., text_columns=["id"])`` is how to say
+  otherwise.
+* **An empty string and a missing value are the same eight characters of
+  nothing.** Set ``na_rep`` to something outside the value set if the difference
+  matters.
+* **A NaN comes back as missing** rather than as a NaN, the reader's default
+  ``na_values`` including it. That is this library's own reading of a NaN, but
+  it is not identity.
+
+When identity is the requirement, ``.dstore`` is the format that promises it.
+
+Speed
+~~~~~
+
+Rows are cut into blocks, the blocks are formatted in parallel, and the buffers
+are written in order. Two things make it quick beyond that: a text column is
+dictionary-encoded, so each distinct value is quoted and escaped once rather
+than once per row, and doubles are formatted by an integer method rather than by
+``snprintf``, which on some platforms costs 280 ns a value and takes the locale
+lock.
+
+Two million rows, four columns, against ``pyarrow.csv.write_csv`` on the same
+table (higher is better for tttrlib):
+
+.. list-table::
+   :header-rows: 1
+
+   * - table
+     - arrow
+     - tttrlib, one thread
+     - tttrlib, default
+   * - four int64
+     - 0.35 s
+     - 0.10 s (3.4×)
+     - 0.09 s (3.7×)
+   * - four float64, measured (~7 digits)
+     - 0.51 s
+     - 0.52 s (1.0×)
+     - 0.20 s (2.6×)
+   * - four float64, full precision
+     - 0.78 s
+     - 0.87 s (0.9×)
+     - 0.42 s (1.9×)
+   * - two text, one int, one float
+     - 0.22 s
+     - 0.21 s (1.0×)
+     - 0.09 s (2.5×)
+
+Options
+~~~~~~~
+
+``delimiter``, ``quote``, ``header``, ``eol``, ``na_rep``, ``true_string`` /
+``false_string``, ``float_precision`` (0 for shortest-round-trip),
+``columns`` (a subset, in that order), ``selected_only``, ``threads``, and
+``quoting``:
+
+* ``"needed"`` — quote only what RFC 4180 says must be (the default);
+* ``"all"`` — quote every value, numbers included;
+* ``"none"`` — never, and refuse to write a value that would need it, rather
+  than produce a file that reads back as a different table.
 
 The HDF5 file
 -------------

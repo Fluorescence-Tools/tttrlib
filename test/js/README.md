@@ -21,6 +21,7 @@ fail, the same way the Python suite behaves.
 | `tttr.test.mjs` | Readers, header, selections, micro-time histograms. |
 | `registry.test.mjs` | The registry, and burst search driven entirely by it. |
 | `analysis.test.mjs` | Correlation, CLSM imaging, burst filtering, phasors, the simulator, histograms. |
+| `csv.test.mjs` | `writeCsv` / `readCsv`, and the list-valued options a SWIG `std::vector<std::string>` will not take as a plain array. |
 
 ## What "on par with Python" means here
 

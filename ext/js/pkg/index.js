@@ -387,6 +387,15 @@ if (native.TTTRHeader) {
 // ---------------------------------------------------------------------------
 // Tabular I/O -- the Python versions of these are also pure scripting layer
 // ---------------------------------------------------------------------------
+// A SWIG std::vector<std::string> parameter will not take a JavaScript array:
+// the typemap wants the wrapped type. Both CSV entry points below have list
+// options, so the conversion lives here once.
+function vectorString(values) {
+  const v = new native.VectorString();
+  for (const s of values) v.add(String(s));
+  return v;
+}
+
 if (typeof native.read_csv_into === 'function' && native.CsvOptions) {
   /**
    * Read a CSV into a DataStore, in parallel, without an intermediate copy.
@@ -401,11 +410,46 @@ if (typeof native.read_csv_into === 'function' && native.CsvOptions) {
     if (opts.threads !== undefined) o.threads = opts.threads | 0;
     if (opts.blockSize !== undefined) o.block_size = opts.blockSize | 0;
     if (opts.newlinesInValues !== undefined) o.newlines_in_values = opts.newlinesInValues;
-    if (opts.naValues !== undefined) o.na_values = opts.naValues;
-    if (opts.textColumns !== undefined) o.text_columns = opts.textColumns;
+    if (opts.naValues !== undefined) o.na_values = vectorString(opts.naValues);
+    if (opts.textColumns !== undefined) o.force_text_columns = vectorString(opts.textColumns);
     const store = new native.DataStore();
     native.read_csv_into(store, filename, o);
     return store;
+  };
+}
+
+if (typeof native.write_csv === 'function' && native.CsvWriteOptions) {
+  /**
+   * Write a DataStore as CSV. Mirrors Python's tttrlib.write_csv().
+   * Pass null as the filename to get the text back instead of a file.
+   */
+  exported.writeCsv = function (filename, store, opts = {}) {
+    const o = new native.CsvWriteOptions();
+    if (opts.delimiter !== undefined) o.delimiter = opts.delimiter;
+    if (opts.quote !== undefined) o.quote = opts.quote;
+    if (opts.header !== undefined) o.has_header = opts.header;
+    if (opts.quoting !== undefined) {
+      const q = {
+        needed: native.CsvQuoting_Needed,
+        all: native.CsvQuoting_All,
+        none: native.CsvQuoting_Never,
+      };
+      o.quoting = typeof opts.quoting === 'string' ? q[opts.quoting] : opts.quoting;
+    }
+    if (opts.eol !== undefined) o.eol = opts.eol;
+    if (opts.naRep !== undefined) o.null_string = opts.naRep;
+    if (opts.trueString !== undefined) o.true_string = opts.trueString;
+    if (opts.falseString !== undefined) o.false_string = opts.falseString;
+    if (opts.floatPrecision !== undefined) o.float_precision = opts.floatPrecision | 0;
+    if (opts.floatDecimals !== undefined) o.float_decimals = opts.floatDecimals | 0;
+    if (opts.keepDecimalPoint !== undefined) o.keep_decimal_point = opts.keepDecimalPoint;
+    if (opts.selectedOnly !== undefined) o.selected_only = opts.selectedOnly;
+    if (opts.columns !== undefined) o.columns = vectorString(opts.columns);
+    if (opts.threads !== undefined) o.threads = opts.threads | 0;
+    if (opts.blockRows !== undefined) o.block_rows = opts.blockRows | 0;
+    if (filename === null || filename === undefined) return native.write_csv_string(store, o);
+    if (!native.write_csv(filename, store, o)) throw new Error(`write_csv: could not write ${filename}`);
+    return true;
   };
 }
 

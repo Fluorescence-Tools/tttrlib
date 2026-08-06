@@ -3,6 +3,36 @@
 ## [Unreleased]
 
 ### Added
+- **`write_csv` — a `DataStore` written out as CSV**, in Python and JavaScript,
+  to a file or to a string. Only the selected rows when the store is gated, the
+  same as `write_hdf5_table`; column subset and order, three quoting modes, a
+  configurable missing-value string, and threaded blocks written in order.
+  Informed by Arrow's writer (`cpp/src/arrow/csv/writer.cc`) and independent of
+  it: the same column-at-a-time dispatch, no sizing pass — this writer owns its
+  sink and formats straight into the block buffer — and each distinct value of a
+  dictionary-encoded text column is escaped once rather than once per row.
+  Measured against `pyarrow.csv.write_csv` on two million rows: 3.4x on integer
+  columns, 2.6x on measured floats and 2.5x on text at the default thread count,
+  and parity single-threaded.
+- **`write_csv` gained `float_decimals` and `keep_decimal_point`**, both for
+  matching a layout another program fixed rather than for preserving a value.
+  `float_decimals` is printf's `%.<n>f` — what a format specified as `%.6f`
+  means — where `float_precision` counts significant digits and would write
+  `1.23457e-05` for `0.000012`. `keep_decimal_point` writes an integral value
+  as `12.0` rather than `12`, so an all-integral column still reads back as a
+  float from a type-inferring reader such as pandas; both spellings are the
+  same double, so what it preserves is the dtype, not the value. Defaults are
+  unchanged and still match Arrow.
+- **Doubles are written as the shortest text that reads back as the same
+  double**, so `read_csv(write_csv(s))` returns the values bit for bit and `0.1`
+  stays `0.1`. `std::to_chars` does this where the platform has it; macOS builds
+  never do, because libc++ keeps the floating-point overloads in the dylib
+  behind a macOS 13.3 availability guard and this library ships a 10.15 floor.
+  `modules/io/csv/src/decimal_exact.h` covers that without vendoring a decimal
+  library: Clinger's conditions decide values of fifteen significant digits or
+  fewer, and an exact 128-bit integer comparison decides sixteen and seventeen.
+  Both answer "cannot decide" outside their range rather than guessing, and the
+  reader decides by the same two rules, so the two directions cannot disagree.
 - **A cross-language conformance suite.** `test/conformance/` holds one
   committed case list — 59 cases over eleven areas — that Python, R, Java and
   JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
@@ -64,6 +94,9 @@
   nineteen digits the mantissa can hold, so `0.00035338058920092875` lost its
   last digit. Ordinary data reads at the same speed as before; only the values
   that need it take the slower exact path.
+- **`readCsv`'s `naValues` and `textColumns` were silently ignored in
+  JavaScript.** A SWIG `std::vector<std::string>` parameter does not accept a
+  plain JavaScript array, and the assignment failed quietly.
 - **A zero-length `TypedArray` was refused by the JavaScript binding** as having
   "the wrong element type". An empty `ArrayBuffer` has a null data pointer, and
   the borrow reported that null as a type error — so writing a zero-row table,
