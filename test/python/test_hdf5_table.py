@@ -119,6 +119,48 @@ def test_only_the_selected_rows_are_written(store, tmp_path):
         [store["text"].numpy()[j] for j in np.flatnonzero(keep)[:3]]
 
 
+def test_a_gated_integer_column_keeps_values_a_double_cannot_hold(tmp_path):
+    """The gated path used to funnel every type through a double.
+
+    A double holds integers exactly only up to 2**53. Above that the gather
+    silently rounded, so a gated int64 column -- macro times, event indices,
+    anything counted rather than measured -- came back with different numbers
+    and nothing said so. The ungated path was always safe, because it writes
+    the column's own buffer, which is why this went unnoticed: the corruption
+    appeared only once a selection was set.
+    """
+    big = np.array([2**53 + 1, 2**53 + 3, 2**62 - 1, 7], dtype=np.int64)
+    s = tttrlib.DataStore()
+    s.set_n_rows(len(big))
+    s.add("big", big)
+    s.add("keep", np.array([1, 1, 1, 0], dtype=np.uint8))
+    s.where("keep", 0.5, 1.5)
+
+    path = tmp_path / "big.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+    back = tttrlib.read_hdf5(str(path))
+
+    assert back["big"].numpy().dtype == np.int64
+    np.testing.assert_array_equal(back["big"].numpy(), big[:3])
+
+
+def test_a_gated_unsigned_column_keeps_the_top_of_its_range(tmp_path):
+    """Same defect, and uint64 loses more of its range to a double than int64."""
+    big = np.array([2**64 - 1, 2**63 + 5, 2**53 + 1], dtype=np.uint64)
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("big", big)
+    s.add("keep", np.array([1, 0, 1], dtype=np.uint8))
+    s.where("keep", 0.5, 1.5)
+
+    path = tmp_path / "ubig.h5"
+    assert tttrlib.write_hdf5(str(path), s)
+    back = tttrlib.read_hdf5(str(path))
+
+    assert back["big"].numpy().dtype == np.uint64
+    np.testing.assert_array_equal(back["big"].numpy(), big[[0, 2]])
+
+
 def test_a_group_other_than_the_root(store, tmp_path):
     path = tmp_path / "grouped.h5"
     tttrlib.write_hdf5(str(path), store, group="/results")

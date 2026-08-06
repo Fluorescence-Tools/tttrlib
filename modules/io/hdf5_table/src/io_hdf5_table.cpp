@@ -2,6 +2,7 @@
 #include "io_hdf5_table.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -395,6 +396,72 @@ void write_column_dataset(hid_t group, const std::string& name, hid_t file_type,
     H5Sclose(space);
 }
 
+/// Gather the selected rows into a contiguous buffer of the column's OWN type.
+///
+/// The shortcut this replaces -- gather into a double and let HDF5 narrow it --
+/// is wrong for the two widest integers. A double carries 53 bits of mantissa,
+/// so an Int64 or UInt64 above 2^53 was written as a different number. It could
+/// only ever show on the gated path, because an ungated write hands HDF5 the
+/// column's buffer untouched, which is why it went unnoticed: the values
+/// changed the moment a selection was set and not before.
+template <typename T>
+void write_gathered(hid_t group, const std::string& name, const data::Column& c,
+                    const std::vector<std::size_t>& rows, bool gated,
+                    std::size_t n_out, int compression) {
+    std::vector<T> values(n_out);
+    const T* src = static_cast<const T*>(c.data_ptr());
+    if (src != nullptr)
+        for (std::size_t i = 0; i < n_out; i++)
+            values[i] = src[gated ? rows[i] : i];
+    write_column_dataset(group, name, file_type_of(c.type()), mem_type_of(c.type()),
+                         n_out, values.data(), compression);
+}
+
+/// \see write_gathered. False for the two types with no contiguous buffer to
+/// gather from -- Bool is bit-packed, String is dictionary-encoded -- which the
+/// caller writes its own way.
+bool write_gathered_typed(hid_t group, const std::string& name,
+                          const data::Column& c,
+                          const std::vector<std::size_t>& rows, bool gated,
+                          std::size_t n_out, int compression) {
+    switch (c.type()) {
+        case data::ColumnType::Float64:
+            write_gathered<double>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Float32:
+            write_gathered<float>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Int64:
+            write_gathered<std::int64_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Int32:
+            write_gathered<std::int32_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Int16:
+            write_gathered<std::int16_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Int8:
+            write_gathered<std::int8_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::UInt64:
+            write_gathered<std::uint64_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::UInt32:
+            write_gathered<std::uint32_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::UInt16:
+            write_gathered<std::uint16_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::UInt8:
+            write_gathered<std::uint8_t>(group, name, c, rows, gated, n_out, compression);
+            return true;
+        case data::ColumnType::Bool:
+        case data::ColumnType::String:
+            return false;
+    }
+    return false;
+}
+
 }  // namespace
 
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
@@ -448,16 +515,16 @@ bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
                                  file_type_of(column.type()),
                                  mem_type_of(column.type()), n_out, column.data_ptr(),
                                  compression);
-        } else {
-            // A gated subset, or a bit-packed bool: gather into a double and let
-            // HDF5 narrow it back. Correct for every type, and only on the path
-            // where the values were not contiguous to begin with.
-            std::vector<double> values(n_out);
+        } else if (!write_gathered_typed(group, encode_name(column.name()), column,
+                                         rows, gated, n_out, compression)) {
+            // Bool: bit-packed in the store, a byte per row on disk, which is
+            // what the reader's Bool branch expects.
+            std::vector<unsigned char> values(n_out);
             for (std::size_t i = 0; i < n_out; i++)
-                values[i] = column.value_at(gated ? rows[i] : i);
+                values[i] = column.value_at(gated ? rows[i] : i) != 0.0 ? 1 : 0;
             write_column_dataset(group, encode_name(column.name()),
                                  file_type_of(column.type()),
-                                 H5T_NATIVE_DOUBLE, n_out, values.data(), compression);
+                                 H5T_NATIVE_UINT8, n_out, values.data(), compression);
         }
 
         if (column.has_mask()) {
