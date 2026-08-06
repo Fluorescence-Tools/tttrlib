@@ -10,6 +10,7 @@ count, selection, validity masks and label. Nothing propagates between them,
 because two groups with different row counts have nothing to share.
 """
 import gc
+import weakref
 
 import numpy as np
 import pytest
@@ -253,6 +254,75 @@ def test_column_names_lists_columns_only():
     s.add_group("g")
     assert s.names == ["x"]
     assert list(s.column_names()) == ["x"]
+
+
+# -- the Python surface -------------------------------------------------------
+
+def test_the_groups_mapping(imaging):
+    assert list(imaging.groups) == ["results", "meta"]
+    assert "results" in imaging.groups
+    assert imaging.groups["results"].n_rows() == 64
+
+
+def test_a_view_through_a_group_outlives_the_root():
+    """A group proxy is a borrowed reference into the root's tree, so it has to
+    hold the root: a zero-copy view reached through a group would otherwise
+    point at freed memory once the root is collected."""
+    root = tttrlib.DataStore()
+    g = root.add_group("results")
+    g.set_n_rows(1000)
+    g.add("x", np.arange(1000.0))
+    view = g["x"].numpy()
+    alive = weakref.ref(root)
+
+    del root, g
+    gc.collect()
+
+    # A value check would prove nothing on its own: freed memory usually still
+    # reads back fine. What matters is that the root was NOT collected.
+    assert alive() is not None, "the root went while a view into a group was alive"
+    assert view.sum() == np.arange(1000.0).sum()
+
+
+def test_a_view_through_a_nested_group_outlives_the_root():
+    """The one that fails if the proxy holds its parent rather than the root:
+    only the root owns the tree, so an intermediate keeps nothing alive."""
+    root = tttrlib.DataStore()
+    deep = root.ensure_group("a/b/c")
+    deep.set_n_rows(500)
+    deep.add("x", np.arange(500.0))
+    view = root.group("a/b/c")["x"].numpy()
+    alive = weakref.ref(root)
+
+    del root, deep
+    gc.collect()
+
+    assert alive() is not None, "an intermediate group was held instead of the root"
+    assert view.sum() == np.arange(500.0).sum()
+
+
+def test_the_repr_mentions_groups_only_when_there_are_some():
+    """A store with no groups must read exactly as it did before they existed."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(4)
+    s.add("x", np.zeros(4))
+    assert "groups" not in repr(s)
+
+    s.add_group("g")
+    assert "1 groups" in repr(s)
+
+
+def test_memory_report_keys_a_group_by_its_path():
+    s = tttrlib.DataStore()
+    s.set_n_rows(10)
+    s.add("own", np.zeros(10))
+    g = s.ensure_group("results")
+    g.set_n_rows(100)
+    g.add("Tau", np.zeros(100))
+
+    report = s.memory_report()
+    assert "own" in report and "results/Tau" in report
+    assert report["total"] == sum(v for k, v in report.items() if k != "total")
 
 
 # -- accounting ---------------------------------------------------------------

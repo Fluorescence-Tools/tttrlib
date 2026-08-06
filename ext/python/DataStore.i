@@ -63,6 +63,24 @@
 #ifdef SWIGPYTHON
 %extend tttrlib::data::DataStore { %pythoncode "./ext/python/DataStore.py" }
 
+// A group proxy is a BORROWED reference into the ROOT's tree. The root owns
+// every child, so the proxy has to hold the ROOT -- not the immediate parent --
+// or a zero-copy view reached through a nested group points at freed memory the
+// moment the root is collected. Same chain and same reason as Column._store;
+// see DataStore.py::__getitem__.
+//
+// `getattr(self, "_store", None) or self` reaches the root in one step: a root
+// has no _store and yields itself, a group proxy already carries the root. That
+// flattens the chain rather than lengthening it.
+%define TTTRLIB_DS_KEEP_ROOT(Method)
+%feature("pythonappend") Method %{
+    val._store = getattr(self, "_store", None) or self
+%}
+%enddef
+TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::group)
+TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::add_group)
+TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::ensure_group)
+
 // A SWIG VectorString is not a list and has no __eq__, so group_names() ==
 // ['a', 'b'] would be False however right the answer was. Everything else on
 // this surface hands back a real list -- `names` builds one by hand at

@@ -353,13 +353,45 @@ def profile(self, *names, **kwargs):
 
 
 def memory_report(self):
-    """Bytes held, per column and in total -- for sizing a cache."""
+    """Bytes held, per column and in total -- for sizing a cache.
+
+    A group's columns appear under their path, so ``results/Tau`` sits beside
+    the root's own columns and it is visible which table is the expensive one.
+    Only leaves are listed, never a per-group subtotal: the total is the sum of
+    the entries, and a subtotal would be counted twice.
+    """
     out = {"total": self.nbytes()}
     for c in self.columns:
         out[c.name()] = c.nbytes()
+    for name in self.group_names():
+        for key, value in self.group(name).memory_report().items():
+            if key != "total":
+                out[name + "/" + key] = value
     return out
 
 
+@property
+def groups(self):
+    """The direct child groups as ``{name: DataStore}``, in insertion order.
+
+    ``store[...]`` is a COLUMN and stays one -- a string key that silently
+    switched between a column and a group depending on what happened to exist
+    is exactly the ambiguity that produces a bug report about the wrong thing.
+    So groups have their own accessors, and this one is for ``"results" in
+    store.groups`` and for printing.
+
+    A fresh proxy per call, each holding the root alive. Caching them would
+    build a reference cycle through ``_store`` and stop a dropped store from
+    freeing its memory, so use ``store.group(path)`` in a loop.
+    """
+    return {name: self.group(name) for name in self.group_names()}
+
+
 def __repr__(self):
+    # The group clause only when there are groups: every store that has none
+    # should read exactly as it did before they existed.
+    if self.n_groups():
+        return "DataStore(%d rows, %d columns, %d groups, %.1f MB)" % (
+            self.n_rows(), self.n_columns(), self.n_groups(), self.nbytes() / 1e6)
     return "DataStore(%d rows, %d columns, %.1f MB)" % (
         self.n_rows(), self.n_columns(), self.nbytes() / 1e6)
