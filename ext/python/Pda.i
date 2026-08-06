@@ -3,6 +3,7 @@
 %{
 #include "Pda.h"
 #include "PdaCallback.h"
+#include "PdaBurstLikelihood.h"
 %}
 
 // Forward declare and expose the enum
@@ -14,17 +15,23 @@ enum PdaImplementation {
 //// internal
 %attribute(Pda, bool, hist_sgsr_valid, is_valid_sgsr, set_valid_sgsr);
 
+// Every buffer below is freshly malloc'd/calloc'd by the C++ side and handed
+// over to Python, so the typemaps must be the MANAGED ones (ARGOUTVIEWM):
+// plain ARGOUTVIEW wraps the pointer in a numpy array that never frees it,
+// which leaks the whole buffer on every call -- and get_1dhistogram is called
+// once per iteration of a fit.
+
 // 1D histogram
-%apply (double** ARGOUTVIEW_ARRAY1, int* DIM1) {
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {
     (double **histogram_x, int *n_histogram_x),
     (double **histogram_y, int *n_histogram_y)
 }
 
 // output of make_s1s2 //
 // the 2d matrix
-%apply(double** ARGOUTVIEW_ARRAY2, int* DIM1, int* DIM2) {(double** s1s2, int* dim1, int* dim2)}
-%apply(double** ARGOUTVIEW_ARRAY1, int* DIM1) {(double** ps, int* dim_ps)}
-%apply(int** ARGOUTVIEW_ARRAY1, int* DIM1) {(int** tttr_indices, int* n_tttr_indices)}
+%apply(double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** s1s2, int* dim1, int* dim2)}
+%apply(double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** ps, int* dim_ps)}
+%apply(int** ARGOUTVIEWM_ARRAY1, int* DIM1) {(int** tttr_indices, int* n_tttr_indices)}
 %apply(double* IN_ARRAY1, int DIM1) {(double* pF, int n_pF)}
 
 // Pda Model attributes
@@ -50,5 +57,13 @@ enum PdaImplementation {
 TTTRLIB_NOGIL(Pda::evaluate)                          // src/Pda.cpp
 TTTRLIB_NOGIL(Pda::compute_experimental_histograms)   // src/Pda.cpp
 
+// PdaBurstLikelihood: the burst table in. Its (double* input, ...) arguments
+// and every output already have their mapping from misc_types.i.
+%apply (int* IN_ARRAY2, int DIM1, int DIM2) {(int* counts, int n_bursts, int n_channels)}
+
+TTTRLIB_NOGIL(PdaBurstLikelihood::log_likelihood_grid)   // src/PdaBurstLikelihood.cpp
+TTTRLIB_NOGIL(PdaBurstLikelihood::total_log_likelihood)  // src/PdaBurstLikelihood.cpp
+
 %include "Pda.h"
 %include "PdaCallback.h"
+%include "PdaBurstLikelihood.h"

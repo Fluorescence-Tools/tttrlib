@@ -3,6 +3,60 @@
 ## [Unreleased]
 
 ### Added
+- **`PdaBurstLikelihood` — K-channel burst-wise PDA, so three-colour PDA is a
+  tttrlib method rather than a NumPy loop in a downstream package.** `Pda` fits a
+  binned 1-D projection of a dense `(hist2d_nmax+1)²` count matrix, and that
+  representation does not generalise: a dense three-channel simplex at
+  `hist2d_nmax = 300` is 217 MB and a four-channel one is 65 GB. The new class
+  never forms a matrix — it evaluates `L(F | p, B)` per burst — so it is defined
+  for any number of channels, has no photon cap, and is a maximum-likelihood
+  objective. At K = 2 it is an alternative to `Pda`'s χ² histogram fit that stays
+  correct where a bin holds a handful of bursts.
+
+  The evaluation follows chisurf's `pda3c` factorisation: only the multinomial's
+  leading `n!` couples the channels, and it depends on the *total* background
+  count, so the nested sum over per-channel background becomes a matrix product
+  over a background box. Everything burst-side — falling factorials, Poisson
+  series, the multinomial constant — is computed once in the constructor and
+  reused for every model point and every fit iteration. Two things go beyond the
+  Python original, and both are algorithmic rather than a language change.
+  **The background box is never formed.** Grouping by the total background count
+  makes the coefficients a discrete convolution of the per-channel series, so
+  the cost is `O(K·b·m_max)` instead of `O(∏_c b_c)` — identical algebra, but the
+  box grows as the K-th power of the cutoff and the convolution does not (at
+  K = 2 they are the same work). That also removes the chunking and its 64 MB
+  memory budget. **And every transcendental leaves the inner loop:** both the
+  burst factor and the model's `p_c^-b` are peak-shifted per channel, so there
+  are `Σ_c b_c` exponentials per burst rather than `∏_c b_c` — 90 instead of
+  3375 at a 15-wide box in three channels — and the per burst-and-point loop is
+  multiply-add only.
+
+  **Measured 14–920× faster than chisurf's NumPy path** on the same inputs,
+  agreeing to ~1e-13 (10k bursts × 20 model points with background: 80 s → 87 ms).
+  chisurf now calls it and is **140× faster end-to-end** at its
+  `total_log_likelihood` entry point.
+
+  It also fixes a case the Python fast path gets wrong. That path evaluates
+  `L = Multinom(F;p) × correction`; where a channel has `p_c = 0` but collected
+  photons the leading term is zero, so the product is `-inf` even though the
+  burst is perfectly possible with those photons as background. `tttrlib`
+  evaluates such bursts in a form that never divides by `p`. chisurf's own
+  untruncated reference agrees with tttrlib.
+
+  Two traps are carried across deliberately and pinned by tests: the background
+  series may **not** be truncated on Poisson tail mass (the terms grow before the
+  Poisson turns them over, exactly where the background explains the burst), and
+  both halves of the factorisation must be peak-shifted before exponentiating —
+  the model half overflows to `inf`, and `log(inf)` reads as a `+inf`
+  log-likelihood, i.e. a perfect fit.
+- **`Pda.get_1dhistogram_per_species()` — the projection, one row per species.**
+  The S1/S2 → 1-D projection is a fixed linear map and the model is linear in
+  the species amplitudes, so `amplitudes @ rows` reproduces `get_1dhistogram()`
+  exactly (to 3e-17). A fit that varies only the fractions can therefore call
+  this once and reweight, turning an O(`hist2d_nmax`²) re-evaluation per
+  iteration into an O(n_species · n_bins) dot product — **measured 62× on a
+  three-species amplitude scan at `hist2d_nmax = 200`.** Recall it when
+  `probabilities_ch1`, `pF`, a background or the binning changes.
 - **A fourth binding: JavaScript for Node.js** — `require('tttrlib')` gives the
   **same surface as Python**, not a subset: core, I/O, burst search, correlation,
   CLSM imaging, HMM decoding, PDA, the decay fits, the simulator, DataStore and
@@ -79,6 +133,47 @@
   unchanged.
 
 ### Fixed
+- **PDA projected the model matrix transposed, mirroring every 1-D histogram.**
+  `evaluate()` builds `S1S2[ch1][ch2]`, but `get_1dhistogram` read
+  `s1s2[ch2][ch1]` and `compute_experimental_histograms` wrote the experimental
+  matrix the same transposed way. The projection axis therefore came out
+  mirrored — `E` where `1 - E` was meant — for the *model* only. Nothing looked
+  broken, because a fit simply converged on `1 - probability_ch1` and left no
+  trace in the residuals. All three now agree on row-is-channel-1, which is what
+  the header always claimed; the convention is spelled out in the class
+  documentation and in `doc/pda-guide.rst`. **A previously fitted
+  `probability_ch1` from tttrlib should be re-checked: the correct value may be
+  its complement.** Experimental 1-D histograms are unaffected (the storage and
+  the read flipped together); code that indexes the raw experimental matrix must
+  swap its indices.
+- **PDA lost the outermost anti-diagonal of the S1S2 matrix — two off-by-ones.**
+  The binomial scatter stopped at `red < Nmax` instead of `red <= Nmax`, dropping
+  the all-channel-2 corner, and `conv_pF` asked `poisson_0toN` for `Nmax` kernel
+  taps where 0..Nmax needs `Nmax + 1`, leaving the last tap zero. Every cell with
+  `ch1 + ch2 == Nmax` was wrong. The model now matches a direct implementation of
+  the definition to ~1e-17 (it was ~3e-6).
+- **`Pda.compute_experimental_histograms` used a quarter of the data, then hung.**
+  `get_time_window_ranges` returns interleaved `[start, stop, start, stop, ...]`,
+  but the loop walked `tws[i], tws[i+1]` over the first half of the array, so
+  every other window was empty and the rest were never reached. The returned
+  index array held one meaningless value per window (the leftover photon-scan
+  variable) rather than the documented start/stop pairs. Separately, an in-memory
+  `TTTR` reports a macro-time resolution of `-1`, which made
+  `ranges_by_time_window` compute a zero-length window and spin forever; a
+  non-positive resolution now falls back to raw macro-time ticks and a window
+  always advances by at least one photon.
+- **PDA leaked every array it returned to Python.** `get_1dhistogram`,
+  `compute_experimental_histograms` and their outputs were bound with
+  `ARGOUTVIEW_*` typemaps, which wrap a malloc'd buffer in a numpy array that
+  never frees it — so a fit leaked two arrays per iteration and the experimental
+  call leaked three buffers plus a full copy of the file's routing channels.
+  They now use the managed `ARGOUTVIEWM_*` typemaps, the time-window array is
+  freed, and the routing channels are read in place instead of copied.
+  `Pda::set_callback` also leaked the callback it replaced, including the default
+  one the constructor allocates, and `Pda` had an owning raw pointer with no
+  copy control, so copying it double-freed.
+- **`str(Pda)` always raised `TypeError`** — five of its lines concatenated a
+  string with a float.
 - **`registry_categories()` returned an empty list in every binding.** It looped
   over `build().items()`, and a range-for lifetime-extends only the range
   expression — the `iteration_proxy` — not the `json` temporary the proxy points
@@ -154,6 +249,32 @@
   the exact size.
 
 ### Changed
+- **PDA scratch buffers are reused between calls and the model matrix is no
+  longer copied into `get_1dhistogram`.** A fit re-evaluates the same `Nmax`
+  thousands of times, and each call allocated and zeroed two to three
+  `(Nmax+1)^2` matrices — 1.4 MB per call at `Nmax = 300`. Measured on Apple
+  silicon: `evaluate()` is ~1.07x faster for two species and 1.3x for ten,
+  `get_1dhistogram` 1.30x. Species with zero amplitude and empty photon-count
+  bins are now skipped outright, and the projection's bin cache is compact (one
+  entry per visited cell, off-axis cells routed to a trash bin) so the inner
+  loop is branchless with both streams contiguous. Note that the row-propagation
+  kernel reads one element past each row's diagonal and so relied on the buffer
+  being freshly zeroed; that slot is now zeroed explicitly per row rather than
+  the whole matrix. `evaluate()`'s zero-padding warnings moved from `stdout` to
+  `stderr`.
+
+  Restructuring `conv_pF`'s background convolution kernel-tap-outermost — one
+  contiguous axpy per tap instead of one short dot product per output cell — was
+  tried and is **1.25x slower**: it stores every output element once per tap
+  where the dot product keeps the accumulator in a register and stores once.
+  Reverted, with a comment in the source so it is not attempted again.
+- **`PDA_OPTIMIZED`'s multi-molecule FFT correction is documented and made
+  safe**, not removed. It fires when `pF[0] < 1e-15` and changes the *model*, so
+  the two implementations legitimately disagree there — a test now pins that.
+  `pF[0] == 0` fed `log(0)` to a cast whose result is undefined; the order is
+  now validated and capped. The doc comment claimed the opposite trigger
+  condition. It would be better as an explicit opt-in flag than a silent
+  threshold; that is left alone here because it is a model change, not a bug.
 - `BurstFeatureExtractor`'s null-`BurstFilter` check throws and is translated in
   an `%exception` instead of calling `SWIG_exception_fail` inside the `%extend`
   body. A raise macro expands to language-specific wrapper code, which an

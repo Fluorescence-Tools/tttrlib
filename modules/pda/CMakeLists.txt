@@ -12,6 +12,7 @@ tttrlib_add_module(
     NAME     pda
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Pda.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/PdaCallback.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/PdaBurstLikelihood.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util core
     EXTERNAL_DEPS tttrlib::pocketfft
