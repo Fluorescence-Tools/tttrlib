@@ -51,3 +51,4 @@
 %template(PtoTagVector) std::vector<tttrlib::io::PtoTag>;
 %template(PtoAnnotationVector) std::vector<tttrlib::io::PtoAnnotation>;
 %template(PtoExtentVector) std::vector<tttrlib::io::PtoExtent>;
+
