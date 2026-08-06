@@ -94,8 +94,13 @@
  */
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
+
+#ifndef SWIG
+#include <cstdio>
+#endif
 
 #include "DataStore.h"
 
@@ -145,6 +150,31 @@ data::DataStore read_store(const std::string& filename);
 /// Whether this file begins with the store magic. Silent on any input,
 /// including a missing file: probing is a normal thing for a caller to do.
 bool is_store_file(const std::string& filename);
+
+#ifndef SWIG
+/*!
+ * \brief Write a store into an already-open file, at its current position.
+ *
+ * Every offset the directory records is relative to where the store starts, so
+ * the result is a self-contained store file that happens to live inside
+ * something bigger -- a PTO container, say. Nothing is buffered and no
+ * temporary file is used, so a multi-gigabyte table costs its own bytes.
+ *
+ * Not exposed to the bindings: a FILE* is not something a binding can hold.
+ *
+ * \return bytes written, or 0 on failure.
+ */
+std::uint64_t write_store_at(std::FILE* f, const data::DataStore& store);
+#endif
+
+/*!
+ * \brief Read a store that begins `base` bytes into `filename`.
+ *
+ * \param bytes the length of the region, or 0 for "to the end of the file".
+ * \see write_store_at, and \ref read_store_into for the whole-file case.
+ */
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes);
 
 /// The column names of the root table, in order, without reading any data.
 /// Empty for a file that is not one of ours.

@@ -115,15 +115,21 @@ struct Reader {
 /// Streams blobs forward, recording where each landed. Only the 48-byte header
 /// is written twice: once as a placeholder, once with the real offsets.
 struct BlobStream {
-    File f;
+    std::FILE* h = nullptr;
+    /// Where in the file this store begins. Every offset the directory records
+    /// is relative to it, so a store written into the middle of a container is
+    /// still a self-contained store.
+    std::uint64_t base = 0;
     std::uint64_t pos = 0;
     bool ok = true;
 
-    BlobStream(const std::string& path) : f(path.c_str(), "wb") { ok = f.ok(); }
+    BlobStream(std::FILE* file, std::uint64_t base_) : h(file), base(base_) {
+        ok = h != nullptr;
+    }
 
     void bytes(const void* data, std::size_t n) {
         if (!ok || n == 0) return;
-        if (std::fwrite(data, 1, n, f.get()) != n) ok = false;
+        if (std::fwrite(data, 1, n, h) != n) ok = false;
         pos += n;
     }
     void pad_to_8() {
@@ -253,6 +259,7 @@ void write_node(BlobStream& out, Writer& dir, const data::DataStore& store) {
 struct Blobs {
     std::FILE* f = nullptr;
     std::uint64_t file_bytes = 0;
+    std::uint64_t base = 0;
 
     /// Read a blob, or throw. An offset past the end of the file is the shape a
     /// truncated or doctored file takes, and reading whatever is there instead
@@ -261,7 +268,7 @@ struct Blobs {
         if (r.bytes == 0) return;
         if (r.offset + r.bytes > file_bytes)
             throw std::runtime_error("store file: a column points past the end");
-        if (std::fseek(f, static_cast<long>(r.offset), SEEK_SET) != 0 ||
+        if (std::fseek(f, static_cast<long>(base + r.offset), SEEK_SET) != 0 ||
             std::fread(into, 1, static_cast<std::size_t>(r.bytes), f) != r.bytes)
             throw std::runtime_error("store file: could not read a column");
     }
@@ -353,9 +360,14 @@ struct OpenStore {
     File f;
     std::vector<unsigned char> directory;
     std::uint64_t file_bytes = 0;
+    std::uint64_t base = 0;
 
-    explicit OpenStore(const std::string& filename) : f(filename.c_str(), "rb") {
+    OpenStore(const std::string& filename, std::uint64_t base_ = 0,
+              std::uint64_t region = 0)
+            : f(filename.c_str(), "rb"), base(base_) {
         if (!f.ok()) throw std::runtime_error("cannot open " + filename);
+        if (base != 0 && std::fseek(f.get(), static_cast<long>(base), SEEK_SET) != 0)
+            throw std::runtime_error(filename + " is shorter than the store in it");
 
         unsigned char head[kHeaderBytes];
         if (std::fread(head, 1, kHeaderBytes, f.get()) != kHeaderBytes ||
@@ -383,14 +395,15 @@ struct OpenStore {
                                      " opposite byte order, which is not supported");
 
         std::fseek(f.get(), 0, SEEK_END);
-        file_bytes = static_cast<std::uint64_t>(std::ftell(f.get()));
+        const std::uint64_t whole = static_cast<std::uint64_t>(std::ftell(f.get()));
+        file_bytes = region != 0 ? region : (whole > base ? whole - base : 0);
         if (declared != file_bytes)
             throw std::runtime_error(filename + " is truncated or was appended to");
         if (dir_offset + dir_bytes > file_bytes)
             throw std::runtime_error(filename + " has no directory where it says");
 
         directory.resize(static_cast<std::size_t>(dir_bytes));
-        if (std::fseek(f.get(), static_cast<long>(dir_offset), SEEK_SET) != 0 ||
+        if (std::fseek(f.get(), static_cast<long>(base + dir_offset), SEEK_SET) != 0 ||
             std::fread(directory.data(), 1, directory.size(), f.get()) != directory.size())
             throw std::runtime_error(filename + ": could not read the directory");
         if (fnv1a(directory.data(), directory.size()) != checksum)
@@ -424,18 +437,11 @@ void walk_paths(Reader& dir, const std::string& prefix,
 
 }  // namespace
 
-bool write_store(const std::string& filename, const data::DataStore& store) {
-    // Beside the target, so the rename that follows stays on one filesystem and
-    // is therefore atomic: a failure never leaves half a file where a good one
-    // was.
-    const std::string temp = filename + ".tttrlib-tmp";
+namespace {
 
-    BlobStream out(temp);
-    if (!out.ok) {
-        std::cerr << "store file: could not create " << temp << std::endl;
-        return false;
-    }
-
+/// Header, blobs, directory, then the header again with the real offsets.
+/// Shared by the by-name and the into-an-open-file forms.
+bool emit_store(BlobStream& out, const data::DataStore& store) {
     unsigned char head[kHeaderBytes];
     std::memset(head, 0, kHeaderBytes);
     out.bytes(head, kHeaderBytes);
@@ -448,8 +454,6 @@ bool write_store(const std::string& filename, const data::DataStore& store) {
     out.bytes(dir.b.data(), dir.b.size());
     const std::uint64_t file_bytes = out.pos;
 
-    // The one place anything is written twice: the header could not be filled in
-    // until the directory had somewhere to live.
     const std::uint32_t version = kVersion;
     const std::uint32_t flags = host_is_little_endian() ? kFlagLittleEndian : 0;
     const std::uint64_t dir_bytes = dir.b.size();
@@ -461,25 +465,57 @@ bool write_store(const std::string& filename, const data::DataStore& store) {
     std::memcpy(head + 24, &dir_bytes, 8);
     std::memcpy(head + 32, &file_bytes, 8);
     std::memcpy(head + 40, &checksum, 4);
-    if (std::fseek(out.f.get(), 0, SEEK_SET) != 0 ||
-        std::fwrite(head, 1, kHeaderBytes, out.f.get()) != kHeaderBytes)
-        out.ok = false;
-    if (!out.f.close()) out.ok = false;
 
-    if (out.ok && std::rename(temp.c_str(), filename.c_str()) != 0) {
+    if (std::fseek(out.h, static_cast<long>(out.base), SEEK_SET) != 0 ||
+        std::fwrite(head, 1, kHeaderBytes, out.h) != kHeaderBytes)
+        out.ok = false;
+    if (out.ok && std::fseek(out.h, static_cast<long>(out.base + file_bytes),
+                             SEEK_SET) != 0)
+        out.ok = false;
+    return out.ok;
+}
+
+}  // namespace
+
+std::uint64_t write_store_at(std::FILE* f, const data::DataStore& store) {
+    if (f == nullptr) return 0;
+    const long here = std::ftell(f);
+    if (here < 0) return 0;
+    BlobStream out(f, static_cast<std::uint64_t>(here));
+    if (!emit_store(out, store)) return 0;
+    return out.pos;
+}
+
+bool write_store(const std::string& filename, const data::DataStore& store) {
+    // Beside the target, so the rename that follows stays on one filesystem and
+    // is therefore atomic: a failure never leaves half a file where a good one
+    // was.
+    const std::string temp = filename + ".tttrlib-tmp";
+
+    File owned(temp.c_str(), "wb");
+    BlobStream out(owned.get(), 0);
+    if (!out.ok) {
+        std::cerr << "store file: could not create " << temp << std::endl;
+        return false;
+    }
+
+    bool ok = emit_store(out, store);
+    if (!owned.close()) ok = false;
+
+    if (ok && std::rename(temp.c_str(), filename.c_str()) != 0) {
         std::cerr << "store file: could not rename " << temp << " over "
                   << filename << std::endl;
-        out.ok = false;
+        ok = false;
     }
-    if (!out.ok) std::remove(temp.c_str());
-    return out.ok;
+    if (!ok) std::remove(temp.c_str());
+    return ok;
 }
 
 void read_store_into(data::DataStore& out, const std::string& filename) {
     ColumnFilter want;
     OpenStore file(filename);
     Reader dir{file.directory.data(), file.directory.size(), 0};
-    Blobs blobs{file.f.get(), file.file_bytes};
+    Blobs blobs{file.f.get(), file.file_bytes, file.base};
     out.release();
     read_node(dir, blobs, out, want);
 }
@@ -491,7 +527,17 @@ void read_store_into(data::DataStore& out, const std::string& filename,
     want.wanted = &columns;
     OpenStore file(filename);
     Reader dir{file.directory.data(), file.directory.size(), 0};
-    Blobs blobs{file.f.get(), file.file_bytes};
+    Blobs blobs{file.f.get(), file.file_bytes, file.base};
+    out.release();
+    read_node(dir, blobs, out, want);
+}
+
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes) {
+    ColumnFilter want;
+    OpenStore file(filename, base, bytes);
+    Reader dir{file.directory.data(), file.directory.size(), 0};
+    Blobs blobs{file.f.get(), file.file_bytes, file.base};
     out.release();
     read_node(dir, blobs, out, want);
 }
