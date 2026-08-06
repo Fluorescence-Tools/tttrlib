@@ -24,7 +24,7 @@ tttrlib_add_module(
              # same reason they belong on this side of the line.
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FitRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  io util core burst   # burst_search_algorithms_json lives in burst now
+    DEPENDS  io plugin util core burst   # burst_search_algorithms_json lives in burst now
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES Registry.i
     TEST_DIR test/python

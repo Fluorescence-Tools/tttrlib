@@ -110,6 +110,7 @@ markers = [
   "hmm: photon-by-photon hidden Markov models",
   "pda: photon distribution analysis",
   "simulation: the diffusion / photon-emission simulator",
+  "plugin: drop-in binary plugins — the ABI, the loader and containment",
   "misc: cross-cutting helpers",
   "benchmarks: performance checks, not correctness",
   "toplevel: registry, settings and other suite-wide tests",

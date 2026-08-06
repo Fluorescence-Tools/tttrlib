@@ -671,6 +671,35 @@ public:
     int read_ttr_file(const char *fn);
 
     /*!
+     * \brief Read a FLIM LABS time-tagger (.bin) file. See io_fl.h.
+     *
+     * Both time-tagger flavours come through here: ``STT1`` carries a micro
+     * time and ``ITT1`` does not, which is the only difference at this level.
+     *
+     * The one thing worth knowing is that the file's times are floating-point
+     * nanoseconds and tttrlib's are integer ticks, so reading one means picking
+     * a tick. For ``STT1`` it is the laser period, making the container behave
+     * like a T3 file; for ``ITT1`` it is one picosecond. The choice is written
+     * into the header, since the file does not record it.
+     *
+     * \param fn Filename of the ".bin" file.
+     * \return 1 on success, 0 on failure.
+     */
+    int read_flimlabs_file(const char *fn);
+
+    /*!
+     * \brief Read through a container contributed by a plugin.
+     *
+     * The plugin decodes into buffers this object allocates and owns, a batch
+     * at a time. See PluginHost.h for what a plugin is and how one is found.
+     *
+     * \param fn Filename.
+     * \param container_type The plugin container's session-local id (>= 1000).
+     * \return 1 on success, 0 on failure.
+     */
+    int read_plugin_file(const char *fn, int container_type);
+
+    /*!
      * \brief Writes the TTTR data to a Photonscore ".photons" (D7) file.
      *
      * Reconstructs the position/photon datasets from the flat stream: each
@@ -1409,35 +1438,6 @@ public:
         return tttr_container_type_str;
     }
 
-    /**
-     * @brief Retrieves a list of supported container names.
-     *
-     * This function returns a list of supported container names, e.g. 'PTU', 'SPC-130', etc..
-     *
-     * @return std::vector<std::string>
-     * A list of supported container names.
-     *
-     */
-    static std::vector<std::string> get_supported_container_names() {
-        // 1) pull into a vector of (name, id)
-        std::vector<std::pair<std::string,int>> items;
-        items.reserve(container_names().size());
-        for (auto const& kv : container_names().left) {
-            // kv.first  = std::string
-            // kv.second = int
-            items.emplace_back(kv.first, kv.second);
-        }
-
-        // 2) sort by the int
-        std::sort(items.begin(), items.end(),
-                  [](auto const& a, auto const& b){
-                      return a.second < b.second;
-                  });
-
-        // 3) project out just the names
-        std::vector<std::string> supported;
-        supported.reserve(items.size());
-        for (auto const& p : items) {
     /*!
      * \brief Tell the reader what the file does not say about itself.
      *
@@ -1473,6 +1473,35 @@ public:
         return tttr_container_parameters;
     }
 
+    /**
+     * @brief Retrieves a list of supported container names.
+     *
+     * This function returns a list of supported container names, e.g. 'PTU', 'SPC-130', etc..
+     *
+     * @return std::vector<std::string>
+     * A list of supported container names.
+     *
+     */
+    static std::vector<std::string> get_supported_container_names() {
+        // 1) pull into a vector of (name, id)
+        std::vector<std::pair<std::string,int>> items;
+        items.reserve(container_names().size());
+        for (auto const& kv : container_names().left) {
+            // kv.first  = std::string
+            // kv.second = int
+            items.emplace_back(kv.first, kv.second);
+        }
+
+        // 2) sort by the int
+        std::sort(items.begin(), items.end(),
+                  [](auto const& a, auto const& b){
+                      return a.second < b.second;
+                  });
+
+        // 3) project out just the names
+        std::vector<std::string> supported;
+        supported.reserve(items.size());
+        for (auto const& p : items) {
             supported.push_back(p.first);
         }
         return supported;
@@ -1588,6 +1617,33 @@ public:
 
     TTTR(const char *filename, const char* container_type);
 
+    /*!
+     * Constructor for a container that needs to be told something the file does
+     * not contain.
+     *
+     * The only built-in one is BrightEyes-TTM, whose ``.ttr`` is a bare word
+     * stream: no header, no magic, and no record of the instrument that wrote
+     * it. @p parameters is a JSON object whose accepted properties are declared
+     * by the container's ``params_schema`` in the ``file_container`` registry
+     * category, and an unrecognised property is an error rather than a silent
+     * no-op. See @ref set_container_parameters.
+     *
+     * \code
+     * TTTR data("scan.ttr", "BRIGHTEYES-TTR", R"({"laser_MHz": 80})");
+     * \endcode
+     *
+     * @param filename TTTR filename.
+     * @param container_type Container type as string, or "auto".
+     * @param parameters JSON object of reader parameters.
+     * @param read_input If true, reads the content of the file.
+     */
+    TTTR(const char *filename, const char* container_type,
+         const std::string& parameters, bool read_input = true);
+
+    /// As above, with the container given as an integer.
+    TTTR(const char *filename, int container_type,
+         const std::string& parameters, bool read_input = true);
+
      /*!
       * Constructor for TTTR object using arrays of TTTR events.
       *
@@ -1617,33 +1673,6 @@ public:
       * The selection array is an array of indices. The events with indices
       * in the selection array are copied in the order of the selection array
       * to a new TTTR object.
-    /*!
-     * Constructor for a container that needs to be told something the file does
-     * not contain.
-     *
-     * The only built-in one is BrightEyes-TTM, whose ``.ttr`` is a bare word
-     * stream: no header, no magic, and no record of the instrument that wrote
-     * it. @p parameters is a JSON object whose accepted properties are declared
-     * by the container's ``params_schema`` in the ``file_container`` registry
-     * category, and an unrecognised property is an error rather than a silent
-     * no-op. See @ref set_container_parameters.
-     *
-     * \code
-     * TTTR data("scan.ttr", "BRIGHTEYES-TTR", R"({"laser_MHz": 80})");
-     * \endcode
-     *
-     * @param filename TTTR filename.
-     * @param container_type Container type as string, or "auto".
-     * @param parameters JSON object of reader parameters.
-     * @param read_input If true, reads the content of the file.
-     */
-    TTTR(const char *filename, const char* container_type,
-         const std::string& parameters, bool read_input = true);
-
-    /// As above, with the container given as an integer.
-    TTTR(const char *filename, int container_type,
-         const std::string& parameters, bool read_input = true);
-
       *
       * @param parent Parent TTTR object from which to select records.
       * @param selection Array of indices specifying the selected records.

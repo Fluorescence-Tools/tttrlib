@@ -85,6 +85,7 @@
 #include <string>
 
 #include "Registry.h"
+#include "PluginHost.h"
 
 namespace tttrlib {
 
@@ -586,7 +587,27 @@ const char* const kObjectiveRegistry = R"JSON({
 } // namespace
 
 std::string fit_models_json() {
-    return std::string(kFitRegistry);
+    // The built-in models are a literal, because they are fixed at compile time
+    // and a literal is the clearest way to say so. A plugin's models are not,
+    // so they are spliced in here -- which is what puts a plugin model in
+    // `registry("fit")` and, through fit_entry(), makes the named-parameter
+    // helpers work for it exactly as they do for fit23.
+    //
+    // Textual splice rather than a JSON round trip: the registry is built with
+    // ordered_json specifically so that a form renders in declaration order,
+    // and parsing then re-dumping it here to append two entries would be a lot
+    // of work to arrive back where we started.
+    const std::string extra = tttrlib::PluginHost::decay_fit_models_json();
+    if (extra.empty()) return std::string(kFitRegistry);
+
+    std::string base(kFitRegistry);
+    const std::size_t close = base.find_last_of('}');
+    if (close == std::string::npos) return base;      // cannot happen; do no harm
+    // Insert before the object's closing brace, after the last entry.
+    const std::size_t last_entry_end = base.find_last_of('}', close - 1);
+    if (last_entry_end == std::string::npos) return base;
+    base.insert(last_entry_end + 1, ",\n" + extra + "\n");
+    return base;
 }
 
 std::string fit_setup_json() {

@@ -18,14 +18,33 @@ plugins themselves.
 What a plugin can add
 ---------------------
 A plugin registers into tttrlib's runtime tables, so what it adds is reachable
-through the entry points that already take a name:
+through the entry points that already take a name.
 
-    a file format      tttrlib.TTTR(filename, "MYLAB")
-                       tttr.write(filename, "MYLAB")
-                       and it appears in get_supported_container_names()
-    a fit model        tttrlib.DecayFit2("mymodel", setup, irf)
-                       and it appears in tttrlib.fit_names()
-    a burst search     tttr.burst_search_by_name("mysearch", **params)
+A **file format**:
+
+    tttrlib.TTTR(filename, "MYLAB")     read it by name
+    tttrlib.TTTR(filename)              or by content, if it has a sniffer
+    tttrlib.registry("file_container")["MYLAB"]
+    tttrlib.TTTR.get_supported_container_names()
+
+A **decay fit model**:
+
+    tttrlib.DecayFit2("mymodel")        construct it by name
+    tttrlib.registry("fit")["mymodel"]  with the parameter schema it published
+    tttrlib.decay_fit_names()
+
+A fit model supplies the objective and nothing else; tttrlib wraps it in its own
+bounded, constraint-aware optimiser, so a plugin fit behaves exactly like a
+built-in one.
+
+Burst searches are the remaining capability on the same ABI; the host table
+grows a register_* entry without disturbing an existing plugin (see
+"struct_size" in tttrlib_plugin.h), so a plugin built against today's header
+keeps working when they arrive.
+
+Writing a format is read-only for now. A plugin container reports can_write
+false and tttr.write(filename, "MYLAB") is refused rather than silently writing
+something else.
 
 A plugin cannot add a new Python class: the language bindings are generated at
 build time, so there is no runtime path to synthesise one. If you need genuinely
@@ -66,8 +85,15 @@ by whatever is in this directory.
 
 Writing one
 -----------
-Include tttrlib_plugin.h (or the header-only C++ helper tttrlib_plugin.hpp) and
-implement tttrlib_plugin_init_v1. The boundary is plain C by design, so a plugin
-built with a different compiler, standard library or runtime than tttrlib itself
-still loads. See examples/plugin/ in the tttrlib source tree for a complete,
-working example.
+Include tttrlib_plugin.h and implement tttrlib_plugin_init_v1. The boundary is
+plain C by design, so a plugin built with a different compiler, standard library
+or runtime than tttrlib itself still loads -- and a plugin links nothing from
+tttrlib at all, because everything it may call arrives as a function pointer in
+the host table:
+
+    cc -shared -fPIC -O2 -o tttrlib_mylab.so mylab.c \
+       -I<tttrlib>/modules/plugin/include
+
+See examples/plugin/tttrlib_example.c in the tttrlib source tree for a
+complete, working, commented example -- it is the same file the test suite
+loads to prove that this directory works.

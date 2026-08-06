@@ -86,22 +86,22 @@ struct FileFormat {
      */
     bool (*sniff)(const std::string& filename) = nullptr;
 
+    /*!
+     * \brief As \ref sniff, but carrying state.
+     *
+     * A plain function pointer cannot close over anything, which is fine for
+     * the built-in predicates -- each one *is* the whole answer for its format.
+     * A plugin's sniffer is a different function per format behind one C entry
+     * point, so it needs to be told which format is asking. Preferred over
+     * \ref sniff when both are set.
+     */
+    bool (*sniff_with_context)(void* context, const std::string& filename) = nullptr;
+
+    /// Passed to \ref sniff_with_context. Owned by whoever set it.
+    void* sniff_context = nullptr;
+
     /// Whether this format takes part in content-based detection. See \ref sniff.
     bool detectable = true;
-
-    /// Record encodings valid inside this container. Empty means "any", which
-    /// is true of Photon-HDF5: it stores decoded arrays, not records.
-    std::vector<int> record_types;
-
-    /// Encoding used when transcoding into this container and the header does
-    /// not carry a usable one. -1 if the format does not need one.
-    int default_record_type = -1;
-
-    bool can_read = true;
-    bool can_write = false;
-
-    /// False for plugin-provided formats, whose container_type is session-local.
-    bool stable = true;
 
     /*!
      * \brief Reader parameters this format needs, as a JSON Schema.
@@ -124,6 +124,20 @@ struct FileFormat {
      * rather than a silent no-op.
      */
     std::string parameters_schema;
+
+    /// Record encodings valid inside this container. Empty means "any", which
+    /// is true of Photon-HDF5: it stores decoded arrays, not records.
+    std::vector<int> record_types;
+
+    /// Encoding used when transcoding into this container and the header does
+    /// not carry a usable one. -1 if the format does not need one.
+    int default_record_type = -1;
+
+    bool can_read = true;
+    bool can_write = false;
+
+    /// False for plugin-provided formats, whose container_type is session-local.
+    bool stable = true;
 
     /// True if this format accepts \p record_type.
     bool accepts_record_type(int record_type) const {
@@ -182,6 +196,26 @@ public:
      * feature.
      */
     static bool add(const FileFormat& format);
+
+    /*!
+     * \brief Remove the format called \p name. Returns false if there is none.
+     *
+     * Exists for one purpose: a plugin whose initialisation fails partway must
+     * leave no trace, so the host rolls back each row it added. Not a general
+     * "unregister" -- removing a format other code is holding a container id
+     * for would be a way to make that id mean something else later.
+     */
+    static bool remove(const std::string& name);
+
+    /*!
+     * \brief Bumped on every add and remove.
+     *
+     * Anything that caches a view of this table -- the container name map is
+     * one -- compares this to know its copy is stale. Without it, a table built
+     * before the plugins loaded stays authoritative forever, and a plugin
+     * format is registered but unnameable.
+     */
+    static unsigned long generation();
 
     /*!
      * \brief Attach a content sniffer to an already-registered format.

@@ -18,9 +18,20 @@ class TestRegistry(unittest.TestCase):
         self.assertIn("fit", registry)
         self.assertIn("fit_setup", registry)
         self.assertIn("objective", registry)
+        # Present whether or not anything was found, so "no plugins" is
+        # reported rather than indistinguishable from "the category is gone".
+        self.assertIn("plugin", registry)
+
+    # "plugin" is a census, not a catalogue: it reports what was found in the
+    # plugin directories, and finding nothing is the normal case and a real
+    # answer. Every other category lists what tttrlib can do, where empty would
+    # mean a capability had gone missing.
+    MAY_BE_EMPTY = {"plugin"}
 
     def test_every_entry_is_self_describing(self):
         for category, entries in tttrlib.registry().items():
+            if not entries and category in self.MAY_BE_EMPTY:
+                continue
             self.assertTrue(entries, f"{category} is empty")
             for name, entry in entries.items():
                 self.assertEqual(entry["name"], name)

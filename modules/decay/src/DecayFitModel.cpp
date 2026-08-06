@@ -86,6 +86,11 @@ void ensure_builtin_models() {
     std::call_once(once, [] {
         register_decay_fit_models_fit2x();
         register_decay_fit_models_nexp();
+        // And whatever a plugin brought. After the built-ins, so a plugin
+        // cannot take a name the library itself uses -- the registrar refuses
+        // rather than shadows, which is the same rule the format table follows
+        // and for the same reason.
+        install_plugin_decay_fits();
     });
 }
 
@@ -121,6 +126,18 @@ std::shared_ptr<const DecayFitModel> make_decay_fit(
         factory = it->second;
     }
     return factory(setup, irf);
+}
+
+
+bool decay_fit_is_registered(const std::string &name) {
+    // Deliberately does NOT call ensure_builtin_models(). This is what the
+    // plugin registrar asks, and the registrar runs from *inside* that
+    // function's call_once -- so going back through it would be a recursive
+    // call_once on the same thread, which deadlocks. By the time a plugin can
+    // ask, the built-ins are already in the table anyway, which is the whole
+    // reason plugins are registered last.
+    std::lock_guard<std::mutex> guard(factory_mutex());
+    return factory_table().find(name) != factory_table().end();
 }
 
 

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "FileCheck.h"
 #include "TTTRFormat.h"
+#include "PluginHost.h"
+#include "io_fl.h"
 
 #include <mutex>
 
@@ -229,8 +231,6 @@ bool isCZConfocor3File(const std::string& filename) {
     return true;
 }
 
-/**
- * @brief Infers the type of a TTTR file based on its content.
 // FLIM LABS: the magic distinguishes the two time taggers from each other and
 // from the three analysis formats that share the envelope. The decoder owns the
 // check because it is the same envelope parse the reader already does -- and
@@ -244,6 +244,8 @@ bool isFlimLabsITT1File(const std::string& filename) {
     return tttrlib::io::flimlabs_flavour(filename) == tttrlib::io::FLIMLABS_ITT1;
 }
 
+/**
+ * @brief Infers the type of a TTTR file based on its content.
  */
 namespace {
 
@@ -273,15 +275,19 @@ void ensure_sniffers() {
         IORegistry::set_sniffer("CZ-RAW",      &isCZConfocor3File);
         IORegistry::set_sniffer("PHOTONS",     &isPhotonsFile);
         IORegistry::set_sniffer("SM",          &isSMFile);
-    });
-}
         IORegistry::set_sniffer("FLIMLABS-STT1", &isFlimLabsSTT1File);
         IORegistry::set_sniffer("FLIMLABS-ITT1", &isFlimLabsITT1File);
+    });
+}
 
 }  // namespace
 
 int inferTTTRFileType(const char* fn) {
     ensure_sniffers();
+    // A plugin format that can identify itself has to be in the table before
+    // anything is asked of it, and this is one of the three doors every path
+    // that could need a plugin comes through.
+    tttrlib::PluginHost::ensure_loaded();
     return tttrlib::IORegistry::infer_container_type(fn ? fn : "");
 }
 

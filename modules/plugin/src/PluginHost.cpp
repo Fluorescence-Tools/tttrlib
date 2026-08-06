@@ -1,0 +1,753 @@
+// SPDX-License-Identifier: BSD-3-Clause
+#include "PluginHost.h"
+
+#include <algorithm>
+#include <array>
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "TTTRFormat.h"
+#include "Verbose.h"
+
+#if defined(_WIN32)
+#  include <windows.h>
+#else
+#  include <dlfcn.h>
+#  include <sys/stat.h>
+#endif
+
+#ifndef TTTRLIB_VERSION_STRING
+#  define TTTRLIB_VERSION_STRING "0.0.0"
+#endif
+
+namespace tttrlib {
+
+namespace {
+
+namespace fs = std::filesystem;
+
+// ---------------------------------------------------------------- sha256
+//
+// Hand-rolled rather than pulled in: the library is deliberately std-only, and
+// this is the whole of what is needed -- a digest of a file so a published
+// result can say which binary produced it. Straight from FIPS 180-4.
+
+struct Sha256 {
+    uint32_t h[8] = {0x6a09e667u, 0xbb67ae85u, 0x3c6ef372u, 0xa54ff53au,
+                     0x510e527fu, 0x9b05688cu, 0x1f83d9abu, 0x5be0cd19u};
+    uint64_t length = 0;
+    unsigned char buffer[64] = {};
+    std::size_t buffered = 0;
+
+    static uint32_t rotr(uint32_t x, int n) { return (x >> n) | (x << (32 - n)); }
+
+    void block(const unsigned char* p) {
+        static const uint32_t k[64] = {
+            0x428a2f98u,0x71374491u,0xb5c0fbcfu,0xe9b5dba5u,0x3956c25bu,0x59f111f1u,
+            0x923f82a4u,0xab1c5ed5u,0xd807aa98u,0x12835b01u,0x243185beu,0x550c7dc3u,
+            0x72be5d74u,0x80deb1feu,0x9bdc06a7u,0xc19bf174u,0xe49b69c1u,0xefbe4786u,
+            0x0fc19dc6u,0x240ca1ccu,0x2de92c6fu,0x4a7484aau,0x5cb0a9dcu,0x76f988dau,
+            0x983e5152u,0xa831c66du,0xb00327c8u,0xbf597fc7u,0xc6e00bf3u,0xd5a79147u,
+            0x06ca6351u,0x14292967u,0x27b70a85u,0x2e1b2138u,0x4d2c6dfcu,0x53380d13u,
+            0x650a7354u,0x766a0abbu,0x81c2c92eu,0x92722c85u,0xa2bfe8a1u,0xa81a664bu,
+            0xc24b8b70u,0xc76c51a3u,0xd192e819u,0xd6990624u,0xf40e3585u,0x106aa070u,
+            0x19a4c116u,0x1e376c08u,0x2748774cu,0x34b0bcb5u,0x391c0cb3u,0x4ed8aa4au,
+            0x5b9cca4fu,0x682e6ff3u,0x748f82eeu,0x78a5636fu,0x84c87814u,0x8cc70208u,
+            0x90befffau,0xa4506cebu,0xbef9a3f7u,0xc67178f2u};
+        uint32_t w[64];
+        for (int i = 0; i < 16; ++i) {
+            w[i] = (uint32_t(p[4 * i]) << 24) | (uint32_t(p[4 * i + 1]) << 16) |
+                   (uint32_t(p[4 * i + 2]) << 8) | uint32_t(p[4 * i + 3]);
+        }
+        for (int i = 16; i < 64; ++i) {
+            const uint32_t s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
+            const uint32_t s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
+            w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+        }
+        uint32_t a = h[0], b = h[1], c = h[2], d = h[3];
+        uint32_t e = h[4], f = h[5], g = h[6], hh = h[7];
+        for (int i = 0; i < 64; ++i) {
+            const uint32_t s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+            const uint32_t ch = (e & f) ^ ((~e) & g);
+            const uint32_t t1 = hh + s1 + ch + k[i] + w[i];
+            const uint32_t s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+            const uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
+            const uint32_t t2 = s0 + maj;
+            hh = g; g = f; f = e; e = d + t1;
+            d = c; c = b; b = a; a = t1 + t2;
+        }
+        h[0] += a; h[1] += b; h[2] += c; h[3] += d;
+        h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+    }
+
+    void update(const unsigned char* p, std::size_t n) {
+        length += n;
+        while (n > 0) {
+            const std::size_t take = std::min(n, sizeof(buffer) - buffered);
+            std::memcpy(buffer + buffered, p, take);
+            buffered += take; p += take; n -= take;
+            if (buffered == sizeof(buffer)) { block(buffer); buffered = 0; }
+        }
+    }
+
+    std::string hex() {
+        const uint64_t bits = length * 8;
+        unsigned char pad = 0x80;
+        update(&pad, 1);
+        pad = 0x00;
+        while (buffered != 56) update(&pad, 1);
+        unsigned char tail[8];
+        for (int i = 0; i < 8; ++i) tail[i] = static_cast<unsigned char>(bits >> (56 - 8 * i));
+        // update() would count these into `length`, which is already frozen in
+        // `bits`; feed the final block directly.
+        std::memcpy(buffer + buffered, tail, 8);
+        block(buffer);
+
+        std::ostringstream out;
+        static const char* digits = "0123456789abcdef";
+        for (int i = 0; i < 8; ++i) {
+            for (int b = 3; b >= 0; --b) {
+                const unsigned char byte = static_cast<unsigned char>(h[i] >> (8 * b));
+                out << digits[byte >> 4] << digits[byte & 0x0F];
+            }
+        }
+        return out.str();
+    }
+};
+
+std::string sha256_of_file(const fs::path& p) {
+    FILE* f = std::fopen(p.string().c_str(), "rb");
+    if (f == nullptr) return {};
+    Sha256 s;
+    std::vector<unsigned char> buf(64 * 1024);
+    for (;;) {
+        const std::size_t got = std::fread(buf.data(), 1, buf.size(), f);
+        if (got == 0) break;
+        s.update(buf.data(), got);
+    }
+    std::fclose(f);
+    return s.hex();
+}
+
+// ---------------------------------------------------------------- environment
+
+std::string env(const char* name) {
+    const char* v = std::getenv(name);
+    return v != nullptr ? std::string(v) : std::string();
+}
+
+std::vector<std::string> split_path_list(const std::string& s) {
+#if defined(_WIN32)
+    const char sep = ';';
+#else
+    const char sep = ':';
+#endif
+    std::vector<std::string> out;
+    std::string current;
+    for (char c : s) {
+        if (c == sep) { if (!current.empty()) out.push_back(current); current.clear(); }
+        else current.push_back(c);
+    }
+    if (!current.empty()) out.push_back(current);
+    return out;
+}
+
+/*!
+ * The directory this library itself lives in.
+ *
+ * The plugin directory is a sibling of the compiled library, wherever the
+ * package ended up -- a wheel, a conda prefix, a build tree. Asking the loader
+ * where it put us is the only way to know that which does not depend on Python
+ * being involved: `inferTTTRFileType` is reached from C++ too.
+ */
+fs::path own_directory() {
+#if defined(_WIN32)
+    HMODULE module = nullptr;
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           reinterpret_cast<LPCWSTR>(&own_directory), &module) == 0) {
+        return {};
+    }
+    wchar_t path[MAX_PATH * 4];
+    const DWORD n = GetModuleFileNameW(module, path, sizeof(path) / sizeof(path[0]));
+    if (n == 0) return {};
+    return fs::path(std::wstring(path, n)).parent_path();
+#else
+    Dl_info info{};
+    if (dladdr(reinterpret_cast<const void*>(&own_directory), &info) == 0 ||
+        info.dli_fname == nullptr) {
+        return {};
+    }
+    std::error_code ec;
+    const fs::path p = fs::absolute(fs::path(info.dli_fname), ec);
+    return ec ? fs::path() : p.parent_path();
+#endif
+}
+
+fs::path per_user_directory() {
+#if defined(_WIN32)
+    const std::string local = env("LOCALAPPDATA");
+    if (local.empty()) return {};
+    return fs::path(local) / "tttrlib" / "plugins";
+#elif defined(__APPLE__)
+    const std::string home = env("HOME");
+    if (home.empty()) return {};
+    return fs::path(home) / "Library" / "Application Support" / "tttrlib" / "plugins";
+#else
+    const std::string xdg = env("XDG_DATA_HOME");
+    if (!xdg.empty()) return fs::path(xdg) / "tttrlib" / "plugins";
+    const std::string home = env("HOME");
+    if (home.empty()) return {};
+    return fs::path(home) / ".local" / "share" / "tttrlib" / "plugins";
+#endif
+}
+
+/*!
+ * Is this directory safe to load binaries out of?
+ *
+ * The threat is not a clever attacker; it is a shared instrument drive where
+ * somebody left a helpful-looking library next to the data. So: nothing
+ * world-writable, ever. The directories that remain are inside the user's own
+ * install or home, writable by exactly the account already running the
+ * interpreter -- which could equally drop a `sitecustomize.py`, so refusing
+ * those would be theatre.
+ *
+ * The temp directory is refused as well, but only when tttrlib went looking
+ * there by itself (\p implicit). A path the user named in
+ * ``TTTRLIB_PLUGIN_PATH`` is a deliberate act, and the whole point of the
+ * variable is trying a plugin out before installing it -- which is exactly what
+ * a scratch directory is for. Refusing it would leave the variable useless for
+ * its main use and teach people to work around the check. Note that on Linux
+ * the shared ``/tmp`` is world-writable and so is still refused by the rule
+ * above; what this allows through is a per-user private temp directory.
+ */
+bool directory_is_safe(const fs::path& dir, bool implicit, std::string* why) {
+    std::error_code ec;
+    if (!fs::is_directory(dir, ec)) return false;
+
+    const fs::path temp = implicit ? fs::temp_directory_path(ec) : fs::path();
+    if (implicit && !ec && !temp.empty()) {
+        const fs::path canonical = fs::weakly_canonical(dir, ec);
+        const fs::path canonical_temp = fs::weakly_canonical(temp, ec);
+        auto t = canonical_temp.begin();
+        auto d = canonical.begin();
+        bool under_temp = true;
+        for (; t != canonical_temp.end(); ++t, ++d) {
+            if (d == canonical.end() || *d != *t) { under_temp = false; break; }
+        }
+        if (under_temp && !canonical_temp.empty()) {
+            if (why) *why = "refusing to load plugins from a temporary directory";
+            return false;
+        }
+    }
+
+#if !defined(_WIN32)
+    struct stat st{};
+    if (::stat(dir.string().c_str(), &st) == 0 && (st.st_mode & S_IWOTH) != 0) {
+        if (why) *why = "refusing to load plugins from a world-writable directory";
+        return false;
+    }
+#endif
+    return true;
+}
+
+const char* library_suffix() {
+#if defined(_WIN32)
+    return ".dll";
+#elif defined(__APPLE__)
+    return ".dylib";
+#else
+    return ".so";
+#endif
+}
+
+/// "tttrlib_mylab.dylib" -> "mylab"; anything else -> "".
+std::string plugin_name_of(const fs::path& file) {
+    const std::string stem = file.filename().string();
+    const std::string prefix = "tttrlib_";
+    const std::string suffix = library_suffix();
+    if (stem.size() <= prefix.size() + suffix.size()) return {};
+    if (stem.compare(0, prefix.size(), prefix) != 0) return {};
+    if (stem.compare(stem.size() - suffix.size(), suffix.size(), suffix) != 0) return {};
+    return stem.substr(prefix.size(), stem.size() - prefix.size() - suffix.size());
+}
+
+// ---------------------------------------------------------------- host state
+
+/// Everything one plugin registered, so it can all be undone if its init fails.
+struct Journal {
+    std::vector<std::string> container_names;
+    std::size_t decay_fits_before = 0;
+};
+
+struct HostState {
+    std::vector<PluginRecord> records;
+    /// container_type -> the plugin's table. Owned by the plugin's library,
+    /// which is never unloaded, so the pointer stays valid for the process.
+    std::vector<std::pair<int, const tttrlib_container_v1*>> containers;
+    std::string error;        ///< set_error's landing pad, for the call in flight
+    Journal* journal = nullptr;
+    int next_container_type = 1000;
+
+    /// Installed from above by the fitting layer; null until then.
+    bool (*decay_fit_registrar)(const tttrlib_decay_fit_v1*) = nullptr;
+    std::vector<const tttrlib_decay_fit_v1*> decay_fits;
+};
+
+HostState& state() {
+    static HostState s;
+    return s;
+}
+
+std::mutex& state_mutex() {
+    static std::mutex m;
+    return m;
+}
+
+void host_log(int level, const char* message) noexcept {
+    if (message == nullptr) return;
+    if (level < TTTRLIB_LOG_WARNING && !is_verbose()) return;
+    std::clog << "-- plugin: " << message << std::endl;
+}
+
+void host_set_error(const char* message) noexcept {
+    state().error = message != nullptr ? message : "";
+}
+
+/*!
+ * The sniffer trampoline.
+ *
+ * `FileFormat` holds a plain function pointer, which cannot carry the plugin's
+ * context, so the format table grew a context-carrying variant and this is what
+ * goes in it. Kept `noexcept` at the boundary: a plugin throwing through the
+ * host is undefined, and sniffers are called speculatively on files that are
+ * not theirs, which is exactly when a bad one misbehaves.
+ */
+bool plugin_sniff(void* ctx, const std::string& filename) noexcept {
+    const auto* container = static_cast<const tttrlib_container_v1*>(ctx);
+    if (container == nullptr || container->sniff == nullptr) return false;
+    return container->sniff(container->ctx, filename.c_str()) == 1;
+}
+
+int host_register_container(const tttrlib_container_v1* c) noexcept {
+    if (c == nullptr || c->struct_size < sizeof(tttrlib_container_v1) ||
+        c->name == nullptr || c->name[0] == '\0' ||
+        c->open == nullptr || c->read == nullptr || c->close == nullptr) {
+        host_set_error("register_container: incomplete container table "
+                       "(name, open, read and close are all required)");
+        return TTTRLIB_INVALID;
+    }
+
+    FileFormat f;
+    f.name = c->name;
+    f.container_type = state().next_container_type;
+    f.label = c->label != nullptr ? c->label : c->name;
+    if (c->summary != nullptr) f.summary = c->summary;
+    if (c->extensions != nullptr) {
+        std::string current;
+        for (const char* p = c->extensions; ; ++p) {
+            if (*p == ',' || *p == '\0') {
+                if (!current.empty()) f.extensions.push_back(current);
+                current.clear();
+                if (*p == '\0') break;
+            } else {
+                current.push_back(static_cast<char>(std::tolower(
+                        static_cast<unsigned char>(*p))));
+            }
+        }
+    }
+    if (c->params_schema != nullptr) f.parameters_schema = c->params_schema;
+    f.detectable = c->detectable != 0 && c->sniff != nullptr;
+    f.sniff_with_context = &plugin_sniff;
+    f.sniff_context = const_cast<tttrlib_container_v1*>(c);
+    f.can_read = true;
+    f.can_write = false;
+    // A plugin's container id is handed out in load order, so it is only
+    // meaningful within this process. The name is the stable identifier, and
+    // `stable` is how a consumer knows not to persist the integer.
+    f.stable = false;
+
+    if (!IORegistry::add(f)) {
+        const std::string taken = std::string("register_container: the name '") +
+                                  c->name + "' is already taken";
+        host_set_error(taken.c_str());
+        return TTTRLIB_INVALID;
+    }
+
+    state().containers.emplace_back(f.container_type, c);
+    if (state().journal != nullptr) state().journal->container_names.push_back(f.name);
+    state().next_container_type += 1;
+    return TTTRLIB_OK;
+}
+
+int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
+    if (f == nullptr || f->struct_size < sizeof(tttrlib_decay_fit_v1) ||
+        f->name == nullptr || f->name[0] == '\0' ||
+        f->create == nullptr || f->evaluate == nullptr || f->destroy == nullptr ||
+        f->n_parameters == nullptr) {
+        host_set_error("register_decay_fit: incomplete model table (name, "
+                       "params_schema, create, n_parameters, evaluate and "
+                       "destroy are all required)");
+        return TTTRLIB_INVALID;
+    }
+    if (f->params_schema == nullptr || f->params_schema[0] == '\0') {
+        // Without it the named-parameter helpers cannot describe the model and
+        // a caller is back to counting slots in a flat array, which is the
+        // thing the registry exists to abolish.
+        host_set_error("register_decay_fit: params_schema is required, so that "
+                       "the model can be called by parameter name");
+        return TTTRLIB_INVALID;
+    }
+    // Recorded first, wired up second -- and the two do not have to happen in
+    // that order in time.
+    //
+    // Loading is triggered by whichever entry point is reached first, which may
+    // be reading a file, and the fitting layer will not have installed its
+    // registrar by then. Requiring it to be there would make a plugin's fit
+    // model silently vanish depending on what the caller happened to do first.
+    // So the table is always recorded, and set_decay_fit_registrar() replays
+    // whatever accumulated before it arrived.
+    state().decay_fits.push_back(f);
+    if (state().decay_fit_registrar != nullptr &&
+        !state().decay_fit_registrar(f)) {
+        state().decay_fits.pop_back();
+        const std::string taken = std::string("register_decay_fit: the name '") +
+                                  f->name + "' is already taken";
+        host_set_error(taken.c_str());
+        return TTTRLIB_INVALID;
+    }
+    return TTTRLIB_OK;
+}
+
+const tttrlib_host_v1& host_table() {
+    static const tttrlib_host_v1 host = {
+        sizeof(tttrlib_host_v1),
+        1,
+        TTTRLIB_VERSION_STRING,
+        &host_log,
+        &host_set_error,
+        &host_register_container,
+        &host_register_decay_fit,
+    };
+    return host;
+}
+
+void roll_back(const Journal& journal) {
+    // Fit models: the fitting layer's own table is left alone deliberately.
+    // Un-registering a factory another thread may already be constructing
+    // through is a worse failure than leaving one unreachable model behind, and
+    // dropping it from this list is what keeps it out of the registry -- so the
+    // model of a failed plugin is not offered to anybody.
+    if (state().decay_fits.size() > journal.decay_fits_before) {
+        state().decay_fits.resize(journal.decay_fits_before);
+    }
+    for (const std::string& name : journal.container_names) {
+        const FileFormat* f = IORegistry::by_name(name);
+        if (f != nullptr) {
+            const int container_type = f->container_type;
+            IORegistry::remove(name);
+            auto& cs = state().containers;
+            cs.erase(std::remove_if(cs.begin(), cs.end(),
+                                    [&](const std::pair<int, const tttrlib_container_v1*>& e) {
+                                        return e.first == container_type;
+                                    }),
+                     cs.end());
+        }
+    }
+}
+
+// ---------------------------------------------------------------- loading
+
+struct Selection {
+    bool enabled = true;
+    bool pinned = false;
+    std::vector<std::string> only;
+};
+
+Selection selection_from_env() {
+    Selection s;
+    const std::string v = env("TTTRLIB_PLUGINS");
+    if (v.empty()) return s;
+    if (v == "0" || v == "off" || v == "false" || v == "no") { s.enabled = false; return s; }
+    const std::string prefix = "only:";
+    if (v.compare(0, prefix.size(), prefix) == 0) {
+        s.pinned = true;
+        std::string current;
+        for (std::size_t i = prefix.size(); i <= v.size(); ++i) {
+            if (i == v.size() || v[i] == ',') {
+                if (!current.empty()) s.only.push_back(current);
+                current.clear();
+            } else {
+                current.push_back(v[i]);
+            }
+        }
+    }
+    return s;
+}
+
+/// Each directory, and whether tttrlib went looking there by itself. The flag
+/// is what distinguishes "the user pointed at this" from "we found it".
+std::vector<std::pair<fs::path, bool>> search_directories() {
+    std::vector<std::pair<fs::path, bool>> dirs;
+    for (const std::string& d : split_path_list(env("TTTRLIB_PLUGIN_PATH"))) {
+        dirs.emplace_back(fs::path(d), false);   // named by the user
+    }
+    const fs::path own = own_directory();
+    if (!own.empty()) dirs.emplace_back(own / "plugins", true);
+    const fs::path user = per_user_directory();
+    if (!user.empty()) dirs.emplace_back(user, true);
+    return dirs;
+}
+
+fs::path quarantine_marker(const fs::path& dir, const std::string& name) {
+    return dir / (".tttrlib-loading-" + name);
+}
+
+/// Open the library, call its entry point, keep or undo what it registered.
+void load_one(PluginRecord& record) {
+    const fs::path path(record.path);
+    const fs::path marker = quarantine_marker(path.parent_path(), record.name);
+
+    std::error_code ec;
+    // Written before the library is opened and removed after it survives, so a
+    // plugin that took the last process down with it is skipped next time
+    // instead of making the interpreter unstartable. Best-effort: a read-only
+    // plugin directory is a managed install, and gets no quarantine.
+    const bool marked = [&] {
+        std::FILE* f = std::fopen(marker.string().c_str(), "wb");
+        if (f == nullptr) return false;
+        std::fclose(f);
+        return true;
+    }();
+
+    struct MarkerGuard {
+        const fs::path& marker;
+        bool marked;
+        ~MarkerGuard() {
+            if (marked) { std::error_code e; fs::remove(marker, e); }
+        }
+    } guard{marker, marked};
+
+#if defined(_WIN32)
+    const std::wstring wide = path.wstring();
+    HMODULE handle = LoadLibraryExW(wide.c_str(), nullptr,
+                                    LOAD_WITH_ALTERED_SEARCH_PATH);
+    if (handle == nullptr) {
+        record.status = PluginStatus::Failed;
+        record.message = "LoadLibraryExW failed (error " +
+                         std::to_string(static_cast<unsigned long>(GetLastError())) + ")";
+        return;
+    }
+    auto init = reinterpret_cast<tttrlib_plugin_init_v1_fn>(
+            reinterpret_cast<void*>(GetProcAddress(handle, "tttrlib_plugin_init_v1")));
+#else
+    // RTLD_NOW: a missing symbol becomes a diagnosis here rather than a crash
+    // in the middle of reading somebody's data. RTLD_LOCAL: the plugin's
+    // symbols never pre-empt tttrlib's own bundled statics.
+    void* handle = dlopen(path.string().c_str(), RTLD_NOW | RTLD_LOCAL);
+    if (handle == nullptr) {
+        record.status = PluginStatus::Failed;
+        const char* e = dlerror();
+        record.message = e != nullptr ? e : "dlopen failed";
+        return;
+    }
+    auto init = reinterpret_cast<tttrlib_plugin_init_v1_fn>(dlsym(handle, "tttrlib_plugin_init_v1"));
+#endif
+
+    if (init == nullptr) {
+        // Not a tttrlib plugin, or one built against a newer ABI that exports a
+        // differently-named entry point. Either way it is not ours to call.
+        record.status = PluginStatus::Failed;
+        record.message = "no tttrlib_plugin_init_v1 symbol; "
+                         "not a tttrlib plugin, or built for a newer ABI";
+        return;
+    }
+
+    Journal journal;
+    journal.decay_fits_before = state().decay_fits.size();
+    state().journal = &journal;
+    state().error.clear();
+
+    tttrlib_plugin_info_v1 info{};
+    info.struct_size = sizeof(info);
+
+    int status = TTTRLIB_ERROR;
+    try {
+        status = init(&host_table(), &info);
+    } catch (...) {
+        // The ABI says no exception crosses. If one does anyway, the plugin is
+        // broken in a way that makes everything else it claims untrustworthy.
+        status = TTTRLIB_ERROR;
+        state().error = "the plugin threw an exception through the C boundary";
+    }
+    state().journal = nullptr;
+
+    if (status != TTTRLIB_OK) {
+        roll_back(journal);
+        record.status = PluginStatus::Failed;
+        record.message = state().error.empty()
+                             ? ("init returned status " + std::to_string(status))
+                             : state().error;
+        return;
+    }
+    if (info.name == nullptr || info.version == nullptr) {
+        roll_back(journal);
+        record.status = PluginStatus::Failed;
+        record.message = "init succeeded but left name or version unset";
+        return;
+    }
+
+    record.declared_name = info.name;
+    record.version = info.version;
+    if (info.description != nullptr) record.description = info.description;
+    record.containers = journal.container_names;
+    record.status = PluginStatus::Loaded;
+}
+
+void load_all() {
+    const Selection selection = selection_from_env();
+    if (!selection.enabled) return;
+
+    std::vector<std::string> seen;   // first directory wins, by plugin name
+
+    for (const auto& entry : search_directories()) {
+        const fs::path& dir = entry.first;
+        const bool implicit = entry.second;
+        std::string why;
+        if (!directory_is_safe(dir, implicit, &why)) {
+            if (!why.empty() && is_verbose()) {
+                std::clog << "-- plugin: " << dir.string() << ": " << why << std::endl;
+            }
+            continue;
+        }
+
+        // Filename order, case-folded, so two machines load in the same order
+        // and a bug is reproducible instead of filesystem-dependent.
+        std::vector<fs::path> candidates;
+        std::error_code ec;
+        for (const auto& entry : fs::directory_iterator(dir, ec)) {
+            if (ec) break;
+            if (!entry.is_regular_file(ec)) continue;
+            if (plugin_name_of(entry.path()).empty()) continue;
+            candidates.push_back(entry.path());
+        }
+        std::sort(candidates.begin(), candidates.end(),
+                  [](const fs::path& a, const fs::path& b) {
+                      std::string x = a.filename().string(), y = b.filename().string();
+                      std::transform(x.begin(), x.end(), x.begin(), ::tolower);
+                      std::transform(y.begin(), y.end(), y.begin(), ::tolower);
+                      return x < y;
+                  });
+
+        for (const fs::path& file : candidates) {
+            PluginRecord record;
+            record.name = plugin_name_of(file);
+            record.path = fs::absolute(file, ec).string();
+            record.sha256 = sha256_of_file(file);
+
+            if (std::find(seen.begin(), seen.end(), record.name) != seen.end()) {
+                record.status = PluginStatus::Shadowed;
+                record.message = "a plugin of this name was found earlier in the search path";
+                state().records.push_back(record);
+                continue;
+            }
+            seen.push_back(record.name);
+
+            if (selection.pinned &&
+                std::find(selection.only.begin(), selection.only.end(), record.name) ==
+                        selection.only.end()) {
+                record.status = PluginStatus::Disabled;
+                record.message = "not listed in TTTRLIB_PLUGINS=only:...";
+                state().records.push_back(record);
+                continue;
+            }
+
+            if (fs::exists(quarantine_marker(dir, record.name), ec)) {
+                record.status = PluginStatus::Quarantined;
+                record.message = "a previous run did not survive loading this plugin; "
+                                 "delete " + quarantine_marker(dir, record.name).string() +
+                                 " to try again";
+                state().records.push_back(record);
+                continue;
+            }
+
+            load_one(record);
+            state().records.push_back(record);
+        }
+    }
+}
+
+}  // namespace
+
+void PluginHost::ensure_loaded() {
+    static std::once_flag once;
+    std::call_once(once, [] {
+        std::lock_guard<std::mutex> guard(state_mutex());
+        load_all();
+    });
+}
+
+const std::vector<PluginRecord>& PluginHost::plugins() {
+    ensure_loaded();
+    return state().records;
+}
+
+const tttrlib_container_v1* PluginHost::container_for(int container_type) {
+    ensure_loaded();
+    for (const auto& entry : state().containers) {
+        if (entry.first == container_type) return entry.second;
+    }
+    return nullptr;
+}
+
+std::string PluginHost::last_error() {
+    return state().error;
+}
+
+void PluginHost::set_decay_fit_registrar(
+        bool (*registrar)(const tttrlib_decay_fit_v1* fit)) {
+    state().decay_fit_registrar = registrar;
+    if (registrar == nullptr) return;
+    // Replay whatever was recorded before the fitting layer showed up. Loading
+    // may already have happened -- triggered by reading a file, say -- and the
+    // models found then would otherwise be listed in the registry but not
+    // constructible, which is the worst of both.
+    for (const tttrlib_decay_fit_v1* f : state().decay_fits) registrar(f);
+}
+
+const std::vector<const tttrlib_decay_fit_v1*>& PluginHost::decay_fits() {
+    ensure_loaded();
+    return state().decay_fits;
+}
+
+std::string PluginHost::decay_fit_models_json() {
+    // Built here rather than in the fitting layer because everything it needs
+    // is in the C tables -- name, labels, and the schema the plugin already
+    // wrote. That is what lets the registry, which must not depend on the
+    // fitting stack, still publish a plugin's fit model.
+    std::string out;
+    for (const tttrlib_decay_fit_v1* f : decay_fits()) {
+        if (!out.empty()) out += ",\n";
+        out += "  \"";
+        out += f->name;
+        out += "\": {\"name\": \"";
+        out += f->name;
+        out += "\", \"label\": \"";
+        out += (f->label != nullptr ? f->label : f->name);
+        out += "\", \"summary\": \"";
+        out += (f->summary != nullptr ? f->summary
+                                      : "A decay fit model provided by a plugin.");
+        out += "\", \"provider\": \"plugin\", \"params_schema\": ";
+        out += f->params_schema;
+        out += "}";
+    }
+    return out;
+}
+
+}  // namespace tttrlib

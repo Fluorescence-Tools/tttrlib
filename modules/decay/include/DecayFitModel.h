@@ -438,6 +438,30 @@ std::shared_ptr<const DecayFitModel> make_decay_fit(
 std::vector<std::string> decay_fit_names();
 
 /*!
+ * \brief Whether \p name is already a registered fit, without registering the
+ *        built-ins first.
+ *
+ * The distinction matters in exactly one place. A plugin's models are
+ * registered from inside the same one-time initialisation that registers the
+ * built-ins, so anything they call must not re-enter it -- `decay_fit_names()`
+ * would, and a recursive `call_once` on one thread deadlocks rather than
+ * recursing. By then the built-ins are in the table, which is why they are
+ * registered before the plugins and not after.
+ */
+bool decay_fit_is_registered(const std::string &name);
+
+/*!
+ * \brief Accept decay fit models from plugins.
+ *
+ * Teaches the plugin host how to turn a plugin's C table into a `DecayFitModel`
+ * -- which it cannot do itself, because it sits below this layer so that a
+ * plugin can add a *file format* without the format table depending on the
+ * fitting stack. Called once, from `make_decay_fit`'s built-in registration, so
+ * a plugin model is constructible by the time anything could ask for one.
+ */
+void install_plugin_decay_fits();
+
+/*!
  * \brief Build \p name's flat setup vector from named values.
  *
  * Every slot takes its documented default unless \p values_json overrides it, so

@@ -26,13 +26,14 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitModel.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitModelFit2x.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitModelNExp.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitPlugin.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitNExp.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitPrior.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitProblem.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitSetup.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayStatistics.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util registry
+    DEPENDS  util registry plugin
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES DecayFit.i DecayConvolution.i
     TEST_DIR test/python/decayfit

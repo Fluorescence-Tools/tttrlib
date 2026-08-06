@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 #include "TTTRFormat.h"
+#include "PluginHost.h"
 #include "TTTR.h"
 
 namespace tttrlib {
@@ -47,7 +48,6 @@ json file_container_entries() {
         // choosing a transcode target had no way to ask.
         entry["record_types"] = f.record_types;
         entry["default_record_type"] = f.default_record_type;
-        entry["canonical_extension"] = f.write_extension();
         // What the reader has to be told, for the formats that cannot tell you
         // themselves. Same shape and same key as the fit models' params_schema,
         // so a frontend that renders one renders this one; an empty object
@@ -57,6 +57,7 @@ json file_container_entries() {
         entry["params_schema"] = f.parameters_schema.empty()
                 ? json::object()
                 : json::parse(f.parameters_schema, nullptr, false);
+        entry["canonical_extension"] = f.write_extension();
         // Tells a consumer which container ints are safe to persist. Built-in
         // formats own 0-999 permanently; a plugin's id is session-local, so for
         // those the NAME is the stable identifier.
@@ -66,12 +67,72 @@ json file_container_entries() {
     return out;
 }
 
+/*!
+ * What was found in the plugin directories, and what became of it.
+ *
+ * A failed plugin is reported here rather than raised or printed. Two reasons:
+ * `import tttrlib` must not be breakable by a stranger's binary sitting in a
+ * directory, and a diagnostic that scrolled past is not a diagnostic. So the
+ * outcome is data, queryable after the fact — including for the plugins that
+ * loaded fine, because "which binary produced this result" is a question a
+ * published figure has to be able to answer.
+ */
+json plugin_entries() {
+    json out = json::object();
+    for (const auto& p : tttrlib::PluginHost::plugins()) {
+        json entry = json::object();
+        entry["name"] = p.name;
+        // label/summary because every registry entry carries them: a tool that
+        // can render one category can render this one, which is the whole
+        // reason the registry has a shape at all.
+        entry["label"] = p.description.empty() ? p.name : p.description;
+        switch (p.status) {
+            case tttrlib::PluginStatus::Loaded:      entry["status"] = "loaded"; break;
+            case tttrlib::PluginStatus::Failed:      entry["status"] = "failed"; break;
+            case tttrlib::PluginStatus::Quarantined: entry["status"] = "quarantined"; break;
+            case tttrlib::PluginStatus::Shadowed:    entry["status"] = "shadowed"; break;
+            case tttrlib::PluginStatus::Disabled:    entry["status"] = "disabled"; break;
+        }
+        entry["summary"] =
+                p.status == tttrlib::PluginStatus::Loaded
+                        ? ("version " + (p.version.empty() ? std::string("?") : p.version) +
+                           ", from " + p.path)
+                        : (entry["status"].get<std::string>() + ": " +
+                           (p.message.empty() ? p.path : p.message));
+        entry["version"] = p.version;
+        entry["description"] = p.description;
+        entry["path"] = p.path;
+        entry["sha256"] = p.sha256;
+        entry["message"] = p.message;
+        // What it actually contributed, so the answer to "where did this format
+        // come from" is one lookup rather than a guess.
+        entry["containers"] = p.containers;
+        // The plugin's own idea of its name, when it disagrees with the
+        // filename. Discovery goes by filename, so the two differing is worth
+        // seeing rather than silently resolving.
+        if (!p.declared_name.empty() && p.declared_name != p.name) {
+            entry["declared_name"] = p.declared_name;
+        }
+        out[p.name] = entry;
+    }
+    return out;
+}
+
 /// Assemble the whole registry once; cheap enough to rebuild per call, and doing
 /// so avoids a static initialisation order dependency on container_names.
 json build() {
+    // Before anything is enumerated, not after. Asking the registry what
+    // tttrlib can do is one of the three moments a plugin has to already be
+    // loaded -- the others being constructing a TTTR and inferring a file type.
+    // Loading further down, next to the `plugin` category that obviously needs
+    // it, left `file_container` listing the built-ins only: the plugin was
+    // loaded and its format registered a few lines too late to be seen.
+    tttrlib::PluginHost::ensure_loaded();
+
     json root = json::object();
     root["burst_search"] = json::parse(TTTR::burst_search_algorithms_json());
     root["file_container"] = file_container_entries();
+    root["plugin"] = plugin_entries();
     root["fit"] = json::parse(fit_models_json());
     root["fit_setup"] = json::parse(fit_setup_json());
     root["objective"] = json::parse(fit_objectives_json());

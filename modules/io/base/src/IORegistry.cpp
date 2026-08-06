@@ -219,6 +219,12 @@ std::mutex& table_mutex() {
     return m;
 }
 
+/// See IORegistry::generation. Bumped under table_mutex().
+unsigned long& generation_counter() {
+    static unsigned long g = 0;
+    return g;
+}
+
 }  // namespace
 
 const std::vector<FileFormat>& IORegistry::formats() {
@@ -272,6 +278,10 @@ int IORegistry::infer_container_type(const std::string& filename) {
     const auto claimants = by_extension(ext);
     for (const FileFormat* f : claimants) {
         if (!f->detectable) continue;          // never identified from a file
+        if (f->sniff_with_context != nullptr) {
+            if (f->sniff_with_context(f->sniff_context, filename)) return f->container_type;
+            continue;
+        }
         if (f->sniff == nullptr) return f->container_type;   // extension is enough
         if (f->sniff(filename)) return f->container_type;
     }
@@ -300,7 +310,12 @@ int IORegistry::infer_container_type(const std::string& filename) {
     // must not start matching arbitrary files, and the SPC-600 variants are not
     // identifiable from content at all.
     for (const FileFormat& f : formats()) {
-        if (!f.detectable || f.sniff == nullptr) continue;
+        if (!f.detectable) continue;
+        if (f.sniff_with_context != nullptr) {
+            if (f.sniff_with_context(f.sniff_context, filename)) return f.container_type;
+            continue;
+        }
+        if (f.sniff == nullptr) continue;
         if (f.sniff(filename)) return f.container_type;
     }
     return -1;
@@ -317,7 +332,25 @@ bool IORegistry::add(const FileFormat& format) {
               [](const FileFormat& a, const FileFormat& b) {
                   return a.container_type < b.container_type;
               });
+    generation_counter() += 1;
     return true;
+}
+
+bool IORegistry::remove(const std::string& name) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    auto& t = table();
+    for (auto it = t.begin(); it != t.end(); ++it) {
+        if (it->name == name) {
+            t.erase(it);
+            generation_counter() += 1;
+            return true;
+        }
+    }
+    return false;
+}
+
+unsigned long IORegistry::generation() {
+    return generation_counter();
 }
 
 }  // namespace tttrlib

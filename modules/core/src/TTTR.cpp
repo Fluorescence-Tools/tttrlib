@@ -6,6 +6,7 @@
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
+#include "PluginHost.h"
 #include "io_be.h"
 #include "io_fl.h"
 #include "io_hdf5.h"
@@ -29,8 +30,34 @@ tttrlib::bimap<std::string, int> TTTR::initialize_container_names() {
     return m;
 }
 
+/*!
+ * \brief The name-to-id map, rebuilt whenever the format table changes.
+ *
+ * It used to be built once, on first use, which was correct while the set of
+ * formats was fixed at compile time. A plugin adds a row at run time, and the
+ * first thing that touches this map decides forever whether that row is
+ * visible -- so a plugin format could be registered, listed in the registry,
+ * and still not nameable in `TTTR(filename, "MYLAB")`. The generation counter
+ * costs one comparison per lookup and removes the ordering dependency.
+ *
+ * Loading is triggered here, too, rather than at import: this is the narrowest
+ * point every path that could need a plugin passes through.
+ */
 tttrlib::bimap<std::string, int>& TTTR::container_names() {
-    static tttrlib::bimap<std::string, int> names = TTTR::initialize_container_names();
+    static tttrlib::bimap<std::string, int> names;
+    static unsigned long built_at = static_cast<unsigned long>(-1);
+    tttrlib::PluginHost::ensure_loaded();
+    const unsigned long now = tttrlib::IORegistry::generation();
+    if (built_at != now) {
+        // Refilled in place rather than replaced: bimap's view proxies hold a
+        // reference to their owner, so it is not assignable, and a reference
+        // already handed out has to keep pointing at the live map anyway.
+        names.clear();
+        for (const auto& f : tttrlib::IORegistry::formats()) {
+            names.insert({f.name, f.container_type});
+        }
+        built_at = now;
+    }
     return names;
 }
 bool TTTR::auto_compress_on_read = []() {
@@ -614,6 +641,125 @@ int TTTR::read_ttr_file(const char *fn) {
  * other imaging container uses, so CLSMImage configures itself without knowing
  * this format exists.
  */
+/*!
+ * \brief Read through a container a plugin contributed.
+ *
+ * The plugin decodes into buffers this side allocates and owns -- the one rule
+ * that keeps a cross-runtime free mismatch structurally impossible on the path
+ * that runs once per event. It fills a batch, says how many it wrote, and is
+ * called again until it reports none.
+ *
+ * Everything a plugin can get wrong is contained here: a status becomes a
+ * message attributed to the plugin, an over-long batch is clamped rather than
+ * trusted, and an exception escaping the C boundary is caught rather than
+ * unwinding through it.
+ */
+int TTTR::read_plugin_file(const char *fn, int container_type) {
+    const tttrlib_container_v1* c = tttrlib::PluginHost::container_for(container_type);
+    if (c == nullptr) {
+        std::cerr << "ERROR: no plugin provides container " << container_type << std::endl;
+        return 0;
+    }
+
+    const char* params = tttr_container_parameters.empty()
+                             ? nullptr : tttr_container_parameters.c_str();
+    void* handle = nullptr;
+    auto fail = [&](const std::string& what) {
+        std::cerr << "Error reading through plugin container '" << c->name << "': " << what;
+        const std::string detail = tttrlib::PluginHost::last_error();
+        if (!detail.empty()) std::cerr << " (" << detail << ")";
+        std::cerr << std::endl;
+        if (handle != nullptr && c->close != nullptr) c->close(c->ctx, handle);
+        return 0;
+    };
+
+    try {
+        if (c->open(c->ctx, fn ? fn : "", params, &handle) != TTTRLIB_OK) {
+            return fail("open failed");
+        }
+
+        // Decoded into plain vectors first, and only then into the event store.
+        //
+        // Two reasons, both of which bite silently if ignored.
+        // allocate_memory_for_records() builds a *fresh* store rather than
+        // growing one, so calling it again between batches discards everything
+        // already decoded. And macro times do not necessarily have a column at
+        // all: with compression on -- the default -- they are deltas plus
+        // keyframes, `macro_times` is null, and the only way in is
+        // set_macro_time_at(). Staging is what lets the batch loop stay simple
+        // and still be correct under both storage layouts.
+        uint64_t hint = 0;
+        if (c->event_count_hint != nullptr) {
+            if (c->event_count_hint(c->ctx, handle, &hint) != TTTRLIB_OK) hint = 0;
+        }
+        constexpr size_t kBatch = 1u << 16;
+        std::vector<unsigned long long> macro;
+        std::vector<unsigned short> micro;
+        std::vector<signed char> channel;
+        std::vector<signed char> type;
+        if (hint > 0) {
+            macro.reserve(static_cast<size_t>(hint));
+            micro.reserve(static_cast<size_t>(hint));
+            channel.reserve(static_cast<size_t>(hint));
+            type.reserve(static_cast<size_t>(hint));
+        }
+
+        size_t total = 0;
+        for (;;) {
+            macro.resize(total + kBatch);
+            micro.resize(total + kBatch);
+            channel.resize(total + kBatch);
+            type.resize(total + kBatch);
+
+            tttrlib_events_v1 events{};
+            events.struct_size = sizeof(events);
+            events.macro_times = reinterpret_cast<uint64_t*>(macro.data() + total);
+            events.micro_times = micro.data() + total;
+            events.routing_channels = reinterpret_cast<int8_t*>(channel.data() + total);
+            events.event_types = reinterpret_cast<int8_t*>(type.data() + total);
+            events.capacity = kBatch;
+            events.size = 0;
+
+            const int status = c->read(c->ctx, handle, &events);
+            if (status == TTTRLIB_UNSUPPORTED) break;   // "nothing more", not a failure
+            if (status != TTTRLIB_OK) return fail("read failed");
+            if (events.size == 0) break;
+            // A plugin that wrote past what it was given has already corrupted
+            // the heap; clamping the count at least keeps the damage out of a
+            // length everything downstream trusts.
+            total += static_cast<size_t>(std::min<uint64_t>(events.size, kBatch));
+        }
+
+        allocate_memory_for_records(total);
+        for (size_t i = 0; i < total; ++i) {
+            set_macro_time_at(i, macro[i]);
+            micro_times[i] = micro[i];
+            routing_channels[i] = channel[i];
+            event_types[i] = type[i];
+        }
+
+        header = new TTTRHeader(container_type);
+        if (c->header_json != nullptr) {
+            const char* json = nullptr;
+            if (c->header_json(c->ctx, handle, &json) == TTTRLIB_OK && json != nullptr) {
+                header->set_json(std::string(json));
+            }
+        }
+        header->set_tttr_container_type(container_type);
+        c->close(c->ctx, handle);
+        handle = nullptr;
+
+        n_records_read = total;
+        n_valid_events = total;
+        return 1;
+    } catch (const std::exception& e) {
+        return fail(std::string("threw through the C boundary: ") + e.what());
+    } catch (...) {
+        return fail("threw through the C boundary");
+    }
+}
+
+
 int TTTR::read_flimlabs_file(const char *fn) {
     tttrlib::io::FlimLabsData d;
     try {
@@ -1151,6 +1297,10 @@ if (is_verbose()) {
         read_ttr_file(fn);
     } else if (container_type == FL_STT1_CONTAINER || container_type == FL_ITT1_CONTAINER) {
         read_flimlabs_file(fn);
+    } else if (container_type >= 1000) {
+        // Plugin-provided containers are allocated ids from 1000 up; built-in
+        // formats own 0-999 permanently, so the range is the dispatch.
+        read_plugin_file(fn, container_type);
     } else {
         read_records_file(fn, container_type);
     }

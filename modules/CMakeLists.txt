@@ -30,6 +30,7 @@
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
 add_subdirectory(util)
 add_subdirectory(io)   # declares `io` and, beneath it, one module per format
+add_subdirectory(plugin)  # the drop-in binary plugin ABI, host and loader; sits on `io`
 add_subdirectory(sim)
 add_subdirectory(core)
 add_subdirectory(imaging)
