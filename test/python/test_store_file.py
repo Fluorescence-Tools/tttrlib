@@ -298,6 +298,8 @@ def test_the_temporary_does_not_survive_a_good_write(tmp_path):
 
 # -- the reason it exists -----------------------------------------------------
 
+@pytest.mark.slow
+@pytest.mark.smoke
 def test_what_the_native_format_is_actually_faster_at(tmp_path, capsys):
     """The justification for a second format, measured rather than asserted.
 

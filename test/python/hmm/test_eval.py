@@ -16,6 +16,7 @@ import unittest
 import numpy as np
 
 import tttrlib
+import pytest
 
 
 def _engine(seed=4, n_bursts=12, burst_len=150):
@@ -92,6 +93,7 @@ class TestAnalyticPosteriorWidth(unittest.TestCase):
     invite it to be read as a credible interval.
     """
 
+    @pytest.mark.heavy  # 5s
     def test_it_is_narrower_than_the_sampled_posterior(self):
         """The whole reason it carries a warning.
 

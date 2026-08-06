@@ -152,7 +152,12 @@ def test_counter_rng_seek_is_constant_time():
         f"Xoshiro {t_ref:.3f}s -- SimCounterRandom::reset should seek, not burn")
 
 
-@pytest.mark.parametrize("kind", ["Xoshiro", "Pcg", "Philox", "Mt19937"])
+# only Mt19937 is expensive here — the other three are ~0.1s, and marking the
+# whole function would drop them from the fast lane for nothing
+@pytest.mark.parametrize("kind", [
+    "Xoshiro", "Pcg", "Philox",
+    pytest.param("Mt19937", marks=pytest.mark.slow),
+])
 def test_rng_thread_count_independent(kind):
     def run(threads):
         s = tttrlib.SimSystem()

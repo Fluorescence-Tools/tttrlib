@@ -11,6 +11,7 @@ import tttrlib
 
 # Centralized test settings
 from test_settings import settings, DATA_AVAILABLE, get_data_path, DATA_ROOT  # type: ignore
+import pytest
 
 # Global data object - kept for backward compatibility but not used in tests
 # All tests now use self.data from setUp() for proper isolation
@@ -130,6 +131,7 @@ class Tests(unittest.TestCase):
         # Assert that the number of tags in the original header is now greater than or equal to
         self.assertEqual(len(self.data.header.tags) >= len(header2.tags), True)
 
+    @pytest.mark.slow
     def test_reading(self):
         test_files = self.test_files
         make_references = self.make_references
@@ -401,6 +403,7 @@ class Tests(unittest.TestCase):
             self.data.get_used_routing_channels()
         )
 
+    @pytest.mark.slow
     def test_constructor(self):
         # first element is the filename
         # second element is the name of the container

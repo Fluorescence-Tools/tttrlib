@@ -96,7 +96,7 @@ def test_window_horizon_still_binds_when_it_is_the_tighter_limit():
                                   np.asarray(direct.channel()))
 
 
-@pytest.mark.slow
+@pytest.mark.heavy  # 8s
 def test_searched_horizon_does_not_bias_the_count_rate():
     """The one statistical risk in searching the horizon.
 

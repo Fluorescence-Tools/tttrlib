@@ -128,6 +128,7 @@ def test_reassignment_sharpens_the_simulated_psf():
     assert width(psf["reassigned_psf"]) < width(psf["sum_psf"])
 
 
+@pytest.mark.heavy  # 9s
 def test_vectorial_psf_converges_to_the_scalar_limit():
     """
     Richards-Wolf must reduce to the Airy pattern as the aperture angle shrinks.
@@ -142,6 +143,7 @@ def test_vectorial_psf_converges_to_the_scalar_limit():
         assert np.abs(vec - scalar).max() < tol, f"NA {na}"
 
 
+@pytest.mark.heavy  # 36s
 def test_vectorial_psf_elongates_along_the_polarization_axis():
     """
     The reason this exists. At NA 1.4 the longitudinal field is not negligible,
@@ -183,6 +185,7 @@ def test_vectorial_psf_rejects_impossible_optics():
         vectorial_psf((33, 33), 1.2, 520.0, 20.0, polarization="diagonal-ish")
 
 
+@pytest.mark.heavy  # 31s
 @pytest.mark.parametrize("geometry,expected", [("rect", 25), ("hex", 23)])
 def test_generate_ism_psf_vectorial(geometry, expected):
     psf = generate_ism_psf(n_det=5, geometry=geometry, model="vectorial",
@@ -218,6 +221,7 @@ def test_jones_vector_states():
             jones_vector(bad)
 
 
+@pytest.mark.heavy  # 132s
 def test_polarization_states_behave_as_the_physics_requires():
     """
     Each input state has a signature that pins it down at NA 1.4:
@@ -266,6 +270,7 @@ def test_polarization_states_behave_as_the_physics_requires():
             < _fwhm_cut(x, "x", px))
 
 
+@pytest.mark.heavy  # 13s
 def test_linear_polarization_follows_its_angle():
     """At 45 degrees the elongation runs along the diagonal, so the axis cuts
     become equal while the diagonal outgrows the anti-diagonal."""
@@ -280,6 +285,7 @@ def test_linear_polarization_follows_its_angle():
     assert (diag > 0.5).sum() > (anti > 0.5).sum()
 
 
+@pytest.mark.slow
 def test_psf_volume_exports_a_numpy_stack(tmp_path):
     """
     A 3-D stack as a plain array, which is what a viewer or a deconvolution

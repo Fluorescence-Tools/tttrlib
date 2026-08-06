@@ -27,6 +27,7 @@ from esrrf_reference import rgc_map as nanoj_rgc_map  # noqa: E402
 from esrrf_reference import temporal_combine as nanoj_temporal_combine  # noqa: E402
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("intensity_weighting", [False, True])
 @pytest.mark.parametrize("magnification,fwhm,sensitivity", [(3, 1.5, 1), (2, 2.5, 2)])
 def test_ab_rgc_map_vs_nanoj_reference(

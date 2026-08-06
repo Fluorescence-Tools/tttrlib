@@ -22,6 +22,7 @@ import tttrlib
 print("Test: ", __file__)
 
 from test_settings import settings, DATA_AVAILABLE  # type: ignore
+import pytest
 
 
 def tmp_filename(suffix):
@@ -125,6 +126,7 @@ class SameFormatRoundTripTests(unittest.TestCase):
         # field and constant per file
         self.roundtrip("cz_raw_filename", "CZ-RAW", ".raw", micro=False)
 
+    @pytest.mark.slow
     def test_photon_hdf5(self):
         d, d2 = self.roundtrip("photon_hdf_filename", "PHOTON-HDF5", ".hdf5")
         # resolutions travel via timestamps_specs / nanotimes_specs

@@ -17,5 +17,5 @@ tttrlib_add_module(
     DEPENDS  util core
     EXTERNAL_DEPS tttrlib::pocketfft
     SWIG_INTERFACES Pda.i
-    TEST_DIR test/python
+    TEST_DIR test/python/pda
 )

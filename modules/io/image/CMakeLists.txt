@@ -16,5 +16,5 @@ tttrlib_add_module(
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/TiffArrayIO.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     SWIG_INTERFACES Tiff.i
-    TEST_DIR test/python/tiff
+    TEST_DIR test/python/misc
 )

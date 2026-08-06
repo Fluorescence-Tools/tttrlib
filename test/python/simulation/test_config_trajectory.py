@@ -20,6 +20,7 @@ def test_default_json_parses_and_builds():
     assert eng.n_photons() == 0
 
 
+@pytest.mark.slow
 def test_json_configured_run_and_seed_changes_output():
     cfg = {
         "settings": {"dt": 0.01, "n_ph_max": 40000, "max_windows": 10 ** 8,

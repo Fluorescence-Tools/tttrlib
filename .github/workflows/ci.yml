@@ -426,7 +426,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install ".[test]"
-          python -m pytest
+          # The `heavy` tier is 85% of the runtime for statistics that a branch
+          # push cannot break without also breaking something cheaper. The
+          # jobs below still run the whole suite on main.
+          python -m pytest --lane standard
 
   # ── Full builds + tests (main and development only) ───────────────────────
 

@@ -28,6 +28,7 @@ def _magnified_positions(tttr, my, mx):
     return flat // mx, flat % mx
 
 
+@pytest.mark.slow
 def test_ism_applies_the_detector_shift():
     """
     With explicit detector offsets, pure ISM reassignment (sensitivity <= 0) is
@@ -67,6 +68,7 @@ def test_ism_applies_the_detector_shift():
     assert dy == pytest.approx(shift_factor * offsets[0, 1] * mag, abs=0.6)
 
 
+@pytest.mark.heavy  # 5s
 def test_ism_and_esrrf_ism_conserve_photons():
     """Both folds move photons without creating or dropping any."""
     t_src = tttrlib.TTTR(PTU_FILE)

@@ -145,6 +145,7 @@ def test_get_photon_positions_reproduces_the_intensity_image():
     assert (binned != intensity).sum() < 0.001 * intensity.size
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not os.path.exists(PTU_FILE), reason="test data not available")
 def test_reassign_photons_conserves_photons_and_concentrates_them():
     """
@@ -179,6 +180,7 @@ def test_reassign_photons_conserves_photons_and_concentrates_them():
     assert spread(esrrf) < spread(uniform)
 
 
+@pytest.mark.heavy  # 6s
 @pytest.mark.skipif(not os.path.exists(PTU_FILE), reason="test data not available")
 def test_reassign_photons_is_reproducible():
     """The reassignment RNG is seeded, so the same seed gives the same stream."""
@@ -194,6 +196,7 @@ def test_reassign_photons_is_reproducible():
     assert not np.array_equal(np.asarray(a.macro_times), np.asarray(c.macro_times))
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not os.path.exists(PTU_FILE), reason="test data not available")
 def test_reassign_photons_and_write_all_formats():
     """Every supported container round-trips back into a magnified CLSMImage."""

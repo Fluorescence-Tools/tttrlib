@@ -172,6 +172,7 @@ def test_features_are_permutation_invariant():
     np.testing.assert_allclose(a, b, rtol=0, atol=1e-12)
 
 
+@pytest.mark.slow
 def test_matches_chisurf_reference():
     """Cross-check against the actual ChiSurf implementation when importable."""
     surrogate = pytest.importorskip(

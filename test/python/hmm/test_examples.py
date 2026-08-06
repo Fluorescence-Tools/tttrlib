@@ -40,6 +40,7 @@ def _run(path):
 
 
 class TestHmmExample(unittest.TestCase):
+    @pytest.mark.heavy  # 8s
     def test_example_runs_and_recovers_states(self):
         self.assertTrue(EXAMPLE.exists(), f"missing example: {EXAMPLE}")
         _show = plt.show
@@ -73,7 +74,7 @@ class TestLifetimeExample(unittest.TestCase):
     make the example prove nothing.
     """
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 18s
     def test_lifetimes_recovered_and_only_micro_time_separates(self):
         self.assertTrue(LIFETIME_EXAMPLE.exists(), f"missing: {LIFETIME_EXAMPLE}")
         ns = _run(LIFETIME_EXAMPLE)
@@ -173,6 +174,7 @@ class TestBlinkingAcceptorExample(unittest.TestCase):
         np.testing.assert_array_less(abs(R[2] - truth[2]), 6.0)
         self.assertTrue(R[0] < R[1] < R[2])
 
+    @pytest.mark.slow
     def test_the_dark_state_is_invisible_to_intensity_alone(self):
         """The negative half: E cannot tell the dark state from R = 65 A."""
         ns = _run(BLINKING_EXAMPLE)
@@ -203,7 +205,7 @@ class TestCoincidenceExample(unittest.TestCase):
     damage is asserted too, on species that are static by construction.
     """
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 32s
     def test_static_molecules_appear_to_switch(self):
         self.assertTrue(COINCIDENCE_EXAMPLE.exists(), f"missing: {COINCIDENCE_EXAMPLE}")
         ns = _run(COINCIDENCE_EXAMPLE)
@@ -220,7 +222,7 @@ class TestCoincidenceExample(unittest.TestCase):
         self.assertGreater(frac[pops[-1]], frac[pops[0]])
         self.assertGreater(frac[pops[-1]], 0.10)
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 20s
     def test_no_burst_statistic_detects_it(self):
         """The negative half, pooled over seeds -- one run would test the seed."""
         ns = _run(COINCIDENCE_EXAMPLE)
@@ -234,7 +236,7 @@ class TestCoincidenceExample(unittest.TestCase):
                                 f"{stat} at population {p} reached AUC {a:.3f} -- "
                                 f"a detector became possible and the example is stale")
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 21s
     def test_the_example_uses_independent_seeds(self):
         """Its own headline lesson, enforced.
 
@@ -257,6 +259,7 @@ class TestPhasorDiagnosticExample(unittest.TestCase):
     where no diagnostic would have been needed.
     """
 
+    @pytest.mark.heavy  # 9s
     def test_phasor_separates_models_that_E_cannot(self):
         self.assertTrue(PHASOR_EXAMPLE.exists(), f"missing: {PHASOR_EXAMPLE}")
         ns = _run(PHASOR_EXAMPLE)
@@ -276,6 +279,7 @@ class TestPhasorDiagnosticExample(unittest.TestCase):
         self.assertLess(ns["good_all"].max(), ns["bad_all"].min(),
                         "correct and misspecified distances must not overlap")
 
+    @pytest.mark.heavy  # 13s
     def test_the_likelihood_agrees_but_says_less(self):
         """The companion claim: the likelihood ranks the models correctly.
 
@@ -295,7 +299,7 @@ class TestBootstrapExample(unittest.TestCase):
     extra cost would buy nothing.
     """
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 100s
     def test_the_bootstrap_interval_covers_and_beats_the_analytic_one(self):
         self.assertTrue(BOOTSTRAP_EXAMPLE.exists(), f"missing: {BOOTSTRAP_EXAMPLE}")
         ns = _run(BOOTSTRAP_EXAMPLE)
@@ -312,7 +316,7 @@ class TestBootstrapExample(unittest.TestCase):
         self.assertLess(ns["tot_a"], ns["tot_b"] - 0.10,
                         "analytic width should under-cover markedly")
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 138s
     def test_states_are_ordered_before_summarising(self):
         """Guards the trap the example warns about.
 

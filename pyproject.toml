@@ -96,7 +96,12 @@ testpaths = ["test/python"]
 norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
 markers = [
   "integration: marks tests as integration tests requiring external resources",
-  "slow: marks tests that take a while (diffusing single-molecule simulations)",
+  # Workload tiers, by measured setup+call+teardown. `--lane fast` runs the
+  # unmarked majority plus `smoke`; `--lane standard` adds `slow`. The budgets
+  # and the audit that keeps these honest live in test/conftest.py.
+  "slow: 1-5s — dropped by `--lane fast`",
+  "heavy: over 5s — dropped by `--lane fast` and `--lane standard`",
+  "smoke: keeps an otherwise-expensive file represented in the fast lane",
   # One marker per test group. conftest.py applies these automatically from the
   # directory a test lives in, so `pytest -m clsm` works with nothing to
   # annotate. `--modules <name>` selects by tttrlib module instead.

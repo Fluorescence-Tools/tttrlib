@@ -11,6 +11,7 @@ from pathlib import Path
 
 # Use TTTRLIB_DATA environment variable or test/settings.json pattern
 from test_settings import DATA_ROOT, DATA_AVAILABLE
+import pytest
 
 # Resolve data paths using TTTRLIB_DATA env var or settings
 HDF5_FILE = DATA_ROOT / "hdf" / "1a_1b_Mix.hdf5" if DATA_AVAILABLE else None
@@ -18,6 +19,7 @@ BH_FILE = DATA_ROOT / "bh" / "bh_spc132.spc" if DATA_AVAILABLE else None
 
 class TestTTTRMerge(unittest.TestCase):
 
+    @pytest.mark.slow
     def test_merge_hdf5(self):
         """Test merging Photon-HDF5 files"""
         if not HDF5_FILE or not HDF5_FILE.exists():

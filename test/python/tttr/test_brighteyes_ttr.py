@@ -293,6 +293,7 @@ def test_the_calibrated_decay_has_no_delay_line_comb(calibrated, ttr_path):
     assert excess.max() < 0.25
 
 
+@pytest.mark.slow
 def test_matches_the_official_libttp_reader(ttr_path, data):
     """Photon for photon, against the vendor's own decoder."""
     libttp_ttp = pytest.importorskip("libttp.ttp", reason="libttp not installed")

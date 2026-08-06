@@ -71,6 +71,7 @@ class TestTheControl(unittest.TestCase):
     """Without coincidence the engine is right -- otherwise nothing below means
     anything, because the damage could not be attributed to coincidence."""
 
+    @pytest.mark.slow
     def test_static_species_yield_no_dynamics_and_two_states(self):
         eng, trans, obs = _fit(*_clean(np.random.default_rng(5)))
         np.testing.assert_allclose(obs[:, 1], [P_LOW, P_HIGH], atol=0.03)
@@ -98,6 +99,7 @@ class TestCoincidenceManufacturesDynamics(unittest.TestCase):
             ks.append(min(range(1, 5), key=lambda k: eng.fit(k, 3, seed=0).bic()))
         return float(np.median(rates)), ks
 
+    @pytest.mark.slow
     def test_five_percent_invents_switching_and_an_extra_state(self):
         """The headline, and the reason this matters in practice.
 
@@ -111,13 +113,14 @@ class TestCoincidenceManufacturesDynamics(unittest.TestCase):
         self.assertTrue(all(k > 2 for k in ks),
                         f"expected BIC to be fooled in every dataset, got {ks}")
 
+    @pytest.mark.heavy  # 8s
     def test_clean_data_are_not_flagged(self):
         """The control for the above -- without coincidence, neither happens."""
         rate, ks = self._over_seeds(0.0)
         self.assertLess(rate, 1e-8)
         self.assertTrue(all(k == 2 for k in ks), ks)
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 11s
     def test_apparent_switching_grows_with_contamination(self):
         """Monotone in the contamination, which is what identifies the cause."""
         rates = [self._over_seeds(f)[0] for f in (0.0, 0.10, 0.50)]
@@ -206,7 +209,7 @@ class TestBrightnessEnvelopeIsHarmless(unittest.TestCase):
             best = min(best, (m.bic(), k))
         return best[1]
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 29s
     def test_a_huge_intensity_swing_adds_no_state(self):
         """425000x brighter at the centre than the edge, still one state."""
         narrow = lambda u: np.exp(-u ** 2 / 0.25)
@@ -481,6 +484,7 @@ class TestPerBurstDetectionDoesNotWork(unittest.TestCase):
         self.assertFalse(len(a[1]) == len(b[1]) and np.allclose(a[1], b[1]),
                          "seeds are not reaching SimEngine -- replicates are copies")
 
+    @pytest.mark.slow
     def test_discrimination_degrades_where_it_is_needed_most(self):
         """The cruel part: the filter fades exactly as contamination rises.
 
@@ -502,6 +506,7 @@ class TestConcentrationIsTheRealLever(unittest.TestCase):
     buys little. Occupancy is the knob that actually moves the number.
     """
 
+    @pytest.mark.slow
     def test_coincidence_grows_with_concentration(self):
         rates = [np.mean([_diffusing_bursts(p, s)[0].mean() for s in SEEDS])
                  for p in (0.25, 0.5, 1.0)]

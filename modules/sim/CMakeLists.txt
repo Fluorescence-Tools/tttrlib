@@ -22,5 +22,5 @@ tttrlib_add_module(
     DEPENDS  util          # Random.h, via SimCounterRandom.h
     EXTERNAL_DEPS tttrlib::highfive
     SWIG_INTERFACES Sim.i
-    TEST_DIR test/python/sim
+    TEST_DIR test/python/simulation
 )

@@ -29,6 +29,7 @@ def _run(cfg):
     return e.photons()
 
 
+@pytest.mark.slow
 def test_proximity_ratio_two_static_states_give_two_E():
     """Two static FRET species (E=0.25, 0.75) recover their E as the per-species red fraction."""
     cfg = {
@@ -50,6 +51,8 @@ def test_proximity_ratio_two_static_states_give_two_E():
         assert abs(red_frac - E) < 0.02, f"species {i}: PR={red_frac:.3f} vs E={E}"
 
 
+@pytest.mark.slow
+@pytest.mark.smoke
 def test_dynamic_exchange_reaches_symmetric_steady_state():
     """Two equally-bright states with fast symmetric spontaneous exchange (k_nrad). Fast
     exchange (relative to the box residence time) equilibrates the born-in-state-0 population

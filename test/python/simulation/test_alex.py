@@ -384,7 +384,7 @@ def test_cw_rejected():
                           [0], [1], 10240)
 
 
-@pytest.mark.slow
+@pytest.mark.heavy  # 8s
 def test_smfret_es_recovery():
     # End-to-end: diffusing two-population ALEX config -> SM -> auto-split -> burst -> E/S.
     cfg = json.load(open(ALEX_CONFIG))
@@ -424,7 +424,6 @@ def test_smfret_es_recovery():
     assert hi.mean() == pytest.approx(0.80, abs=0.05)
 
 
-@pytest.mark.slow
 def test_independent_mode_parity():
     # Diffusing doubly-labelled molecules (open-volume) in independent-timeline mode; the ALEX
     # physics (no donor leakage in red windows) must hold there too.

@@ -299,6 +299,7 @@ def test_partial_occlusion_follows_one_minus_occ(occ_val):
 # ---------------------------------------------------------------------------
 # T7.5 — coasting agrees with flow
 # ---------------------------------------------------------------------------
+@pytest.mark.slow
 def test_coasting_agrees_with_flow():
     """Uniform-flow run with per_molecule_skip True and False produce photon counts
     within 5% and population within 3 σ."""
@@ -333,6 +334,7 @@ def test_coasting_agrees_with_flow():
     assert abs(e0.n_molecules() - e1.n_molecules()) < 3 * np.sqrt(e0.n_molecules())
 
 
+@pytest.mark.heavy  # 6s
 def test_coasting_inert_for_poiseuille():
     """Poiseuille flow disables coasting — output is identical with the flag on or off."""
     cfg = {
@@ -540,7 +542,7 @@ def test_poiseuille_is_spatially_varying():
 # ---------------------------------------------------------------------------
 # T7.8 — flow FCS matches analytic curve (slow)
 # ---------------------------------------------------------------------------
-@pytest.mark.slow
+@pytest.mark.heavy  # 42s
 def test_flow_fcs_matches_the_analytic_curve():
     """End-to-end: correlate an open-volume run and recover the simulated D and v.
 
@@ -656,7 +658,7 @@ def _fcs_curve(D, v, n_ph=120000, seed=42, wr=0.3, wz=1.5, dt=0.001):
     return tau[keep], g[keep], e.n_molecules()
 
 
-@pytest.mark.slow
+@pytest.mark.heavy  # 92s
 def test_fcs_agrees_with_the_analytic_curve_across_D():
     """The simulated correlation must *be* the textbook FCS curve, at every D.
 
@@ -714,7 +716,7 @@ def test_fcs_agrees_with_the_analytic_curve_across_D():
         f"G(0) should not track D, got {amplitudes}")
 
 
-@pytest.mark.slow
+@pytest.mark.heavy  # 63s
 def test_fcs_becomes_faster_with_flow():
     """Adding flow shortens the correlation at fixed D, and the fit sees it as v.
 
@@ -798,6 +800,7 @@ def test_coasting_does_not_rescan_the_flow_field():
         f"({t_on:.2f}s vs {t_off:.2f}s) — the per-window field rescan is back")
 
 
+@pytest.mark.slow
 def test_independent_mode_injects_flow_aware():
     """Independent-molecule mode must inject like the window engine does under flow.
 
@@ -862,6 +865,7 @@ def _run_with_excitation(exc, windows=120000, seed=3):
     return e.n_photons()
 
 
+@pytest.mark.slow
 def test_radial_psf_matches_the_lattice():
     """A (rho, z) table reproduces the x-y-z lattice for a symmetric PSF.
 
@@ -895,6 +899,7 @@ def test_radial_psf_matches_the_lattice():
         f"radial PSF disagrees with the analytic field: {n_radial} vs {n_analytic}")
 
 
+@pytest.mark.slow
 def test_radial_psf_is_faster_and_resolution_independent():
     """Halving the voxel size must not cost the radial path anything.
 

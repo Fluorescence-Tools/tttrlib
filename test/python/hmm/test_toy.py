@@ -20,6 +20,7 @@ import numpy as np
 
 import tttrlib
 import toy
+import pytest
 
 
 # A tiny model and tiny bursts: small enough to enumerate every tick-level path,
@@ -118,6 +119,8 @@ class TestEngineAgainstReference(unittest.TestCase):
             toy.viterbi(TINY_PRIOR, TINY_A, TINY_B, t, s)[0] for t, s in TINY_BURSTS])
         np.testing.assert_array_equal(path, ref)
 
+    @pytest.mark.slow
+    @pytest.mark.smoke
     def test_em_reaches_same_fixed_point(self):
         """Full EM on simulated data: engine and reference agree on logL."""
         true = toy.two_state(e_low=0.2, e_high=0.8, k_switch=2e-3)

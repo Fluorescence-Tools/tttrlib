@@ -63,7 +63,7 @@ class TestTargetsThePosterior(unittest.TestCase):
         np.testing.assert_allclose(trans[1, 0], mle.trans_np[1, 0], rtol=0.15)
         np.testing.assert_allclose(obs[1, 1], mle.obs_np[1, 1], rtol=0.05)
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 11s
     def test_converges_from_an_em_seed_and_covers(self):
         """The workflow to actually use: fit first, then sample around the fit."""
         eng, _ = _engine()
@@ -80,6 +80,7 @@ class TestTargetsThePosterior(unittest.TestCase):
             self.assertLessEqual(l, truth)
             self.assertGreaterEqual(h, truth)
 
+    @pytest.mark.slow
     def test_intervals_are_ordered_and_contain_the_mean(self):
         eng, _ = _engine()
         post = eng.sample(eng.fit(2, 3, seed=0), 300, 200, 2, 5)
@@ -104,6 +105,7 @@ class TestTargetsThePosterior(unittest.TestCase):
 
 class TestExchangeableStates(unittest.TestCase):
 
+    @pytest.mark.slow
     def test_summary_is_invariant_to_relabelling_the_start(self):
         """The property relabelling exists to provide, stated directly.
 
@@ -133,7 +135,7 @@ class TestExchangeableStates(unittest.TestCase):
         for k in (1, 2):
             np.testing.assert_allclose(a[k], b[k], atol=0.03)
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 8s
     def test_relabelling_makes_rhat_meaningful(self):
         """Pinned because the raw statistic looks catastrophic and is not.
 
@@ -232,7 +234,7 @@ class TestParameterisedEmissionSampling(unittest.TestCase):
                              2, self.N_BINS, dt)
         return eng
 
-    @pytest.mark.slow
+    @pytest.mark.heavy  # 20s
     def test_it_converges_where_the_free_emission_does_not(self):
         eng = self._engine()
         spec = self._spec((8.0, 0.8))          # deliberately wrong start
@@ -247,6 +249,7 @@ class TestParameterisedEmissionSampling(unittest.TestCase):
         self.assertGreater(par["ess_min"], free["ess_min"])
         self.assertLess(par["rhat_max"], 1.1, par)
 
+    @pytest.mark.slow
     def test_the_spec_carries_sampled_lifetimes_back(self):
         """The spec is updated in place, so the last draw is readable."""
         eng = self._engine()
@@ -277,6 +280,7 @@ class TestParameterisedEmissionSampling(unittest.TestCase):
 
 class TestRestraintsEnterAsConcentrations(unittest.TestCase):
 
+    @pytest.mark.slow
     def test_a_sticky_prior_moves_the_posterior(self):
         """Concentrations are used as-is, not as `alpha - 1`.
 
