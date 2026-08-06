@@ -22,15 +22,33 @@ creating a cycle.
 | [`hdf5/`](hdf5) | `tttrlib_io_hdf5` | Photon-HDF5 v0.5 — decoded arrays, not a record encoding |
 | [`image/`](image) | `tttrlib_io_image` | TIFF 2D/3D arrays — file I/O, but not a TTTR container |
 
-`hdf5` is where HighFive and `<hdf5.h>` stop. Before it existed,
+A second group reads and writes **tables** rather than photon streams. A table
+is a [`DataStore`](../core), which lives in `core`, so these sit *above* core
+rather than below it — the arrow runs `io_table_* → core → io_* → io`:
+
+| Directory | Target | What it is |
+|---|---|---|
+| [`csv/`](csv) | `tttrlib_io_csv` | CSV, both directions — threaded reader, threaded writer |
+| [`hdf5/`](hdf5) | `tttrlib_io_hdf5_table` | Columnar HDF5 — one dataset per column |
+| [`store/`](store) | `tttrlib_io_store` | The native `.dstore` file: fidelity, no dependency |
+| [`pto/`](pto) | `tttrlib_io_pto` | PTO, the PhoTon cOntainer — EBML, DocType `pto` |
+
+`hdf5/` is the one directory with a target in each group, because HDF5 is used
+for both jobs. They stay two targets because one target with both dependencies
+would be a cycle; the directory is shared because someone looking for "where
+does tttrlib do HDF5" should find one place. Nothing there is special —
+`io_hdf5` is a format module like `io_pq`, and `io_hdf5_table` is a DataStore
+backend like `io_csv`.
+
+`hdf5/` is where HighFive and `<hdf5.h>` stop. Before it existed,
 `TTTRHeader.h` forward-declared `HighFive::Group` for a single private method,
 so imaging, correlation and fitting all needed an HDF5 toolchain on their
 include path to compile a header that has nothing to do with HDF5.
 `BUILD_PHOTON_HDF` stays project-wide — core reads it to decide whether to offer
 the container — but it is carried by `tttrlib::build_config` as a capability
-flag, and only this module links `tttrlib::highfive`.
+flag, and only that directory's two targets link `tttrlib::highfive`.
 
-Every vendor module depends on `base` and on nothing else. They do not depend on
+Every module in the FIRST table depends on `base` and on nothing else. They do not depend on
 each other, and none of them depends on `core`: the dependency arrow runs
 `core → io_* → io`, so a format can be added, changed or dropped without
 recompiling the photon-stream data model. `base` must therefore be declared

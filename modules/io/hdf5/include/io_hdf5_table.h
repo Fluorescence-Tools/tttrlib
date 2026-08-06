@@ -19,12 +19,20 @@
  * integer column with one missing value comes back float64 too. Neither is
  * recoverable afterwards, which is why this exists rather than a converter.
  *
- * \section hdf5_table_why_separate Why this is not part of io_hdf5
+ * \section hdf5_table_why_separate Why this is a second target, in the same
+ *          directory as io_hdf5
  *
- * Because `core` reads Photon-HDF5, so `io_hdf5` cannot depend on `core`
- * without a cycle -- and this needs `core`, since a DataStore lives there. The
- * dependency runs core -> io_hdf5 and io_hdf5_table -> core, which is a line
- * rather than a loop.
+ * It sits here because HDF5 is a file format like any other and there should be
+ * one place to look for it. It is a separate TARGET because it is a different
+ * job from Photon-HDF5, and the two are on opposite sides of `core`: a photon
+ * stream decodes into plain arrays and so lives below core, which depends on
+ * it; a DataStore lives IN core, so anything producing one is above it. The
+ * arrows are core -> io_hdf5 and io_hdf5_table -> core, which is a line. One
+ * target carrying both would be a loop, and CMake says so.
+ *
+ * Same shape as io_csv and io_store, which are also DataStore backends above
+ * core. Nothing about HDF5 is special here; only that it happens to do both
+ * jobs.
  */
 
 #include <cstddef>

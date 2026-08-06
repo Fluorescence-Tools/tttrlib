@@ -132,6 +132,12 @@
   followed by `/meta` left only `/meta` — and both calls returned `true`.
 
 ### Changed
+- **The columnar HDF5 table moved into `modules/io/hdf5/`**, beside Photon-HDF5,
+  so there is one place to look for HDF5 rather than two directories. They stay
+  two targets because they sit on opposite sides of `core` — a photon stream
+  decodes into plain arrays and lives below it, a `DataStore` lives in it — and
+  one target carrying both dependencies would be a cycle. Nothing else changes:
+  same module names, same headers, same API.
 - **`write_hdf5_table` defaults to `Hdf5WriteMode::Update`**, keeping groups it
   is not writing, instead of truncating the file. For any file this library has
   produced the two are indistinguishable; what changes is the two broken cases

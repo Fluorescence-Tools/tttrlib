@@ -15,10 +15,10 @@ add_subdirectory(sm)      # Single-molecule .sm
 add_subdirectory(ps)      # Photonscore LINCam .photons
 add_subdirectory(be)      # BrightEyes-TTM .ttr
 add_subdirectory(fl)      # FLIM LABS time tagger .bin (STT1, ITT1)
-add_subdirectory(hdf5)    # Photon-HDF5 v0.5 -- decoded arrays, not a record encoding
+add_subdirectory(hdf5)    # HDF5, both jobs: Photon-HDF5 v0.5 (a photon stream,
+                          # below core) and the columnar DataStore table (above
+                          # it). Two targets, one directory; see its CMakeLists.
 add_subdirectory(image)   # TIFF arrays -- file I/O, but not a TTTR container
 add_subdirectory(csv)     # CSV -> DataStore. Depends on core; see its CMakeLists.
-add_subdirectory(hdf5_table)  # columnar HDF5 -> DataStore. Depends on core, so it
-                              # cannot live in hdf5/, which core itself depends on.
 add_subdirectory(store)   # the native .dstore file. No external dependency at all.
 add_subdirectory(pto)     # PTO, the PhoTon cOntainer: EBML, DocType "pto".
