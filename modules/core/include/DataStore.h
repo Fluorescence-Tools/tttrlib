@@ -177,6 +177,14 @@ public:
     const std::uint64_t* words() const { return words_.data(); }
     std::size_t n_words() const { return words_.size(); }
 
+    /// The inverse of \ref words: take a mask back from packed words, for a
+    /// loader that read them out of a file rather than computing them. Keeps
+    /// the packing an implementation detail on both sides.
+    void assign_words(const std::uint64_t* w, std::size_t n_bits) {
+        n_ = n_bits;
+        words_.assign(w, w + (n_bits + 63) / 64);
+    }
+
     // --- set algebra ------------------------------------------------------
     //
     // A selection is built by combining conditions, and doing it on bits works
@@ -650,6 +658,22 @@ public:
 
     bool has_mask() const { return !mask_.empty(); }
     const BitMask& mask() const { return mask_; }
+
+    /// The packed bits of a Bool column, for a writer that moves memory rather
+    /// than values. Empty for every other type, which have \ref data_ptr.
+    const BitMask& bits() const { return bits_; }
+
+    /// \see bits. The inverse, for a loader reading packed words off disk --
+    /// eight times less to read than a byte per row, and no expansion pass.
+    void set_bits(const std::uint64_t* w, std::size_t n_bits) {
+        type_ = ColumnType::Bool;
+        bits_.assign_words(w, n_bits);
+        n_ = n_bits;
+    }
+    /// \see mask. The inverse, same reason.
+    void set_mask_bits(const std::uint64_t* w, std::size_t n_bits) {
+        mask_.assign_words(w, n_bits);
+    }
     void set_mask(const unsigned char* m, int n) { mask_.from_bytes(m, n); }
     void clear_mask() { mask_.clear(); }
     inline bool valid(std::size_t i) const { return mask_.empty() || mask_.test(i); }
@@ -945,6 +969,11 @@ public:
     bool has_row_mask() const { return !row_mask_.empty(); }
     const BitMask& row_mask() const { return row_mask_; }
     void set_row_mask(const unsigned char* m, int n) { row_mask_.from_bytes(m, n); }
+    /// \see BitMask::assign_words -- for a loader taking the selection back off
+    /// disk in the form it is held in.
+    void set_row_mask_bits(const std::uint64_t* w, std::size_t n_bits) {
+        row_mask_.assign_words(w, n_bits);
+    }
     void clear_row_mask() { row_mask_.clear(); }
     std::size_t n_selected() const {
         return row_mask_.empty() ? n_rows_ : row_mask_.count();
