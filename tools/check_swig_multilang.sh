@@ -81,9 +81,13 @@ for sym in TTTR TTTRHeader Correlator CLSMImage registry_json; do
 done
 echo "   OK"
 
-echo "== Python wrapper unchanged =="
+echo "== Python wrapper is reproducible =="
 mkdir -p "$OUT/py2"
 swig -c++ -python "${INCLUDES[@]}" -outdir "$OUT/py2" -o "$OUT/py2/w.cxx" ext/python/tttrlib.i 2>/dev/null
+# NB: this compares two runs of THIS script, so it catches non-determinism in
+# SWIG's output -- not a change against the previous commit. It does not tell
+# you whether an edit altered the Python surface; `git diff` on the generated
+# wrapper does. The old heading said "unchanged", which read as the latter.
 if [ "$(cksum < "$OUT/py2/w.cxx")" != "$PY_HASH_BEFORE" ]; then
   echo "   ERROR: the Python wrapper is not reproducible across runs" >&2
   exit 1
