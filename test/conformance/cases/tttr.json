@@ -141,23 +141,28 @@
       "expect": {"has_container": true}
     },
     {
-      "id": "tttr.spc130.dtypes",
-      "doc": "What the three event arrays marshal to. This is the binding contract, not a C++ fact: it is the case most likely to differ between languages, which is why it is here.",
+      "id": "tttr.spc130.value_ranges",
+      "doc": "What the element WIDTH has to preserve, asserted with values rather than with a type name. The previous form of this case asked each binding for the arrays' dtype, which R cannot answer -- it has one numeric type. The failure that mattered was never the name: it was a 64-bit macro time truncated, or an unsigned micro time sign-extended into a negative. Minima and maxima catch exactly that, in every language.",
       "data": ["bh/bh_spc132.spc"],
       "steps": [
         {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
         {"op": "tttr.macro_times", "on": "t", "as": "mt"},
+        {"op": "min", "on": "mt", "as": "macro_min"},
+        {"op": "max", "on": "mt", "as": "macro_max"},
         {"op": "tttr.micro_times", "on": "t", "as": "ut"},
+        {"op": "min", "on": "ut", "as": "micro_min"},
+        {"op": "max", "on": "ut", "as": "micro_max"},
         {"op": "tttr.routing_channels", "on": "t", "as": "rc"},
-        {"op": "dtype", "on": "mt", "as": "macro_dtype"},
-        {"op": "dtype", "on": "ut", "as": "micro_dtype"},
-        {"op": "dtype", "on": "rc", "as": "routing_dtype"}
+        {"op": "min", "on": "rc", "as": "routing_min"},
+        {"op": "max", "on": "rc", "as": "routing_max"}
       ],
-      "expect": {"macro_dtype": "uint64", "micro_dtype": "uint16", "routing_dtype": "int8"},
-      "unsupported": {
-        "r": "R has one numeric vector type, so the element width is not observable from R at all",
-        "java": "the runner carries every numeric array as double[], which erases the element type; what Java does preserve is which typed accessor exists, and that is a different claim",
-        "js": "the addon returns typed arrays whose element type is the binding's own choice; arrays.test.mjs pins that directly"
+      "expect": {
+        "macro_min": 56916,
+        "macro_max": 4616948462,
+        "micro_min": 461,
+        "micro_max": 3663,
+        "routing_min": 0,
+        "routing_max": 9
       }
     },
     {

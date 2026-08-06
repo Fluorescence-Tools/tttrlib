@@ -1,6 +1,6 @@
 {
   "area": "correlator",
-  "doc": "Correlator geometry. The curve size is pure arithmetic on two settings, so it is the cheapest possible check that the settings marshal at all.",
+  "doc": "Correlation. The curve-geometry cases are arithmetic on two settings; the cross-correlation cases below run the correlator over real photon streams, which is what this area is actually for.",
   "cases": [
     {
       "id": "correlator.curve.size_3_5",
@@ -16,6 +16,68 @@
         {"op": "correlator.curve_size", "args": [1, 10], "as": "bins1"}
       ],
       "expect": {"casc1": 9, "casc10": 81, "bins1": 11}
+    },
+    {
+      "id": "correlator.spc130.cross_correlation",
+      "doc": "The two detection channels of the reference file, cross-correlated on a multi-tau axis of 8 bins over 12 cascades. The lag axis, its first non-zero value and the correlation's total and peak are pinned -- a binding that lost the coarse cascades, or read the curve at the wrong stride, moves all of them.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[0]], "as": "ch0"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[8]], "as": "ch8"},
+        {"op": "correlator.new", "args": [8, 12], "as": "c"},
+        {"op": "correlator.set_tttr", "on": "c", "args": ["$ch0", "$ch8"]},
+        {"op": "correlator.x_axis", "on": "c", "as": "x"},
+        {"op": "correlator.correlation", "on": "c", "as": "y"},
+        {"op": "len", "on": "x", "as": "n_lags"},
+        {"op": "len", "on": "y", "as": "n_values"},
+        {"op": "nth", "on": "x", "args": [1], "as": "first_lag"},
+        {"op": "last", "on": "x", "as": "last_lag"},
+        {"op": "sum", "on": "y", "as": "total"},
+        {"op": "max", "on": "y", "as": "peak"},
+        {"op": "argmax", "on": "y", "as": "peak_lag_index"}
+      ],
+      "expect": {
+        "n_lags": 97,
+        "n_values": 97,
+        "first_lag": 1.35e-08,
+        "last_lag": 0.00044226,
+        "total": 942.0949805979346,
+        "peak": 17.479641795856587,
+        "peak_lag_index": 2
+      },
+      "tolerance": {"first_lag": 1e-12, "last_lag": 1e-12, "total": 1e-12, "peak": 1e-12}
+    },
+    {
+      "id": "correlator.spc130.geometry_changes_the_curve",
+      "doc": "Doubling the cascades lengthens the lag axis and extends it further in time, without changing the finest lag. Two claims that need no magic number, so they survive a change of reference file.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[0]], "as": "ch0"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[8]], "as": "ch8"},
+        {"op": "correlator.new", "args": [8, 6], "as": "small"},
+        {"op": "correlator.set_tttr", "on": "small", "args": ["$ch0", "$ch8"]},
+        {"op": "correlator.x_axis", "on": "small", "as": "x_small"},
+        {"op": "len", "on": "x_small", "as": "n_small"},
+        {"op": "nth", "on": "x_small", "args": [1], "as": "finest_small"},
+        {"op": "last", "on": "x_small", "as": "coarsest_small"},
+        {"op": "correlator.new", "args": [8, 12], "as": "big"},
+        {"op": "correlator.set_tttr", "on": "big", "args": ["$ch0", "$ch8"]},
+        {"op": "correlator.x_axis", "on": "big", "as": "x_big"},
+        {"op": "len", "on": "x_big", "as": "n_big"},
+        {"op": "nth", "on": "x_big", "args": [1], "as": "finest_big"},
+        {"op": "last", "on": "x_big", "as": "coarsest_big"}
+      ],
+      "expect": {
+        "n_small": 49,
+        "finest_small": 1.35e-08,
+        "coarsest_small": 6.804e-06,
+        "n_big": 97,
+        "finest_big": 1.35e-08,
+        "coarsest_big": 0.00044226
+      },
+      "tolerance": {"finest_small": 1e-12, "coarsest_small": 1e-12, "finest_big": 1e-12, "coarsest_big": 1e-12}
     }
   ]
 }

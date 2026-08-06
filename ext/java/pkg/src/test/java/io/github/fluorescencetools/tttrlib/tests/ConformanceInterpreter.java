@@ -228,8 +228,6 @@ final class ConformanceInterpreter {
                 out.add((double) lengthOf(on));
                 return out;
             }
-            case "dtype":
-                throw new UnsupportedOpException("dtype");
             case "contains": return ((String) on).contains(s(a, 0));
             case "round": {
                 double f = Math.pow(10, i(a, 0));
@@ -326,6 +324,30 @@ final class ConformanceInterpreter {
                 cc.setN_bins(i(a, 0));
                 cc.setN_casc(i(a, 1));
                 return (double) cc.size();
+            }
+
+            case "correlator.new": {
+                Correlator c = new Correlator();
+                c.setN_bins(i(a, 0));
+                c.setN_casc(i(a, 1));
+                return c;
+            }
+            case "correlator.set_tttr":
+                ((Correlator) on).set_tttr((TTTR) a.get(0), (TTTR) a.get(1));
+                return null;
+            case "correlator.x_axis": {
+                Correlator c = (Correlator) on;
+                int n = c.get_x_axis_into(new double[0]);
+                double[] out = new double[n];
+                c.get_x_axis_into(out);
+                return out;
+            }
+            case "correlator.correlation": {
+                Correlator c = (Correlator) on;
+                int n = c.get_corr_normalized_into(new double[0]);
+                double[] out = new double[n];
+                c.get_corr_normalized_into(out);
+                return out;
             }
 
             // -- datastore ----------------------------------------------------
@@ -498,14 +520,12 @@ final class ConformanceInterpreter {
             }
 
             case "clsm.fluorescence_decay": {
-                // helpers.i's 4-D accessor; ask once for the true length.
-                CLSMImage img = (CLSMImage) on;
-                int n = img.get_fluorescence_decay_into(new int[0], i(a, 1),
-                                                        (Boolean) a.get(2));
-                int[] buf = new int[n];
-                img.get_fluorescence_decay_into(buf, i(a, 1), (Boolean) a.get(2));
-                double[] out = new double[n];
-                for (int k = 0; k < n; k++) out[k] = buf[k];
+                // The _v accessor, so all four runners call the same thing --
+                // see the note on it in ext/python/CLSM.i.
+                VectorInt32 v = ((CLSMImage) on).get_fluorescence_decay_v(
+                        (TTTR) a.get(0), i(a, 1), (Boolean) a.get(2));
+                double[] out = new double[v.size()];
+                for (int k = 0; k < out.length; k++) out[k] = v.get(k);
                 return out;
             }
 

@@ -145,7 +145,6 @@ OPS <- list(
   to_list = function(on, a) as.list(flat(on)),
   unique_sorted = function(on, a) as.list(sort(unique(as.numeric(on)))),
   shape = function(on, a) list(length(on)),
-  dtype = function(on, a) stop("dtype is not observable from R"),
   contains = function(on, a) grepl(a[[1]], on, fixed = TRUE),
   round = function(on, a) round(as.numeric(on), as.integer(a[[1]])),
   identity = function(on, a) on,
@@ -194,6 +193,17 @@ OPS <- list(
     CorrelatorCurve_n_casc_set(cc, as.integer(a[[2]]))
     CorrelatorCurve_size(cc)
   },
+
+  "correlator.new" = function(on, a) {
+    co <- Correlator()
+    Correlator_n_bins_set(co, as.integer(a[[1]]))
+    Correlator_n_casc_set(co, as.integer(a[[2]]))
+    co
+  },
+  "correlator.set_tttr" = function(on, a) Correlator_set_tttr(on, a[[1]], a[[2]]),
+  "correlator.x_axis" = function(on, a) as.numeric(unlist(Correlator_get_x_axis(on))),
+  "correlator.correlation" = function(on, a)
+    as.numeric(unlist(Correlator_get_corr_normalized(on))),
 
   # -- datastore ------------------------------------------------------------
   "ds.new" = function(on, a) new_store_with(),
@@ -296,14 +306,12 @@ OPS <- list(
   "clsm.intensity" = function(on, a) row_major(CLSMImage_get_intensity(on)),
   "clsm.mean_micro_time" = function(on, a)
     row_major(CLSMImage_get_mean_micro_time(on, a[[1]])),
-  # Unreachable from R, and for the same reason as tttr.microtime_histogram:
-  # SWIG's R overload dispatcher tests the OUTPUT-pointer parameter that
-  # rarrays.i removes from the R signature, so its argc branches are off by one
-  # against the functions they dispatch to. Only the all-defaults call resolves,
-  # and that means a coarsening of 1 -- a 268-million-element block.
+  # The _v accessor, added to CLSM.i for exactly this: a plain vector return has
+  # no output pointers for SWIG's R overload dispatcher to trip over. Same
+  # reason get_phasor_v exists.
   "clsm.fluorescence_decay" = function(on, a)
-    stop("UNSUPPORTED_OP:clsm.fluorescence_decay ",
-         "(SWIG's R overload dispatcher cannot match the parameterised form)"),
+    as.numeric(CLSMImage_get_fluorescence_decay_v(on, a[[1]], as.integer(a[[2]]),
+                                                  as.logical(a[[3]]))),
 
   # -- histogram ---------------------------------------------------------------
   "hist.new" = function(on, a) doubleHistogram(),

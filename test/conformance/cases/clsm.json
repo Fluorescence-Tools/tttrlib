@@ -57,7 +57,7 @@
     },
     {
       "id": "clsm.ht3.fluorescence_decay_conserves_photons",
-      "doc": "The per-pixel decay block: (frame, line, pixel, tac), stacked to one frame with 32 micro-time bins. This is the suite's 4-D output view, and its total is the same 3364714 the intensity image has -- every photon lands in exactly one decay bin, which is the invariant a wrong stride or a dropped dimension would break.",
+      "doc": "The per-pixel decay block: (frame, line, pixel, tac), stacked to one frame with 32 micro-time bins. This is the suite's 4-D output case, and its total is the same 3364714 the intensity image has -- every photon lands in exactly one decay bin, which is the invariant a wrong stride or a dropped dimension would break. Uses the get_fluorescence_decay_v accessor, whose plain vector return is reachable from R where the native output-pointer form is not.",
       "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
       "steps": [
         {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
@@ -67,10 +67,7 @@
         {"op": "sum", "on": "decay", "as": "total"},
         {"op": "max", "on": "decay", "as": "busiest_bin"}
       ],
-      "expect": {"n_values": 2097152, "total": 3364714, "busiest_bin": 164},
-      "unsupported": {
-        "r": "SWIG's R overload dispatcher tests the output-pointer parameter that rarrays.i removes from the R signature, so only the all-defaults call resolves -- and that is a coarsening of 1, a 268-million-element block. The same defect blocks the explicit form of tttr.microtime_histogram."
-      }
+      "expect": {"n_values": 2097152, "total": 3364714, "busiest_bin": 164}
     }
   ]
 }

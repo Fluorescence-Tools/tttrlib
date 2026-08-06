@@ -101,6 +101,33 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
         return v;
     }
 
+    // Cross-language decay accessor, and the same story as get_phasor_v above:
+    // SWIG's R overload dispatcher matches against the C++ parameter list, so it
+    // tests the four output-pointer arguments that the array typemaps remove
+    // from the R signature. Its argc branches end up off by one and only the
+    // all-defaults call resolves -- which means a coarsening of 1, a
+    // 268-million-element block. A plain vector return sidesteps all of it.
+    //
+    // Flattened [frame, line, pixel, tac] (or [line, pixel, tac] when
+    // stack_frames = true). Returned as int rather than the native unsigned
+    // char because a Java byte and an R integer are both signed, and a bin with
+    // more than 127 counts would come back negative. The native
+    // get_fluorescence_decay() is retained unchanged.
+    std::vector<int> get_fluorescence_decay_v(TTTR* tttr_data,
+                                              int micro_time_coarsening = 1,
+                                              bool stack_frames = false,
+                                              int max_micro_time_channels = -1) {
+        unsigned char* out = 0; int d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+        $self->get_fluorescence_decay(tttr_data, &out, &d1, &d2, &d3, &d4,
+                                      micro_time_coarsening, stack_frames,
+                                      max_micro_time_channels);
+        size_t n = (size_t) d1 * d2 * d3 * d4;
+        std::vector<int> v(n);
+        for (size_t i = 0; i < n; ++i) v[i] = out[i];
+        if (out) free(out);
+        return v;
+    }
+
     CLSMFrame* __getitem__(int i) {
         if (i >= $self->size()){
             myErr = 1;

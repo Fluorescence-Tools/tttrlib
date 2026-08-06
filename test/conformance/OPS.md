@@ -51,7 +51,6 @@ comparable.
 | `to_list` | array, string list | — | list (use only for short arrays) |
 | `unique_sorted` | numeric array | — | ascending list of distinct values |
 | `shape` | array | — | list of integers |
-| `dtype` | array | — | canonical dtype string (below) |
 | `contains` | string | `[substring]` | boolean |
 | `round` | double | `[ndigits]` | double |
 | `count_gt` | numeric array | `[threshold]` | integer — how many exceed it |
@@ -63,11 +62,13 @@ case whose peak is not unique is a bad case regardless.
 
 ### Canonical dtype strings
 
-`float64`, `float32`, `int64`, `int32`, `int16`, `int8`, `uint64`, `uint32`,
-`uint16`, `uint8`, `bool`, `string`. A runner whose language cannot distinguish
-two of these (R has one numeric type; JavaScript has no int16) reports the dtype
-the **binding** produced, not the one the language would prefer — that is exactly
-the marshalling fact the case is pinning.
+`ds.column_dtype` answers with one of: `float64`, `float32`, `int64`, `int32`,
+`int16`, `int8`, `uint64`, `uint32`, `uint16`, `uint8`, `bool`, `string`. That
+reads the column's **C++** `ColumnType`, so every binding can answer it.
+
+There is deliberately no generic `dtype` op for arrays. R has one numeric type,
+so an array's element width is not observable from R at all, and a case using it
+could never run in all four — which is the bar every case here has to clear.
 
 ## `tttr.*`
 
@@ -96,6 +97,10 @@ the marshalling fact the case is pinning.
 | op | on | args | result |
 |---|---|---|---|
 | `correlator.curve_size` | — | `[n_bins, n_casc]` | integer |
+| `correlator.new` | — | `[n_bins, n_casc]` | Correlator handle |
+| `correlator.set_tttr` | correlator | `[$tttr_a, $tttr_b]` | — |
+| `correlator.x_axis` | correlator | — | array of lag times |
+| `correlator.correlation` | correlator | — | array, normalised |
 
 ## `ds.*` — DataStore
 

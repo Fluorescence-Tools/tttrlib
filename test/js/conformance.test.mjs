@@ -144,7 +144,6 @@ function makeOps(ctx) {
       return [...new Set(seen)].sort((x, y) => x - y);
     },
     shape: (on) => [asSequence(on).length],
-    dtype: () => { throw new UnsupportedOp('dtype'); },
     contains: (on, a) => String(on).includes(a[0]),
     round: (on, a) => {
       const f = 10 ** a[0];
@@ -187,6 +186,16 @@ function makeOps(ctx) {
       cc.n_casc = a[1];
       return Number(cc.size());
     },
+
+    'correlator.new': (on, a) => {
+      const c = new tttrlib.Correlator();
+      c.n_bins = a[0];
+      c.n_casc = a[1];
+      return c;
+    },
+    'correlator.set_tttr': (on, a) => { on.set_tttr(a[0], a[1]); },
+    'correlator.x_axis': (on) => on.get_x_axis(),
+    'correlator.correlation': (on) => on.get_corr_normalized(),
 
     // -- datastore ----------------------------------------------------------
     'ds.new': () => new tttrlib.DataStore(),
@@ -287,7 +296,8 @@ function makeOps(ctx) {
     'clsm.n_pixel': (on) => Number(on.n_pixel),
     'clsm.intensity': (on) => on.get_intensity(),
     'clsm.mean_micro_time': (on, a) => on.get_mean_micro_time(a[0]),
-    'clsm.fluorescence_decay': (on, a) => on.get_fluorescence_decay(a[0], a[1], a[2]),
+    'clsm.fluorescence_decay': (on, a) =>
+      Float64Array.from(on.get_fluorescence_decay_v(a[0], a[1], a[2])),
 
     // -- histogram --------------------------------------------------------------
     // jsarrays.i takes 2-D input as {data, shape}; a bare flat TypedArray would

@@ -233,15 +233,6 @@ def _op_shape(on, args):
     return [int(x) for x in _as_array(on).shape]
 
 
-def _op_dtype(on, args):
-    if isinstance(on, list):
-        return "string"
-    d = _as_array(on).dtype
-    if d not in _DTYPES:
-        raise ConformanceError(f"dtype {d} is not in the canonical set")
-    return _DTYPES[d]
-
-
 def _op_contains(on, args):
     if not isinstance(on, str):
         raise ConformanceError("contains expects a string")
@@ -290,6 +281,18 @@ def _op_tttr_by_channel(on, args):
 # ---------------------------------------------------------------------------
 # correlator.*
 # ---------------------------------------------------------------------------
+
+def _op_correlator_new(on, args):
+    """A correlator with its geometry set, ready for set_tttr."""
+    c = tttrlib.Correlator()
+    c.n_bins = int(args[0])
+    c.n_casc = int(args[1])
+    return c
+
+
+def _op_correlator_set_tttr(on, args):
+    on.set_tttr(args[0], args[1])
+
 
 def _op_correlator_curve_size(on, args):
     cc = tttrlib.CorrelatorCurve()
@@ -472,9 +475,15 @@ def _op_clsm_mean_micro_time(on, args):
 
 
 def _op_clsm_fluorescence_decay(on, args):
-    """(frame, line, pixel, tac) -- the suite's 4-D output view."""
-    return np.asarray(on.get_fluorescence_decay(
-        args[0], micro_time_coarsening=int(args[1]), stack_frames=bool(args[2])))
+    """(frame, line, pixel, tac), flattened.
+
+    The `_v` accessor rather than the native one: SWIG's R overload dispatcher
+    cannot reach the parameterised form of `get_fluorescence_decay` (it matches
+    against the C++ parameter list, output pointers and all). Using the vector
+    return everywhere keeps the four runners calling the same thing.
+    """
+    return np.asarray(on.get_fluorescence_decay_v(
+        args[0], int(args[1]), bool(args[2])), dtype=np.int64)
 
 
 # ---------------------------------------------------------------------------
@@ -565,7 +574,7 @@ _OPS = {
     "min": _op_min, "max": _op_max, "argmax": _op_argmax, "argmin": _op_argmin,
     "first": _op_first, "last": _op_last, "nth": _op_nth, "slice": _op_slice,
     "to_list": _op_to_list, "unique_sorted": _op_unique_sorted,
-    "shape": _op_shape, "dtype": _op_dtype, "contains": _op_contains,
+    "shape": _op_shape, "contains": _op_contains,
     "round": _op_round, "identity": _op_identity, "count_gt": _op_count_gt,
 
     # tttr
@@ -589,6 +598,11 @@ _OPS = {
 
     # correlator
     "correlator.curve_size": _op_correlator_curve_size,
+    "correlator.new": _op_correlator_new,
+    "correlator.set_tttr": _op_correlator_set_tttr,
+    "correlator.x_axis": lambda on, a: np.asarray(on.get_x_axis(), dtype=np.float64),
+    "correlator.correlation": lambda on, a: np.asarray(on.get_corr_normalized(),
+                                                       dtype=np.float64),
 
     # datastore
     "ds.new": lambda on, a: tttrlib.DataStore(),
@@ -702,7 +716,7 @@ for _s in _ADD_DTYPE:
 YIELDS_COMPARABLE = {
     # generic reducers -- the whole point of which is to be comparable
     "len", "sum", "mean", "min", "max", "argmax", "argmin", "first", "last",
-    "nth", "to_list", "unique_sorted", "shape", "dtype", "contains", "round",
+    "nth", "to_list", "unique_sorted", "shape", "contains", "round",
     "identity", "count_gt",
     # scalar-valued library getters
     "tttr.size", "tttr.n_valid_events", "tttr.n_micro_channels",
@@ -737,6 +751,8 @@ RAW_MATERIAL = {
     "fit.parameters", "fit.results",
     "pda.new", "pda.append", "pda.evaluate", "pda.s1s2", "pda.histogram_y",
     "burst.new", "burst.find", "burst.properties",
+    "correlator.new", "correlator.set_tttr", "correlator.x_axis",
+    "correlator.correlation",
     "tiff.write_f64", "tiff.read_f64",
     # side effects that bind nothing worth expecting
     "ds.add_string", "ds.set_label", "ds.select_range", "file.write_text",

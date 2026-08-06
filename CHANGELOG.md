@@ -4,8 +4,8 @@
 
 ### Added
 - **A cross-language conformance suite.** `test/conformance/` holds one
-  committed case list — 56 cases over eleven areas — that Python, R, Java and
-  JavaScript all run. The expected values are *shared*, not four copies that
+  committed case list — 58 cases over eleven areas — that Python, R, Java and
+  JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
   happen to agree: change one and all four go red. It replaces the hand-copied
   constants of PRD-001, and the four files that duplicated them are gone.
   `tools/conformance_update.py` generates expectations for review;
@@ -16,6 +16,14 @@
   HDF5 round trip are reachable from every binding rather than from Python
   alone. Java also gains eleven `Column.get_*_into` accessors, without which a
   column could not be read at all.
+- **`CLSMImage.get_fluorescence_decay_v`** — the per-pixel decay block as a
+  plain vector, so R can reach it. SWIG's R overload dispatcher matches against
+  the C++ parameter list, output pointers included, and could only resolve the
+  all-defaults call; `get_phasor_v` already existed for the same reason. The
+  native `get_fluorescence_decay` is unchanged.
+- **`Correlator.get_x_axis_into` / `get_corr_normalized_into` for Java** —
+  both getters were opaque pointers, so a correlation could not be read from
+  Java at all.
 - **`jarrays.i` gained 2-D and 3-D input marshalling.** A Java caller passes
   `double[][]` or `double[][][]` and the typemap flattens it row-major, taking
   the dimensions from the array itself; ragged input is refused rather than

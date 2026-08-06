@@ -17,6 +17,7 @@
 #include "Histogram.h"
 #include "BurstFilter.h"
 #include "TiffArrayIO.h"
+#include "Correlator.h"
 #include "DataStore.h"
 #include <vector>
 #include <set>
@@ -75,6 +76,11 @@
   }
 }
 %enddef
+
+// The correlation curve. Both getters are the ARGOUTVIEWM shape, so Java sees
+// opaque pointers without these and cannot read a correlation at all.
+%ARRAY_INTO(Correlator, get_x_axis,          get_x_axis_into,          double)
+%ARRAY_INTO(Correlator, get_corr_normalized, get_corr_normalized_into, double)
 
 %ARRAY_INTO(TTTR, get_macro_times,     get_macro_times_into,      unsigned long long)
 %ARRAY_INTO(TTTR, get_micro_times,     get_micro_times_into,      unsigned short)

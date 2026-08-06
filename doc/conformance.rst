@@ -33,24 +33,26 @@ burst.spc130.properties   ✓       ✓  ✓     ✓
 clsm
 ----
 
-=============================================  ======  ===  ====  ==========
-case                                           Python  R    Java  JavaScript
-=============================================  ======  ===  ====  ==========
-clsm.ht3.intensity_image                       ✓       ✓    ✓     ✓
-clsm.ht3.mean_micro_time_image                 ✓       ✓    ✓     ✓
-clsm.ht3.channel_selection_changes_the_image   ✓       ✓    ✓     ✓
-clsm.ht3.fluorescence_decay_conserves_photons  ✓       n/a  ✓     ✓
-=============================================  ======  ===  ====  ==========
+=============================================  ======  =  ====  ==========
+case                                           Python  R  Java  JavaScript
+=============================================  ======  =  ====  ==========
+clsm.ht3.intensity_image                       ✓       ✓  ✓     ✓
+clsm.ht3.mean_micro_time_image                 ✓       ✓  ✓     ✓
+clsm.ht3.channel_selection_changes_the_image   ✓       ✓  ✓     ✓
+clsm.ht3.fluorescence_decay_conserves_photons  ✓       ✓  ✓     ✓
+=============================================  ======  =  ====  ==========
 
 correlator
 ----------
 
-=========================================  ======  =  ====  ==========
-case                                       Python  R  Java  JavaScript
-=========================================  ======  =  ====  ==========
-correlator.curve.size_3_5                  ✓       ✓  ✓     ✓
-correlator.curve.size_grows_with_cascades  ✓       ✓  ✓     ✓
-=========================================  ======  =  ====  ==========
+============================================  ======  =  ====  ==========
+case                                          Python  R  Java  JavaScript
+============================================  ======  =  ====  ==========
+correlator.curve.size_3_5                     ✓       ✓  ✓     ✓
+correlator.curve.size_grows_with_cascades     ✓       ✓  ✓     ✓
+correlator.spc130.cross_correlation           ✓       ✓  ✓     ✓
+correlator.spc130.geometry_changes_the_curve  ✓       ✓  ✓     ✓
+============================================  ======  =  ====  ==========
 
 datastore
 ---------
@@ -132,27 +134,27 @@ tiff.single_frame_roundtrip     ✓       ✓  ✓     ✓
 tttr
 ----
 
-=================================  ======  ===  ====  ==========
-case                               Python  R    Java  JavaScript
-=================================  ======  ===  ====  ==========
-tttr.spc130.size                   ✓       ✓    ✓     ✓
-tttr.spc130.micro_channels         ✓       ✓    ✓     ✓
-tttr.spc130.macro_times            ✓       ✓    ✓     ✓
-tttr.spc130.micro_times            ✓       ✓    ✓     ✓
-tttr.spc130.routing_channels       ✓       ✓    ✓     ✓
-tttr.spc130.used_routing_channels  ✓       ✓    ✓     ✓
-tttr.spc130.index_getters          ✓       ✓    ✓     ✓
-tttr.spc130.micro_time_resolution  ✓       ✓    ✓     ✓
-tttr.spc130.by_channel             ✓       ✓    ✓     ✓
-tttr.spc130.burst_search           ✓       ✓    ✓     ✓
-tttr.spc130.microtime_histogram    ✓       ✓    ✓     ✓
-tttr.spc130.header_json            ✓       ✓    ✓     ✓
-tttr.spc130.dtypes                 ✓       n/a  n/a   n/a
-tttr.ptu_t3.basic                  ✓       ✓    ✓     ✓
-tttr.ht3_clsm.basic                ✓       ✓    ✓     ✓
-tttr.spc600.basic                  ✓       ✓    ✓     ✓
-tttr.open.bad_container_throws     ✓       ✓    ✓     ✓
-=================================  ======  ===  ====  ==========
+=================================  ======  =  ====  ==========
+case                               Python  R  Java  JavaScript
+=================================  ======  =  ====  ==========
+tttr.spc130.size                   ✓       ✓  ✓     ✓
+tttr.spc130.micro_channels         ✓       ✓  ✓     ✓
+tttr.spc130.macro_times            ✓       ✓  ✓     ✓
+tttr.spc130.micro_times            ✓       ✓  ✓     ✓
+tttr.spc130.routing_channels       ✓       ✓  ✓     ✓
+tttr.spc130.used_routing_channels  ✓       ✓  ✓     ✓
+tttr.spc130.index_getters          ✓       ✓  ✓     ✓
+tttr.spc130.micro_time_resolution  ✓       ✓  ✓     ✓
+tttr.spc130.by_channel             ✓       ✓  ✓     ✓
+tttr.spc130.burst_search           ✓       ✓  ✓     ✓
+tttr.spc130.microtime_histogram    ✓       ✓  ✓     ✓
+tttr.spc130.header_json            ✓       ✓  ✓     ✓
+tttr.spc130.value_ranges           ✓       ✓  ✓     ✓
+tttr.ptu_t3.basic                  ✓       ✓  ✓     ✓
+tttr.ht3_clsm.basic                ✓       ✓  ✓     ✓
+tttr.spc600.basic                  ✓       ✓  ✓     ✓
+tttr.open.bad_container_throws     ✓       ✓  ✓     ✓
+=================================  ======  =  ====  ==========
 
 Totals
 ------
@@ -160,24 +162,9 @@ Totals
 ==========  ======  ======  =======  ===========
             passed  failed  skipped  unsupported
 ==========  ======  ======  =======  ===========
-Python      56      0       0        0
-R           54      0       0        2
-Java        55      0       0        1
-JavaScript  55      0       0        1
+Python      58      0       0        0
+R           58      0       0        0
+Java        58      0       0        0
+JavaScript  58      0       0        0
 ==========  ======  ======  =======  ===========
-
-Declared gaps
--------------
-
-A binding that cannot express a case says so in the case file, with a
-reason. These are the gaps the suite knows about; anything else that
-does not run is a bug.
-
-``clsm.ht3.fluorescence_decay_conserves_photons`` — **R**: SWIG's R overload dispatcher tests the output-pointer parameter that rarrays.i removes from the R signature, so only the all-defaults call resolves -- and that is a coarsening of 1, a 268-million-element block. The same defect blocks the explicit form of tttr.microtime_histogram.
-
-``tttr.spc130.dtypes`` — **Java**: the runner carries every numeric array as double[], which erases the element type; what Java does preserve is which typed accessor exists, and that is a different claim
-
-``tttr.spc130.dtypes`` — **JavaScript**: the addon returns typed arrays whose element type is the binding's own choice; arrays.test.mjs pins that directly
-
-``tttr.spc130.dtypes`` — **R**: R has one numeric vector type, so the element width is not observable from R at all
 
