@@ -349,7 +349,19 @@ void write_root_attribute(hid_t file, const char* name, const std::string& s) {
  * dropped, which is the honest outcome for metadata the format has no place
  * for.
  */
-enum class FieldKind { Text, Scalar, Array };
+enum class FieldKind {
+    Text, Scalar, Array,
+    /*!
+     * A field the writer emits itself, from \ref PhotonHdf5Setup.
+     *
+     * Listed here so it is *recognised* without being *carried over*: the
+     * carry-over loops skip it, because writing it twice would mean the same
+     * dataset name twice and HDF5 fails the second, and the /user JSON skips it
+     * too, because it is already in the file as a real field and a value stated
+     * in two places is a value that can disagree with itself.
+     */
+    Written
+};
 
 /*!
  * \p kind is declared, never inferred. A one-element array field written as a
@@ -415,6 +427,31 @@ const KnownField kKnownFields[] = {
      "Polarization angles (in degrees) for each detected polarization."},
 
     {"nanotimes_specs", "tcspc_range", FieldKind::Scalar, "TCSPC full-scale range in seconds."},
+
+    // Emitted by the writer itself from PhotonHdf5Setup; see FieldKind::Written.
+    {"setup", "num_pixels", FieldKind::Written, ""},
+    {"setup", "num_spots", FieldKind::Written, ""},
+    {"setup", "num_spectral_ch", FieldKind::Written, ""},
+    {"setup", "num_polarization_ch", FieldKind::Written, ""},
+    {"setup", "num_split_ch", FieldKind::Written, ""},
+    {"setup", "modulated_excitation", FieldKind::Written, ""},
+    {"setup", "lifetime", FieldKind::Written, ""},
+    {"setup", "excitation_alternated", FieldKind::Written, ""},
+    {"identity", "format_name", FieldKind::Written, ""},
+    {"identity", "format_version", FieldKind::Written, ""},
+    {"identity", "format_url", FieldKind::Written, ""},
+    {"identity", "software", FieldKind::Written, ""},
+    {"identity", "software_version", FieldKind::Written, ""},
+    {"identity", "creation_time", FieldKind::Written, ""},
+    {"timestamps_specs", "timestamps_unit", FieldKind::Written, ""},
+    {"nanotimes_specs", "tcspc_unit", FieldKind::Written, ""},
+    {"nanotimes_specs", "tcspc_num_bins", FieldKind::Written, ""},
+    // Derived from the photons actually written, never carried over: a source
+    // file's counts describe that file, and the validator checks ours against
+    // /photon_data/detectors.
+    {"detectors", "id", FieldKind::Written, ""},
+    {"detectors", "id_hardware", FieldKind::Written, ""},
+    {"detectors", "counts", FieldKind::Written, ""},
 };
 
 const KnownField* find_known_field(const std::string& group, const std::string& name) {
@@ -436,6 +473,8 @@ namespace {
 /// Write one carried-over value, choosing the HDF5 shape from what it holds.
 void write_meta(hid_t loc, const PhotonHdf5Meta& m, const KnownField& field) {
     switch (field.kind) {
+        case FieldKind::Written:
+            break;                    // the writer already put it in the file
         case FieldKind::Text:
             write_string(loc, m.name.c_str(), m.text, field.description);
             break;
@@ -469,7 +508,7 @@ void write_meta_group(hid_t parent, const char* group, const char* group_path,
     for (const PhotonHdf5Meta& m : metadata) {
         if (m.group != group) continue;
         const KnownField* field = find_known_field(m.group, m.name);
-        if (field == nullptr) continue;
+        if (field == nullptr || field->kind == FieldKind::Written) continue;
         if (loc < 0) loc = create_group(parent, group_path, group_description);
         if (loc < 0) return;
         write_meta(loc, m, *field);
@@ -679,6 +718,29 @@ bool write_photon_hdf5(const std::string& filename,
         if (field != nullptr) write_meta(g_identity, m, *field);
     }
     H5Gclose(g_identity);
+
+    // ---- /user -----------------------------------------------------------
+    //
+    // Whatever the caller could not express as a standard field, kept rather
+    // than discarded. A validator skips /user entirely -- it is typed "flex" in
+    // the specification -- so this cannot make the file non-conformant, and it
+    // is honest about not being a standard field.
+    if (!setup.user_json.empty()) {
+        const hid_t g_user = create_group(file, "/user",
+                                          "Non-standard, application-specific data.");
+        if (g_user >= 0) {
+            const hid_t g_tttrlib = create_group(g_user, "tttrlib",
+                                                 "Metadata written by tttrlib.");
+            if (g_tttrlib >= 0) {
+                write_string(g_tttrlib, "metadata_json", setup.user_json,
+                             "Header fields with no place in the Photon-HDF5 "
+                             "specification, as a JSON object keyed by "
+                             "\"group.field\".");
+                H5Gclose(g_tttrlib);
+            }
+            H5Gclose(g_user);
+        }
+    }
 
     H5Fclose(file);
     return true;

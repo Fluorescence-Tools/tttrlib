@@ -554,6 +554,50 @@ bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
             }
             if (usable) setup.metadata.push_back(std::move(m));
         }
+
+        // Everything the format has no field for, kept as one JSON object
+        // rather than dropped: measurement_specs, the detectors_specs channel
+        // mapping, a vendor group like picoquant.hardware_name. It goes to
+        // /user, which the specification sets aside for exactly this and which
+        // a validator skips, so preserving it cannot cost conformance.
+        //
+        // Keyed by the same "group.field" address the reader uses, so what
+        // comes out reads like what went in. A field with several indices
+        // becomes a list, in index order; anything else is a bare value.
+        nlohmann::json leftovers = nlohmann::json::object();
+        std::map<std::string, std::map<int, nlohmann::json>> spare;
+        std::vector<std::string> spare_order;
+        for (const auto& tag : tags) {
+            if (!tag.contains("name") || !tag["name"].is_string()) continue;
+            if (!tag.contains("value")) continue;
+            const std::string name = tag["name"].get<std::string>();
+            const auto dot = name.find('.');
+            // Only values that came from a Photon-HDF5 group. tttrlib's own
+            // canonical tags (the resolutions, the channel count) are written
+            // as real fields and would be duplicated here.
+            if (dot == std::string::npos || dot + 1 >= name.size()) continue;
+            if (tttrlib::io::known_photon_hdf5_field(
+                        name.substr(0, dot), name.substr(dot + 1)) != nullptr) {
+                continue;
+            }
+            int idx = 0;
+            if (tag.contains("idx") && tag["idx"].is_number_integer()) {
+                idx = tag["idx"].get<int>();
+            }
+            if (spare.find(name) == spare.end()) spare_order.push_back(name);
+            spare[name][idx] = tag["value"];
+        }
+        for (const std::string& name : spare_order) {
+            const auto& byindex = spare[name];
+            if (byindex.size() == 1) {
+                leftovers[name] = byindex.begin()->second;
+            } else {
+                nlohmann::json list = nlohmann::json::array();
+                for (const auto& e : byindex) list.push_back(e.second);
+                leftovers[name] = std::move(list);
+            }
+        }
+        if (!leftovers.empty()) setup.user_json = leftovers.dump();
     }
 
     // get_macro_time_at rather than the raw array, for the same reason the

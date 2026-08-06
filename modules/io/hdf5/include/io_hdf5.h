@@ -149,6 +149,24 @@ struct PhotonHdf5Setup {
      * ``known_photon_hdf5_field()``.
      */
     std::vector<PhotonHdf5Meta> metadata;
+
+    /*!
+     * \brief Everything else, as one JSON object.
+     *
+     * The fields above are the ones the specification defines, and they are all
+     * that may be written as real fields -- an invented one carries an invented
+     * description and invalidates the file. That still leaves metadata a source
+     * file had and this one would otherwise lose: ``measurement_specs``, the
+     * ``detectors_specs`` channel mapping, a vendor group like
+     * ``picoquant.hardware_name``.
+     *
+     * Rather than drop it, it goes verbatim into ``/user/tttrlib/metadata_json``
+     * as a single string. ``/user`` is the one place the format sets aside for
+     * this: a validator skips the whole subtree, so nothing in here can make a
+     * file non-conformant, and nothing in here is pretending to be a standard
+     * field either. Empty means nothing was left over.
+     */
+    std::string user_json;
 };
 
 /*!

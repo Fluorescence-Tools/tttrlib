@@ -380,12 +380,14 @@ target format can physically store:
   sample name, the buffer, the original filename, the author. Those are exactly
   the parts a reader cannot reconstruct from the photons.
 
-  Only fields the specification defines are written. Each one carries its
-  official description into the file, and a validator compares that text
+  Only fields the specification defines are written *as fields*: each carries
+  its official description into the file, and a validator compares that text
   against the specification, so a field tttrlib invented a description for
-  would make the whole file invalid. Non-standard groups from a source file are
-  therefore dropped rather than guessed at. ``/photon_data/measurement_specs``
-  (the measurement type and the ALEX periods) is not yet carried across.
+  would make the whole file invalid. Everything else — ``measurement_specs``,
+  the ``detectors_specs`` channel mapping, vendor groups — is kept as one JSON
+  object in ``/user/tttrlib/metadata_json``, the part of the format set aside
+  for application data and skipped by validators. Nothing is dropped, and
+  nothing is stated twice.
 
   ``/setup/detectors`` is written from the data — every detector ID that
   appears, with its photon count. It is mandatory from v0.5, and it is the only

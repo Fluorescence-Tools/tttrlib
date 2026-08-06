@@ -147,6 +147,42 @@ def test_the_metadata_survives_a_round_trip(data, tmp_path):
         assert value(back, name) == source, name
 
 
+def test_nothing_is_lost_and_nothing_is_said_twice(data, tmp_path):
+    """What the format has no field for goes to /user as JSON, not to nowhere.
+
+    The specification defines a fixed set of fields, and only those may be
+    written as real fields -- an invented one carries an invented description
+    and invalidates the file. That still leaves real metadata a source file had:
+    measurement_specs, the detectors_specs channel mapping, a vendor group.
+    /user is the one place set aside for it, and a validator skips the whole
+    subtree, so keeping it costs no conformance.
+
+    The two halves have to partition, not overlap. A value stated both as a
+    real field and in the blob is a value that can disagree with itself -- and
+    the detector counts are the case where it would, since those are derived
+    from the photons actually written rather than copied from the source.
+    """
+    import tttrlib as _t
+
+    out = str(tmp_path / "user.hdf5")
+    assert data.write(out, "PHOTON-HDF5")
+    back = _t.TTTR(out, "PHOTON-HDF5")
+
+    source = {t["name"] for t in json.loads(data.header.json)["tags"]}
+    written = {t["name"] for t in json.loads(back.header.json)["tags"]}
+
+    blob = [t["value"] for t in json.loads(back.header.json)["tags"]
+            if t["name"] == "tttrlib.metadata_json"]
+    assert blob, "the leftovers were dropped instead of kept"
+    kept = json.loads(blob[0])
+
+    assert not (source - written - set(kept)), "a source field went nowhere"
+    assert not (set(kept) & written), "a field is stated both ways"
+    # The things the format genuinely has no home for.
+    assert "measurement_specs.measurement_type" in kept
+    assert "picoquant.hardware_name" in kept
+
+
 def test_carries_more_than_setup_and_identity(tags):
     """/sample, /provenance and the measurement specs are the point."""
     groups = {n.split(".")[0] for n in tags if "." in n}

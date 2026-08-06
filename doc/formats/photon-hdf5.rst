@@ -60,12 +60,28 @@ description of the instrument including its array fields, and the ``/sample``,
 reconstruct from the photons, and dropping them was the point of writing a
 Photon-HDF5 file rather than an SPC.
 
-Only fields the specification defines are written. Every field carries its
-official description into the file as a ``TITLE`` attribute, and a validator
-compares that text against the specification — so a field tttrlib invented a
-description for would make the whole file invalid. Metadata from a non-standard
-group is therefore dropped rather than guessed at, and
-``/photon_data/measurement_specs`` is not yet carried across.
+Only fields the specification defines are written as real fields. Every field
+carries its official description into the file as a ``TITLE`` attribute, and a
+validator compares that text against the specification — so a field tttrlib
+invented a description for would make the whole file invalid.
+
+Everything else is kept rather than dropped. It goes into
+``/user/tttrlib/metadata_json`` as a single JSON object keyed by the same
+``group.field`` address the reader uses — ``measurement_specs.measurement_type``,
+the ``detectors_specs`` channel mapping, a vendor group such as
+``picoquant.hardware_name``, and the source file's own name. ``/user`` is the
+one place the format sets aside for application data: a validator skips the
+whole subtree, so preserving this costs no conformance and none of it pretends
+to be a standard field.
+
+The two halves partition. A value written as a real field is not repeated in
+the JSON, because a value stated twice is one that can disagree with itself —
+which the detector counts would, since those are derived from the photons
+actually written rather than copied from the source.
+
+One field does lose detail: ``/setup/excitation_alternated`` is written as a
+single flag, so a source that alternated two excitation sources independently
+comes back with one value rather than two.
 
 ``/setup/detectors`` is written from the data rather than from the header: every
 detector ID that appears in ``/photon_data/detectors``, with the number of
