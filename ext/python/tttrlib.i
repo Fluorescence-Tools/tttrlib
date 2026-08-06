@@ -147,6 +147,7 @@ def experimental(cls):
 %include "DataStore.i"
 %include "CsvReader.i"
 %include "Hdf5Table.i"
+%include "StoreFile.i"
 
 /* Correlation of data */
 %include "Correlator.i"

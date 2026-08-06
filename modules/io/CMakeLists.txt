@@ -20,3 +20,4 @@ add_subdirectory(image)   # TIFF arrays -- file I/O, but not a TTTR container
 add_subdirectory(csv)     # CSV -> DataStore. Depends on core; see its CMakeLists.
 add_subdirectory(hdf5_table)  # columnar HDF5 -> DataStore. Depends on core, so it
                               # cannot live in hdf5/, which core itself depends on.
+add_subdirectory(store)   # the native .dstore file. No external dependency at all.
