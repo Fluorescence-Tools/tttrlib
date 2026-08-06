@@ -153,11 +153,11 @@ void read_string_column(hid_t ds, hid_t type, data::Column& column, std::size_t 
     H5Tclose(mem);
 }
 
-/// The `columns` attribute, if the writer left one.
-std::vector<std::string> declared_order(hid_t group) {
+/// A string-list attribute, or empty when the object does not carry one.
+std::vector<std::string> read_string_attribute(hid_t obj, const char* attribute) {
     std::vector<std::string> out;
-    if (H5Aexists(group, "columns") <= 0) return out;
-    const hid_t attr = H5Aopen(group, "columns", H5P_DEFAULT);
+    if (H5Aexists(obj, attribute) <= 0) return out;
+    const hid_t attr = H5Aopen(obj, attribute, H5P_DEFAULT);
     if (attr < 0) return out;
     const hid_t space = H5Aget_space(attr);
     hsize_t dims[1] = {0};
@@ -174,6 +174,11 @@ std::vector<std::string> declared_order(hid_t group) {
     H5Sclose(space);
     H5Aclose(attr);
     return out;
+}
+
+/// The `columns` attribute, if the writer left one.
+std::vector<std::string> declared_order(hid_t group) {
+    return read_string_attribute(group, "columns");
 }
 
 /*!
@@ -238,6 +243,14 @@ std::string encode_name(const std::string& name) {
  * returning the answer. The stack is not an error report, it is the
  * implementation narrating a lookup that failed, and there is no way to ask
  * without triggering it.
+ *
+ * It silences the WRITE paths too, which is why those report their own failures
+ * through \ref write_failed rather than relying on the stack: a caller who gets
+ * `false` back would otherwise have nothing to go on.
+ *
+ * `H5E_DEFAULT` is process-global. Nesting is safe -- the save and restore are
+ * stack-like -- but this does not defend against another thread using HDF5 at
+ * the same time, which would have its diagnostics suppressed for the duration.
  */
 class QuietHdf5 {
 public:
@@ -369,14 +382,28 @@ std::vector<std::string> read_hdf5_table_columns(const std::string& filename,
 
 namespace {
 
+/*!
+ * \brief Say that a write failed, once, naming what and where.
+ *
+ * The QuietHdf5 guard silences HDF5's own error stack, which is right for the
+ * queries -- probing a foreign file is a normal thing to do and should not
+ * narrate. It is wrong for a write: a caller who gets `false` back has no other
+ * way to find out which column stopped it.
+ */
+bool write_failed(const char* what, const std::string& name) {
+    std::cerr << "hdf5 table: could not " << what << " '" << name << "'" << std::endl;
+    return false;
+}
+
 /// One column, chunked and optionally deflated. Chunking is not decoration: an
 /// unchunked dataset cannot be compressed, and a chunk of the whole column
 /// would have to be inflated in full to read any of it.
-void write_column_dataset(hid_t group, const std::string& name, hid_t file_type,
+bool write_column_dataset(hid_t group, const std::string& name, hid_t file_type,
                           hid_t mem_type, std::size_t n, const void* data,
                           int compression) {
     const hsize_t dims[1] = {static_cast<hsize_t>(n)};
     const hid_t space = H5Screate_simple(1, dims, nullptr);
+    if (space < 0) return write_failed("describe", name);
     hid_t plist = H5P_DEFAULT;
     const std::size_t element = std::max<std::size_t>(1, H5Tget_size(file_type));
     if (n > 0 && compression > 0) {
@@ -388,12 +415,42 @@ void write_column_dataset(hid_t group, const std::string& name, hid_t file_type,
     }
     const hid_t ds = H5Dcreate2(group, name.c_str(), file_type, space,
                                 H5P_DEFAULT, plist, H5P_DEFAULT);
-    if (ds >= 0) {
-        if (n > 0) H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    bool ok = ds >= 0;
+    if (ok) {
+        if (n > 0 && H5Dwrite(ds, mem_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+            ok = false;
         H5Dclose(ds);
     }
     if (plist != H5P_DEFAULT) H5Pclose(plist);
     H5Sclose(space);
+    return ok ? true : write_failed("write column", name);
+}
+
+/// A list of strings as one attribute -- the `columns` order, and later the
+/// group order. Variable-length UTF-8, so a name is whatever the caller called
+/// it.
+bool write_string_attribute(hid_t obj, const char* attribute,
+                            const std::vector<std::string>& values) {
+    std::vector<const char*> pointers;
+    pointers.reserve(values.size());
+    for (const std::string& v : values) pointers.push_back(v.c_str());
+
+    const hsize_t dims[1] = {static_cast<hsize_t>(pointers.size())};
+    const hid_t space = H5Screate_simple(1, dims, nullptr);
+    if (space < 0) return write_failed("describe attribute", attribute);
+    const hid_t vlen = H5Tcopy(H5T_C_S1);
+    H5Tset_size(vlen, H5T_VARIABLE);
+    H5Tset_cset(vlen, H5T_CSET_UTF8);
+
+    const hid_t attr = H5Acreate2(obj, attribute, vlen, space, H5P_DEFAULT, H5P_DEFAULT);
+    bool ok = attr >= 0;
+    if (ok) {
+        if (!pointers.empty() && H5Awrite(attr, vlen, pointers.data()) < 0) ok = false;
+        H5Aclose(attr);
+    }
+    H5Tclose(vlen);
+    H5Sclose(space);
+    return ok ? true : write_failed("write attribute", attribute);
 }
 
 /// Gather the selected rows into a contiguous buffer of the column's OWN type.
@@ -405,7 +462,7 @@ void write_column_dataset(hid_t group, const std::string& name, hid_t file_type,
 /// column's buffer untouched, which is why it went unnoticed: the values
 /// changed the moment a selection was set and not before.
 template <typename T>
-void write_gathered(hid_t group, const std::string& name, const data::Column& c,
+bool write_gathered(hid_t group, const std::string& name, const data::Column& c,
                     const std::vector<std::size_t>& rows, bool gated,
                     std::size_t n_out, int compression) {
     std::vector<T> values(n_out);
@@ -413,53 +470,148 @@ void write_gathered(hid_t group, const std::string& name, const data::Column& c,
     if (src != nullptr)
         for (std::size_t i = 0; i < n_out; i++)
             values[i] = src[gated ? rows[i] : i];
-    write_column_dataset(group, name, file_type_of(c.type()), mem_type_of(c.type()),
-                         n_out, values.data(), compression);
+    return write_column_dataset(group, name, file_type_of(c.type()),
+                                mem_type_of(c.type()), n_out, values.data(),
+                                compression);
 }
 
-/// \see write_gathered. False for the two types with no contiguous buffer to
-/// gather from -- Bool is bit-packed, String is dictionary-encoded -- which the
-/// caller writes its own way.
+/// \see write_gathered. Bool and String have no contiguous buffer to gather
+/// from -- one is bit-packed, the other dictionary-encoded -- and the caller
+/// writes them its own way, so reaching them here is a bug rather than a case.
 bool write_gathered_typed(hid_t group, const std::string& name,
                           const data::Column& c,
                           const std::vector<std::size_t>& rows, bool gated,
                           std::size_t n_out, int compression) {
     switch (c.type()) {
         case data::ColumnType::Float64:
-            write_gathered<double>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<double>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Float32:
-            write_gathered<float>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<float>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Int64:
-            write_gathered<std::int64_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::int64_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Int32:
-            write_gathered<std::int32_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::int32_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Int16:
-            write_gathered<std::int16_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::int16_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Int8:
-            write_gathered<std::int8_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::int8_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::UInt64:
-            write_gathered<std::uint64_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::uint64_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::UInt32:
-            write_gathered<std::uint32_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::uint32_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::UInt16:
-            write_gathered<std::uint16_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::uint16_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::UInt8:
-            write_gathered<std::uint8_t>(group, name, c, rows, gated, n_out, compression);
-            return true;
+            return write_gathered<std::uint8_t>(group, name, c, rows, gated, n_out,
+                                     compression);
         case data::ColumnType::Bool:
         case data::ColumnType::String:
             return false;
     }
     return false;
+}
+
+/*!
+ * \brief Which rows a write covers.
+ *
+ * Only the selected ones, when the store has a selection. Writing the whole
+ * table and expecting the reader to gate it again would put the selection in
+ * two places, and the point of exporting a subset is that it IS the subset.
+ */
+struct RowGate {
+    bool gated = false;
+    std::vector<std::size_t> rows;   ///< source row of each output row; empty when not gated
+    std::size_t n_out = 0;
+
+    std::size_t source(std::size_t i) const { return gated ? rows[i] : i; }
+};
+
+RowGate row_gate_of(const data::DataStore& store) {
+    RowGate g;
+    g.gated = store.has_row_mask();
+    if (g.gated) {
+        g.rows.reserve(store.n_selected());
+        for (std::size_t i = 0; i < store.n_rows(); i++)
+            if (store.row_selected(i)) g.rows.push_back(i);
+    }
+    g.n_out = g.gated ? g.rows.size() : store.n_rows();
+    return g;
+}
+
+/*!
+ * \brief A store's columns into an already-open group.
+ *
+ * Takes an hid_t and makes no decision about the file: whether that group was
+ * created, opened, or is a temporary about to be moved into place is the
+ * caller's business.
+ */
+bool write_table_into(hid_t dest, const data::DataStore& store, int compression) {
+    const RowGate gate = row_gate_of(store);
+    const std::size_t n_out = gate.n_out;
+
+    std::vector<std::string> names;
+    for (int c = 0; c < store.n_columns(); c++) {
+        const data::Column& column = store.column(c);
+        const std::string stored = encode_name(column.name());
+        names.push_back(column.name());
+        bool ok = true;
+
+        if (column.type() == data::ColumnType::String) {
+            std::vector<std::string> values(n_out);
+            for (std::size_t i = 0; i < n_out; i++)
+                values[i] = column.string_at(gate.source(i));
+            std::vector<const char*> pointers(n_out);
+            for (std::size_t i = 0; i < n_out; i++) pointers[i] = values[i].c_str();
+            const hid_t vlen = H5Tcopy(H5T_C_S1);
+            H5Tset_size(vlen, H5T_VARIABLE);
+            H5Tset_cset(vlen, H5T_CSET_UTF8);
+            ok = write_column_dataset(dest, stored, vlen, vlen, n_out,
+                                      pointers.data(), 0);
+            H5Tclose(vlen);
+        } else if (!gate.gated && column.type() != data::ColumnType::Bool &&
+                   column.data_ptr() != nullptr) {
+            // The whole column, straight out of its buffer.
+            ok = write_column_dataset(dest, stored, file_type_of(column.type()),
+                                      mem_type_of(column.type()), n_out,
+                                      column.data_ptr(), compression);
+        } else if (column.type() != data::ColumnType::Bool) {
+            ok = write_gathered_typed(dest, stored, column, gate.rows, gate.gated,
+                                      n_out, compression);
+        } else {
+            // Bool: bit-packed in the store, a byte per row on disk, which is
+            // what the reader's Bool branch expects.
+            std::vector<unsigned char> values(n_out);
+            for (std::size_t i = 0; i < n_out; i++)
+                values[i] = column.value_at(gate.source(i)) != 0.0 ? 1 : 0;
+            ok = write_column_dataset(dest, stored, file_type_of(column.type()),
+                                      H5T_NATIVE_UINT8, n_out, values.data(),
+                                      compression);
+        }
+        if (!ok) return false;
+
+        if (column.has_mask()) {
+            std::vector<unsigned char> bytes(n_out, 1);
+            for (std::size_t i = 0; i < n_out; i++)
+                bytes[i] = column.valid(gate.source(i)) ? 1 : 0;
+            if (!write_column_dataset(dest, stored + kMaskSuffix, H5T_STD_U8LE,
+                                      H5T_NATIVE_UINT8, n_out, bytes.data(),
+                                      compression))
+                return false;
+        }
+    }
+
+    // The column order, so a reader does not have to guess it from however HDF5
+    // happens to list the group.
+    return write_string_attribute(dest, "columns", names);
 }
 
 }  // namespace
@@ -475,92 +627,18 @@ bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
     if (group_name != "/" && !group_name.empty()) {
         group = H5Gcreate2(file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
                            H5P_DEFAULT);
-        if (group < 0) { H5Fclose(file); return false; }
+        if (group < 0) {
+            H5Fclose(file);
+            return write_failed("create group", group_name);
+        }
         own_group = true;
     }
 
-    // Only the selected rows. Writing the whole table and expecting the reader
-    // to gate it again would put the selection in two places, and the point of
-    // exporting a subset is that it IS the subset.
-    const bool gated = store.has_row_mask();
-    std::vector<std::size_t> rows;
-    if (gated) {
-        rows.reserve(store.n_selected());
-        for (std::size_t i = 0; i < store.n_rows(); i++)
-            if (store.row_selected(i)) rows.push_back(i);
-    }
-    const std::size_t n_out = gated ? rows.size() : store.n_rows();
-
-    std::vector<std::string> names;
-    for (int c = 0; c < store.n_columns(); c++) {
-        const data::Column& column = store.column(c);
-        names.push_back(column.name());
-
-        if (column.type() == data::ColumnType::String) {
-            std::vector<std::string> values(n_out);
-            for (std::size_t i = 0; i < n_out; i++)
-                values[i] = column.string_at(gated ? rows[i] : i);
-            std::vector<const char*> pointers(n_out);
-            for (std::size_t i = 0; i < n_out; i++) pointers[i] = values[i].c_str();
-            const hid_t vlen = H5Tcopy(H5T_C_S1);
-            H5Tset_size(vlen, H5T_VARIABLE);
-            H5Tset_cset(vlen, H5T_CSET_UTF8);
-            write_column_dataset(group, encode_name(column.name()), vlen, vlen,
-                                 n_out, pointers.data(), 0);
-            H5Tclose(vlen);
-        } else if (!gated && column.type() != data::ColumnType::Bool &&
-                   column.data_ptr() != nullptr) {
-            // The whole column, straight out of its buffer.
-            write_column_dataset(group, encode_name(column.name()),
-                                 file_type_of(column.type()),
-                                 mem_type_of(column.type()), n_out, column.data_ptr(),
-                                 compression);
-        } else if (!write_gathered_typed(group, encode_name(column.name()), column,
-                                         rows, gated, n_out, compression)) {
-            // Bool: bit-packed in the store, a byte per row on disk, which is
-            // what the reader's Bool branch expects.
-            std::vector<unsigned char> values(n_out);
-            for (std::size_t i = 0; i < n_out; i++)
-                values[i] = column.value_at(gated ? rows[i] : i) != 0.0 ? 1 : 0;
-            write_column_dataset(group, encode_name(column.name()),
-                                 file_type_of(column.type()),
-                                 H5T_NATIVE_UINT8, n_out, values.data(), compression);
-        }
-
-        if (column.has_mask()) {
-            std::vector<unsigned char> bytes(n_out, 1);
-            for (std::size_t i = 0; i < n_out; i++)
-                bytes[i] = column.valid(gated ? rows[i] : i) ? 1 : 0;
-            write_column_dataset(group, encode_name(column.name()) + kMaskSuffix,
-                                 H5T_STD_U8LE, H5T_NATIVE_UINT8, n_out,
-                                 bytes.data(), compression);
-        }
-    }
-
-    // The column order, so a reader does not have to guess it from however HDF5
-    // happens to list the group.
-    {
-        std::vector<const char*> pointers;
-        pointers.reserve(names.size());
-        for (const std::string& n : names) pointers.push_back(n.c_str());
-        const hsize_t dims[1] = {static_cast<hsize_t>(pointers.size())};
-        const hid_t space = H5Screate_simple(1, dims, nullptr);
-        const hid_t vlen = H5Tcopy(H5T_C_S1);
-        H5Tset_size(vlen, H5T_VARIABLE);
-        H5Tset_cset(vlen, H5T_CSET_UTF8);
-        const hid_t attr = H5Acreate2(group, "columns", vlen, space,
-                                      H5P_DEFAULT, H5P_DEFAULT);
-        if (attr >= 0) {
-            if (!pointers.empty()) H5Awrite(attr, vlen, pointers.data());
-            H5Aclose(attr);
-        }
-        H5Tclose(vlen);
-        H5Sclose(space);
-    }
+    const bool ok = write_table_into(group, store, compression);
 
     if (own_group) H5Gclose(group);
     H5Fclose(file);
-    return true;
+    return ok;
 }
 
 #endif  // BUILD_PHOTON_HDF
