@@ -397,6 +397,53 @@ def _op_burst_properties(on, args):
 
 
 # ---------------------------------------------------------------------------
+# mask.*
+# ---------------------------------------------------------------------------
+#
+# Photon selection. A TTTRMask is a per-event boolean over one TTTR, and the
+# selections compose -- which is the part worth pinning across languages, since
+# each binding reaches select_channels with a different array spelling.
+
+def _op_mask_new(on, args):
+    m = tttrlib.TTTRMask()
+    m.set_tttr(args[0])
+    return m
+
+
+def _op_mask_select_channels(on, args):
+    on.select_channels(args[0], np.asarray(args[1], dtype=np.int8), bool(args[2]))
+
+
+def _op_mask_array(on, args):
+    """The per-event mask, one byte per event.
+
+    get_indices() would say the same thing, but SWIG-R names it
+    TTTRMask__get_indices__SWIG_0 -- a doubly-underscored generated symbol with
+    no stable dispatcher -- while get_mask_array() is plainly named everywhere.
+    Summing the mask is also order-independent, so it cannot be fooled by a
+    binding that returns the right events in the wrong order.
+    """
+    return np.asarray(on.get_mask_array(), dtype=np.int64)
+
+
+# ---------------------------------------------------------------------------
+# phasor.*
+# ---------------------------------------------------------------------------
+#
+# Static methods on DecayPhasor: pure arithmetic on scalars, plus one that
+# takes a bin-count vector. Nothing here reads a file, so these cases run
+# wherever the binding exists at all.
+
+def _op_phasor_from_bincounts(on, args):
+    # phasor_of_bincounts, not compute_phasor_bincounts: the native method takes
+    # a std::vector<int>& , which R cannot pass at all. See DecayPhasor.i.
+    return np.asarray(tttrlib.DecayPhasor.phasor_of_bincounts(
+        np.asarray(args[0], dtype=np.int32),
+        float(args[1]), int(args[2]), float(args[3]), float(args[4])),
+        dtype=np.float64)
+
+
+# ---------------------------------------------------------------------------
 # pda.*
 # ---------------------------------------------------------------------------
 #
@@ -652,6 +699,21 @@ _OPS = {
     "burst.find": _op_burst_find,
     "burst.properties": _op_burst_properties,
 
+    # photon selection
+    "mask.new": _op_mask_new,
+    "mask.select_channels": _op_mask_select_channels,
+    "mask.select_count_rate": lambda on, a: on.select_count_rate(
+        a[0], float(a[1]), int(a[2]), bool(a[3])),
+    "mask.size": lambda on, a: int(on.size()),
+    "mask.mask_array": _op_mask_array,
+
+    # phasor
+    "phasor.g": lambda on, a: float(tttrlib.DecayPhasor.g(float(a[0]), float(a[1]),
+                                                          float(a[2]), float(a[3]))),
+    "phasor.s": lambda on, a: float(tttrlib.DecayPhasor.s(float(a[0]), float(a[1]),
+                                                          float(a[2]), float(a[3]))),
+    "phasor.from_bincounts": _op_phasor_from_bincounts,
+
     # pda
     "pda.new": _op_pda_new,
     "pda.append": lambda on, a: on.append(float(a[0]), float(a[1])),
@@ -740,7 +802,7 @@ YIELDS_COMPARABLE = {
     "tttr.size", "tttr.n_valid_events", "tttr.n_micro_channels",
     "tttr.macro_time_at", "tttr.micro_time_at", "tttr.routing_channel_at",
     "tttr.micro_time_resolution", "tttr.macro_time_resolution",
-    "correlator.curve_size",
+    "correlator.curve_size", "phasor.g", "phasor.s", "mask.size",
     "clsm.n_frames", "clsm.n_lines", "clsm.n_pixel",
     "fit.names", "fit.setup_names", "fit.result_names", "fit.objective",
     "ds.n_rows", "ds.n_columns", "ds.n_groups", "ds.column_names",
@@ -770,7 +832,8 @@ RAW_MATERIAL = {
     "pda.new", "pda.append", "pda.evaluate", "pda.s1s2", "pda.histogram_y",
     "burst.new", "burst.find", "burst.properties",
     "correlator.new", "correlator.set_tttr", "correlator.x_axis",
-    "correlator.correlation",
+    "correlator.correlation", "phasor.from_bincounts",
+    "mask.new", "mask.select_channels", "mask.select_count_rate", "mask.mask_array",
     "tiff.write_f64", "tiff.read_f64",
     # side effects that bind nothing worth expecting
     "ds.add_string", "ds.set_label", "ds.select_range", "file.write_text",

@@ -254,6 +254,26 @@ function makeOps(ctx) {
       return out;
     },
 
+    // -- photon selection -----------------------------------------------------
+    'mask.new': (on, a) => {
+      const m = new tttrlib.TTTRMask();
+      m.set_tttr(a[0]);
+      return m;
+    },
+    'mask.select_channels': (on, a) => {
+      on.select_channels(a[0], Int8Array.from(a[1]), a[2]);
+    },
+    'mask.select_count_rate': (on, a) => { on.select_count_rate(a[0], a[1], a[2], a[3]); },
+    'mask.size': (on) => Number(on.size()),
+    'mask.mask_array': (on) => on.get_mask_array(),
+
+    // -- phasor ---------------------------------------------------------------
+    'phasor.g': (on, a) => tttrlib.DecayPhasor.g(a[0], a[1], a[2], a[3]),
+    'phasor.s': (on, a) => tttrlib.DecayPhasor.s(a[0], a[1], a[2], a[3]),
+    'phasor.from_bincounts': (on, a) =>
+      Float64Array.from(tttrlib.DecayPhasor.phasor_of_bincounts(
+        Int32Array.from(a[0]), a[1], a[2], a[3], a[4])),
+
     // -- pda ------------------------------------------------------------------
     'pda.new': (on, a) =>
       new tttrlib.Pda(a[0], a[1], a[2], a[3], Float64Array.from(a[4])),

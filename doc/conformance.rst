@@ -109,6 +109,18 @@ pda.s1s2_matrix_is_a_normalised_distribution  ✓       ✓  ✓     ✓
 pda.one_dimensional_histogram                 ✓       ✓  ✓     ✓
 ============================================  ======  =  ====  ==========
 
+phasor
+------
+
+=================================  ======  =  ====  ==========
+case                               Python  R  Java  JavaScript
+=================================  ======  =  ====  ==========
+phasor.identity_irf_is_a_no_op     ✓       ✓  ✓     ✓
+phasor.irf_rotation                ✓       ✓  ✓     ✓
+phasor.from_a_decay_histogram      ✓       ✓  ✓     ✓
+phasor.too_few_photons_is_refused  ✓       ✓  ✓     ✓
+=================================  ======  =  ====  ==========
+
 registry
 --------
 
@@ -116,11 +128,23 @@ registry
 case                                             Python  R  Java  JavaScript
 ===============================================  ======  =  ====  ==========
 registry.categories                              ✓       ✓  ✓     ✓
-registry.json_is_the_same_blob                   ✓       ✓  ✓     ✓
+registry.whole_blob_names_its_categories         ✓       ✓  ✓     ✓
 registry.file_container_category                 ✓       ✓  ✓     ✓
 registry.burst_search_category                   ✓       ✓  ✓     ✓
 registry.unknown_category_is_empty_not_an_error  ✓       ✓  ✓     ✓
 ===============================================  ======  =  ====  ==========
+
+selection
+---------
+
+==========================================  ======  =  ====  ==========
+case                                        Python  R  Java  JavaScript
+==========================================  ======  =  ====  ==========
+selection.spc130.channels                   ✓       ✓  ✓     ✓
+selection.spc130.two_channels_is_the_union  ✓       ✓  ✓     ✓
+selection.spc130.mask_false_marks_nothing   ✓       ✓  ✓     ✓
+selection.spc130.count_rate                 ✓       ✓  ✓     ✓
+==========================================  ======  =  ====  ==========
 
 tiff
 ----
@@ -163,9 +187,9 @@ Totals
 ==========  ======  ======  =======  ===========
             passed  failed  skipped  unsupported
 ==========  ======  ======  =======  ===========
-Python      59      0       0        0
-R           59      0       0        0
-Java        59      0       0        0
-JavaScript  59      0       0        0
+Python      67      0       0        0
+R           67      0       0        0
+Java        67      0       0        0
+JavaScript  67      0       0        0
 ==========  ======  ======  =======  ===========
 

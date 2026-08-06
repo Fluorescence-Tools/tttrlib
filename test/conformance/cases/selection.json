@@ -1,0 +1,65 @@
+{
+  "area": "selection",
+  "doc": "Photon selection through TTTRMask. A mask is one byte per event, and each binding reaches select_channels with a different array spelling -- a NumPy int8 array, an R integer vector, a Java byte[], a JavaScript Int8Array. What must agree is which events end up marked.\n\nNote the argument that is easy to get backwards: the `mask` parameter is the VALUE WRITTEN for matching events, not a request to keep them. select_channels(t, [0], true) MARKS channel 0. Passing false writes false for events that are already false, so nothing is marked -- which looks exactly like a filter that selected everything.\n\nThe cases read the mask itself rather than get_indices(): summing it is order-independent, and SWIG-R names get_indices TTTRMask__get_indices__SWIG_0, with no stable dispatcher to call.",
+  "cases": [
+    {
+      "id": "selection.spc130.channels",
+      "doc": "Marking channel 0 marks exactly the events get_tttr_by_channel([0]) returns -- 56499, the number tttr.spc130.by_channel pins through an entirely different code path. argmax over a 0/1 mask is the first marked event, since the first maximum wins.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "mask.new", "args": ["$t"], "as": "m"},
+        {"op": "mask.select_channels", "on": "m", "args": ["$t", [0], true]},
+        {"op": "mask.size", "on": "m", "as": "n_events"},
+        {"op": "mask.mask_array", "on": "m", "as": "mask"},
+        {"op": "len", "on": "mask", "as": "mask_length"},
+        {"op": "sum", "on": "mask", "as": "n_marked"},
+        {"op": "argmax", "on": "mask", "as": "first_marked"}
+      ],
+      "expect": {"n_events": 183657, "mask_length": 183657, "n_marked": 56499, "first_marked": 3}
+    },
+    {
+      "id": "selection.spc130.two_channels_is_the_union",
+      "doc": "Channels 0 and 8 together mark the sum of what each marks alone -- 56499 + 79468 = 135967 -- because a routing channel belongs to exactly one of them.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "mask.new", "args": ["$t"], "as": "m"},
+        {"op": "mask.select_channels", "on": "m", "args": ["$t", [0, 8], true]},
+        {"op": "mask.mask_array", "on": "m", "as": "mask"},
+        {"op": "sum", "on": "mask", "as": "n_marked"},
+        {"op": "argmax", "on": "mask", "as": "first_marked"}
+      ],
+      "expect": {"n_marked": 135967, "first_marked": 1}
+    },
+    {
+      "id": "selection.spc130.mask_false_marks_nothing",
+      "doc": "The foot-gun, pinned so it cannot change silently: passing false writes false for the matching events, which is what they already are, so nothing is marked. A binding that quietly reinterpreted this parameter as 'keep these' would answer 56499 here.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "mask.new", "args": ["$t"], "as": "m"},
+        {"op": "mask.select_channels", "on": "m", "args": ["$t", [0], false]},
+        {"op": "mask.mask_array", "on": "m", "as": "mask"},
+        {"op": "len", "on": "mask", "as": "mask_length"},
+        {"op": "sum", "on": "mask", "as": "n_marked"},
+        {"op": "max", "on": "mask", "as": "highest"}
+      ],
+      "expect": {"mask_length": 183657, "n_marked": 0, "highest": 0}
+    },
+    {
+      "id": "selection.spc130.count_rate",
+      "doc": "A sliding-window count-rate filter -- the burst-adjacent selection, which depends on macro-time arithmetic rather than on routing channels.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "mask.new", "args": ["$t"], "as": "m"},
+        {"op": "mask.select_count_rate", "on": "m", "args": ["$t", 0.001, 30, false]},
+        {"op": "mask.mask_array", "on": "m", "as": "mask"},
+        {"op": "len", "on": "mask", "as": "mask_length"},
+        {"op": "sum", "on": "mask", "as": "n_marked"}
+      ],
+      "expect": {"mask_length": 183657, "n_marked": 42472}
+    }
+  ]
+}

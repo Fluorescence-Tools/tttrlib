@@ -1,0 +1,93 @@
+{
+  "area": "phasor",
+  "doc": "Phasor arithmetic. The only area that touches no file, so nothing here can be skipped for want of data -- which makes it the cheapest possible check that a binding is wired up at all. The IRF-referenced g and s are a rotation and scaling of the raw phasor, so passing an identity IRF (g=1, s=0) must return the experimental values unchanged.",
+  "cases": [
+    {
+      "id": "phasor.identity_irf_is_a_no_op",
+      "doc": "With g_irf = 1 and s_irf = 0 the IRF correction is the identity, so g and s come back as they went in. A binding that swapped the argument order would fail this and nothing else.",
+      "steps": [
+        {"op": "phasor.g", "args": [1.0, 0.0, 0.4, 0.3], "as": "g"},
+        {"op": "phasor.s", "args": [1.0, 0.0, 0.4, 0.3], "as": "s"}
+      ],
+      "expect": {"g": 0.4, "s": 0.3},
+      "tolerance": {"g": 1e-12, "s": 1e-12}
+    },
+    {
+      "id": "phasor.irf_rotation",
+      "doc": "A non-identity IRF, where g and s genuinely mix. Asymmetric inputs throughout, so a transposed or reordered argument list cannot pass by coincidence.",
+      "steps": [
+        {"op": "phasor.g", "args": [0.8, 0.25, 0.4, 0.3], "as": "g"},
+        {"op": "phasor.s", "args": [0.8, 0.25, 0.4, 0.3], "as": "s"}
+      ],
+      "expect": {"g": 0.5622775800711743, "s": 0.19928825622775798},
+      "tolerance": {"g": 1e-12, "s": 1e-12}
+    },
+    {
+      "id": "phasor.from_a_decay_histogram",
+      "doc": "A single-exponential decay in 32 bins, reduced to one (g, s) pair. This is the vector-in, vector-out path rather than the scalar one.",
+      "steps": [
+        {
+          "op": "phasor.from_bincounts",
+          "args": [
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              100,
+              80,
+              60,
+              45,
+              34,
+              25,
+              19,
+              14,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            0.02,
+            1,
+            1.0,
+            0.0
+          ],
+          "as": "gs"
+        },
+        {"op": "len", "on": "gs", "as": "n"},
+        {"op": "first", "on": "gs", "as": "g"},
+        {"op": "last", "on": "gs", "as": "s"}
+      ],
+      "expect": {"n": 2, "g": 0.2846069851972034, "s": 0.9255891246080333},
+      "tolerance": {"g": 1e-12, "s": 1e-12}
+    },
+    {
+      "id": "phasor.too_few_photons_is_refused",
+      "doc": "An empty histogram cannot yield a phasor. What comes back is the documented not-a-value pair rather than an exception, so a caller scanning an image does not have to guard every pixel.",
+      "steps": [
+        {"op": "phasor.from_bincounts", "args": [[0, 0, 0, 0, 0, 0, 0, 0], 0.02, 1, 1.0, 0.0], "as": "gs"},
+        {"op": "len", "on": "gs", "as": "n"},
+        {"op": "first", "on": "gs", "as": "g"},
+        {"op": "last", "on": "gs", "as": "s"}
+      ],
+      "expect": {"n": 2, "g": -1.0, "s": -1.0},
+      "tolerance": {"g": 1e-12, "s": 1e-12}
+    }
+  ]
+}

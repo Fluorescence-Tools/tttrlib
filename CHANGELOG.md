@@ -34,8 +34,8 @@
   Both answer "cannot decide" outside their range rather than guessing, and the
   reader decides by the same two rules, so the two directions cannot disagree.
 - **A cross-language conformance suite.** `test/conformance/` holds one
-  committed case list — 59 cases over eleven areas — that Python, R, Java and
-  JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
+  committed case list — 67 cases over thirteen areas — that Python, R, Java
+  and JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
   happen to agree: change one and all four go red. It replaces the hand-copied
   constants of PRD-001, and the four files that duplicated them are gone.
   `tools/conformance_update.py` generates expectations for review;
@@ -51,6 +51,10 @@
   the C++ parameter list, output pointers included, and could only resolve the
   all-defaults call; `get_phasor_v` already existed for the same reason. The
   native `get_fluorescence_decay` is unchanged.
+- **`DecayPhasor.phasor_of_bincounts`** — the phasor of a decay histogram
+  through an array rather than a `std::vector<int>&`, which R cannot pass:
+  SWIG's R dispatcher wants a typed S4 proxy and `VectorInt32()` returns a bare
+  externalptr it will not match. The native method is unchanged.
 - **`CLSMImage.get_decay_of_pixels_v`** — the masked decay as a plain vector,
   for the same reason as `get_fluorescence_decay_v`. Deliberately without
   default arguments: defaults make SWIG emit an overload set, and an overload

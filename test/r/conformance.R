@@ -260,6 +260,33 @@ OPS <- list(
   "burst.find" = function(on, a) row_major(BurstFilter_find_bursts(on)),
   "burst.properties" = function(on, a) row_major(BurstFilter_get_all_burst_properties(on)),
 
+  # -- photon selection ---------------------------------------------------------
+  "mask.new" = function(on, a) { m <- TTTRMask(); TTTRMask_set_tttr(m, a[[1]]); m },
+  "mask.select_channels" = function(on, a)
+    TTTRMask_select_channels(on, a[[1]], as.integer(unlist(a[[2]])), as.logical(a[[3]])),
+  "mask.select_count_rate" = function(on, a)
+    TTTRMask_select_count_rate(on, a[[1]], as.numeric(a[[2]]),
+                               as.integer(a[[3]]), as.logical(a[[4]])),
+  "mask.size" = function(on, a) TTTRMask_size(on),
+  # get_mask_array, not get_indices: SWIG-R names the latter
+  # TTTRMask__get_indices__SWIG_0, with no stable dispatcher to call.
+  "mask.mask_array" = function(on, a) as.numeric(unlist(TTTRMask_get_mask_array(on))),
+
+  # -- phasor -------------------------------------------------------------------
+  "phasor.g" = function(on, a)
+    DecayPhasor_g(as.numeric(a[[1]]), as.numeric(a[[2]]),
+                  as.numeric(a[[3]]), as.numeric(a[[4]])),
+  "phasor.s" = function(on, a)
+    DecayPhasor_s(as.numeric(a[[1]]), as.numeric(a[[2]]),
+                  as.numeric(a[[3]]), as.numeric(a[[4]])),
+  # phasor_of_bincounts takes (int* IN_ARRAY1, int DIM1), so a plain R integer
+  # vector goes straight through; the native std::vector<int>& form needs a
+  # typed S4 proxy the R dispatcher will not match.
+  "phasor.from_bincounts" = function(on, a)
+    as.numeric(DecayPhasor_phasor_of_bincounts(
+      as.integer(unlist(a[[1]])), as.numeric(a[[2]]), as.integer(a[[3]]),
+      as.numeric(a[[4]]), as.numeric(a[[5]]))),
+
   # -- pda ----------------------------------------------------------------------
   # get_1dhistogram is a two-output getter, so rarrays.i returns
   # list(NULL, x, y); the y values are the third element.

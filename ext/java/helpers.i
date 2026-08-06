@@ -18,6 +18,7 @@
 #include "BurstFilter.h"
 #include "TiffArrayIO.h"
 #include "Correlator.h"
+#include "TTTRMask.h"
 #include "DataStore.h"
 #include <vector>
 #include <set>
@@ -79,6 +80,23 @@
 
 // The correlation curve. Both getters are the ARGOUTVIEWM shape, so Java sees
 // opaque pointers without these and cannot read a correlation at all.
+// The per-event selection mask, one byte per event. ARGOUTVIEW shape, so Java
+// sees an opaque pointer without this.
+//
+// NOT %ARRAY_INTO: that free()s what it copied, and get_mask_array hands back a
+// VIEW into a cached snapshot the mask still owns (see the note in
+// ext/python/TTTRMask.i). Copy, do not free. Unqualified name because
+// TTTRMask.i wraps the class that way -- `%shared_ptr(TTTRMask)`.
+%extend TTTRMask {
+  int get_mask_array_into(unsigned char* INPLACE_ARRAY1, int DIM1) {
+    unsigned char* buf = 0; int n = 0;
+    $self->get_mask(&buf, &n);   // get_mask_array is TTTRMask.i's %rename of it
+    const int m = (DIM1 < n) ? DIM1 : n;
+    for (int i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    return n;
+  }
+}
+
 %ARRAY_INTO(Correlator, get_x_axis,          get_x_axis_into,          double)
 %ARRAY_INTO(Correlator, get_corr_normalized, get_corr_normalized_into, double)
 

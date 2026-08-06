@@ -158,6 +158,31 @@ output typemap, so `find_bursts` needs the `%ARRAY_INTO_2D` accessor in
 `helpers.i` and `get_all_burst_properties` comes back as a nested vector proxy
 read row by row.
 
+## `mask.*` — photon selection
+
+| op | on | args | result |
+|---|---|---|---|
+| `mask.new` | — | `[$tttr]` | TTTRMask handle |
+| `mask.select_channels` | mask | `[$tttr, [channels], mask]` | — |
+| `mask.select_count_rate` | mask | `[$tttr, time_window, n_ph_max, invert]` | — |
+| `mask.size` | mask | — | integer |
+| `mask.mask_array` | mask | — | array, one byte per event (1 = marked) |
+
+## `phasor.*`
+
+| op | on | args | result |
+|---|---|---|---|
+| `phasor.g` / `phasor.s` | — | `[g_irf, s_irf, g_exp, s_exp]` | double |
+| `phasor.from_bincounts` | — | `[[counts], frequency, min_photons, g_irf, s_irf]` | array of `[g, s]` |
+
+`phasor.from_bincounts` calls `phasor_of_bincounts`, the `IN_ARRAY1`
+overload added for it. The native `compute_phasor_bincounts` takes a
+`std::vector<int>&`, which R cannot pass — SWIG's R dispatcher wants a typed
+S4 proxy and `VectorInt32()` returns a bare externalptr it will not match.
+
+Static methods, and the only area that reads no file at all — so these cases
+run wherever the binding exists.
+
 ## `pda.*`
 
 | op | on | args | result |

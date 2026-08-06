@@ -436,6 +436,44 @@ final class ConformanceInterpreter {
                 return out;
             }
 
+            // -- photon selection -----------------------------------------------
+            case "mask.new": {
+                TTTRMask m = new TTTRMask();
+                m.set_tttr((TTTR) a.get(0));
+                return m;
+            }
+            case "mask.select_channels": {
+                double[] v = numbers(a.get(1));
+                byte[] ch = new byte[v.length];
+                for (int k = 0; k < v.length; k++) ch[k] = (byte) Math.round(v[k]);
+                ((TTTRMask) on).select_channels((TTTR) a.get(0), ch, (Boolean) a.get(2));
+                return null;
+            }
+            case "mask.select_count_rate":
+                ((TTTRMask) on).select_count_rate((TTTR) a.get(0), d(a, 1), i(a, 2),
+                                                  (Boolean) a.get(3));
+                return null;
+            case "mask.size": return (double) ((TTTRMask) on).size();
+            case "mask.mask_array": {
+                TTTRMask m = (TTTRMask) on;
+                byte[] buf = new byte[m.size()];
+                m.get_mask_array_into(buf);
+                double[] out = new double[buf.length];
+                for (int k = 0; k < buf.length; k++) out[k] = buf[k] & 0xFF;
+                return out;
+            }
+
+            // -- phasor ---------------------------------------------------------
+            case "phasor.g": return DecayPhasor.g(d(a, 0), d(a, 1), d(a, 2), d(a, 3));
+            case "phasor.s": return DecayPhasor.s(d(a, 0), d(a, 1), d(a, 2), d(a, 3));
+            case "phasor.from_bincounts": {
+                double[] v = numbers(a.get(0));
+                int[] counts = new int[v.length];
+                for (int k = 0; k < v.length; k++) counts[k] = (int) Math.round(v[k]);
+                return vectorDoubles(DecayPhasor.phasor_of_bincounts(
+                        counts, d(a, 1), i(a, 2), d(a, 3), d(a, 4)));
+            }
+
             // -- pda ------------------------------------------------------------
             // The two getters are helpers.i's INPLACE-fill accessors: ask once
             // with an empty array for the true length, then once for real.
