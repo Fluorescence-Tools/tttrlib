@@ -108,6 +108,7 @@ Documentation
    tttr-core
    file-formats
    formats/index
+   saving-tables
    plugins
    burst-analysis
    hmm-bva
