@@ -78,6 +78,9 @@ Read :rfc:`8794` for the framing. The parts that matter most here:
   this; see :ref:`pto_inplace`.
 - ``Void`` (``0xEC``) reserves or reclaims space, anywhere.
 - ``CRC-32`` (``0xBF``) covers its siblings and must be first in its parent.
+  **All** of them: the ``Void`` that pads an element out is a sibling and is
+  covered. Checksumming only the part that carries information is
+  self-consistent and unverifiable by anything else.
 - Value types are Unsigned Integer, Signed Integer, Float, String (ASCII),
   UTF-8, Date, Master and Binary. **Date is nanoseconds from 2001-01-01T00:00:00
   UTC**, not the Unix epoch.
@@ -362,24 +365,43 @@ File shape
 ::
 
     EBML                      DocType "pto"
-    Segment
-      SeekHead                index A   [CRC-32, PtoGeneration, Seek...]
-      Void                    slack, so A can be rewritten in place
+    Segment                   Data Size in eight octets, rewritten as it grows
+      SeekHead                index A   [CRC-32, PtoGeneration, Seek..., Void]
       SeekHead                index B
-      Void                    slack, so B can be rewritten in place
       Info
       Attachments
         AttachedFile          photon stream, FileData 8 GiB
-        Void                  slack, so FileData can grow
+      Void                    slack, so that FileData can grow
+      Attachments
         AttachedFile          burst table
-        ...
       Tags
-      Void
       PtoAnnotations
       Void                    reclaimed space from an earlier rewrite
 
 Order is not fixed and a reader must not depend on it; the two ``SeekHead``\ s
 come first only so that opening a file is two short reads.
+
+Three consequences of the layout, each of which an implementer will otherwise
+have to rediscover:
+
+- **A ``Segment`` has a known size, written in eight octets and rewritten as the
+  file grows.** Not an unknown-size Master: a known size is what lets a reader
+  tell a complete file from a truncated one, and eight octets is what lets the
+  number be raised without moving anything after it.
+- **``Attachments`` may appear many times, once per object.** Matroska permits
+  one; PTO permits any number, and a reader concatenates them. Adding an object
+  is then appending an element rather than growing one, and an object that
+  outgrows its space can be moved on its own.
+- **Each ``SeekHead`` is padded to a fixed reserve with a trailing ``Void``**
+  (8 KiB in the reference implementation), because the commit protocol depends
+  on being able to rewrite one where it lies. A writer whose index outgrows the
+  reserve must compact rather than move it.
+
+Bytes after the end of the ``Segment`` are not part of the file: they are an
+abandoned write, from a session that extended the file and died before the
+commit that would have claimed them. A writer opening such a file **should**
+turn them into a ``Void`` and take them into the ``Segment``, which is the only
+thing that stops a repeatedly-interrupted file growing forever.
 
 .. _pto_objects:
 
@@ -694,6 +716,7 @@ twenty-odd IDs.
 A conformant **writer** must:
 
 - give every object a non-zero ``FileUID``, unique in the file;
+- write the ``Segment`` Data Size in eight octets and keep it current;
 - write ``PtoKind`` and ``PtoEncoding`` on every object;
 - follow the two-``SeekHead`` commit, including the flushes;
 - never rewrite the live ``SeekHead``;
