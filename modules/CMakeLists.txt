@@ -24,7 +24,7 @@
 #   burst                   burst selection and features
 #   sim                     the simulator (depends on nothing above util)
 #   hmm                     photon-by-photon HMMs -- the top of the graph
-#   io/{pq,bh,cz,sm,ps,be,hdf5,image,csv}, pda
+#   io/{pq,bh,cz,sm,ps,be,hdf5,hdf5_table,image,csv}, pda
 #
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
