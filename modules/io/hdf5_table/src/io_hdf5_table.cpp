@@ -22,11 +22,11 @@ namespace io {
 
 bool hdf5_table_available() { return false; }
 
-void read_hdf5_table_into(data::DataStore&, const std::string&, const std::string&) {
+void read_hdf5_table_into(data::DataStore&, const std::string&, const std::string&, bool) {
     throw std::runtime_error("not built with Photon HDF interface");
 }
 
-data::DataStore read_hdf5_table(const std::string&, const std::string&) {
+data::DataStore read_hdf5_table(const std::string&, const std::string&, bool) {
     throw std::runtime_error("not built with Photon HDF interface");
 }
 
@@ -310,17 +310,11 @@ bool is_mask_name(const std::string& name) {
 
 }  // namespace
 
-void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
-                          const std::string& group_name) {
-    const QuietHdf5 quiet;
-    const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-    if (file < 0) throw std::runtime_error("cannot open " + filename);
-    const hid_t group = H5Gopen2(file, group_name.c_str(), H5P_DEFAULT);
-    if (group < 0) {
-        H5Fclose(file);
-        throw std::runtime_error("no group " + group_name + " in " + filename);
-    }
+namespace {
 
+/// One group's datasets into one store. Takes an hid_t and decides nothing
+/// about the file, so the tree walk can call it per node.
+void read_table_into(hid_t group, data::DataStore& out, const std::string& filename) {
     std::vector<std::string> names = declared_order(group);
     const std::vector<std::string> present = dataset_names(group);
     if (names.empty()) {
@@ -392,14 +386,14 @@ void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
 
     out.set_n_rows(n_rows);
     if (out.label().empty()) out.set_label(filename);
-    H5Gclose(group);
-    H5Fclose(file);
 }
 
+}  // namespace
+
 data::DataStore read_hdf5_table(const std::string& filename,
-                                const std::string& group_name) {
+                                const std::string& group_name, bool with_groups) {
     data::DataStore out;
-    read_hdf5_table_into(out, filename, group_name);
+    read_hdf5_table_into(out, filename, group_name, with_groups);
     return out;
 }
 
@@ -653,6 +647,56 @@ bool write_table_into(hid_t dest, const data::DataStore& store, int compression)
     return write_string_attribute(dest, "columns", names);
 }
 
+/*!
+ * \brief The first place a column and a group share a name, or empty.
+ *
+ * HDF5 has one link namespace per group, so a dataset `meta` and a group `meta`
+ * cannot both exist. In memory they can, deliberately -- a DataStore keeps the
+ * two namespaces apart because nothing there has to disambiguate them -- so the
+ * refusal belongs here, and has to happen before anything is written rather
+ * than halfway through.
+ */
+std::string first_name_collision(const data::DataStore& store,
+                                 const std::string& prefix) {
+    for (const std::string& name : store.group_names()) {
+        if (store.find(name) >= 0) return prefix + name;
+        const std::string deeper =
+                first_name_collision(store.group(name), prefix + name + "/");
+        if (!deeper.empty()) return deeper;
+    }
+    return std::string();
+}
+
+/*!
+ * \brief A store and its groups into an already-open group, recursively.
+ *
+ * The child groups are listed in a `groups` attribute, for the same reason the
+ * columns are: HDF5 lists a group's links in whatever order it likes, and
+ * insertion order is what a round trip has to give back. Keeping the order as
+ * data also makes it immune to the H5Lmove that replacing a group performs --
+ * an attribute belongs to the object and travels with it, where HDF5's own
+ * creation-order index would put the moved group back at the end.
+ *
+ * A store with no groups writes no attribute, so its file stays byte-for-byte
+ * what the previous version produced.
+ */
+bool write_tree_into(hid_t dest, const data::DataStore& store, int compression) {
+    if (!write_table_into(dest, store, compression)) return false;
+
+    const std::vector<std::string> names = store.group_names();
+    if (names.empty()) return true;
+
+    for (const std::string& name : names) {
+        const hid_t child = H5Gcreate2(dest, encode_name(name).c_str(),
+                                       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        if (child < 0) return write_failed("create group", name);
+        const bool ok = write_tree_into(child, store.group(name), compression);
+        H5Gclose(child);
+        if (!ok) return false;
+    }
+    return write_string_attribute(dest, "groups", names);
+}
+
 /// A path with no leading or trailing separator. Empty means the root.
 std::string normalise_group(const std::string& path) {
     std::size_t b = 0, e = path.size();
@@ -744,7 +788,7 @@ bool replace_group(hid_t file, const std::string& path,
         if (scratch < 0) {
             write_failed("create group", path);
         } else {
-            ok = write_table_into(scratch, store, compression);
+            ok = write_tree_into(scratch, store, compression);
             H5Gclose(scratch);
         }
         if (ok) {
@@ -782,7 +826,7 @@ bool replace_whole_file(const std::string& filename, const data::DataStore& stor
     const hid_t file = H5Fcreate(temp.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file < 0) return write_failed("create", temp);
 
-    bool ok = write_table_into(file, store, compression);
+    bool ok = write_tree_into(file, store, compression);
     if (H5Fclose(file) < 0) ok = false;
 
     if (ok && std::rename(temp.c_str(), filename.c_str()) != 0)
@@ -877,12 +921,95 @@ bool clear_table(hid_t group) {
 
 }  // namespace
 
+namespace {
+
+/*!
+ * \brief Does this group, or anything under it, hold a table?
+ *
+ * What decides whether a foreign sub-group is descended into. A Photon-HDF5 or
+ * pandas file read at the root should give back the parts that are tables and
+ * quietly skip the rest -- reading foreign layouts is not this module's job,
+ * but failing on them is not either.
+ */
+bool has_table_below(hid_t group) {
+    if (group_is_table(group)) return true;
+    for (const std::string& name : subgroup_names(group)) {
+        if (is_temp_name(name)) continue;
+        const hid_t child = H5Gopen2(group, name.c_str(), H5P_DEFAULT);
+        if (child < 0) continue;
+        const bool found = has_table_below(child);
+        H5Gclose(child);
+        if (found) return true;
+    }
+    return false;
+}
+
+/// The tree at `group`, rebuilt under `out`.
+void read_tree_into(hid_t group, data::DataStore& out, const std::string& filename) {
+    read_table_into(group, out, filename);
+
+    // The true names the writer recorded, so a percent-encoded link comes back
+    // under the name the store used. Anything not in the attribute is a group
+    // something else put there, and keeps its name as it is on disk.
+    const std::vector<std::string> declared = read_string_attribute(group, "groups");
+    for (const std::string& link : ordered_subgroups(group)) {
+        std::string name = link;
+        for (const std::string& d : declared)
+            if (encode_name(d) == link) { name = d; break; }
+
+        const hid_t child = H5Gopen2(group, link.c_str(), H5P_DEFAULT);
+        if (child < 0) continue;
+        // A group we named is always taken, so a container group with no
+        // columns of its own survives the round trip. One we did not is taken
+        // only if there is a table somewhere in it.
+        const bool ours = std::find(declared.begin(), declared.end(), name) != declared.end();
+        if (ours || has_table_below(child)) {
+            data::DataStore& into = out.ensure_group(name);
+            read_tree_into(child, into, filename);
+        }
+        H5Gclose(child);
+    }
+}
+
+}  // namespace
+
+void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
+                          const std::string& group_name, bool with_groups) {
+    const QuietHdf5 quiet;
+    const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    if (file < 0) throw std::runtime_error("cannot open " + filename);
+    const std::string path = normalise_group(group_name);
+    const hid_t group = path.empty() ? file
+                                     : H5Gopen2(file, path.c_str(), H5P_DEFAULT);
+    if (group < 0) {
+        H5Fclose(file);
+        throw std::runtime_error("no group " + group_name + " in " + filename);
+    }
+
+    if (with_groups) read_tree_into(group, out, filename);
+    else read_table_into(group, out, filename);
+
+    if (!path.empty()) H5Gclose(group);
+    H5Fclose(file);
+}
+
+
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
                       const std::string& group_name, int compression,
                       Hdf5WriteMode mode) {
     const QuietHdf5 quiet;
     const std::string path = normalise_group(group_name);
     const bool present = file_exists(filename);
+
+    // Before the file is touched at all: a store that cannot be represented
+    // must not take the old one with it.
+    const std::string clash = first_name_collision(store, std::string());
+    if (!clash.empty()) {
+        std::cerr << "hdf5 table: '" << clash << "' is both a column and a group,"
+                  << " which one HDF5 group cannot hold; nothing was written"
+                  << std::endl;
+        return false;
+    }
 
     // Do not truncate someone else's file by inference. A caller that means
     // "replace whatever is there" says Truncate.

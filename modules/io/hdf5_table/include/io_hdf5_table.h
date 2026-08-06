@@ -60,15 +60,26 @@ bool hdf5_table_available();
  * column's, are skipped rather than truncated: a ragged table is a mistake
  * somewhere upstream and quietly shortening it hides which.
  *
+ * Sub-groups become groups of the store, recursively, so a file written from a
+ * tree comes back as that tree. Which children are descended into: the ones the
+ * writer named in the group's `groups` attribute, always -- that is how a group
+ * holding no columns of its own survives -- plus any other that has a table
+ * somewhere inside it. A group with nothing table-shaped under it is skipped
+ * rather than turned into an empty node, so a Photon-HDF5 or data-frame file
+ * read at the root gives back the parts that are tables and ignores the rest.
+ *
+ * \param with_groups false to read only this group's own columns, as before
+ *        there was a tree to read.
  * \throws std::runtime_error if the file or group cannot be read.
  */
 void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
-                          const std::string& group = "/");
+                          const std::string& group = "/", bool with_groups = true);
 
 /// \see read_hdf5_table_into. Returns by value, which for a large table means a
 /// second copy at the peak -- prefer the in-place form from a binding.
 data::DataStore read_hdf5_table(const std::string& filename,
-                                const std::string& group = "/");
+                                const std::string& group = "/",
+                                bool with_groups = true);
 
 /// The column names, in order, without reading any data.
 std::vector<std::string> read_hdf5_table_columns(const std::string& filename,

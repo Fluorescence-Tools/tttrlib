@@ -15,8 +15,8 @@
 // equivalents of these conveniences live in ext/js/pkg/index.js.
 #ifdef SWIGPYTHON
 %pythoncode %{
-def read_hdf5(filename, group="/"):
-    """Read a columnar HDF5 table into a DataStore.
+def read_hdf5(filename, group="/", with_groups=True):
+    """Read a columnar HDF5 table, and the tree under it, into a DataStore.
 
     One 1-D dataset per column, which is what a DataStore already is -- so the
     file loads with no conversion, no transpose and no intermediate copy. Types
@@ -32,12 +32,20 @@ def read_hdf5(filename, group="/"):
       that with a NaN; an integer column has nothing to spare, so this is the
       only way it can.
 
-    :param group: the group holding the columns; "/" for the file root
+    Sub-groups become groups of the store, recursively, so a file written from
+    a tree comes back as that tree -- names, order, nesting, column order,
+    dtypes and validity masks. A group with nothing table-shaped anywhere
+    inside it is skipped rather than turned into an empty node, so a
+    Photon-HDF5 or pandas file read at the root gives back whichever parts are
+    tables and ignores the rest.
+
+    :param group: the group to read; "/" for the file root
+    :param with_groups: False to read only that group's own columns
     """
     store = DataStore()
     # Filled in place: returning a store by value would have SWIG copy the whole
     # table at the moment it is largest.
-    read_hdf5_table_into(store, filename, group)
+    read_hdf5_table_into(store, filename, group, with_groups)
     return store
 
 
