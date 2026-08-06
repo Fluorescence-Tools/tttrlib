@@ -18,6 +18,8 @@ void HmmConstraints::impose(std::vector<double>& value, int n_rows, int n_cols,
             if (std::isnan(fx[c])) { free_sum += row[c]; ++n_free; }
             else { budget -= fx[c]; any_fixed = true; }
         }
+        // early-out is not just speed: rescaling an already-normalised row
+        // perturbs the last bit and breaks bit-identity with plain EM
         if (!any_fixed) continue;
         if (budget < 0.0) budget = 0.0;
 

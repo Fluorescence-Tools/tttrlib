@@ -180,13 +180,19 @@ void matmul_norm(const R* a, const R* b, R* out, int n) {
             out[i * n + j] = static_cast<R>(v);
             s += v;
         }
+        // load-bearing: ~log2(Δt) chained products drift off 1
+        // side effect: HmmEval::score simplex-only
         if (s > 0.0) {
             for (int j = 0; j < n; ++j) out[i * n + j] = static_cast<R>(out[i * n + j] / s);
         }
     }
 }
 
+// ρ(Δt)[k,m,i,j] = expected one-tick i->j inside a Δt gap running k -> m.
+// gap interior in closed form; states known only at photons.
+//
 // ρ tensor indexing: R[((k*n + m)*n + i)*n + j]  (order k,m,i,j)
+// endpoints outermost -> estep_t's reduction sweeps a contiguous (i,j) block
 inline int rho_idx(int k, int m, int i, int j, int n) {
     return ((k * n + m) * n + i) * n + j;
 }
@@ -195,6 +201,7 @@ inline int rho_idx(int k, int m, int i, int j, int n) {
 template <class R>
 void rho_base(const R* A, R* Rt, int n) {
     std::fill(Rt, Rt + n * n * n * n, R(0));
+    // one tick -> only start->end possible, rest stays zero
     for (int i = 0; i < n; ++i)
         for (int j = 0; j < n; ++j)
             Rt[rho_idx(i, j, i, j, n)] = A[i * n + j];
@@ -211,6 +218,8 @@ void pair_compose(
     matmul_norm<R>(Pa, Pb, P, n);
     const int n2 = n * n;
     std::fill(Rt, Rt + n2 * n2, R(0));
+    // i->j fired in a or in b; expectations add, so the terms just sum
+    // associative -> binary exponentiation in pair_pow is legal
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             for (int k = 0; k < n; ++k) {
@@ -228,6 +237,7 @@ void pair_compose(
 }
 
 /// Reusable scratch for the allocation-free pair-power (one per worker thread).
+// ρ is n^4 doubles; per-slot allocation would dominate the build
 template <class R>
 struct PairPowScratch {
     std::vector<R> Pres, Rres, Pb, Rb, Ptmp, Rtmp, Pb2, Rb2;
@@ -351,6 +361,8 @@ double forward_burst(
             alpha[i] = a0;
             tot += a0;
         }
+        // scaled, not log-space: alpha underflows fast, and the sums get reused
+        // -- logs are the loglik, backward pass wants 1/c_t
         scale[0] = tot;
         if (tot > 0.0) {
             for (int i = 0; i < n; ++i) alpha[i] /= tot;
@@ -367,6 +379,7 @@ double forward_burst(
         double* acur = alpha + li * n;
         double tot = 0.0;
         if (slot < 0) {
+            // coincident photons (Δt=0 after down-scaling): A = I, no propagation
             for (int i = 0; i < n; ++i) {
                 double v = aprev[i] * obs[i * p + yn];
                 acur[i] = v; tot += v;
@@ -503,6 +516,8 @@ double estep_t(
                     gobs_local[i * p + yn] += g;
                     if (li == 0) prior_local[i] += g;
                 }
+                // deferred ρ: bank the (k,m) weight, contract against ρ later.
+                // per-photon contraction would be O(N n^4); this is O(n^2)
                 if (cc > 0.0 && slot >= 0) {
                     double* Wslot = W_local.data() + static_cast<size_t>(slot) * n2;
                     for (int k = 0; k < n; ++k) {
@@ -520,6 +535,7 @@ double estep_t(
     if (pool) pool->run(n_bursts, body);
     else body(0, 0, n_bursts);
 
+    // serial reduction in thread order -> result independent of thread count
     double loglik = 0.0;
     for (int c = 0; c < nthreads; ++c) {
         loglik += ll_p[c];
@@ -529,6 +545,7 @@ double estep_t(
                 gamma_obs_acc[i * p + k] += gobs_p[c][i * p + k];
         }
     }
+    // ξ = Σ W·ρ -- the n^4 bill, once per slot instead of once per photon
     if (have_dt) {
         for (int slot = 0; slot < n_slots; ++slot) {
             const R* Rslot = rho_cache + static_cast<size_t>(slot) * n4;
@@ -667,7 +684,8 @@ void HMM::set_bursts_impl(
         offsets_.push_back(static_cast<int64_t>(streams_.size()));
     }
 
-    // Unique inter-photon Δt (>0) across all bursts.
+    // the sparse trick: cache size follows distinct gaps, not the largest one,
+    // so a long dark stretch costs one slot rather than dt_max of them
     std::vector<int64_t> all_dt;
     all_dt.reserve(total_photons);
     for (const auto* tp : kept_times) {
@@ -758,6 +776,7 @@ void HMM::set_bursts_from_tttr(
         if (stream_channels[si]) comps[si] = stream_channels[si]->get_components();
     }
 
+    // first match wins; overlapping Channel defs resolve by order, no match drops
     auto match_stream = [&](int ch, int mt) -> int {
         for (size_t si = 0; si < comps.size(); ++si) {
             for (const auto& c : comps[si]) {
@@ -918,7 +937,8 @@ void unpack(
     obs.assign(v.begin() + n + n * n, v.end());
 }
 
-// Project an extrapolated parameter vector back onto the feasible model set.
+// SQUAREM extrapolates in raw R^n -> negative probabilities, rows off 1.
+// clamp, renormalise, re-floor, or the next E-step gets a non-model.
 std::vector<double> project(
     const std::vector<double>& v, int n, int p, double min_trans
 ) {
@@ -1211,6 +1231,9 @@ void HMM::viterbi(
     std::vector<double> pow_cache;
     fill_pow_cache(model.trans, n, pow_cache);
 
+    // log space here -- max-product has no row sum to scale by. tiny not 0:
+    // -inf + -inf = NaN, which kills every comparison in the argmax below.
+    // logged up front so std::log never runs inside the n^2 inner loop.
     const double tiny = std::numeric_limits<double>::min();
     std::vector<double> log_prior(n), log_obs(static_cast<size_t>(n) * p);
     for (int i = 0; i < n; ++i) log_prior[i] = std::log(std::max(model.prior[i], tiny));
@@ -1281,6 +1304,8 @@ void HMM::viterbi(
     double total_ll = 0.0;
     for (double v : ll_p) total_ll += v;
 
+    // ICL not BIC: total_ll is the complete-data likelihood along the best path,
+    // so this penalises states the decoder cannot separate. bic() does not.
     if (icl) {
         *icl = -2.0 * total_ll +
                model.n_free() * std::log(static_cast<double>(std::max<long long>(N, 1)));
@@ -1567,12 +1592,17 @@ HmmModel HMM::factory_model(int n_states, int n_symbols, double trans_scale,
     std::mt19937_64 rng(seed < 0 ? std::random_device{}() : static_cast<uint64_t>(seed));
     std::normal_distribution<double> normal(0.0, 1.0);
 
+    // near-identity: real dynamics are slow vs photon arrivals, and EM started
+    // in the fast-switching corner tends to stay there
     std::vector<double> prior(n_states, 1.0 / n_states);
     std::vector<double> trans(static_cast<size_t>(n_states) * n_states, trans_scale);
     for (int i = 0; i < n_states; ++i)
         trans[i * n_states + i] = 1.0 - trans_scale * (n_states - 1);
     row_normalize(trans, n_states, n_states);
 
+    // spread + jitter so states start distinguishable -- identical rows are an
+    // EM fixed point and never separate. jitter is why fit() does restarts,
+    // and why labels are arbitrary between them.
     std::vector<double> obs(static_cast<size_t>(n_states) * n_streams, 1.0 / n_streams);
     if (n_states > 1 && n_streams > 1) {
         for (int i = 0; i < n_states; ++i) {
@@ -1616,6 +1646,8 @@ std::vector<std::vector<int>> HMM::simulate_bursts(
         std::vector<int> s(m);
         int state = sample(model.prior.data(), n);
         for (int k = 0; k < m; ++k) {
+            // tick by tick on purpose: never touches the A^Δt machinery it is
+            // meant to check. slow on long gaps, fine -- it is an oracle.
             if (k > 0) {
                 long long gap = t[k] - t[k - 1];
                 for (long long g = 0; g < gap; ++g)
@@ -1776,6 +1808,8 @@ HmmPosterior HMM::sample(
         std::vector<int> path(size_t(std::max<int64_t>(max_len, 1)));
         std::vector<double> prior_cnt(n), trans_cnt(size_t(n) * n), obs_cnt(size_t(n) * p);
 
+        // conjugate throughout: nothing to tune, no accept rate. not cheaper
+        // than EM though -- ~1.17x, the bridge below is the cost.
         const int total_sweeps = n_burnin + draws * keep;
         int kept = 0;
         for (int sweep = 0; sweep < total_sweeps; ++sweep) {
@@ -1961,6 +1995,7 @@ HmmModel HMM::fit(
                                        1e-4, seed < 0 ? -1 : seed + r,
                                        n_micro_bins_);
         HmmModel fitr = optimize(init, max_iter, tol, 1e-12, accelerate, single_precision);
+        // loglik, not logpost: fit() takes no restraints, so they are equal here
         if (!have_best || fitr.loglik > best.loglik) { best = fitr; have_best = true; }
     }
     return best;
