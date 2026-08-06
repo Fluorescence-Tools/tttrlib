@@ -98,6 +98,17 @@ public:
     /// across molecules. `run()` dispatches here when `independent_molecules` is set.
     void run_independent(uint64_t n_windows);
 
+    /// Independent mode under a **photon budget**. The independent engine is inherently
+    /// fixed-duration — every molecule's birth count `Poisson(rate_in·W)` and birth time
+    /// `U[0,W)` are functions of the horizon `W`, so a short run cannot be extended without
+    /// changing the realization. Instead the horizon is *searched*: simulate a cheap pilot,
+    /// extrapolate the horizon needed for `n_ph_max` photons, re-simulate, and truncate the
+    /// merged stream at exactly the budget. Every attempt reseeds the global streams, so the
+    /// surviving realization is a pure function of (seeds, horizon) and does not depend on how
+    /// many attempts preceded it. Stops at whichever of `n_ph_max` / `max_windows` binds
+    /// first, matching the fixed-`dt` engine. Returns the horizon actually simulated.
+    uint64_t run_independent_budgeted();
+
     /// Run a CLSM raster scan: for each pixel, position the fields and dwell, emitting
     /// photons + frame/line/pixel markers into the record stream (event_type 1 = marker).
     /// The resulting records build a marker-annotated TTTR consumable by CLSMImage.
@@ -263,6 +274,18 @@ private:
     void push_alex_marker(int laser);       ///< append an ALEX laser-switch marker at the current window
     void emit_window();                   ///< one time window: photophysics + emission + diffusion
     template <class Rng> void run_independent_impl(uint64_t W);  ///< independent-mode driver
+
+    /// Drop every record after the `budget`-th photon (markers do not count against the
+    /// budget, and trailing markers past the cut are dropped with it). The merged stream is
+    /// already time-ordered, so truncating a prefix is exactly the fixed-`dt` engine's
+    /// "stop once the budget is reached".
+    void truncate_to_photon_budget(uint64_t budget);
+
+    /// Discard everything an attempt produced and restore the pre-run state, so the next
+    /// attempt is a fresh realization rather than a continuation: output records, state log,
+    /// marker count, window clock and background clock are reset and the global RNG streams
+    /// are rewound to the snapshots taken when the search started.
+    void reset_for_retry(const SimRngState& diff0, const SimRngState& emit0);
 
     // --- per-molecule coasting (opt-in) ----------------------------------------
     void compute_focus_aabb();            ///< effective-focus AABB + uniform_D_/any_knrad_ (once)

@@ -609,9 +609,15 @@ void SimEngine::batch_background(uint64_t n_windows) {
 }
 
 void SimEngine::run() {
-    if (set_.independent_molecules && set_.max_windows > 0) {
-        run_independent(set_.max_windows);
-        return;
+    if (set_.independent_molecules) {
+        // The independent engine is fixed-duration. When a photon budget is what actually
+        // binds, search for the horizon that delivers it (run_independent_budgeted); when the
+        // window horizon binds, run it directly. Deciding by value is impossible — callers use
+        // both `n_ph_max` and `max_windows` as "effectively infinite" sentinels — so the search
+        // handles both and simply stops at whichever limit is reached first.
+        if (set_.n_ph_max > 0) { run_independent_budgeted(); return; }
+        if (set_.max_windows > 0) { run_independent(set_.max_windows); return; }
+        return;   // neither limit set: nothing to simulate
     }
     const bool coast = set_.per_molecule_skip;
     // Stop on the PHOTON count, not the total record count — markers (CLSM scan or ALEX
@@ -779,7 +785,12 @@ void SimEngine::run_independent_impl(uint64_t W) {
     std::vector<Cur> runs;
     for (auto& b : perbuf) if (!b.empty()) runs.push_back({&b, 0});
     if (!bg.empty()) runs.push_back({&bg, 0});
-    if (!alexm.empty()) runs.push_back({&alexm, 0});
+    if (!alexm.empty()) {
+        runs.push_back({&alexm, 0});
+        // These bypass push_marker, so account for them here — otherwise `n_photons() -
+        // n_markers_` counts laser-switch markers as photons and overstates the budget.
+        n_markers_ += alexm.size();
+    }
     size_t total = 0; for (auto& c : runs) total += c.run->size();
     T_.reserve(T_.size() + total); t_.reserve(t_.size() + total); N_.reserve(N_.size() + total);
     sp_.reserve(sp_.size() + total); mol_.reserve(mol_.size() + total);
@@ -801,6 +812,82 @@ void SimEngine::run_independent_impl(uint64_t W) {
     }
     T0_ = uint32_t(W);
     mol_alive_ = 0;   // independent mode does not maintain a live-molecule pool
+}
+
+void SimEngine::truncate_to_photon_budget(uint64_t budget) {
+    size_t keep = 0, photons = 0;
+    for (size_t i = 0; i < et_.size(); ++i) {
+        if (et_[i] == 0 && ++photons > budget) break;
+        keep = i + 1;
+    }
+    if (keep >= et_.size()) return;
+    T_.resize(keep); t_.resize(keep); N_.resize(keep);
+    sp_.resize(keep); mol_.resize(keep); et_.resize(keep); micro_.resize(keep);
+    n_markers_ = 0;
+    for (int8_t e : et_) if (e != 0) ++n_markers_;
+}
+
+void SimEngine::reset_for_retry(const SimRngState& diff0, const SimRngState& emit0) {
+    T_.clear(); t_.clear(); N_.clear(); sp_.clear(); mol_.clear(); et_.clear(); micro_.clear();
+    st_w_.clear(); st_t_.clear(); st_mol_.clear(); st_from_.clear(); st_to_.clear();
+    n_markers_ = 0;
+    T0_ = 0;
+    t_bg_.clear(); t_bg_setup_ = false;   // background arrival clock starts over
+    // Rewind to the state the streams were in when run() was entered -- NOT to the settings
+    // seed. Building the sample (initial population, dipole orientations, injection clocks)
+    // already consumed draws, so reseeding would silently shift every realization away from
+    // what a plain run_independent() produces.
+    rng_diff_.setState(diff0);
+    rng_emit_.setState(emit0);
+    // set_state_log(true) records the t=0 population's births; clearing the log dropped them.
+    if (state_log_)
+        for (const auto& m : mols_) if (m.alive) log_state(0, 0.0, m.id, -1, m.state);
+}
+
+uint64_t SimEngine::run_independent_budgeted() {
+    // Horizons are cast to uint32_t windows inside the driver, so that is the hard ceiling.
+    constexpr uint64_t kMaxHorizon = 0xFFFFFFFFull;
+    constexpr uint64_t kPilotWindows = 10000;   // cheap first attempt; also the rate estimator
+    constexpr double   kMargin = 1.3;           // cover the pilot's counting noise
+    constexpr int      kMaxAttempts = 40;       // geometric growth: a backstop, never reached
+
+    const uint64_t budget = set_.n_ph_max;
+    const uint64_t cap = set_.max_windows;      // 0 = no window limit
+
+    // Every attempt restarts from exactly this state, so the realization that survives is a
+    // function of (entry state, horizon) alone — a run whose horizon ends up window-bound is
+    // bit-identical to calling run_independent(max_windows) directly.
+    const SimRngState diff0 = rng_diff_.getState();
+    const SimRngState emit0 = rng_emit_.getState();
+
+    uint64_t W = cap ? std::min(kPilotWindows, cap) : kPilotWindows;
+    if (W < 1) W = 1;
+
+    for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+        reset_for_retry(diff0, emit0);
+        run_independent(W);
+
+        const uint64_t got = n_photons() - n_markers_;
+        if (got >= budget) { truncate_to_photon_budget(budget); return W; }
+        if (cap && W >= cap) return W;          // the window horizon bound first
+        if (W >= kMaxHorizon) return W;
+
+        // Extrapolate the horizon the observed count rate needs, but always at least double —
+        // a pilot that saw very few photons is a noisy estimator to lean on.
+        uint64_t next;
+        if (got == 0) {
+            next = W * 16;                      // no signal yet: escape quickly
+        } else {
+            const double need = double(W) * (double(budget) / double(got)) * kMargin;
+            next = (need >= double(kMaxHorizon)) ? kMaxHorizon : uint64_t(need);
+            if (next < W * 2) next = W * 2;
+        }
+        if (cap && next > cap) next = cap;
+        if (next > kMaxHorizon) next = kMaxHorizon;
+        if (next <= W) return W;                // cannot grow further
+        W = next;
+    }
+    return W;
 }
 
 void SimEngine::run_independent(uint64_t n_windows) {
