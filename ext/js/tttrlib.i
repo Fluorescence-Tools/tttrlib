@@ -65,11 +65,12 @@
 %include "HistogramNd.i"
 %include "DataStore.i"
 %include "CsvReader.i"
-// NOTE: Hdf5Table.i is deliberately absent, and this list is otherwise identical
-// to ext/python/tttrlib.i's. Add `%include "Hdf5Table.i"` here the moment the
-// columnar HDF5 reader lands in the Python module -- the guard it needs is
-// already in that file, and ext/js/pkg/index.js already exposes readHdf5() /
-// writeHdf5() behind a feature check, so nothing else has to change.
+// The columnar HDF5 reader has landed in the Python module, which is what the
+// note here used to be waiting for. ext/js/pkg/index.js already exposed
+// readHdf5()/writeHdf5() behind a feature check, so adding this line is all it
+// took; test/js/conformance.test.mjs runs the PRD-019 group-tree cases through
+// it. This list is again identical to ext/python/tttrlib.i's.
+%include "Hdf5Table.i"
 
 /* Correlation of data */
 %include "Correlator.i"

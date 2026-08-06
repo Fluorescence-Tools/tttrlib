@@ -121,6 +121,30 @@ is the authority if this table ever falls behind.
 `test/java/` and `test/r/` hold the bindings' own tests; see
 `tools/check_swig_multilang.sh` after changing any `.i` file.
 
+`test/conformance/` is different from all of the above: it holds **one case
+list that all four bindings run**, so the expected values are shared rather than
+copied. See `test/conformance/README.md`.
+
+## Adding a feature, and the conformance suite
+
+If the feature is new **public API** — something a caller of the Python, R, Java
+or JavaScript binding can reach — add a conformance case for it:
+
+1. Put it in `test/conformance/cases/<area>.json` with an empty `"expect": {}`,
+   using ops from `test/conformance/OPS.md`.
+2. `python tools/conformance_update.py --id <your.case.id>` fills the
+   expectations in. **Read the diff** — every number in it is a claim.
+3. Run all four runners. A case only Python can run is not doing its job;
+   either make it work everywhere, or declare the gap in the case with a reason.
+
+The one rule: a failing case means a binding is wrong, not that the number needs
+updating. Regenerating expectations to make a red test go green destroys the
+only thing the suite provides.
+
+Language-specific behaviour — Python sugar, R's S4 dispatch, JavaScript
+ergonomics — stays in that language's own tests. The conformance suite is the
+*shared* subset.
+
 ## Reference arrays
 
 `test/data/reference/*.npz` pin decoded arrays per data file. They regenerate

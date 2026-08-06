@@ -1,0 +1,21 @@
+{
+  "area": "correlator",
+  "doc": "Correlator geometry. The curve size is pure arithmetic on two settings, so it is the cheapest possible check that the settings marshal at all.",
+  "cases": [
+    {
+      "id": "correlator.curve.size_3_5",
+      "doc": "The PRD-001 constant: n_bins=3, n_casc=5.",
+      "steps": [{"op": "correlator.curve_size", "args": [3, 5], "as": "size"}],
+      "expect": {"size": 16}
+    },
+    {
+      "id": "correlator.curve.size_grows_with_cascades",
+      "steps": [
+        {"op": "correlator.curve_size", "args": [8, 1], "as": "casc1"},
+        {"op": "correlator.curve_size", "args": [8, 10], "as": "casc10"},
+        {"op": "correlator.curve_size", "args": [1, 10], "as": "bins1"}
+      ],
+      "expect": {"casc1": 9, "casc10": 81, "bins1": 11}
+    }
+  ]
+}

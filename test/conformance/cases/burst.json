@@ -1,0 +1,42 @@
+{
+  "area": "burst",
+  "doc": "The burst filter: finding bursts in a photon stream and reading their properties. find_bursts returns an (n_bursts, 2) block of start/stop indices and get_all_burst_properties an (n_bursts, 5) block of per-burst numbers -- both 2-D outputs, which is where the four bindings differ most: Python and JavaScript carry the shape, R hands back a column-major array with a dim attribute, and Java has no 2-D output typemap at all and reads a nested vector proxy row by row.",
+  "cases": [
+    {
+      "id": "burst.spc130.find_bursts",
+      "doc": "The default burst search over the reference file. The ranges are start/stop pairs, so the block has two columns and an even length.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "burst.new", "args": ["$t"], "as": "bf"},
+        {"op": "burst.find", "on": "bf", "as": "ranges"},
+        {"op": "len", "on": "ranges", "as": "n_values"},
+        {"op": "first", "on": "ranges", "as": "first_start"},
+        {"op": "nth", "on": "ranges", "args": [1], "as": "first_stop"},
+        {"op": "sum", "on": "ranges", "as": "total"}
+      ],
+      "expect": {"n_values": 1958, "first_start": 119, "first_stop": 128, "total": 187728891}
+    },
+    {
+      "id": "burst.spc130.properties",
+      "doc": "Five properties per burst. The first row is pinned element by element, which is the check that catches a transposed or column-major read -- the values have different magnitudes, so a wrong orientation cannot pass by coincidence.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "burst.new", "args": ["$t"], "as": "bf"},
+        {"op": "burst.find", "on": "bf", "as": "ranges"},
+        {"op": "burst.properties", "on": "bf", "as": "props"},
+        {"op": "len", "on": "props", "as": "n_values"},
+        {"op": "slice", "on": "props", "args": [0, 5], "as": "first_row"},
+        {"op": "to_list", "on": "first_row", "as": "first_burst"},
+        {"op": "max", "on": "props", "as": "largest"}
+      ],
+      "expect": {
+        "n_values": 4895,
+        "first_burst": [119.0, 128.0, 10.0, 0.000828603, 12068.505665559984],
+        "largest": 183354.0
+      },
+      "tolerance": {"first_burst": 1e-12, "largest": 1e-12}
+    }
+  ]
+}

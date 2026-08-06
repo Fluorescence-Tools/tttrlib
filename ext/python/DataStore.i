@@ -93,6 +93,72 @@ TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::ensure_group)
 %}
 #endif  // SWIGPYTHON
 
+// The same keep-alive problem, in R, and it is not theoretical: a group taken
+// from a store that then goes out of scope reads freed memory after the next
+// gc() -- n_rows() answers with a stale number and column_by_name() says the
+// column is not there.
+//
+// R has no __dict__ to hang the owner on, so the root rides along as an
+// attribute of the returned S4 object. The receiver has to be captured BEFORE
+// SWIG's default scoercein replaces it with its `ref` slot, which is why the
+// input side is overridden too -- by the time the output typemap runs, `self`
+// is a bare externalptr that has lost the attribute and the chain would break
+// at the first nested group.
+//
+// Reading the root off the receiver rather than the receiver itself is what
+// flattens the chain: a root has no attribute and becomes the root, a proxy
+// already carries one and passes it on. Same rule as the Python side above.
+#ifdef SWIGR
+%typemap(scoercein) tttrlib::data::DataStore *, tttrlib::data::DataStore & %{
+  .tttrlib_receiver <- $input;
+  if (inherits($input, "ExternalReference")) $input = slot($input,"ref");
+%}
+
+%typemap(scoerceout) tttrlib::data::DataStore & %{
+  $result <- if (is.null($result)) $result
+  else new("$R_class", ref=$result);
+  if (!is.null($result) && exists(".tttrlib_receiver", inherits = FALSE)) {
+    .tttrlib_root <- attr(.tttrlib_receiver, "tttrlib.root");
+    if (is.null(.tttrlib_root)) .tttrlib_root <- .tttrlib_receiver;
+    attr($result, "tttrlib.root") <- .tttrlib_root;
+  }
+%}
+#endif  // SWIGR
+
+// And once more for Java, where the hazard is the same and the mechanism is a
+// field: the proxy returned for a group holds a raw pointer into the root, and
+// nothing else references the root, so the collector is free to run the root's
+// finalizer -- which deletes the C++ object the proxy is still pointing at.
+//
+// Same flattening rule as Python and R: take the receiver's root if it has one,
+// otherwise the receiver is the root. The field is package-private rather than
+// private so the typemap can assign it from the proxy of another instance;
+// SWIG writes this code inside the DataStore class either way.
+#ifdef SWIGJAVA
+// BitMask(std::size_t, bool) erases to (long, boolean) in Java, which is
+// exactly the signature of the protected (long cPtr, boolean cMemOwn)
+// constructor SWIG puts on every proxy -- so the generated class will not
+// compile. Java therefore does without that overload. Nothing is lost: the
+// parameter defaults to true, so BitMask(n) still builds a filled mask, and
+// assign(n, false) is the other half.
+%ignore tttrlib::data::BitMask::BitMask(std::size_t, bool);
+
+%typemap(javacode) tttrlib::data::DataStore %{
+  /**
+   * The store that owns this one's memory, or null when this IS the root.
+   * A group is a borrowed reference into its root's tree; holding the root
+   * here is what stops the collector from freeing the tree underneath it.
+   */
+  DataStore tttrlibRoot;
+%}
+
+%typemap(javaout) tttrlib::data::DataStore & {
+    DataStore proxy = new DataStore($jnicall, $owner);
+    proxy.tttrlibRoot = (this.tttrlibRoot != null) ? this.tttrlibRoot : this;
+    return proxy;
+  }
+#endif  // SWIGJAVA
+
 %include "DataStore.h"
 
 %template(DataStoreInfoVector) std::vector<tttrlib::data::DataStoreInfo>;

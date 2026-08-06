@@ -1,0 +1,221 @@
+{
+  "area": "tttr",
+  "doc": "The canonical cross-language values. These cases are the PRD-001 constants, which used to be typed by hand into three test files; this is now the only place they exist.",
+  "cases": [
+    {
+      "id": "tttr.spc130.size",
+      "doc": "The event count of the reference file, from both accessors.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.size", "on": "t", "as": "n"},
+        {"op": "tttr.n_valid_events", "on": "t", "as": "n_valid"}
+      ],
+      "expect": {"n": 183657, "n_valid": 183657}
+    },
+    {
+      "id": "tttr.spc130.micro_channels",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.n_micro_channels", "on": "t", "as": "n_chan"}
+      ],
+      "expect": {"n_chan": 4096}
+    },
+    {
+      "id": "tttr.spc130.macro_times",
+      "doc": "The 64-bit macro-time channel. The sum is 4.4e14, below 2^53, so a double-backed runner can still compare it exactly -- and must refuse to if a later case is not.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.macro_times", "on": "t", "as": "mt"},
+        {"op": "len", "on": "mt", "as": "n"},
+        {"op": "first", "on": "mt", "as": "first"},
+        {"op": "sum", "on": "mt", "as": "total"}
+      ],
+      "expect": {"n": 183657, "first": 56916, "total": 443406877425185}
+    },
+    {
+      "id": "tttr.spc130.micro_times",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.micro_times", "on": "t", "as": "mt"},
+        {"op": "sum", "on": "mt", "as": "total"},
+        {"op": "max", "on": "mt", "as": "largest"}
+      ],
+      "expect": {"total": 242477881, "largest": 3663}
+    },
+    {
+      "id": "tttr.spc130.routing_channels",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.routing_channels", "on": "t", "as": "rc"},
+        {"op": "sum", "on": "rc", "as": "total"},
+        {"op": "unique_sorted", "on": "rc", "as": "distinct"}
+      ],
+      "expect": {"total": 880650, "distinct": [0, 1, 8, 9]}
+    },
+    {
+      "id": "tttr.spc130.used_routing_channels",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.used_routing_channels", "on": "t", "as": "used"},
+        {"op": "unique_sorted", "on": "used", "as": "channels"}
+      ],
+      "expect": {"channels": [0, 1, 8, 9]}
+    },
+    {
+      "id": "tttr.spc130.index_getters",
+      "doc": "Event 0 through the single-index getters, which take a different C++ path from the bulk arrays.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.macro_time_at", "on": "t", "args": [0], "as": "macro0"},
+        {"op": "tttr.micro_time_at", "on": "t", "args": [0], "as": "micro0"},
+        {"op": "tttr.routing_channel_at", "on": "t", "args": [0], "as": "route0"}
+      ],
+      "expect": {"macro0": 56916, "micro0": 1440, "route0": 9}
+    },
+    {
+      "id": "tttr.spc130.micro_time_resolution",
+      "doc": "A double that is exact in binary (a power-of-two fraction), so it compares bit for bit in every language.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.micro_time_resolution", "on": "t", "as": "res"}
+      ],
+      "expect": {"res": 3.2958984375e-12},
+      "tolerance": {"res": 1e-12}
+    },
+    {
+      "id": "tttr.spc130.by_channel",
+      "doc": "Sub-selection: the two channel subsets must partition the same way everywhere.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[0]], "as": "c0"},
+        {"op": "tttr.by_channel", "on": "t", "args": [[8]], "as": "c8"},
+        {"op": "tttr.size", "on": "c0", "as": "n0"},
+        {"op": "tttr.size", "on": "c8", "as": "n8"}
+      ],
+      "expect": {"n0": 56499, "n8": 79468}
+    },
+    {
+      "id": "tttr.spc130.burst_search",
+      "doc": "A sliding-window burst search, returned flat as start/stop pairs.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.burst_search", "on": "t", "args": [30, 10, 0.001, "sliding_window"], "as": "b"},
+        {"op": "len", "on": "b", "as": "n"},
+        {"op": "sum", "on": "b", "as": "total"}
+      ],
+      "expect": {"n": 586, "total": 59237329}
+    },
+    {
+      "id": "tttr.spc130.microtime_histogram",
+      "doc": "The peak channel and its height; argmax ties would make this ambiguous, and this peak is unique.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.microtime_histogram", "on": "t", "args": [1], "as": "h"},
+        {"op": "len", "on": "h", "as": "n"},
+        {"op": "argmax", "on": "h", "as": "peak_channel"},
+        {"op": "max", "on": "h", "as": "peak_value"}
+      ],
+      "expect": {"n": 4096, "peak_channel": 814, "peak_value": 676.0},
+      "tolerance": {"peak_value": 1e-12}
+    },
+    {
+      "id": "tttr.spc130.header_json",
+      "doc": "The header serialises to JSON naming its container type. A string case, so the string marshalling is covered too.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.header_json", "on": "t", "as": "j"},
+        {"op": "contains", "on": "j", "args": ["MeasDesc_ContainerType"], "as": "has_container"}
+      ],
+      "expect": {"has_container": true}
+    },
+    {
+      "id": "tttr.spc130.dtypes",
+      "doc": "What the three event arrays marshal to. This is the binding contract, not a C++ fact: it is the case most likely to differ between languages, which is why it is here.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.macro_times", "on": "t", "as": "mt"},
+        {"op": "tttr.micro_times", "on": "t", "as": "ut"},
+        {"op": "tttr.routing_channels", "on": "t", "as": "rc"},
+        {"op": "dtype", "on": "mt", "as": "macro_dtype"},
+        {"op": "dtype", "on": "ut", "as": "micro_dtype"},
+        {"op": "dtype", "on": "rc", "as": "routing_dtype"}
+      ],
+      "expect": {"macro_dtype": "uint64", "micro_dtype": "uint16", "routing_dtype": "int8"},
+      "unsupported": {
+        "r": "R has one numeric vector type, so the element width is not observable from R at all",
+        "java": "the runner carries every numeric array as double[], which erases the element type; what Java does preserve is which typed accessor exists, and that is a different claim",
+        "js": "the addon returns typed arrays whose element type is the binding's own choice; arrays.test.mjs pins that directly"
+      }
+    },
+    {
+      "id": "tttr.ptu_t3.basic",
+      "doc": "A second reader, so the suite is not one file's decoder.",
+      "data": ["pq/ptu/pq_ptu_hh_t3.ptu"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "PTU"], "as": "t"},
+        {"op": "tttr.size", "on": "t", "as": "n"},
+        {"op": "tttr.macro_times", "on": "t", "as": "mt"},
+        {"op": "sum", "on": "mt", "as": "macro_total"},
+        {"op": "tttr.micro_times", "on": "t", "as": "ut"},
+        {"op": "sum", "on": "ut", "as": "micro_total"},
+        {"op": "tttr.used_routing_channels", "on": "t", "as": "used"},
+        {"op": "unique_sorted", "on": "used", "as": "channels"}
+      ],
+      "expect": {"n": 3506476, "macro_total": 2870712951885067, "micro_total": 4665893769, "channels": [0, 2]}
+    },
+    {
+      "id": "tttr.ht3_clsm.basic",
+      "doc": "This file's macro-time sum is 1.7e16, past the point where a double still holds every integer, so the case pins the first and last macro time and the sum of a leading slice instead. The array is marshalled either way; the difference is that these numbers can be compared exactly in all four languages.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "tttr.size", "on": "t", "as": "n"},
+        {"op": "tttr.macro_times", "on": "t", "as": "mt"},
+        {"op": "first", "on": "mt", "as": "macro_first"},
+        {"op": "last", "on": "mt", "as": "macro_last"},
+        {"op": "slice", "on": "mt", "args": [0, 10000], "as": "head"},
+        {"op": "sum", "on": "head", "as": "head_total"},
+        {"op": "tttr.n_micro_channels", "on": "t", "as": "n_chan"}
+      ],
+      "expect": {
+        "n": 15604430,
+        "macro_first": 24454,
+        "macro_last": 2404583835,
+        "head_total": 301014519201,
+        "n_chan": 31250
+      }
+    },
+    {
+      "id": "tttr.spc600.basic",
+      "data": ["bh/bh_spc630_256.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-600_256"], "as": "t"},
+        {"op": "tttr.size", "on": "t", "as": "n"},
+        {"op": "tttr.micro_times", "on": "t", "as": "ut"},
+        {"op": "sum", "on": "ut", "as": "micro_total"},
+        {"op": "tttr.n_micro_channels", "on": "t", "as": "n_chan"}
+      ],
+      "expect": {"n": 294884, "micro_total": 28321868, "n_chan": 0}
+    },
+    {
+      "id": "tttr.open.bad_container_throws",
+      "doc": "An unknown container type is refused rather than guessed at.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [{"op": "tttr.open", "args": ["$data0", "NOT-A-CONTAINER"], "as": "threw", "throws": true}],
+      "expect": {"threw": false}
+    }
+  ]
+}

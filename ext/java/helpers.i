@@ -14,6 +14,10 @@
 #include "TTTR.h"
 #include "TTTRHeader.h"
 #include "Pda.h"
+#include "Histogram.h"
+#include "BurstFilter.h"
+#include "TiffArrayIO.h"
+#include "DataStore.h"
 #include <vector>
 #include <set>
 %}
@@ -76,6 +80,78 @@
 %ARRAY_INTO(TTTR, get_micro_times,     get_micro_times_into,      unsigned short)
 %ARRAY_INTO(TTTR, get_routing_channel, get_routing_channels_into, signed char)
 %ARRAY_INTO(TTTR, get_event_type,      get_event_types_into,      signed char)
+
+// ── Histogram counts, for Java ─────────────────────────────────────────────
+// get_histogram is the ARGOUTVIEWM shape (it malloc()s and hands over
+// ownership), so this is %ARRAY_INTO's job -- but Histogram<double> is a
+// template and the macro takes a plain class name, so it is stamped by hand on
+// the instantiation. Pair it with n_total_bins() to size the array.
+%extend Histogram<double> {
+  int get_histogram_into(double* INPLACE_ARRAY1, int DIM1) {
+    double* buf = 0; int n = 0;
+    $self->get_histogram(&buf, &n);
+    const int m = (DIM1 < n) ? DIM1 : n;
+    for (int i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return n;
+  }
+}
+
+// ── TIFF, for Java ─────────────────────────────────────────────────────────
+// read_tiff is a free function with an output-pointer block, so neither
+// %ARRAY_INTO (which extends a class) nor an ARGOUTVIEW typemap (which Java
+// does not have) applies. A free helper is the whole answer: the caller
+// preallocates and gets back the true element count, exactly like the %*_INTO
+// accessors. The dimensions come back through a second call because a Java
+// method has one return; tiff_info() already reports them.
+%inline %{
+namespace tttrlib {
+int tiff_read_f64_into(const std::string& path,
+                       double* INPLACE_ARRAY1, int DIM1) {
+    double* buf = 0; int d1 = 0, d2 = 0, d3 = 0;
+    read_tiff<double>(path, &buf, &d1, &d2, &d3);
+    const size_t n = (size_t) d1 * (size_t) d2 * (size_t) d3;
+    const size_t m = ((size_t) DIM1 < n) ? (size_t) DIM1 : n;
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    if (buf) free(buf);
+    return (int) n;
+}
+}  // namespace tttrlib
+%}
+
+// ── Column data, for Java (PRD-019) ────────────────────────────────────────
+// Column's typed getters have the same "output pointer" shape as the ones
+// above, with one difference that matters: a *view* points INTO the column and
+// the column keeps owning it. %ARRAY_INTO free()s what it copied, which here
+// would hand the allocator a pointer into the middle of a live std::vector.
+// Hence a separate macro that copies and does not free.
+//
+// Without these, a DataStore column is unreadable from Java -- jarrays.i
+// defines no ARGOUTVIEW typemaps, because a void-returning method has no
+// jresult to assign, so the view getters wrap as opaque SWIGTYPE_p_double.
+%define %VIEW_INTO(METHOD, INTONAME, CTYPE)
+%extend tttrlib::data::Column {
+  int INTONAME(CTYPE* INPLACE_ARRAY1, int DIM1) {
+    CTYPE* buf = 0; int n = 0;
+    $self->METHOD(&buf, &n);
+    const int m = (DIM1 < n) ? DIM1 : n;
+    for (int i = 0; i < m; ++i) INPLACE_ARRAY1[i] = buf[i];
+    return n;   // the true length, so a caller can detect truncation
+  }
+}
+%enddef
+
+%VIEW_INTO(get_f64_view,   get_f64_into,   double)
+%VIEW_INTO(get_f32_view,   get_f32_into,   float)
+%VIEW_INTO(get_i64_view,   get_i64_into,   long long)
+%VIEW_INTO(get_i32_view,   get_i32_into,   int)
+%VIEW_INTO(get_i16_view,   get_i16_into,   short)
+%VIEW_INTO(get_i8_view,    get_i8_into,    signed char)
+%VIEW_INTO(get_u64_view,   get_u64_into,   unsigned long long)
+%VIEW_INTO(get_u32_view,   get_u32_into,   unsigned int)
+%VIEW_INTO(get_u16_view,   get_u16_into,   unsigned short)
+%VIEW_INTO(get_u8_view,    get_u8_into,    unsigned char)
+%VIEW_INTO(get_codes_view, get_codes_into, int)
 
 // ── Multi-dimensional output-array marshalling ─────────────────────────────
 // Same idea as %ARRAY_INTO, for the far more common tttrlib shape
@@ -148,6 +224,14 @@
 // First real user: the IRF-corrected mean lifetime map, which the plugin's
 // "Lifetime Map" command needs. get_mean_micro_time (already wrapped by hand
 // above) is only the mean arrival time.
+// Burst ranges. find_bursts both computes the bursts and returns them as an
+// (n_bursts, 2) block of start/stop indices; Java has no 2-D output typemap, so
+// without this the only wrapped form takes three opaque pointers and cannot be
+// called at all.
+%ARRAY_INTO_2D(tttrlib::BurstFilter, find_bursts_into, long long,
+               SWIG_ARGS(),
+               ($self->find_bursts(&buf, &d1, &d2)))
+
 %ARRAY_INTO_3D(CLSMImage, get_mean_lifetime_into, double,
                SWIG_ARGS(, int minimum_number_of_photons = 3,
                            bool stack_frames = false),

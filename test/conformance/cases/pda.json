@@ -1,0 +1,123 @@
+{
+  "area": "pda",
+  "doc": "Photon-distribution analysis. The S1S2 matrix is the suite's ARGOUTVIEW_ARRAY2 case; Python and JavaScript carry its shape, R and Java hand back a flat block, so the cases reduce it rather than ask for the shape. Numerical, so tolerances apply.",
+  "cases": [
+    {
+      "id": "pda.s1s2_matrix_is_a_normalised_distribution",
+      "doc": "Two species at equal amplitude, a Poisson brightness distribution of mean ten. The S1S2 matrix is a probability distribution, so it sums to one; its peak and its length pin the shape. This is the suite's 2-D output case -- (nmax+1) x (nmax+1) -- and the row/column orientation is exactly what a transpose would hide, which is why the two species are given DIFFERENT probabilities.",
+      "steps": [
+        {
+          "op": "pda.new",
+          "args": [
+            30,
+            5,
+            0.0,
+            0.0,
+            [
+              4.53999333871223e-05,
+              0.00045399933387122306,
+              0.002269996669356115,
+              0.007566655564520384,
+              0.018916638911300958,
+              0.037833277822601916,
+              0.06305546303766986,
+              0.09007923291095696,
+              0.1125990411386962,
+              0.12511004570966247,
+              0.12511004570966247,
+              0.11373640519060224,
+              0.0947803376588352,
+              0.07290795204525784,
+              0.0520771086037556,
+              0.034718072402503734,
+              0.021698795251564835,
+              0.012763997206802845,
+              0.007091109559334914,
+              0.0037321629259657444,
+              0.0018660814629828722,
+              0.0008886102204680344,
+              0.0004039137365763793,
+              0.00017561466807668663,
+              7.31727783652861e-05,
+              2.9269111346114438e-05,
+              1.1257350517736322e-05,
+              4.1693890806430814e-06,
+              1.4890675288011007e-06,
+              5.134715616555519e-07,
+              1.711571872185173e-07
+            ]
+          ],
+          "as": "p"
+        },
+        {"op": "pda.append", "on": "p", "args": [0.5, 0.3]},
+        {"op": "pda.append", "on": "p", "args": [0.5, 0.7]},
+        {"op": "pda.evaluate", "on": "p"},
+        {"op": "pda.s1s2", "on": "p", "as": "s"},
+        {"op": "len", "on": "s", "as": "n_cells"},
+        {"op": "sum", "on": "s", "as": "total"},
+        {"op": "max", "on": "s", "as": "peak"},
+        {"op": "argmax", "on": "s", "as": "peak_cell"}
+      ],
+      "expect": {"n_cells": 961, "total": 0.9999999999999997, "peak": 0.01800532983174904, "peak_cell": 189},
+      "tolerance": {"total": 1e-12, "peak": 1e-12}
+    },
+    {
+      "id": "pda.one_dimensional_histogram",
+      "doc": "The 1-D histogram over the same model: 81 log-spaced bins, and a sum below one because the outermost ratios fall outside the axis.",
+      "steps": [
+        {
+          "op": "pda.new",
+          "args": [
+            30,
+            5,
+            0.0,
+            0.0,
+            [
+              4.53999333871223e-05,
+              0.00045399933387122306,
+              0.002269996669356115,
+              0.007566655564520384,
+              0.018916638911300958,
+              0.037833277822601916,
+              0.06305546303766986,
+              0.09007923291095696,
+              0.1125990411386962,
+              0.12511004570966247,
+              0.12511004570966247,
+              0.11373640519060224,
+              0.0947803376588352,
+              0.07290795204525784,
+              0.0520771086037556,
+              0.034718072402503734,
+              0.021698795251564835,
+              0.012763997206802845,
+              0.007091109559334914,
+              0.0037321629259657444,
+              0.0018660814629828722,
+              0.0008886102204680344,
+              0.0004039137365763793,
+              0.00017561466807668663,
+              7.31727783652861e-05,
+              2.9269111346114438e-05,
+              1.1257350517736322e-05,
+              4.1693890806430814e-06,
+              1.4890675288011007e-06,
+              5.134715616555519e-07,
+              1.711571872185173e-07
+            ]
+          ],
+          "as": "p"
+        },
+        {"op": "pda.append", "on": "p", "args": [0.5, 0.3]},
+        {"op": "pda.append", "on": "p", "args": [0.5, 0.7]},
+        {"op": "pda.evaluate", "on": "p"},
+        {"op": "pda.histogram_y", "on": "p", "as": "hy"},
+        {"op": "len", "on": "hy", "as": "n_bins"},
+        {"op": "sum", "on": "hy", "as": "total"},
+        {"op": "max", "on": "hy", "as": "peak"}
+      ],
+      "expect": {"n_bins": 81, "total": 0.9294045248130871, "peak": 0.05201369840584126},
+      "tolerance": {"total": 1e-12, "peak": 1e-12}
+    }
+  ]
+}

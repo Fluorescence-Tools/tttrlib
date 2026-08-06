@@ -1,0 +1,76 @@
+{
+  "area": "clsm",
+  "doc": "Confocal image reconstruction from a photon stream, and the suite's 3-D output case. An intensity image is (frame, line, pixel); only Python and JavaScript carry that shape with the array, R flattens it and Java fills a 1-D buffer, so these cases pin the three dimensions as separate scalars and reduce the image rather than asking it for its shape. The numbers are the ones test_clsm.R and CLSMTest.java asserted by hand.",
+  "cases": [
+    {
+      "id": "clsm.ht3.intensity_image",
+      "doc": "Forty frames of 256x256, and every photon in the image is a photon from the file. The sum is the reconstruction: a marker misread by one event moves it.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "clsm.open", "args": ["$t", [0]], "as": "img"},
+        {"op": "clsm.n_frames", "on": "img", "as": "n_frames"},
+        {"op": "clsm.n_lines", "on": "img", "as": "n_lines"},
+        {"op": "clsm.n_pixel", "on": "img", "as": "n_pixel"},
+        {"op": "clsm.intensity", "on": "img", "as": "img_data"},
+        {"op": "len", "on": "img_data", "as": "n_voxels"},
+        {"op": "sum", "on": "img_data", "as": "total"},
+        {"op": "max", "on": "img_data", "as": "brightest_pixel"}
+      ],
+      "expect": {
+        "n_frames": 40,
+        "n_lines": 256,
+        "n_pixel": 256,
+        "n_voxels": 2621440,
+        "total": 3364714,
+        "brightest_pixel": 26
+      }
+    },
+    {
+      "id": "clsm.ht3.mean_micro_time_image",
+      "doc": "The FastLifetime map over the same image. Counting the pixels that got a value is how a 2.6-million-element float image is compared without writing it into the case file -- and it is sensitive to the photon-to-pixel assignment, which is the thing worth pinning.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "clsm.open", "args": ["$t", [0]], "as": "img"},
+        {"op": "clsm.mean_micro_time", "on": "img", "args": ["$t"], "as": "mmt"},
+        {"op": "len", "on": "mmt", "as": "n_voxels"},
+        {"op": "count_gt", "on": "mmt", "args": [0], "as": "defined_pixels"}
+      ],
+      "expect": {"n_voxels": 2621440, "defined_pixels": 610553}
+    },
+    {
+      "id": "clsm.ht3.channel_selection_changes_the_image",
+      "doc": "An image built from a channel the file does not use is empty, and one built from all channels holds at least as many photons as one channel does. Two claims that need no magic number, so they stay true if the reference file is ever replaced.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "clsm.open", "args": ["$t", [0]], "as": "one"},
+        {"op": "clsm.intensity", "on": "one", "as": "one_data"},
+        {"op": "sum", "on": "one_data", "as": "one_channel"},
+        {"op": "clsm.open", "args": ["$t", [7]], "as": "unused"},
+        {"op": "clsm.intensity", "on": "unused", "as": "unused_data"},
+        {"op": "sum", "on": "unused_data", "as": "unused_channel"},
+        {"op": "clsm.n_frames", "on": "unused", "as": "frames_still"}
+      ],
+      "expect": {"one_channel": 3364714, "unused_channel": 0, "frames_still": 40}
+    },
+    {
+      "id": "clsm.ht3.fluorescence_decay_conserves_photons",
+      "doc": "The per-pixel decay block: (frame, line, pixel, tac), stacked to one frame with 32 micro-time bins. This is the suite's 4-D output view, and its total is the same 3364714 the intensity image has -- every photon lands in exactly one decay bin, which is the invariant a wrong stride or a dropped dimension would break.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "clsm.open", "args": ["$t", [0]], "as": "img"},
+        {"op": "clsm.fluorescence_decay", "on": "img", "args": ["$t", 1024, true], "as": "decay"},
+        {"op": "len", "on": "decay", "as": "n_values"},
+        {"op": "sum", "on": "decay", "as": "total"},
+        {"op": "max", "on": "decay", "as": "busiest_bin"}
+      ],
+      "expect": {"n_values": 2097152, "total": 3364714, "busiest_bin": 164},
+      "unsupported": {
+        "r": "SWIG's R overload dispatcher tests the output-pointer parameter that rarrays.i removes from the R signature, so only the all-defaults call resolves -- and that is a coarsening of 1, a 268-million-element block. The same defect blocks the explicit form of tttr.microtime_histogram."
+      }
+    }
+  ]
+}

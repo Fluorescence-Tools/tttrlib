@@ -91,23 +91,44 @@ jobs:
             -DBUILD_LIBRARY=ON \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build-r --target tttrlibR
+      - name: Install R packages
+        # jsonlite reads the conformance case list. It is the only new R
+        # dependency the suite needs; hand-rolling a JSON parser in R is worse.
+        run: Rscript -e 'install.packages("jsonlite", repos="https://cloud.r-project.org")'
       - name: Download reference test data
         run: |
-          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
           curl -sSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
           curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+            https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       - name: Run R tests
         env:
           TTTRLIB_R_SO: ${{ github.workspace }}/build-r/ext/tttrlib.so
           TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build-r/ext/tttrlib.R
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
         run: |
-          Rscript test/r/test_tttr.R
           Rscript test/r/test_clsm.R
           Rscript test/r/test_decayfit.R
           Rscript test/r/test_pda.R
+      # The conformance suite (PRD-015): the same case list the Python, Java and
+      # JavaScript runners execute. A failure is an R binding bug, never a stale
+      # constant -- see test/conformance/README.md.
+      - name: Run the conformance suite
+        env:
+          TTTRLIB_R_SO: ${{ github.workspace }}/build-r/ext/tttrlib.so
+          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build-r/ext/tttrlib.R
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+          TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-r.json
+        run: Rscript test/r/conformance.R
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-r
+          path: conformance-r.json
 
   # ── Build & test the Java interface (FindJNI + jarrays.i + JNI) ───────────
 
@@ -145,17 +166,29 @@ jobs:
           mkdir -p ext/java/pkg/src/main/resources/native/linux-x86-64
           cp build-java/java-pkg/native/libtttrlibjni.so \
              ext/java/pkg/src/main/resources/native/linux-x86-64/
+      # The four files the conformance cases name. A missing one skips its cases
+      # with a reason rather than failing, so a silent gap is easy to acquire --
+      # keep this list in step with `data:` in test/conformance/cases/*.json.
       - name: Download reference test data
         run: |
-          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
           curl -sSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
           curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+            https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       - name: Run Java tests (JUnit 5)
         env:
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+          TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-java.json
         run: mvn -B -f ext/java/pkg test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-java
+          path: conformance-java.json
 
   # ── Build & test the JavaScript interface (Node-API + jsarrays.i) ─────────
 
@@ -191,18 +224,24 @@ jobs:
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
           curl -sSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
           curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
           curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
-      # The canonical cross-language values in
-      # test/js/cross_language_reference.test.mjs are the same ones the Python, R
-      # and Java suites assert. A failure there is a binding bug, never a stale
-      # constant.
+      # test/js/conformance.test.mjs reads the same case list the Python, R and
+      # Java runners read, so the canonical values are shared rather than copied.
+      # A failure there is a binding bug, never a stale constant.
       - name: Run JavaScript tests
         env:
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+          TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-js.json
         run: node --test test/js/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-js
+          path: conformance-js.json
       # The reference application is the binding's only non-trivial consumer;
       # a smoke request keeps its worker/route wiring from rotting unnoticed.
       - name: Smoke-test the example web application
@@ -423,13 +462,56 @@ jobs:
       - name: Build and Test
         env:
           TTTRLIB_DATA: ./tttr-data
+          TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-python.json
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[test]"
+          python -m pip install ".[test]" jsonschema
           # The `heavy` tier is 85% of the runtime for statistics that a branch
           # push cannot break without also breaking something cheaper. The
           # jobs below still run the whole suite on main.
           python -m pytest --lane standard
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-python
+          path: conformance-python.json
+
+  # ── Publish the conformance coverage matrix ───────────────────────────────
+  #
+  # The table is an artefact, not a checked-in file to diff against: which cases
+  # a runner can execute depends on which data files that job downloaded, so a
+  # byte-exact committed matrix would be wrong the moment the data set changed.
+  # What IS enforced, deterministically and without any of this, lives in
+  # test/python/test_conformance.py -- the schema, unique ids, and every op a
+  # case names existing in the vocabulary.
+
+  conformance_matrix:
+    name: Conformance coverage matrix
+    needs: [build_test_r_lnx, build_test_java_lnx, build_test_js_lnx]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: conformance-*
+          merge-multiple: true
+        continue-on-error: true
+      - name: Build the matrix
+        run: |
+          python tools/conformance_matrix.py \
+            --report python=conformance-python.json \
+            --report r=conformance-r.json \
+            --report java=conformance-java.json \
+            --report js=conformance-js.json \
+            --out doc/conformance.rst
+          cat doc/conformance.rst >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-matrix
+          path: doc/conformance.rst
 
   # ── Full builds + tests (main and development only) ───────────────────────
 

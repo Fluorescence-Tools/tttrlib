@@ -3,6 +3,24 @@
 ## [Unreleased]
 
 ### Added
+- **A cross-language conformance suite.** `test/conformance/` holds one
+  committed case list — 56 cases over eleven areas — that Python, R, Java and
+  JavaScript all run. The expected values are *shared*, not four copies that
+  happen to agree: change one and all four go red. It replaces the hand-copied
+  constants of PRD-001, and the four files that duplicated them are gone.
+  `tools/conformance_update.py` generates expectations for review;
+  `tools/conformance_matrix.py` publishes the coverage table. See
+  `test/conformance/README.md`.
+- **R and Java now wrap `DataStore`, `Hdf5Table` and the registry**, and
+  JavaScript gains `Hdf5Table` — so a columnar store, its group tree and its
+  HDF5 round trip are reachable from every binding rather than from Python
+  alone. Java also gains eleven `Column.get_*_into` accessors, without which a
+  column could not be read at all.
+- **`jarrays.i` gained 2-D and 3-D input marshalling.** A Java caller passes
+  `double[][]` or `double[][][]` and the typemap flattens it row-major, taking
+  the dimensions from the array itself; ragged input is refused rather than
+  truncated. Before this, every 2-D or 3-D input parameter was an opaque
+  pointer, so `Histogram.update` and the TIFF writers could not be called.
 - **A `DataStore` is a tree.** It gains named child groups, each a full store
   with its own columns, row count, selection, masks and label — because that is
   the shape the data has: an imaging run is a `results` table of one row per
@@ -26,6 +44,18 @@
 - **`Hdf5WriteMode`** on `write_hdf5_table`, and whole-tree HDF5 read and write.
 
 ### Fixed
+- **A zero-length `TypedArray` was refused by the JavaScript binding** as having
+  "the wrong element type". An empty `ArrayBuffer` has a null data pointer, and
+  the borrow reported that null as a type error — so writing a zero-row table,
+  or updating a histogram with no samples, was impossible.
+- **Six enums were unusable from R.** SWIG's R backend emits one name for a
+  namespace-scope `enum class` accessor and a different one in the table that
+  reads it, so `ColumnType`, `Hdf5WriteMode`, `AxisKind`, `HistStorage`,
+  `SuperResMethod` and `TiffDType` all failed on first use — two of them in the
+  already-shipped R module. They are passed as integers now.
+- **A `DataStore` group proxy could outlive the store that owned it** in R and
+  in Java, reading freed memory after a garbage collection. The proxy now holds
+  its root, as it already did in Python.
 - **A text column went into HDF5 as one string per row**, throwing away the
   encoding at the file boundary — which is the one place a written store lost to
   the DataFrame it replaces. The dataset is now the `int32` codes and the labels

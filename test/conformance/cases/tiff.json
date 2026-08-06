@@ -1,0 +1,45 @@
+{
+  "area": "tiff",
+  "doc": "TIFF array I/O, and the suite's IN_ARRAY3 case paired with a 3-D output view on the way back. The values arrive flat with the dimensions as separate arguments and each runner shapes them -- Python reshapes a NumPy array, R builds an array and aperm()s it into the column-major layout rarrays.i reads, JavaScript passes {data, shape}, and Java fills a double[][][] for the typemap added for exactly this. A round trip that came back transposed would look identical in total and different element by element, which is why the values are all distinct.",
+  "cases": [
+    {
+      "id": "tiff.f64_roundtrip_keeps_order",
+      "doc": "Twenty-four distinct values as two 3x4 frames. Reading them back in the same flat order is the claim; the first and last elements and a middle slice are what a transpose would move.",
+      "tmp": 1,
+      "steps": [
+        {
+          "op": "tiff.write_f64",
+          "args": [
+            "$tmp0",
+            2,
+            3,
+            4,
+            [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+          ]
+        },
+        {"op": "tiff.read_f64", "args": ["$tmp0"], "as": "back"},
+        {"op": "len", "on": "back", "as": "n"},
+        {"op": "sum", "on": "back", "as": "total"},
+        {"op": "first", "on": "back", "as": "first"},
+        {"op": "last", "on": "back", "as": "last"},
+        {"op": "slice", "on": "back", "args": [4, 8], "as": "second_row"},
+        {"op": "to_list", "on": "second_row", "as": "second_row_values"}
+      ],
+      "expect": {"n": 24, "total": 276.0, "first": 0.0, "last": 23.0, "second_row_values": [4.0, 5.0, 6.0, 7.0]},
+      "tolerance": {"total": 1e-12, "first": 1e-12, "last": 1e-12, "second_row_values": 1e-12}
+    },
+    {
+      "id": "tiff.single_frame_roundtrip",
+      "doc": "One frame, so the leading dimension is 1 -- the shape a binding is most likely to drop or squeeze on the way through.",
+      "tmp": 1,
+      "steps": [
+        {"op": "tiff.write_f64", "args": ["$tmp0", 1, 2, 3, [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]]},
+        {"op": "tiff.read_f64", "args": ["$tmp0"], "as": "back"},
+        {"op": "len", "on": "back", "as": "n"},
+        {"op": "to_list", "on": "back", "as": "values"}
+      ],
+      "expect": {"n": 6, "values": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5]},
+      "tolerance": {"values": 1e-12}
+    }
+  ]
+}

@@ -232,13 +232,22 @@ inline bool read_shape(const Napi::Value &v, int ndim, size_t *dims) {
 // Borrow a TypedArray's element pointer, honouring ByteOffset (sliced views
 // share the underlying ArrayBuffer, and ignoring the offset reads the wrong
 // data or runs off the end).
-inline void *borrow_typed(const Napi::Value &v, napi_typedarray_type want, size_t *nelem) {
-  if (!v.IsTypedArray()) return nullptr;
+//
+// Returns false only for a type mismatch. A null `*data` with `*nelem == 0` is
+// a SUCCESS: an empty ArrayBuffer has no data pointer, so `new Float64Array(0)`
+// borrows as (nullptr, 0). Reporting that through the return value rather than
+// through a null pointer is what keeps "wrong element type" from being the
+// message for a perfectly good empty array -- a zero-row table is a normal
+// thing to write, and it used to be refused.
+inline bool borrow_typed(const Napi::Value &v, napi_typedarray_type want,
+                         void **data, size_t *nelem) {
+  if (!v.IsTypedArray()) return false;
   Napi::TypedArray ta = v.As<Napi::TypedArray>();
-  if (ta.TypedArrayType() != want) return nullptr;
+  if (ta.TypedArrayType() != want) return false;
   *nelem = ta.ElementLength();
   char *base = static_cast<char *>(ta.ArrayBuffer().Data());
-  return base + ta.ByteOffset();
+  *data = base ? base + ta.ByteOffset() : nullptr;
+  return true;
 }
 
 // Cheap predicate for overload resolution (typecheck typemaps).
@@ -288,11 +297,8 @@ bool nd_input(const Napi::Value &v, napi_typedarray_type want, int ndim,
   // 2. TypedArray -- borrow, no copy.
   if (arr.IsTypedArray()) {
     size_t nelem = 0;
-    void *p = borrow_typed(arr, want, &nelem);
-    if (!p) {
-      if (!arr.As<Napi::TypedArray>().ArrayBuffer().Data() && nelem == 0) {
-        // fall through: an empty array of the wrong type is still wrong
-      }
+    void *p = nullptr;
+    if (!borrow_typed(arr, want, &p, &nelem)) {
       *err = "TypedArray has the wrong element type";
       return false;
     }
@@ -342,8 +348,10 @@ bool nd_inplace(const Napi::Value &v, napi_typedarray_type want, int ndim,
   }
   if (!arr.IsTypedArray()) { *err = "in-place argument must be a TypedArray (a plain Array cannot be written back)"; return false; }
   size_t nelem = 0;
-  void *p = borrow_typed(arr, want, &nelem);
-  if (!p) { *err = "TypedArray has the wrong element type"; return false; }
+  void *p = nullptr;
+  if (!borrow_typed(arr, want, &p, &nelem)) {
+    *err = "TypedArray has the wrong element type"; return false;
+  }
   if (!have_shape) have_shape = read_shape(arr, ndim, out->dims);
   if (!have_shape) {
     if (ndim != 1) { *err = "a flat TypedArray needs a `shape` property for a multi-dimensional argument"; return false; }

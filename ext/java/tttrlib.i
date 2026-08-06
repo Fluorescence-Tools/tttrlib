@@ -36,6 +36,9 @@
 // Shared C++ core -- identical %include list to ext/python/tttrlib.i.
 %include "info.h"
 %include "misc_types.i"
+/* The registry: pure data, identical in every language, and the one case
+   that covers a lot of surface at once (PRD-015). */
+%include "Registry.i"
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"
@@ -48,6 +51,13 @@
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
+
+/* Columnar tables and their HDF5 form (PRD-019). HistogramNd.i must come first:
+   DataStore.h's free functions name tttrlib::hist::Axis and HistogramNd, and
+   without their declarations SWIG emits an unqualified `hist::Axis`. */
+%include "HistogramNd.i"
+%include "DataStore.i"
+%include "Hdf5Table.i"
 
 /* Correlation of data */
 %include "Correlator.i"

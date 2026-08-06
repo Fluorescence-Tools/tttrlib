@@ -8,7 +8,7 @@
 // conservation laws, monotonicity, and agreement between two routes to the same
 // number -- rather than a second copy of Python's magic constants. The canonical
 // values that MUST agree across bindings live in
-// test_cross_language_reference.mjs, and belong there and nowhere else.
+// the conformance suite (test/conformance/cases/), and belong there.
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,8 +18,9 @@ const SPC = settings.spc132_filename;
 const PTU_T3 = 'pq/ptu/pq_ptu_hh_t3.ptu';
 const HT3_CLSM = 'imaging/pq/ht3/pq_ht3_clsm.ht3';
 
-// Opened once, lazily -- see the note in cross_language_reference.test.mjs on
-// why this suite avoids before() hooks.
+// Opened once, lazily. `before()` hooks are avoided throughout this suite:
+// node:test ran some subtests ahead of the hook, leaving the fixture undefined
+// in a scattered subset of them. A memoised factory has no ordering question.
 let _spc = null;
 const spc = () => (_spc ??= new tttrlib.TTTR(dataPath(SPC), 'SPC-130'));
 

@@ -1,0 +1,751 @@
+# SPDX-License-Identifier: BSD-3-Clause
+"""The Python dispatch table for the conformance vocabulary.
+
+This is the reference implementation of `../OPS.md`: the R, Java and JavaScript
+runners are ports of this file and must produce the same values from the same
+case list.
+
+It is imported by two callers with different jobs, and the sharing is the point:
+
+* ``test/python/test_conformance.py`` runs a case and asserts against the
+  committed ``expect`` block;
+* ``tools/conformance_update.py`` runs a case and *writes* that block.
+
+If the generator used a different interpreter from the runner, a regenerated
+expectation would be self-consistent and still wrong.
+"""
+from __future__ import annotations
+
+import json
+import math
+import os
+from typing import Any, Dict, List, Sequence
+
+import numpy as np
+
+import tttrlib
+
+# The dtype spelling in OPS.md. NumPy's own names differ per platform for the
+# C types (`long` is 32-bit on Windows), so map explicitly rather than reading
+# `dtype.name` and hoping.
+_DTYPES = {
+    np.dtype(np.float64): "float64", np.dtype(np.float32): "float32",
+    np.dtype(np.int64): "int64", np.dtype(np.int32): "int32",
+    np.dtype(np.int16): "int16", np.dtype(np.int8): "int8",
+    np.dtype(np.uint64): "uint64", np.dtype(np.uint32): "uint32",
+    np.dtype(np.uint16): "uint16", np.dtype(np.uint8): "uint8",
+    np.dtype(np.bool_): "bool",
+}
+
+_ADD_DTYPE = {
+    "f64": np.float64, "f32": np.float32,
+    "i64": np.int64, "i32": np.int32, "i16": np.int16, "i8": np.int8,
+    "u64": np.uint64, "u32": np.uint32, "u16": np.uint16, "u8": np.uint8,
+}
+
+# ds.column_<suffix> asks for a column of exactly this type; a mismatch is an
+# error, which is what makes a dtype round trip a test rather than a coercion.
+_COLUMN_DTYPE = dict(_ADD_DTYPE)
+
+
+class ConformanceError(RuntimeError):
+    """A case is malformed, or names an op this runner does not implement."""
+
+
+class UnsupportedOp(ConformanceError):
+    """The op exists in the vocabulary but not in this dispatch table."""
+
+
+def _as_array(v: Any) -> np.ndarray:
+    if isinstance(v, np.ndarray):
+        return v
+    raise ConformanceError(f"expected an array, got {type(v).__name__}")
+
+
+def _as_strings(v: Any) -> List[str]:
+    if isinstance(v, list) and all(isinstance(x, str) for x in v):
+        return v
+    raise ConformanceError(f"expected a string list, got {type(v).__name__}")
+
+
+def _sequence(v: Any):
+    """Anything `len`/`nth`/`slice`/`first` accept: an array or a string list.
+
+    A multi-dimensional array is flattened row-major first. NumPy's `len` is the
+    length of the FIRST AXIS, so a (40, 256, 256) image would answer 40 here and
+    2621440 in the other three runners, which flatten at the binding boundary.
+    Row-major is the layout every binding already agrees on, so flattening makes
+    the element ops mean the same thing everywhere. `shape` still reports the
+    real shape -- it reads the array directly.
+    """
+    if isinstance(v, np.ndarray):
+        return v.ravel() if v.ndim > 1 else v
+    if isinstance(v, (list, str)):
+        return v
+    raise ConformanceError(f"expected a sequence, got {type(v).__name__}")
+
+
+def _scalar(v: Any) -> Any:
+    """Collapse a NumPy scalar to a plain Python one, so JSON sees int/float."""
+    if isinstance(v, np.generic):
+        v = v.item()
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, (int, float, str)):
+        return v
+    raise ConformanceError(f"not a comparable scalar: {type(v).__name__}")
+
+
+class Interpreter:
+    """Runs one case's steps and returns the bindings named by `expect`."""
+
+    def __init__(self, data_root: str, tmp_paths: Sequence[str]):
+        self.data_root = data_root
+        self.tmp_paths = list(tmp_paths)
+        self.bindings: Dict[str, Any] = {}
+
+    # -- argument substitution ------------------------------------------------
+
+    def _arg(self, a: Any) -> Any:
+        if isinstance(a, str) and a.startswith("$"):
+            name = a[1:]
+            if name.startswith("data") and name[4:].isdigit():
+                return os.path.join(self.data_root, self._data[int(name[4:])])
+            if name.startswith("tmp") and name[3:].isdigit():
+                return self.tmp_paths[int(name[3:])]
+            if name not in self.bindings:
+                raise ConformanceError(f"step reads unbound '{name}'")
+            return self.bindings[name]
+        if isinstance(a, list):
+            return [self._arg(x) for x in a]
+        return a
+
+    # -- the case loop --------------------------------------------------------
+
+    def run(self, case: Dict[str, Any]) -> Dict[str, Any]:
+        self._data = case.get("data", [])
+        self.produced_by: Dict[str, str] = {}
+        for i, step in enumerate(case["steps"]):
+            op = step["op"]
+            args = [self._arg(a) for a in step.get("args", [])]
+            on = self.bindings[step["on"]] if "on" in step else None
+            if "on" in step and step["on"] not in self.bindings:
+                raise ConformanceError(f"step {i} reads unbound '{step['on']}'")
+
+            if step.get("throws"):
+                # The contract is "this raises", so the exception type is
+                # deliberately not part of it: SWIG maps the same C++ throw to
+                # RuntimeError, an R condition, a Java RuntimeException and a JS
+                # Error, and pinning four different names would test SWIG.
+                try:
+                    self._dispatch(op, on, args)
+                    threw = False
+                except Exception:
+                    threw = True
+                if "as" in step:
+                    self.bindings[step["as"]] = threw
+                    # "did it throw" is always an expectation, whatever the op
+                    # would otherwise have produced.
+                    self.produced_by[step["as"]] = "throws"
+                continue
+
+            result = self._dispatch(op, on, args)
+            if "as" in step:
+                if step["as"] in self.bindings:
+                    raise ConformanceError(f"rebinds '{step['as']}'")
+                self.bindings[step["as"]] = result
+                self.produced_by[step["as"]] = op
+        return self.bindings
+
+    # -- dispatch -------------------------------------------------------------
+
+    def _dispatch(self, op: str, on: Any, args: List[Any]) -> Any:
+        fn = _OPS.get(op)
+        if fn is None:
+            raise UnsupportedOp(op)
+        return fn(on, args)
+
+
+# ---------------------------------------------------------------------------
+# Generic ops
+# ---------------------------------------------------------------------------
+
+def _op_len(on, args):
+    return len(_sequence(on))
+
+
+def _op_sum(on, args):
+    a = _as_array(on)
+    if a.dtype == np.bool_ or np.issubdtype(a.dtype, np.integer):
+        # Python ints are unbounded, so the sum is exact whatever the width.
+        # The 2^53 guard lives in the comparison, not here.
+        return int(a.sum(dtype=np.uint64 if a.dtype == np.uint64 else np.int64))
+    return float(a.sum())
+
+
+def _op_mean(on, args):
+    return float(_as_array(on).mean())
+
+
+def _op_min(on, args):
+    return _scalar(_as_array(on).min())
+
+
+def _op_max(on, args):
+    return _scalar(_as_array(on).max())
+
+
+def _op_argmax(on, args):
+    return int(np.argmax(_as_array(on)))
+
+
+def _op_argmin(on, args):
+    return int(np.argmin(_as_array(on)))
+
+
+def _op_first(on, args):
+    return _scalar(_sequence(on)[0])
+
+
+def _op_last(on, args):
+    return _scalar(_sequence(on)[-1])
+
+
+def _op_nth(on, args):
+    return _scalar(_sequence(on)[int(args[0])])
+
+
+def _op_slice(on, args):
+    return _sequence(on)[int(args[0]):int(args[1])]
+
+
+def _op_to_list(on, args):
+    if isinstance(on, np.ndarray):
+        return [_scalar(x) for x in on.ravel()]
+    return list(_as_strings(on))
+
+
+def _op_unique_sorted(on, args):
+    return [_scalar(x) for x in np.unique(_as_array(on))]
+
+
+def _op_shape(on, args):
+    return [int(x) for x in _as_array(on).shape]
+
+
+def _op_dtype(on, args):
+    if isinstance(on, list):
+        return "string"
+    d = _as_array(on).dtype
+    if d not in _DTYPES:
+        raise ConformanceError(f"dtype {d} is not in the canonical set")
+    return _DTYPES[d]
+
+
+def _op_contains(on, args):
+    if not isinstance(on, str):
+        raise ConformanceError("contains expects a string")
+    return str(args[0]) in on
+
+
+def _op_round(on, args):
+    return round(float(on), int(args[0]))
+
+
+def _op_identity(on, args):
+    return on
+
+
+def _op_count_gt(on, args):
+    """How many elements exceed a threshold.
+
+    The way to compare a 2.6-million-pixel float image without writing it into
+    the case file: `mean_micro_time > 0` counts the pixels that got a value.
+    """
+    return int((_as_array(on) > float(args[0])).sum())
+
+
+# ---------------------------------------------------------------------------
+# tttr.*
+# ---------------------------------------------------------------------------
+
+def _op_tttr_open(on, args):
+    return tttrlib.TTTR(str(args[0]), str(args[1]))
+
+
+def _op_tttr_burst_search(on, args):
+    return np.asarray(on.burst_search(int(args[0]), int(args[1]),
+                                      float(args[2]), str(args[3])))
+
+
+def _op_tttr_microtime_histogram(on, args):
+    hist, _ = on.get_microtime_histogram(micro_time_coarsening=int(args[0]))
+    return np.asarray(hist)
+
+
+def _op_tttr_by_channel(on, args):
+    return on.get_tttr_by_channel([int(c) for c in args[0]])
+
+
+# ---------------------------------------------------------------------------
+# correlator.*
+# ---------------------------------------------------------------------------
+
+def _op_correlator_curve_size(on, args):
+    cc = tttrlib.CorrelatorCurve()
+    cc.n_bins = int(args[0])
+    cc.n_casc = int(args[1])
+    return int(cc.size())
+
+
+# ---------------------------------------------------------------------------
+# DataStore
+# ---------------------------------------------------------------------------
+
+def _add_numeric(suffix):
+    def add(on, args):
+        on.add(str(args[0]), np.asarray(args[1], dtype=_ADD_DTYPE[suffix]))
+    return add
+
+
+def _op_ds_add_string(on, args):
+    on.add(str(args[0]), [str(s) for s in args[1]])
+
+
+def _column_typed(suffix):
+    want = np.dtype(_COLUMN_DTYPE[suffix])
+
+    def get(on, args):
+        col = on[str(args[0])]
+        a = col.numpy()
+        if a.dtype != want:
+            raise ConformanceError(
+                f"column '{args[0]}' is {a.dtype}, the case asked for {want}")
+        return a
+    return get
+
+
+def _op_ds_column_strings(on, args):
+    col = on[str(args[0])]
+    return [col.string_at(i) for i in range(col.size())]
+
+
+def _op_ds_column_dtype(on, args):
+    # Column.dtype is already a string; only the text column needs renaming,
+    # because the binding says "str" and OPS.md says "string".
+    d = str(on[str(args[0])].dtype)
+    if d == "str":
+        return "string"
+    if np.dtype(d) not in _DTYPES:
+        raise ConformanceError(f"dtype {d} is not in the canonical set")
+    return d
+
+
+def _op_ds_column_names(on, args):
+    return [str(s) for s in on.names]
+
+
+def _op_ds_select_range(on, args):
+    # The C++ selector takes a column INDEX; the case names the column, because
+    # a positional index would make every case depend on the order columns were
+    # added. The range is half-open, which is what the expectation pins.
+    idx = on.find(str(args[0]))
+    if idx < 0:
+        raise ConformanceError(f"no column '{args[0]}'")
+    on.select_range(idx, float(args[1]), float(args[2]))
+
+
+# ---------------------------------------------------------------------------
+# tiff.*
+# ---------------------------------------------------------------------------
+#
+# The suite's IN_ARRAY3 case, paired with a 3-D output view on the way back.
+# The values arrive flat with the dimensions as separate arguments and each
+# runner shapes them -- the same rule as hist.update, and for the same reason.
+
+def _op_tiff_write_f64(on, args):
+    n_frames, height, width = int(args[1]), int(args[2]), int(args[3])
+    block = np.asarray(args[4], dtype=np.float64).reshape(n_frames, height, width)
+    tttrlib._tiff_write_f64(str(args[0]), block)
+
+
+def _op_tiff_read_f64(on, args):
+    return np.asarray(tttrlib._tiff_read_f64(str(args[0])), dtype=np.float64)
+
+
+# ---------------------------------------------------------------------------
+# burst.*
+# ---------------------------------------------------------------------------
+#
+# find_bursts returns an (n_bursts, 2) block of start/stop indices and also
+# leaves the bursts on the filter, which is why `burst.find` binds its result
+# AND later ops read the same filter.
+
+def _op_burst_new(on, args):
+    return tttrlib.BurstFilter(args[0])
+
+
+def _op_burst_find(on, args):
+    return np.asarray(on.find_bursts(), dtype=np.int64)
+
+
+def _op_burst_properties(on, args):
+    return np.asarray(on.get_all_burst_properties(), dtype=np.float64)
+
+
+# ---------------------------------------------------------------------------
+# pda.*
+# ---------------------------------------------------------------------------
+#
+# Photon-distribution analysis, and the suite's ARGOUTVIEW_ARRAY2 case: the
+# S1S2 matrix is (nmax+1) x (nmax+1). Python and JavaScript carry that shape,
+# R and Java hand back a flat block, so -- as with CLSM -- the cases reduce the
+# matrix rather than asking it for its shape.
+
+def _op_pda_new(on, args):
+    return tttrlib.Pda(int(args[0]), int(args[1]), float(args[2]), float(args[3]),
+                       np.asarray(args[4], dtype=np.float64))
+
+
+def _op_pda_s1s2(on, args):
+    return np.asarray(on.get_S1S2_matrix())
+
+
+def _op_pda_histogram_y(on, args):
+    _, hy = on.get_1dhistogram()
+    return np.asarray(hy)
+
+
+# ---------------------------------------------------------------------------
+# fit.*
+# ---------------------------------------------------------------------------
+#
+# The decay fitters, through the raw registry-driven interface rather than each
+# binding's sugar: decay_fit_setup_vector / DecayFit2 / DecayFitProblem exist
+# under those names in all four, while Python's setup_vector() and
+# results_as_dict() are %pythoncode and exist in one.
+
+def _op_fit_setup_vector(on, args):
+    return np.asarray(tttrlib.decay_fit_setup_vector(str(args[0]), str(args[1])),
+                      dtype=np.float64)
+
+
+def _op_fit_problem(on, args):
+    prob = tttrlib.DecayFitProblem(int(args[0]), int(args[1]), float(args[2]))
+    prob.irf = tttrlib.VectorDouble([float(v) for v in args[3]])
+    prob.background = tttrlib.VectorDouble([float(v) for v in args[4]])
+    prob.data = tttrlib.VectorDouble([float(v) for v in args[5]])
+    return prob
+
+
+def _op_fit_new(on, args):
+    return tttrlib.DecayFit2(str(args[0]),
+                             tttrlib.VectorDouble([float(v) for v in args[1]]),
+                             [float(v) for v in args[2]])
+
+
+def _op_fit_run(on, args):
+    constraints = tttrlib.DecayFitConstraints(
+        tttrlib.VectorInt32([int(v) for v in args[1]]))
+    return on.fit([float(v) for v in args[0]], constraints, args[2])
+
+
+# ---------------------------------------------------------------------------
+# clsm.*
+# ---------------------------------------------------------------------------
+#
+# The suite's ARGOUTVIEW_ARRAY3 case: an intensity image is (frame, line, pixel).
+# Only Python and JavaScript carry that shape with the array; R flattens and
+# Java fills a 1-D buffer, so the cases pin the three dimensions as separate
+# scalars and reduce the image rather than asking for its shape.
+
+def _op_clsm_open(on, args):
+    return tttrlib.CLSMImage(args[0], channels=[int(c) for c in args[1]], fill=True)
+
+
+def _op_clsm_intensity(on, args):
+    return np.asarray(on.get_intensity())
+
+
+def _op_clsm_mean_micro_time(on, args):
+    return np.asarray(on.get_mean_micro_time(args[0]))
+
+
+def _op_clsm_fluorescence_decay(on, args):
+    """(frame, line, pixel, tac) -- the suite's 4-D output view."""
+    return np.asarray(on.get_fluorescence_decay(
+        args[0], micro_time_coarsening=int(args[1]), stack_frames=bool(args[2])))
+
+
+# ---------------------------------------------------------------------------
+# hist.*
+# ---------------------------------------------------------------------------
+#
+# The suite's IN_ARRAY2 case. The samples arrive as a flat list and every runner
+# shapes them (n, 1) -- one column, n rows -- because that is the shape the
+# histogram wants and shaping it in the case file would make the case format
+# grow a shape.
+
+def _op_hist_new(on, args):
+    return tttrlib.doubleHistogram()
+
+
+def _op_hist_update(on, args):
+    on.update(np.asarray(args[0], dtype=np.float64).reshape(-1, 1))
+
+
+def _op_hist_counts(on, args):
+    return np.asarray(on.get_histogram())
+
+
+# ---------------------------------------------------------------------------
+# bitmask.*
+# ---------------------------------------------------------------------------
+#
+# The one place the suite exercises INPLACE_ARRAY1: to_bytes fills a buffer the
+# caller allocates. Every binding spells that differently -- Python and
+# JavaScript mutate the array they are handed, Java copies back on release, and
+# R cannot mutate at all (copy-on-modify) so rarrays.i returns the result
+# instead. The dispatch table is exactly where that difference belongs.
+
+def _op_bitmask_new(on, args):
+    return tttrlib.BitMask(int(args[0]))
+
+
+def _op_bitmask_to_bytes(on, args):
+    out = np.zeros(int(on.size()), dtype=np.uint8)
+    on.to_bytes(out)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# registry.*
+# ---------------------------------------------------------------------------
+
+def _op_registry_json(on, args):
+    return tttrlib.registry_json()
+
+
+def _op_registry_category_json(on, args):
+    return tttrlib.registry_category_json(str(args[0]))
+
+
+def _op_registry_categories(on, args):
+    return [str(s) for s in tttrlib.registry_categories()]
+
+
+# ---------------------------------------------------------------------------
+# hdf5.*
+# ---------------------------------------------------------------------------
+
+def _op_file_write_text(on, args):
+    with open(str(args[0]), "w", encoding="utf-8") as fh:
+        fh.write(str(args[1]))
+
+
+def _op_hdf5_write(on, args):
+    return bool(tttrlib.write_hdf5(str(args[0]), args[1], str(args[2])))
+
+
+def _op_hdf5_read(on, args):
+    return tttrlib.read_hdf5(str(args[0]), str(args[1]))
+
+
+def _op_hdf5_groups(on, args):
+    return [str(s) for s in tttrlib.hdf5_table_groups(str(args[0]))]
+
+
+def _op_hdf5_has(on, args):
+    return bool(tttrlib.hdf5_table_has(str(args[0]), str(args[1])))
+
+
+_OPS = {
+    # generic
+    "len": _op_len, "sum": _op_sum, "mean": _op_mean,
+    "min": _op_min, "max": _op_max, "argmax": _op_argmax, "argmin": _op_argmin,
+    "first": _op_first, "last": _op_last, "nth": _op_nth, "slice": _op_slice,
+    "to_list": _op_to_list, "unique_sorted": _op_unique_sorted,
+    "shape": _op_shape, "dtype": _op_dtype, "contains": _op_contains,
+    "round": _op_round, "identity": _op_identity, "count_gt": _op_count_gt,
+
+    # tttr
+    "tttr.open": _op_tttr_open,
+    "tttr.size": lambda on, a: int(on.size()),
+    "tttr.n_valid_events": lambda on, a: int(on.get_n_valid_events()),
+    "tttr.n_micro_channels": lambda on, a: int(on.get_number_of_micro_time_channels()),
+    "tttr.macro_times": lambda on, a: np.asarray(on.macro_times),
+    "tttr.micro_times": lambda on, a: np.asarray(on.micro_times),
+    "tttr.routing_channels": lambda on, a: np.asarray(on.routing_channels),
+    "tttr.macro_time_at": lambda on, a: int(on.get_macro_time_at(int(a[0]))),
+    "tttr.micro_time_at": lambda on, a: int(on.get_micro_time_at(int(a[0]))),
+    "tttr.routing_channel_at": lambda on, a: int(on.get_routing_channel_at(int(a[0]))),
+    "tttr.used_routing_channels": lambda on, a: np.asarray(on.get_used_routing_channels()),
+    "tttr.by_channel": _op_tttr_by_channel,
+    "tttr.burst_search": _op_tttr_burst_search,
+    "tttr.microtime_histogram": _op_tttr_microtime_histogram,
+    "tttr.header_json": lambda on, a: str(on.header.get_json()),
+    "tttr.micro_time_resolution": lambda on, a: float(on.header.micro_time_resolution),
+    "tttr.macro_time_resolution": lambda on, a: float(on.header.macro_time_resolution),
+
+    # correlator
+    "correlator.curve_size": _op_correlator_curve_size,
+
+    # datastore
+    "ds.new": lambda on, a: tttrlib.DataStore(),
+    "ds.n_rows": lambda on, a: int(on.n_rows()),
+    "ds.n_columns": lambda on, a: int(on.n_columns()),
+    "ds.n_groups": lambda on, a: int(on.n_groups()),
+    "ds.column_names": _op_ds_column_names,
+    "ds.add_group": lambda on, a: on.add_group(str(a[0])),
+    "ds.ensure_group": lambda on, a: on.ensure_group(str(a[0])),
+    "ds.group": lambda on, a: on.group(str(a[0])),
+    "ds.has_group": lambda on, a: bool(on.has_group(str(a[0]))),
+    "ds.remove_group": lambda on, a: bool(on.remove_group(str(a[0]))),
+    "ds.group_names": lambda on, a: [str(s) for s in on.group_names()],
+    "ds.group_paths": lambda on, a: [str(s) for s in on.group_paths()],
+    "ds.set_label": lambda on, a: on.set_label(str(a[0])),
+    "ds.label": lambda on, a: str(on.label()),
+    "ds.nbytes": lambda on, a: int(on.nbytes()),
+    "ds.add_string": _op_ds_add_string,
+    "ds.column_strings": _op_ds_column_strings,
+    "ds.column_dtype": _op_ds_column_dtype,
+    "ds.select_range": _op_ds_select_range,
+    "ds.n_selected": lambda on, a: int(on.n_selected()),
+
+    # tiff
+    "tiff.write_f64": _op_tiff_write_f64,
+    "tiff.read_f64": _op_tiff_read_f64,
+
+    # bursts
+    "burst.new": _op_burst_new,
+    "burst.find": _op_burst_find,
+    "burst.properties": _op_burst_properties,
+
+    # pda
+    "pda.new": _op_pda_new,
+    "pda.append": lambda on, a: on.append(float(a[0]), float(a[1])),
+    "pda.evaluate": lambda on, a: on.evaluate(),
+    "pda.s1s2": _op_pda_s1s2,
+    "pda.histogram_y": _op_pda_histogram_y,
+
+    # decay fitting
+    "fit.names": lambda on, a: [str(x) for x in tttrlib.decay_fit_names()],
+    "fit.setup_names": lambda on, a: [str(x) for x in tttrlib.decay_fit_setup_names(str(a[0]))],
+    "fit.result_names": lambda on, a: [str(x) for x in tttrlib.decay_fit_result_names(str(a[0]), 0)],
+    "fit.setup_vector": _op_fit_setup_vector,
+    "fit.problem": _op_fit_problem,
+    "fit.new": _op_fit_new,
+    "fit.run": _op_fit_run,
+    "fit.objective": lambda on, a: float(on.objective),
+    "fit.parameters": lambda on, a: np.asarray(on.parameters, dtype=np.float64),
+    "fit.results": lambda on, a: np.asarray(on.results, dtype=np.float64),
+
+    # clsm
+    "clsm.open": _op_clsm_open,
+    "clsm.n_frames": lambda on, a: int(on.n_frames),
+    "clsm.n_lines": lambda on, a: int(on.n_lines),
+    "clsm.n_pixel": lambda on, a: int(on.n_pixel),
+    "clsm.intensity": _op_clsm_intensity,
+    "clsm.mean_micro_time": _op_clsm_mean_micro_time,
+    "clsm.fluorescence_decay": _op_clsm_fluorescence_decay,
+
+    # histogram
+    "hist.new": _op_hist_new,
+    "hist.set_axis": lambda on, a: on.set_axis(int(a[0]), str(a[1]), float(a[2]),
+                                               float(a[3]), int(a[4]), str(a[5])),
+    "hist.update": _op_hist_update,
+    "hist.counts": _op_hist_counts,
+
+    # bitmask
+    "bitmask.new": _op_bitmask_new,
+    "bitmask.set": lambda on, a: on.set(int(a[0]), bool(a[1])),
+    "bitmask.size": lambda on, a: int(on.size()),
+    "bitmask.count": lambda on, a: int(on.count()),
+    "bitmask.to_bytes": _op_bitmask_to_bytes,
+
+    # registry
+    "registry.json": _op_registry_json,
+    "registry.category_json": _op_registry_category_json,
+    "registry.categories": _op_registry_categories,
+
+    # files -- only enough to put a non-HDF5 file in front of the probes
+    "file.write_text": _op_file_write_text,
+
+    # hdf5
+    "hdf5.write": _op_hdf5_write,
+    "hdf5.read": _op_hdf5_read,
+    "hdf5.groups": _op_hdf5_groups,
+    "hdf5.has": _op_hdf5_has,
+}
+
+for _s in _ADD_DTYPE:
+    _OPS[f"ds.add_{_s}"] = _add_numeric(_s)
+    _OPS[f"ds.column_{_s}"] = _column_typed(_s)
+
+
+# ---------------------------------------------------------------------------
+# Which ops produce an expectation
+# ---------------------------------------------------------------------------
+#
+# `tools/conformance_update.py` writes the `expect` block from the bindings a
+# case produced, and it has to know which of them are answers and which are raw
+# material. The distinction is a property of the op, not of the value: a whole
+# macro-time array and the whole header JSON are both perfectly comparable and
+# both belong nowhere near a reviewed diff -- 183657 numbers, or a serialiser's
+# exact whitespace, pin the wrong thing and hide the one number that changed.
+#
+# So an op is classified once, here, and a case reduces its raw material with
+# `sum`, `contains`, `to_list` and the rest. A new op must be added to one of
+# the two sets or the check below fails; silently dropping a binding would be
+# the worst outcome, because the case would still pass while testing less.
+
+YIELDS_COMPARABLE = {
+    # generic reducers -- the whole point of which is to be comparable
+    "len", "sum", "mean", "min", "max", "argmax", "argmin", "first", "last",
+    "nth", "to_list", "unique_sorted", "shape", "dtype", "contains", "round",
+    "identity", "count_gt",
+    # scalar-valued library getters
+    "tttr.size", "tttr.n_valid_events", "tttr.n_micro_channels",
+    "tttr.macro_time_at", "tttr.micro_time_at", "tttr.routing_channel_at",
+    "tttr.micro_time_resolution", "tttr.macro_time_resolution",
+    "correlator.curve_size",
+    "clsm.n_frames", "clsm.n_lines", "clsm.n_pixel",
+    "fit.names", "fit.setup_names", "fit.result_names", "fit.objective",
+    "ds.n_rows", "ds.n_columns", "ds.n_groups", "ds.column_names",
+    "ds.has_group", "ds.remove_group", "ds.group_names", "ds.group_paths",
+    "ds.label", "ds.nbytes", "ds.column_strings", "ds.column_dtype",
+    "ds.n_selected",
+    "hdf5.write", "hdf5.groups", "hdf5.has",
+    "registry.categories",
+    "bitmask.size", "bitmask.count",
+}
+
+RAW_MATERIAL = {
+    # object handles -- not comparable across languages at all
+    "tttr.open", "tttr.by_channel", "ds.new", "ds.add_group",
+    "ds.ensure_group", "ds.group", "hdf5.read",
+    # arrays and long strings: reduce them, do not pin them
+    "tttr.macro_times", "tttr.micro_times", "tttr.routing_channels",
+    "tttr.used_routing_channels", "tttr.burst_search",
+    "tttr.microtime_histogram", "tttr.header_json", "slice",
+    "registry.json", "registry.category_json",
+    "bitmask.new", "bitmask.set", "bitmask.to_bytes",
+    "hist.new", "hist.set_axis", "hist.update", "hist.counts",
+    "clsm.open", "clsm.intensity", "clsm.mean_micro_time",
+    "clsm.fluorescence_decay",
+    "fit.setup_vector", "fit.problem", "fit.new", "fit.run",
+    "fit.parameters", "fit.results",
+    "pda.new", "pda.append", "pda.evaluate", "pda.s1s2", "pda.histogram_y",
+    "burst.new", "burst.find", "burst.properties",
+    "tiff.write_f64", "tiff.read_f64",
+    # side effects that bind nothing worth expecting
+    "ds.add_string", "ds.set_label", "ds.select_range", "file.write_text",
+}
+RAW_MATERIAL |= {f"ds.add_{s}" for s in _ADD_DTYPE}
+RAW_MATERIAL |= {f"ds.column_{s}" for s in _ADD_DTYPE}
+
+_unclassified = set(_OPS) - YIELDS_COMPARABLE - RAW_MATERIAL
+if _unclassified:
+    raise AssertionError(
+        "these ops are in neither YIELDS_COMPARABLE nor RAW_MATERIAL, so the "
+        f"generator would not know what to do with them: {sorted(_unclassified)}")

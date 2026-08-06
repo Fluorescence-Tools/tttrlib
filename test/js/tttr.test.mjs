@@ -12,8 +12,9 @@ const PTU_T3 = 'pq/ptu/pq_ptu_hh_t3.ptu';
 const PTU_T2 = 'pq/ptu/pq_ptu_hh_t2.ptu';
 const HT3 = 'pq/ht3/pq_ht3v1.0_hh_t3.ht3';
 
-// Opened once, lazily -- see the note in cross_language_reference.test.mjs on
-// why this suite avoids before() hooks.
+// Opened once, lazily. `before()` hooks are avoided throughout this suite:
+// node:test ran some subtests ahead of the hook, leaving the fixture undefined
+// in a scattered subset of them. A memoised factory has no ordering question.
 let _spc = null;
 const spc = () => (_spc ??= new tttrlib.TTTR(dataPath(SPC), 'SPC-130'));
 

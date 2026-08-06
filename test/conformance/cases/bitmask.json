@@ -1,0 +1,40 @@
+{
+  "area": "bitmask",
+  "doc": "The row mask a DataStore selection is made of, and the suite's only INPLACE_ARRAY1 case. to_bytes fills a buffer the caller allocates, which is the typemap category that behaves differently in every binding: Python and JavaScript mutate the array they are handed, Java copies back when the JNI array is released, and R cannot mutate at all so rarrays.i returns the filled vector instead. Whichever way a binding spells it, the bytes have to come out the same.",
+  "cases": [
+    {
+      "id": "bitmask.to_bytes_roundtrip",
+      "doc": "A mask built by clearing two bits of a full one, read back one byte per row.",
+      "steps": [
+        {"op": "bitmask.new", "args": [6], "as": "m"},
+        {"op": "bitmask.set", "on": "m", "args": [0, false]},
+        {"op": "bitmask.set", "on": "m", "args": [3, false]},
+        {"op": "bitmask.size", "on": "m", "as": "size"},
+        {"op": "bitmask.count", "on": "m", "as": "count"},
+        {"op": "bitmask.to_bytes", "on": "m", "as": "bytes"},
+        {"op": "to_list", "on": "bytes", "as": "as_list"},
+        {"op": "sum", "on": "bytes", "as": "total"},
+        {"op": "len", "on": "bytes", "as": "n"}
+      ],
+      "expect": {"size": 6, "count": 4, "as_list": [0, 1, 1, 0, 1, 1], "total": 4, "n": 6}
+    },
+    {
+      "id": "bitmask.all_set_and_all_clear",
+      "doc": "The two ends. A mask starts full, and clearing every bit leaves a zero count with the length unchanged -- a binding that confused count() with size() would pass the first case alone.",
+      "steps": [
+        {"op": "bitmask.new", "args": [4], "as": "m"},
+        {"op": "bitmask.count", "on": "m", "as": "count_full"},
+        {"op": "bitmask.set", "on": "m", "args": [0, false]},
+        {"op": "bitmask.set", "on": "m", "args": [1, false]},
+        {"op": "bitmask.set", "on": "m", "args": [2, false]},
+        {"op": "bitmask.set", "on": "m", "args": [3, false]},
+        {"op": "bitmask.count", "on": "m", "as": "count_empty"},
+        {"op": "bitmask.size", "on": "m", "as": "size_after"},
+        {"op": "bitmask.to_bytes", "on": "m", "as": "bytes"},
+        {"op": "sum", "on": "bytes", "as": "total"},
+        {"op": "to_list", "on": "bytes", "as": "as_list"}
+      ],
+      "expect": {"count_full": 4, "count_empty": 0, "size_after": 4, "total": 0, "as_list": [0, 0, 0, 0]}
+    }
+  ]
+}

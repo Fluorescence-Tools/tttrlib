@@ -1,0 +1,54 @@
+{
+  "area": "registry",
+  "doc": "The machine-readable description of what the library can do. It is pure data with no file behind it, identical in every binding, so it needs no test data and covers a lot of surface for its size: if a category or a parameter goes missing in one binding, it shows up here rather than in whatever feature happened to use it.",
+  "cases": [
+    {
+      "id": "registry.categories",
+      "doc": "The categories, in the order the registry lists them.",
+      "steps": [{"op": "registry.categories", "as": "cats"}, {"op": "len", "on": "cats", "as": "n"}],
+      "expect": {"cats": ["burst_search", "file_container", "plugin", "fit", "fit_setup", "objective"], "n": 6}
+    },
+    {
+      "id": "registry.json_is_the_same_blob",
+      "doc": "The whole registry, compared by length and by the keys it must contain. Length is a strong equality proxy across four languages -- a differing entry moves it -- without pinning a serialiser's exact whitespace into the case file.",
+      "steps": [
+        {"op": "registry.json", "as": "j"},
+        {"op": "len", "on": "j", "as": "length"},
+        {"op": "contains", "on": "j", "args": ["burst_search"], "as": "has_burst_search"},
+        {"op": "contains", "on": "j", "args": ["file_container"], "as": "has_file_container"},
+        {"op": "contains", "on": "j", "args": ["fit"], "as": "has_fit"}
+      ],
+      "expect": {"length": 63095, "has_burst_search": true, "has_file_container": true, "has_fit": true}
+    },
+    {
+      "id": "registry.file_container_category",
+      "doc": "One category on its own, which is the call a binding actually makes.",
+      "steps": [
+        {"op": "registry.category_json", "args": ["file_container"], "as": "j"},
+        {"op": "len", "on": "j", "as": "length"},
+        {"op": "contains", "on": "j", "args": ["SPC-130"], "as": "has_spc130"},
+        {"op": "contains", "on": "j", "args": ["PTU"], "as": "has_ptu"},
+        {"op": "contains", "on": "j", "args": ["HT3"], "as": "has_ht3"}
+      ],
+      "expect": {"length": 7631, "has_spc130": true, "has_ptu": true, "has_ht3": true}
+    },
+    {
+      "id": "registry.burst_search_category",
+      "steps": [
+        {"op": "registry.category_json", "args": ["burst_search"], "as": "j"},
+        {"op": "len", "on": "j", "as": "length"},
+        {"op": "contains", "on": "j", "args": ["sliding_window"], "as": "has_sliding_window"}
+      ],
+      "expect": {"length": 23324, "has_sliding_window": true}
+    },
+    {
+      "id": "registry.unknown_category_is_empty_not_an_error",
+      "doc": "Asking for a category that does not exist answers rather than throws -- a caller enumerating categories should not have to guard every call.",
+      "steps": [
+        {"op": "registry.category_json", "args": ["no_such_category"], "as": "j"},
+        {"op": "len", "on": "j", "as": "length"}
+      ],
+      "expect": {"length": 2}
+    }
+  ]
+}

@@ -16,8 +16,9 @@ import { tttrlib, settings, dataPath, hasData } from './settings.mjs';
 const REL = settings.spc132_filename;
 const available = hasData(REL);
 
-// Opened once, lazily -- see the note in cross_language_reference.test.mjs on
-// why this suite avoids before() hooks.
+// Opened once, lazily. `before()` hooks are avoided throughout this suite:
+// node:test ran some subtests ahead of the hook, leaving the fixture undefined
+// in a scattered subset of them. A memoised factory has no ordering question.
 let _spc = null;
 const spc = () => (_spc ??= new tttrlib.TTTR(dataPath(REL), 'SPC-130'));
 

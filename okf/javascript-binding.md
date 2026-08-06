@@ -16,7 +16,7 @@ sources:
     resource: https://www.swig.org/Doc4.2/Javascript.html
     title: SWIG 4.2 JavaScript (Node-API) documentation
   - id: xlang
-    resource: test/python/tttr/test_cross_language_reference.py
+    resource: test/conformance/cases/tttr.json
     title: Canonical cross-language reference values
     author: human:tpeulen
 ---

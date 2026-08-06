@@ -16,7 +16,7 @@ fail, the same way the Python suite behaves.
 
 | | |
 |---|---|
-| `cross_language_reference.test.mjs` | The canonical values every binding must agree on. **The same assertions run in Python, R and Java.** A failure here means the JavaScript binding is wrong — never that the number needs updating. |
+| `conformance.test.mjs` | The canonical values every binding must agree on, read from `test/conformance/cases/`. **The same case list runs in Python, R and Java.** A failure here means the JavaScript binding is wrong — never that the number needs updating. See `test/conformance/README.md`. |
 | `arrays.test.mjs` | The marshalling contract of `ext/js/jsarrays.i`: element types, byte offsets on sliced views, wrong-type rejection, shapes. |
 | `tttr.test.mjs` | Readers, header, selections, micro-time histograms. |
 | `registry.test.mjs` | The registry, and burst search driven entirely by it. |
@@ -30,9 +30,9 @@ JavaScript would test the same C++ twice and the binding not at all.
 
 So the split is deliberate:
 
-- **Shared numbers** live in `cross_language_reference.test.mjs`, byte for byte
-  the constants from `test/python/tttr/test_cross_language_reference.py`. This is
-  what actually proves the two bindings read the same data.
+- **Shared numbers** live in `test/conformance/cases/`, in one file that all
+  four runners read. Nothing is copied between languages any more, so there is
+  no way for two bindings to drift while both stay green.
 - **Binding-specific risk** gets its own file, `arrays.test.mjs`. Python inherits
   its marshalling from numpy.i, which is upstream and mature; `jsarrays.i` is new,
   everything else depends on it, and its failure modes are silent — a
