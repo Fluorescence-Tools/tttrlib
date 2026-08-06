@@ -48,6 +48,7 @@
 #include <cstring>
 #include <deque>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -788,25 +789,38 @@ public:
     DataStore(const DataStore& o)
             : columns_(o.columns_), n_rows_(o.n_rows_), row_mask_(o.row_mask_),
               label_(o.label_) {
+        clone_groups_from(o);               // deep: a group belongs to one parent
         id_ = DataStoreRegistry::instance().add(this);
     }
     DataStore& operator=(const DataStore& o) {
         if (this != &o) {
+            // Copying an ancestor into one of its own groups would read the tree
+            // it is in the middle of rewriting. One pointer compare for a store
+            // with no groups, which is every store that never uses them.
+            if (o.contains(this))
+                throw std::invalid_argument(
+                        "assigning a store into its own subtree would make a cycle");
             columns_ = o.columns_; n_rows_ = o.n_rows_;
             row_mask_ = o.row_mask_; label_ = o.label_;
+            groups_.clear();
+            clone_groups_from(o);
         }
         return *this;                       // keeps its own registry identity
     }
     DataStore(DataStore&& o) noexcept
             : columns_(std::move(o.columns_)), n_rows_(o.n_rows_),
-              row_mask_(std::move(o.row_mask_)), label_(std::move(o.label_)) {
+              row_mask_(std::move(o.row_mask_)), label_(std::move(o.label_)),
+              groups_(std::move(o.groups_)) {
         o.n_rows_ = 0;
         id_ = DataStoreRegistry::instance().add(this);
     }
+    // No cycle guard here, deliberately: this is noexcept, so throwing would
+    // terminate. See operator=(const DataStore&), which is the reachable route.
     DataStore& operator=(DataStore&& o) noexcept {
         if (this != &o) {
             columns_ = std::move(o.columns_); n_rows_ = o.n_rows_;
             row_mask_ = std::move(o.row_mask_); label_ = std::move(o.label_);
+            groups_ = std::move(o.groups_);
             o.n_rows_ = 0;
         }
         return *this;
@@ -1312,14 +1326,73 @@ public:
         row_mask_.invert();
     }
 
-    /// Total bytes held, so a caller can size a cache.
+    // -- groups ---------------------------------------------------------------
+
+    /// Direct children only.
+    int n_groups() const { return static_cast<int>(groups_.size()); }
+
+    /// Drop every group, and everything under them. Invalidates any handle into
+    /// the tree; the store's own columns are untouched.
+    void clear_groups() { groups_.clear(); }
+
+    /*!
+     * \brief Total bytes held, by this store and every group under it.
+     *
+     * Columns and row masks only -- not the group names, not the container --
+     * so the total stays exactly the sum of the per-column figures that
+     * memory_report() lists. A subtotal that counted anything else would make
+     * the two disagree.
+     *
+     * \warning Called by DataStoreRegistry::list() and total_bytes() while they
+     *          hold a non-recursive mutex. Nothing this reaches -- including the
+     *          recursion into groups -- may touch the registry, or the first
+     *          data_store_report() deadlocks. Groups are unregistered, which is
+     *          what makes that safe.
+     */
     std::size_t nbytes() const {
         std::size_t b = row_mask_.nbytes();
         for (const Column& c : columns_) b += c.nbytes();
+        for (const auto& g : groups_) b += g.second->nbytes();
         return b;
     }
 
 private:
+    /*!
+     * \brief A store that belongs to a parent rather than to the registry.
+     *
+     * The registry holds ROOTS. A child that registered itself would make
+     * total_bytes() double-count the moment nbytes() recurses, and would put an
+     * entry in the listing that nobody can drop independently. Leaving id_ at 0
+     * is all it takes -- the destructor already reads that as "nothing to
+     * deregister".
+     */
+    struct ChildTag {};
+    explicit DataStore(ChildTag) {}
+    DataStore(ChildTag, const DataStore& o)
+            : columns_(o.columns_), n_rows_(o.n_rows_), row_mask_(o.row_mask_),
+              label_(o.label_) {
+        clone_groups_from(o);
+    }
+
+    /// Deep-copy o's groups into this store's, as children.
+    void clone_groups_from(const DataStore& o) {
+        if (o.groups_.empty()) return;      // the common case, and it costs nothing
+        groups_.reserve(o.groups_.size());
+        for (const auto& g : o.groups_)
+            // Not make_unique: it is not a friend and cannot see ChildTag.
+            groups_.emplace_back(g.first, std::unique_ptr<DataStore>(
+                    new DataStore(ChildTag{}, *g.second)));
+    }
+
+    /// Is p this store, or anywhere under it? Walks nothing when there are no
+    /// groups, which is the only case the hot paths ever reach.
+    bool contains(const DataStore* p) const {
+        if (this == p) return true;
+        for (const auto& g : groups_)
+            if (g.second->contains(p)) return true;
+        return false;
+    }
+
     void apply(BitMask& m, Combine how) {
         if (row_mask_.empty() && how != Combine::Replace) row_mask_.assign(n_rows_, true);
         switch (how) {
@@ -1337,6 +1410,27 @@ private:
     BitMask row_mask_;
     std::string label_;
     int id_ = 0;
+
+    /*!
+     * A vector of unique_ptr, not of DataStore.
+     *
+     * A handle to a group must survive a sibling being added AND removed, and
+     * must survive the parent itself being moved -- and behind a pointer the
+     * child never moves for any of the three. This is the bug the columns deque
+     * exists to avoid, one level up: a reference handed out and then quietly
+     * reallocated away reads freed memory and reports an empty name rather than
+     * raising.
+     *
+     * (deque<pair<string, DataStore>> is not an option in any case: DataStore is
+     * incomplete inside its own definition, and deque -- unlike vector -- may
+     * not be instantiated on an incomplete type.)
+     *
+     * A vector because groups are few and ordered; lookup is a linear scan on
+     * the name. The public API would be identical over any container, so if
+     * sizeof(DataStore) ever matters this member and the special members above
+     * are the whole of what would change.
+     */
+    std::vector<std::pair<std::string, std::unique_ptr<DataStore>>> groups_;
 };
 
 inline std::vector<DataStoreInfo> DataStoreRegistry::list() const {
