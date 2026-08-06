@@ -1,8 +1,9 @@
 .. _pto_format:
 
-PTO — the Peulen Thomas-Otavio container
-========================================
+PTO — the PhoTon cOntainer
+==========================
 
+:Name: **Pho**\ ton c\ **O**\ ntainer — PTO
 :Version: 1.0
 :Status: Specification. Normative.
 :Extension: ``.pto``
