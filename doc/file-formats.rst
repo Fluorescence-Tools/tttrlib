@@ -373,9 +373,27 @@ target format can physically store:
   restored from tags (including the imaging block used by CLSM
   reconstruction). Fields that are not parsed into tags (display curve
   mappings, hardware module list) are zeroed.
-- **Photon-HDF5** keeps the time calibrations in
-  ``timestamps_specs``/``nanotimes_specs`` and preserves ``/setup`` values
-  from a Photon-HDF5 source; other groups are regenerated.
+- **Photon-HDF5** carries metadata across rather than regenerating it: the
+  time calibrations in ``timestamps_specs``/``nanotimes_specs``, the ``/setup``
+  description of the instrument including its wavelength and repetition-rate
+  arrays, and the ``/sample``, ``/provenance`` and ``/identity`` groups — the
+  sample name, the buffer, the original filename, the author. Those are exactly
+  the parts a reader cannot reconstruct from the photons.
+
+  Only fields the specification defines are written. Each one carries its
+  official description into the file, and a validator compares that text
+  against the specification, so a field tttrlib invented a description for
+  would make the whole file invalid. Non-standard groups from a source file are
+  therefore dropped rather than guessed at. ``/photon_data/measurement_specs``
+  (the measurement type and the ALEX periods) is not yet carried across.
+
+  ``/setup/detectors`` is written from the data — every detector ID that
+  appears, with its photon count. It is mandatory from v0.5, and it is the only
+  place the format can admit that an ID belongs to something other than a
+  photon detector.
+
+  Files written by tttrlib pass ``phconvert.hdf5.assert_valid_photon_hdf5``,
+  the reference implementation's validator; the test suite checks it.
 - **SPC-130/SPC-600, CZ-RAW, SM** headers are small fixed structures — only
   the fields listed in the table survive. SPC-130 imaging data is the
   exception: its instrument setup and scan geometry are preserved in the

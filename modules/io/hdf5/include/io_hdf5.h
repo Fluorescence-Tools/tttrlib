@@ -89,6 +89,31 @@ struct PhotonHdf5Photons {
  * Photon-HDF5 file should pass back what that file said, so a round trip does
  * not quietly re-describe the instrument.
  */
+/*!
+ * \brief One metadata value on its way into a file.
+ *
+ * A tagged union rather than a variant so the header stays C++11-plain and
+ * SWIG-free: \ref is_text picks which of the two payloads is live.
+ */
+struct PhotonHdf5Meta {
+    std::string group;    ///< "sample", "provenance", "identity", "setup", "nanotimes_specs"
+    std::string name;     ///< field name within that group
+    bool is_text = true;
+    std::string text;
+    std::vector<double> numbers;   ///< one element for a scalar field
+};
+
+/*!
+ * \brief Whether the specification defines ``group.name``, and its description.
+ *
+ * The description is not decoration: a Photon-HDF5 validator compares each
+ * node's TITLE against the official text for that path, so a field written
+ * without it -- or with a paraphrase -- makes the whole file invalid. Returns
+ * nullptr for anything not in the specification, which is the writer's signal
+ * to leave it out.
+ */
+const char* known_photon_hdf5_field(const std::string& group, const std::string& name);
+
 struct PhotonHdf5Setup {
     double timestamps_unit = 0.0;   ///< seconds per macro time tick
     double tcspc_unit = 0.0;        ///< seconds per micro time bin
@@ -107,6 +132,23 @@ struct PhotonHdf5Setup {
     std::string description = "TTTR data written by tttrlib";
     std::string software = "tttrlib";
     std::string software_version;
+
+    /*!
+     * \brief Metadata to carry across, addressed as ``group.field``.
+     *
+     * Everything a Photon-HDF5 file says about the sample, the provenance of
+     * the original recording and who made it -- ``sample.sample_name``,
+     * ``provenance.filename``, ``identity.author``,
+     * ``setup.excitation_wavelengths``. The reader already returns all of it;
+     * without somewhere to put it on the way back out, a round trip through
+     * this format quietly threw away half of what it was told.
+     *
+     * Only fields the specification defines are written, because a field
+     * carries its description into the file and an invented one makes the file
+     * fail validation. Anything else is skipped rather than guessed at; see
+     * ``known_photon_hdf5_field()``.
+     */
+    std::vector<PhotonHdf5Meta> metadata;
 };
 
 /*!

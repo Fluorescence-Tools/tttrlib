@@ -20,6 +20,7 @@
 #include <ctime>
 #include <algorithm>
 #include <array>
+#include <map>
 
 // Static member definition outside the class
 tttrlib::bimap<std::string, int> TTTR::initialize_container_names() {
@@ -483,6 +484,77 @@ bool TTTR::write_hdf_file(std::string fn, TTTRHeader* header){
     setup.modulated_excitation = setup_tag_int("modulated_excitation", 0) != 0;
     setup.lifetime = setup_tag_int("lifetime", 1) != 0;
     setup.excitation_alternated = setup_tag_int("excitation_alternated", 0) != 0;
+
+    // Everything the source file said about the sample, its provenance and who
+    // made it. The reader already collects all of it into tags; without this
+    // the writer emitted only the mandatory fields, so a round trip through
+    // Photon-HDF5 silently dropped half of what it had been told -- the sample
+    // name, the buffer, the excitation wavelengths, the original filename.
+    //
+    // Tags are addressed "group.field" by the reader, which is exactly the
+    // address the writer needs; io_hdf5 decides which of them the format
+    // actually defines, and drops the rest rather than writing fields that
+    // would make the file fail validation.
+    {
+        // An array field arrives as one tag PER ELEMENT, each carrying its
+        // position in "idx" -- that is how the reader flattens a 1-D dataset.
+        // Gathering them back into one value is not a tidy-up: writing them as
+        // they come produces the same dataset name several times, which fails,
+        // and a two-element wavelength list would otherwise be written as two
+        // scalars named the same thing.
+        std::map<std::pair<std::string, std::string>,
+                 std::map<int, nlohmann::json>> gathered;
+        std::vector<std::pair<std::string, std::string>> order;
+
+        const nlohmann::json& tags = header->json_data()["tags"];
+        for (const auto& tag : tags) {
+            if (!tag.contains("name") || !tag["name"].is_string()) continue;
+            if (!tag.contains("value")) continue;
+            const std::string name = tag["name"].get<std::string>();
+            const auto dot = name.find('.');
+            if (dot == std::string::npos || dot + 1 >= name.size()) continue;
+            const std::string group = name.substr(0, dot);
+            const std::string field = name.substr(dot + 1);
+            if (tttrlib::io::known_photon_hdf5_field(group, field) == nullptr) continue;
+
+            const auto key = std::make_pair(group, field);
+            if (gathered.find(key) == gathered.end()) order.push_back(key);
+            // A scalar carries idx -1; an array element carries its position.
+            int idx = 0;
+            if (tag.contains("idx") && tag["idx"].is_number_integer()) {
+                idx = tag["idx"].get<int>();
+            }
+            gathered[key][idx] = tag["value"];
+        }
+
+        for (const auto& key : order) {
+            tttrlib::io::PhotonHdf5Meta m;
+            m.group = key.first;
+            m.name = key.second;
+            bool usable = false;
+            // std::map keeps the indices in order, which is the order the
+            // elements had in the file.
+            for (const auto& entry : gathered[key]) {
+                const nlohmann::json& v = entry.second;
+                if (v.is_string()) {
+                    m.is_text = true;
+                    m.text = v.get<std::string>();
+                    usable = true;
+                    break;                       // a string field is one value
+                }
+                if (v.is_boolean()) {
+                    m.is_text = false;
+                    m.numbers.push_back(v.get<bool>() ? 1.0 : 0.0);
+                    usable = true;
+                } else if (v.is_number()) {
+                    m.is_text = false;
+                    m.numbers.push_back(v.get<double>());
+                    usable = true;
+                }
+            }
+            if (usable) setup.metadata.push_back(std::move(m));
+        }
+    }
 
     // get_macro_time_at rather than the raw array, for the same reason the
     // reader uses set_macro_time_at.

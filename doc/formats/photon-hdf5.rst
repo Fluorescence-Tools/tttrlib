@@ -51,6 +51,34 @@ alone. The four values tttrlib itself understands -- the two resolutions and
 the micro time channel count -- are additionally promoted to their canonical
 tag names.
 
+What survives a write
+---------------------
+
+The writer carries metadata across rather than regenerating it: the ``/setup``
+description of the instrument including its array fields, and the ``/sample``,
+``/provenance`` and ``/identity`` groups. Those are the parts a reader cannot
+reconstruct from the photons, and dropping them was the point of writing a
+Photon-HDF5 file rather than an SPC.
+
+Only fields the specification defines are written. Every field carries its
+official description into the file as a ``TITLE`` attribute, and a validator
+compares that text against the specification — so a field tttrlib invented a
+description for would make the whole file invalid. Metadata from a non-standard
+group is therefore dropped rather than guessed at, and
+``/photon_data/measurement_specs`` is not yet carried across.
+
+``/setup/detectors`` is written from the data rather than from the header: every
+detector ID that appears in ``/photon_data/detectors``, with the number of
+photons on it. Mandatory since v0.5, and the counts have to agree with what was
+actually written — a header carried over from a source file describes that
+file's detectors, not this one's.
+
+Files written by tttrlib pass ``phconvert.hdf5.assert_valid_photon_hdf5``, the
+reference implementation's validator, which checks rather more than the prose
+suggests: the mandatory fields, the exact description text on every node,
+scalar-versus-array shapes, and that the detector counts match the photons. The
+test suite runs it.
+
 Metadata is told apart from measurements by size: a one-dimensional dataset
 longer than 1024 elements is a photon array, not a description of one. No field
 in the specification comes close to that, and every photon array is far beyond

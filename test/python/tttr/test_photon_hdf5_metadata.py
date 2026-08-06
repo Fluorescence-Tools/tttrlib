@@ -62,6 +62,91 @@ def test_every_event_is_a_photon(data):
     assert set(np.unique(np.asarray(data.event_types)).tolist()) == {0}
 
 
+def test_the_written_file_validates_against_phconvert(data, tmp_path):
+    """Conformance judged by the reference implementation, not by our own reading.
+
+    phconvert is the Photon-HDF5 reference tool, and its validator is stricter
+    than the prose suggests: besides the mandatory fields it checks that every
+    node's TITLE attribute matches the official description for that path
+    exactly, that scalars are scalars and arrays are arrays, and that
+    /setup/detectors/counts agrees with what is actually in
+    /photon_data/detectors. A file can be perfectly readable and still not be a
+    Photon-HDF5 file, which is why this asks something other than ourselves.
+    """
+    ph5 = pytest.importorskip("phconvert.hdf5", reason="phconvert not installed")
+    tables = pytest.importorskip("tables")
+
+    out = str(tmp_path / "conformance.hdf5")
+    assert data.write(out, "PHOTON-HDF5")
+
+    handle = tables.open_file(out)
+    try:
+        # warnings=False: the optional fields it would grumble about
+        # (excitation_wavelengths on a file that never had them, author,
+        # measurement_specs) are optional, and their absence is not a defect.
+        ph5.assert_valid_photon_hdf5(handle, warnings=False)
+    finally:
+        handle.close()
+
+
+def test_the_detectors_group_declares_every_id(data, tmp_path):
+    """Mandatory since v0.5, and the piece the writer used to omit entirely.
+
+    It is also the only place a Photon-HDF5 file can admit that an ID belongs to
+    something other than a photon detector -- a monitor channel, or a marker the
+    acquisition hardware saved.
+    """
+    tables = pytest.importorskip("tables")
+    import numpy as np
+
+    out = str(tmp_path / "detectors.hdf5")
+    assert data.write(out, "PHOTON-HDF5")
+
+    handle = tables.open_file(out)
+    try:
+        ids = handle.root.setup.detectors.id.read()
+        counts = handle.root.setup.detectors.counts.read()
+        written = handle.root.photon_data.detectors.read()
+    finally:
+        handle.close()
+
+    unique, expected = np.unique(written, return_counts=True)
+    assert ids.tolist() == unique.tolist()
+    # Counts derived from the data, not carried over from a source header: a
+    # header describes the file it came from, and the validator checks these
+    # against the photons actually written.
+    assert counts.tolist() == expected.tolist()
+
+
+def test_the_metadata_survives_a_round_trip(data, tmp_path):
+    """The sample, the provenance and the instrument description come back.
+
+    The writer used to emit only the mandatory fields, so a round trip through
+    Photon-HDF5 dropped the sample name, the buffer, the original filename and
+    the excitation wavelengths -- everything a reader cannot reconstruct from
+    the photons, which is the whole reason the format carries it.
+    """
+    import tttrlib as _t
+
+    out = str(tmp_path / "roundtrip.hdf5")
+    assert data.write(out, "PHOTON-HDF5")
+    back = _t.TTTR(out, "PHOTON-HDF5")
+
+    def value(tttr, name):
+        entries = [t for t in json.loads(tttr.header.json)["tags"] if t["name"] == name]
+        return [t["value"] for t in sorted(entries, key=lambda t: t.get("idx", 0))]
+
+    for name in ("sample.sample_name", "sample.buffer_name", "provenance.filename",
+                 "setup.excitation_wavelengths", "setup.detection_wavelengths"):
+        source = value(data, name)
+        if not source:
+            continue
+        # Arrays reach the header as one tag per element, indexed. They have to
+        # be gathered back into one dataset on the way out -- written as they
+        # come, a two-element list becomes the same dataset name twice.
+        assert value(back, name) == source, name
+
+
 def test_carries_more_than_setup_and_identity(tags):
     """/sample, /provenance and the measurement specs are the point."""
     groups = {n.split(".")[0] for n in tags if "." in n}
