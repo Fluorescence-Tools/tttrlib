@@ -4,7 +4,7 @@
 
 ### Added
 - **A cross-language conformance suite.** `test/conformance/` holds one
-  committed case list — 58 cases over eleven areas — that Python, R, Java and
+  committed case list — 59 cases over eleven areas — that Python, R, Java and
   JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
   happen to agree: change one and all four go red. It replaces the hand-copied
   constants of PRD-001, and the four files that duplicated them are gone.
@@ -21,14 +21,19 @@
   the C++ parameter list, output pointers included, and could only resolve the
   all-defaults call; `get_phasor_v` already existed for the same reason. The
   native `get_fluorescence_decay` is unchanged.
+- **`CLSMImage.get_decay_of_pixels_v`** — the masked decay as a plain vector,
+  for the same reason as `get_fluorescence_decay_v`. Deliberately without
+  default arguments: defaults make SWIG emit an overload set, and an overload
+  set brings back the R dispatcher the wrapper exists to avoid.
 - **`Correlator.get_x_axis_into` / `get_corr_normalized_into` for Java** —
   both getters were opaque pointers, so a correlation could not be read from
   Java at all.
-- **`jarrays.i` gained 2-D and 3-D input marshalling.** A Java caller passes
-  `double[][]` or `double[][][]` and the typemap flattens it row-major, taking
-  the dimensions from the array itself; ragged input is refused rather than
-  truncated. Before this, every 2-D or 3-D input parameter was an opaque
-  pointer, so `Histogram.update` and the TIFF writers could not be called.
+- **`jarrays.i` gained 2-D and 3-D array marshalling.** A Java caller passes
+  `double[][]` or `byte[][][]` and the typemap flattens it row-major, taking the
+  dimensions from the array itself; ragged input is refused rather than
+  truncated, and the in-place forms write back afterwards. Before this, every
+  2-D or 3-D array parameter was an opaque pointer, so `Histogram.update`, the
+  TIFF writers and the masked-decay getter could not be called at all.
 - **A `DataStore` is a tree.** It gains named child groups, each a full store
   with its own columns, row count, selection, masks and label — because that is
   the shape the data has: an imaging run is a `results` table of one row per

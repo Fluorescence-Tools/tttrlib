@@ -296,6 +296,17 @@ function makeOps(ctx) {
     'clsm.n_pixel': (on) => Number(on.n_pixel),
     'clsm.intensity': (on) => on.get_intensity(),
     'clsm.mean_micro_time': (on, a) => on.get_mean_micro_time(a[0]),
+    'clsm.decay_of_pixels': (on, a) => {
+      const [f0, l0, l1, p0, p1] = a[1];
+      const nf = Number(on.n_frames), nl = Number(on.n_lines), np = Number(on.n_pixel);
+      const mask = new Uint8Array(nf * nl * np);
+      for (let f = f0; f < nf; f++)
+        for (let l = l0; l < l1; l++)
+          for (let p = p0; p < p1; p++) mask[(f * nl + l) * np + p] = 1;
+      return Float64Array.from(
+        on.get_decay_of_pixels_v(a[0], { data: mask, shape: [nf, nl, np] },
+                                 a[2], a[3]));
+    },
     'clsm.fluorescence_decay': (on, a) =>
       Float64Array.from(on.get_fluorescence_decay_v(a[0], a[1], a[2])),
 

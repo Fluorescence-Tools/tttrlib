@@ -203,6 +203,13 @@ tolerance. Everything else is exact.
 | `clsm.intensity` | image | — | array, (frame, line, pixel) row-major |
 | `clsm.mean_micro_time` | image | `[$tttr]` | array, same layout |
 | `clsm.fluorescence_decay` | image | `[$tttr, coarsening, stack_frames]` | array, (frame, line, pixel, tac) |
+| `clsm.decay_of_pixels` | image | `[$tttr, [f0, l0, l1, p0, p1], coarsening, stack_frames]` | array |
+
+`clsm.decay_of_pixels` is the suite's `INPLACE_ARRAY3` case — the only live user
+of that typemap category in the library. The mask is described as a rectangle
+and each runner builds the array, because the vocabulary has no way to
+construct one and a literal 2.6-million-element mask in a case file would be
+absurd.
 
 The suite's 3-D output case. Only Python and JavaScript carry the shape with
 the array — R flattens and Java fills a 1-D buffer — so a case pins the three

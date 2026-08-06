@@ -40,6 +40,7 @@ clsm.ht3.intensity_image                       ✓       ✓  ✓     ✓
 clsm.ht3.mean_micro_time_image                 ✓       ✓  ✓     ✓
 clsm.ht3.channel_selection_changes_the_image   ✓       ✓  ✓     ✓
 clsm.ht3.fluorescence_decay_conserves_photons  ✓       ✓  ✓     ✓
+clsm.ht3.decay_of_a_masked_region              ✓       ✓  ✓     ✓
 =============================================  ======  =  ====  ==========
 
 correlator
@@ -162,9 +163,9 @@ Totals
 ==========  ======  ======  =======  ===========
             passed  failed  skipped  unsupported
 ==========  ======  ======  =======  ===========
-Python      58      0       0        0
-R           58      0       0        0
-Java        58      0       0        0
-JavaScript  58      0       0        0
+Python      59      0       0        0
+R           59      0       0        0
+Java        59      0       0        0
+JavaScript  59      0       0        0
 ==========  ======  ======  =======  ===========
 

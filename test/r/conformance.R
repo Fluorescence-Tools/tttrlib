@@ -306,6 +306,21 @@ OPS <- list(
   "clsm.intensity" = function(on, a) row_major(CLSMImage_get_intensity(on)),
   "clsm.mean_micro_time" = function(on, a)
     row_major(CLSMImage_get_mean_micro_time(on, a[[1]])),
+  # The mask is built here rather than in the case file: an R array with a dim
+  # attribute is what rarrays.i reads as INPLACE_ARRAY3, and a literal mask of
+  # 2.6 million values in JSON would be absurd. R is 1-based, so the rectangle's
+  # bounds shift by one.
+  "clsm.decay_of_pixels" = function(on, a) {
+    nf <- CLSMImage_n_frames_get(on); nl <- CLSMImage_n_lines_get(on)
+    np <- CLSMImage_n_pixel_get(on)
+    b <- as.integer(unlist(a[[2]]))
+    m <- array(0L, dim = c(nf, nl, np))
+    m[(b[[1]] + 1L):nf, (b[[2]] + 1L):b[[3]], (b[[4]] + 1L):b[[5]]] <- 1L
+    as.numeric(CLSMImage_get_decay_of_pixels_v(on, a[[1]], m,
+                                               as.integer(a[[3]]),
+                                               as.logical(a[[4]])))
+  },
+
   # The _v accessor, added to CLSM.i for exactly this: a plain vector return has
   # no output pointers for SWIG's R overload dispatcher to trip over. Same
   # reason get_phasor_v exists.

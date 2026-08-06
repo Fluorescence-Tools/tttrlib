@@ -128,6 +128,36 @@ TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLS
         return v;
     }
 
+    // The masked decay, and the third method to need this treatment (see
+    // get_phasor_v and get_fluorescence_decay_v): SWIG's R overload dispatcher
+    // matches on the C++ parameter list, so the two output pointers make every
+    // explicit call unresolvable from R. A vector return has none.
+    //
+    // The mask keeps its INPLACE_ARRAY3 mapping -- it is the only live user of
+    // that typemap category in the library, and this is what exercises it.
+    // Flattened [dim1, n_tac]. The native get_decay_of_pixels() is unchanged.
+    //
+    // No default arguments, deliberately. Defaults make SWIG emit overloads,
+    // and an overload set brings back the R dispatcher this wrapper exists to
+    // avoid -- worse here than for get_phasor_v, because the mask collapses
+    // four C++ parameters into one R argument, so the dispatcher's argc
+    // branches cannot line up for ANY call. One signature, one function, no
+    // dispatch.
+    std::vector<unsigned int> get_decay_of_pixels_v(
+            TTTR* tttr_data,
+            uint8_t* mask, int dmask1, int dmask2, int dmask3,
+            int tac_coarsening,
+            bool stack_frames) {
+        unsigned int* out = 0; int d1 = 0, d2 = 0;
+        $self->get_decay_of_pixels(tttr_data, mask, dmask1, dmask2, dmask3,
+                                   &out, &d1, &d2, tac_coarsening, stack_frames);
+        size_t n = (size_t) d1 * (size_t) d2;
+        std::vector<unsigned int> v(n);
+        for (size_t i = 0; i < n; ++i) v[i] = out[i];
+        if (out) free(out);
+        return v;
+    }
+
     CLSMFrame* __getitem__(int i) {
         if (i >= $self->size()){
             myErr = 1;

@@ -474,6 +474,23 @@ def _op_clsm_mean_micro_time(on, args):
     return np.asarray(on.get_mean_micro_time(args[0]))
 
 
+def _op_clsm_decay_of_pixels(on, args):
+    """The masked decay -- the library's only live INPLACE_ARRAY3 user.
+
+    The mask is (frame, line, pixel) uint8; the case gives its rectangle as
+    [frame0, line0, line1, pixel0, pixel1] because the vocabulary has no way to
+    build an array, and a literal 2.6-million-element mask in a case file would
+    be absurd.
+    """
+    img, tttr = on, args[0]
+    f0, l0, l1, p0, p1 = (int(v) for v in args[1])
+    mask = np.zeros((int(img.n_frames), int(img.n_lines), int(img.n_pixel)),
+                    dtype=np.uint8)
+    mask[f0:, l0:l1, p0:p1] = 1
+    return np.asarray(img.get_decay_of_pixels_v(tttr, mask, int(args[2]),
+                                                bool(args[3])), dtype=np.int64)
+
+
 def _op_clsm_fluorescence_decay(on, args):
     """(frame, line, pixel, tac), flattened.
 
@@ -662,6 +679,7 @@ _OPS = {
     "clsm.intensity": _op_clsm_intensity,
     "clsm.mean_micro_time": _op_clsm_mean_micro_time,
     "clsm.fluorescence_decay": _op_clsm_fluorescence_decay,
+    "clsm.decay_of_pixels": _op_clsm_decay_of_pixels,
 
     # histogram
     "hist.new": _op_hist_new,
@@ -746,7 +764,7 @@ RAW_MATERIAL = {
     "bitmask.new", "bitmask.set", "bitmask.to_bytes",
     "hist.new", "hist.set_axis", "hist.update", "hist.counts",
     "clsm.open", "clsm.intensity", "clsm.mean_micro_time",
-    "clsm.fluorescence_decay",
+    "clsm.fluorescence_decay", "clsm.decay_of_pixels",
     "fit.setup_vector", "fit.problem", "fit.new", "fit.run",
     "fit.parameters", "fit.results",
     "pda.new", "pda.append", "pda.evaluate", "pda.s1s2", "pda.histogram_y",

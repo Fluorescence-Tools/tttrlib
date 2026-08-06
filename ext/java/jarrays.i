@@ -223,6 +223,167 @@
   free($1);
 }
 
+/* ---- INPLACE_ARRAY2 / INPLACE_ARRAY3 : mutate the caller's nested array --- *
+ *
+ * Same flattening as IN_ARRAY2/3, plus an argout that writes the buffer back
+ * into the Java rows -- a Java 2-D array is an array OF arrays, so there is no
+ * contiguous block to hand C++ and the copy has to go both ways. The argout
+ * runs before freearg, which is what makes the write-back land before the
+ * buffer is released.
+ */
+%typemap(jni)    (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) "jobjectArray"
+%typemap(jtype)  (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) "JAVATYPE[][]"
+%typemap(jstype) (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) "JAVATYPE[][]"
+%typemap(javain) (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) "$javainput"
+%typemap(in)     (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) {
+  if (!$input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array is null");
+    return $null;
+  }
+  {
+    const jsize n_rows_ = JCALL1(GetArrayLength, jenv, $input);
+    jsize n_cols_ = 0;
+    if (n_rows_ > 0) {
+      JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, $input, 0);
+      if (!row_) {
+        SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null row in 2-D array");
+        return $null;
+      }
+      n_cols_ = JCALL1(GetArrayLength, jenv, row_);
+      JCALL1(DeleteLocalRef, jenv, row_);
+    }
+    const size_t n_ = (size_t) n_rows_ * (size_t) n_cols_;
+    DATA_TYPE *buf_ = (DATA_TYPE *) malloc(sizeof(DATA_TYPE) * (n_ ? n_ : 1));
+    if (!buf_) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "out of memory");
+      return $null;
+    }
+    for (jsize r_ = 0; r_ < n_rows_; r_++) {
+      JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, $input, r_);
+      if (!row_ || JCALL1(GetArrayLength, jenv, row_) != n_cols_) {
+        if (row_) JCALL1(DeleteLocalRef, jenv, row_);
+        free(buf_);
+        SWIG_JavaThrowException(jenv, SWIG_JavaIllegalArgumentException,
+                                "ragged 2-D array: every row must have the same length");
+        return $null;
+      }
+      {
+        JELEM *p_ = JCALL2(GETELEMS, jenv, row_, 0);
+        memcpy(buf_ + (size_t) r_ * (size_t) n_cols_, p_,
+               sizeof(DATA_TYPE) * (size_t) n_cols_);
+        JCALL3(RELEASEELEMS, jenv, row_, p_, JNI_ABORT);
+      }
+      JCALL1(DeleteLocalRef, jenv, row_);
+    }
+    $1 = buf_;
+    $2 = (int) n_rows_;
+    $3 = (int) n_cols_;
+  }
+}
+%typemap(argout) (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) {
+  {
+    jsize r_;
+    for (r_ = 0; r_ < (jsize) $2; r_++) {
+      JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, $input, r_);
+      if (!row_) continue;
+      JCALL4(SETREGION, jenv, row_, 0, (jsize) $3,
+             (const JELEM *) ($1 + (size_t) r_ * (size_t) $3));
+      JCALL1(DeleteLocalRef, jenv, row_);
+    }
+  }
+}
+%typemap(freearg) (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) {
+  free($1);
+}
+
+%typemap(jni)    (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) "jobjectArray"
+%typemap(jtype)  (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) "JAVATYPE[][][]"
+%typemap(jstype) (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) "JAVATYPE[][][]"
+%typemap(javain) (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) "$javainput"
+%typemap(in)     (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
+  if (!$input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array is null");
+    return $null;
+  }
+  {
+    const jsize n0_ = JCALL1(GetArrayLength, jenv, $input);
+    jsize n1_ = 0, n2_ = 0;
+    if (n0_ > 0) {
+      jobjectArray plane_ = (jobjectArray) JCALL2(GetObjectArrayElement, jenv, $input, 0);
+      if (!plane_) {
+        SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null plane in 3-D array");
+        return $null;
+      }
+      n1_ = JCALL1(GetArrayLength, jenv, plane_);
+      if (n1_ > 0) {
+        JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, plane_, 0);
+        n2_ = row_ ? JCALL1(GetArrayLength, jenv, row_) : 0;
+        if (row_) JCALL1(DeleteLocalRef, jenv, row_);
+      }
+      JCALL1(DeleteLocalRef, jenv, plane_);
+    }
+    const size_t n_ = (size_t) n0_ * (size_t) n1_ * (size_t) n2_;
+    DATA_TYPE *buf_ = (DATA_TYPE *) malloc(sizeof(DATA_TYPE) * (n_ ? n_ : 1));
+    if (!buf_) {
+      SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "out of memory");
+      return $null;
+    }
+    for (jsize f_ = 0; f_ < n0_; f_++) {
+      jobjectArray plane_ = (jobjectArray) JCALL2(GetObjectArrayElement, jenv, $input, f_);
+      if (!plane_ || JCALL1(GetArrayLength, jenv, plane_) != n1_) {
+        if (plane_) JCALL1(DeleteLocalRef, jenv, plane_);
+        free(buf_);
+        SWIG_JavaThrowException(jenv, SWIG_JavaIllegalArgumentException,
+                                "ragged 3-D array: every plane must have the same height");
+        return $null;
+      }
+      for (jsize r_ = 0; r_ < n1_; r_++) {
+        JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, plane_, r_);
+        if (!row_ || JCALL1(GetArrayLength, jenv, row_) != n2_) {
+          if (row_) JCALL1(DeleteLocalRef, jenv, row_);
+          JCALL1(DeleteLocalRef, jenv, plane_);
+          free(buf_);
+          SWIG_JavaThrowException(jenv, SWIG_JavaIllegalArgumentException,
+                                  "ragged 3-D array: every row must have the same length");
+          return $null;
+        }
+        {
+          JELEM *p_ = JCALL2(GETELEMS, jenv, row_, 0);
+          memcpy(buf_ + (((size_t) f_ * (size_t) n1_) + (size_t) r_) * (size_t) n2_,
+                 p_, sizeof(DATA_TYPE) * (size_t) n2_);
+          JCALL3(RELEASEELEMS, jenv, row_, p_, JNI_ABORT);
+        }
+        JCALL1(DeleteLocalRef, jenv, row_);
+      }
+      JCALL1(DeleteLocalRef, jenv, plane_);
+    }
+    $1 = buf_;
+    $2 = (int) n0_;
+    $3 = (int) n1_;
+    $4 = (int) n2_;
+  }
+}
+%typemap(argout) (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
+  {
+    jsize f_, r_;
+    for (f_ = 0; f_ < (jsize) $2; f_++) {
+      jobjectArray plane_ = (jobjectArray) JCALL2(GetObjectArrayElement, jenv, $input, f_);
+      if (!plane_) continue;
+      for (r_ = 0; r_ < (jsize) $3; r_++) {
+        JNIARRAY row_ = (JNIARRAY) JCALL2(GetObjectArrayElement, jenv, plane_, r_);
+        if (!row_) continue;
+        JCALL4(SETREGION, jenv, row_, 0, (jsize) $4,
+               (const JELEM *) ($1 + (((size_t) f_ * (size_t) $3) + (size_t) r_) * (size_t) $4));
+        JCALL1(DeleteLocalRef, jenv, row_);
+      }
+      JCALL1(DeleteLocalRef, jenv, plane_);
+    }
+  }
+}
+%typemap(freearg) (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) {
+  free($1);
+}
+
 %enddef
 
 // NOTE: output typemaps (ARGOUTVIEW / ARGOUTVIEWM) are intentionally NOT defined

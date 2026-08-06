@@ -68,6 +68,26 @@
         {"op": "max", "on": "decay", "as": "busiest_bin"}
       ],
       "expect": {"n_values": 2097152, "total": 3364714, "busiest_bin": 164}
+    },
+    {
+      "id": "clsm.ht3.decay_of_a_masked_region",
+      "doc": "The decay of a 40x40 pixel rectangle, and the suite's INPLACE_ARRAY3 case -- the mask is the only live user of that typemap category in the library. Its total must be less than the whole image's 3364714, because a mask that selected everything, or nothing, would pass a sum check while proving nothing about the mask reaching C++ at all.",
+      "data": ["imaging/pq/ht3/pq_ht3_clsm.ht3"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "HT3"], "as": "t"},
+        {"op": "clsm.open", "args": ["$t", [0]], "as": "img"},
+        {
+          "op": "clsm.decay_of_pixels",
+          "on": "img",
+          "args": ["$t", [0, 100, 140, 100, 140], 256, true],
+          "as": "decay"
+        },
+        {"op": "len", "on": "decay", "as": "n_bins"},
+        {"op": "sum", "on": "decay", "as": "total"},
+        {"op": "argmax", "on": "decay", "as": "peak_bin"},
+        {"op": "max", "on": "decay", "as": "peak"}
+      ],
+      "expect": {"n_bins": 128, "total": 509753, "peak_bin": 4, "peak": 42253}
     }
   ]
 }

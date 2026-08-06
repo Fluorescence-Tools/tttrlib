@@ -519,6 +519,23 @@ final class ConformanceInterpreter {
                 return out;
             }
 
+            case "clsm.decay_of_pixels": {
+                // byte[][][] is what jarrays.i's INPLACE_ARRAY3 takes.
+                CLSMImage img = (CLSMImage) on;
+                double[] b = numbers(a.get(1));
+                int nf = (int) img.getN_frames(), nl = (int) img.getN_lines();
+                int np = (int) img.getN_pixel();
+                byte[][][] mask = new byte[nf][nl][np];
+                for (int f = (int) b[0]; f < nf; f++)
+                    for (int l = (int) b[1]; l < (int) b[2]; l++)
+                        for (int p = (int) b[3]; p < (int) b[4]; p++)
+                            mask[f][l][p] = 1;
+                VectorUint32 v = img.get_decay_of_pixels_v(
+                        (TTTR) a.get(0), mask, i(a, 2), (Boolean) a.get(3));
+                double[] out = new double[v.size()];
+                for (int k = 0; k < out.length; k++) out[k] = v.get(k);
+                return out;
+            }
             case "clsm.fluorescence_decay": {
                 // The _v accessor, so all four runners call the same thing --
                 // see the note on it in ext/python/CLSM.i.
