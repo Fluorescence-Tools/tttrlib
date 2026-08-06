@@ -636,7 +636,16 @@ public:
      * This method only processes the fundamental data, excluding meta data.
      *
      * \param fn Filename pointing to the Photon HDF file.
-     * \return Returns an integer indicating the success or failure of the file reading operation.
+     * \return 0 on success, 1 on failure.
+     *
+     * \note The polarity is the opposite of every sibling reader --
+     *       read_ttr_file(), read_ps_file(), read_flimlabs_file() and
+     *       read_records_file() all return 1 for success. It is written down
+     *       here rather than quietly corrected because this is a public method
+     *       and the doc never said which way round it was, so anyone who got it
+     *       working got it working against the behaviour, not the contract.
+     *       read_file() ignores the value, so nothing inside tttrlib depends on
+     *       it either way.
      */
     int read_hdf_file(const char *fn);
 

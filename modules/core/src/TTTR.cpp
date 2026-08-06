@@ -419,6 +419,33 @@ int TTTR::read_hdf_file(const char *fn) {
         set_macro_time_at(i, p.macro_times[i]);
         routing_channels[i] = p.routing_channels[i];
         micro_times[i] = p.micro_times[i];
+        // Every row is read as a photon, which is the only thing a reader can
+        // do -- but it is a real limitation rather than a property of the
+        // format, so it is worth being exact about.
+        //
+        // Photon-HDF5 has no marker *stream*: /photon_data is one timestamp
+        // array and one detector array, and the specification calls them
+        // photons. It does however allow marker events to be stored as ordinary
+        // rows carrying a dedicated detector ID -- /setup/detectors must list
+        // "all detectors IDs as they appear in /photon_data/detectors ...
+        // including non-standard detectors ... or 'markers' saved by the
+        // acquisition hardware (for example PicoQuant TCSPC hardware can save
+        // makers for synchronization)". What it does not provide is any
+        // machine-readable flag saying which of those IDs is a marker, so the
+        // distinction cannot be recovered: such a file reads back as photons on
+        // the marker's channel. (Overflow IDs are a different matter -- the
+        // specification requires them removed before saving.)
+        //
+        // Not writing this column at all was the bug being fixed here. The
+        // event store allocates with a default-init allocator, so a column the
+        // reader never writes holds whatever was in that memory. It read as
+        // zeros for the one published sample only because 22 MB comes back from
+        // the OS as fresh zeroed pages; a smaller file, or a reused block, gets
+        // arbitrary bytes -- and a non-zero byte means "marker", which every
+        // consumer downstream (correlation, burst search, decay histograms)
+        // filters out. Photons would have vanished from an analysis with
+        // nothing to indicate it had happened.
+        event_types[i] = RECORD_PHOTON;
     }
     return 0;
 }
@@ -1868,6 +1895,11 @@ void TTTR::get_time_window_ranges(
             macro_time_calibration = 1.0;
         }
     }
+    // A header with no resolution reports -1 (in-memory TTTRs do). The
+    // negative tick count that follows is UB when cast to uint64_t.
+    if(!(macro_time_calibration > 0.0)){
+        macro_time_calibration = 1.0;
+    }
     // If using compression, extract macro times first
     if (macro_time_compression_enabled) {
         std::vector<unsigned long long> temp_macro_times(n_valid_events);
@@ -1994,8 +2026,10 @@ if (is_verbose()) {
     while (tw_begin < static_cast<size_t>(n_input)) {
 
         // search for the first index tw_end where (input[tw_end] - input[tw_begin]) >= tw_min
-        // or until the end of the array
-        size_t tw_end = tw_begin;
+        // or until the end of the array.
+        // Start one past tw_begin: at tw_begin dt is 0, which satisfies
+        // tw_min == 0, so tw_begin never advances and this loop spins.
+        size_t tw_end = tw_begin + 1;
         uint64_t dt   = 0; // difference in macro-time ticks
 
         for (; tw_end < static_cast<size_t>(n_input); tw_end++) {

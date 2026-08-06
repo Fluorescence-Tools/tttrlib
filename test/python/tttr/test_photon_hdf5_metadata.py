@@ -41,6 +41,27 @@ def test_reads_the_photons(data):
     assert data.n_valid_events > 0
 
 
+def test_every_event_is_a_photon(data):
+    """The reader must write the event-type column, not leave it to chance.
+
+    Photon-HDF5 has no marker stream -- /photon_data is timestamps plus
+    detectors, and the spec calls them photons -- so reading every row as a
+    photon is the only thing a reader can do. (The spec does allow markers to be
+    stored as rows with their own detector ID, but provides no flag saying which
+    ID that is, so the distinction is not recoverable. See read_hdf_file.)
+
+    The bug this pins was not the choice but the omission: the event store
+    allocates with a default-init allocator, so a column the reader never writes
+    holds whatever was in that memory. It went unnoticed because the one
+    published sample is 22 MB and gets fresh zeroed pages from the OS; a smaller
+    file, or a reused block, would have produced arbitrary bytes. Every consumer
+    downstream filters markers out, so the failure mode was photons silently
+    disappearing from an analysis.
+    """
+    import numpy as np
+    assert set(np.unique(np.asarray(data.event_types)).tolist()) == {0}
+
+
 def test_carries_more_than_setup_and_identity(tags):
     """/sample, /provenance and the measurement specs are the point."""
     groups = {n.split(".")[0] for n in tags if "." in n}
