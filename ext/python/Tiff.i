@@ -176,8 +176,10 @@ def tiff_metadata(path):
 
     Returns a dict with ``axes`` (a label per dimension: ``T`` frames, ``Z``
     slices, ``C`` channels, ``I`` an unlabelled page index, ``Y``/``X`` the
-    image plane), ``shape``, ``dtype`` and the raw ``description`` tag. A file
-    without ImageJ metadata is reported as ``"YX"`` (single page) or ``"IYX"``.
+    image plane), ``shape``, ``dtype``, the raw ``description`` tag, the
+    ``resolution`` pair in pixels per unit (``None`` when the file carries none)
+    and ``imagej``, the description parsed into fields. A file without ImageJ
+    metadata is reported as ``"YX"`` (single page) or ``"IYX"``.
 
     Parameters
     ----------
@@ -187,7 +189,8 @@ def tiff_metadata(path):
     Returns
     -------
     dict
-        ``{"axes": str, "shape": tuple, "dtype": str, "description": str}``.
+        ``{"axes": str, "shape": tuple, "dtype": str, "description": str,
+        "resolution": tuple or None, "imagej": dict}``.
     """
     info = tiff_info(_os.fspath(path))
     plane = (info.height, info.width)
@@ -198,11 +201,21 @@ def tiff_metadata(path):
         axes, shape = "I", (info.n_frames,)
     else:
         axes, shape = "", ()
+    fields = {}
+    for line in (info.description or "").splitlines():
+        key, sep, value = line.partition("=")
+        if sep:
+            fields[key.strip()] = value.strip()
+    resolution = None
+    if info.x_resolution > 0.0 and info.y_resolution > 0.0:
+        resolution = (info.x_resolution, info.y_resolution)
     return {
         "axes": axes + "YX",
         "shape": shape + plane,
         "dtype": tiff_dtype_name(info.dtype),
         "description": info.description,
+        "resolution": resolution,
+        "imagej": fields if "ImageJ" in fields else {},
     }
 
 

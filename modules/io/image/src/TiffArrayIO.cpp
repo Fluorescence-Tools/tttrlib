@@ -373,6 +373,9 @@ TiffInfo tiff_info(const std::string& path) {
     if (TIFFGetField(f.tif, TIFFTAG_IMAGEDESCRIPTION, &desc) && desc) {
         info.description = desc;
     }
+    float res = 0.0f;
+    if (TIFFGetField(f.tif, TIFFTAG_XRESOLUTION, &res)) info.x_resolution = res;
+    if (TIFFGetField(f.tif, TIFFTAG_YRESOLUTION, &res)) info.y_resolution = res;
     return info;
 }
 

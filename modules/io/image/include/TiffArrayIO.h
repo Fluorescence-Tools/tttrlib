@@ -47,6 +47,8 @@ struct TiffInfo {
     /// language wrappers parse it into an axis order. Kept as the raw string:
     /// the tag is also used for free-form text by other writers.
     std::string description;
+    double x_resolution = 0.0;     ///< pixels per unit across, 0 when absent
+    double y_resolution = 0.0;     ///< pixels per unit down, 0 when absent
 };
 
 /// Read only the header of \p path (no pixel decoding).
