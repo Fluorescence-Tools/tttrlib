@@ -62,6 +62,17 @@
 // Python-only; see the note above.
 #ifdef SWIGPYTHON
 %extend tttrlib::data::DataStore { %pythoncode "./ext/python/DataStore.py" }
+
+// A SWIG VectorString is not a list and has no __eq__, so group_names() ==
+// ['a', 'b'] would be False however right the answer was. Everything else on
+// this surface hands back a real list -- `names` builds one by hand at
+// DataStore.py -- and these should not be the exception.
+%feature("pythonappend") tttrlib::data::DataStore::group_names %{
+    val = list(val)
+%}
+%feature("pythonappend") tttrlib::data::DataStore::group_paths %{
+    val = list(val)
+%}
 #endif  // SWIGPYTHON
 
 %include "DataStore.h"

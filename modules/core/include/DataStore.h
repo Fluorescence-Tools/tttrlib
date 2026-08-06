@@ -1327,6 +1327,21 @@ public:
     }
 
     // -- groups ---------------------------------------------------------------
+    //
+    // A store is both a table (its own columns) and a container (its groups);
+    // either may be empty. Each group is a full store -- its own columns, row
+    // count, selection and label -- because that is what the data needs: a
+    // results table has one row per pixel and the meta beside it has one row.
+    //
+    // Column and group namespaces are separate. A store may have a column and a
+    // group of the same name, and nothing has to disambiguate, because the
+    // accessors differ. In particular find() and column_by_name() never see a
+    // group: they are the hottest lookup in the class and are not touched.
+    //
+    // Paths: "" and "/" mean this store, a leading and a trailing separator are
+    // both optional, and "a/b" nests. add_group takes a NAME, the rest take a
+    // path. An empty component ("a//b"), "." or ".." as a component, and a NUL
+    // are rejected by throwing rather than by being reinterpreted.
 
     /// Direct children only.
     int n_groups() const { return static_cast<int>(groups_.size()); }
@@ -1334,6 +1349,92 @@ public:
     /// Drop every group, and everything under them. Invalidates any handle into
     /// the tree; the store's own columns are untouched.
     void clear_groups() { groups_.clear(); }
+
+    bool has_group(const std::string& path) const { return resolve(path) != nullptr; }
+
+    /*!
+     * \brief The group at `path`.
+     *
+     * A borrowed reference into the tree, owned by the root. It survives any
+     * number of later add_group calls and the removal of unrelated siblings;
+     * what invalidates it is removing it, or an ancestor.
+     *
+     * \note A group has no registry identity -- `id()` is 0 and it never appears
+     *       in the live-store listing. The root's entry reports the whole tree.
+     * \throws std::invalid_argument if there is no such group.
+     */
+    DataStore& group(const std::string& path) {
+        DataStore* g = resolve(path);
+        if (g == nullptr) throw std::invalid_argument("no group '" + path + "'");
+        return *g;
+    }
+    const DataStore& group(const std::string& path) const {
+        const DataStore* g = resolve(path);
+        if (g == nullptr) throw std::invalid_argument("no group '" + path + "'");
+        return *g;
+    }
+
+    /*!
+     * \brief Add an empty group as a direct child.
+     *
+     * \param name a name, not a path -- a separator in it throws, because
+     *        add_group("a/b") reads as "make b inside a" and does not.
+     * \throws std::invalid_argument if a group of that name is already there.
+     *         Replacing one is remove_group then add_group, said out loud.
+     */
+    DataStore& add_group(const std::string& name) {
+        check_component(name, name);
+        if (name.find(kGroupSeparator) != std::string::npos)
+            throw std::invalid_argument(
+                    "add_group takes a name, not a path: '" + name + "'");
+        if (child(name) != nullptr)
+            throw std::invalid_argument("group '" + name + "' is already there");
+        groups_.emplace_back(name, std::unique_ptr<DataStore>(new DataStore(ChildTag{})));
+        return *groups_.back().second;
+    }
+
+    /// The group at `path`, creating it and any intermediate it needs.
+    /// Idempotent: calling it twice gives the same group, not two.
+    DataStore& ensure_group(const std::string& path) {
+        DataStore* cur = this;
+        for (const std::string& name : split_path(path)) {
+            DataStore* next = cur->child(name);
+            cur = next != nullptr ? next : &cur->add_group(name);
+        }
+        return *cur;
+    }
+
+    /// False when there was no such group. Handles into the removed subtree
+    /// die with it; handles to anything else survive.
+    bool remove_group(const std::string& path) {
+        const std::vector<std::string> parts = split_path(path);
+        if (parts.empty()) return false;            // "" and "/" are this store
+        DataStore* parent = this;
+        for (std::size_t i = 0; i + 1 < parts.size(); i++) {
+            parent = parent->child(parts[i]);
+            if (parent == nullptr) return false;
+        }
+        for (auto it = parent->groups_.begin(); it != parent->groups_.end(); ++it)
+            if (it->first == parts.back()) { parent->groups_.erase(it); return true; }
+        return false;
+    }
+
+    /// Direct children, in the order they were added. Not alphabetical:
+    /// insertion order is what a round trip has to preserve.
+    std::vector<std::string> group_names() const {
+        std::vector<std::string> out;
+        out.reserve(groups_.size());
+        for (const auto& g : groups_) out.push_back(g.first);
+        return out;
+    }
+
+    /// Every descendant, depth first and parent before child, so every
+    /// intermediate appears before anything under it.
+    std::vector<std::string> group_paths() const {
+        std::vector<std::string> out;
+        append_paths(std::string(), out);
+        return out;
+    }
 
     /*!
      * \brief Total bytes held, by this store and every group under it.
@@ -1391,6 +1492,75 @@ private:
         for (const auto& g : groups_)
             if (g.second->contains(p)) return true;
         return false;
+    }
+
+    static const char kGroupSeparator = '/';
+
+    /// One path component, or the name handed to add_group.
+    static void check_component(const std::string& c, const std::string& whole) {
+        if (c.empty())
+            throw std::invalid_argument("empty group name in '" + whole + "'");
+        if (c == "." || c == "..")
+            throw std::invalid_argument("'" + c + "' is not a group name");
+        if (c.find('\0') != std::string::npos)
+            throw std::invalid_argument("a group name cannot contain a NUL");
+    }
+
+    /// The components of a path. Empty for "" and "/", which mean this store.
+    static std::vector<std::string> split_path(const std::string& path) {
+        std::vector<std::string> out;
+        std::size_t b = 0, e = path.size();
+        if (b < e && path[b] == kGroupSeparator) b++;              // leading, optional
+        if (e > b && path[e - 1] == kGroupSeparator) e--;          // trailing, optional
+        if (b >= e) return out;
+        while (b < e) {
+            std::size_t cut = path.find(kGroupSeparator, b);
+            if (cut == std::string::npos || cut > e) cut = e;
+            const std::string part = path.substr(b, cut - b);
+            check_component(part, path);
+            out.push_back(part);
+            b = cut + 1;
+        }
+        return out;
+    }
+
+    DataStore* child(const std::string& name) {
+        for (const auto& g : groups_)
+            if (g.first == name) return g.second.get();
+        return nullptr;
+    }
+    const DataStore* child(const std::string& name) const {
+        return const_cast<DataStore*>(this)->child(name);
+    }
+
+    /// The store a path names, or nullptr. The single-component case is the one
+    /// that happens, so it does not allocate a vector to find one child.
+    const DataStore* resolve(const std::string& path) const {
+        if (path.empty() || path == std::string(1, kGroupSeparator)) return this;
+        if (path.find(kGroupSeparator) == std::string::npos) {
+            check_component(path, path);
+            return child(path);
+        }
+        const DataStore* cur = this;
+        for (const std::string& name : split_path(path)) {
+            cur = cur->child(name);
+            if (cur == nullptr) return nullptr;
+        }
+        return cur;
+    }
+    DataStore* resolve(const std::string& path) {
+        return const_cast<DataStore*>(
+                static_cast<const DataStore*>(this)->resolve(path));
+    }
+
+    void append_paths(const std::string& prefix, std::vector<std::string>& out) const {
+        for (const auto& g : groups_) {
+            // A local copy, not out.back(): the recursive call push_backs into
+            // the same vector and reallocates the reference away.
+            const std::string path = prefix + g.first;
+            out.push_back(path);
+            g.second->append_paths(path + kGroupSeparator, out);
+        }
     }
 
     void apply(BitMask& m, Combine how) {
