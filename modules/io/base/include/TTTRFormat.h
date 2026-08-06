@@ -39,6 +39,23 @@
 namespace tttrlib {
 
 /*!
+ * \brief Separates a container from the object inside it: `run.pto|m001.spc`.
+ *
+ * A pipe, not a colon: `C:\\data\\run.pto` already has a colon in it, and
+ * telling a drive letter from a selector would be guesswork on every path on
+ * one platform. A pipe is not legal in a filename on Windows and is vanishingly
+ * rare on anything else.
+ */
+extern const char kSubfileSeparator;
+
+/// The container part of a spec -- everything before the last \ref
+/// kSubfileSeparator, or the whole thing when there is none.
+std::string subfile_path(const std::string& spec);
+
+/// The object part, or empty when the spec names no particular one.
+std::string subfile_selector(const std::string& spec);
+
+/*!
  * \brief One file format tttrlib can read and/or write.
  *
  * `container_type` is the integer that has always identified this format.
@@ -96,6 +113,29 @@ struct FileFormat {
      * \ref sniff when both are set.
      */
     bool (*sniff_with_context)(void* context, const std::string& filename) = nullptr;
+
+    /*!
+     * \brief Read a file of this format into a TTTR, for a reader above core.
+     *
+     * A container format is read by a module that sits ON TOP of the photon
+     * data model -- PTO holds a TTTR file, so io_pto depends on core and core
+     * therefore cannot call it. This pointer inverts that, the same way
+     * \ref sniff does for recognition: the layer that owns the reader hands it
+     * down, and core calls through a pointer it was given.
+     *
+     * Deliberately C-shaped -- `const char*`, `void*`, `int` -- because the
+     * modules are separate shared libraries and this crosses between them. A
+     * `std::string` or a `TTTR&` here would tie every module to one compiler's
+     * library ABI, which is the thing PRD-018 is about. `tttr` is a
+     * `tttrlib::TTTR*`; `spec` is the whole thing the caller passed, selector
+     * and all, because splitting it is the format's business.
+     *
+     * \return 1 on success, 0 on failure.
+     */
+    int (*read_into)(void* context, const char* spec, void* tttr) = nullptr;
+
+    /// Passed back to \ref read_into. \see sniff_context.
+    void* read_context = nullptr;
 
     /// Passed to \ref sniff_with_context. Owned by whoever set it.
     void* sniff_context = nullptr;
@@ -228,6 +268,16 @@ public:
      */
     static bool set_sniffer(const std::string& name,
                             bool (*sniff)(const std::string&));
+
+    /*!
+     * \brief Attach a reader to an already-registered format. \see FileFormat::read_into.
+     *
+     * For a container whose reader lives above core. Returns false if there is
+     * no format of that name.
+     */
+    static bool set_reader(const std::string& name,
+                           int (*read_into)(void*, const char*, void*),
+                           void* context = nullptr);
 
     /*!
      * \brief Identify the format of \p filename: extension, then contents.

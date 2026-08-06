@@ -250,6 +250,32 @@ std::vector<const FileFormat*> IORegistry::by_extension(const std::string& exten
     return out;
 }
 
+const char kSubfileSeparator = '|';
+
+std::string subfile_path(const std::string& spec) {
+    const std::size_t bar = spec.rfind(kSubfileSeparator);
+    return bar == std::string::npos ? spec : spec.substr(0, bar);
+}
+
+std::string subfile_selector(const std::string& spec) {
+    const std::size_t bar = spec.rfind(kSubfileSeparator);
+    return bar == std::string::npos ? std::string() : spec.substr(bar + 1);
+}
+
+bool IORegistry::set_reader(const std::string& name,
+                            int (*read_into)(void*, const char*, void*),
+                            void* context) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    for (auto& f : table()) {
+        if (f.name == name) {
+            f.read_into = read_into;
+            f.read_context = context;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IORegistry::set_sniffer(const std::string& name,
                              bool (*sniff)(const std::string&)) {
     std::lock_guard<std::mutex> guard(table_mutex());

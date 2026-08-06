@@ -101,6 +101,17 @@ struct PtoAnnotation {
     long long when = 0;             ///< nanoseconds since 2001-01-01 UTC, 0 if unset
 };
 
+/*!
+ * \brief Reserved tag: the object this one accompanies, as a \ref PtoType::UID.
+ *
+ * A Becker & Hickl `.spc` keeps half its header in a `.set` beside it, so the
+ * two have to travel together and be handed to the reader together. That makes
+ * it container business rather than application business -- unlike
+ * "derived from", which PTO deliberately leaves undefined -- and it is the one
+ * relation the container names itself.
+ */
+extern const char* const kPtoSidecarTag;
+
 /// A run of free space inside the file. \see PtoFile::free_extents.
 struct PtoExtent {
     std::uint64_t offset = 0;
@@ -147,6 +158,9 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
 
 /// Replace a `dstore` object's payload from a store, in place where it fits.
 bool pto_update_store(PtoFile& file, std::uint64_t uid, const data::DataStore& store);
+
+/// Record that `uid` accompanies `primary`. \see kPtoSidecarTag.
+void pto_mark_sidecar(PtoFile& file, std::uint64_t uid, std::uint64_t primary);
 
 /// Read a `dstore` object back. \throws std::runtime_error if it is not one.
 void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out);

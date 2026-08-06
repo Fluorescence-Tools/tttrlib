@@ -1418,8 +1418,13 @@ if (is_verbose()) {
         container_type = tttr_container_type;
     }
 
+    // A spec may name an object inside a container -- "run.pto|m001.ptu". Only
+    // the container is a path; the selector is for whoever reads the container.
+    const std::string spec = fn ? fn : "";
+    const std::string only_path = tttrlib::subfile_path(spec);
+
     // check if file exists (UTF-8 safe)
-    std::filesystem::path p = std::filesystem::u8path(fn ? fn : "");
+    std::filesystem::path p = std::filesystem::u8path(only_path);
     if (!std::filesystem::exists(p)) {
         std::clog << "-- WARNING: File " << p.u8string() << " does not exist" << std::endl;
         return 0;
@@ -1430,6 +1435,24 @@ if (is_verbose()) {
     // store canonical UTF-8 string version
     this->filename = p.u8string();
     fn = this->filename.c_str();
+
+    /*
+     * A container whose reader lives above core reads itself. PTO holds TTTR
+     * files, so io_pto depends on core and core cannot call it; the format
+     * table carries a pointer that io_pto filled in instead. The whole spec
+     * goes across, selector and all, because which object to take is the
+     * container's business and not ours.
+     */
+    {
+        const tttrlib::FileFormat* format = tttrlib::IORegistry::by_container_type(container_type);
+        if (format != nullptr && format->read_into != nullptr) {
+            const std::string whole =
+                    tttrlib::subfile_selector(spec).empty()
+                            ? this->filename
+                            : this->filename + tttrlib::kSubfileSeparator + tttrlib::subfile_selector(spec);
+            return format->read_into(format->read_context, whole.c_str(), this);
+        }
+    }
 
     // Parameters offered to a container that has none are refused, not
     // dropped. Nearly every format describes itself completely, so a caller

@@ -2,6 +2,8 @@
 #include "io_pto.h"
 
 #include "io_store.h"
+#include "TTTR.h"
+#include "TTTRFormat.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -11,6 +13,9 @@
 
 namespace tttrlib {
 namespace io {
+
+const char* const kPtoSidecarTag = "pto.sidecar_of";
+
 namespace {
 
 // --- element ids ------------------------------------------------------------
@@ -1483,6 +1488,15 @@ bool pto_update_store(PtoFile& file, std::uint64_t uid, const data::DataStore& s
     return file.update(uid, bytes.data(), bytes.size());
 }
 
+void pto_mark_sidecar(PtoFile& file, std::uint64_t uid, std::uint64_t primary) {
+    PtoTag t;
+    t.name = kPtoSidecarTag;
+    t.type = PtoType::UID;
+    t.target = uid;
+    t.u = primary;
+    file.add_tag(t);
+}
+
 void pto_read_store(const PtoFile& file, std::uint64_t uid, data::DataStore& out) {
     const PtoFile::Impl& m = *file.p_;
     const PtoFile::Impl::Slot* s = m.find(uid);
@@ -1511,6 +1525,167 @@ bool is_pto_file(const std::string& filename) {
         if (cid == kDocType) return get_text(d, n) == "pto";
     return false;
 }
+
+// --- opening the photon data inside a container -------------------------------
+
+namespace {
+
+/// What an encoding means to the photon reader. Only the record-stream
+/// containers can be read where they lie; the rest read by path.
+struct Readable { const char* encoding; const char* container; };
+const Readable kReadable[] = {
+    {"ptu", "PTU"}, {"ht3", "HT3"}, {"spc", "SPC-130"}, {"spc-130", "SPC-130"},
+    {"spc-600", "SPC-600_256"}, {"spc-qc", "SPC-QC"},
+    {"cz-raw", "CZ-CONFOCOR3"}, {"sm", "SM"},
+};
+
+std::string lowered(std::string s) {
+    for (std::size_t i = 0; i < s.size(); i++)
+        if (s[i] >= 'A' && s[i] <= 'Z') s[i] = static_cast<char>(s[i] + ('a' - 'A'));
+    return s;
+}
+
+/// The container id an encoding reads as, or -1.
+int container_for(const std::string& encoding) {
+    const std::string e = lowered(encoding);
+    for (std::size_t i = 0; i < sizeof(kReadable) / sizeof(kReadable[0]); i++) {
+        if (e != kReadable[i].encoding) continue;
+        const FileFormat* f = IORegistry::by_name(kReadable[i].container);
+        return f ? f->container_type : -1;
+    }
+    return -1;
+}
+
+bool holds_photons(const PtoObject& o) {
+    return container_for(o.encoding) >= 0 ||
+           (lowered(o.encoding) == "dstore" && o.kind == "photons");
+}
+
+/// A `.set` that accompanies `uid`, as bytes, or empty. \see kSidecarTag.
+std::string sidecar_text(const PtoFile& file, std::uint64_t uid) {
+    const std::vector<PtoTag> tags = file.tags();
+    for (std::size_t i = 0; i < tags.size(); i++) {
+        if (tags[i].name != kPtoSidecarTag || tags[i].type != PtoType::UID) continue;
+        if (tags[i].u != uid) continue;
+        const PtoObject o = file.object(tags[i].target);
+        const std::string name = lowered(o.name);
+        if (name.size() < 4 || name.compare(name.size() - 4, 4, ".set") != 0) continue;
+        const std::vector<unsigned char> bytes = file.read(tags[i].target);
+        return std::string(bytes.begin(), bytes.end());
+    }
+    return std::string();
+}
+
+/// One object into `out`, read where it lies.
+bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
+              TTTR* out) {
+    if (lowered(o.encoding) == "dstore") {
+        data::DataStore store;
+        pto_read_store(file, o.uid, store);
+        const int mt = store.find("macro_time"), ut = store.find("micro_time");
+        const int rc = store.find("routing_channel"), et = store.find("event_type");
+        const std::size_t n = store.n_rows();
+        std::vector<unsigned long long> macro(n, 0);
+        std::vector<unsigned short> micro(n, 0);
+        std::vector<signed char> chan(n, 0), type(n, 0);
+        for (std::size_t i = 0; i < n; i++) {
+            if (mt >= 0) macro[i] = static_cast<unsigned long long>(store.column(mt).value_at(i));
+            if (ut >= 0) micro[i] = static_cast<unsigned short>(store.column(ut).value_at(i));
+            if (rc >= 0) chan[i] = static_cast<signed char>(store.column(rc).value_at(i));
+            if (et >= 0) type[i] = static_cast<signed char>(store.column(et).value_at(i));
+        }
+        out->append_events(macro.data(), static_cast<int>(n), micro.data(),
+                           static_cast<int>(n), chan.data(), static_cast<int>(n),
+                           type.data(), static_cast<int>(n), false, 0);
+        return true;
+    }
+    const int container = container_for(o.encoding);
+    if (container < 0) return false;
+    return out->read_embedded(path.c_str(), container, o.offset, o.size,
+                              sidecar_text(file, o.uid)) != 0;
+}
+
+/*!
+ * \brief Read the photon data of a container into a TTTR. \see FileFormat::read_into.
+ *
+ * With a selector, that one object. Without, the only one -- or, when there are
+ * several, all of them stacked in lexical order of their names, so m001.spc,
+ * m002.spc, m003.spc come back as one measurement in the order they were
+ * recorded, with each one's macro times continuing after the last.
+ *
+ * Nothing is unpacked: a container that begins partway into the file is read
+ * where it lies.
+ */
+int read_pto_into_tttr(void*, const char* spec_c, void* tttr) {
+    TTTR* out = static_cast<TTTR*>(tttr);
+    const std::string spec = spec_c == nullptr ? "" : spec_c;
+    const std::string path = subfile_path(spec);
+    const std::string selector = subfile_selector(spec);
+
+    PtoFile file;
+    if (!file.open(path)) {
+        std::cerr << "pto: " << file.error() << std::endl;
+        return 0;
+    }
+
+    std::vector<PtoObject> chosen;
+    const std::vector<PtoObject> all = file.objects();
+    for (std::size_t i = 0; i < all.size(); i++) {
+        if (!holds_photons(all[i])) continue;
+        if (!selector.empty() && all[i].name != selector &&
+            std::to_string(all[i].uid) != selector) continue;
+        chosen.push_back(all[i]);
+        if (!selector.empty()) break;
+    }
+    if (chosen.empty()) {
+        std::cerr << "pto: " << path << " holds no photon data"
+                  << (selector.empty() ? "" : " called '" + selector + "'")
+                  << std::endl;
+        return 0;
+    }
+    // Lexical order, so a numbered series comes back in the order it was taken.
+    if (chosen.size() > 1) {
+        std::sort(chosen.begin(), chosen.end(),
+                  [](const PtoObject& a, const PtoObject& b) { return a.name < b.name; });
+    }
+
+    if (!read_one(file, path, chosen[0], out)) return 0;
+    for (std::size_t i = 1; i < chosen.size(); i++) {
+        TTTR next;
+        if (!read_one(file, path, chosen[i], &next)) return 0;
+        // shift_macro_time: the next measurement continues after this one
+        // rather than restarting at zero.
+        out->append(&next, true, 0);
+    }
+    out->find_used_routing_channels();
+    return 1;
+}
+
+/*!
+ * \brief Put PTO in the format table, and make it read itself.
+ *
+ * A file-scope object rather than a call from core: core must not know this
+ * module exists, or the dependency it inverts comes straight back.
+ */
+struct RegisterPto {
+    RegisterPto() {
+        FileFormat f;
+        f.name = "PTO";
+        f.container_type = 20;
+        f.label = "PhoTon cOntainer";
+        f.summary = "EBML container holding photon data and what was computed from it";
+        f.extensions.push_back("pto");
+        f.canonical_extension = "pto";
+        f.sniff = [](const std::string& fn) { return is_pto_file(fn); };
+        f.can_read = true;
+        f.can_write = false;
+        IORegistry::add(f);
+        IORegistry::set_reader("PTO", &read_pto_into_tttr, nullptr);
+    }
+};
+const RegisterPto register_pto;
+
+}  // namespace
 
 }  // namespace io
 }  // namespace tttrlib
