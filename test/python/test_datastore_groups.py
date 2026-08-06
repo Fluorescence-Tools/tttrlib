@@ -288,6 +288,82 @@ def test_the_root_entry_reports_the_tree_total():
     assert entry["bytes"] >= 800000
 
 
+def test_release_frees_the_whole_tree():
+    """release() promises to free the memory. A release that left most of a
+    tree alive would defeat the one thing it is for."""
+    s = tttrlib.DataStore()
+    g = s.ensure_group("a/b")
+    g.set_n_rows(1000)
+    g.add("x", np.zeros(1000))
+
+    s.release()
+    assert s.nbytes() == 0
+    assert s.n_groups() == 0
+
+
+# -- selection over a tree ----------------------------------------------------
+
+def test_clearing_every_gate_at_once(imaging):
+    """The one tree-wide selection operation, because it is well defined
+    whatever the row counts are."""
+    imaging.group("results").where("Tau", 1.0, 2.0)
+    assert imaging.group("results").n_selected() < 64
+
+    imaging.select_all_recursive()
+    assert imaging.group("results").n_selected() == 64
+    assert imaging.group("results").selection() is None, "the mask was freed too"
+
+
+def test_selecting_nothing_reaches_every_group(imaging):
+    imaging.ensure_group("a/b").set_n_rows(5)
+    imaging.select_none_recursive()
+    assert imaging.group("results").n_selected() == 0
+    assert imaging.group("a/b").n_selected() == 0
+
+
+def test_a_plain_select_does_not_propagate(imaging):
+    """Groups have different row counts, so a mask over one means nothing
+    over another."""
+    imaging.group("results").set_n_rows(64)
+    imaging.select_none()
+    assert imaging.group("results").n_selected() == 64
+
+
+# -- the hot path -------------------------------------------------------------
+
+def test_groups_do_not_slow_the_selection_path():
+    """The canary for the whole design.
+
+    A store that HAS groups must scan at the same speed as one that does not,
+    because nothing on the scan path looks at them. A ratio rather than a wall
+    clock, so it does not depend on the machine -- the honest answer is 1.0,
+    and anything past 2 means a branch or an indirection reached
+    find/apply/scan_column.
+    """
+    import time
+
+    s = tttrlib.DataStore()
+    n = 1_000_000
+    s.set_n_rows(n)
+    s.add("x", np.random.default_rng(0).random(n))
+
+    def timed():
+        best = float("inf")
+        for _ in range(5):
+            t = time.perf_counter()
+            for _ in range(4):
+                s.where("x", 0.2, 0.8)
+            best = min(best, time.perf_counter() - t)
+        return best
+
+    before = timed()
+    for i in range(32):
+        s.add_group("g%d" % i)
+    after = timed()
+
+    assert after < before * 2.0 + 1e-3, "scanning got slower once groups existed"
+
+
 def test_dropping_the_root_frees_the_whole_tree():
     before = tttrlib.live_data_store_bytes()
     s = tttrlib.DataStore()

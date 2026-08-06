@@ -839,12 +839,17 @@ public:
      * handle -- a cache eviction, a plot that has been closed. Views handed out
      * before this DO keep their own memory alive, because they hold a reference
      * to the column; what is freed is this store's claim on it.
+     *
+     * **Drops the groups too**, so nbytes() really does go to zero. A release
+     * that left most of a tree alive would defeat the one thing it is for.
+     * Handles into the tree die with it, exactly as for clear_groups().
      */
     void release() {
         columns_.clear();
         columns_.shrink_to_fit();
         row_mask_.clear();
         n_rows_ = 0;
+        groups_.clear();
     }
 
     std::size_t n_rows() const { return n_rows_; }
@@ -853,6 +858,16 @@ public:
     Column& column(int i) { return columns_.at(i); }
     const Column& column(int i) const { return columns_.at(i); }
 
+    /*!
+     * \brief The index of a column of this store, or -1.
+     *
+     * Never looks in a group, and must not start. This is the hottest lookup in
+     * the class -- column_by_name goes through it, and so does every
+     * where/region/interval/histogram call from a binding -- and a group is not
+     * a column, so a hit here could not be returned anyway. It is also what
+     * keeps `store["meta"]` unambiguous when there is both a column and a group
+     * called meta: the accessors differ, so nothing has to guess.
+     */
     int find(const std::string& name) const {
         for (std::size_t i = 0; i < columns_.size(); i++)
             if (columns_[i].name() == name) return static_cast<int>(i);
@@ -864,6 +879,8 @@ public:
         return columns_[i];
     }
 
+    /// The columns of this store. A group is not a column and never appears
+    /// here; \see group_names.
     std::vector<std::string> column_names() const {
         std::vector<std::string> out;
         out.reserve(columns_.size());
@@ -898,7 +915,14 @@ public:
      */
     void set_n_rows(std::size_t n) { n_rows_ = n; }
 
-    /// Every column that disagrees with n_rows(), by name.
+    /*!
+     * \brief Every column of THIS store that disagrees with n_rows(), by name.
+     *
+     * Does not look into the groups, and must not: a group with a different row
+     * count from its parent is the normal shape, not a fault. A results table
+     * has one row per pixel and the meta beside it has one row, and reporting
+     * that would make the arrangement this feature exists for look broken.
+     */
     std::vector<std::string> inconsistent_columns() const {
         std::vector<std::string> bad;
         for (const Column& c : columns_)
@@ -1310,6 +1334,29 @@ public:
     void select_all() { row_mask_.clear(); }
     /// Nothing selected.
     void select_none() { row_mask_.assign(n_rows_, false); }
+
+    /*!
+     * \brief Ungate this store and every group under it.
+     *
+     * A selection does NOT propagate down a tree: groups have different row
+     * counts, so a mask over one of them means nothing over another. Clearing
+     * every gate at once is the exception, because it is the one tree-wide
+     * operation callers actually want -- "show me all of it again" -- and it is
+     * well defined whatever the row counts are.
+     *
+     * This is the one that also frees the masks, select_all() being a clear
+     * rather than a fill.
+     */
+    void select_all_recursive() {
+        select_all();
+        for (const auto& g : groups_) g.second->select_all_recursive();
+    }
+
+    /// \see select_all_recursive. Selects nothing, everywhere; keeps the masks.
+    void select_none_recursive() {
+        select_none();
+        for (const auto& g : groups_) g.second->select_none_recursive();
+    }
     /*!
      * Flip the selection.
      *
