@@ -112,6 +112,30 @@ describe('burst search and filtering', { skip: !hasData(SPC) && 'no data' }, () 
     assert.ok(strict <= loose);
   });
 
+  test('per-channel burst features come back as an object, not a proxy', () => {
+    // Python gets a dict here. Before ext/js/jsarrays.i grew std::map support
+    // this was an opaque SWIG proxy with .get()/.size(), which is unusable
+    // without a hand-written loop and was the last marshalling gap.
+    const bf = new tttrlib.BurstFilter(spc());
+    const fx = new tttrlib.BurstFeatureExtractor(bf);
+    const counts = fx.get_burst_channel_photons();
+    // Assert what a plain object IS, not what a proxy is not: the previous
+    // negative form passed on a binary with no map support at all, where the
+    // value was an empty generic SwigObject.
+    assert.equal(counts.constructor, Object,
+                 `expected a plain Object, got ${counts?.constructor?.name}`);
+    assert.equal(Object.getPrototypeOf(counts), Object.prototype);
+    // Keys are strings and values are TypedArrays, matching the JSON shape the
+    // same call produces in Python.
+    for (const [k, v] of Object.entries(counts)) {
+      assert.equal(typeof k, 'string');
+      assert.ok(ArrayBuffer.isView(v), `${k} is ${v && v.constructor && v.constructor.name}`);
+    }
+    // And it agrees with the JSON route, which is what callers used before.
+    const viaJson = JSON.parse(fx.to_json_string()).channel_photons ?? {};
+    assert.deepEqual(Object.keys(counts).sort(), Object.keys(viaJson).sort());
+  });
+
   test('BurstFilter round-trips its settings through JSON', () => {
     // BurstFilter has no default constructor: it is built around a photon
     // stream. Passing the TTTR also exercises the shared_ptr<TTTR> argument

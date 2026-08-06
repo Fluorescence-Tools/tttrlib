@@ -84,6 +84,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
+#include <type_traits>
 
 namespace tttrlib_js {
 
@@ -135,6 +137,79 @@ inline bool js_get(const Napi::Value &v, unsigned long long *o) {
 // vector<unsigned char> instead, which is byte-for-byte what a `bool*` array is.
 template <typename T> struct store_type { typedef T type; };
 template <> struct store_type<bool> { typedef unsigned char type; };
+
+// --- generic value -> JavaScript, for the std::map conversions -------------
+// The TypedArray kind is derived from the element type's size and signedness
+// rather than from a per-type overload, so `int64_t` works whether the platform
+// spells it `long` (LP64 Linux) or `long long` (macOS, Windows).
+template <class T>
+struct napi_type_of {
+  static constexpr napi_typedarray_type value =
+      std::is_floating_point<T>::value
+          ? (sizeof(T) == 8 ? napi_float64_array : napi_float32_array)
+          : (std::is_signed<T>::value
+                 ? (sizeof(T) == 1 ? napi_int8_array
+                    : sizeof(T) == 2 ? napi_int16_array
+                    : sizeof(T) == 4 ? napi_int32_array
+                                     : napi_bigint64_array)
+                 : (sizeof(T) == 1 ? napi_uint8_array
+                    : sizeof(T) == 2 ? napi_uint16_array
+                    : sizeof(T) == 4 ? napi_uint32_array
+                                     : napi_biguint64_array));
+};
+
+inline Napi::Value make_view(Napi::Env env, void *data, size_t nelem, size_t elsize,
+                             napi_typedarray_type type, bool own,
+                             const size_t *dims, int ndim);
+
+/// A numeric vector as a TypedArray (copied: the source is usually a temporary).
+template <class T>
+inline Napi::Value js_from(Napi::Env env, const std::vector<T> &v) {
+  size_t n = v.size();
+  size_t dims[1] = {n};
+  void *buf = std::malloc(n * sizeof(T) + 1);
+  if (!buf) return env.Null();
+  if (n) std::memcpy(buf, v.data(), n * sizeof(T));
+  return make_view(env, buf, n, sizeof(T), napi_type_of<T>::value, true, dims, 1);
+}
+
+/// A ragged vector-of-vectors as an Array of TypedArrays (Python: list of lists).
+template <class T>
+inline Napi::Value js_from(Napi::Env env, const std::vector<std::vector<T> > &v) {
+  Napi::Array out = Napi::Array::New(env, v.size());
+  for (size_t i = 0; i < v.size(); i++)
+    out.Set(static_cast<uint32_t>(i), js_from(env, v[i]));
+  return out;
+}
+
+inline Napi::Value js_from(Napi::Env env, const std::string &s) {
+  return Napi::String::New(env, s);
+}
+inline Napi::Value js_from(Napi::Env env, const std::vector<std::string> &v) {
+  Napi::Array out = Napi::Array::New(env, v.size());
+  for (size_t i = 0; i < v.size(); i++)
+    out.Set(static_cast<uint32_t>(i), Napi::String::New(env, v[i]));
+  return out;
+}
+/// Scalars. 64-bit ones become BigInt for the same reason arrays do.
+template <class T>
+inline typename std::enable_if<std::is_arithmetic<T>::value, Napi::Value>::type
+js_from(Napi::Env env, T v) {
+  if (sizeof(T) == 8 && std::is_integral<T>::value) {
+    return std::is_signed<T>::value
+               ? Napi::BigInt::New(env, static_cast<int64_t>(v)).As<Napi::Value>()
+               : Napi::BigInt::New(env, static_cast<uint64_t>(v)).As<Napi::Value>();
+  }
+  return Napi::Number::New(env, static_cast<double>(v));
+}
+
+/// Map keys. JavaScript object keys are strings, which is also what a Python
+/// dict becomes once it is serialised, so a numeric key is stringified rather
+/// than preserved as a number -- the same shape either binding's JSON gives.
+inline std::string js_key(const std::string &k) { return k; }
+template <class T>
+inline typename std::enable_if<std::is_arithmetic<T>::value, std::string>::type
+js_key(T k) { return std::to_string(static_cast<long long>(k)); }
 
 // --- input descriptor ------------------------------------------------------
 struct NdIn {
@@ -726,6 +801,61 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %js_vector_typemaps(unsigned int,       napi_uint32_array,    "Uint32Array")
 %js_vector_typemaps(long long,          napi_bigint64_array,  "BigInt64Array")
 %js_vector_typemaps(unsigned long long, napi_biguint64_array, "BigUint64Array")
+
+// ===========================================================================
+// std::map<K, V> -> a plain JavaScript object
+//
+// Python's std_map.i turns a map into a dict; the Node-API one wraps it as an
+// opaque proxy with .get()/.set()/.size(), the way the Java backend does. So
+// `extractor.get_burst_channel_photons()` came back as a handle a caller had to
+// iterate by hand, where Python hands over a dict -- the one marshalling gap
+// left after the vector conversions.
+//
+// Keys become strings, because JavaScript object keys are strings and because
+// that is the shape either binding's JSON already produces. Values go through
+// the js_from() overloads above, so a map of vectors yields TypedArrays.
+//
+// OUT only: no wrapped API takes a map as a parameter.
+// ===========================================================================
+%define %js_map_out(MAPTYPE...)
+%typemap(out) MAPTYPE {
+  Napi::Object obj_ = Napi::Object::New(env);
+  // A by-value class return arrives as SwigValueWrapper<T>, which has no
+  // begin()/end() but does convert to T&. Bind through that conversion before
+  // iterating, or the wrapper does not compile.
+  const $1_ltype& map_ = $1;
+  for (const auto& kv_ : map_)
+    obj_.Set(tttrlib_js::js_key(kv_.first), tttrlib_js::js_from(env, kv_.second));
+  $result = obj_;
+}
+%typemap(out) const MAPTYPE&, MAPTYPE& {
+  Napi::Object obj_ = Napi::Object::New(env);
+  for (const auto& kv_ : *$1)
+    obj_.Set(tttrlib_js::js_key(kv_.first), tttrlib_js::js_from(env, kv_.second));
+  $result = obj_;
+}
+%enddef
+
+// Every map the wrapped API returns. int64_t is spelled both ways because it is
+// `long` on LP64 Linux and `long long` elsewhere, and SWIG matches on the
+// written type, not the resolved one.
+%js_map_out(std::map<std::string, int>)
+%js_map_out(std::map<std::string, std::string>)
+%js_map_out(std::map<std::string, double>)
+%js_map_out(std::map<std::string, std::vector<double> >)
+%js_map_out(std::map<std::string, std::vector<float> >)
+%js_map_out(std::map<std::string, std::vector<int> >)
+%js_map_out(std::map<std::string, std::vector<unsigned char> >)
+%js_map_out(std::map<std::string, std::vector<long long> >)
+%js_map_out(std::map<std::string, std::vector<long> >)
+%js_map_out(std::map<std::string, std::vector<std::vector<long long> > >)
+%js_map_out(std::map<std::string, std::vector<std::vector<long> > >)
+%js_map_out(std::map<std::string, std::vector<std::string> >)
+%js_map_out(std::map<int, int>)
+%js_map_out(std::map<int, std::vector<float> >)
+%js_map_out(std::map<int, std::vector<double> >)
+%js_map_out(std::map<short, std::vector<double> >)
+%js_map_out(std::map<signed char, int>)
 
 // std::vector<std::string> -> Array of strings (Python gives a list of str).
 %typemap(out) std::vector<std::string> {

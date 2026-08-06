@@ -57,7 +57,7 @@ Quick start
 
    const [decay, timeAxis] = t.getMicrotimeHistogram(1);
 
-Four conventions
+Five conventions
 ----------------
 
 These are the whole of what a Python user has to relearn.
@@ -88,6 +88,21 @@ Arrays are flat and row-major, with a ``shape``
 
 The same form is accepted back as input, as are nested arrays and
 ``{data, shape}`` objects.
+
+Containers become native JavaScript values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Where Python's binding gives a list or a dict, this one gives a TypedArray or a
+plain object rather than the opaque proxy SWIG's Node-API backend produces by
+default:
+
+.. code-block:: javascript
+
+   correlator.getCorrNormalized()          // Float64Array, not a VectorDouble
+   extractor.getBurstChannelPhotons()      // {"0": Float64Array, "8": ...}
+
+Map keys are strings, because JavaScript object keys are — the same shape either
+binding's JSON produces.
 
 Two names for every method, and properties for accessors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,6 +208,57 @@ Known limitations
        extend its life. Keep the JavaScript variable alive as long as anything
        C++-side refers to it. (R and Java live under the same contract — neither
        has shared_ptr support at all.)
+   * - ``std::set``
+     - ``SetInt32`` is not instantiated for JavaScript, as it is not for R.
+       Nothing in the wrapped API returns or takes a ``std::set``, so this costs
+       nothing today; it would have to be added if one ever did.
+
+.. _javascript-open-items:
+
+What is still open
+------------------
+
+Kept here rather than in a tracker so it stays next to the thing it describes.
+Ordered by what would bite first.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 26 74
+
+   * - Open item
+     - Where it stands
+   * - **Test coverage is not at parity**
+     - The Python suite has ~1500 test functions across 141 files; this one has
+       ~60. It covers the same *subsystems* and asserts the same canonical
+       cross-language values, which is what catches a broken binding — but it is
+       not the file-for-file parity the phrase suggests. Closing it properly
+       means either porting the Python suite or generating both from one shared
+       case list, which is what PRD-015 exists for.
+   * - **Only macOS arm64 has been built**
+     - Linux and Windows are untried. The ``build_test_js_lnx`` CI job is written
+       but has never run, so treat its first run as part of the work rather than
+       as a regression check.
+   * - **No prebuilt binaries, nothing published**
+     - PRD-016's M5 asks for ``prebuildify`` binaries for linux-x64/arm64,
+       darwin-x64/arm64 and win32-x64, loaded by ``node-gyp-build``, and an npm
+       release. The package metadata is in place; the pipeline is not.
+   * - **The copy fallback has never executed**
+     - When a host refuses an external ``ArrayBuffer`` the binding copies
+       instead. That path is exercised by no test, because no available runtime
+       refuses. Building with ``-DTTTRLIB_JS_COPY_ARRAYS`` and running the suite
+       would cover it.
+   * - **No sanitiser run**
+     - PRD-016 asks for the "drop the owner, then read the view" case under ASAN.
+       ``test/js/lifetime.test.mjs`` covers the shared_ptr and GC side in ordinary
+       builds, but nothing has been run under a sanitiser.
+   * - **Columnar HDF5 is not wrapped**
+     - ``ext/js/tttrlib.i`` deliberately omits ``Hdf5Table.i`` so it matches the
+       committed Python module. Add the ``%include`` when the reader lands;
+       ``readHdf5()`` / ``writeHdf5()`` are already in ``index.js`` behind a
+       feature check, so nothing else changes.
+   * - **The full conformance list**
+     - PRD-016's M6 wants PRD-015's case list green. The canonical reference
+       values pass; that list does not exist yet.
 
 Testing status
 --------------

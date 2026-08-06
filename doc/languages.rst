@@ -37,9 +37,11 @@ it.
 
       A Node.js native addon (Node-API), covering the **same surface as Python**.
       Arrays are TypedArrays, and 64-bit values — macro times above all — are
-      ``BigInt64Array`` rather than ``Float64Array``, because a JavaScript
-      ``number`` stops being exact at 2\ :sup:`53`. Methods are available under
-      both their C++ names and camelCase aliases.
+      ``BigUint64Array`` rather than ``Float64Array``, because a JavaScript
+      ``number`` stops being exact at 2\ :sup:`53`. ``std::vector`` and
+      ``std::map`` become TypedArrays and plain objects, mirroring Python's list
+      and dict. Methods are available under both their C++ names and camelCase
+      aliases. See :doc:`javascript-package`.
 
 .. tip::
 

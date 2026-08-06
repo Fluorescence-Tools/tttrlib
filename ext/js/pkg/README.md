@@ -17,7 +17,7 @@ console.log(t.acquisitionTime, 's');
 const [decay, time] = t.getMicrotimeHistogram(1);
 ```
 
-## Three things to know
+## Four things to know
 
 **64-bit values are BigInt.** Macro times exceed 2<sup>53</sup>, where a
 JavaScript `number` stops being exact. They cross as `BigInt64Array` and scalars
@@ -39,6 +39,15 @@ img[(f * lines + l) * pixels + p]
 ```
 
 The same form is accepted as input, as are nested arrays and `{data, shape}`.
+
+**Containers are native values.** `std::vector` comes back as a TypedArray and
+`std::map` as a plain object — not the opaque proxy SWIG's Node-API backend
+produces by default, and matching the list/dict Python's binding gives:
+
+```js
+correlator.getCorrNormalized()        // Float64Array
+extractor.getBurstChannelPhotons()    // { "0": Float64Array, "8": Float64Array }
+```
 
 **Every method has two names.** The C++ name (`get_macro_times`) and a camelCase
 alias (`getMacroTimes`); a `get_x`/`set_x` pair also appears as a property `x`.
