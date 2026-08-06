@@ -21,3 +21,4 @@ add_subdirectory(csv)     # CSV -> DataStore. Depends on core; see its CMakeList
 add_subdirectory(hdf5_table)  # columnar HDF5 -> DataStore. Depends on core, so it
                               # cannot live in hdf5/, which core itself depends on.
 add_subdirectory(store)   # the native .dstore file. No external dependency at all.
+add_subdirectory(pto)     # PTO, the PhoTon cOntainer: EBML, DocType "pto".
