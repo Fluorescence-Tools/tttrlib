@@ -20,8 +20,10 @@
     (const double* xs, int n_xs),
     (const double* ys, int n_ys)
 }
+// DIM1 is the FIRST dimension of the array, which for a row-major image is the
+// row count. The C++ parameters are named in that order for the same reason.
 %apply (unsigned char* IN_ARRAY2, int DIM1, int DIM2) {
-    (const unsigned char* image, int nx, int ny)
+    (const unsigned char* image, int ny, int nx)
 }
 %apply (signed char* IN_ARRAY1, int DIM1) { (const signed char* v, int n) }
 %apply (unsigned long long* IN_ARRAY1, int DIM1) { (const unsigned long long* v, int n) }

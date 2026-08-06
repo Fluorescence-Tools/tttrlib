@@ -119,3 +119,35 @@ def _ds_col(store, c):
     if i < 0:
         raise KeyError("no column named %r" % c)
     return i
+
+
+def _ds_axis_from_edges(edges, label=""):
+    """An Axis over explicit bin boundaries.
+
+    NumPy's last bin includes its upper edge while every other bin is half-open,
+    and a caller replacing a NumPy histogram must not lose the highest point of
+    the dataset -- bin edges are routinely taken from the data's own maximum. So
+    the stored top edge is nudged up by one ulp, which cannot move any value
+    except one sitting exactly on it.
+
+    A VARIABLE axis even when the edges are evenly spaced, which costs a binary
+    search per point rather than a multiply. Two faster shapes were tried and
+    both are wrong:
+
+    - Nudging the top edge of a REGULAR axis moves every interior boundary with
+      it, and on an integer-valued axis -- pixel indices -- a point sitting
+      exactly on a boundary then falls in the bin below.
+    - Adding one extra bin of the same width keeps the interior boundaries
+      exactly, but its extra bin spans ``[hi, hi + w)`` and so also catches the
+      values ABOVE the top edge, which numpy drops. Folding it back into the
+      last bin silently pulls in points that are off the axis.
+
+    Both are ~2x faster and neither gives the same answer, so neither is here.
+    """
+    np = _np_ds
+    e = np.ascontiguousarray(np.asarray(edges, dtype=np.float64))
+    if e.ndim != 1 or e.size < 2:
+        raise ValueError("bin edges must be a 1-D array of at least two values")
+    e = e.copy()
+    e[-1] = np.nextafter(e[-1], np.inf)
+    return Axis.variable(e, AxisOptions.flow(), label), False

@@ -55,6 +55,19 @@ def test_a_column_view_keeps_its_store_alive():
     assert v.sum() == 6.0, "the buffer was freed under the view"
 
 
+def test_a_held_column_survives_later_columns_being_added():
+    """A Column is a borrowed reference into the store's column container, and a
+    table adapter fetches its columns once and keeps them. Adding a column must
+    therefore not move the ones already handed out."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(5)
+    held = s.add("f", np.arange(5, dtype=np.float64))
+    for i in range(8):
+        s.add(f"x{i}", np.arange(5, dtype=np.float64))
+    assert held.name() == "f", "the held column moved out from under the proxy"
+    assert np.array_equal(held.numpy(), np.arange(5, dtype=np.float64))
+
+
 def test_store_reports_its_own_size(store):
     r = store.memory_report()
     assert r["total"] == sum(v for k, v in r.items() if k != "total")

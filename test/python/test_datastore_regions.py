@@ -68,17 +68,28 @@ def test_polygon_matches_matplotlib(store):
     assert np.count_nonzero(s.selection() != ref) <= 2
 
 
-def test_painted_mask(store):
-    """An arbitrary drawing costs one lookup per point, like a rectangle."""
-    s, x, y = store
-    nx = ny = 64
-    img = np.zeros((ny, nx), dtype=np.uint8)
-    img[16:48, 8:24] = 1                     # a painted blob
-    img[40:60, 40:60] = 1                    # and a second, disconnected one
-    s.region("x", "y", kind="mask", image=img, x0=0.0, y0=0.0, x1=1.0, y1=1.0)
+@pytest.mark.parametrize("ny,nx,extent", [
+    (64, 64, (0.0, 0.0, 1.0, 1.0)),          # square, unit, at the origin
+    (17, 43, (-1.0, -0.5, 2.0, 1.5)),        # neither square nor unit nor at 0
+    (43, 17, (-1.0, -0.5, 2.0, 1.5)),        # and the same shape transposed
+])
+def test_painted_mask(store, ny, nx, extent):
+    """An arbitrary drawing costs one lookup per point, like a rectangle.
 
-    ix = ((x - 0.0) * nx / 1.0).astype(int)
-    iy = ((y - 0.0) * ny / 1.0).astype(int)
+    Parametrised over a NON-SQUARE mask deliberately. A square one cannot tell a
+    row-major image from its transpose, and the extent starting left of and
+    below zero is what tells a floor from a cast: a cast rounds towards zero, so
+    a point half a pixel outside the left edge lands in column 0 rather than
+    -1 and is wrongly accepted.
+    """
+    s, x, y = store
+    x0, y0, x1, y1 = extent
+    rng = np.random.default_rng(3)
+    img = (rng.random((ny, nx)) < 0.3).astype(np.uint8)
+    s.region("x", "y", kind="mask", image=img, x0=x0, y0=y0, x1=x1, y1=y1)
+
+    ix = np.floor((x - x0) * nx / (x1 - x0)).astype(np.int64)
+    iy = np.floor((y - y0) * ny / (y1 - y0)).astype(np.int64)
     inside = (ix >= 0) & (ix < nx) & (iy >= 0) & (iy < ny)
     expected = np.zeros(len(x), dtype=bool)
     expected[inside] = img[iy[inside], ix[inside]] != 0
@@ -114,6 +125,35 @@ def test_a_point_with_no_position_is_not_inside_anything():
     s["y"].mask_non_finite()
     s.region("x", "y", kind="rectangle", x0=0.0, y0=0.0, x1=1.0, y1=1.0)
     assert s.n_selected() == 2
+
+
+def test_an_inverted_region_can_be_subtracted_from_a_selection(store):
+    """``invert=True, how="and"`` is "keep what is selected and not in here".
+
+    It used to invert the whole selection and then raise, which left the store
+    holding an answer nobody asked for -- and a caller that caught the exception
+    had no way to know.
+    """
+    s, x, y = store
+    s.where("x", 0.0, 1.0)
+    before = s.selection().copy()
+    s.region("x", "y", kind="ellipse", cx=0.5, cy=0.5, rx=0.2, ry=0.2,
+             how="and", invert=True)
+    inside = ((x - 0.5) / 0.2) ** 2 + ((y - 0.5) / 0.2) ** 2 <= 1.0
+    assert np.array_equal(s.selection(), before & ~inside)
+
+
+def test_a_region_that_cannot_be_evaluated_leaves_the_selection_alone(store):
+    s, x, y = store
+    s.where("x", 0.0, 1.0)
+    before = s.selection().copy()
+    with pytest.raises(NotImplementedError):
+        s.region("x", "y", kind="rectangle", x0=0, y0=0, x1=1, y1=1,
+                 how="or", invert=True)
+    assert np.array_equal(s.selection(), before)
+    with pytest.raises(ValueError):
+        s.region("x", "y", kind="trapezoid")
+    assert np.array_equal(s.selection(), before)
 
 
 def test_a_weighted_histogram_respects_the_region(store):

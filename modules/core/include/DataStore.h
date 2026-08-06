@@ -46,6 +46,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
 #include <map>
 #include <mutex>
 #include <stdexcept>
@@ -106,6 +107,11 @@ enum class ColumnType {
     Bool,
     String
 };
+
+/// Whether a column type can hold a NaN or an infinity at all.
+inline bool is_floating(ColumnType t) {
+    return t == ColumnType::Float64 || t == ColumnType::Float32;
+}
 
 /// Bytes per element of a stored column, for reporting memory use.
 inline int column_type_size(ColumnType t) {
@@ -200,10 +206,27 @@ public:
         return false;
     }
 
-    /// Set from a byte-per-row array, which is what numpy hands over.
+    /*!
+     * Set from a byte-per-row array, which is what numpy hands over.
+     *
+     * A word at a time. Setting one bit at a time is a read-modify-write of a
+     * whole word per row, and this is on the interactive path -- every redraw
+     * hands over a fresh mask of every row in the table.
+     */
     void from_bytes(const unsigned char* b, std::size_t n) {
         assign(n, false);
-        for (std::size_t i = 0; i < n; i++) if (b[i]) set(i, true);
+        const std::size_t full = n / 64;
+        for (std::size_t k = 0; k < full; k++) {
+            const unsigned char* q = b + k * 64;
+            std::uint64_t bits = 0;
+            for (int i = 0; i < 64; i++)
+                bits |= static_cast<std::uint64_t>(q[i] != 0 ? 1 : 0) << i;
+            words_[k] = bits;
+        }
+        std::uint64_t bits = 0;
+        for (std::size_t i = full * 64; i < n; i++)
+            bits |= static_cast<std::uint64_t>(b[i] != 0 ? 1 : 0) << (i - full * 64);
+        if (full < words_.size()) words_[full] = bits;
     }
     /// Expand into a caller-provided byte-per-row array. Takes a length
     /// because a language binding cannot pass a bare pointer safely.
@@ -588,6 +611,40 @@ public:
         *n = static_cast<int>(codes_.size());
     }
 
+    /*!
+     * \brief The buffer itself, untyped.
+     *
+     * For a reader or writer that moves a whole column at once and already
+     * knows its type -- an HDF5 dataset, a memory-mapped block. Untyped because
+     * the alternative is a switch that names all eleven typed accessors at
+     * every such call site, and the caller has just read \ref type to decide
+     * which one it would name.
+     *
+     * Null for a Bool column, whose values are bit-packed and so do not exist
+     * as elements to point at.
+     */
+    void* data_ptr() {
+        switch (type_) {
+            case ColumnType::Float64: return f64_.empty() ? nullptr : f64_.data();
+            case ColumnType::Float32: return f32_.empty() ? nullptr : f32_.data();
+            case ColumnType::Int64:   return i64_.empty() ? nullptr : i64_.data();
+            case ColumnType::Int32:   return i32_.empty() ? nullptr : i32_.data();
+            case ColumnType::Int16:   return i16_.empty() ? nullptr : i16_.data();
+            case ColumnType::Int8:    return i8_.empty() ? nullptr : i8_.data();
+            case ColumnType::UInt64:  return u64_.empty() ? nullptr : u64_.data();
+            case ColumnType::UInt32:  return u32_.empty() ? nullptr : u32_.data();
+            case ColumnType::UInt16:  return u16_.empty() ? nullptr : u16_.data();
+            case ColumnType::UInt8:   return u8_.empty() ? nullptr : u8_.data();
+            case ColumnType::String:  return codes_.empty() ? nullptr : codes_.data();
+            case ColumnType::Bool:    return nullptr;
+        }
+        return nullptr;
+    }
+    /// \see data_ptr
+    const void* data_ptr() const {
+        return const_cast<Column*>(this)->data_ptr();
+    }
+
     // --- validity ---------------------------------------------------------
 
     bool has_mask() const { return !mask_.empty(); }
@@ -928,9 +985,19 @@ private:
         if (cy.has_mask()) m.and_with(cy.mask());
     }
 
-    /// Dispatch `p` over whatever type the column holds. One switch per COLUMN.
+    /*!
+     * Dispatch `p` over whatever type the column holds. One switch per COLUMN.
+     *
+     * `invalid_selected` says what a row the column marks as missing means. The
+     * default -- false -- is the library's rule: "not measured" cannot satisfy a
+     * condition. True is for a front end whose gates are written as comparisons
+     * in a language where every comparison against a missing value is false, so
+     * a missing value passes through the gate untouched. Both are defensible and
+     * they are not interchangeable, so it is a parameter rather than a policy.
+     */
     template<typename Pred>
-    void scan_column(const Column& c, BitMask& m, Pred p) const {
+    void scan_column(const Column& c, BitMask& m, Pred p,
+                     bool invalid_selected = false) const {
         const std::size_t n = std::min(n_rows_, c.size());
         switch (c.type()) {
             case ColumnType::Float64: scan_typed(c.f64_ptr(), n, m, p); break;
@@ -949,8 +1016,19 @@ private:
                 break;
             }
         }
-        // A column that says a value is missing cannot satisfy any condition.
-        if (c.has_mask()) m.and_with(c.mask());
+        if (c.has_mask()) {
+            if (invalid_selected) {
+                // The missing rows pass the gate whatever the predicate made of
+                // whatever was in the buffer for them.
+                BitMask missing = c.mask();
+                missing.invert();
+                m.or_with(missing);
+            } else {
+                // A column that says a value is missing cannot satisfy any
+                // condition.
+                m.and_with(c.mask());
+            }
+        }
     }
 
 public:
@@ -989,12 +1067,64 @@ public:
         apply(m, how);
     }
 
+    /*!
+     * \brief Select the rows whose value in `col` lies in an interval whose
+     *        endpoints may each be open or closed.
+     *
+     * \ref select_range is the library's own rule -- half-open, missing values
+     * dropped -- and is unchanged. This is for reproducing a gate defined
+     * somewhere else, where those two decisions were made differently and
+     * changing them would change which points a published figure contains:
+     *
+     *  - **Closed endpoints.** Most gates a scientist draws are `lo <= v <= hi`.
+     *    A half-open interval quietly drops the points exactly on the upper
+     *    edge, which for integer-valued or binned columns is not a rounding
+     *    detail but a visible bite out of the population.
+     *  - **`invalid_selected`.** A front end that writes its gate as
+     *    `(v >= lo) & (v <= hi)` in numpy keeps every NaN, because both
+     *    comparisons are false and the point is never excluded by THIS gate --
+     *    it is left for a separate "drop the non-finite" step to decide. Passing
+     *    true reproduces that; the default reproduces the library's rule.
+     *
+     * `lo` and `hi` may be infinite, which is how a one-sided gate is written.
+     * An infinite bound is a real comparison, not a missing value: with
+     * `hi = +inf` a stored `+inf` is inside a closed interval and outside an
+     * open one, exactly as the arithmetic says.
+     */
+    void select_interval(int col, double lo, double hi,
+                         bool lo_closed = true, bool hi_closed = true,
+                         bool invalid_selected = false,
+                         Combine how = Combine::Replace) {
+        BitMask m(n_rows_, false);
+        scan_column(column(col), m,
+                    [lo, hi, lo_closed, hi_closed, invalid_selected](auto v) {
+                        const double d = static_cast<double>(v);
+                        // NaN fails every comparison, so the two conventions
+                        // differ on it and only on it.
+                        if (d != d) return invalid_selected;
+                        const bool above = lo_closed ? (d >= lo) : (d > lo);
+                        const bool below = hi_closed ? (d <= hi) : (d < hi);
+                        return above && below;
+                    },
+                    invalid_selected);
+        apply(m, how);
+    }
+
     /// Select the rows where every listed column has a finite, valid value.
     void select_finite(const std::vector<int>& cols, Combine how = Combine::Replace) {
         BitMask acc(n_rows_, true);
         for (int ci : cols) {
+            const Column& c = column(ci);
+            // An integer cannot be a NaN or an infinity, so there is nothing to
+            // scan for: only what the column itself marks missing can exclude a
+            // row. Worth the branch because a pixel coordinate is an integer
+            // column and this runs on every redraw.
+            if (!is_floating(c.type())) {
+                if (c.has_mask()) acc.and_with(c.mask());
+                continue;
+            }
             BitMask m(n_rows_, false);
-            scan_column(column(ci), m,
+            scan_column(c, m,
                         [](auto v) { return std::isfinite(static_cast<double>(v)); });
             acc.and_with(m);
         }
@@ -1044,6 +1174,54 @@ public:
     }
 
     /*!
+     * \brief Rows where a quadratic form about (cx, cy) is at most `threshold`.
+     *
+     * `(dx, dy) M (dx, dy)^T <= threshold` with `M = [[a, b], [b, c]]`. With `M`
+     * the inverse of a covariance matrix and `threshold` the square of a number
+     * of standard deviations, this is a Mahalanobis gate -- the ellipse drawn
+     * around a fitted 2-D Gaussian population.
+     *
+     * \ref select_ellipse says the same thing in centre-radii-angle form and is
+     * what a drawn shape has. This says it in the form a FIT has, and the
+     * difference is not presentation: converting one to the other means
+     * diagonalising `M`, and a comparison against a boundary computed through
+     * two square roots and an arctangent does not agree bit for bit with one
+     * computed from the coefficients directly. For a gate that decides which
+     * points appear in a published population, reproducing the arithmetic is
+     * worth a second entry point. It also stays meaningful when `M` is not
+     * positive definite -- a covariance from a failed fit -- where the radii
+     * form has no answer at all.
+     */
+    void select_quadratic(int col_x, int col_y, double cx, double cy,
+                          double a, double b, double c, double threshold,
+                          Combine how = Combine::Replace) {
+        BitMask m(n_rows_, false);
+        scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
+            const double dx = x - cx, dy = y - cy;
+            return a * dx * dx + 2.0 * b * dx * dy + c * dy * dy <= threshold;
+        });
+        apply(m, how);
+    }
+
+    /*!
+     * \brief Combine a row-per-byte boolean mask into the selection.
+     *
+     * The way in for a condition the store has no primitive for. A caller can
+     * read the one or two columns it needs as zero-copy views, decide in
+     * whatever language it is written in, and combine the answer here -- rather
+     * than taking the selection out, combining outside, and putting a whole new
+     * one back, which is where a second representation of the selection starts.
+     */
+    void select_mask_rows(const unsigned char* m, int n,
+                          Combine how = Combine::Replace) {
+        BitMask b(n_rows_, false);
+        const std::size_t k = std::min<std::size_t>(static_cast<std::size_t>(n < 0 ? 0 : n),
+                                                    n_rows_);
+        for (std::size_t i = 0; i < k; i++) if (m[i]) b.set(i, true);
+        apply(b, how);
+    }
+
+    /*!
      * Rows inside a polygon, by the crossing-number rule.
      *
      * A lasso has a hundred vertices and the test is O(vertices) per point, so
@@ -1080,13 +1258,18 @@ public:
     /*!
      * Rows whose (x, y) falls on a set pixel of a painted mask.
      *
-     * `image` is `nx * ny` bytes in row-major order covering
-     * [x0, x1) x [y0, y1). One multiply-add and a load per point, whatever the
-     * shape painted -- which is why an arbitrary drawing is no more expensive
-     * than a rectangle.
+     * `image` is `ny` rows of `nx` bytes -- row-major, y varying slowest --
+     * covering [x0, x1) x [y0, y1). The parameter order says so: a 2-D numpy
+     * array binds its first dimension to the first length, and that dimension
+     * is the row count. Naming the row count `nx` and then indexing
+     * `iy * nx + ix` transposes every non-square mask, silently and only for
+     * non-square masks, which is exactly the bug this order exists to prevent.
+     *
+     * One multiply-add and a load per point, whatever the shape painted --
+     * which is why an arbitrary drawing is no more expensive than a rectangle.
      */
     void select_mask_image(int col_x, int col_y,
-                           const unsigned char* image, int nx, int ny,
+                           const unsigned char* image, int ny, int nx,
                            double x0, double y0, double x1, double y1,
                            Combine how = Combine::Replace) {
         BitMask m(n_rows_, false);
@@ -1096,10 +1279,15 @@ public:
         }
         const double sx = nx / (x1 - x0), sy = ny / (y1 - y0);
         scan_xy(column(col_x), column(col_y), m, [=](double x, double y) {
-            const int ix = static_cast<int>((x - x0) * sx);
-            const int iy = static_cast<int>((y - y0) * sy);
-            if (ix < 0 || ix >= nx || iy < 0 || iy >= ny) return false;
-            return image[static_cast<std::size_t>(iy) * nx + ix] != 0;
+            // floor, not a cast: casting truncates towards zero, so a point one
+            // half-pixel to the LEFT of the extent lands in column 0 instead of
+            // -1 and is accepted by the range check below.
+            const double fx = std::floor((x - x0) * sx);
+            const double fy = std::floor((y - y0) * sy);
+            if (!(fx >= 0.0 && fx < nx && fy >= 0.0 && fy < ny)) return false;
+            const std::size_t ix = static_cast<std::size_t>(fx);
+            const std::size_t iy = static_cast<std::size_t>(fy);
+            return image[iy * static_cast<std::size_t>(nx) + ix] != 0;
         });
         apply(m, how);
     }
@@ -1108,7 +1296,17 @@ public:
     void select_all() { row_mask_.clear(); }
     /// Nothing selected.
     void select_none() { row_mask_.assign(n_rows_, false); }
-    /// Flip the selection.
+    /*!
+     * Flip the selection.
+     *
+     * Every row flips, including rows whose coordinates a region could not be
+     * evaluated on because a column marks them missing. That is what "flip"
+     * means and it is the only thing a mask operation can mean, but it is
+     * usually not what a caller inverting a REGION wants: a point whose position
+     * is unknown cannot be shown to be outside a shape any more than inside it.
+     * Express that as `select_finite({x, y})` followed by the region with
+     * Combine::AndNot, which keeps the missing rows out under both polarities.
+     */
     void invert_selection() {
         if (row_mask_.empty()) { select_none(); return; }
         row_mask_.invert();
@@ -1132,7 +1330,9 @@ private:
         }
     }
 
-    std::vector<Column> columns_;
+    // A deque, not a vector: adding a column must not invalidate a Column
+    // reference already handed out. Nothing here needs the columns contiguous.
+    std::deque<Column> columns_;
     std::size_t n_rows_ = 0;
     BitMask row_mask_;
     std::string label_;
@@ -1206,15 +1406,6 @@ inline void fill_histogram(hist::HistogramNd& h, const DataStore& store,
     for (int i : columns) cols.push_back(&store.column(i));
     const Column* w = (weight >= 0) ? &store.column(weight) : nullptr;
 
-    // Weights have to be doubles by the time they reach the accumulator, and
-    // there is one per row rather than one per axis, so this is the single
-    // place a conversion is worth doing.
-    std::vector<double> weights;
-    if (w != nullptr) {
-        weights.resize(store.n_rows());
-        for (std::size_t i = 0; i < weights.size(); i++) weights[i] = w->value_at(i);
-    }
-
     const Column* const* cp = cols.data();
     const DataStore* sp = &store;
     const std::size_t n_cols = cols.size();
@@ -1229,8 +1420,82 @@ inline void fill_histogram(hist::HistogramNd& h, const DataStore& store,
                 if (w != nullptr && !w->valid(r)) return false;
                 return true;
             },
+            // The weight is read out of its column, in its own type, exactly
+            // like a coordinate. Materialising it as a double array first --
+            // which is what this did -- allocated and filled one double per ROW
+            // per fill: 14 MB on a two-million-row table, three times per
+            // redraw, to widen values that are added up and discarded.
+            [w](long long i) {
+                // Guarded rather than relying on the caller never asking: the
+                // guard is one predictable branch, and a null dereference here
+                // would be a crash in a fill loop.
+                return w != nullptr ? w->value_at(static_cast<std::size_t>(i)) : 1.0;
+            },
+            w != nullptr,
+            static_cast<long long>(store.n_rows()), n_threads);
+}
+
+/*!
+ * \brief Fill a Mean or WeightedMean histogram with a SAMPLE column, binned by
+ *        the coordinate columns.
+ *
+ * The parameter map: each bin holds the mean of `sample` over the rows that
+ * landed in it, rather than how many landed there. Two axis columns and a
+ * lifetime column make a lifetime image; the same call with one axis makes a
+ * profile along it.
+ *
+ * A row is used only if the selection allows it and every column involved --
+ * each axis, the sample, and the weight -- says its value is valid. The sample
+ * carries a stricter rule than the axes do: a non-finite sample is skipped even
+ * if the column does not mark it missing, because Welford's update is recursive
+ * and a single NaN leaves the bin NaN for every row after it. Dropping the row
+ * loses one measurement; keeping it loses the pixel.
+ *
+ * \param h         the histogram; its storage must be Mean or WeightedMean
+ * \param store     the table the columns come from
+ * \param columns   one column index per axis
+ * \param sample    the column being averaged
+ * \param weight    a column to weight by, or -1 (WeightedMean only)
+ */
+inline void fill_histogram_sample(hist::HistogramNd& h, const DataStore& store,
+                                  const std::vector<int>& columns, int sample,
+                                  int weight = -1) {
+    if (static_cast<int>(columns.size()) != h.rank())
+        throw std::invalid_argument(
+                "fill_histogram_sample: one column per axis is required");
+
+    std::vector<const Column*> cols;
+    cols.reserve(columns.size());
+    for (int i : columns) cols.push_back(&store.column(i));
+    const Column& s = store.column(sample);
+    const Column* w = (weight >= 0) ? &store.column(weight) : nullptr;
+
+    std::vector<double> weights;
+    if (w != nullptr) {
+        weights.resize(store.n_rows());
+        for (std::size_t i = 0; i < weights.size(); i++) weights[i] = w->value_at(i);
+    }
+
+    const Column* const* cp = cols.data();
+    const Column* sp_col = &s;
+    const DataStore* sp = &store;
+    const std::size_t n_cols = cols.size();
+
+    h.fill_sample_with(
+            [cp](int d, long long i) { return cp[d]->value_at(static_cast<std::size_t>(i)); },
+            [cp, sp, sp_col, n_cols, w](long long i) {
+                const std::size_t r = static_cast<std::size_t>(i);
+                if (!sp->row_selected(r)) return false;
+                for (std::size_t d = 0; d < n_cols; d++)
+                    if (!cp[d]->valid(r)) return false;
+                if (!sp_col->valid(r)) return false;
+                if (!std::isfinite(sp_col->value_at(r))) return false;
+                if (w != nullptr && !w->valid(r)) return false;
+                return true;
+            },
+            [sp_col](long long i) { return sp_col->value_at(static_cast<std::size_t>(i)); },
             static_cast<long long>(store.n_rows()),
-            weights.empty() ? nullptr : weights.data(), n_threads);
+            weights.empty() ? nullptr : weights.data());
 }
 
 /*!

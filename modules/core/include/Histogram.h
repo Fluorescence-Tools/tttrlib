@@ -160,10 +160,10 @@ inline void histogram_run_threads(unsigned n_threads, Fn body) {
  *
  * \param cell_of maps a point index to a flat cell index, or -1 to drop it
  */
-template<typename CellFn>
+template<typename WeightFn, typename CellFn>
 inline void histogram_partitioned_fill(
         double* hist, int n_cells, long long n_points, unsigned n_threads,
-        const double* weights, bool use_weights, CellFn cell_of) {
+        WeightFn weight_of, bool use_weights, CellFn cell_of) {
     const unsigned owners = n_threads;
     const long long cells_per_owner =
             (static_cast<long long>(n_cells) + owners - 1) / owners;
@@ -204,7 +204,7 @@ inline void histogram_partitioned_fill(
                 unsigned o = static_cast<unsigned>(c / cells_per_owner);
                 if (o >= owners) o = owners - 1;
                 my_cells[o].push_back(c);
-                if (use_weights) my_weights[o].push_back(weights[i]);
+                if (use_weights) my_weights[o].push_back(weight_of(i));
             }
         });
 
@@ -475,7 +475,8 @@ void histogram1D(
     if (n_threads > 1) {
         if (histogram_should_partition(limit, n_threads)) {
             histogram_partitioned_fill(
-                    hist, limit, n_data, n_threads, weights, use_weights,
+                    hist, limit, n_data, n_threads,
+                    [weights](long long i) { return weights[i]; }, use_weights,
                     [&](long long i) { return axis.bin_of(data[i]); });
         } else {
             histogram_parallel_fill(hist, limit, n_data, n_threads, fill_chunk);
@@ -556,7 +557,8 @@ void histogram2D(
     if (n_threads > 1) {
         if (histogram_should_partition(n_cells, n_threads)) {
             histogram_partitioned_fill(
-                    hist, n_cells, n, n_threads, weights,
+                    hist, n_cells, n, n_threads,
+                    [weights](long long i) { return weights[i]; },
                     use_weights && n_weights >= n,
                     [&](long long i) {
                         const int ix = ax.bin_of(data_x[i]);

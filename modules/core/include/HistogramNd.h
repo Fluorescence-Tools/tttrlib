@@ -67,6 +67,21 @@ struct AxisOptions {
     bool overflow = true;
     bool circular = false;
     bool growth = false;
+    /*!
+     * Include the axis's own upper bound in the last bin.
+     *
+     * Every bin is [lower, upper) and the top of the axis is therefore outside
+     * all of them -- which is right until the axis was built from the data,
+     * because then the largest value in the dataset sits exactly on it. NumPy
+     * closes its last bin for that reason and a caller replacing a NumPy
+     * histogram needs the same answer, or the topmost bin is short by however
+     * many points sit at the maximum. On a pixel axis that is a whole column of
+     * the image.
+     *
+     * Off by default: it is a deviation from "every bin is half-open", and one
+     * that should be asked for rather than inherited.
+     */
+    bool closed_upper = false;
 
     // Written out rather than brace-initialised: SWIG's C++ parser does not
     // accept AxisOptions{...} in a default argument, and having two spellings
@@ -251,7 +266,19 @@ public:
 
             case AxisKind::Variable: {
                 if (!(x >= edges_.front())) return wrap_or(AXIS_UNDERFLOW);
-                if (x >= edges_.back()) return wrap_or(n_);
+                if (x >= edges_.back())
+                    return (opt_.closed_upper && x == edges_.back()) ? n_ - 1
+                                                                     : wrap_or(n_);
+                if (guess_ok_) {
+                    // See plan_variable_search. The guess is within one bin, so
+                    // the two loops below run at most once each.
+                    int i = static_cast<int>((x - edges_.front()) * guess_scale_);
+                    if (i < 0) i = 0;
+                    else if (i > n_ - 1) i = n_ - 1;
+                    while (i > 0 && edges_[i] > x) i--;
+                    while (i < n_ - 1 && edges_[i + 1] <= x) i++;
+                    return i;
+                }
                 // upper_bound gives the first edge strictly greater than x, so
                 // the bin is one before it. Bins are [lower, upper).
                 const auto it = std::upper_bound(edges_.begin(), edges_.end(), x);
@@ -267,6 +294,9 @@ public:
                 const double t = transform(x);
                 if (!std::isfinite(t)) return AXIS_UNDERFLOW;
                 const double f = std::floor((t - t_lo_) * t_inv_width_);
+                // The value sitting exactly on the top of the axis: see
+                // AxisOptions::closed_upper.
+                if (opt_.closed_upper && f >= n_ && x == hi_) return n_ - 1;
                 if (f < 0.0) return wrap_or(AXIS_UNDERFLOW, f);
                 if (f >= n_) return wrap_or(n_, f);
                 return static_cast<int>(f);
@@ -328,6 +358,40 @@ private:
             t_width_ = (t_hi - t_lo_) / n_;
             t_inv_width_ = t_width_ != 0.0 ? 1.0 / t_width_ : 0.0;
         }
+        if (kind_ == AxisKind::Variable) plan_variable_search();
+    }
+
+    /*!
+     * Decide how a variable axis finds a bin: by guessing, or by searching.
+     *
+     * A binary search over the edges costs log2(n) comparisons per point -- 8
+     * for a 256-bin axis -- and that is the whole cost of a fill over a few
+     * million points. But most variable axes are not arbitrary: the common one
+     * is a plain uniform grid that arrived as an array of edges rather than as
+     * a count and a range, and for those an affine guess lands on the right bin
+     * every time.
+     *
+     * So the guess is measured here, once. If no edge is more than one bin away
+     * from where the guess puts it, the lookup becomes a multiply plus a
+     * comparison or two; otherwise -- a log-spaced axis, where the guess can be
+     * out by half the axis -- it stays a binary search. Exact either way: the
+     * correction walks to the bin that actually contains the value.
+     */
+    void plan_variable_search() {
+        guess_scale_ = 0.0;
+        guess_ok_ = false;
+        const double span = edges_.back() - edges_.front();
+        if (!(span > 0.0) || n_ < 1) return;
+        const double width = span / n_;
+        const double scale = n_ / span;
+        double worst = 0.0;
+        for (int i = 0; i <= n_; i++) {
+            const double predicted = edges_.front() + i * width;
+            worst = std::max(worst, std::abs(edges_[i] - predicted));
+            if (worst > width) return;      // the walk would be longer than the search
+        }
+        guess_scale_ = scale;
+        guess_ok_ = true;
     }
 
     double transform(double x) const {
@@ -360,6 +424,9 @@ private:
     int n_ = 0;
     double lo_ = 0.0, hi_ = 0.0, power_ = 1.0;
     double t_lo_ = 0.0, t_width_ = 1.0, t_inv_width_ = 1.0;
+    /// Variable axes: an affine guess at the bin, when it is worth making.
+    double guess_scale_ = 0.0;
+    bool guess_ok_ = false;
     std::vector<double> edges_;
     std::vector<int> categories_;
     std::string label_;
@@ -598,6 +665,28 @@ public:
     template<typename Get, typename Keep>
     void fill_with(Get get, Keep keep, long long n_points,
                    const double* weights, int n_threads) {
+        if (weights != nullptr) {
+            fill_with(get, keep, [weights](long long i) { return weights[i]; },
+                      true, n_points, n_threads);
+        } else {
+            fill_with(get, keep, [](long long) { return 1.0; }, false,
+                      n_points, n_threads);
+        }
+    }
+
+    /*!
+     * \brief \ref fill_with, with the weight read through an accessor.
+     *
+     * The weights are one per POINT rather than one per axis, so the array form
+     * above meant a caller holding them as a column had to widen the whole
+     * column to double first -- 14 MB per fill on a two-million-row table, three
+     * times per redraw, to read values that are binned and discarded. Reading
+     * them the same way the coordinates are read costs nothing extra.
+     */
+    template<typename Get, typename Keep, typename WeightAt>
+    void fill_with(Get get, Keep keep, WeightAt weight_of, bool use_weights,
+                   long long n_points, int n_threads) {
+
         if (n_points <= 0) return;
         grow_to_fit(get, n_points);
 
@@ -620,7 +709,7 @@ public:
                     if (slot < 0) ok = false; else flat += slot * strides[d];
                 }
                 if (!ok) continue;
-                const double w = weights ? weights[i] : 1.0;
+                const double w = use_weights ? weight_of(i) : 1.0;
                 values_[flat] += w;
                 variances_[flat] += w * w;
             }
@@ -641,7 +730,7 @@ public:
             const std::vector<FastAxis> fa = fast_axes();
             std::array<FastAxis, kMaxFastRank> a{};
             for (int d = 0; d < r; d++) a[d] = fa[d];
-            dispatch_fill(n_points, n_cells, weights, n_threads,
+            dispatch_fill(n_points, n_cells, weight_of, use_weights, n_threads,
                           [a, r, get, keep](long long i) -> int {
                 if (!keep(i)) return -1;
                 int flat = 0;
@@ -659,7 +748,7 @@ public:
             const std::vector<FastAxis> fa = fast_axes();
             if (r == 1) {
                 const FastAxis a = fa[0];
-                dispatch_fill(n_points, n_cells, weights, n_threads,
+                dispatch_fill(n_points, n_cells, weight_of, use_weights, n_threads,
                               [a, get, keep](long long i) -> int {
                     if (!keep(i)) return -1;
                     const int s = a.slot_of(get(0, i));
@@ -667,7 +756,7 @@ public:
                 });
             } else {
                 const FastAxis a0 = fa[0], a1 = fa[1];
-                dispatch_fill(n_points, n_cells, weights, n_threads,
+                dispatch_fill(n_points, n_cells, weight_of, use_weights, n_threads,
                               [a0, a1, get, keep](long long i) -> int {
                     if (!keep(i)) return -1;
                     const int s0 = a0.slot_of(get(0, i));
@@ -684,7 +773,7 @@ public:
         // rank 3 and above -- goes through Axis::index, which is general and
         // slower and is not on anybody's inner loop.
         const std::vector<int> strides = compute_strides();
-        dispatch_fill(n_points, n_cells, weights, n_threads,
+        dispatch_fill(n_points, n_cells, weight_of, use_weights, n_threads,
                       [&](long long i) -> int {
             if (!keep(i)) return -1;
             int flat = 0;
@@ -695,6 +784,66 @@ public:
             }
             return flat;
         });
+    }
+
+    /*!
+     * \brief Accumulate a per-point SAMPLE into a Mean or WeightedMean
+     *        histogram, through the same accessor form as \ref fill_with.
+     *
+     * The parameter-map fill: instead of "how many points landed in this bin",
+     * each bin holds the mean of a quantity over the points that landed in it.
+     * A lifetime image is exactly this -- the axes are x and y, the sample is
+     * the per-burst lifetime, and the picture is the mean per pixel.
+     *
+     * Public and templated for the same reason \ref fill_with is: a caller
+     * holding the coordinates and the sample as float32 columns should not have
+     * to widen three arrays to double to make a picture out of them. `keep(i)`
+     * carries the selection and the validity of every column involved -- and for
+     * this fill that is not merely an optimisation. Welford's update is
+     * recursive, so one NaN sample does not spoil one entry, it leaves the bin's
+     * running mean NaN for every point that follows. A bin poisoned at row zero
+     * is NaN in the finished image.
+     *
+     * Serial by construction: the accumulator is a running mean and a running
+     * second moment, and threads would each need their own and a Chan merge to
+     * combine them. That is worth doing when it is measured to matter; it is not
+     * worth pretending to do behind a thread count that is silently ignored.
+     */
+    template<typename Get, typename Keep, typename Sample>
+    void fill_sample_with(Get get, Keep keep, Sample sample, long long n_points,
+                          const double* weights) {
+        if (!is_profile())
+            throw std::invalid_argument("a sample needs a Mean or WeightedMean histogram");
+        if (n_points <= 0) return;
+        grow_to_fit(get, n_points);
+
+        const int r = rank();
+        // A pixel grid is the affine case, which is what this fill is mostly
+        // for, so it gets the cheap index rather than Axis::index.
+        const bool affine = all_axes_affine() && r <= kMaxFastRank;
+        std::array<FastAxis, kMaxFastRank> a{};
+        std::vector<int> strides;
+        if (affine) {
+            const std::vector<FastAxis> fa = fast_axes();
+            for (int d = 0; d < r; d++) a[d] = fa[d];
+        } else {
+            strides = compute_strides();
+        }
+
+        for (long long i = 0; i < n_points; i++) {
+            if (!keep(i)) continue;
+            int flat = 0;
+            bool ok = true;
+            for (int d = 0; d < r && ok; d++) {
+                const int slot = affine ? a[d].slot_of(get(d, i))
+                                        : axes_[d].slot(axes_[d].index(get(d, i)));
+                if (slot < 0) ok = false;
+                else flat += slot * (affine ? a[d].stride : strides[d]);
+            }
+            if (!ok) continue;
+            accumulate_sample(flat, static_cast<double>(sample(i)),
+                              weights ? weights[i] : 1.0);
+        }
     }
 
     // --- output, for language bindings ------------------------------------
@@ -779,21 +928,25 @@ private:
                 if (slot < 0) ok = false; else flat += slot * strides[d];
             }
             if (!ok) continue;
-            const double s = sample[i];
-            if (storage_ == HistStorage::Mean) {
-                counts_[flat] += 1.0;
+            accumulate_sample(flat, sample[i], weights ? weights[i] : 1.0);
+        }
+    }
+
+    /// One Welford step into cell `flat`. The only place the profile storages
+    /// are updated, so the raw-pointer fill and the templated one cannot drift.
+    inline void accumulate_sample(int flat, double s, double w) {
+        if (storage_ == HistStorage::Mean) {
+            counts_[flat] += 1.0;
+            const double delta = s - values_[flat];
+            values_[flat] += delta / counts_[flat];
+            variances_[flat] += delta * (s - values_[flat]);
+        } else {
+            counts_[flat] += w;
+            aux_[flat] += w * w;
+            if (counts_[flat] != 0.0) {
                 const double delta = s - values_[flat];
-                values_[flat] += delta / counts_[flat];
-                variances_[flat] += delta * (s - values_[flat]);
-            } else {
-                const double w = weights ? weights[i] : 1.0;
-                counts_[flat] += w;
-                aux_[flat] += w * w;
-                if (counts_[flat] != 0.0) {
-                    const double delta = s - values_[flat];
-                    values_[flat] += w * delta / counts_[flat];
-                    variances_[flat] += w * delta * (s - values_[flat]);
-                }
+                values_[flat] += w * delta / counts_[flat];
+                variances_[flat] += w * delta * (s - values_[flat]);
             }
         }
     }
@@ -850,8 +1003,10 @@ private:
 
     struct FastAxis {
         double offset = 0.0, inv_width = 1.0;
+        double hi = 0.0;
         int n = 0, shift = 0, stride = 1;
         bool has_under = false, has_over = false;
+        bool closed_upper = false;
 
         /*!
          * The storage slot for `v`, or -1 when there is no bin for it.
@@ -870,6 +1025,9 @@ private:
             }
             if (f != f) return has_over ? n + shift : -1;      // NaN
             if (f < 0.0) return has_under ? 0 : -1;
+            // The value exactly on the top of the axis; see
+            // AxisOptions::closed_upper. Last, so the common path is untouched.
+            if (closed_upper && v == hi) return n - 1 + shift;
             return has_over ? n + shift : -1;
         }
     };
@@ -891,8 +1049,10 @@ private:
             f[d].offset = a.lo();
             f[d].inv_width = a.size() / (a.hi() - a.lo());
             f[d].n = a.size();
+            f[d].hi = a.hi();
             f[d].has_under = a.options().underflow;
             f[d].has_over = a.options().overflow;
+            f[d].closed_upper = a.options().closed_upper;
             f[d].shift = f[d].has_under ? 1 : 0;
             f[d].stride = strides[d];
         }
@@ -900,22 +1060,22 @@ private:
     }
 
     /// Pick a fill strategy for `cell_of` and run it. \see Histogram.h
-    template<typename CellFn>
-    void dispatch_fill(long long n_points, int n_cells, const double* weights,
-                       int n_threads, CellFn cell_of) {
+    template<typename WeightFn, typename CellFn>
+    void dispatch_fill(long long n_points, int n_cells, WeightFn weight_of,
+                       bool use_weights, int n_threads, CellFn cell_of) {
         const unsigned threads = histogram_fill_threads(n_points, n_cells, n_threads);
         double* out0 = values_.data();
         if (threads > 1) {
             if (histogram_should_partition(n_cells, threads)) {
                 histogram_partitioned_fill(out0, n_cells, n_points, threads,
-                                           weights, weights != nullptr, cell_of);
+                                           weight_of, use_weights, cell_of);
             } else {
                 histogram_parallel_fill(
                         out0, n_cells, n_points, threads,
                         [&](long long a, long long b, double* out) {
                             for (long long i = a; i < b; i++) {
                                 const int c = cell_of(i);
-                                if (c >= 0) out[c] += weights ? weights[i] : 1.0;
+                                if (c >= 0) out[c] += use_weights ? weight_of(i) : 1.0;
                             }
                         });
             }
@@ -923,7 +1083,7 @@ private:
         }
         for (long long i = 0; i < n_points; i++) {
             const int c = cell_of(i);
-            if (c >= 0) out0[c] += weights ? weights[i] : 1.0;
+            if (c >= 0) out0[c] += use_weights ? weight_of(i) : 1.0;
         }
     }
 
