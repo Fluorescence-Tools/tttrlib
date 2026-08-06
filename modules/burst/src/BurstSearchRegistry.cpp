@@ -22,9 +22,14 @@
  * Keep this in sync with the method signatures in TTTR.h — `method` is called by
  * name and each property name must match that method's keyword argument.
  */
+#include <algorithm>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "TTTR.h"
+#include "TTTRHeader.h"
+#include "PluginHost.h"
 
 namespace {
 
@@ -356,5 +361,76 @@ const char* const kBurstSearchRegistry = R"JSON({
 } // namespace
 
 std::string TTTR::burst_search_algorithms_json() {
-    return std::string(kBurstSearchRegistry);
+    // The built-ins are a literal because they are fixed at compile time. A
+    // plugin's searches are not, so they are spliced in -- which is what puts
+    // one in `registry("burst_search")` and lets a form render it. They carry
+    // "provider": "plugin" and no "method", because there is no attribute on
+    // TTTR to call; see TTTR::burst_search_plugin.
+    const std::string extra = tttrlib::PluginHost::burst_searches_json();
+    if (extra.empty()) return std::string(kBurstSearchRegistry);
+
+    std::string base(kBurstSearchRegistry);
+    const std::size_t close = base.find_last_of('}');
+    if (close == std::string::npos) return base;
+    const std::size_t last_entry_end = base.find_last_of('}', close - 1);
+    if (last_entry_end == std::string::npos) return base;
+    base.insert(last_entry_end + 1, ",\n" + extra + "\n");
+    return base;
+}
+
+/*!
+ * \brief Run a plugin's burst search over this object's photons.
+ *
+ * A burst search is nearly a pure function -- arrival times in, index ranges
+ * out -- which is why this capability needed no registrar handed down from a
+ * higher layer, unlike the fit models: the host can call it directly.
+ *
+ * The result buffer is the host's, and grows rather than truncating. A search
+ * that finds more bursts than it was given room for reports the total it would
+ * have written, and is called again with a buffer that fits; silently returning
+ * the first N bursts of a measurement would be a wrong answer that looks like a
+ * right one.
+ */
+std::vector<long long> TTTR::burst_search_plugin(
+        const std::string& name, const std::string& parameters_json) {
+    const tttrlib_burst_search_v1* s = tttrlib::PluginHost::burst_search(name);
+    if (s == nullptr) {
+        throw std::invalid_argument(
+            "no plugin provides the burst search '" + name + "'");
+    }
+
+    const std::size_t n = get_n_valid_events();
+    const double resolution = header != nullptr ? header->get_macro_time_resolution() : 0.0;
+    const char* params = parameters_json.empty() ? nullptr : parameters_json.c_str();
+
+    // Start at a burst per thousand photons, which is generous for real data,
+    // and grow only if the search says it needs more.
+    std::vector<long long> out(2 * std::max<std::size_t>(64, n / 1000 + 1), 0);
+    for (int attempt = 0; attempt < 3; ++attempt) {
+        uint64_t n_bursts = 0;
+        int status = TTTRLIB_ERROR;
+        try {
+            status = s->search(s->ctx,
+                               reinterpret_cast<const uint64_t*>(macro_times),
+                               reinterpret_cast<const int8_t*>(routing_channels),
+                               static_cast<uint64_t>(n), resolution, params,
+                               reinterpret_cast<int64_t*>(out.data()),
+                               static_cast<uint64_t>(out.size() / 2), &n_bursts);
+        } catch (...) {
+            status = TTTRLIB_ERROR;
+        }
+        if (status != TTTRLIB_OK) {
+            const std::string detail = tttrlib::PluginHost::last_error();
+            throw std::runtime_error(
+                "plugin burst search '" + name + "' failed" +
+                (detail.empty() ? std::string() : " (" + detail + ")"));
+        }
+        if (n_bursts * 2 <= out.size()) {
+            out.resize(static_cast<std::size_t>(n_bursts) * 2);
+            return out;
+        }
+        out.assign(static_cast<std::size_t>(n_bursts) * 2, 0);
+    }
+    throw std::runtime_error("plugin burst search '" + name +
+                             "' kept asking for a larger result buffer");
 }

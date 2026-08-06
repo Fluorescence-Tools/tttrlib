@@ -284,6 +284,7 @@ std::string plugin_name_of(const fs::path& file) {
 struct Journal {
     std::vector<std::string> container_names;
     std::size_t decay_fits_before = 0;
+    std::size_t burst_searches_before = 0;
 };
 
 struct HostState {
@@ -298,6 +299,11 @@ struct HostState {
     /// Installed from above by the fitting layer; null until then.
     bool (*decay_fit_registrar)(const tttrlib_decay_fit_v1*) = nullptr;
     std::vector<const tttrlib_decay_fit_v1*> decay_fits;
+
+    /// Burst searches need no registrar from above: a search is a pure function
+    /// of the photon arrays, so the host can call it without help from any
+    /// higher layer. That is why this one is simply a table.
+    std::vector<const tttrlib_burst_search_v1*> burst_searches;
 };
 
 HostState& state() {
@@ -425,6 +431,31 @@ int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
     return TTTRLIB_OK;
 }
 
+int host_register_burst_search(const tttrlib_burst_search_v1* s) noexcept {
+    if (s == nullptr || s->struct_size < sizeof(tttrlib_burst_search_v1) ||
+        s->name == nullptr || s->name[0] == '\0' || s->search == nullptr) {
+        host_set_error("register_burst_search: incomplete table (name, "
+                       "params_schema and search are all required)");
+        return TTTRLIB_INVALID;
+    }
+    if (s->params_schema == nullptr || s->params_schema[0] == '\0') {
+        host_set_error("register_burst_search: params_schema is required, so "
+                       "that the search can be called by parameter name");
+        return TTTRLIB_INVALID;
+    }
+    for (const tttrlib_burst_search_v1* existing : state().burst_searches) {
+        if (std::string(existing->name) == s->name) {
+            const std::string taken =
+                    std::string("register_burst_search: the name '") + s->name +
+                    "' is already taken";
+            host_set_error(taken.c_str());
+            return TTTRLIB_INVALID;
+        }
+    }
+    state().burst_searches.push_back(s);
+    return TTTRLIB_OK;
+}
+
 const tttrlib_host_v1& host_table() {
     static const tttrlib_host_v1 host = {
         sizeof(tttrlib_host_v1),
@@ -434,6 +465,7 @@ const tttrlib_host_v1& host_table() {
         &host_set_error,
         &host_register_container,
         &host_register_decay_fit,
+        &host_register_burst_search,
     };
     return host;
 }
@@ -446,6 +478,9 @@ void roll_back(const Journal& journal) {
     // model of a failed plugin is not offered to anybody.
     if (state().decay_fits.size() > journal.decay_fits_before) {
         state().decay_fits.resize(journal.decay_fits_before);
+    }
+    if (state().burst_searches.size() > journal.burst_searches_before) {
+        state().burst_searches.resize(journal.burst_searches_before);
     }
     for (const std::string& name : journal.container_names) {
         const FileFormat* f = IORegistry::by_name(name);
@@ -571,6 +606,7 @@ void load_one(PluginRecord& record) {
 
     Journal journal;
     journal.decay_fits_before = state().decay_fits.size();
+    journal.burst_searches_before = state().burst_searches.size();
     state().journal = &journal;
     state().error.clear();
 
@@ -724,6 +760,41 @@ void PluginHost::set_decay_fit_registrar(
 const std::vector<const tttrlib_decay_fit_v1*>& PluginHost::decay_fits() {
     ensure_loaded();
     return state().decay_fits;
+}
+
+const tttrlib_burst_search_v1* PluginHost::burst_search(const std::string& name) {
+    ensure_loaded();
+    for (const tttrlib_burst_search_v1* s : state().burst_searches) {
+        if (name == s->name) return s;
+    }
+    return nullptr;
+}
+
+const std::vector<const tttrlib_burst_search_v1*>& PluginHost::burst_searches() {
+    ensure_loaded();
+    return state().burst_searches;
+}
+
+std::string PluginHost::burst_searches_json() {
+    std::string out;
+    for (const tttrlib_burst_search_v1* s : burst_searches()) {
+        if (!out.empty()) out += ",\n";
+        out += "  \"";
+        out += s->name;
+        out += "\": {\"name\": \"";
+        out += s->name;
+        out += "\", \"label\": \"";
+        out += (s->label != nullptr ? s->label : s->name);
+        out += "\", \"summary\": \"";
+        out += (s->summary != nullptr ? s->summary
+                                      : "A burst search provided by a plugin.");
+        // No "method": a plugin search has no attribute on TTTR to call, and
+        // its absence is exactly how a caller knows to dispatch by name.
+        out += "\", \"provider\": \"plugin\", \"params_schema\": ";
+        out += s->params_schema;
+        out += "}";
+    }
+    return out;
 }
 
 std::string PluginHost::decay_fit_models_json() {

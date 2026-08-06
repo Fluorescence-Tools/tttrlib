@@ -25,7 +25,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BVA.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TwoCDE.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util core
+    DEPENDS  util core plugin
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES BurstSignificance.i BurstFilter.i BurstFeature.i BurstFeatureExtractor.i BVA.i TwoCDE.i
     TEST_DIR test/python/burstfilter

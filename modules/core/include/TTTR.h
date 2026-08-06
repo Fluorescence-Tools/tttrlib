@@ -1128,6 +1128,25 @@ public:
      */
     static std::string burst_search_algorithms_json();
 
+    /*!
+     * \brief Run a burst search a plugin provided.
+     *
+     * The built-in searches are methods, and `burst_search_by_name` reaches
+     * them by attribute. A plugin has no attribute to reach -- the bindings are
+     * generated at build time -- so a search it contributed is dispatched by
+     * name instead, through here. Its registry entry says which it is: a plugin
+     * entry carries ``provider: "plugin"`` and no ``method``.
+     *
+     * @param name The registered search name.
+     * @param parameters_json Its parameters as a JSON object, or "".
+     * @return Flat [start, stop, start, stop, ...] photon indices, stop
+     *         exclusive -- the same shape every other burst search returns.
+     * @throws std::invalid_argument if no plugin provides \p name.
+     * @throws std::runtime_error if the search fails.
+     */
+    std::vector<long long> burst_search_plugin(
+            const std::string& name, const std::string& parameters_json = "");
+
     std::vector<long long> burst_search_maxtree(
         int L = 20,
         int m = 10,

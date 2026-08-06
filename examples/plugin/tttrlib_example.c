@@ -338,6 +338,78 @@ static tttrlib_decay_fit_v1 g_fit = {
     NULL
 };
 
+/* ------------------------------------------------------------------ burst search
+ *
+ * The third capability, and the simplest table in the ABI: a burst search is
+ * nearly a pure function -- arrival times in, index ranges out -- so it needs
+ * no handle and no lifetime.
+ *
+ * This one is an interphoton-time threshold: a burst is a run of photons whose
+ * consecutive gaps all fall below `max_gap` ticks, keeping runs of at least
+ * `min_photons`. Crude next to the built-in searches, and deliberately so; what
+ * is being shown is the boundary.
+ */
+
+static int example_burst_search(void* ctx,
+                                const uint64_t* macro_times,
+                                const int8_t* routing_channels,
+                                uint64_t n,
+                                double macro_time_resolution,
+                                const char* params_json,
+                                int64_t* out, uint64_t capacity, uint64_t* n_out) {
+    double max_gap = 500.0, min_photons = 10.0;
+    uint64_t found = 0, i = 0;
+    (void)ctx; (void)routing_channels; (void)macro_time_resolution;
+
+    /* A two-key JSON object, scanned rather than parsed: the plugin boundary is
+     * C, and pulling in a JSON library to read two numbers would be a strange
+     * dependency to impose on plugin authors. A real plugin with a larger
+     * schema would of course use one -- its own, not the host's. */
+    if (params_json != NULL) {
+        const char* p = strstr(params_json, "\"max_gap\"");
+        if (p != NULL && (p = strchr(p, ':')) != NULL) max_gap = atof(p + 1);
+        p = strstr(params_json, "\"min_photons\"");
+        if (p != NULL && (p = strchr(p, ':')) != NULL) min_photons = atof(p + 1);
+    }
+
+    while (i < n) {
+        uint64_t j = i + 1;
+        while (j < n && (double)(macro_times[j] - macro_times[j - 1]) <= max_gap) j += 1;
+        if ((double)(j - i) >= min_photons) {
+            /* Counted even when it does not fit: the host grows the buffer and
+             * calls again, which is the contract that keeps a long measurement
+             * from being silently truncated to the first N bursts. */
+            if (found < capacity) {
+                out[2 * found] = (int64_t)i;
+                out[2 * found + 1] = (int64_t)j;
+            }
+            found += 1;
+        }
+        i = j;
+    }
+    *n_out = found;
+    return TTTRLIB_OK;
+}
+
+static tttrlib_burst_search_v1 g_burst_search = {
+    sizeof(tttrlib_burst_search_v1),
+    "interphoton_plugin",
+    "{"
+    "\"type\": \"object\","
+    "\"required\": [\"max_gap\", \"min_photons\"],"
+    "\"properties\": {"
+    "\"max_gap\": {\"type\": \"number\", \"title\": \"Maximum gap\", \"default\": 500.0,"
+    " \"minimum\": 1.0, \"unit\": \"macro time ticks\","
+    " \"description\": \"Largest gap between consecutive photons still inside one burst.\"},"
+    "\"min_photons\": {\"type\": \"integer\", \"title\": \"Min photons\", \"default\": 10,"
+    " \"minimum\": 1, \"description\": \"Runs shorter than this are discarded.\"}"
+    "}}",
+    "Interphoton time (plugin)",
+    "A run of photons whose consecutive gaps stay below a threshold.",
+    example_burst_search,
+    NULL
+};
+
 /* ------------------------------------------------------------------ entry */
 
 TTTRLIB_PLUGIN_EXPORT int tttrlib_plugin_init_v1(const tttrlib_host_v1* host,
@@ -366,6 +438,11 @@ TTTRLIB_PLUGIN_EXPORT int tttrlib_plugin_init_v1(const tttrlib_host_v1* host,
     if (host->struct_size >= sizeof(tttrlib_host_v1) &&
         host->register_decay_fit != NULL) {
         status = host->register_decay_fit(&g_fit);
+        if (status != TTTRLIB_OK) return status;
+    }
+    if (host->struct_size >= sizeof(tttrlib_host_v1) &&
+        host->register_burst_search != NULL) {
+        status = host->register_burst_search(&g_burst_search);
         if (status != TTTRLIB_OK) return status;
     }
     return TTTRLIB_OK;

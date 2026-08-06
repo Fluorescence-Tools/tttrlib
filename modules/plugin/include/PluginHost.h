@@ -160,6 +160,24 @@ public:
      * entirely in the overwhelmingly common case.
      */
     static std::string decay_fit_models_json();
+
+    /// The burst search registered under \p name, or nullptr.
+    static const tttrlib_burst_search_v1* burst_search(const std::string& name);
+
+    /// Every burst search a plugin registered, in registration order.
+    static const std::vector<const tttrlib_burst_search_v1*>& burst_searches();
+
+    /*!
+     * \brief Those searches as registry entries, ready to splice into
+     *        `burst_search`.
+     *
+     * As \ref decay_fit_models_json, and for the same reason: everything needed
+     * is already in the C table, so the category can publish a plugin's search
+     * without depending on anything above this module. Entries carry
+     * ``"provider": "plugin"`` and no ``method``, which is how a caller knows to
+     * dispatch by name rather than by attribute.
+     */
+    static std::string burst_searches_json();
 };
 
 }  // namespace tttrlib

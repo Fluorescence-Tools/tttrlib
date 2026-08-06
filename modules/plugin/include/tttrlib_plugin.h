@@ -297,6 +297,64 @@ typedef struct tttrlib_decay_fit_v1 {
 } tttrlib_decay_fit_v1;
 
 /*!
+ * \brief A burst search contributed by a plugin.
+ *
+ * A burst search reads a photon stream's arrival times and returns the index
+ * ranges of the transits it found. That is the whole of it, which is why this
+ * is the smallest of the three capability tables: no lifetime, no handle, one
+ * call.
+ *
+ * Registering one makes it reachable by name --
+ * ``tttr.burst_search_by_name("mysearch", **params)`` -- and puts it in the
+ * ``burst_search`` registry category, so a UI builds its parameter form from
+ * the schema without knowing the search exists.
+ */
+typedef struct tttrlib_burst_search_v1 {
+    uint32_t struct_size;         /*!< sizeof(tttrlib_burst_search_v1). */
+
+    /*! What a caller passes to burst_search_by_name. Refused if already taken. */
+    const char* name;
+
+    /*! JSON Schema of the parameters, published in the registry. Required: it
+     *  is what lets a caller pass them by name and a form render itself. */
+    const char* params_schema;
+
+    const char* label;            /*!< Human-readable. May be NULL. */
+    const char* summary;          /*!< One line. May be NULL. */
+
+    /*!
+     * \brief Find the bursts.
+     *
+     * \param macro_times   Arrival times, ascending, of the photons to search.
+     *                      Read-only, valid for the call only.
+     * \param routing_channels Their detector numbers, or NULL if the host has
+     *                      none to offer. Same length as \p macro_times.
+     * \param n             Number of photons.
+     * \param macro_time_resolution Seconds per macro time tick, so a search can
+     *                      work in seconds rather than in ticks. 0 if unknown.
+     * \param params_json   The caller's parameters as a JSON object, or NULL.
+     * \param out           Host-allocated, ``2 * capacity`` entries: the result
+     *                      is flat ``[start, stop, start, stop, …]`` index pairs
+     *                      into the photon arrays, stop exclusive.
+     * \param capacity      Bursts \p out can hold.
+     * \param n_out         Set to the number of bursts written. If the search
+     *                      found more than \p capacity, set this to the total
+     *                      it *would* have written and return
+     *                      \ref TTTRLIB_OK -- the host will grow the buffer and
+     *                      call again rather than silently truncating.
+     */
+    int (*search)(void* ctx,
+                  const uint64_t* macro_times,
+                  const int8_t* routing_channels,
+                  uint64_t n,
+                  double macro_time_resolution,
+                  const char* params_json,
+                  int64_t* out, uint64_t capacity, uint64_t* n_out);
+
+    void* ctx;                    /*!< The plugin's own state. */
+} tttrlib_burst_search_v1;
+
+/*!
  * \brief What the host offers the plugin. Valid for the process lifetime.
  *
  * Handed to \ref tttrlib_plugin_init_v1. A plugin may keep the pointer.
@@ -336,6 +394,10 @@ typedef struct tttrlib_host_v1 {
      *  ``sizeof`` and never reads this field, and keeps working unchanged. A
      *  plugin that wants to use it must check ``struct_size`` first. */
     int (*register_decay_fit)(const tttrlib_decay_fit_v1* fit);
+
+    /*! Contribute a burst search. Only valid during init. Appended after
+     *  \ref register_decay_fit; the same \ref struct_size rule applies. */
+    int (*register_burst_search)(const tttrlib_burst_search_v1* search);
 } tttrlib_host_v1;
 
 /*!

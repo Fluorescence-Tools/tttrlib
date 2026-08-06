@@ -440,7 +440,15 @@ def burst_search_by_name(self, algorithm, /, **parameters):
             kwargs[name] = float(kwargs[name])
         elif kind == "boolean":
             kwargs[name] = bool(kwargs[name])
-    result = getattr(self, spec["method"])(**kwargs)
+    # A built-in search is a method and is reached by attribute; one from a
+    # plugin has no attribute to reach, because the bindings were generated at
+    # build time. Its registry entry says which it is -- a plugin entry carries
+    # no "method" -- so the dispatch reads the registry rather than guessing.
+    if "method" in spec:
+        result = getattr(self, spec["method"])(**kwargs)
+    else:
+        import json as _json
+        result = self.burst_search_plugin(algorithm, _json.dumps(kwargs))
     return _np.asarray(result, dtype=_np.int64).reshape(-1, 2)
 
 

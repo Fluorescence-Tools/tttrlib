@@ -14,15 +14,16 @@ calling code:
    data = tttrlib.TTTR("measurement.mylab", "MYLAB")   # by name
    data = tttrlib.TTTR("measurement.mylab")            # or by content
 
-A plugin can add a **file format** or a **decay fit model**:
+A plugin can add a **file format**, a **decay fit model** or a **burst search**:
 
 .. code-block:: python
 
-   fit = tttrlib.DecayFit2("mymodel")            # a model from a plugin
-   tttrlib.registry("fit")["mymodel"]            # with its parameter schema
+   fit = tttrlib.DecayFit2("mymodel")                    # a model from a plugin
+   bursts = tttr.burst_search_by_name("mysearch", **p)   # a search from one
+   tttrlib.registry("fit")["mymodel"]                    # with its schema
 
-Burst searches are the remaining capability, and a plugin built against today's
-header will keep working when they arrive -- see :ref:`plugin_abi` for why.
+All three are reachable through the entry points that already take a name, so
+nothing calling tttrlib has to know a plugin is involved.
 
 Where tttrlib looks
 -------------------
@@ -109,7 +110,7 @@ function pointer in the host table -- which is what lets it be built with a
 different compiler, standard library and runtime than tttrlib itself.
 
 ``examples/plugin/tttrlib_example.c`` is a complete, commented, working example
-providing both a container and a fit model. It is the same file the test suite
+providing a container, a fit model and a burst search from one library. It is the same file the test suite
 loads to prove this page is true.
 
 A fit model implements ``create``, ``n_parameters``, ``evaluate`` and
@@ -123,6 +124,15 @@ plugin doing it slightly differently.
 A model must publish a ``params_schema``. Without one a caller is back to
 counting slots in a flat array, which is the thing the registry exists to
 abolish, so registration is refused rather than accepted with a gap.
+
+A burst search is the smallest table of the three -- arrival times in, index
+ranges out, one call, no handle. It is dispatched by *name* rather than by
+attribute, because a plugin has no method on ``TTTR`` to reach: its registry
+entry carries ``provider: "plugin"`` and no ``method``, and that absence is the
+signal. If it finds more bursts than the buffer it was given holds, it reports
+the total it would have written and the host calls again with a bigger one --
+returning the first N bursts of a measurement would be a wrong answer that
+looks like a right one.
 
 The five contracts
 ------------------

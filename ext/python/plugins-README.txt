@@ -37,10 +37,12 @@ A fit model supplies the objective and nothing else; tttrlib wraps it in its own
 bounded, constraint-aware optimiser, so a plugin fit behaves exactly like a
 built-in one.
 
-Burst searches are the remaining capability on the same ABI; the host table
-grows a register_* entry without disturbing an existing plugin (see
-"struct_size" in tttrlib_plugin.h), so a plugin built against today's header
-keeps working when they arrive.
+A **burst search**:
+
+    tttr.burst_search_by_name("mysearch", **parameters)
+    tttrlib.registry("burst_search")["mysearch"]
+
+All three tables are independent: one library may provide any combination.
 
 Writing a format is read-only for now. A plugin container reports can_write
 false and tttr.write(filename, "MYLAB") is refused rather than silently writing

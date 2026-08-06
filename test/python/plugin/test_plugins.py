@@ -424,6 +424,99 @@ def test_a_plugin_cannot_take_a_builtin_fit_name(plugin_dir, tmp_path, plugin_so
     assert out["fit23_has_setup"]
 
 
+# ------------------------------------------------------------------ burst searches
+
+def test_a_plugin_burst_search_runs_by_name(plugin_dir):
+    """The third capability, dispatched by name rather than by attribute.
+
+    A built-in search is a method on TTTR and ``burst_search_by_name`` reaches
+    it with ``getattr``. A plugin has no attribute to reach -- the bindings were
+    generated at build time -- so its registry entry carries no ``method``, and
+    that absence is what routes it through the by-name path instead.
+    """
+    out = run_in_subprocess("""
+        import json, numpy as np, tttrlib
+        reg = tttrlib.registry("burst_search")
+        entry = reg.get("interphoton_plugin")
+
+        # Two runs of 20 photons, 100 ticks apart, separated by a long gap.
+        mt = np.concatenate([np.arange(0, 2000, 100),
+                             np.arange(60000, 62000, 100)]).astype(np.uint64)
+        t = tttrlib.TTTR()
+        t.append_events(mt, np.zeros(len(mt), np.uint16),
+                        np.zeros(len(mt), np.int8), np.zeros(len(mt), np.int8))
+        bursts = t.burst_search_by_name("interphoton_plugin",
+                                        max_gap=500.0, min_photons=5)
+        print(json.dumps({
+            "entry": entry,
+            "bursts": bursts.tolist(),
+            "builtin_still_works":
+                t.burst_search_by_name("sliding_window", L=5, m=3, T=1e9).shape[1],
+        }))
+    """, plugin_path=plugin_dir)
+
+    entry = out["entry"]
+    assert entry is not None, "the plugin burst search never reached the registry"
+    assert entry["provider"] == "plugin"
+    # No "method": there is no attribute to call, and its absence is the signal.
+    assert "method" not in entry
+    assert list(entry["params_schema"]["properties"]) == ["max_gap", "min_photons"]
+    assert out["bursts"] == [[0, 20], [20, 40]]
+    assert out["builtin_still_works"] == 2
+
+
+def test_a_plugin_burst_search_honours_its_parameters(plugin_dir):
+    """Parameters reach the plugin, or the schema is decoration."""
+    out = run_in_subprocess("""
+        import json, numpy as np, tttrlib
+        mt = np.concatenate([np.arange(0, 2000, 100),
+                             np.arange(60000, 62000, 100)]).astype(np.uint64)
+        t = tttrlib.TTTR()
+        t.append_events(mt, np.zeros(len(mt), np.uint16),
+                        np.zeros(len(mt), np.int8), np.zeros(len(mt), np.int8))
+        # A gap threshold above the 60000-tick separation merges the two runs.
+        merged = t.burst_search_by_name("interphoton_plugin",
+                                        max_gap=1e9, min_photons=5)
+        # A photon count above the run length rejects both.
+        none = t.burst_search_by_name("interphoton_plugin",
+                                      max_gap=500.0, min_photons=1000)
+        print(json.dumps({"merged": merged.tolist(), "none": none.tolist()}))
+    """, plugin_path=plugin_dir)
+    assert out["merged"] == [[0, 40]]
+    assert out["none"] == []
+
+
+def test_an_unknown_burst_search_is_refused(plugin_dir):
+    out = run_in_subprocess("""
+        import json, numpy as np, tttrlib
+        t = tttrlib.TTTR()
+        t.append_events(np.arange(10, dtype=np.uint64), np.zeros(10, np.uint16),
+                        np.zeros(10, np.int8), np.zeros(10, np.int8))
+        try:
+            t.burst_search_plugin("nosuchsearch", "{}")
+            print(json.dumps({"raised": False}))
+        except Exception as e:
+            print(json.dumps({"raised": True, "message": str(e)}))
+    """, plugin_path=plugin_dir)
+    assert out["raised"]
+    assert "nosuchsearch" in out["message"]
+
+
+def test_all_three_capabilities_come_from_one_library(plugin_dir):
+    """One .so, three tables. Nothing about the ABI ties them together."""
+    out = run_in_subprocess("""
+        import json, tttrlib
+        print(json.dumps({
+            "container": "EXAMPLE" in tttrlib.registry("file_container"),
+            "fit": "exp1_plugin" in tttrlib.registry("fit"),
+            "burst": "interphoton_plugin" in tttrlib.registry("burst_search"),
+            "plugins": list(tttrlib.registry("plugin")),
+        }))
+    """, plugin_path=plugin_dir)
+    assert out["container"] and out["fit"] and out["burst"]
+    assert out["plugins"] == ["example"]
+
+
 def test_the_current_directory_is_never_searched(plugin_dir, plugin_so, tmp_path):
     """The shared-instrument-drive attack is DLL hijacking verbatim."""
     cwd = tmp_path / "cwd"
