@@ -420,9 +420,17 @@ if (typeof native.read_hdf5_table_into === 'function') {
   };
 }
 if (typeof native.write_hdf5_table === 'function') {
-  /** Write a DataStore as a columnar HDF5 table. Mirrors Python's write_hdf5(). */
-  exported.writeHdf5 = (filename, store, group = '/', compression = 4) =>
-    native.write_hdf5_table(filename, store, group, compression);
+  /**
+   * Write a DataStore as a columnar HDF5 table. Mirrors Python's write_hdf5().
+   *
+   * Writing a group replaces that group and everything under it; under the
+   * default Update mode every other group in the file is left alone. Writing
+   * '/' replaces the file's whole content. A file that exists and is not HDF5
+   * is refused rather than replaced -- pass Hdf5WriteMode_Truncate for that.
+   */
+  exported.writeHdf5 = (filename, store, group = '/', compression = 0, mode = undefined) =>
+    native.write_hdf5_table(filename, store, group, compression,
+                            mode === undefined ? native.Hdf5WriteMode_Update : mode);
 }
 
 // ---------------------------------------------------------------------------

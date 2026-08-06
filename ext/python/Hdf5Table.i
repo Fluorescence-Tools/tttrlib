@@ -41,14 +41,33 @@ def read_hdf5(filename, group="/"):
     return store
 
 
-def write_hdf5(filename, store, group="/", compression=4):
+def write_hdf5(filename, store, group="/", compression=0, mode=None):
     """Write a DataStore as a columnar HDF5 table.
 
     Only the SELECTED rows are written when the store has a selection, so
     exporting a gated subset needs no intermediate table.
 
-    :param compression: 0 for none, 1-9 for gzip
+    Writing a group replaces that group and everything under it; under the
+    default ``Hdf5WriteMode_Update`` every other group in the file is left
+    alone, so a file can be built one group at a time. Writing ``"/"`` replaces
+    the file's whole content, the root being a group like any other.
+
+    The write never half-happens -- it goes to a temporary and is moved into
+    place -- so a failure leaves what was there before readable and unchanged.
+    A file that exists and is not HDF5 is refused rather than replaced; pass
+    ``mode=tttrlib.Hdf5WriteMode_Truncate`` if replacing it is what you meant.
+
+    Note that HDF5 never reclaims freed space, so repeatedly replacing one
+    group of a multi-group file grows it; ``h5repack`` is the answer. Replacing
+    the root does not, because that writes a new file and renames it over.
+
+    :param compression: 0 for none, 1-9 for gzip. None by default: level 4
+        costs roughly thirty times the write to save eight percent of the size,
+        on files written once and read repeatedly.
+    :param mode: ``Hdf5WriteMode_Update`` (default) or ``Hdf5WriteMode_Truncate``
     """
-    return write_hdf5_table(filename, store, group, int(compression))
+    if mode is None:
+        mode = Hdf5WriteMode_Update
+    return write_hdf5_table(filename, store, group, int(compression), mode)
 %}
 #endif  // SWIGPYTHON

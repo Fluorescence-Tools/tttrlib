@@ -74,6 +74,12 @@ data::DataStore read_hdf5_table(const std::string& filename,
 std::vector<std::string> read_hdf5_table_columns(const std::string& filename,
                                                  const std::string& group = "/");
 
+/// How a write treats a file that is already there.
+enum class Hdf5WriteMode {
+    Update,     ///< create the file if absent; replace what is written; keep the rest
+    Truncate,   ///< recreate the file, so it holds only what is written now
+};
+
 /*!
  * \brief Write a store as a columnar HDF5 table.
  *
@@ -82,11 +88,40 @@ std::vector<std::string> read_hdf5_table_columns(const std::string& filename,
  * Only the SELECTED rows are written when the store has a selection, so
  * exporting a gated subset needs no intermediate table.
  *
+ * \section hdf5_table_replacement What a write replaces
+ *
+ * **Writing a group replaces that group and everything under it.** Writing
+ * `/results` holding `{a, b}` over a `/results` that held `{a, b, c}` leaves `c`
+ * gone, and takes any sub-group of `/results` with it. Merging column-wise is a
+ * caller's decision, never the writer's: a table that silently keeps a stale
+ * column from a previous run is worse than one that lost it, because it looks
+ * current.
+ *
+ * Under \ref Hdf5WriteMode::Update every OTHER group in the file is left alone,
+ * so a file is built one group at a time. Writing the root replaces the file's
+ * whole content, because the root is a group like any other.
+ *
+ * A write never half-happens: it goes to a temporary and is moved into place, so
+ * a failure leaves what was there before readable and unchanged.
+ *
+ * \note HDF5 does not reclaim freed space inside a file, so repeatedly replacing
+ *       a group in a multi-group file grows it. That is inherent to the format;
+ *       `h5repack` is the answer. (Replacing the root does not grow anything --
+ *       it writes a new file and renames it over the old one.)
+ * \note HDF5 without SWMR is single-writer. Nothing here defends against a
+ *       second process writing the same file at the same time.
+ *
  * \param compression 0 for none, 1-9 for gzip. Chunked at 1 MB per chunk, which
  *        is what makes a column readable back without inflating the whole file.
+ *        Defaults to none: level 4 costs roughly thirty times the write to save
+ *        eight percent of the size, on files written once and read repeatedly.
+ * \param mode \ref Hdf5WriteMode. `Update` on a file that exists and is not
+ *        HDF5 returns false and leaves it untouched -- ask for `Truncate` to
+ *        replace a file of unknown provenance.
  */
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
-                      const std::string& group = "/", int compression = 4);
+                      const std::string& group = "/", int compression = 0,
+                      Hdf5WriteMode mode = Hdf5WriteMode::Update);
 
 }  // namespace io
 }  // namespace tttrlib

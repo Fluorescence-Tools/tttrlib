@@ -272,8 +272,11 @@ export interface CsvReadOptions {
 
 export declare function readCsv(filename: string, options?: CsvReadOptions): DataStore;
 export declare function readHdf5(filename: string, group?: string): DataStore;
+export declare const Hdf5WriteMode_Update: number;
+export declare const Hdf5WriteMode_Truncate: number;
 export declare function writeHdf5(
-  filename: string, store: DataStore, group?: string, compression?: number): void;
+  filename: string, store: DataStore, group?: string, compression?: number,
+  mode?: number): boolean;
 
 // ---------------------------------------------------------------------------
 // Module-level

@@ -3,9 +3,12 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #ifdef BUILD_PHOTON_HDF
@@ -33,7 +36,7 @@ std::vector<std::string> read_hdf5_table_columns(const std::string&, const std::
 }
 
 bool write_hdf5_table(const std::string&, const data::DataStore&,
-                      const std::string&, int) {
+                      const std::string&, int, Hdf5WriteMode) {
     std::cerr << "Not built with Photon HDF interface." << std::endl;
     return false;
 }
@@ -614,29 +617,172 @@ bool write_table_into(hid_t dest, const data::DataStore& store, int compression)
     return write_string_attribute(dest, "columns", names);
 }
 
+/// A path with no leading or trailing separator. Empty means the root.
+std::string normalise_group(const std::string& path) {
+    std::size_t b = 0, e = path.size();
+    while (b < e && path[b] == '/') b++;
+    while (e > b && path[e - 1] == '/') e--;
+    return path.substr(b, e - b);
+}
+
+bool file_exists(const std::string& path) {
+    std::ifstream f(path.c_str(), std::ios::binary);
+    return f.good();
+}
+
+/*!
+ * \brief Is this an HDF5 file?
+ *
+ * Asked directly rather than inferred from H5Fopen failing, which also fails on
+ * a permission error -- and truncating then would destroy a file the caller
+ * cannot even read.
+ *
+ * H5Fis_hdf5 moved behind H5_NO_DEPRECATED_SYMBOLS in HDF5 2.0, and
+ * H5Fis_accessible has been there since 1.12; the module already builds against
+ * both 1.10 and 1.12, so pick per version rather than per build flag.
+ */
+bool looks_like_hdf5(const std::string& path) {
+#if defined(H5_VERSION_GE) && H5_VERSION_GE(1, 12, 0)
+    return H5Fis_accessible(path.c_str(), H5P_DEFAULT) > 0;
+#else
+    return H5Fis_hdf5(path.c_str()) > 0;
+#endif
+}
+
+/// Creates missing intermediates, so "/a/b" does not need "/a" to exist first.
+hid_t lcpl_intermediate() {
+    const hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
+    if (lcpl >= 0) H5Pset_create_intermediate_group(lcpl, 1);
+    return lcpl;
+}
+
+/// A name no caller would choose, free in this group.
+std::string free_temp_name(hid_t parent) {
+    for (int i = 0; i < 1000; i++) {
+        std::string name = "__tttrlib_tmp__" + std::to_string(i);
+        if (H5Lexists(parent, name.c_str(), H5P_DEFAULT) <= 0) return name;
+    }
+    return std::string();
+}
+
+/*!
+ * \brief Replace one group of an open file, or leave it exactly as it was.
+ *
+ * HDF5 has no transactions, so this is as close as the format allows: the new
+ * contents go into a sibling temporary, and only once every column is safely
+ * written is the old group unlinked and the temporary moved into its place.
+ * A failure anywhere before that leaves the original readable.
+ *
+ * The target has to be unlinked rather than emptied -- deleting its datasets one
+ * by one leaves the group behind, and H5Gcreate2 on an existing group fails.
+ */
+bool replace_group(hid_t file, const std::string& path,
+                   const data::DataStore& store, int compression) {
+    const std::size_t cut = path.rfind('/');
+    const std::string parent_path = cut == std::string::npos ? std::string()
+                                                             : path.substr(0, cut);
+    const std::string leaf = cut == std::string::npos ? path : path.substr(cut + 1);
+
+    const hid_t lcpl = lcpl_intermediate();
+    hid_t parent = file;
+    bool own_parent = false;
+    if (!parent_path.empty()) {
+        parent = H5Gopen2(file, parent_path.c_str(), H5P_DEFAULT);
+        if (parent < 0)
+            parent = H5Gcreate2(file, parent_path.c_str(), lcpl, H5P_DEFAULT,
+                                H5P_DEFAULT);
+        if (parent < 0) {
+            if (lcpl >= 0) H5Pclose(lcpl);
+            return write_failed("create group", parent_path);
+        }
+        own_parent = true;
+    }
+
+    bool ok = false;
+    const std::string temp = free_temp_name(parent);
+    if (temp.empty()) {
+        write_failed("find a free temporary name in", path);
+    } else {
+        const hid_t scratch = H5Gcreate2(parent, temp.c_str(), H5P_DEFAULT,
+                                         H5P_DEFAULT, H5P_DEFAULT);
+        if (scratch < 0) {
+            write_failed("create group", path);
+        } else {
+            ok = write_table_into(scratch, store, compression);
+            H5Gclose(scratch);
+        }
+        if (ok) {
+            if (H5Lexists(parent, leaf.c_str(), H5P_DEFAULT) > 0 &&
+                H5Ldelete(parent, leaf.c_str(), H5P_DEFAULT) < 0) {
+                ok = write_failed("remove the previous", path);
+            } else if (H5Lmove(parent, temp.c_str(), parent, leaf.c_str(),
+                               lcpl, H5P_DEFAULT) < 0) {
+                ok = write_failed("move the new group into", path);
+            }
+        }
+        // Whatever went wrong, the scratch group must not survive it.
+        if (!ok && H5Lexists(parent, temp.c_str(), H5P_DEFAULT) > 0)
+            H5Ldelete(parent, temp.c_str(), H5P_DEFAULT);
+    }
+
+    if (own_parent) H5Gclose(parent);
+    if (lcpl >= 0) H5Pclose(lcpl);
+    if (ok) H5Fflush(file, H5F_SCOPE_GLOBAL);
+    return ok;
+}
+
+/*!
+ * \brief Replace the whole file, without a window in which it is broken.
+ *
+ * The root group is the one group that cannot be swapped from inside: H5Lmove
+ * needs a sibling and the root has none. Writing a temporary file beside it and
+ * renaming over the original gives the same guarantee more cheaply -- rename is
+ * atomic -- and it is also the only way the file does not grow, since HDF5 never
+ * reuses the space a replaced group leaves behind.
+ */
+bool replace_whole_file(const std::string& filename, const data::DataStore& store,
+                        int compression) {
+    const std::string temp = filename + ".tttrlib-tmp";
+    const hid_t file = H5Fcreate(temp.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file < 0) return write_failed("create", temp);
+
+    bool ok = write_table_into(file, store, compression);
+    if (H5Fclose(file) < 0) ok = false;
+
+    if (ok && std::rename(temp.c_str(), filename.c_str()) != 0)
+        ok = write_failed("rename the new file over", filename);
+    if (!ok) std::remove(temp.c_str());
+    return ok;
+}
+
 }  // namespace
 
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
-                      const std::string& group_name, int compression) {
+                      const std::string& group_name, int compression,
+                      Hdf5WriteMode mode) {
     const QuietHdf5 quiet;
-    const hid_t file = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC,
-                                 H5P_DEFAULT, H5P_DEFAULT);
-    if (file < 0) return false;
-    hid_t group = file;
-    bool own_group = false;
-    if (group_name != "/" && !group_name.empty()) {
-        group = H5Gcreate2(file, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
-                           H5P_DEFAULT);
-        if (group < 0) {
-            H5Fclose(file);
-            return write_failed("create group", group_name);
-        }
-        own_group = true;
+    const std::string path = normalise_group(group_name);
+    const bool present = file_exists(filename);
+
+    // Do not truncate someone else's file by inference. A caller that means
+    // "replace whatever is there" says Truncate.
+    if (mode == Hdf5WriteMode::Update && present && !looks_like_hdf5(filename)) {
+        std::cerr << "hdf5 table: " << filename << " exists and is not an HDF5 file; "
+                  << "pass Hdf5WriteMode::Truncate to replace it" << std::endl;
+        return false;
     }
 
-    const bool ok = write_table_into(group, store, compression);
+    // The root is replaced wholesale either way -- writing a group replaces
+    // everything under it, and everything is under the root.
+    if (path.empty()) return replace_whole_file(filename, store, compression);
 
-    if (own_group) H5Gclose(group);
+    const bool keep = mode == Hdf5WriteMode::Update && present;
+    const hid_t file = keep
+            ? H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT)
+            : H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file < 0) return write_failed(keep ? "open for writing" : "create", filename);
+
+    const bool ok = replace_group(file, path, store, compression);
     H5Fclose(file);
     return ok;
 }
