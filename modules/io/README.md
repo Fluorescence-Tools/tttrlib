@@ -18,6 +18,7 @@ creating a cycle.
 | [`sm/`](sm) | `tttrlib_io_sm` | Single-molecule `.sm` |
 | [`ps/`](ps) | `tttrlib_io_ps` | Photonscore LINCam `.photons` (D7) |
 | [`be/`](be) | `tttrlib_io_be` | BrightEyes-TTM `.ttr` |
+| [`fl/`](fl) | `tttrlib_io_fl` | FLIM LABS time tagger `.bin` — `STT1`, `ITT1` |
 | [`hdf5/`](hdf5) | `tttrlib_io_hdf5` | Photon-HDF5 v0.5 — decoded arrays, not a record encoding |
 | [`image/`](image) | `tttrlib_io_image` | TIFF 2D/3D arrays — file I/O, but not a TTTR container |
 

@@ -263,6 +263,19 @@ private:
     std::string tttr_container_type_str; // e.g. Becker&Hickl (BH) SPC, PicoQuant (PQ) HT3, PQ-PTU
     int tttr_record_type;                // e.g. BH spc132, PQ HydraHarp (HH) T3, PQ HH T2, etc.
 
+    /*!
+     * \brief Reader parameters for containers that need them, as a JSON object.
+     *
+     * Empty for almost everything: a PTU or an SPC says what it is, and the
+     * reader needs nothing but the bytes. A BrightEyes ``.ttr`` does not -- its
+     * sample clock, laser rate and detector count are properties of the
+     * instrument, absent from the file -- and this is where a caller says so.
+     * See @ref set_container_parameters, and the ``params_schema`` of the
+     * matching entry in the ``file_container`` registry category for what each
+     * container accepts.
+     */
+    std::string tttr_container_parameters;
+
     /// The input file, i.e., the TTTR file, and the output file for the header
     std::FILE *fp;                          /* File handle for all other file types */
 
@@ -1425,6 +1438,41 @@ public:
         std::vector<std::string> supported;
         supported.reserve(items.size());
         for (auto const& p : items) {
+    /*!
+     * \brief Tell the reader what the file does not say about itself.
+     *
+     * \p parameters is a JSON object, and the properties it may carry are
+     * declared per container by the ``params_schema`` of the ``file_container``
+     * registry category -- so a caller discovers them rather than being told
+     * them, and no language binding has to know that any particular format
+     * exists. Almost every container needs nothing here; the one that does is
+     * BrightEyes-TTM, whose ``.ttr`` is a bare word stream carrying neither its
+     * sample clock nor its laser rate nor its detector count.
+     *
+     * \code
+     * TTTR data("scan.ttr", "BRIGHTEYES-TTR",
+     *           R"({"n_channels": 25, "sysclk_MHz": 240, "laser_MHz": 80})");
+     * \endcode
+     *
+     * Set this before reading; on an object that has already read a file, call
+     * @ref read_file again for it to take effect.
+     *
+     * An unknown property is an error rather than a silent no-op: a
+     * misspelled parameter that quietly does nothing gives a plausible-looking
+     * wrong answer, which for these formats is the failure worth preventing.
+     * The error surfaces when the file is read.
+     *
+     * @param parameters JSON object, or "" for none.
+     */
+    void set_container_parameters(const std::string& parameters){
+        tttr_container_parameters = parameters;
+    }
+
+    /// The reader parameters set by @ref set_container_parameters, or "".
+    std::string get_container_parameters() const {
+        return tttr_container_parameters;
+    }
+
             supported.push_back(p.first);
         }
         return supported;
@@ -1569,6 +1617,33 @@ public:
       * The selection array is an array of indices. The events with indices
       * in the selection array are copied in the order of the selection array
       * to a new TTTR object.
+    /*!
+     * Constructor for a container that needs to be told something the file does
+     * not contain.
+     *
+     * The only built-in one is BrightEyes-TTM, whose ``.ttr`` is a bare word
+     * stream: no header, no magic, and no record of the instrument that wrote
+     * it. @p parameters is a JSON object whose accepted properties are declared
+     * by the container's ``params_schema`` in the ``file_container`` registry
+     * category, and an unrecognised property is an error rather than a silent
+     * no-op. See @ref set_container_parameters.
+     *
+     * \code
+     * TTTR data("scan.ttr", "BRIGHTEYES-TTR", R"({"laser_MHz": 80})");
+     * \endcode
+     *
+     * @param filename TTTR filename.
+     * @param container_type Container type as string, or "auto".
+     * @param parameters JSON object of reader parameters.
+     * @param read_input If true, reads the content of the file.
+     */
+    TTTR(const char *filename, const char* container_type,
+         const std::string& parameters, bool read_input = true);
+
+    /// As above, with the container given as an integer.
+    TTTR(const char *filename, int container_type,
+         const std::string& parameters, bool read_input = true);
+
       *
       * @param parent Parent TTTR object from which to select records.
       * @param selection Array of indices specifying the selected records.

@@ -2,9 +2,12 @@
 #include "io_be.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "FileIO.h"
 
@@ -82,7 +85,87 @@ private:
     bool have_previous_ = false;
 };
 
+/// Codes are 8 bits, so a per-channel table is always this long, however few
+/// of the taps the delay line actually reaches.
+constexpr int kCodeSpace = 256;
+
 }  // namespace
+
+TtrParams ttr_params_from_json(const std::string& text) {
+    TtrParams p;
+    // Blank means "nothing to say", which is the common case and must not be an
+    // error: every container is constructed with an empty parameter string.
+    const auto first = text.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return p;
+
+    nlohmann::json j = nlohmann::json::parse(text, nullptr, false);
+    if (j.is_discarded() || !j.is_object()) {
+        throw std::invalid_argument(
+            "BrightEyes-TTM: container parameters must be a JSON object, got: " + text);
+    }
+
+    auto number = [&](const nlohmann::json& v, const char* key) {
+        if (!v.is_number()) {
+            throw std::invalid_argument(std::string("BrightEyes-TTM: parameter '") +
+                                        key + "' must be a number");
+        }
+        return v.get<double>();
+    };
+    auto boolean = [&](const nlohmann::json& v, const char* key) {
+        if (!v.is_boolean()) {
+            throw std::invalid_argument(std::string("BrightEyes-TTM: parameter '") +
+                                        key + "' must be true or false");
+        }
+        return v.get<bool>();
+    };
+
+    for (const auto& item : j.items()) {
+        const std::string& k = item.key();
+        if (k == "n_channels") {
+            const double v = number(item.value(), "n_channels");
+            // 123 is the DUMMY id; a channel range reaching it would swallow
+            // the control words and decode the file as noise.
+            if (v < 1 || v > 123) {
+                throw std::invalid_argument(
+                    "BrightEyes-TTM: n_channels must be between 1 and 123");
+            }
+            p.n_channels = static_cast<int>(v);
+        } else if (k == "sysclk_MHz") {
+            const double v = number(item.value(), "sysclk_MHz");
+            if (!(v > 0.0)) {
+                throw std::invalid_argument("BrightEyes-TTM: sysclk_MHz must be positive");
+            }
+            p.sysclk_MHz = v;
+        } else if (k == "laser_MHz") {
+            const double v = number(item.value(), "laser_MHz");
+            if (v < 0.0) {
+                throw std::invalid_argument("BrightEyes-TTM: laser_MHz must not be negative");
+            }
+            p.laser_MHz = v;
+        } else if (k == "tdc_ps_per_code") {
+            const double v = number(item.value(), "tdc_ps_per_code");
+            if (v < 0.0) {
+                throw std::invalid_argument(
+                    "BrightEyes-TTM: tdc_ps_per_code must not be negative");
+            }
+            p.tdc_ps_per_code = v;
+        } else if (k == "auto_calibrate_tdc") {
+            p.auto_calibrate_tdc = boolean(item.value(), "auto_calibrate_tdc");
+        } else if (k == "drop_filler") {
+            p.drop_filler = boolean(item.value(), "drop_filler");
+        } else {
+            // Not ignored. A parameter this format does not have is either a
+            // typo or a wrong assumption about the reader, and both produce a
+            // file read with the defaults instead -- a wrong answer wearing the
+            // shape of a right one.
+            throw std::invalid_argument(
+                "BrightEyes-TTM: unknown container parameter '" + k +
+                "'. Accepted: n_channels, sysclk_MHz, laser_MHz, tdc_ps_per_code, "
+                "auto_calibrate_tdc, drop_filler");
+        }
+    }
+    return p;
+}
 
 TtrStats scan_ttr(const std::string& filename, const TtrParams& params) {
     const std::vector<uint16_t> words = read_words(filename);
@@ -134,7 +217,120 @@ TtrStats scan_ttr(const std::string& filename, const TtrParams& params) {
     return s;
 }
 
-TtrData read_ttr(const std::string& filename, const TtrParams& params) {
+namespace {
+
+/*!
+ * Turn a code histogram into a code-to-time table.
+ *
+ * Over one sample-clock period the arrival phase is uniform, so a tap that
+ * collected twice the counts is twice as wide. Normalise the counts to the
+ * clock period and integrate, taking the centre of each tap -- which is the
+ * vendor's autoCalibrateTAP, and the standard code-density method for a
+ * delay-line TDC.
+ *
+ * An empty histogram gives an empty table rather than a linear one, so a
+ * channel that saw no photons is visibly not calibrated instead of quietly
+ * carrying an invented scale.
+ */
+std::vector<double> code_density_table(const std::vector<uint64_t>& histogram,
+                                       double sysclk_ps) {
+    uint64_t total = 0;
+    for (uint64_t c : histogram) total += c;
+    if (total == 0) return {};
+
+    std::vector<double> t(histogram.size(), 0.0);
+    double accumulated = 0.0;
+    for (std::size_t i = 0; i < histogram.size(); ++i) {
+        const double width = static_cast<double>(histogram[i]) * sysclk_ps /
+                             static_cast<double>(total);
+        t[i] = accumulated + 0.5 * width;
+        accumulated += width;
+    }
+    return t;
+}
+
+/// The nominal least-significant bit of the TDC: the clock period spread over
+/// the 8-bit code space. Not the mean tap width -- that depends on how many
+/// taps the line reaches, which is a property of the data, not of the axis.
+double micro_bin_ps(double sysclk_ps) { return sysclk_ps / kCodeSpace; }
+
+/// A calibration that is not measured but assumed: every code the same width.
+/// The vendor's dt_with_fixConstant, and wrong in the same way -- but wrong
+/// only in the code-to-time step, so it goes through the same decode.
+TtrCalibration linear_calibration(const TtrParams& params) {
+    TtrCalibration c;
+    c.sysclk_ps = 1e6 / params.sysclk_MHz;
+    c.laser_ps = params.laser_MHz > 0.0 ? 1e6 / params.laser_MHz : 0.0;
+    c.micro_time_bin_ps = micro_bin_ps(c.sysclk_ps);
+    const double period = c.laser_ps > 0.0 ? c.laser_ps : c.sysclk_ps;
+    c.n_micro_time_channels =
+        std::max(1, static_cast<int>(std::ceil(period / c.micro_time_bin_ps)));
+
+    std::vector<double> table(kCodeSpace);
+    for (int i = 0; i < kCodeSpace; ++i) table[i] = i * params.tdc_ps_per_code;
+    c.laser_code_ps = table;
+    c.channel_code_ps.assign(static_cast<std::size_t>(std::max(0, params.n_channels)), table);
+    return c;
+}
+
+}  // namespace
+
+TtrCalibration calibrate_ttr(const std::string& filename, const TtrParams& params) {
+    const std::vector<uint16_t> words = read_words(filename);
+
+    const int n_channels = std::max(0, params.n_channels);
+    std::vector<std::vector<uint64_t>> per_channel(
+        static_cast<std::size_t>(n_channels), std::vector<uint64_t>(kCodeSpace, 0));
+    std::vector<uint64_t> laser(kCodeSpace, 0);
+
+    for (const uint16_t w : words) {
+        if (params.drop_filler && w == kFiller) continue;
+        if (!word_valid(w)) continue;          // the zero-filled partner word
+        const int id = word_id(w);
+        if (id < n_channels) {
+            per_channel[static_cast<std::size_t>(id)][word_data(w)] += 1;
+        } else if (id == kIdLaser) {
+            laser[word_data(w)] += 1;
+        }
+    }
+
+    TtrCalibration c;
+    c.sysclk_ps = 1e6 / params.sysclk_MHz;
+    c.laser_ps = params.laser_MHz > 0.0 ? 1e6 / params.laser_MHz : 0.0;
+    c.micro_time_bin_ps = micro_bin_ps(c.sysclk_ps);
+    const double period = c.laser_ps > 0.0 ? c.laser_ps : c.sysclk_ps;
+    c.n_micro_time_channels =
+        std::max(1, static_cast<int>(std::ceil(period / c.micro_time_bin_ps)));
+
+    c.laser_code_ps = code_density_table(laser, c.sysclk_ps);
+    if (c.laser_code_ps.empty()) {
+        throw std::runtime_error(
+            "BrightEyes-TTM: cannot calibrate " + filename +
+            " -- it contains no valid laser words, so there is no time reference");
+    }
+    c.channel_code_ps.resize(static_cast<std::size_t>(n_channels));
+    for (int ch = 0; ch < n_channels; ++ch) {
+        c.channel_code_ps[static_cast<std::size_t>(ch)] =
+            code_density_table(per_channel[static_cast<std::size_t>(ch)], c.sysclk_ps);
+    }
+    return c;
+}
+
+TtrData read_ttr(const std::string& filename, const TtrParams& params,
+                 const TtrCalibration* calibration) {
+    // Three ways to get a calibration, in decreasing order of how much it is
+    // worth: one handed in, one measured from the file, one assumed. None of
+    // them, and the micro times stay raw codes.
+    TtrCalibration measured;
+    TtrCalibration assumed;
+    if (calibration == nullptr && params.auto_calibrate_tdc) {
+        measured = calibrate_ttr(filename, params);
+        calibration = &measured;
+    } else if (calibration == nullptr && params.tdc_ps_per_code > 0.0) {
+        assumed = linear_calibration(params);
+        calibration = &assumed;
+    }
+
     const std::vector<uint16_t> words = read_words(filename);
     TtrData out;
     // One event per valid detector word, plus scanner markers. Guessing high
@@ -155,6 +351,21 @@ TtrData read_ttr(const std::string& filename, const TtrParams& params) {
     // Detector words arrive before the step bytes that time them, so a record's
     // photons are buffered until its coarse time is known.
     std::vector<std::pair<int, int>> pending;   // (channel, tdc code)
+
+    // Only for the calibrated pass: a photon's reference is the NEXT valid
+    // laser word, which is usually in a later record, so the micro times cannot
+    // be filled in while decoding forwards. The raw code of each photon is kept
+    // in emission order, and every laser word with the tick it arrived on, and
+    // a second sweep pairs them. Nothing here is allocated on the raw path.
+    const bool calibrated = calibration != nullptr && !calibration->empty();
+    std::vector<uint8_t>  photon_code;
+    std::vector<uint64_t> laser_step;
+    std::vector<uint8_t>  laser_code_of;
+    if (calibrated) {
+        photon_code.reserve(guess);
+        laser_step.reserve(guess);
+        laser_code_of.reserve(guess);
+    }
 
     auto emit = [&](uint64_t macro, uint16_t micro, int8_t channel, int8_t type) {
         out.macro_times.push_back(macro);
@@ -184,16 +395,24 @@ TtrData read_ttr(const std::string& filename, const TtrParams& params) {
             step.update(a, b, c);
             const uint64_t macro = step.cumulative();
 
+            if (calibrated && have_laser) {
+                laser_step.push_back(macro);
+                laser_code_of.push_back(static_cast<uint8_t>(laser_code));
+            }
             for (const auto& p : pending) {
+                if (calibrated) {
+                    // Placeholder: filled in below, once the following laser
+                    // word is known.
+                    photon_code.push_back(static_cast<uint8_t>(p.second));
+                    emit(macro, 0, static_cast<int8_t>(p.first), 0);
+                    continue;
+                }
                 // Micro time is the channel code measured against the laser
                 // reference. Without a laser word there is no reference, so the
                 // photon keeps its raw code rather than a difference computed
                 // against a stale one.
                 int micro = have_laser ? (p.second - laser_code) : p.second;
                 if (micro < 0) micro += 256;          // codes wrap within a period
-                if (params.tdc_ps_per_code > 0.0) {
-                    micro = static_cast<int>(micro * params.tdc_ps_per_code);
-                }
                 emit(macro, static_cast<uint16_t>(micro), static_cast<int8_t>(p.first), 0);
             }
             pending.clear();
@@ -217,6 +436,61 @@ TtrData read_ttr(const std::string& filename, const TtrParams& params) {
             last_scan = scan;
             last_line = line;
         }
+    }
+
+    if (!calibrated) return out;
+
+    // Second sweep: give every photon its arrival time.
+    //
+    // dt = (S_laser - S_photon) * clock + t_channel - t_laser is the interval
+    // from the photon to the next laser sync -- the vendor's formula, and the
+    // direction the hardware measures in. The arrival time after the exciting
+    // pulse is the period minus that, which is the flip that makes the decay a
+    // decay instead of its mirror image.
+    out.micro_times_calibrated = true;
+    out.micro_time_bin_ps = calibration->micro_time_bin_ps;
+    out.n_micro_time_channels = calibration->n_micro_time_channels;
+
+    const double period = calibration->laser_ps > 0.0 ? calibration->laser_ps
+                                                      : calibration->sysclk_ps;
+    const double bin = calibration->micro_time_bin_ps;
+    const uint16_t max_bin = static_cast<uint16_t>(
+        std::max(0, calibration->n_micro_time_channels - 1));
+
+    std::size_t j = 0;      // photon index, in emission order
+    std::size_t li = 0;     // first laser word at or after the current photon
+    for (std::size_t i = 0; i < out.event_types.size(); ++i) {
+        if (out.event_types[i] != 0) continue;
+        const int channel = out.routing_channels[i];
+        const int code = photon_code[j++];
+
+        double dt;
+        if (laser_step.empty()) {
+            dt = 0.0;
+        } else {
+            while (li + 1 < laser_step.size() && laser_step[li] < out.macro_times[i]) ++li;
+            // Photons after the last laser word have no following reference.
+            // They keep the last one instead of being dropped -- the vendor
+            // discards them, but an event count that depends on whether a
+            // calibration was asked for is worse than a handful of photons
+            // referenced backwards at the very end of a file.
+            const double ds =
+                static_cast<double>(laser_step[li]) - static_cast<double>(out.macro_times[i]);
+            const std::vector<double>& table =
+                (channel >= 0 &&
+                 static_cast<std::size_t>(channel) < calibration->channel_code_ps.size())
+                    ? calibration->channel_code_ps[static_cast<std::size_t>(channel)]
+                    : calibration->laser_code_ps;
+            const double t_ch = table.empty() ? 0.0 : table[static_cast<std::size_t>(code)];
+            const double t_l = calibration->laser_code_ps[laser_code_of[li]];
+            dt = ds * calibration->sysclk_ps + t_ch - t_l;
+        }
+
+        double arrival = std::fmod(period - dt, period);
+        if (arrival < 0.0) arrival += period;
+        const long bin_index = std::lround(arrival / bin);
+        out.micro_times[i] = static_cast<uint16_t>(
+            std::min<long>(std::max<long>(bin_index, 0), max_bin));
     }
     return out;
 }

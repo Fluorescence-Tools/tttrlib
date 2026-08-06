@@ -130,6 +130,47 @@ std::vector<FileFormat> builtin_formats() {
     ttr.container_type = BE_TTR_CONTAINER;
     ttr.label = "BrightEyes-TTM raw";
     ttr.extensions = {"ttr"};
+    // The only built-in format that cannot be read without being told
+    // something. A .ttr is a bare word stream: the sample clock, the laser rate
+    // and the number of detector elements are properties of the instrument, and
+    // the TDC payload is a delay-line code rather than a duration. Declared
+    // here, so a caller can ask what the format needs instead of finding out
+    // from a wrong answer. The reader parses the matching JSON object; see
+    // io_be.h ttr_params_from_json().
+    ttr.parameters_schema = R"({
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "n_channels": {
+      "type": "integer", "title": "Detector elements", "default": 25,
+      "minimum": 1, "maximum": 123,
+      "description": "SPAD array size: 25 (5x5) or 49 (7x7). Words with a smaller ID are detector words, so this is what decides where the channel range ends."
+    },
+    "sysclk_MHz": {
+      "type": "number", "title": "Sample clock", "default": 240.0,
+      "exclusiveMinimum": 0.0, "unit": "MHz",
+      "description": "The coarse counter counts these ticks, so this sets what a macro time means."
+    },
+    "laser_MHz": {
+      "type": "number", "title": "Laser repetition rate", "default": 0.0,
+      "minimum": 0.0, "unit": "MHz",
+      "description": "Only used once the TDC is calibrated, to fold arrival times into one laser period. Zero leaves them unfolded."
+    },
+    "tdc_ps_per_code": {
+      "type": "number", "title": "Picoseconds per TDC code", "default": 0.0,
+      "minimum": 0.0, "unit": "ps",
+      "description": "Crude linear stand-in for a calibration. The delay line's bins are not equal, so this is an approximation; prefer auto_calibrate_tdc. Zero leaves micro times in raw codes."
+    },
+    "auto_calibrate_tdc": {
+      "type": "boolean", "title": "Calibrate the delay line from the data", "default": false,
+      "description": "Run a code-density calibration pass over the file before decoding, and report micro times in picoseconds. This is an estimation step, not parsing: it reads the bin widths off the data itself, so the same file read over different subranges gives slightly different times."
+    },
+    "drop_filler": {
+      "type": "boolean", "title": "Drop 0x7FFF idle words", "default": true,
+      "description": "The FPGA emits an idle word when it has nothing to report."
+    }
+  }
+})";
     // A bare uint16 stream: no header, no magic, nothing to sniff. It can only
     // ever be reached by extension or by being named, so it takes no part in
     // content detection -- any file at all would "match".
@@ -138,6 +179,29 @@ std::vector<FileFormat> builtin_formats() {
     ttr.default_record_type = BE_RECORD_TYPE_TTR;
     ttr.can_write = true;
     f.push_back(ttr);
+
+    // FLIM LABS writes five different ".bin" formats behind the same
+    // magic-plus-JSON envelope and only the two time taggers carry photons; the
+    // rest are decay curves, phasors and correlation curves, which a TTTR
+    // container has nowhere to put. So both of these are identified by their
+    // magic and never by the extension alone -- ".bin" claims nothing.
+    FileFormat stt1;
+    stt1.name = "FLIMLABS-STT1";
+    stt1.container_type = FL_STT1_CONTAINER;
+    stt1.label = "FLIM LABS spectroscopy time tagger";
+    stt1.extensions = {"bin"};
+    stt1.record_types = {FL_RECORD_TYPE_STT1};
+    stt1.default_record_type = FL_RECORD_TYPE_STT1;
+    stt1.can_write = false;   // see PRD-012: not before the reader has seen a real file
+    f.push_back(stt1);
+
+    FileFormat itt1 = stt1;
+    itt1.name = "FLIMLABS-ITT1";
+    itt1.container_type = FL_ITT1_CONTAINER;
+    itt1.label = "FLIM LABS intensity tracing time tagger";
+    itt1.record_types = {FL_RECORD_TYPE_ITT1};
+    itt1.default_record_type = FL_RECORD_TYPE_ITT1;
+    f.push_back(itt1);
 
     for (auto& fmt : f) {
         if (fmt.summary.empty()) fmt.summary = "TTTR container: " + fmt.label;

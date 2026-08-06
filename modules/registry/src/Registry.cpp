@@ -48,6 +48,15 @@ json file_container_entries() {
         entry["record_types"] = f.record_types;
         entry["default_record_type"] = f.default_record_type;
         entry["canonical_extension"] = f.write_extension();
+        // What the reader has to be told, for the formats that cannot tell you
+        // themselves. Same shape and same key as the fit models' params_schema,
+        // so a frontend that renders one renders this one; an empty object
+        // means the format takes no parameters. This is the whole point of
+        // declaring container parameters here rather than as a per-format
+        // struct: no language binding needs to know that BrightEyes exists.
+        entry["params_schema"] = f.parameters_schema.empty()
+                ? json::object()
+                : json::parse(f.parameters_schema, nullptr, false);
         // Tells a consumer which container ints are safe to persist. Built-in
         // formats own 0-999 permanently; a plugin's id is session-local, so for
         // those the NAME is the stable identifier.

@@ -43,6 +43,8 @@
 #define PS_PHOTONS_CONTAINER      8  // Photonscore LINCam ".photons" (D7)
 #define BH_SPCQC_CONTAINER        9  // Becker & Hickl SPC-QC ".spc"
 #define BE_TTR_CONTAINER         10  // BrightEyes-TTM raw ".ttr"
+#define FL_STT1_CONTAINER        11  // FLIM LABS spectroscopy time tagger ".bin"
+#define FL_ITT1_CONTAINER        12  // FLIM LABS intensity-tracing time tagger ".bin"
 
 // tttrlib record type identifier definitions
 #define PQ_RECORD_TYPE_HHT2v2       1
@@ -61,7 +63,9 @@
 #define PQ_RECORD_TYPE_SF_HT3       14  // SF-compressed HT3 (S. Felekyan): HHT3 records, overflow record carries a 24-bit count
 #define BH_RECORD_TYPE_SPCQC_X04    15  // Becker & Hickl SPC-QC-104 / QC-004 (2 bit channel)
 #define BH_RECORD_TYPE_SPCQC_X06    16  // Becker & Hickl SPC-QC-106 / QC-006 (3 bit channel)
-#define BE_RECORD_TYPE_TTR          17  // BrightEyes-TTM raw words  // Becker & Hickl SPC-QC-106 / QC-006 (3 bit channel)
+#define BE_RECORD_TYPE_TTR          17  // BrightEyes-TTM raw words
+#define FL_RECORD_TYPE_STT1         18  // FLIM LABS 17 byte {u8 event, f64 micro ns, f64 macro ns}
+#define FL_RECORD_TYPE_ITT1         19  // FLIM LABS  9 byte {u8 event, f64 time ns}
 
 /// Micro time channels of a Becker & Hickl SPC-QC record (12 bit ADC)
 #define BH_SPCQC_N_MICRO_TIMES  4096

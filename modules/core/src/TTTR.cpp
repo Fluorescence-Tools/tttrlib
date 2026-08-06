@@ -7,6 +7,7 @@
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
 #include "io_be.h"
+#include "io_fl.h"
 #include "io_hdf5.h"
 #include "TTTRMask.h"
 #include "FileCheck.h"
@@ -159,6 +160,7 @@ void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     header = new TTTRHeader(*p2.header);
     tttr_container_type = p2.tttr_container_type;
     tttr_container_type_str = p2.tttr_container_type_str;
+    tttr_container_parameters = p2.tttr_container_parameters;
     fp_records_begin = p2.fp_records_begin;
 
     used_routing_channels = p2.used_routing_channels;
@@ -279,6 +281,43 @@ TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
     catch (...) {
         std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): "
                   << "Container type " << container_type << " not supported." << std::endl;
+    }
+}
+
+TTTR::TTTR(const char *fn, const char *container_type,
+           const std::string& parameters, bool read_input) : TTTR() {
+    tttr_container_parameters = parameters;
+    try {
+        std::string lowered(container_type);
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(), ::tolower);
+        if (lowered == "auto") {
+            tttr_container_type = inferTTTRFileType(fn);
+            tttr_container_type_str = container_names().right.at(tttr_container_type);
+        } else {
+            tttr_container_type_str.assign(container_type);
+            tttr_container_type = container_names().left.at(std::string(container_type));
+        }
+        filename.assign(fn);
+        if (read_input && read_file())
+            find_used_routing_channels();
+    }
+    catch (...) {
+        std::cerr << "TTTR::TTTR(fn, container_type, parameters, read_input): "
+                  << "Container type " << container_type << " not supported." << std::endl;
+    }
+}
+
+TTTR::TTTR(const char *fn, int container_type,
+           const std::string& parameters, bool read_input) : TTTR() {
+    tttr_container_parameters = parameters;
+    if (container_type >= 0) {
+        tttr_container_type_str = container_names().right.at(container_type);
+        tttr_container_type = container_type;
+        this->filename.assign(fn);
+        if (read_input && read_file())
+            find_used_routing_channels();
+    } else {
+        std::cerr << "File " << fn << " not supported." << std::endl;
     }
 }
 
@@ -517,6 +556,9 @@ int TTTR::read_ttr_file(const char *fn) {
     tttrlib::io::TtrParams params;   // instrument defaults; see io_be.h
     tttrlib::io::TtrData d;
     try {
+        // Whatever the caller said the instrument is. Everything the format
+        // cannot tell you about itself enters here and nowhere else.
+        params = tttrlib::io::ttr_params_from_json(tttr_container_parameters);
         d = tttrlib::io::read_ttr(std::string(fn ? fn : ""), params);
     } catch (const std::exception &e) {
         std::cerr << "Error reading .ttr file: " << e.what() << std::endl;
@@ -528,7 +570,17 @@ int TTTR::read_ttr_file(const char *fn) {
     // The sample clock is an assumption, so it is written down rather than left
     // implicit: a reader of the header can see what the macro times mean.
     header->set_macro_time_resolution(1.0 / (params.sysclk_MHz * 1e6));
-    header->set_number_of_micro_time_channels(256);   // 8-bit TDC code
+    header->set_number_of_micro_time_channels(d.n_micro_time_channels);
+    // Whether the micro times are times at all. A delay-line code is not
+    // proportional to a duration, so a fit against uncalibrated codes is
+    // meaningless -- and would look perfectly reasonable. Downstream can refuse
+    // rather than guess, which it cannot do if the state is invisible.
+    header->set_int_tag("BrightEyes_MicroTimeCalibrated", d.micro_times_calibrated ? 1 : 0);
+    header->set_string_tag("BrightEyes_MicroTimeUnit",
+                           d.micro_times_calibrated ? "picoseconds" : "tdc_code");
+    if (d.micro_times_calibrated) {
+        header->set_micro_time_resolution(d.micro_time_bin_ps * 1e-12);   // TTTRTagRes is seconds
+    }
 
     const size_t n = d.event_types.size();
     allocate_memory_for_records(n);
@@ -540,6 +592,80 @@ int TTTR::read_ttr_file(const char *fn) {
     }
     n_records_read = n;
     n_valid_events = n;
+    return 1;
+}
+
+
+/*!
+ * \brief Read a FLIM LABS time-tagger file into the standard event arrays.
+ *
+ * The decode lives in io_fl; this turns its output into tttrlib's internal
+ * representation and records, in the header, the two things about the result
+ * that the file itself does not state:
+ *
+ * - what a macro time tick is. The file's times are floating-point
+ *   nanoseconds, so a tick had to be chosen: the laser period for STT1, one
+ *   picosecond for ITT1. See io_fl.h.
+ * - which reading of the file's macro times turned out to be true, via
+ *   FlimLabs_MacroTimeResidual_ns.
+ *
+ * Markers keep the format's own codes -- 70 'F', 76 'L', 80 'P' -- as their
+ * routing channel, and are advertised through the same ImgHdr_* tags every
+ * other imaging container uses, so CLSMImage configures itself without knowing
+ * this format exists.
+ */
+int TTTR::read_flimlabs_file(const char *fn) {
+    tttrlib::io::FlimLabsData d;
+    try {
+        d = tttrlib::io::read_flimlabs(std::string(fn ? fn : ""));
+    } catch (const std::exception &e) {
+        std::cerr << "Error reading FLIM LABS .bin file: " << e.what() << std::endl;
+        return 0;
+    }
+
+    const int container = d.flavour == tttrlib::io::FLIMLABS_ITT1
+                              ? FL_ITT1_CONTAINER : FL_STT1_CONTAINER;
+    header = new TTTRHeader(container);
+    header->set_tttr_record_type(d.flavour == tttrlib::io::FLIMLABS_ITT1
+                                     ? FL_RECORD_TYPE_ITT1 : FL_RECORD_TYPE_STT1);
+    header->set_macro_time_resolution(d.macro_time_resolution_s);
+    header->set_number_of_micro_time_channels(d.n_micro_time_channels);
+    if (d.micro_time_resolution_s > 0.0) {
+        header->set_micro_time_resolution(d.micro_time_resolution_s);
+    }
+    if (d.laser_period_ns > 0.0) {
+        header->set_float_tag("FlimLabs_LaserPeriod_ns", d.laser_period_ns);
+    }
+    header->set_string_tag("FlimLabs_MacroTimeUnit",
+                           d.flavour == tttrlib::io::FLIMLABS_ITT1 ? "picosecond"
+                                                                   : "laser_pulse");
+    header->set_float_tag("FlimLabs_MacroTimeResidual_ns", d.macro_time_residual_ns);
+    if (!d.metadata_json.empty()) {
+        header->set_string_tag("FlimLabs_Header", d.metadata_json);
+    }
+    // Scanner markers, in the container-independent form CLSMImage reads. A
+    // FLIM LABS file does not carry the scan geometry, so only the marker
+    // channels are known -- the pixel count still has to be supplied.
+    header->set_int_tag("ImgHdr_Frame", tttrlib::io::FlimLabsData::MARKER_FRAME);
+    header->set_int_tag("ImgHdr_LineStart", tttrlib::io::FlimLabsData::MARKER_LINE);
+    header->set_int_tag("ImgHdr_LineStop", tttrlib::io::FlimLabsData::MARKER_LINE);
+
+    const size_t n = d.event_types.size();
+    allocate_memory_for_records(n);
+    for (size_t i = 0; i < n; ++i) {
+        set_macro_time_at(i, static_cast<unsigned long long>(d.macro_times[i]));
+        micro_times[i] = d.micro_times[i];
+        routing_channels[i] = d.routing_channels[i];
+        event_types[i] = d.event_types[i];
+    }
+    n_records_read = n;
+    n_valid_events = n;
+
+    if (d.n_undeclared_channel > 0) {
+        std::cerr << "-- WARNING: " << d.n_undeclared_channel
+                  << " events are on channels the FLIM LABS header does not list as enabled"
+                  << std::endl;
+    }
     return 1;
 }
 
@@ -667,7 +793,10 @@ int TTTR::read_ps_file(const char *fn) {
 bool TTTR::write_ttr_file(const std::string& filename, TTTRHeader* hdr) {
     (void) hdr;   // a .ttr has no header
     try {
-        tttrlib::io::TtrParams params;   // instrument defaults; see io_be.h
+        // The channel count decides which routing channels the device could
+        // have produced, so the writer needs the same parameters as the reader.
+        tttrlib::io::TtrParams params =
+                tttrlib::io::ttr_params_from_json(tttr_container_parameters);
         tttrlib::io::write_ttr(filename, macro_times, micro_times,
                                routing_channels, event_types,
                                n_valid_events, params);
@@ -991,6 +1120,24 @@ if (is_verbose()) {
     this->filename = p.u8string();
     fn = this->filename.c_str();
 
+    // Parameters offered to a container that has none are refused, not
+    // dropped. Nearly every format describes itself completely, so a caller
+    // passing parameters to one has misunderstood something -- and reading the
+    // file anyway hides the misunderstanding behind a plausible result. An
+    // empty object is not an offer, so `{}` passes.
+    if (tttr_container_parameters.find_first_not_of(" \t\r\n") != std::string::npos) {
+        auto parsed = nlohmann::json::parse(tttr_container_parameters, nullptr, false);
+        const bool says_something =
+                parsed.is_discarded() || !parsed.is_object() || !parsed.empty();
+        const auto* fmt = tttrlib::IORegistry::by_container_type(container_type);
+        if (says_something && fmt != nullptr && fmt->parameters_schema.empty()) {
+            std::cerr << "-- ERROR: container " << fmt->name
+                      << " takes no reader parameters, but was given "
+                      << tttr_container_parameters << std::endl;
+            return 0;
+        }
+    }
+
     // Dispatch to the container-specific reader. Photon-HDF5 and SM files
     // have their own file layout; everything else is a header followed by
     // a stream of fixed-size records.
@@ -1002,6 +1149,8 @@ if (is_verbose()) {
         read_ps_file(fn);
     } else if (container_type == BE_TTR_CONTAINER) {
         read_ttr_file(fn);
+    } else if (container_type == FL_STT1_CONTAINER || container_type == FL_ITT1_CONTAINER) {
+        read_flimlabs_file(fn);
     } else {
         read_records_file(fn, container_type);
     }
@@ -2464,6 +2613,15 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     // shares nothing with the header + records path below.
     if(container_type == BE_TTR_CONTAINER){
         return write_ttr_file(filename, header);
+    }
+    // FLIM LABS is read-only. Writing one means baking in the choice of what a
+    // macro time tick is (see io_fl.h) and emitting it as if the instrument
+    // had; that choice has never been checked against a file the instrument
+    // wrote, because no such file is published. See PRD-012.
+    if(container_type == FL_STT1_CONTAINER || container_type == FL_ITT1_CONTAINER){
+        std::cerr << "ERROR in TTTR::write: tttrlib reads FLIM LABS time-tagger files "
+                     "but does not write them." << std::endl;
+        return false;
     }
 
     int record_type = header->get_tttr_record_type();

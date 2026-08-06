@@ -181,6 +181,56 @@ SM (``.sm``, container ``SM``)
    12-byte records of a 64-bit macro time and a 32-bit channel number, and a
    26-byte trailer. No micro times.
 
+BrightEyes-TTM (``.ttr``, container ``BRIGHTEYES-TTR``)
+   The Vicidomini-lab open-hardware time-tagging module: a bare little-endian
+   ``uint16`` stream with no header, no magic and no metadata at all. It is the
+   one container that has to be named -- any file whatsoever is a valid
+   sequence of 16-bit words, so it cannot take part in content detection -- and
+   the one that has to be *told* things: the sample clock, the laser rate and
+   the detector count are properties of the instrument, and the payload is a
+   raw delay-line code rather than a duration. See
+   :ref:`container_parameters` and :doc:`formats/brighteyes-ttm`.
+
+FLIM LABS time tagger (``.bin``, containers ``FLIMLABS-STT1``, ``FLIMLABS-ITT1``)
+   Four magic bytes, a JSON header and fixed-size records. ``STT1`` carries a
+   micro time and ``ITT1`` does not; the other three ``.bin`` formats sharing
+   the envelope are decay curves, phasors and correlation curves, which are not
+   photon streams and are not read. Both store times as ``float64``
+   nanoseconds rather than integer ticks, so reading one means choosing a tick;
+   see :doc:`formats/flim-labs-stt1`. Read-only. Records are not in time order
+   in the file, and are sorted on read.
+
+.. _container_parameters:
+
+Containers that need to be told something
+-----------------------------------------
+
+Almost every format above describes itself completely: hand tttrlib the bytes
+and it knows what they mean. A ``.ttr`` does not, and no amount of care with
+the reader can change that -- the sample clock and the laser rate were never
+written down.
+
+Such a container declares what it needs as JSON Schema, in the registry, and
+receives it as a JSON object:
+
+.. code-block:: python
+
+   import tttrlib, json
+
+   # what does this container need to be told?
+   schema = tttrlib.registry("file_container")["BRIGHTEYES-TTR"]["params_schema"]
+   print(json.dumps(schema["properties"], indent=2))
+
+   data = tttrlib.TTTR("scan.ttr", "BRIGHTEYES-TTR",
+                       '{"n_channels": 25, "sysclk_MHz": 240, "laser_MHz": 80}')
+
+The schema is the same shape the fit models and burst searches publish, so a
+frontend that renders one renders this one, and no language binding has to know
+that any particular format exists. Formats needing nothing have an empty
+``params_schema`` and refuse parameters rather than ignoring them; so does a
+misspelled property, because a parameter that silently does nothing produces a
+file read with the defaults and no indication that it was.
+
 Support matrix
 --------------
 
@@ -277,6 +327,31 @@ Support matrix
      - ✗
      - **Header fields** — version, comment, column names/resolutions
        (channel labels are dropped)
+   * - ``BRIGHTEYES-TTR``
+     - BrightEyes-TTM words
+     - ✓
+     - ✓
+     - 8 bit (raw delay-line code unless calibrated)
+     - 25 or 49 elements
+     - ✓
+     - **None** (headerless format) — the instrument parameters are supplied
+       by the caller, see :ref:`container_parameters`
+   * - ``FLIMLABS-STT1``
+     - 17-byte ``<Bdd``
+     - ✓
+     - ✗
+     - 8 bit (256 bins of the laser period)
+     - 8 bit
+     - ✓
+     - n/a — read-only
+   * - ``FLIMLABS-ITT1``
+     - 9-byte ``<Bd``
+     - ✓
+     - ✗
+     - ✗
+     - 8 bit
+     - ✓
+     - n/a — read-only
 
 Same-format round trips (``read → write → read``) reproduce the decoded event
 stream exactly for every container. Writing v1 HydraHarp records (HT3 v1

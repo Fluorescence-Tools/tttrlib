@@ -180,26 +180,32 @@ def __init__(self, *args, **kwargs):
     Parameters:
     - filename (str or Path): Path to TTTR file to load
     - container_type (int, optional): TTTR container type (-1 for auto-detect)
+    - parameters (dict or str, optional): Reader parameters, for the containers
+      that cannot describe themselves. What each accepts is declared by its
+      ``params_schema`` in ``registry('file_container')``; almost every format
+      needs none.
     - settings_file (str or Path, optional): Path to JSON settings file with corrections
     - settings (dict, optional): Dictionary with correction settings
     - channel_luts (dict, optional): Channel LUTs (alternative to settings)
     - channel_shifts (dict, optional): Channel shifts (alternative to settings)
-    
+
     Examples:
     tttr = TTTR('file.ptu')  # Basic loading
     tttr = TTTR('file.ptu', settings_file='settings.json')  # With corrections from file
     tttr = TTTR('file.ptu', channel_luts={0: lut_array})  # With corrections directly
+    tttr = TTTR('scan.ttr', 'BRIGHTEYES-TTR', {'laser_MHz': 80})  # Reader parameters
     """
     import pathlib
     import json
     import os
-    
+
     # Extract our special parameters
     channel_luts = kwargs.pop('channel_luts', None)
     channel_shifts = kwargs.pop('channel_shifts', None)
     settings_file = kwargs.pop('settings_file', None)
     settings = kwargs.pop('settings', None)
-    
+    parameters = kwargs.pop('parameters', None)
+
     # Handle settings parameters
     if settings_file is not None or settings is not None:
         if settings_file is not None:
@@ -232,8 +238,27 @@ def __init__(self, *args, **kwargs):
                 container_type = args[1]
             else:
                 container_type = -1  # infer
-            
-            if channel_luts is not None or channel_shifts is not None:
+
+            # A third positional that is text or a mapping is reader parameters.
+            # A bool there is the historical read_input flag, which this wrapper
+            # has never forwarded, so it stays ignored rather than starting to
+            # mean something new.
+            if len(args) > 2 and isinstance(args[2], (str, dict)):
+                parameters = args[2]
+            # A dict is the convenient form and JSON is what crosses the
+            # boundary; converting here keeps the C++ signature the same one R
+            # and Java call, so no binding needs a special case.
+            if isinstance(parameters, dict):
+                parameters = json.dumps(parameters)
+
+            if parameters is not None:
+                if container_type == -1:
+                    container_type = _tttrlib.inferTTTRFileType(filename)
+                if isinstance(container_type, str):
+                    this = _tttrlib.new_TTTR(filename, container_type, parameters, True)
+                else:
+                    this = _tttrlib.new_TTTR(filename, int(container_type), parameters, True)
+            elif channel_luts is not None or channel_shifts is not None:
                 if container_type == -1:
                     # This overload takes no "auto" sentinel, so resolve the
                     # container here. Guessing SPC-130 for every .spc used to

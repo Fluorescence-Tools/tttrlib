@@ -103,6 +103,28 @@ struct FileFormat {
     /// False for plugin-provided formats, whose container_type is session-local.
     bool stable = true;
 
+    /*!
+     * \brief Reader parameters this format needs, as a JSON Schema.
+     *
+     * Most formats need none: everything about the measurement is in the file,
+     * so the string is empty and a caller passes nothing. A few cannot be read
+     * without knowing something the file does not record -- a BrightEyes
+     * ``.ttr`` is a bare word stream whose sample clock, laser rate and channel
+     * count are properties of the instrument -- and those are named here.
+     *
+     * A schema rather than a struct, because the alternative is per-format
+     * plumbing in every language binding. The registry already publishes
+     * JSON Schema for fit models and burst searches, and a frontend that can
+     * render one of those renders this one too; the reader receives the same
+     * JSON object the schema describes. What a format requires is therefore
+     * discoverable rather than documented, which matters most for the formats
+     * that need it, since those are exactly the ones a caller cannot guess.
+     *
+     * Empty means the format takes no parameters, and passing any is an error
+     * rather than a silent no-op.
+     */
+    std::string parameters_schema;
+
     /// True if this format accepts \p record_type.
     bool accepts_record_type(int record_type) const {
         if (record_types.empty()) return true;

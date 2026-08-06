@@ -112,6 +112,31 @@ bool isBH132File(const std::string& filename);
  */
 bool isBHSPCQCFile(const std::string& filename);
 
+/**
+ * @brief Checks if the given file is a FLIM LABS spectroscopy time tagger.
+ *
+ * FLIM LABS write five different ".bin" formats behind one envelope, and only
+ * the two time taggers carry photons, so the magic is the whole of the answer:
+ * "STT1" here, "ITT1" for @ref isFlimLabsITT1File. Four bytes are weak evidence
+ * on an extension as generic as ".bin", so the record area is checked to divide
+ * evenly by the record size as well.
+ *
+ * @param filename The name of the file to check.
+ * @return true if the file is an STT1 file, false otherwise.
+ */
+bool isFlimLabsSTT1File(const std::string& filename);
+
+/**
+ * @brief Checks if the given file is a FLIM LABS intensity tracing time tagger.
+ *
+ * See @ref isFlimLabsSTT1File; this one matches the "ITT1" magic and its
+ * 9-byte records.
+ *
+ * @param filename The name of the file to check.
+ * @return true if the file is an ITT1 file, false otherwise.
+ */
+bool isFlimLabsITT1File(const std::string& filename);
+
 
 /**
  * @brief Determines the type of the TTTR file based on its content.

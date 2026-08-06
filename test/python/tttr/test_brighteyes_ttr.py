@@ -187,6 +187,112 @@ def test_refuses_what_the_format_cannot_hold(data, tmp_path):
     assert not bad.write(str(tmp_path / "bad.ttr"), "BRIGHTEYES-TTR")
 
 
+def _tag(tttr, name, default=None):
+    """One header tag's value, by name."""
+    values = tttr.header.data.get(name)
+    return default if not values else values[0]
+
+
+# ---------------------------------------------------------------- parameters
+
+def test_the_container_declares_what_it_needs_to_be_told():
+    """A .ttr carries neither its clock nor its laser nor its channel count.
+
+    Every other built-in container describes itself completely, and takes no
+    parameters at all. This one publishes what it needs as JSON Schema, in the
+    registry, so a caller in any language can ask instead of being told.
+    """
+    entry = tttrlib.registry("file_container")["BRIGHTEYES-TTR"]
+    schema = entry["params_schema"]
+    assert set(schema["properties"]) == {
+        "n_channels", "sysclk_MHz", "laser_MHz", "tdc_ps_per_code",
+        "auto_calibrate_tdc", "drop_filler",
+    }
+    assert schema["properties"]["sysclk_MHz"]["default"] == 240.0
+    # and nothing else does
+    assert tttrlib.registry("file_container")["PTU"]["params_schema"] == {}
+
+
+def test_parameters_reach_the_reader(ttr_path):
+    """The sample clock is what a macro time is counted in."""
+    slow = tttrlib.TTTR(ttr_path, "BRIGHTEYES-TTR", '{"sysclk_MHz": 120.0}')
+    assert slow.header.macro_time_resolution == pytest.approx(1.0 / 120e6)
+    assert slow.get_container_parameters() == '{"sysclk_MHz": 120.0}'
+
+    default = tttrlib.TTTR(ttr_path, "BRIGHTEYES-TTR")
+    assert default.header.macro_time_resolution == pytest.approx(1.0 / 240e6)
+
+
+def test_a_misspelled_parameter_is_refused(ttr_path):
+    """Quietly reading with the defaults instead is a wrong answer that looks right."""
+    d = tttrlib.TTTR(ttr_path, "BRIGHTEYES-TTR", '{"sysclock_MHz": 240.0}')
+    assert d.n_valid_events == 0
+
+
+def test_a_container_with_no_parameters_refuses_them(ttr_path):
+    d = tttrlib.TTTR(ttr_path, "BRIGHTEYES-TTR")   # a real read, to compare against
+    assert d.n_valid_events > 0
+    empty = tttrlib.TTTR(ttr_path, "BRIGHTEYES-TTR", "{}")
+    assert empty.n_valid_events == d.n_valid_events   # an empty object is not an offer
+
+
+# --------------------------------------------------------------- calibration
+
+def test_micro_times_are_flagged_uncalibrated(data):
+    """A delay-line code is not a time, and must not be mistaken for one."""
+    assert _tag(data, "BrightEyes_MicroTimeCalibrated") == 0
+    assert _tag(data, "BrightEyes_MicroTimeUnit") == "tdc_code"
+
+
+@pytest.fixture(scope="module")
+def calibrated(ttr_path):
+    return tttrlib.TTTR(
+        ttr_path, "BRIGHTEYES-TTR",
+        '{"laser_MHz": 80.0, "sysclk_MHz": 240.0, "auto_calibrate_tdc": true}')
+
+
+def test_calibration_says_so_in_the_header(calibrated):
+    assert _tag(calibrated, "BrightEyes_MicroTimeCalibrated") == 1
+    assert _tag(calibrated, "BrightEyes_MicroTimeUnit") == "picoseconds"
+    # one nominal TDC least-significant bit: 4166.7 ps / 256
+    assert calibrated.header.micro_time_resolution == pytest.approx(4166.67e-12 / 256, rel=1e-3)
+    # and the axis spans one laser period
+    assert calibrated.header.number_of_micro_time_channels == 768
+
+
+def test_calibrating_changes_no_event_but_the_micro_time(data, calibrated):
+    """It is a reinterpretation of one column, not a different decode."""
+    assert calibrated.n_valid_events == data.n_valid_events
+    for name in ("macro_times", "routing_channels", "event_types"):
+        assert np.array_equal(np.asarray(getattr(calibrated, name)),
+                              np.asarray(getattr(data, name))), name
+
+
+def test_the_calibrated_decay_has_no_delay_line_comb(calibrated, ttr_path):
+    """The point of calibrating: unequal taps stop looking like structure.
+
+    Uncalibrated, the arrival histogram carries spikes wherever the delay line
+    has a wide tap -- they are the tap widths, not photons. The check is on the
+    slow-rising side of the decay, away from the sharp edge, where a real decay
+    is smooth and a comb is not.
+    """
+    if "80MHz" not in os.path.basename(ttr_path):
+        pytest.skip("the laser rate is taken from the sample's filename")
+
+    photons = np.asarray(calibrated.event_types) == 0
+    micro = np.asarray(calibrated.micro_times)[photons]
+    h, _ = np.histogram(micro, bins=64, range=(0, 768))
+    assert h.sum() > 0
+
+    # The decay's own curvature is gentle over one bin, so a bin differing
+    # sharply from both neighbours is the delay line and not the sample.
+    mid = h[1:-1].astype(float)
+    neighbour_mean = (h[:-2] + h[2:]) / 2.0
+    keep = neighbour_mean > 100
+    excess = np.abs(mid[keep] - neighbour_mean[keep]) / neighbour_mean[keep]
+    assert excess.max() < 0.25
+
+
 def test_matches_the_official_libttp_reader(ttr_path, data):
     """Photon for photon, against the vendor's own decoder."""
     libttp_ttp = pytest.importorskip("libttp.ttp", reason="libttp not installed")

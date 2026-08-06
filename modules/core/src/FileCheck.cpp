@@ -231,6 +231,19 @@ bool isCZConfocor3File(const std::string& filename) {
 
 /**
  * @brief Infers the type of a TTTR file based on its content.
+// FLIM LABS: the magic distinguishes the two time taggers from each other and
+// from the three analysis formats that share the envelope. The decoder owns the
+// check because it is the same envelope parse the reader already does -- and
+// because "is this a time tagger" and "can this be read" must not be able to
+// disagree.
+bool isFlimLabsSTT1File(const std::string& filename) {
+    return tttrlib::io::flimlabs_flavour(filename) == tttrlib::io::FLIMLABS_STT1;
+}
+
+bool isFlimLabsITT1File(const std::string& filename) {
+    return tttrlib::io::flimlabs_flavour(filename) == tttrlib::io::FLIMLABS_ITT1;
+}
+
  */
 namespace {
 
@@ -262,6 +275,8 @@ void ensure_sniffers() {
         IORegistry::set_sniffer("SM",          &isSMFile);
     });
 }
+        IORegistry::set_sniffer("FLIMLABS-STT1", &isFlimLabsSTT1File);
+        IORegistry::set_sniffer("FLIMLABS-ITT1", &isFlimLabsITT1File);
 
 }  // namespace
 
