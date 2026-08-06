@@ -113,6 +113,14 @@ import tttrlib
 import numpy as np
 from pathlib import Path
 
+# ``np.trapezoid`` is the NumPy >= 2.0 spelling of ``np.trapz``. Bind whichever
+# one this NumPy has: the old name is deprecated in 2.x and slated for removal,
+# the new one does not exist in 1.x, so neither can be referenced directly.
+try:
+    _trapezoid = np.trapezoid
+except AttributeError:  # NumPy < 2.0
+    _trapezoid = np.trapz
+
 tttrlib.mark_experimental(
     CLSMSuperRes,
     "Photon-level super-resolution (eSRRF) is experimental. API may change."
@@ -415,9 +423,9 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     common = np.sqrt(ct) * st * np.exp(1j * k * z_nm * ct)
     krs = k * r[:, None] * st[None, :]
 
-    i0 = np.trapezoid(common * (1.0 + ct) * jv(0, krs), theta, axis=1)
-    i1 = np.trapezoid(common * st * jv(1, krs), theta, axis=1)
-    i2 = np.trapezoid(common * (1.0 - ct) * jv(2, krs), theta, axis=1)
+    i0 = _trapezoid(common * (1.0 + ct) * jv(0, krs), theta, axis=1)
+    i1 = _trapezoid(common * st * jv(1, krs), theta, axis=1)
+    i2 = _trapezoid(common * (1.0 - ct) * jv(2, krs), theta, axis=1)
 
     if isinstance(polarization, str) and polarization.lower() == "unpolarized":
         # incoherent average of two orthogonal linear states
@@ -427,13 +435,13 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     elif isinstance(polarization, str) and polarization.lower() in ("radial", "azimuthal"):
         # cylindrical vector beams need their own aperture integrals: the pupil
         # field is not a constant Jones vector across it
-        j0 = np.trapezoid(common * st * jv(0, krs), theta, axis=1)
+        j0 = _trapezoid(common * st * jv(0, krs), theta, axis=1)
         if polarization.lower() == "radial":
-            e_r = np.trapezoid(common * ct * jv(1, krs), theta, axis=1)
+            e_r = _trapezoid(common * ct * jv(1, krs), theta, axis=1)
             e_z = 2j * j0
             intensity = np.abs(e_r) ** 2 + np.abs(e_z) ** 2
         else:
-            e_phi = np.trapezoid(common * jv(1, krs), theta, axis=1)
+            e_phi = _trapezoid(common * jv(1, krs), theta, axis=1)
             intensity = np.abs(e_phi) ** 2
     else:
         jones = jones_vector(polarization, angle_deg)
