@@ -3,6 +3,100 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## `PtoFile::open(writable=true)` takes no exclusive lock, so two writers silently race
+
+**2026-08-08.** `PtoFile::open` (`modules/io/pto/src/io_pto.cpp:1083`) opens the
+file with `"r+b"` and `PtoFile::create` with `"w+b"`; neither takes a lock and
+neither asks whether anyone else has the file open for writing. Two processes
+therefore both succeed, immediately, and neither is told:
+
+```python
+import multiprocessing as mp, tttrlib
+
+def second(path, q):
+    f = tttrlib.PtoFile()
+    q.put(("ok" if f.open(path, True) else "refused", f.error()))
+
+# first writer, still open and uncommitted
+first = tttrlib.PtoFile(); first.open("m000.pto", True)
+
+q = mp.get_context("spawn").Queue()
+p = mp.Process(target=second, args=("m000.pto", q)); p.start(); p.join()
+print(q.get())      # ('ok', '')
+```
+
+Run as filed, against `tttrlib.PtoFile` with no wrapper:
+
+```
+first writer opened: True
+second writer: ok after 0.006 s   error=''
+both hold writable handles simultaneously: True
+```
+
+That is not an exotic situation. It is what happens whenever an application has
+a measurement open and anything else — a script, a second tool in the same
+session, a re-run of the analysis — reaches the same file. Both writers hold
+their own in-memory slot table, freelist and generation counter, and the format
+is designed so that nothing is visible until `commit()`; the consequence is that
+the *last* commit decides what the file says, and the other writer's work is
+gone. There is no error, no partial write, and nothing in the file afterwards
+that says two writers were ever there.
+
+The observed damage is worse than "one result lost", because the two writers
+allocate from freelists computed before either committed. A burst table came
+back holding rows no single code path produces: `Duration (ms) = 0.0` beside
+`Number of Photons = 1951`, and `Mean Macro Time (ms) = 7136629033695` for a
+measurement 707 s long. The photon streams verified clean and the table read
+back identically through two independent decoders, so the bytes on disk really
+did say that — they were assembled from two writers' views of the same file.
+
+### What it should do
+
+`open(..., writable=true)` and `create(...)` should take an **exclusive**
+advisory lock (`flock(LOCK_EX | LOCK_NB)` on POSIX, `LockFileEx` with
+`LOCKFILE_FAIL_IMMEDIATELY` on Windows) and **fail immediately** when it is
+held, with an error naming the holder. `close()` releases it.
+
+Three properties matter, and the first two are easy to get wrong:
+
+* **Readers must not be locked out.** A viewer opening a container while an
+  analysis writes is the normal case, and the commit-on-write design already
+  accounts for a reader seeing the pre-commit state.
+* **Failing must be immediate, not a wait.** A writer that blocks is
+  indistinguishable from a writer that hung — an analysis legitimately taking a
+  minute gives no way to tell. This cost ten minutes of staring at a frozen
+  window before the cause was found.
+* **The lock must be released on the failure path**, or a crashed writer blocks
+  every later one for the life of the process.
+
+A lock on the file itself is fine here (unlike a rename-based writer), since
+`PtoFile` writes in place and does not replace the inode.
+
+**Worked around in ChiSurf** (`chisurf/core/fio/pto.py`, `_WriteLock`) with an
+advisory lock on a `<container>.lock` sidecar, because the workaround cannot
+assume anything about how the C++ writer holds its descriptor. That protects
+callers that go through `Measurement`; it does nothing for anyone using
+`tttrlib.PtoFile` directly, which is why it belongs here. Remove the workaround
+once this lands.
+
+## `disassemble` does not create the directories an object's name implies
+
+**2026-08-07.** An object name is written out as a *relative path* — which is
+useful, and is what ChiSurf now relies on to address a container like a folder
+(`m000.pto/countrate_All 0.2000#60/bursts`). But the writer does not create the
+directories the name implies, so the first name containing a separator fails:
+
+```
+PtoMfdbError: could not disassemble into /tmp/unpack:
+    cannot create /tmp/unpack/countrate_All 0.2000#30/bursts
+```
+
+Worked around by walking `objects()` and `mkdir(parents=True)`-ing each name's
+parent before the call. Either the writer should do that, or it should say that
+a name is a flat identifier and reject a separator — the present behaviour
+accepts the name and then fails on it, which is the one option that teaches
+nothing.
+
 ## A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
 
 Found driving ChiSurf's burst pipeline end to end over a `.pto` built from ten
