@@ -62,12 +62,18 @@ def dtype(self):
 
 
 def mask_numpy(self):
-    """The validity mask as a bool array, or None when everything is valid."""
-    if not self.has_mask():
+    """The validity as a bool array, or None when every row is valid.
+
+    Answers from whichever form the column stores. `has_mask()` is about
+    storage and says False for a column whose gaps are ranges; the gaps are
+    just as real, so asking here must not depend on that.
+    """
+    if not self.has_missing():
         return None
     out = _np_ds.empty(self.size(), dtype=_np_ds.uint8)
-    self.mask().to_bytes(out)
+    self.validity().to_bytes(out)
     return out.astype(bool)
+
 
 
 def set_numpy(self, values):
@@ -137,7 +143,7 @@ def __repr__(self):
     extra = ""
     if self.type() == ColumnType_String:
         extra = ", %d labels" % len(self.dictionary())
-    if self.has_mask():
+    if self.has_missing():
         extra += ", masked"
     return "Column(%r, %s, %d rows%s, %.1f kB)" % (
         self.name(), self.dtype, self.size(), extra, self.nbytes() / 1024.0)

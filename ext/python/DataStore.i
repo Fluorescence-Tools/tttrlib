@@ -186,6 +186,10 @@ TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::column_by_name)
 %include "DataStore.h"
 
 %template(DataStoreInfoVector) std::vector<tttrlib::data::DataStoreInfo>;
+// The runs a column records as never measured. A vector of a nested struct
+// needs the template by name or it crosses as an opaque proxy with no length
+// and no iteration.
+%template(NaRangeVector) std::vector<tttrlib::data::NaRange>;
 
 // ...and the module-level support AFTER it, because it names the generated
 // enum constants at import time and they do not exist until the header has

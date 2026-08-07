@@ -791,7 +791,12 @@ bool write_table_into(hid_t dest, const data::DataStore& store, int compression)
             if (!ok) return false;
         }
 
-        if (column.has_mask()) {
+        // `has_missing`, not `has_mask`: a column whose gaps are recorded as
+        // ranges has no bit mask and still has gaps. The description carries
+        // the ranges as well, so a tttrlib reader gets the reason back -- but
+        // this format exists to hand a table to something that is NOT tttrlib,
+        // and that reader needs the per-row answer written down.
+        if (column.has_missing()) {
             std::vector<unsigned char> bytes(n_out, 1);
             for (std::size_t i = 0; i < n_out; i++)
                 bytes[i] = column.valid(gate.source(i)) ? 1 : 0;

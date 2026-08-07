@@ -336,6 +336,67 @@ everything needed to read a column is on the column, so a reader that takes one
 column out of a wide table gets its description too. Nothing acquires a
 description by being written: a column with none costs nothing.
 
+Rows that were never measured
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A column can say a row holds no measurement, and it can do so **without
+touching the dtype** — which is the thing a data frame cannot do, because it
+has to widen an ``int64`` to ``float64`` to hold a ``NaN`` and the type is not
+recoverable afterwards.
+
+``valid(i)`` is the question, and there are two ways the answer is stored. A
+scattered pattern — what :meth:`mask_non_finite` produces — becomes a bit mask.
+A contiguous run becomes a range in the description:
+
+.. code-block:: python
+
+    r = tttrlib.concat([tttrlib.load_store(f) for f in files])
+
+    r["n"].has_mask()        # False -- no bit mask was allocated
+    r["n"].has_missing()     # True  -- the rows are missing all the same
+    r["n"].valid(1_000_001)  # False
+    r["n"].mask_numpy()      # the bool array, whichever way it was stored
+
+    for run in r["n"].na_ranges():
+        print(run.first, run.last, run.why)
+        # 1000000 2000000 absent in 'm002.hdf5'
+
+The gap a merge leaves is one whole file's contribution, so it is one run by
+construction, and a bit per row would be a million copies of one fact. Twenty
+files of a million rows cost about a kilobyte of description instead of 2.5 MB
+of bits.
+
+**The better reason is that a range can say why and a bit cannot.** "These rows
+are not measured because that file did not have this column" is information;
+a zero bit is the absence of it — so a caller merging twenty files can report
+which ones contributed what, rather than keeping the file list beside the
+table.
+
+Three things follow, and none is guessable:
+
+* ``has_mask()`` asks about **storage**, not about meaning: it is ``False`` for
+  a column whose gaps are ranges. ``has_missing()`` is almost always the one
+  meant.
+* **HDF5 writes both** — the ranges in the description and the mask as a
+  dataset. That format exists to hand a table to something that is not
+  tttrlib, and such a reader cannot be assumed to know what an ``na`` range is.
+  CSV, which has nowhere to put either, writes empty cells: the answer survives
+  and the reason does not.
+* :meth:`take` and :meth:`compact` **keep the validity and drop the ranges**.
+  A gather reorders rows, so a range naming the source's rows says nothing true
+  about the result's; the rest of the description is untouched.
+
+A range can also be written by hand, in either spelling:
+
+.. code-block:: python
+
+    c.add_na_range(2, 4, "detector off")
+    c.set_attribute_json("na", "[[2,4]]")      # the short form, no reason
+
+Note ``set_attribute_json`` and not ``set_attribute``: the latter would store
+the seven characters ``[[2,4]]`` as a string, and the column would have no
+missing rows as a result.
+
 CSV
 ---
 

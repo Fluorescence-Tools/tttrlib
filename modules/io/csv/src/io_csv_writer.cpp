@@ -379,6 +379,13 @@ struct Plan {
      */
     std::vector<std::string> rendered;
     CellFn fn = nullptr;
+    /*!
+     * Owns the validity when the column stores its gaps as ranges rather than
+     * as bits. CSV has nowhere to put a range, so the alternative is writing
+     * the zeroes that stand in for the missing rows as though they had been
+     * measured -- which is the one outcome worse than losing the reason.
+     */
+    data::BitMask owned_mask;
 };
 
 /// Wrap what a formatter just wrote, when every value is being quoted. Numbers
@@ -529,7 +536,12 @@ Job prepare(const DataStore& store, const CsvWriteOptions& options) {
         const Column& c = *j.columns[k];
         Plan& p = j.plans[k];
         p.fn = cell_writer(c.type());
-        p.mask = c.has_mask() ? &c.mask() : nullptr;
+        if (c.has_mask()) {
+            p.mask = &c.mask();
+        } else if (c.has_missing()) {
+            p.owned_mask = c.validity();
+            p.mask = &p.owned_mask;
+        }
         if (c.type() == ColumnType::Bool) {
             p.bits = &c.bits();
         } else if (c.type() == ColumnType::String) {

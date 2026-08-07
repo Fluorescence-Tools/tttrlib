@@ -49,6 +49,46 @@ std::string with_attribute(const std::string& blob, const std::string& key,
                           value.empty() ? nlohmann::json() : nlohmann::json(value));
 }
 
+/*!
+ * \brief The `na` attribute as ranges, or empty when there is none.
+ *
+ * Two spellings are read and one is written. `{"rows":[a,b],"why":"..."}` is
+ * what this library writes, because the reason is the point. `[a,b]` is
+ * accepted because it is what a person types by hand, and refusing it would
+ * make the shorter form a silent no-op rather than an error.
+ *
+ * Anything else is ignored rather than rejected: `na` is one key of a free-form
+ * description, and a caller who put something else under that name should not
+ * find their column unreadable.
+ */
+std::vector<NaRange> na_ranges_of(const std::string& blob) {
+    std::vector<NaRange> out;
+    if (blob.empty()) return out;
+    const nlohmann::json j = nlohmann::json::parse(blob, nullptr, false);
+    if (j.is_discarded() || !j.is_object()) return out;
+    const auto it = j.find("na");
+    if (it == j.end() || !it->is_array()) return out;
+
+    for (const nlohmann::json& e : *it) {
+        NaRange r;
+        const nlohmann::json* rows = nullptr;
+        if (e.is_array()) {
+            rows = &e;
+        } else if (e.is_object()) {
+            const auto f = e.find("rows");
+            if (f != e.end()) rows = &(*f);
+            const auto w = e.find("why");
+            if (w != e.end() && w->is_string()) r.why = w->get<std::string>();
+        }
+        if (rows == nullptr || !rows->is_array() || rows->size() != 2) continue;
+        if (!(*rows)[0].is_number_unsigned() || !(*rows)[1].is_number_unsigned()) continue;
+        r.first = (*rows)[0].get<std::size_t>();
+        r.last = (*rows)[1].get<std::size_t>();
+        if (r.last > r.first) out.push_back(r);
+    }
+    return out;
+}
+
 }  // namespace
 
 std::vector<unsigned char> metadata_to_msgpack(const std::string& json_text) {
@@ -71,6 +111,7 @@ void Column::set_metadata(const std::string& json) {
     if (json.empty()) {
         metadata_.clear();
         units_.clear();
+        na_.clear();
         return;
     }
     const nlohmann::json parsed = nlohmann::json::parse(json, nullptr, false);
@@ -81,6 +122,7 @@ void Column::set_metadata(const std::string& json) {
                                     std::string(parsed.type_name()));
     metadata_ = parsed.dump();
     units_ = attribute_of(metadata_, "units");
+    na_ = na_ranges_of(metadata_);
     const std::string named = attribute_of(metadata_, "name");
     if (!named.empty()) name_ = named;
 }
@@ -108,6 +150,10 @@ void Column::set_attribute(const std::string& key, const std::string& value) {
     metadata_ = with_attribute(metadata_, key, value);
     if (key == "units") units_ = value;
     if (key == "name" && !value.empty()) name_ = value;
+    // A string value is never a range list, so this clears rather than parses --
+    // set_attribute("na", "[[2,4]]") stores the characters, and the column has
+    // no missing rows as a result of it.
+    if (key == "na") na_ = na_ranges_of(metadata_);
 }
 
 std::string Column::attribute_json(const std::string& key) const {
@@ -129,11 +175,40 @@ void Column::set_attribute_json(const std::string& key,
                                         "' is not JSON: " + json_value);
     }
     metadata_ = with_attribute(metadata_, key, value);
-    // The two cached attributes stay in step however they were set. A non-string
-    // value for either is not what they mean, so it caches as empty rather than
-    // as the text of a number.
+    // The cached attributes stay in step however they were set. A non-string
+    // value for either name is not what they mean, so it caches as empty rather
+    // than as the text of a number.
     if (key == "units") units_ = value.is_string() ? value.get<std::string>() : std::string();
     if (key == "name" && value.is_string()) name_ = value.get<std::string>();
+    if (key == "na") na_ = na_ranges_of(metadata_);
+}
+
+void Column::add_na_range(std::size_t first, std::size_t last,
+                          const std::string& why) {
+    if (last <= first) return;
+    // A column that already carries bits gets bits. Two representations in one
+    // column would put both paths in every reader for no gain -- and the bits
+    // are already allocated, so the range would save nothing anyway.
+    if (!mask_.empty()) {
+        materialise_mask(n_);
+        const std::size_t end = last < n_ ? last : n_;
+        for (std::size_t i = first; i < end; i++) mask_.set(i, false);
+        return;
+    }
+
+    nlohmann::json entry = nlohmann::json::object();
+    entry["rows"] = nlohmann::json::array({first, last});
+    if (!why.empty()) entry["why"] = why;
+
+    nlohmann::json list = nlohmann::json::array();
+    const std::string existing = attribute_json("na");
+    if (!existing.empty()) {
+        nlohmann::json parsed = nlohmann::json::parse(existing, nullptr, false);
+        if (!parsed.is_discarded() && parsed.is_array()) list = std::move(parsed);
+    }
+    list.push_back(entry);
+    metadata_ = with_attribute(metadata_, "na", list);
+    na_ = na_ranges_of(metadata_);
 }
 
 // --- combining and subsetting ---------------------------------------------
@@ -163,10 +238,18 @@ void DataStore::append_rows(const DataStore& other, Join join) {
             if (other.find(columns_[i].name()) < 0) remove_column(i);
     }
 
+    // The label is what a range can say and a zero bit cannot: which table did
+    // not have this column. A store with no label falls back to saying that
+    // much, since "absent in <nothing>" would read as a bug.
+    const std::string source = other.label().empty()
+            ? std::string("a store with no label")
+            : ("'" + other.label() + "'");
+
     for (Column& mine : columns_) {
         const int j = other.find(mine.name());
         if (j >= 0) mine.append_from(other.column(j));
-        else mine.append_missing(added);          // Outer; Inner dropped it above
+        // Outer; Inner dropped it above
+        else mine.append_missing(added, "absent in " + source);
     }
 
     if (join == Join::Outer) {
@@ -175,7 +258,9 @@ void DataStore::append_rows(const DataStore& other, Join join) {
             // New to us: the rows we already had were never measured for it.
             const int k = add_column(c.name(), c.type());
             columns_[k].set_metadata(c.metadata());
-            columns_[k].append_missing(before);
+            columns_[k].append_missing(
+                    before, "absent in " + (label_.empty()
+                            ? std::string("a store with no label") : "'" + label_ + "'"));
             columns_[k].append_from(c);
         }
     }

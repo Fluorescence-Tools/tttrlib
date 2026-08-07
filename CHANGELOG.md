@@ -32,6 +32,26 @@
   split: `attribute()` unquotes so a caller reading `units` need not parse,
   `attribute_json()` does not, so the round trip is exact.
 
+- **Rows that were never measured are recorded as ranges**, not as a bit per
+  row, when they are contiguous — which the gap a `concat` leaves always is,
+  because it is one file's whole contribution. Twenty files of a million rows
+  cost about a kilobyte of description rather than 2.5 MB of bits. The saving
+  is real and is not the main reason: **a range can say why and a bit cannot.**
+  `run.why` is `absent in 'm002.hdf5'`, so a caller merging twenty files can
+  report which ones contributed what instead of keeping the file list beside
+  the table. `valid(i)` and `mask_numpy()` answer the same whichever way the
+  column stores it; `has_missing()` is the new question ("are any rows
+  missing"), because `has_mask()` asks about storage and is false for a column
+  whose gaps are ranges. A scattered pattern — what `mask_non_finite()`
+  produces — still becomes a bit mask, and the two are never mixed in one
+  column. `add_na_range(first, last, why)` writes one by hand.
+  HDF5 writes **both**, the ranges in the description and the mask as a
+  dataset, because that format exists to hand a table to a reader that cannot
+  be assumed to know what an `na` range is; CSV writes empty cells. `take()`
+  and `compact()` keep the validity and drop the ranges — a gather reorders
+  rows, so a range naming the source's rows says nothing true about the
+  result's.
+
 ### Changed
 - **A column's description is stored as msgpack**, in both formats, rather than
   as JSON text. The reason is types: JSON has one number type, so an integer

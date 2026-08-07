@@ -180,6 +180,27 @@ std::vector<unsigned char> metadata_to_msgpack(const std::string& json_text);
 std::string metadata_from_msgpack(const unsigned char* bytes, std::size_t n);
 
 /*!
+ * \brief A run of rows that were never measured, and why.
+ *
+ * The form a concat leaves behind: a column absent from one of twenty files is
+ * missing for that file's whole contribution, which is one contiguous run, so a
+ * bit per row would store a million copies of one fact. Half-open,
+ * `[first, last)`.
+ *
+ * `why` is the part a bit cannot carry. "Not measured because that file did not
+ * have this column" is information; a zero bit is the absence of it.
+ *
+ * At namespace scope rather than inside Column, where it belongs by meaning: a
+ * nested class does not reach three of the four bindings, so it would have been
+ * an opaque pointer everywhere but C++.
+ */
+struct NaRange {
+    std::size_t first = 0;
+    std::size_t last = 0;
+    std::string why;
+};
+
+/*!
  * \brief A bit per row.
  *
  * One eighth the size of a byte array, which matters at ten million rows, and
@@ -424,7 +445,15 @@ public:
         codes_.shrink_to_fit(); dictionary_.shrink_to_fit();
     }
 
-    /// Bytes actually held -- CAPACITY, not size -- dictionary and mask included.
+    /*!
+     * \brief Bytes actually held -- CAPACITY, not size.
+     *
+     * The buffers: values, dictionary and mask. NOT the description, which is
+     * how a column that records its gaps as ranges rather than as bits shows
+     * that it allocated no mask -- and which is a description rather than a
+     * buffer, so counting it would make "a float32 column is half a float64
+     * one" false for a reason that has nothing to do with dtypes.
+     */
     std::size_t nbytes() const {
         std::size_t b = 0;
         switch (type_) {
@@ -698,11 +727,17 @@ public:
     /*!
      * \brief Extend by `n` rows that were never measured.
      *
-     * The values are zeroed and the validity mask says so, which is what lets a
-     * column absent from one store keep its dtype through a concat instead of
-     * being widened to hold a NaN.
+     * The values are zeroed and the column says so, which is what lets a column
+     * absent from one store keep its dtype through a concat instead of being
+     * widened to hold a NaN.
+     *
+     * Recorded as one range, not as `n` zero bits: the rows are contiguous by
+     * construction -- they are one store's whole contribution -- so a bit per
+     * row would be a million copies of one fact. \param why travels with it,
+     * which is the part a bit cannot carry. \see add_na_range, which decides
+     * between the two representations.
      */
-    void append_missing(std::size_t n) {
+    void append_missing(std::size_t n, const std::string& why = std::string()) {
         const std::size_t before = n_;
         if (type_ == ColumnType::String) {
             for (std::size_t i = 0; i < n; i++) push_string(std::string());
@@ -718,13 +753,12 @@ public:
             });
             n_ = before + n;
         }
-        materialise_mask(before);
-        for (std::size_t i = 0; i < n; i++) mask_.set(before + i, false);
+        add_na_range(before, before + n, why);
     }
 
     /// Gather rows `rows[0..n)` of `src` into this column, which is emptied first.
     void take_from(const Column& src, const int* rows, std::size_t n) {
-        metadata_ = src.metadata_;
+        set_metadata(src.metadata_);
         name_ = src.name_;
         units_ = src.units_;
         type_ = src.type_;
@@ -743,11 +777,17 @@ public:
             });
             n_ = n;
         }
-        if (src.mask_.empty()) {
+        // A gather reorders rows, so a range describing the SOURCE's rows says
+        // nothing true about these. The validity is kept and the ranges are not:
+        // the reason a row is missing survives only while the rows it names still
+        // mean what they meant.
+        if (!na_.empty()) { set_attribute_json("na", std::string()); }
+        if (!src.has_missing()) {
             mask_.clear();
         } else {
             mask_.assign(n, true);
-            for (std::size_t k = 0; k < n; k++) mask_.set(k, src.mask_.test(rows[k]));
+            for (std::size_t k = 0; k < n; k++)
+                mask_.set(k, src.valid(static_cast<std::size_t>(rows[k])));
         }
     }
 
@@ -877,8 +917,54 @@ public:
 
     // --- validity ---------------------------------------------------------
 
+    /*!
+     * \brief Whether a bit mask is allocated.
+     *
+     * Storage, not meaning: a column whose missing rows are recorded as ranges
+     * answers `false` here and still has missing rows. Ask \ref has_missing for
+     * the question that is usually meant, and \ref valid for one row.
+     */
     bool has_mask() const { return !mask_.empty(); }
     const BitMask& mask() const { return mask_; }
+
+    /// Whether any row is not valid, in whichever form this column stores it.
+    bool has_missing() const { return !mask_.empty() || !na_.empty(); }
+
+    /*!
+     * \brief Validity as a bit mask, whatever the storage.
+     *
+     * Empty when every row is valid, which is the same convention \ref mask
+     * uses. Ranges are expanded here rather than kept expanded, so a column
+     * that nobody asks pays nothing: the whole point of the range form is that
+     * a million rows of one fact do not become a million bits.
+     */
+    BitMask validity() const {
+        if (na_.empty()) return mask_;
+        BitMask m;
+        m.assign(n_, true);
+        for (const NaRange& r : na_) {
+            const std::size_t last = r.last < n_ ? r.last : n_;
+            for (std::size_t i = r.first; i < last; i++) m.set(i, false);
+        }
+        if (!mask_.empty())
+            for (std::size_t i = 0; i < n_ && i < mask_.size(); i++)
+                if (!mask_.test(i)) m.set(i, false);
+        return m;
+    }
+
+    /// The runs recorded as not measured, in the order they were recorded.
+    const std::vector<NaRange>& na_ranges() const { return na_; }
+
+    /*!
+     * \brief Record `[first, last)` as never measured, with a reason.
+     *
+     * Stored in \ref metadata under `na`, so it travels with the column through
+     * any format that carries a description and costs about forty bytes rather
+     * than one bit per row. A column that already carries a bit mask gets bits
+     * instead -- mixing the two representations in one column would make every
+     * reader carry both paths for no gain.
+     */
+    void add_na_range(std::size_t first, std::size_t last, const std::string& why);
 
     /// The packed bits of a Bool column, for a writer that moves memory rather
     /// than values. Empty for every other type, which have \ref data_ptr.
@@ -897,7 +983,21 @@ public:
     }
     void set_mask(const unsigned char* m, int n) { mask_.from_bytes(m, n); }
     void clear_mask() { mask_.clear(); }
-    inline bool valid(std::size_t i) const { return mask_.empty() || mask_.test(i); }
+
+    /*!
+     * \brief Whether row `i` holds a measurement.
+     *
+     * The interface, whichever way the answer is stored. The range scan is a
+     * loop over as many entries as there were files in the merge, and it is
+     * reached only by a column that has ranges at all -- a column with neither
+     * form costs the one branch it always cost.
+     */
+    inline bool valid(std::size_t i) const {
+        if (!mask_.empty() && !mask_.test(i)) return false;
+        for (std::size_t k = 0; k < na_.size(); k++)
+            if (i >= na_[k].first && i < na_[k].last) return false;
+        return true;
+    }
 
     /*!
      * Mark every non-finite value invalid.
@@ -953,18 +1053,34 @@ private:
 
     /// Carry `src`'s validity into rows [`at`, `at` + `n`) of this column.
     void append_mask_from(const Column& src, std::size_t at, std::size_t n) {
-        if (mask_.empty() && src.mask_.empty()) return;   // all valid, stays implicit
+        // The source's ranges shift by `at` and stay ranges, which is what keeps
+        // a concat of twenty files from materialising twenty masks. Only when
+        // one side already has bits does everything become bits -- see
+        // add_na_range, which makes that decision in one place.
+        if (mask_.empty() && !src.has_mask()) {
+            for (const NaRange& r : src.na_) {
+                const std::size_t last = (r.last < n ? r.last : n) + at;
+                add_na_range(r.first + at, last, r.why);
+            }
+            return;                     // the appended rows are otherwise valid
+        }
+        if (!has_missing() && !src.has_missing()) return;  // all valid, stays implicit
         materialise_mask(at);
         for (std::size_t i = 0; i < n; i++)
-            mask_.set(at + i, src.mask_.empty() ? true : src.mask_.test(i));
+            mask_.set(at + i, src.valid(i));
     }
 
-    //: The authority. `name_` and `units_` are caches kept in step by the
-    //: setters -- there are two ways in, and both have to update both, or a
-    //: column reports one name and serialises another.
+    //: The authority. `name_`, `units_` and `na_` are caches kept in step by
+    //: the setters -- there are two ways in, and both have to update all of
+    //: them, or a column reports one name and serialises another.
+    //:
+    //: `na_` is a cache for a second reason: `valid()` is called once per row
+    //: by every fill and every gather, and parsing JSON per row is not a thing
+    //: that can happen.
     std::string metadata_;
     std::string name_;
     std::string units_;
+    std::vector<NaRange> na_;
     ColumnType type_ = ColumnType::Float64;
     std::size_t n_ = 0;
 
@@ -1404,8 +1520,8 @@ private:
         }
         // A point whose position is unknown cannot be shown to be inside a
         // shape, and admitting it would quietly widen every selection.
-        if (cx.has_mask()) m.and_with(cx.mask());
-        if (cy.has_mask()) m.and_with(cy.mask());
+        if (cx.has_missing()) m.and_with(cx.validity());
+        if (cy.has_missing()) m.and_with(cy.validity());
     }
 
     /*!
@@ -1439,17 +1555,17 @@ private:
                 break;
             }
         }
-        if (c.has_mask()) {
+        if (c.has_missing()) {
             if (invalid_selected) {
                 // The missing rows pass the gate whatever the predicate made of
                 // whatever was in the buffer for them.
-                BitMask missing = c.mask();
+                BitMask missing = c.validity();
                 missing.invert();
                 m.or_with(missing);
             } else {
                 // A column that says a value is missing cannot satisfy any
                 // condition.
-                m.and_with(c.mask());
+                m.and_with(c.validity());
             }
         }
     }
@@ -1543,7 +1659,7 @@ public:
             // row. Worth the branch because a pixel coordinate is an integer
             // column and this runs on every redraw.
             if (!is_floating(c.type())) {
-                if (c.has_mask()) acc.and_with(c.mask());
+                if (c.has_missing()) acc.and_with(c.validity());
                 continue;
             }
             BitMask m(n_rows_, false);
