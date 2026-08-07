@@ -141,37 +141,81 @@ The copy is not free — it is the one on the largest array in the process.
 # Enhancements
 
 Not defects — things a downstream migration needs and cannot express today.
-Counted from the 27 files of one downstream package still holding tables as
-DataFrames, which is the population being migrated onto `DataStore`.
+**Rewritten 2026-08-07 from evidence rather than prediction**: the first version
+of this list was written before migrating any consumers, and the migration
+disagreed with it. What follows is what actually cost time.
 
-## What a `DataStore` needs before a table layer can stop being a frame
+## Landed since this list was first written
 
-The migration has moved every *file* boundary onto the store (HDF5 and CSV, read
-and write) and has stopped there, because the operations below have no
-equivalent. Each line is the number of call sites blocked, in the shipped
-package, not a guess:
+`concat` / `append_rows` / `append_columns`, `take` / `compact`, the column
+lifetime fix, `container_read_records` / `container_read_events` /
+`decode_records`, na-ranges and column descriptions.
 
-| Operation | Blocked call sites | Note |
+**The prediction was half right.** `concat` *was* the item that changed the
+shape of the migration — but only for the **file layer**. With it, one downstream
+plugin (burst fusion: core, driver and view-model) went from frames to stores
+end to end, and the burst reader now returns a store. That half is done and it
+worked as argued.
+
+**It was wrong about the consumer layer**, which is where the remaining cost
+actually is, and the blocker there was not on the list at all.
+
+## The blocker that matters now: a `Column` is not array-like
+
+`np.asarray(column)` and `len(column)` work. Nothing else does:
+
+```python
+column[0]          # TypeError: 'Column' object is not subscriptable
+column[1:3]        # TypeError
+column > 1         # TypeError: '>' not supported
+list(column)       # TypeError: not iterable
+```
+
+So every consumer that touched `frame[name]` as a value has to be rewritten to
+take `np.asarray` first — not because the arithmetic changes, but because the
+*handle* does not behave like the thing it replaced. Counted across the files
+still holding frames in the downstream package:
+
+| Idiom that needs a column to behave like an array | calls | files |
 |---|---|---|
-| **`concat` / append rows** | **24 in 13 files** | The biggest single blocker after construction. Same columns, stacked — a burst folder is read per measurement and combined. Today the only way is to build one frame per file and concatenate. |
-| **coerce a column to numeric, invalid → missing** | **43 in 10 files** | `to_numeric(errors="coerce")`. Half of these disappear on their own — the CSV reader already types a column, so what is left is coercing a *text* column that arrived from elsewhere. A `to_numeric(column)` that sets the validity mask rather than raising would cover the rest. |
-| **`take` / `compact`** — realise a selection into a new store | 9 (`dropna`) + every filtered export | A selection is expressible as a mask and cannot be *materialised*. Listed in the downstream PRD as T4 and still the one that makes filtering a table impossible without a frame. |
-| **group-by over a dictionary column** | 7 in 6 files | Mostly `codes` + `bincount`, which is exactly why it belongs here: every consumer hand-rolling that loop is how the codes get copied around. |
-| **`argsort` / sort by column** | 4 in 2 files | Also the table widget, which sorts through a per-column numpy array today — fine for one column, not for a stable multi-column sort. |
-| **insert a column at a position** | 4 in 3 files | `insert(0, "source", …)` — a provenance column prepended before writing. `add` appends only. |
-| **rename a column** | 2 in 1 file | |
-| **iterate rows** | 9 (`itertuples`/`iterrows`) | Low priority: most of these are better rewritten as column arithmetic anyway, and the ones that are not are small. |
+| `col.to_numpy(...)` | 31 | 10 |
+| `col[i]` / `col[a:b]` | 17 | 4 |
+| `col > x`, `col == x` (building a mask) | 5 | 2 |
+| `col.map(fn)` | 3 | 2 |
 
-`reset_index` (10 sites) needs nothing — a store has no index, which is the
-point; those calls simply vanish.
+That is ~56 mechanical edits whose only purpose is to insert a conversion. Every
+one of them is a place a reader will later ask "why is this wrapped?".
 
-**The one that would change the shape of the migration is `concat`.** Everything
-else has a workaround that is ugly but local; without row-append, a package that
-reads N measurements has to hold N stores and cannot combine them, so it builds
-frames instead and the store never reaches memory. That is why the downstream
-memory measurement — 109.5 MB as frames against 60.2 MB as a store on a 1M-row
-burst table — is still not being collected even though both file boundaries have
-moved.
+**Element access and comparison would remove almost all of it.** A column that
+supports `__getitem__`, `__len__`, `__iter__` and rich comparison returning a
+bool array is the difference between "swap the reader" and "rewrite every
+consumer". `map` is not needed — `np.asarray(col)` plus a comprehension is
+honest — but indexing and comparison are used everywhere and have no readable
+substitute.
+
+## After that, in the order they were hit
+
+| Operation | calls | files | Note |
+|---|---|---|---|
+| **`DataStore.copy()`** | 28 | 13 | `frame.copy()` before mutating. `take(range(n))` is the workaround and says nothing about intent. |
+| **row selection returning a store** (`loc`/`iloc` shaped) | 36 | 8 | `take`/`compact` cover it; what is missing is a *readable* spelling at the call site. |
+| **group-by over a dictionary column** | 6 | 5 | Unchanged from the first list. |
+| **`argsort` / `sort_by`** | 4 | 2 | |
+| **`rename_column`, `insert_column(position)`** | — | — | `insert(0, "source", …)` prepends a provenance column before writing; `add` appends only. |
+| **`to_numeric(column)`** setting the mask rather than raising | — | — | Mostly evaporated: the CSV reader already types columns, so what is left is coercing text that arrived from elsewhere. |
+
+## What the migration confirmed about the file layer
+
+Worth recording because it was the argument for all of this, and it held:
+
+* an `int32` column survives an **outer join** where a frame must widen to
+  `float64` to hold the `NaN` and cannot recover the dtype;
+* columns line up **by name**, which is what a burst folder needs — two runs
+  need not have written them in the same order;
+* a dtype conflict is **refused and named** rather than promoted silently;
+* ranged reads compose: `container_read_records` + `decode_records` from record
+  0 with a carried state gave macro times **identical** to a whole-file read on
+  a 174 438-event SPC-130 file.
 
 ## `.dstore` specifically
 
@@ -183,12 +227,6 @@ tree and the row selection. Two notes from using it:
   downstream at a wash against uncompressed HDF5 on bulk I/O and dramatically
   faster than compressed. What keeps HDF5 in the picture downstream is that the
   burst and imaging files are *interchange* formats read by other programs.
-* ~~**The column-lifetime defect above applies to a store loaded from
-  `.dstore`** exactly as it does to any other, and is more likely to bite
-  there, because `load_store` is the call whose result a caller naturally lets
-  go of after pulling arrays out of it.~~ **Fixed** — see the entry above. The
-  copy-or-keep workaround is no longer needed anywhere.
-* Reaching into the tree is now pathlib-shaped: `store / "results" / "Tau"`,
-  `store["results/Tau"]`, `store.tree()`, `store.rglob("Tau")`, and
-  `add_group("meta", {...})` for the build side. Histograms take paths too.
-  See `doc/saving-tables.rst`.
+* **The column-lifetime defect above is fixed**, and `.dstore` was where it
+  would have bitten hardest: `load_store` is exactly the call whose result a
+  caller lets go of after pulling arrays out of it.
