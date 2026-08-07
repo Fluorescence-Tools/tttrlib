@@ -329,9 +329,20 @@ struct Fmt {
     int precision = 0;
     int decimals = -1;
     bool keep_dot = false;
-    const std::string* null_string = nullptr;
-    const std::string* true_string = nullptr;
-    const std::string* false_string = nullptr;
+    // The FINISHED text of each, quoted once at setup exactly as a column name
+    // and a dictionary label already are. They used to be the caller's raw
+    // strings, put straight into the stream -- so `na_rep="a,b"` wrote a
+    // phantom column separator and the file did not read back, while the header
+    // three lines away quoted the same string correctly.
+    //
+    // BY VALUE, and that is not a style choice: Job is returned by value from
+    // prepare(), so a pointer into a member of it points at a moved-from
+    // string. Pointing at the caller's options was what made the old code safe,
+    // and rendering means there is no caller-owned string to point at.
+    std::string null_string;
+    std::string true_string;
+    std::string false_string;
+    std::string nan_string;
 };
 
 /// RFC 4180: a value holding the delimiter, a quote, or a line break has to be
@@ -402,7 +413,7 @@ inline char* close_quote(char* q, const Fmt& f) {
 
 template<typename T>
 void cell_integer(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
-    if (p.mask && !p.mask->test(r)) { o.put(*f.null_string); return; }
+    if (p.mask && !p.mask->test(r)) { o.put(f.null_string); return; }
     char* const s = o.room(32);
     char* q = open_quote(s, f);
     // Promoted, because to_chars of a char type is a corner of the standard
@@ -414,7 +425,14 @@ void cell_integer(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
 }
 
 void cell_f64(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
-    if (p.mask && !p.mask->test(r)) { o.put(*f.null_string); return; }
+    if (p.mask && !p.mask->test(r)) { o.put(f.null_string); return; }
+    // A NaN is a VALUE, not a missing one, so it gets its own say. Checked
+    // here rather than inside the formatter because the replacement is a
+    // rendered string and the formatter writes digits into a raw buffer.
+    if (std::isnan(static_cast<const double*>(p.data)[r])) {
+        o.put(f.nan_string);
+        return;
+    }
     char* const s = o.room(48);
     char* q = open_quote(s, f);
     q += format_double(q, 40, static_cast<const double*>(p.data)[r], f.precision,
@@ -424,7 +442,14 @@ void cell_f64(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
 }
 
 void cell_f32(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
-    if (p.mask && !p.mask->test(r)) { o.put(*f.null_string); return; }
+    if (p.mask && !p.mask->test(r)) { o.put(f.null_string); return; }
+    // A NaN is a VALUE, not a missing one, so it gets its own say. Checked
+    // here rather than inside the formatter because the replacement is a
+    // rendered string and the formatter writes digits into a raw buffer.
+    if (std::isnan(static_cast<const float*>(p.data)[r])) {
+        o.put(f.nan_string);
+        return;
+    }
     char* const s = o.room(48);
     char* q = open_quote(s, f);
     q += format_float(q, 40, static_cast<const float*>(p.data)[r], f.precision,
@@ -434,15 +459,15 @@ void cell_f32(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
 }
 
 void cell_bool(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
-    if (p.mask && !p.mask->test(r)) { o.put(*f.null_string); return; }
-    const std::string& v = p.bits->test(r) ? *f.true_string : *f.false_string;
+    if (p.mask && !p.mask->test(r)) { o.put(f.null_string); return; }
+    const std::string& v = p.bits->test(r) ? f.true_string : f.false_string;
     if (f.quote_all) o.put(f.quote);
     o.put(v);
     if (f.quote_all) o.put(f.quote);
 }
 
 void cell_text(Out& o, const Plan& p, std::size_t r, const Fmt& f) {
-    if (p.mask && !p.mask->test(r)) { o.put(*f.null_string); return; }
+    if (p.mask && !p.mask->test(r)) { o.put(f.null_string); return; }
     o.put(p.rendered[static_cast<std::size_t>(p.codes[r])]);
 }
 
@@ -490,9 +515,6 @@ Job prepare(const DataStore& store, const CsvWriteOptions& options) {
     j.fmt.precision = options.float_precision;
     j.fmt.decimals = options.float_decimals;
     j.fmt.keep_dot = options.keep_decimal_point;
-    j.fmt.null_string = &options.null_string;
-    j.fmt.true_string = &options.true_string;
-    j.fmt.false_string = &options.false_string;
     j.eol = options.eol;
 
     if (options.delimiter == options.quote)
@@ -530,6 +552,15 @@ Job prepare(const DataStore& store, const CsvWriteOptions& options) {
     check_none(options.null_string, "the null string");
     check_none(options.true_string, "the true string");
     check_none(options.false_string, "the false string");
+    check_none(options.nan_string, "the NaN string");
+
+    // Rendered once, through the same quoting a column name goes through. The
+    // job owns them because the Fmt holds pointers and the options need not
+    // outlive the write.
+    j.fmt.null_string = render(options.null_string, j.fmt, mode);
+    j.fmt.true_string = render(options.true_string, j.fmt, mode);
+    j.fmt.false_string = render(options.false_string, j.fmt, mode);
+    j.fmt.nan_string = render(options.nan_string, j.fmt, mode);
 
     j.plans.resize(j.columns.size());
     for (std::size_t k = 0; k < j.columns.size(); k++) {

@@ -328,7 +328,15 @@ expects, not a dataframe surface.
 
 ---
 
-# Proposal — `write_csv` should say what a `NaN` is written as
+# ~~Proposal — `write_csv` should say what a `NaN` is written as~~ — DONE
+
+**Shipped as `nan_rep`.** Two defects were found while adding it and fixed in
+the same change: the null/true/false texts were written unquoted, so an
+`na_rep` containing a delimiter produced a file that did not read back; and
+`quoting="never"` raised a bare `KeyError`. One thing the proposal got wrong:
+it assumed `nan` round-trips as a NaN value. It does not — `nan` is one of the
+reader's default `na_values`, so both spellings come back masked, and the
+option is about what *other* programs read.
 
 A second concrete request, from the same migration. Smaller than the array
 protocol and it removes a whole class of workaround.

@@ -341,3 +341,146 @@ def test_we_write_what_pyarrow_writes():
     assert ours.split("\n")[1:] == theirs.split("\n")[1:]
     assert ours.split("\n")[0] == "i,x"
     assert theirs.split("\n")[0] == '"i","x"'
+
+
+# -- a NaN is a value, and a masked cell is not ------------------------------
+
+
+def test_a_nan_and_a_masked_cell_are_different_questions():
+    """`na_rep` covers a cell the mask says was never measured. A `NaN` is a
+    *value* -- a fit that diverged, a ratio with no denominator -- and the store
+    keeps the two apart on purpose. CSV has one blank field for both, so the
+    writer is where the caller has to be able to choose."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("x", np.array([1.0, np.nan, 3.0]))
+    s.add("n", np.array([1, 2, 3], dtype=np.int32))
+    s["n"].set_mask(np.array([1, 0, 1], dtype=np.uint8))
+
+    out = tttrlib.write_csv(None, s, nan_rep="NaN", na_rep="NA")
+    assert out == "x,n\n1,1\nNaN,NA\n3,3\n"
+
+
+def test_the_default_is_what_it_always_wrote():
+    """`nan` -- so no existing file changes."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("x", np.array([1.0, np.nan]))
+    assert tttrlib.write_csv(None, s) == "x\n1\nnan\n"
+
+
+def test_the_empty_field_is_reachable_without_touching_the_table():
+    """What a data frame's writer produces, and the whole point of the option.
+
+    The workaround was to mask every non-finite value first -- and the mask is
+    part of the table, so doing that in place means *writing a table changes
+    it*. The alternative was a whole-table copy per write, to express one
+    formatting choice.
+    """
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("x", np.array([1.0, np.nan, 3.0]))
+
+    assert tttrlib.write_csv(None, s, nan_rep="") == "x\n1\n\n3\n"
+    assert not s["x"].has_mask(), "writing the table changed it"
+    assert s["x"].valid(1), "writing the table changed it"
+
+
+def test_infinity_is_left_alone():
+    """It has an exact text that reads back as itself, and a frame writes it as
+    `inf` too. Only the not-a-number is a formatting question."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("x", np.array([np.inf, -np.inf, np.nan]))
+    assert tttrlib.write_csv(None, s, nan_rep="") == "x\ninf\n-inf\n\n"
+
+
+def test_a_float32_column_takes_it_too():
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("x", np.array([1.5, np.nan], dtype=np.float32))
+    assert tttrlib.write_csv(None, s, nan_rep="") == "x\n1.5\n\n"
+
+
+def test_a_nan_replacement_is_quoted_when_it_needs_to_be():
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("x", np.array([np.nan]))
+    assert tttrlib.write_csv(None, s, nan_rep="a,b") == 'x\n"a,b"\n'
+
+
+def test_neither_spelling_survives_a_round_trip_as_a_value():
+    """Measured, and it decides what the option is FOR.
+
+    `nan` is one of the reader's default `na_values`, so it comes back as a
+    masked cell -- and the column then infers as an integer, having no
+    non-integral text left in it. The empty field does the same thing for the
+    same reason. So CSV conflates "not a number" with "not measured" whichever
+    spelling is chosen, and `nan_rep` is about what OTHER programs read rather
+    than about this library's own round trip. A caller who needs the
+    distinction preserved wants `.dstore` or HDF5.
+    """
+    import os
+    import tempfile
+
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("x", np.array([1.0, np.nan, 3.0]))
+    s.add("k", np.array([1, 2, 3], dtype=np.int32))   # so the row does not vanish
+
+    d = tempfile.mkdtemp()
+    for spelling in ("nan", ""):
+        p = os.path.join(d, "r%s.csv" % len(spelling))
+        tttrlib.write_csv(p, s, nan_rep=spelling)
+        back = tttrlib.read_csv(p)["x"]
+        assert back.size() == 3, spelling
+        assert not back.valid(1), "%r came back as a value" % spelling
+
+
+# -- two defects found while adding it ----------------------------------------
+
+
+def test_a_constant_cell_is_quoted_like_every_other_cell():
+    """`na_rep="a,b"` was written raw, so the file gained a phantom column and
+    did not read back -- while the header three lines away quoted the same
+    string correctly. The four constant cells now go through the same render."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("n", np.array([7, 8], dtype=np.int32))
+    s["n"].set_mask(np.array([1, 0], dtype=np.uint8))
+
+    out = tttrlib.write_csv(None, s, na_rep="a,b")
+    assert out == 'n\n7\n"a,b"\n'
+
+    import tempfile, os
+    p = os.path.join(tempfile.mkdtemp(), "q.csv")
+    tttrlib.write_csv(p, s, na_rep="a,b")
+    assert tttrlib.read_csv(p).n_columns() == 1, "the file grew a column"
+
+
+def test_a_bool_word_that_needs_quoting_is_quoted_too():
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("f", np.array([True, False]))
+    assert tttrlib.write_csv(None, s, true_string="yes,really") == \
+        'f\n"yes,really"\nfalse\n'
+
+
+def test_quoting_takes_never_as_well_as_none():
+    """The C++ enumerator is `Never` -- SWIG has to escape `None` -- so a caller
+    reading the C++ side types the spelling this used to reject with a bare
+    KeyError naming nothing."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("x", np.zeros(1))
+    assert tttrlib.write_csv(None, s, quoting="never") == \
+           tttrlib.write_csv(None, s, quoting="none")
+
+
+def test_an_unknown_quoting_names_the_ones_that_work():
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("x", np.zeros(1))
+    with pytest.raises(ValueError) as e:
+        tttrlib.write_csv(None, s, quoting="bogus")
+    assert "needed" in str(e.value) and "bogus" in str(e.value)

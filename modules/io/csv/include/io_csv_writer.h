@@ -122,6 +122,29 @@ struct CsvWriteOptions {
     /// reader's default `na_values` takes back as missing.
     std::string null_string = "";
 
+    /*!
+     * \brief What a float `NaN` is written as.
+     *
+     * A different question from \ref null_string, and the store keeps the two
+     * apart on purpose: a masked cell says *not measured*, a `NaN` says *the
+     * number is not a number* -- a fit that diverged, a ratio with no
+     * denominator. CSV has one blank field for both, so the writer is the place
+     * a caller has to be able to choose.
+     *
+     * `"nan"` is the default and is what this always wrote, so no existing file
+     * changes. `""` is what a data frame's writer produces, and is what a caller
+     * feeding a program written against one needs.
+     *
+     * Without it the only way to get the empty field was to mask every
+     * non-finite value before writing -- and the mask is part of the table, so
+     * doing that in place means *writing a table changes it*. The alternative
+     * was a whole-table copy per write, to express one formatting choice.
+     *
+     * ±infinity is NOT covered: it is a value with an exact text that reads
+     * back as itself, and a frame writes it as `inf` too.
+     */
+    std::string nan_string = "nan";
+
     // A Bool column written as 1/0 would be inferred as an integer on the way
     // back in, which is why these are words and not digits.
     std::string true_string = "true";

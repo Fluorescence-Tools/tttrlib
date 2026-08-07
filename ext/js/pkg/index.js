@@ -438,6 +438,9 @@ if (typeof native.write_csv === 'function' && native.CsvWriteOptions) {
     }
     if (opts.eol !== undefined) o.eol = opts.eol;
     if (opts.naRep !== undefined) o.null_string = opts.naRep;
+    // A NaN is a VALUE and a masked cell is not, so they are separate knobs:
+    // `nanRep: ''` is what a data frame's writer produces.
+    if (opts.nanRep !== undefined) o.nan_string = opts.nanRep;
     if (opts.trueString !== undefined) o.true_string = opts.trueString;
     if (opts.falseString !== undefined) o.false_string = opts.falseString;
     if (opts.floatPrecision !== undefined) o.float_precision = opts.floatPrecision | 0;

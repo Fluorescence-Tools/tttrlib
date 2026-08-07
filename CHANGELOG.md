@@ -111,6 +111,20 @@
   in one group and not another leaves that group with fewer columns rather than
   making the read an error.
 
+- **`write_csv(nan_rep=...)`** — what a float `NaN` is written as. `na_rep`
+  covers a cell the mask says was never measured; a `NaN` is a *value*, and the
+  store keeps the two apart on purpose. CSV has one blank field for both, so
+  the writer is where the choice has to be made. `"nan"` is the default and is
+  what this always wrote; `""` is what a data frame's writer produces.
+  The workaround it removes was masking every non-finite value before writing —
+  and the mask is *part of the table*, so doing that in place means writing a
+  table changes it. The cost was never the 3% of write time; it was a
+  whole-table copy per write to express one formatting choice.
+  ±infinity is deliberately not covered: it has an exact text that reads back
+  as itself. Neither spelling survives this library's own round trip as a
+  *value* — `nan` is one of the reader's default `na_values`, so both come back
+  masked — which is measured, stated in the docstring, and the reason the
+  option is about what other programs read.
 - **A `Column` behaves like the array it wraps**: `col[0]`, `col[1:3]`,
   `col[mask]`, `list(col)` and `col[0] = x`. `np.asarray(column)` and
   `len(column)` already worked and nothing else did, so every consumer that
@@ -148,6 +162,15 @@
   the same place and holds text, so only the decode differs.
 
 ### Fixed
+- **`write_csv` wrote its constant cells unquoted**, so `na_rep="a,b"` produced
+  a file with a phantom column that did not read back — while the header three
+  lines away quoted the same string correctly. The null, true, false and NaN
+  texts now go through the same render a column name and a dictionary label
+  already did.
+- **`write_csv(quoting="never")` raised a bare `KeyError` naming nothing.** The
+  C++ enumerator is `Never` — SWIG has to escape `None` — so a caller reading
+  the C++ side typed the one spelling the Python wrapper rejected. Both work
+  now, and an unknown value names the ones that do.
 - **`column == value` returned `False` instead of a mask.** SWIG's default
   identity comparison, so `store.select(column == "m000.spc")` selected
   nothing, raised nothing, and looked like a run with no matching bursts —
