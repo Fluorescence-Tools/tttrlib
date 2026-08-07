@@ -99,3 +99,55 @@ makes it safe.
 asserting the arrays survive their store. Note that `np.asarray(x, dtype=...)`
 is **not** a copy when the dtype already matches, which is exactly how this got
 into shipped code.
+
+---
+
+# Enhancements
+
+Not defects — things a downstream migration needs and cannot express today.
+Counted from the 27 files of one downstream package still holding tables as
+DataFrames, which is the population being migrated onto `DataStore`.
+
+## What a `DataStore` needs before a table layer can stop being a frame
+
+The migration has moved every *file* boundary onto the store (HDF5 and CSV, read
+and write) and has stopped there, because the operations below have no
+equivalent. Each line is the number of call sites blocked, in the shipped
+package, not a guess:
+
+| Operation | Blocked call sites | Note |
+|---|---|---|
+| **`concat` / append rows** | **24 in 13 files** | The biggest single blocker after construction. Same columns, stacked — a burst folder is read per measurement and combined. Today the only way is to build one frame per file and concatenate. |
+| **coerce a column to numeric, invalid → missing** | **43 in 10 files** | `to_numeric(errors="coerce")`. Half of these disappear on their own — the CSV reader already types a column, so what is left is coercing a *text* column that arrived from elsewhere. A `to_numeric(column)` that sets the validity mask rather than raising would cover the rest. |
+| **`take` / `compact`** — realise a selection into a new store | 9 (`dropna`) + every filtered export | A selection is expressible as a mask and cannot be *materialised*. Listed in the downstream PRD as T4 and still the one that makes filtering a table impossible without a frame. |
+| **group-by over a dictionary column** | 7 in 6 files | Mostly `codes` + `bincount`, which is exactly why it belongs here: every consumer hand-rolling that loop is how the codes get copied around. |
+| **`argsort` / sort by column** | 4 in 2 files | Also the table widget, which sorts through a per-column numpy array today — fine for one column, not for a stable multi-column sort. |
+| **insert a column at a position** | 4 in 3 files | `insert(0, "source", …)` — a provenance column prepended before writing. `add` appends only. |
+| **rename a column** | 2 in 1 file | |
+| **iterate rows** | 9 (`itertuples`/`iterrows`) | Low priority: most of these are better rewritten as column arithmetic anyway, and the ones that are not are small. |
+
+`reset_index` (10 sites) needs nothing — a store has no index, which is the
+point; those calls simply vanish.
+
+**The one that would change the shape of the migration is `concat`.** Everything
+else has a workaround that is ugly but local; without row-append, a package that
+reads N measurements has to hold N stores and cannot combine them, so it builds
+frames instead and the store never reaches memory. That is why the downstream
+memory measurement — 109.5 MB as frames against 60.2 MB as a store on a 1M-row
+burst table — is still not being collected even though both file boundaries have
+moved.
+
+## `.dstore` specifically
+
+Nothing missing for the migration: `save_store` / `load_store` already keep
+column order, dtypes, dictionary-encoded text, validity masks, labels, the group
+tree and the row selection. Two notes from using it:
+
+* **It is the right default for anything only this ecosystem reads** — measured
+  downstream at a wash against uncompressed HDF5 on bulk I/O and dramatically
+  faster than compressed. What keeps HDF5 in the picture downstream is that the
+  burst and imaging files are *interchange* formats read by other programs.
+* **The column-lifetime defect above applies to a store loaded from `.dstore`
+  exactly as it does to any other**, and is more likely to bite there, because
+  `load_store` is the call whose result a caller naturally lets go of after
+  pulling arrays out of it.
