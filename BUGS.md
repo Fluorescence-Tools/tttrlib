@@ -325,3 +325,62 @@ column repeatedly should compare `codes()` against a dictionary index instead.
 or `np.isin` is honest, reads fine, and does not grow a second table API inside
 the column. The gap being closed here is the *protocol* a numpy user already
 expects, not a dataframe surface.
+
+---
+
+# Proposal — `write_csv` should say what a `NaN` is written as
+
+A second concrete request, from the same migration. Smaller than the array
+protocol and it removes a whole class of workaround.
+
+## The gap
+
+`na_rep` controls what an **invalid** (masked) value is written as. It says
+nothing about a float `NaN`, which is a *value*, so it goes out as the text
+`nan`:
+
+```python
+store_from_arrays({"x": np.array([1.0, np.nan, 3.0])})
+write_csv(None, s, na_rep="")      # -> "1\nnan\n3\n"
+```
+
+A frame's writer produces the empty field for both, and these files are read by
+programs that were written against that. So a caller wanting the old text has to
+**mask every non-finite float before writing**.
+
+## Why that workaround is worse than it looks
+
+It is not the cost — masking 12 columns of 500 000 rows is 19.5 ms against a
+732 ms write, 3%. It is that **the mask is part of the table**, so doing it in
+place means *writing a table changes it*:
+
+```
+before write: has_mask = False,  valid(1) = True
+after  write: has_mask = True,   valid(1) = False
+```
+
+That shipped in the downstream package and was found only by measuring this. It
+is fixed there by copying the store before masking — which is a whole-table copy
+on every CSV write, to express one formatting choice.
+
+## The change
+
+```python
+write_csv(..., nan_rep=None)   # None: as now, the shortest text ("nan")
+                               # "":   the empty field, what a frame writes
+                               # any:  that text
+```
+
+Independent of `na_rep`, because the two are genuinely different questions: a
+masked cell says *not measured*, a `NaN` says *the number is not a number* —
+a fit that diverged, a ratio with no denominator. The store keeps them apart on
+purpose, and CSV has one blank field for both, so the writer is exactly the
+place the caller has to be able to choose.
+
+Suggested default `None` (unchanged), so no existing file changes.
+
+## Why not solve it downstream
+
+It is solved downstream, and the fix is a full copy of the table per write. The
+information needed — "this float is NaN" — is already in the writer's hands as
+it formats each value.
