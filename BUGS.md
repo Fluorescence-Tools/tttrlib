@@ -230,3 +230,77 @@ tree and the row selection. Two notes from using it:
 * **The column-lifetime defect above is fixed**, and `.dstore` was where it
   would have bitten hardest: `load_store` is exactly the call whose result a
   caller lets go of after pulling arrays out of it.
+
+---
+
+# Proposal — give `Column` the array protocol
+
+A concrete form of the blocker above, because "make it array-like" is not
+actionable on its own and the interesting part is what it should do about
+masks and text.
+
+## The change
+
+Four dunders and rich comparison, all delegating to the buffer the column
+already exposes:
+
+```python
+class Column:
+    def __getitem__(self, key):        # scalar for an int, ndarray otherwise
+        return self.numpy()[key]
+
+    def __setitem__(self, key, value): # numeric only -- see below
+        ...
+
+    def __iter__(self):
+        return iter(self.numpy())
+
+    # __len__ already exists; __array__ already works.
+    # __eq__ __ne__ __lt__ __le__ __gt__ __ge__ -> np.asarray(self) OP other
+```
+
+Nothing new is computed: `numpy()` is a zero-copy view for a numeric column and
+already materialises a text one. This is a *handle* change, not a data change.
+
+## Why it is worth more than it looks
+
+It is the difference between "swap the reader" and "rewrite every consumer".
+Measured on the package migrating onto `DataStore`: **~56 call sites** exist
+purely to insert a conversion — 31 `to_numpy`, 17 element accesses, 5 mask
+comparisons, 3 `map`s — and every one is a place a later reader asks why the
+wrapping is there. The arithmetic around them does not change at all.
+
+## Three decisions worth making deliberately
+
+**1. Should element access honour the validity mask?** Today `numpy()` ignores
+it: a masked row still returns its stored value. Measured — a column with
+`set_mask([1,0,1])` returns `[1., 2., 3.]`, and the `2.` is not a measurement.
+
+The consistent answer is that the *array protocol* returns what is stored and
+says nothing about validity, exactly as `numpy()` does, and that "value or
+missing" stays an explicit question (`valid(i)` / `mask_numpy()`). The
+alternative — `col[i]` returning `NaN` where masked — cannot work for an
+integer or text column without changing its dtype, which is the whole reason
+the mask exists. **Recommend: no masking, and say so in the docstring**, since
+the silent-wrong-answer risk is real and one sentence removes it.
+
+**2. Should `col[i] = x` write through?** The numeric view is writable, so
+delegation works for numeric columns and *silently loses the write* for boolean
+and text ones, which decode through a copy. A write that vanishes is worse than
+one that refuses. **Recommend: implement `__setitem__` for numeric dtypes and
+raise `TypeError` naming the dtype for boolean and text**, pointing at the
+dictionary/`set_bool` route.
+
+**3. What does comparison return for a text column?** `np.asarray` on a
+dictionary column gives an object array of Python strings, so `col == "m000.spc"`
+gives an elementwise bool array — which is what a caller wants and what the
+frame did. It also decodes the whole column, so it is O(n) in Python. That is
+acceptable for a comparison, and worth a note: a caller filtering a large text
+column repeatedly should compare `codes()` against a dictionary index instead.
+
+## What is deliberately *not* asked for
+
+`map`, `isin`, `groupby` on the column. `np.asarray(col)` plus a comprehension
+or `np.isin` is honest, reads fine, and does not grow a second table API inside
+the column. The gap being closed here is the *protocol* a numpy user already
+expects, not a dataframe surface.
