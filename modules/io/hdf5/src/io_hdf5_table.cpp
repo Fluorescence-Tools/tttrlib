@@ -180,6 +180,21 @@ void read_string_column(hid_t ds, hid_t type, data::Column& column, std::size_t 
  */
 const char* kDictionaryAttribute = "dictionary";
 
+/*!
+ * \brief The attribute carrying the column's description.
+ *
+ * A `.dstore` keeps one per column and HDF5 dropped it entirely, which made the
+ * two formats disagree about what a column *is*: a lifetime written in
+ * nanoseconds through HDF5 came back saying nothing about nanoseconds. It rides
+ * as an attribute on the column's own dataset, like the dictionary and for the
+ * same reason -- everything needed to read the column is on the column.
+ *
+ * Bytes rather than text: the value is msgpack, exactly what a `.dstore` holds,
+ * so the two formats store the identical encoding and neither has to escape
+ * anything. \see data::metadata_to_msgpack.
+ */
+const char* kMetadataAttribute = "tttrlib_metadata";
+
 /// Whether an object carries a named attribute at all, which is not the same
 /// question as whether it carries a non-empty one: a text column with no rows
 /// has an empty dictionary and is still a text column.
@@ -205,6 +220,24 @@ std::vector<std::string> read_string_attribute(hid_t obj, const char* attribute)
         H5Dvlen_reclaim(mem, space, H5P_DEFAULT, raw.data());
     }
     H5Tclose(mem);
+    H5Sclose(space);
+    H5Aclose(attr);
+    return out;
+}
+
+/// A byte-array attribute as JSON text, or "" when the object has none.
+/// \see kMetadataAttribute
+std::string read_metadata_attribute(hid_t obj) {
+    if (H5Aexists(obj, kMetadataAttribute) <= 0) return std::string();
+    const hid_t attr = H5Aopen(obj, kMetadataAttribute, H5P_DEFAULT);
+    if (attr < 0) return std::string();
+    const hid_t space = H5Aget_space(attr);
+    hsize_t dims[1] = {0};
+    H5Sget_simple_extent_dims(space, dims, nullptr);
+    std::vector<unsigned char> bytes(static_cast<std::size_t>(dims[0]));
+    std::string out;
+    if (!bytes.empty() && H5Aread(attr, H5T_NATIVE_UINT8, bytes.data()) >= 0)
+        out = data::metadata_from_msgpack(bytes.data(), bytes.size());
     H5Sclose(space);
     H5Aclose(attr);
     return out;
@@ -435,6 +468,12 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
                 read_numeric_column(ds, column, column_type, n);
             }
 
+            // After the column exists and before its mask: the description may
+            // carry a `name`, and restoring it is how a name HDF5 could not
+            // hold as a link -- one with a `/` in it -- comes back whole.
+            const std::string meta = read_metadata_attribute(ds);
+            if (!meta.empty()) column.set_metadata(meta);
+
             // A per-column validity mask, if one was written. This is the only
             // way an INTEGER column can say a value is missing -- a float has
             // NaN, an integer has nothing to spare.
@@ -563,6 +602,27 @@ bool write_string_attribute(hid_t obj, const char* attribute,
     H5Tclose(vlen);
     H5Sclose(space);
     return ok ? true : write_failed("write attribute", attribute);
+}
+
+/// The column's description as one byte attribute. A column with none gets no
+/// attribute rather than an empty one -- nothing should acquire a description
+/// merely by being written. \see kMetadataAttribute
+bool write_metadata_attribute(hid_t obj, const std::string& json_text) {
+    if (json_text.empty()) return true;
+    const std::vector<unsigned char> bytes = data::metadata_to_msgpack(json_text);
+    if (bytes.empty()) return true;
+    hsize_t dims[1] = {static_cast<hsize_t>(bytes.size())};
+    const hid_t space = H5Screate_simple(1, dims, nullptr);
+    if (space < 0) return write_failed("describe attribute", kMetadataAttribute);
+    const hid_t attr = H5Acreate2(obj, kMetadataAttribute, H5T_STD_U8LE, space,
+                                  H5P_DEFAULT, H5P_DEFAULT);
+    bool ok = attr >= 0;
+    if (ok) {
+        if (H5Awrite(attr, H5T_NATIVE_UINT8, bytes.data()) < 0) ok = false;
+        H5Aclose(attr);
+    }
+    H5Sclose(space);
+    return ok ? true : write_failed("write attribute", kMetadataAttribute);
 }
 
 /// Gather the selected rows into a contiguous buffer of the column's OWN type.
@@ -720,6 +780,16 @@ bool write_table_into(hid_t dest, const data::DataStore& store, int compression)
                                       compression);
         }
         if (!ok) return false;
+
+        // The description, on the column it describes. Only opened when there
+        // is one, so a store that carries none pays nothing for the feature.
+        if (!column.metadata().empty()) {
+            const hid_t ds = H5Dopen2(dest, stored.c_str(), H5P_DEFAULT);
+            if (ds < 0) return write_failed("reopen for its description", stored);
+            ok = write_metadata_attribute(ds, column.metadata());
+            H5Dclose(ds);
+            if (!ok) return false;
+        }
 
         if (column.has_mask()) {
             std::vector<unsigned char> bytes(n_out, 1);

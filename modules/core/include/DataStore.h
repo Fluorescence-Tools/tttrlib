@@ -154,6 +154,32 @@ inline int column_type_size(ColumnType t) {
 }
 
 /*!
+ * \brief The msgpack encoding of a column description held as JSON text.
+ *
+ * Storage, not API: \ref Column::metadata keeps a text face because a string
+ * crosses four bindings with no typemap and is what a human reads in a
+ * debugger. This is what a *file* holds, for four reasons -- types survive
+ * (JSON has one number type, so an integer row index comes back as a double),
+ * binary values need no base64, the description is parsed on every open whether
+ * or not anyone looks at it, and it is about a quarter smaller.
+ *
+ * Empty in, empty out: a column with no description costs one length prefix.
+ *
+ * \throws std::invalid_argument if the text does not parse, matching
+ *         \ref Column::set_metadata rather than silently storing nothing.
+ */
+std::vector<unsigned char> metadata_to_msgpack(const std::string& json_text);
+
+/*!
+ * \brief JSON text from what \ref metadata_to_msgpack wrote.
+ *
+ * Returns ``""`` for a byte range that is not msgpack. A corrupt description is
+ * not a reason to refuse the column -- the values are still exactly what was
+ * measured, and losing the units is the smaller loss.
+ */
+std::string metadata_from_msgpack(const unsigned char* bytes, std::size_t n);
+
+/*!
  * \brief A bit per row.
  *
  * One eighth the size of a byte array, which matters at ten million rows, and
@@ -336,8 +362,40 @@ public:
     /// One attribute, or ``""`` when absent, so a caller never has to parse.
     std::string attribute(const std::string& key) const;
 
-    /// Set one attribute, creating the description if there was none.
+    /*!
+     * \brief One attribute as JSON **text**, or ``""`` when absent.
+     *
+     * The difference from \ref attribute is quoting, and it is what makes the
+     * round trip exact: a stored string comes back as ``"ns"`` with its quotes,
+     * a stored array as ``[[2,4]]``. \ref attribute unquotes a string so a
+     * caller reading ``units`` need not parse, which leaves it unable to say
+     * whether ``[[2,4]]`` was an array or a string that looked like one.
+     */
+    std::string attribute_json(const std::string& key) const;
+
+    /*!
+     * \brief Set one attribute to a string value, creating the description if
+     *        there was none.
+     *
+     * The value is stored as a JSON **string**, whatever it looks like:
+     * ``set_attribute("na", "[[2,4]]")`` stores the seven characters, not an
+     * array of ranges. Use \ref set_attribute_json for anything structured.
+     */
     void set_attribute(const std::string& key, const std::string& value);
+
+    /*!
+     * \brief Set one attribute to a JSON value given as text.
+     *
+     * \param json_value a JSON value -- ``42``, ``[[2,4]]``, ``{"of":"run.ptu"}``,
+     *        ``"ns"`` **with** its quotes for a string. The empty string erases
+     *        the key, matching \ref set_attribute.
+     * \throws std::invalid_argument if it does not parse.
+     *
+     * Text rather than a variant because a string crosses four bindings with no
+     * typemap; the type is preserved from here on, and \ref metadata is stored
+     * as msgpack, so an integer written as an integer stays one.
+     */
+    void set_attribute_json(const std::string& key, const std::string& json_value);
 
     /// The ``units`` attribute -- what this was built for. ``""`` when unsaid.
     const std::string& units() const { return units_; }
@@ -1186,7 +1244,8 @@ public:
     // tables being stacked, or the roots? -- and row counts differ per group
     // anyway. Concatenating groups is `a.group("r").append_rows(b.group("r"))`,
     // said out loud. Same rule as the histogram fill, which also takes one
-    // store; PRD-019 introduced no cross-group operation and this adds none.
+    // store: there is no cross-group operation anywhere in this class, and this
+    // adds none.
 
     /// How a column present in one store and not the other is treated.
     enum class Join {

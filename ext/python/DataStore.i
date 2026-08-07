@@ -55,6 +55,13 @@
 %apply (unsigned short** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned short** view, int* n) }
 %apply (unsigned char** ARGOUTVIEW_ARRAY1, int* DIM1) { (unsigned char** view, int* n) }
 
+// How a description is STORED, which no caller has any reason to see: the API
+// face is Column::metadata(), a JSON string that crosses every binding with no
+// typemap. Wrapping these would put a raw byte pointer and an opaque
+// vector<unsigned char> on the module for no gain.
+%ignore tttrlib::data::metadata_to_msgpack;
+%ignore tttrlib::data::metadata_from_msgpack;
+
 // %extend must come BEFORE the header it extends...
 // %pythoncode is a Python-only directive. The other bindings (R, Java) never
 // reached it because they wrap a subset; the JavaScript module wraps the whole

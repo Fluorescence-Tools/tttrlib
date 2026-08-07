@@ -14,9 +14,12 @@ const char* const kStoreExtension = ".dstore";
 
 namespace {
 
-/// 2 added a per-column metadata string; see PRD-022. A version 1 file
-/// reads under 2 with empty metadata.
-const std::uint32_t kVersion = 2;
+/// 2 added a per-column description; a version 1 file reads under 2 with an
+/// empty one. 3 stores that description as msgpack rather than as JSON text,
+/// in the same length-prefixed slot -- \ref data::metadata_to_msgpack says
+/// why. A version 2 file still reads: the slot is there and holds text, so
+/// only the decode differs.
+const std::uint32_t kVersion = 3;
 const std::uint32_t kFlagLittleEndian = 1u << 0;
 const std::size_t kMagicBytes = 8;
 const std::size_t kHeaderBytes = 48;
@@ -241,11 +244,15 @@ void write_node(BlobStream& out, Writer& dir, const data::DataStore& store) {
         dir.u64(mask.size());
         dir.blob(out.blob(mask.words(), mask.nbytes()));
 
-        // The column's description. The name is written above as a field of its
-        // own as well, even though it is an attribute of this: a subset read
-        // decides whether to skip a column before it has any reason to parse,
-        // and store_columns() promises the names without reading data.
-        dir.str(column.metadata());
+        // The column's description, as msgpack. The name is written above as a
+        // field of its own as well, even though it is an attribute of this: a
+        // subset read decides whether to skip a column before it has any reason
+        // to decode, and store_columns() promises the names without reading
+        // data.
+        const std::vector<unsigned char> meta =
+            data::metadata_to_msgpack(column.metadata());
+        dir.u32(static_cast<std::uint32_t>(meta.size()));
+        if (!meta.empty()) dir.raw(meta.data(), meta.size());
 
         // The dictionary of a text column, as its own little block: a count and
         // then each string with its length. Written through the same blob path
@@ -405,7 +412,16 @@ void read_node(Reader& dir, const Blobs& blobs, data::DataStore& store,
         const BlobRef mask_blob = dir.blob();
         // Read even for a column about to be skipped: the directory is
         // positional, so not consuming it here misaligns every column after.
-        const std::string meta = dir.version >= 2 ? dir.str() : std::string();
+        // Version 3 holds msgpack in the slot version 2 held JSON text in.
+        std::string meta;
+        if (dir.version >= 2) {
+            const std::string stored = dir.str();
+            meta = dir.version >= 3
+                       ? data::metadata_from_msgpack(
+                             reinterpret_cast<const unsigned char*>(stored.data()),
+                             stored.size())
+                       : stored;
+        }
         if (!known_column_type(raw_type))
             throw std::runtime_error("store file: unknown column type for '" + name + "'");
         const data::ColumnType type = static_cast<data::ColumnType>(raw_type);
@@ -526,10 +542,11 @@ void walk_paths(Reader& dir, const std::string& prefix,
         const std::string name = dir.str();
         const std::uint8_t type = dir.u8();
         dir.u64(); dir.u8(); dir.blob(); dir.u64(); dir.blob();
-        // The metadata string, in the same place the reader expects it. This
-        // walk touches no blob, but it still has to *step over* every field:
-        // the directory is positional, and one unconsumed string here shifts
-        // every column and group after it.
+        // The description, in the same place the reader expects it, and never
+        // decoded -- the slot is length-prefixed either way, so stepping over
+        // it costs the same in v2 and v3. This walk touches no blob, but it
+        // still has to step over every field: the directory is positional, and
+        // one unconsumed slot here shifts every column and group after it.
         if (dir.version >= 2) dir.str();
         if (type == static_cast<std::uint8_t>(data::ColumnType::String)) dir.blob();
         if (columns != nullptr && here) columns->push_back(name);

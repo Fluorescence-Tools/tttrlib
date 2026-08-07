@@ -31,18 +31,41 @@ std::string attribute_of(const std::string& blob, const std::string& key) {
 
 /// Set one attribute of a JSON object held as text, creating it if need be.
 std::string with_attribute(const std::string& blob, const std::string& key,
-                           const std::string& value) {
+                           const nlohmann::json& value) {
     nlohmann::json j = nlohmann::json::object();
     if (!blob.empty()) {
         nlohmann::json parsed = nlohmann::json::parse(blob, nullptr, false);
         if (!parsed.is_discarded() && parsed.is_object()) j = std::move(parsed);
     }
-    if (value.empty()) j.erase(key);
+    if (value.is_null()) j.erase(key);
     else j[key] = value;
     return j.empty() ? std::string() : j.dump();
 }
 
+/// The string overload, where "" erases rather than storing an empty string.
+std::string with_attribute(const std::string& blob, const std::string& key,
+                           const std::string& value) {
+    return with_attribute(blob, key,
+                          value.empty() ? nlohmann::json() : nlohmann::json(value));
+}
+
 }  // namespace
+
+std::vector<unsigned char> metadata_to_msgpack(const std::string& json_text) {
+    if (json_text.empty()) return std::vector<unsigned char>();
+    const nlohmann::json parsed = nlohmann::json::parse(json_text, nullptr, false);
+    if (parsed.is_discarded())
+        throw std::invalid_argument("column metadata is not JSON: " + json_text);
+    return nlohmann::json::to_msgpack(parsed);
+}
+
+std::string metadata_from_msgpack(const unsigned char* bytes, std::size_t n) {
+    if (bytes == nullptr || n == 0) return std::string();
+    const nlohmann::json parsed =
+        nlohmann::json::from_msgpack(bytes, bytes + n, true, false);
+    if (parsed.is_discarded() || !parsed.is_object()) return std::string();
+    return parsed.dump();
+}
 
 void Column::set_metadata(const std::string& json) {
     if (json.empty()) {
@@ -85,6 +108,32 @@ void Column::set_attribute(const std::string& key, const std::string& value) {
     metadata_ = with_attribute(metadata_, key, value);
     if (key == "units") units_ = value;
     if (key == "name" && !value.empty()) name_ = value;
+}
+
+std::string Column::attribute_json(const std::string& key) const {
+    if (metadata_.empty()) return std::string();
+    const nlohmann::json j = nlohmann::json::parse(metadata_, nullptr, false);
+    if (j.is_discarded() || !j.is_object()) return std::string();
+    const auto it = j.find(key);
+    if (it == j.end()) return std::string();
+    return it->dump();
+}
+
+void Column::set_attribute_json(const std::string& key,
+                                const std::string& json_value) {
+    nlohmann::json value;                       // null, which erases
+    if (!json_value.empty()) {
+        value = nlohmann::json::parse(json_value, nullptr, false);
+        if (value.is_discarded())
+            throw std::invalid_argument("attribute '" + key +
+                                        "' is not JSON: " + json_value);
+    }
+    metadata_ = with_attribute(metadata_, key, value);
+    // The two cached attributes stay in step however they were set. A non-string
+    // value for either is not what they mean, so it caches as empty rather than
+    // as the text of a number.
+    if (key == "units") units_ = value.is_string() ? value.get<std::string>() : std::string();
+    if (key == "name" && value.is_string()) name_ = value.get<std::string>();
 }
 
 // --- combining and subsetting ---------------------------------------------

@@ -379,3 +379,68 @@ def test_codes_that_do_not_index_their_dictionary_read_as_integers(tmp_path):
     back = tttrlib.read_hdf5(str(path))
     assert back["label"].dtype == "int32"
     np.testing.assert_array_equal(back["label"].numpy(), [0, 7, 1])
+
+
+# -- the column's description -------------------------------------------------
+
+
+def test_a_column_description_survives_hdf5(tmp_path):
+    """It did not, until this: the two formats disagreed about what a column
+    is. A lifetime written in nanoseconds through HDF5 came back saying nothing
+    about nanoseconds, so a store that round-tripped through a file the caller
+    chose lost what the one they did not choose kept."""
+    import json
+
+    s = tttrlib.DataStore()
+    s.set_n_rows(4)
+    s.add("Tau", np.arange(4.0))
+    s.add("n", np.arange(4, dtype=np.int32))
+    s["Tau"].set_units("nanoseconds")
+    s["Tau"].set_attribute("of", "run.ptu")
+
+    path = str(tmp_path / "described.h5")
+    tttrlib.write_hdf5(path, s, "/t")
+    back = tttrlib.read_hdf5(path, "/t")
+
+    assert back["Tau"].units() == "nanoseconds"
+    assert json.loads(back["Tau"].metadata()) == json.loads(s["Tau"].metadata())
+    assert back["n"].metadata() == "", "nothing acquires a description by being written"
+
+
+def test_the_two_formats_carry_the_same_description(tmp_path):
+    """The invariant that makes them interchangeable: what a caller gets back
+    must not depend on which format they picked."""
+    import json
+
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("Tau", np.arange(3.0))
+    s["Tau"].set_units("ns")
+    s["Tau"].set_attribute_json("na", "[[1,2]]")
+    s["Tau"].set_attribute_json("n", "9007199254740993")   # 2**53 + 1
+
+    h5, dstore = str(tmp_path / "a.h5"), str(tmp_path / "a.dstore")
+    tttrlib.write_hdf5(h5, s, "/t")
+    tttrlib.save_store(dstore, s)
+
+    via_hdf5 = tttrlib.read_hdf5(h5, "/t")["Tau"].metadata()
+    via_store = tttrlib.load_store(dstore)["Tau"].metadata()
+    assert json.loads(via_hdf5) == json.loads(via_store)
+    # types survive both, which is what msgpack storage is for
+    assert json.loads(via_hdf5)["n"] == 9007199254740993
+    assert json.loads(via_hdf5)["na"] == [[1, 2]]
+
+
+def test_a_name_hdf5_cannot_hold_as_a_link_comes_back_whole(tmp_path):
+    """A `/` in a column name is a group separator to HDF5, so the dataset is
+    written under an encoded name. The description carries the true one."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("Sg/Sr", np.arange(2.0))
+    s["Sg/Sr"].set_units("ratio")
+
+    path = str(tmp_path / "slash.h5")
+    tttrlib.write_hdf5(path, s, "/t")
+    back = tttrlib.read_hdf5(path, "/t")
+    assert back.names == ["Sg/Sr"]
+    assert back["Sg/Sr"].units() == "ratio"

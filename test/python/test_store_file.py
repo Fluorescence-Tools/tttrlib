@@ -461,8 +461,9 @@ def test_what_the_native_format_is_actually_faster_at(tmp_path, capsys):
     assert read_one < read_native / 5, "a partial read is reading the whole table"
 
 
-# -- PRD-022: a column is described, not just named -------------------------------
+# -- a column is described, not just named -------------------------------
 
+import json
 import struct as _struct
 
 
@@ -563,17 +564,21 @@ def test_metadata_that_is_not_a_json_object_is_refused():
             s[0].set_metadata(bad)
 
 
-def _downgrade_to_v1(src, dst):
-    """Rewrite a version 2 store as a genuine version 1 one.
+def _downgrade(src, dst, target):
+    """Rewrite the current store version as a genuine older one.
 
     Built rather than committed as a binary so the fixture cannot rot: it is
-    produced from whatever the current writer emits, with the one field version
-    2 added removed again. The directory layout it walks is the writer's --
+    produced from whatever the current writer emits, with the one thing each
+    version changed put back. The directory layout it walks is the writer's --
     a string is a u32 length and its bytes, a blob is two u64s.
+
+    Both older versions differ from the current one in the *same slot*, which is
+    what makes one walker enough: version 1 has no description at all, version 2
+    holds it as JSON text where 3 holds msgpack.
     """
     raw = bytearray(open(src, "rb").read())
     version, = _struct.unpack_from("<I", raw, 8)
-    assert version == 2, version
+    assert version == 3, version
     dir_offset, dir_bytes = _struct.unpack_from("<QQ", raw, 16)
     d = raw[dir_offset : dir_offset + dir_bytes]
 
@@ -590,10 +595,18 @@ def _downgrade_to_v1(src, dst):
         k, = _struct.unpack_from("<I", d, i)
         take(4 + k)
 
-    def drop_str():
+    def old_metadata():
+        """The description slot, as the target version held it."""
         nonlocal i
         k, = _struct.unpack_from("<I", d, i)
+        packed = bytes(d[i + 4 : i + 4 + k])
         i += 4 + k
+        if target == 1:
+            return                                  # version 1 has no slot
+        text = b"" if not packed else json.dumps(
+            msgpack_loads(packed), separators=(",", ":"), sort_keys=True).encode()
+        out.extend(_struct.pack("<I", len(text)))
+        out.extend(text)
 
     def node():
         nonlocal i
@@ -608,7 +621,7 @@ def _downgrade_to_v1(src, dst):
             take(1 + 8 + 1)             # type, size, flags
             take(16)                    # data blob
             take(8 + 16)                # mask bits + blob
-            drop_str()                  # <- the version 2 field
+            old_metadata()              # <- the slot each version changed
             if type_code == 11:         # String: dictionary blob
                 take(16)
         n_groups, = _struct.unpack_from("<I", d, i)
@@ -628,19 +641,72 @@ def _downgrade_to_v1(src, dst):
 
     body = raw[:dir_offset]
     new = bytearray(body) + out
-    _struct.pack_into("<I", new, 8, 1)                       # version
+    _struct.pack_into("<I", new, 8, target)                  # version
     _struct.pack_into("<QQ", new, 16, dir_offset, len(out))  # directory
     _struct.pack_into("<Q", new, 32, len(new))               # declared size
     _struct.pack_into("<I", new, 40, fnv1a(bytes(out)))      # checksum
     open(dst, "wb").write(bytes(new))
 
 
+def msgpack_loads(b):
+    """Enough msgpack to read what the writer emits, so the fixture needs no
+    third-party package to be a genuine older file."""
+    pos = 0
+
+    def value():
+        nonlocal pos
+        c = b[pos]; pos += 1
+        if c <= 0x7F: return c
+        if 0xE0 <= c: return c - 0x100
+        if 0xA0 <= c <= 0xBF: return text(c & 0x1F)
+        if 0x80 <= c <= 0x8F: return obj(c & 0x0F)
+        if 0x90 <= c <= 0x9F: return arr(c & 0x0F)
+        if c == 0xC0: return None
+        if c == 0xC2: return False
+        if c == 0xC3: return True
+        if c in (0xCC, 0xCD, 0xCE, 0xCF): return uint(1 << (c - 0xCC))
+        if c in (0xD0, 0xD1, 0xD2, 0xD3): return int_(1 << (c - 0xD0))
+        if c == 0xCB: return struct_(">d")
+        if c == 0xCA: return struct_(">f")
+        if c == 0xD9: return text(uint(1))
+        if c == 0xDA: return text(uint(2))
+        if c == 0xDC: return arr(uint(2))
+        if c == 0xDE: return obj(uint(2))
+        raise AssertionError(f"unhandled msgpack byte 0x{c:02x}")
+
+    def uint(n):
+        nonlocal pos
+        v = int.from_bytes(b[pos:pos + n], "big"); pos += n
+        return v
+
+    def int_(n):
+        nonlocal pos
+        v = int.from_bytes(b[pos:pos + n], "big", signed=True); pos += n
+        return v
+
+    def struct_(fmt):
+        nonlocal pos
+        v, = _struct.unpack_from(fmt, b, pos); pos += _struct.calcsize(fmt)
+        return v
+
+    def text(n):
+        nonlocal pos
+        v = b[pos:pos + n].decode(); pos += n
+        return v
+
+    def arr(n): return [value() for _ in range(n)]
+
+    def obj(n): return {value(): value() for _ in range(n)}
+
+    return value()
+
+
 def test_a_version_1_file_still_reads(tmp_path):
     """The format gained a field; files written before it did not."""
-    v2 = str(tmp_path / "v2.dstore")
+    cur = str(tmp_path / "cur.dstore")
     v1 = str(tmp_path / "v1.dstore")
-    tttrlib.write_store(v2, _units_store())
-    _downgrade_to_v1(v2, v1)
+    tttrlib.write_store(cur, _units_store())
+    _downgrade(cur, v1, 1)
 
     back = tttrlib.DataStore()
     tttrlib.read_store_into(back, v1)
@@ -648,3 +714,105 @@ def test_a_version_1_file_still_reads(tmp_path):
     assert all(back[i].metadata() == "" for i in range(back.n_columns()))
     np.testing.assert_array_equal(back["Duration"].numpy(), np.arange(10, dtype=np.float64))
     assert list(tttrlib.store_columns(v1)) == ["Duration", "Tau", "label"]
+
+
+def test_a_version_2_file_still_reads(tmp_path):
+    """Version 2 held the same description as JSON text.
+
+    Unlike version 1 this loses nothing, so the assertion is the strong one:
+    every column reads back with the description it was written with.
+    """
+    cur = str(tmp_path / "cur.dstore")
+    v2 = str(tmp_path / "v2.dstore")
+    tttrlib.write_store(cur, _units_store())
+    _downgrade(cur, v2, 2)
+
+    assert _struct.unpack_from("<I", open(v2, "rb").read(12), 8)[0] == 2
+    back = tttrlib.DataStore()
+    tttrlib.read_store_into(back, v2)
+    now = tttrlib.load_store(cur)
+    for i in range(back.n_columns()):
+        assert json.loads(back[i].metadata() or "{}") == json.loads(now[i].metadata() or "{}")
+    assert back["Tau"].units() == "nanoseconds"
+    np.testing.assert_array_equal(back["Duration"].numpy(), np.arange(10, dtype=np.float64))
+
+
+def test_the_description_is_stored_as_msgpack(tmp_path):
+    """The encoding, asserted at the byte level rather than through the reader.
+
+    A round trip alone would pass just as well if the writer had kept storing
+    JSON text, so the test that the change happened has to look at the file.
+    """
+    path = str(tmp_path / "packed.dstore")
+    tttrlib.write_store(path, _units_store())
+    raw = open(path, "rb").read()
+
+    assert _struct.unpack_from("<I", raw, 8)[0] == 3
+    # The JSON form would carry these; msgpack carries the keys as text and
+    # nothing else.
+    assert b'"units":"nanoseconds"' not in raw and b'{"name":' not in raw
+    assert b"units" in raw and b"nanoseconds" in raw
+
+
+def test_a_typed_attribute_keeps_its_type(tmp_path):
+    """What the encoding is for. JSON has one number type, so an integer row
+    index would come back as a double and a caller would have to re-infer it."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(2)
+    s.add("Tau", np.zeros(2))
+    c = s["Tau"]
+    c.set_attribute_json("na", "[[2,4]]")
+    c.set_attribute_json("n", "9007199254740993")     # 2^53 + 1
+    c.set_attribute_json("ok", "true")
+    c.set_attribute("of", "run.ptu")
+
+    path = str(tmp_path / "typed.dstore")
+    tttrlib.write_store(path, s)
+    back = tttrlib.load_store(path)["Tau"]
+
+    assert json.loads(back.metadata()) == {
+        "na": [[2, 4]], "n": 9007199254740993, "ok": True, "of": "run.ptu"}
+    # exact past 2^53, which a double could not be
+    assert back.attribute_json("n") == "9007199254740993"
+    # and the string setter still stores a string, whatever it looks like
+    assert back.attribute_json("of") == '"run.ptu"'
+
+
+def test_set_attribute_stores_a_string_even_when_it_looks_structured():
+    """The two setters are not interchangeable, and the difference is the bug
+    that made this necessary: `set_attribute` double-encoded structured data."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    c = s["a"]
+
+    c.set_attribute("na", "[[2,4]]")
+    assert json.loads(c.metadata())["na"] == "[[2,4]]"      # the seven characters
+    c.set_attribute_json("na", "[[2,4]]")
+    assert json.loads(c.metadata())["na"] == [[2, 4]]       # the ranges
+
+    # attribute() unquotes so a caller reading units need not parse;
+    # attribute_json() does not, so the round trip is exact.
+    assert c.attribute("na") == "[[2,4]]"
+    assert c.attribute_json("na") == "[[2,4]]"
+    c.set_units("ns")
+    assert c.attribute("units") == "ns" and c.attribute_json("units") == '"ns"'
+
+
+def test_a_typed_attribute_that_is_not_json_is_refused():
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    with pytest.raises(Exception):
+        s["a"].set_attribute_json("na", "[[2,4")
+    assert s["a"].metadata() == ""
+
+
+def test_an_empty_typed_attribute_erases_the_key():
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    c = s["a"]
+    c.set_attribute_json("na", "[[2,4]]")
+    c.set_attribute_json("na", "")
+    assert "na" not in json.loads(c.metadata() or "{}")

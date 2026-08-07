@@ -200,8 +200,7 @@ directions — so the two are not yet interchangeable from a caller's side:
      - ``PtoFile`` methods
 
 Note the leading slash: the string identifying a group depends on which file it
-came out of, which is the value a caller passes straight back in. Closing all of
-this — one vocabulary, the gaps filled natively — is PRD-023.
+came out of, which is the value a caller passes straight back in.
 
 Two things about ``columns=`` that are worth knowing before you rely on them,
 because neither is guessable:
@@ -289,6 +288,53 @@ deflate is CPU-bound and this has no deflate. Reading one column of four takes
 So the reasons to reach for it are: it is much faster than *compressed* HDF5, it
 reads a single column without touching the others, it preserves things HDF5
 cannot, and it works in a build without HDF5 at all.
+
+.. _column_descriptions:
+
+What a column knows about itself
+--------------------------------
+
+A column carries a description alongside its values: a JSON object, one per
+column, that both the native format and HDF5 store and give back. ``units`` is
+what it was built for — a burst duration in milliseconds and a lifetime in
+nanoseconds otherwise say so only in their column names, when whoever wrote
+them remembered.
+
+.. code-block:: python
+
+    store["Tau"].set_units("nanoseconds")
+    store["Tau"].set_attribute("of", "run.ptu")
+
+    back = tttrlib.load_store("run.dstore")
+    back["Tau"].units()          # 'nanoseconds'
+    back["Tau"].attribute("of")  # 'run.ptu'
+    back["Tau"].metadata()       # the whole object, as JSON text
+
+There are two setters and the difference matters. ``set_attribute`` stores a
+**string**, whatever it looks like; ``set_attribute_json`` takes JSON text and
+stores the **value** it denotes:
+
+.. code-block:: python
+
+    c.set_attribute("na", "[[2,4]]")       # the seven characters
+    c.set_attribute_json("na", "[[2,4]]")  # a list of ranges
+    c.set_attribute_json("n", "9007199254740993")
+
+    c.attribute("na")        # '[[2,4]]'   -- unquoted, so units needs no parse
+    c.attribute_json("na")   # '[[2,4]]'   -- exact, so the round trip is exact
+    c.attribute_json("of")   # '"run.ptu"' -- a string keeps its quotes
+
+Types survive the file. The description is stored as **msgpack**, not as JSON
+text, so an integer written as an integer reads back as one — the ``n`` above
+is exact, which it could not be if it had gone through a JSON number and come
+back a double. That is storage, not interface: ``metadata()`` still takes and
+returns JSON text in every binding.
+
+Both formats keep it, and keep it identically. In HDF5 it rides as an attribute
+on the column's own dataset, next to the dictionary and for the same reason —
+everything needed to read a column is on the column, so a reader that takes one
+column out of a wide table gets its description too. Nothing acquires a
+description by being written: a column with none costs nothing.
 
 CSV
 ---

@@ -24,8 +24,36 @@
   `profile(sample=)` take paths on the same rule.
 - **`np.asarray(column)` and `np.mean(column)` work**, without spelling
   `.numpy()`.
+- **`Column.set_attribute_json(key, value)` and `attribute_json(key)`**, so a
+  description can hold structure rather than only strings. `set_attribute`
+  stores a string whatever it looks like — `set_attribute("na", "[[2,4]]")`
+  really stored the seven characters — which forced anything structured to be
+  double-encoded and re-parsed by hand at the other end. The reader is the same
+  split: `attribute()` unquotes so a caller reading `units` need not parse,
+  `attribute_json()` does not, so the round trip is exact.
+
+### Changed
+- **A column's description is stored as msgpack**, in both formats, rather than
+  as JSON text. The reason is types: JSON has one number type, so an integer
+  row index, a count and a flag all came back as doubles and had to be
+  re-inferred — and a row boundary was exact only up to 2^53. It is also about
+  a quarter smaller, needs no base64 for binary values, and is decoded on every
+  open whether or not anyone asks for it. The interface is unchanged:
+  `metadata()` still takes and returns JSON **text**, because a string crosses
+  four bindings with no typemap and is what a human reads in a debugger. The
+  `.dstore` format goes 2 → 3, and version 2 files still read — the slot is in
+  the same place and holds text, so only the decode differs.
 
 ### Fixed
+- **HDF5 dropped a column's description entirely**, which made the two formats
+  disagree about what a column *is*: a lifetime written in nanoseconds came
+  back through HDF5 saying nothing about nanoseconds, so what a caller got
+  depended on which format they had picked. It now rides as a byte attribute on
+  the column's own dataset — next to the dictionary and for the same reason,
+  that everything needed to read a column is on the column — holding the same
+  msgpack the native format holds. A name HDF5 cannot store as a link, one with
+  a `/` in it, now comes back whole for the same reason. Nothing acquires a
+  description by being written: a column with none costs nothing.
 - **A column's zero-copy array outlived its `DataStore` and read reused
   memory** (BUGS.md). Nothing in the returned array's base chain owned the
   buffer or referenced the store: the owner rode on an ndarray subclass, and
@@ -56,7 +84,7 @@
   and `read_hdf5_table_columns()` return real lists, so `== [...]` is true
   without wrapping every call in `list()`. `group_names()`/`group_paths()`
   already did.
-- **A buffer of undecoded records can be decoded** (PRD-021). Every decoder sat
+- **A buffer of undecoded records can be decoded.** Every decoder sat
   behind `TTTR(filename)`, so a caller holding records from a card, a socket or
   a container it unpacked itself had to write the decoder a second time — and a
   copy with nothing holding it to the original is how two implementations come
@@ -113,8 +141,8 @@
   `target`, `primary`); rows, offsets and sizes stay numeric, being magnitudes
   a double holds exactly.
 - **The R conformance runner passes for the first time** (80/80). Three bugs,
-  all in `test/r/conformance.R` and none in the library, from PRD-020's ops
-  having been written without an R toolchain to run them against:
+  all in `test/r/conformance.R` and none in the library, from those ops having
+  been written without an R toolchain to run them against:
   `file.write_text` used `writeLines`, which appends a newline the other three
   runners do not, so a case pinning a byte range read one byte too many in R
   alone; and `pto_read_store`'s generated R dispatcher cannot be satisfied at
@@ -163,8 +191,8 @@
 - **A cross-language conformance suite.** `test/conformance/` holds one
   committed case list — 67 cases over thirteen areas — that Python, R, Java
   and JavaScript all run, every case in every binding. The expected values are *shared*, not four copies that
-  happen to agree: change one and all four go red. It replaces the hand-copied
-  constants of PRD-001, and the four files that duplicated them are gone.
+  happen to agree: change one and all four go red. It replaces hand-copied
+  constants, and the four files that duplicated them are gone.
   `tools/conformance_update.py` generates expectations for review;
   `tools/conformance_matrix.py` publishes the coverage table. See
   `test/conformance/README.md`.
@@ -386,7 +414,7 @@
   outliving the object that produced it, surviving that object's collection,
   thousands of proxies of the same object releasing cleanly, `.slice()` detaching
   a view from C++-owned memory, and a crude leak check over 200 file reads. This
-  is the risk PRD-016 flags as worst, because it fails by segfault rather than by
+  is the worst of the binding's risks, because it fails by segfault rather than by
   exception. Run with `--expose-gc`; the GC-forcing cases skip without it rather
   than pass vacuously.
 - **A minimal web viewer for TTTR files** — `examples/js/ptu-webapp/` opens a PTU
