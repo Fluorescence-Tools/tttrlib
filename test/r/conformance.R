@@ -448,6 +448,32 @@ OPS <- list(
   "hdf5.groups" = function(on, a) as.list(as.character(hdf5_table_groups(a[[1]]))),
   "hdf5.has" = function(on, a) hdf5_table_has(a[[1]], a[[2]]),
 
+  # -- the format-agnostic table vocabulary -----------------------------------
+  #
+  # The three queries and the writer need no R-specific plumbing: everything
+  # that crosses is a string or a store. `read_table_into` needs the numbered
+  # overload for the same reason `pto.read_store` above does -- its `columns`
+  # parameter is a std::vector<std::string>, so the generated dispatcher tests
+  # for a wrapped VectorString while the typemap behind it coerces a character
+  # vector, and no single argument satisfies both. That defect is a property of
+  # the parameter type, so it reappears on every function that takes one.
+  "table.read" = function(on, a) {
+    s <- DataStore()
+    cols <- if (length(a) >= 3 && length(a[[3]]) > 0) as.character(unlist(a[[3]])) else character(0)
+    first <- if (length(a) >= 4) as.numeric(a[[4]]) else 0
+    n <- if (length(a) >= 5) as.numeric(a[[5]]) else 0
+    read_table_into__SWIG_0(s, a[[1]], if (length(a) >= 2) a[[2]] else "",
+                            cols, first, n)
+    s
+  },
+  "table.write" = function(on, a)
+    write_table(a[[1]], a[[2]], if (length(a) >= 3) a[[3]] else "", FALSE),
+  "table.groups" = function(on, a) as.list(as.character(table_groups(a[[1]]))),
+  "table.columns" = function(on, a)
+    as.list(as.character(table_columns(a[[1]], if (length(a) >= 2) a[[2]] else ""))),
+  "table.has" = function(on, a)
+    table_has(a[[1]], if (length(a) >= 2) a[[2]] else ""),
+
   # -- pto --------------------------------------------------------------------
   #
   # A uid arrives as an R numeric, which is a double -- exact only because PTO
@@ -690,8 +716,13 @@ run_case <- function(case, area) {
       nm <- substring(x, 2)
       if (grepl("^data[0-9]+$", nm))
         return(file.path(DATA_ROOT, case$data[[as.integer(substring(nm, 5)) + 1L]]))
-      if (grepl("^tmp[0-9]+$", nm))
-        return(tmp_paths[as.integer(substring(nm, 4)) + 1L])
+      # `$tmp0.dstore` -- a scratch path with a suffix, because a writer that
+      # picks its format from the extension needs one.
+      if (grepl("^tmp[0-9]+(\\..*)?$", nm)) {
+        k <- as.integer(sub("^tmp([0-9]+).*$", "\\1", nm))
+        suffix <- sub("^tmp[0-9]+", "", nm)
+        return(paste0(tmp_paths[k + 1L], suffix))
+      }
       if (!exists(nm, envir = bindings, inherits = FALSE))
         stop("step reads unbound '", nm, "'")
       return(get(nm, envir = bindings, inherits = FALSE))

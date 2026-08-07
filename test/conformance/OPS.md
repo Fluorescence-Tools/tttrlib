@@ -19,7 +19,7 @@ in the Python suite instead — see `README.md`.
 |---|---|
 | `op` | the operation, from the tables below |
 | `on` | binding the op reads (the receiver); omitted by constructors |
-| `args` | literal JSON values, or `$name` to substitute a binding, `$data0`…`$dataN` for the case's data files, `$tmp0`…`$tmpN` for scratch file paths |
+| `args` | literal JSON values, or `$name` to substitute a binding, `$data0`…`$dataN` for the case's data files, `$tmp0`…`$tmpN` for scratch file paths, optionally with a suffix (`$tmp0.dstore`) for a writer that picks its format from the extension |
 | `as` | name to bind the result to; omitted when the result is not used |
 | `throws` | when true the step is expected to raise, and `as` is bound to a **boolean**: did it raise. The step's normal result is discarded. |
 
@@ -430,3 +430,39 @@ imaging tags the photon reader folds into a header.
 its own type per parameter and a parser that guesses is wrong about one field in
 a hundred and silent about it, so the interpretation is the caller's — which
 means the expectation in a case is `"6.554e-08"` and not `6.554e-08`.
+
+## `table.*`
+
+One vocabulary for a table in a file, whatever the file is. These add no
+capability — every one calls a reader that already exists — and what the cases
+pin is that the choosing happens once and gives the *same* answer in every
+format.
+
+| op | on | args | result |
+|---|---|---|---|
+| `table.read` | — | `[spec, group?, columns?, first_row?, n_rows?]` | store handle |
+| `table.write` | — | `[spec, $store, group?]` | boolean |
+| `table.groups` | — | `[spec]` | string list |
+| `table.columns` | — | `[spec, group?]` | string list |
+| `table.has` | — | `[spec, group?]` | boolean |
+
+**`spec` is `path` or `path|object`.** A PTO holds many objects, each of which
+is a tree, and the pipe is where that extra addressing axis goes. Everything
+after it is identical across the three formats:
+`table.read` on `run.dstore`, on `run.h5` and on `run.pto|bursts` with the same
+`group` and `columns` gives the same table.
+
+**The reader takes its format from the content and the writer from the
+extension.** That asymmetry is inherent — the file a write targets need not
+exist yet, so there is nothing to sniff — and it is why the cases here name
+scratch files as `$tmp0.dstore` rather than `$tmp0`.
+
+**Group paths are normalised to the bare form.** HDF5's own listing gives
+`/results` and includes the root; the native format's gives `results` and does
+not. One of them had to win or a path taken from one listing could not be handed
+to the other, and the bare form wins because it is the one a caller writes.
+
+**The three queries are silent on any input** and `table.read` is not: a caller
+probes with the queries to decide whether a file is worth opening, often in a
+loop, while a read that returned an empty store to mean "could not read" could
+not be told from one that read an empty table.

@@ -173,6 +173,60 @@ directory, and a hyperslab. **Emulation was rejected**: reading a whole file and
 slicing gives the right answer at the wrong cost, so a caller who swapped an
 extension to get a subset read would have got the opposite.
 
+.. _table_vocabulary:
+
+One way to ask, whatever the format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each format also has its own verb — :func:`load_store`, :func:`read_hdf5`,
+:func:`pto_store` — with its own spelling of the same argument. Five functions
+say it once:
+
+.. code-block:: python
+
+    tttrlib.read_table("run.dstore",     group="results", columns=["Tau"])
+    tttrlib.read_table("run.h5",         group="results", columns=["Tau"])
+    tttrlib.read_table("run.pto|bursts", group="results", columns=["Tau"])
+
+    tttrlib.write_table("out.h5", store, group="results")
+    tttrlib.table_groups("run.dstore")      # ['results']
+    tttrlib.table_columns("run.h5", "results")
+    tttrlib.table_has("run.pto|bursts", "results")
+
+These add **no capability**. Every one is a call to a reader on this page,
+chosen from the file — so a caller swaps a format by swapping a filename rather
+than by rewriting their call sites, and one reading a folder of mixed files
+carries no branch per format.
+
+Five, not six: **there is no** ``table_remove``. Removing a group is
+``read_table`` → :meth:`remove_group` → ``write_table``, which is the rule the
+whole surface rests on — a change happens in memory, and a write is what puts
+it in a file.
+
+Four things worth knowing before relying on it:
+
+* **The reader takes its format from the content; the writer from the
+  extension.** A ``.dstore`` named ``.h5`` still reads as a ``.dstore``,
+  because an extension is a claim and the bytes are the fact. The asymmetry is
+  inherent: a file being written need not exist yet, so there is nothing to
+  sniff.
+* **The spec is** ``path`` **or** ``path|object``. A PTO holds many objects,
+  each of which is a tree, and the pipe is where that extra addressing axis
+  goes — the same form ``TTTR("run.pto|m001.ptu")`` already takes.
+* **Group paths come back in the bare form.** HDF5's own listing gives
+  ``/results`` and includes the root; the native format's gives ``results`` and
+  does not. One had to win, or a path taken from one listing could not be handed
+  to the other.
+* **The three queries are silent and the read is not.** ``table_groups``,
+  ``table_columns`` and ``table_has`` answer for any input, because probing is
+  a normal thing to do in a loop. ``read_table`` raises and says what it looked
+  for — an empty store returned to mean "could not read" cannot be told from one
+  that read an empty table.
+
+CSV is the one that cannot do everything: it is one flat table with no tree, so
+``group`` and a row range **raise** rather than being ignored. A knob that
+silently does nothing is worse than one that is not there.
+
 .. list-table::
    :header-rows: 1
 

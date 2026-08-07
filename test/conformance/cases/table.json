@@ -1,0 +1,219 @@
+{
+  "area": "table",
+  "doc": "One vocabulary for a table in a file, whatever the file is. Three formats can hold a DataStore and each was reached by a different verb with a different spelling of the same argument, so a caller who wanted to swap one for another rewrote their call sites. These cases add no capability -- every step is a call to a reader that already existed -- and what they pin is that the choosing happens once and gives the SAME answer. The interesting cases are the ones that run identical steps against a .dstore, an HDF5 file and a store inside a PTO: that is what 'interchangeable' means, and without it this is only a fourth spelling.",
+  "cases": [
+    {
+      "id": "table.read_dstore",
+      "doc": "A group and a column subset out of the native format, through the format-agnostic verb. Written with the specific writer and read with the general one, which is the direction that matters: the file is whatever it always was.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["Tau", [1.0, 2.0, 3.0, 4.0]]},
+        {"op": "ds.add_f64", "on": "s", "args": ["E", [0.1, 0.2, 0.3, 0.4]]},
+        {"op": "ds.add_group", "on": "s", "args": ["results"], "as": "r"},
+        {"op": "ds.add_f64", "on": "r", "args": ["Tau", [2.0, 4.0, 6.0, 8.0]]},
+        {"op": "ds.add_i32", "on": "r", "args": ["n", [7, 8, 9, 10]]},
+        {"op": "table.write", "args": ["$tmp0.dstore", "$s"]},
+
+        {"op": "table.groups", "args": ["$tmp0.dstore"], "as": "groups"},
+        {"op": "table.columns", "args": ["$tmp0.dstore", ""], "as": "root_cols"},
+        {"op": "table.columns", "args": ["$tmp0.dstore", "results"], "as": "group_cols"},
+        {"op": "table.has", "args": ["$tmp0.dstore", "results"], "as": "has"},
+        {"op": "table.has", "args": ["$tmp0.dstore", "nope"], "as": "has_not"},
+        {"op": "table.read", "args": ["$tmp0.dstore", "results", ["Tau"]], "as": "part"},
+        {"op": "ds.column_names", "on": "part", "as": "cols"},
+        {"op": "ds.n_rows", "on": "part", "as": "rows"},
+        {"op": "ds.column_f64", "on": "part", "args": ["Tau"], "as": "tau"},
+        {"op": "sum", "on": "tau", "as": "total"}
+      ],
+      "expect": {
+        "groups": ["results"],
+        "root_cols": ["Tau", "E"],
+        "group_cols": ["Tau", "n"],
+        "has": true,
+        "has_not": false,
+        "cols": ["Tau"],
+        "rows": 4,
+        "total": 20.0
+      }
+    },
+    {
+      "id": "table.read_hdf5",
+      "doc": "The identical steps against HDF5. The listing is the one that used to disagree -- HDF5's own gives `/results` and includes the root, the native format's gives `results` and does not -- so a path taken from one listing could not be handed to the other. The bare form wins, because it is the one a caller writes.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["Tau", [1.0, 2.0, 3.0, 4.0]]},
+        {"op": "ds.add_f64", "on": "s", "args": ["E", [0.1, 0.2, 0.3, 0.4]]},
+        {"op": "ds.add_group", "on": "s", "args": ["results"], "as": "r"},
+        {"op": "ds.add_f64", "on": "r", "args": ["Tau", [2.0, 4.0, 6.0, 8.0]]},
+        {"op": "ds.add_i32", "on": "r", "args": ["n", [7, 8, 9, 10]]},
+        {"op": "hdf5.write", "args": ["$tmp0.h5", "$s", "/"]},
+
+        {"op": "table.groups", "args": ["$tmp0.h5"], "as": "groups"},
+        {"op": "table.columns", "args": ["$tmp0.h5", ""], "as": "root_cols"},
+        {"op": "table.columns", "args": ["$tmp0.h5", "results"], "as": "group_cols"},
+        {"op": "table.has", "args": ["$tmp0.h5", "results"], "as": "has"},
+        {"op": "table.has", "args": ["$tmp0.h5", "nope"], "as": "has_not"},
+        {"op": "table.read", "args": ["$tmp0.h5", "results", ["Tau"]], "as": "part"},
+        {"op": "ds.column_names", "on": "part", "as": "cols"},
+        {"op": "ds.n_rows", "on": "part", "as": "rows"},
+        {"op": "ds.column_f64", "on": "part", "args": ["Tau"], "as": "tau"},
+        {"op": "sum", "on": "tau", "as": "total"}
+      ],
+      "expect": {
+        "groups": ["results"],
+        "root_cols": ["Tau", "E"],
+        "group_cols": ["Tau", "n"],
+        "has": true,
+        "has_not": false,
+        "cols": ["Tau"],
+        "rows": 4,
+        "total": 20.0
+      }
+    },
+    {
+      "id": "table.read_pto",
+      "doc": "The identical steps against a store embedded in a container. A PTO has one addressing axis more than the other two -- it holds many objects, each of which is a tree -- and the pipe in the spec is where that axis goes. Everything after it is the same call.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["Tau", [1.0, 2.0, 3.0, 4.0]]},
+        {"op": "ds.add_f64", "on": "s", "args": ["E", [0.1, 0.2, 0.3, 0.4]]},
+        {"op": "ds.add_group", "on": "s", "args": ["results"], "as": "r"},
+        {"op": "ds.add_f64", "on": "r", "args": ["Tau", [2.0, 4.0, 6.0, 8.0]]},
+        {"op": "ds.add_i32", "on": "r", "args": ["n", [7, 8, 9, 10]]},
+        {"op": "pto.create", "args": ["$tmp0.pto", "conformance"], "as": "f"},
+        {"op": "pto.add_store", "on": "f", "args": ["table", "bursts", "$s"]},
+        {"op": "pto.commit", "on": "f"},
+        {"op": "pto.close", "on": "f"},
+
+        {"op": "table.groups", "args": ["$tmp0.pto|bursts"], "as": "groups"},
+        {"op": "table.columns", "args": ["$tmp0.pto|bursts", ""], "as": "root_cols"},
+        {"op": "table.columns", "args": ["$tmp0.pto|bursts", "results"], "as": "group_cols"},
+        {"op": "table.has", "args": ["$tmp0.pto|bursts", "results"], "as": "has"},
+        {"op": "table.has", "args": ["$tmp0.pto|bursts", "nope"], "as": "has_not"},
+        {"op": "table.read", "args": ["$tmp0.pto|bursts", "results", ["Tau"]], "as": "part"},
+        {"op": "ds.column_names", "on": "part", "as": "cols"},
+        {"op": "ds.n_rows", "on": "part", "as": "rows"},
+        {"op": "ds.column_f64", "on": "part", "args": ["Tau"], "as": "tau"},
+        {"op": "sum", "on": "tau", "as": "total"}
+      ],
+      "expect": {
+        "groups": ["results"],
+        "root_cols": ["Tau", "E"],
+        "group_cols": ["Tau", "n"],
+        "has": true,
+        "has_not": false,
+        "cols": ["Tau"],
+        "rows": 4,
+        "total": 20.0
+      }
+    },
+    {
+      "id": "table.row_window_is_the_same_in_every_format",
+      "doc": "A row range through the general verb, against all three formats in one case so the numbers cannot drift apart between them. Fifty rows of a million-row burst table is what a table viewer needs, and it has to cost the same wherever the table is.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["Tau", [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]]},
+        {"op": "table.write", "args": ["$tmp0.dstore", "$s"]},
+        {"op": "hdf5.write", "args": ["$tmp0.h5", "$s", "/"]},
+        {"op": "pto.create", "args": ["$tmp0.pto", "conformance"], "as": "f"},
+        {"op": "pto.add_store", "on": "f", "args": ["table", "t", "$s"]},
+        {"op": "pto.commit", "on": "f"},
+        {"op": "pto.close", "on": "f"},
+
+        {"op": "table.read", "args": ["$tmp0.dstore", "", ["Tau"], 2, 3], "as": "a"},
+        {"op": "table.read", "args": ["$tmp0.h5", "", ["Tau"], 2, 3], "as": "b"},
+        {"op": "table.read", "args": ["$tmp0.pto|t", "", ["Tau"], 2, 3], "as": "c"},
+        {"op": "ds.column_f64", "on": "a", "args": ["Tau"], "as": "va"},
+        {"op": "ds.column_f64", "on": "b", "args": ["Tau"], "as": "vb"},
+        {"op": "ds.column_f64", "on": "c", "args": ["Tau"], "as": "vc"},
+        {"op": "ds.n_rows", "on": "a", "as": "na"},
+        {"op": "ds.n_rows", "on": "b", "as": "nb"},
+        {"op": "ds.n_rows", "on": "c", "as": "nc"}
+      ],
+      "expect": {
+        "va": [2.0, 3.0, 4.0],
+        "vb": [2.0, 3.0, 4.0],
+        "vc": [2.0, 3.0, 4.0],
+        "na": 3, "nb": 3, "nc": 3
+      }
+    },
+    {
+      "id": "table.content_beats_the_extension",
+      "doc": "A `.dstore` named `.h5` is still a `.dstore`. An extension is a claim and the bytes are the fact, which matters because the two formats a table can be in are also formats something else can be in -- a `.h5` is a Photon-HDF5 as often as it is a table.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["x", [1.0, 2.0]]},
+        {"op": "table.write", "args": ["$tmp0.h5", "$s"]},
+        {"op": "table.read", "args": ["$tmp0.h5"], "as": "back"},
+        {"op": "ds.column_names", "on": "back", "as": "cols"},
+        {"op": "ds.column_f64", "on": "back", "args": ["x"], "as": "x"},
+        {"op": "sum", "on": "x", "as": "total"}
+      ],
+      "expect": {"cols": ["x"], "total": 3.0}
+    },
+    {
+      "id": "table.write_then_read_in_every_format",
+      "doc": "The general writer, which takes its format from the EXTENSION -- the one asymmetry with the reader, and an inherent one: the file need not exist yet, so there is nothing to sniff.",
+      "tmp": 3,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["Tau", [1.5, 2.5, 3.5]]},
+        {"op": "ds.add_i32", "on": "s", "args": ["n", [4, 5, 6]]},
+        {"op": "table.write", "args": ["$tmp0.dstore", "$s"], "as": "wrote_store"},
+        {"op": "table.write", "args": ["$tmp1.h5", "$s"], "as": "wrote_hdf5"},
+        {"op": "table.write", "args": ["$tmp2.csv", "$s"], "as": "wrote_csv"},
+
+        {"op": "table.read", "args": ["$tmp0.dstore"], "as": "a"},
+        {"op": "table.read", "args": ["$tmp1.h5"], "as": "b"},
+        {"op": "table.read", "args": ["$tmp2.csv"], "as": "c"},
+        {"op": "ds.column_f64", "on": "a", "args": ["Tau"], "as": "va"},
+        {"op": "ds.column_f64", "on": "b", "args": ["Tau"], "as": "vb"},
+        {"op": "ds.column_f64", "on": "c", "args": ["Tau"], "as": "vc"},
+        {"op": "ds.column_dtype", "on": "a", "args": ["n"], "as": "dt_store"},
+        {"op": "ds.column_dtype", "on": "b", "args": ["n"], "as": "dt_hdf5"}
+      ],
+      "expect": {
+        "wrote_store": true, "wrote_hdf5": true, "wrote_csv": true,
+        "va": [1.5, 2.5, 3.5],
+        "vb": [1.5, 2.5, 3.5],
+        "vc": [1.5, 2.5, 3.5],
+        "dt_store": "int32",
+        "dt_hdf5": "int32"
+      }
+    },
+    {
+      "id": "table.csv_refuses_the_knobs_it_does_not_have",
+      "doc": "CSV is one flat table with no tree, and a knob that silently does nothing is worse than one that is not there: a caller asking for a window would get the whole file and never know. Also the case that pins that a spec naming no table raises rather than returning an empty store -- an empty store returned to mean 'could not read' cannot be told from one that read an empty table.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["x", [1.0, 2.0]]},
+        {"op": "table.write", "args": ["$tmp0.csv", "$s"]},
+        {"op": "table.read", "args": ["$tmp0.csv", "results"], "throws": true},
+        {"op": "table.read", "args": ["$tmp0.csv", "", [], 1, 1], "throws": true},
+        {"op": "table.groups", "args": ["$tmp0.csv"], "as": "groups"},
+        {"op": "table.has", "args": ["$tmp0.csv", ""], "as": "has"},
+        {"op": "table.has", "args": ["$tmp0.csv", "results"], "as": "has_group"}
+      ],
+      "expect": {"groups": [], "has": true, "has_group": false}
+    },
+    {
+      "id": "table.the_queries_are_silent_on_anything",
+      "doc": "A question, unlike a read. A caller probes with these to decide whether a file is worth opening, often in a loop, and a predicate that narrates or throws is one nobody can use. The read of the same file DOES throw, which is the other half of the contract.",
+      "tmp": 1,
+      "steps": [
+        {"op": "file.write_text", "args": ["$tmp0.bin", "not a table at all"]},
+        {"op": "table.groups", "args": ["$tmp0.bin"], "as": "groups"},
+        {"op": "table.columns", "args": ["$tmp0.bin", ""], "as": "cols"},
+        {"op": "table.has", "args": ["$tmp0.bin", ""], "as": "has"},
+        {"op": "table.read", "args": ["$tmp0.bin"], "throws": true}
+      ],
+      "expect": {"groups": [], "cols": [], "has": false}
+    }
+  ]
+}

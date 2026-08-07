@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 from typing import Any, Dict, List, Sequence
 
 import numpy as np
@@ -111,8 +112,12 @@ class Interpreter:
             name = a[1:]
             if name.startswith("data") and name[4:].isdigit():
                 return os.path.join(self.data_root, self._data[int(name[4:])])
-            if name.startswith("tmp") and name[3:].isdigit():
-                return self.tmp_paths[int(name[3:])]
+            # `$tmp0.dstore` -- a scratch path with a suffix, because a writer
+            # that picks its format from the extension needs one and a bare
+            # scratch name has none.
+            m = re.match(r"tmp(\d+)(\..*)?$", name)
+            if m:
+                return self.tmp_paths[int(m.group(1))] + (m.group(2) or "")
             if name not in self.bindings:
                 raise ConformanceError(f"step reads unbound '{name}'")
             return self.bindings[name]
@@ -694,6 +699,43 @@ def _op_hdf5_has(on, args):
 
 
 # ---------------------------------------------------------------------------
+# table.* -- one vocabulary, whichever format the spec names
+# ---------------------------------------------------------------------------
+#
+# The cases here run the SAME steps against a .dstore, an HDF5 file and a store
+# inside a PTO, which is the only way to assert that the formats are
+# interchangeable rather than merely similar. `$spec` is substituted by the
+# runner from the case's `formats` list.
+
+
+def _op_table_read(on, args):
+    columns = [str(c) for c in (args[2] if len(args) > 2 and args[2] else [])]
+    first = int(args[3]) if len(args) > 3 else 0
+    n = int(args[4]) if len(args) > 4 else 0
+    return tttrlib.read_table(str(args[0]), str(args[1]) if len(args) > 1 else "",
+                              columns or None, first, n)
+
+
+def _op_table_write(on, args):
+    group = str(args[2]) if len(args) > 2 else ""
+    return bool(tttrlib.write_table(str(args[0]), args[1], group))
+
+
+def _op_table_groups(on, args):
+    return [str(s) for s in tttrlib.table_groups(str(args[0]))]
+
+
+def _op_table_columns(on, args):
+    group = str(args[1]) if len(args) > 1 else ""
+    return [str(s) for s in tttrlib.table_columns(str(args[0]), group)]
+
+
+def _op_table_has(on, args):
+    group = str(args[1]) if len(args) > 1 else ""
+    return bool(tttrlib.table_has(str(args[0]), group))
+
+
+# ---------------------------------------------------------------------------
 # pto.*
 # ---------------------------------------------------------------------------
 #
@@ -941,6 +983,13 @@ _OPS = {
     "hdf5.groups": _op_hdf5_groups,
     "hdf5.has": _op_hdf5_has,
 
+    # table -- the format-agnostic vocabulary
+    "table.read": _op_table_read,
+    "table.write": _op_table_write,
+    "table.groups": _op_table_groups,
+    "table.columns": _op_table_columns,
+    "table.has": _op_table_has,
+
     # pto
     "pto.create": _op_pto_create,
     "pto.open": _op_pto_open,
@@ -1035,6 +1084,10 @@ YIELDS_COMPARABLE = {
     "stream.record_name", "stream.record_bytes", "stream.can_decode",
     "stream.decode", "stream.overflows",
     "bhset.n", "bhset.sections", "bhset.value",
+    # the format-agnostic vocabulary: three queries and one predicate, all of
+    # which answer with a list or a bool and are the same in every format --
+    # which is the whole claim being made.
+    "table.groups", "table.columns", "table.has", "table.write",
 }
 
 RAW_MATERIAL = {
@@ -1063,6 +1116,8 @@ RAW_MATERIAL = {
     # pto -- a uid is random, and a file or store handle is a handle
     "pto.create", "pto.open", "pto.add_file", "pto.add_store",
     "pto.read_store", "pto.events",
+    # a table read gives back a store, which is a handle like any other
+    "table.read",
     # record streams -- a TTTR, a decode state and a record buffer are handles
     "tttr.new", "stream.state", "stream.read_records", "stream.events",
     # side effects that bind nothing worth expecting

@@ -88,8 +88,14 @@ final class ConformanceInterpreter {
                 String name = s.substring(1);
                 if (name.matches("data\\d+"))
                     return Paths.get(dataRoot, dataFiles.get(Integer.parseInt(name.substring(4)))).toString();
-                if (name.matches("tmp\\d+"))
-                    return tmpPaths.get(Integer.parseInt(name.substring(3)));
+                // `$tmp0.dstore` -- a scratch path with a suffix, because a
+                // writer that picks its format from the extension needs one.
+                if (name.matches("tmp\\d+(\\..*)?")) {
+                    int dot = name.indexOf('.');
+                    String digits = dot < 0 ? name.substring(3) : name.substring(3, dot);
+                    String suffix = dot < 0 ? "" : name.substring(dot);
+                    return tmpPaths.get(Integer.parseInt(digits)) + suffix;
+                }
                 if (!bindings.containsKey(name))
                     throw new ConformanceException("step reads unbound '" + name + "'");
                 return bindings.get(name);
@@ -699,6 +705,35 @@ final class ConformanceInterpreter {
             }
             case "hdf5.groups": return vectorStrings(tttrlib.hdf5_table_groups(s(a, 0)));
             case "hdf5.has": return tttrlib.hdf5_table_has(s(a, 0), s(a, 1));
+
+            // -- the format-agnostic table vocabulary ------------------------
+            //
+            // No Java-specific plumbing, which is the point: the dispatcher is
+            // C++ and what crosses is a string, a store and a VectorString, all
+            // of which the existing typemaps already carry. Compare pto.* above,
+            // where a uid has to stay a BigInteger the whole way.
+            case "table.read": {
+                DataStore out = new DataStore();
+                VectorString cols = new VectorString();
+                if (a.size() > 2 && a.get(2) != null)
+                    for (String c : texts(a.get(2))) cols.add(c);
+                java.math.BigInteger first =
+                        java.math.BigInteger.valueOf(a.size() > 3 ? i(a, 3) : 0);
+                java.math.BigInteger count =
+                        java.math.BigInteger.valueOf(a.size() > 4 ? i(a, 4) : 0);
+                tttrlib.read_table_into(out, s(a, 0), a.size() > 1 ? s(a, 1) : "",
+                                        cols, first, count);
+                return out;
+            }
+            case "table.write":
+                return tttrlib.write_table(s(a, 0), (DataStore) a.get(1),
+                                           a.size() > 2 ? s(a, 2) : "", false);
+            case "table.groups": return vectorStrings(tttrlib.table_groups(s(a, 0)));
+            case "table.columns":
+                return vectorStrings(tttrlib.table_columns(
+                        s(a, 0), a.size() > 1 ? s(a, 1) : ""));
+            case "table.has":
+                return tttrlib.table_has(s(a, 0), a.size() > 1 ? s(a, 1) : "");
 
             // -- pto ---------------------------------------------------------
             //

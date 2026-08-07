@@ -407,6 +407,23 @@ function makeOps(ctx) {
     'hdf5.groups': (on, a) => Array.from(tttrlib.hdf5_table_groups(a[0])),
     'hdf5.has': (on, a) => tttrlib.hdf5_table_has(a[0], a[1]),
 
+    // -- the format-agnostic table vocabulary --------------------------------
+    //
+    // No JS-specific plumbing: the dispatcher is C++ and what crosses is a
+    // string, a store and a vector of strings, all of which already have
+    // typemaps.
+    'table.read': (on, a) => {
+      const s = new tttrlib.DataStore();
+      tttrlib.read_table_into(s, a[0], a[1] ?? '',
+                              new tttrlib.VectorString(a[2] ?? []),
+                              a[3] ?? 0, a[4] ?? 0);
+      return s;
+    },
+    'table.write': (on, a) => tttrlib.write_table(a[0], a[1], a[2] ?? '', false),
+    'table.groups': (on, a) => Array.from(tttrlib.table_groups(a[0])),
+    'table.columns': (on, a) => Array.from(tttrlib.table_columns(a[0], a[1] ?? '')),
+    'table.has': (on, a) => tttrlib.table_has(a[0], a[1] ?? ''),
+
     // -- pto -----------------------------------------------------------------
     //
     // A uid crosses as a BigInt: jsarrays.i routes 64-bit scalars through
@@ -609,8 +626,10 @@ function runCase(c) {
       const name = x.slice(1);
       let m = /^data(\d+)$/.exec(name);
       if (m) return dataPath(dataFiles[Number(m[1])]);
-      m = /^tmp(\d+)$/.exec(name);
-      if (m) return tmpPaths[Number(m[1])];
+      // `$tmp0.dstore` -- a scratch path with a suffix, because a writer that
+      // picks its format from the extension needs one.
+      m = /^tmp(\d+)(\..*)?$/.exec(name);
+      if (m) return tmpPaths[Number(m[1])] + (m[2] ?? '');
       if (!bindings.has(name)) throw new Error(`step reads unbound '${name}'`);
       return bindings.get(name);
     }

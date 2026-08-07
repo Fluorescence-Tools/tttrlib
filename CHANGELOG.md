@@ -52,6 +52,35 @@
   rows, so a range naming the source's rows says nothing true about the
   result's.
 
+- **One vocabulary for a table in a file, whatever the file is.**
+  `read_table` / `write_table` / `table_groups` / `table_columns` /
+  `table_has`, keyed by a spec — `path` or `path|object` — with the format taken
+  from the file exactly as `TTTR(filename)` already infers a container:
+
+  ```python
+  read_table("run.dstore",     group="results", columns=["Tau"])
+  read_table("run.h5",         group="results", columns=["Tau"])
+  read_table("run.pto|bursts", group="results", columns=["Tau"])
+  ```
+
+  These add **no capability**: every one is a call to a reader that already
+  existed, chosen from the file. What they add is that the choosing happens once
+  in the library instead of at every call site in four languages — three formats
+  could hold a `DataStore` and each was reached by a different verb with a
+  different spelling of the same argument, so swapping one for another meant
+  rewriting call sites.
+  Five, not six: there is no `table_remove`. Removing a group is `read_table` →
+  `remove_group` → `write_table`.
+  Group paths now come back in one form: HDF5's own listing gives `/results` and
+  includes the root, the native format's gives `results` and does not, and one
+  had to win or a path from one listing could not be handed to the other.
+  The reader takes its format from the **content** — a `.dstore` named `.h5`
+  still reads as a `.dstore` — and the writer from the **extension**, which is
+  inherent since the file need not exist yet. CSV is one flat table with no
+  tree, so `group` and a row range raise rather than being quietly ignored.
+  In the conformance case list, with the same steps run against a `.dstore`, an
+  HDF5 file and a store inside a PTO from all four languages: that is what
+  "interchangeable" means, and without it this would be only a fourth spelling.
 - **Every partial read now works on both formats.** They had complementary
   holes — `.dstore` could take a column subset and a row range but not one
   group, HDF5 could take one group and neither of the others — so a caller who

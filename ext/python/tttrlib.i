@@ -150,6 +150,9 @@ def experimental(cls):
 %include "Hdf5Table.i"
 %include "StoreFile.i"
 %include "Pto.i"
+/* One vocabulary for a table in a file, whatever the file is. Must follow
+   StoreFile.i, Hdf5Table.i, Csv.i and Pto.i: it dispatches to all four. */
+%include "Table.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
    ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:

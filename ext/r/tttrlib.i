@@ -129,6 +129,19 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 %include "Hdf5Table.i"
 %include "StoreFile.i"
 %include "Pto.i"
+/* One vocabulary for a table in a file, whatever the file is. Must follow
+   StoreFile.i, Hdf5Table.i, Csv.i and Pto.i: it dispatches to all four.
+
+   NOTE for an R caller: `read_table_into` takes a std::vector<std::string> for
+   its `columns`, and SWIG-R generates a dispatcher for such a function that
+   NOTHING can satisfy -- it tests for a wrapped VectorString while the typemap
+   behind it coerces a character vector, so a proxy passes the dispatcher and
+   fails the typemap and a character vector does the reverse. Call the numbered
+   overload directly: `read_table_into__SWIG_0(store, spec, group, cols, first,
+   n)`. Same defect and same workaround as `pto_read_store`; it is a property of
+   the parameter type, so it reappears on every function that takes one.
+   test/r/conformance.R has a worked example. */
+%include "Table.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
    ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
