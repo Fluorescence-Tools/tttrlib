@@ -52,9 +52,13 @@
   `uint64_t` — `SimEngine.n_photons()` is the common one. `Number(x)` converts
   where a plain number is wanted.
 
-  R has the same symptom for a different reason and no such fix: its `integer`
-  is 32-bit and its `numeric` is a double, so a uid is not representable at
-  all. The PTO conformance cases are declared unsupported there.
+  R had the same symptom for a different reason: its `integer` is 32-bit and
+  its `numeric` is an IEEE double, so a 64-bit float — the widest number R has
+  — still carries only 53 bits of mantissa and three consecutive uids collapse
+  onto one value. A **PTO uid is therefore a character string in R**: produced
+  as one, accepted as one, never arithmetic. Scoped to the identifiers (`uid`,
+  `target`, `primary`); rows, offsets and sizes stay numeric, being magnitudes
+  a double holds exactly.
 - **The R conformance runner passes for the first time** (80/80). Three bugs,
   all in `test/r/conformance.R` and none in the library, from PRD-020's ops
   having been written without an R toolchain to run them against:

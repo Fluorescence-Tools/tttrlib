@@ -120,9 +120,6 @@
           "table",
           "attachment"
         ]
-      },
-      "unsupported": {
-        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -283,9 +280,6 @@
       },
       "tolerance": {
         "tau_sum": 1e-12
-      },
-      "unsupported": {
-        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -427,9 +421,6 @@
       },
       "tolerance": {
         "values": 1e-12
-      },
-      "unsupported": {
-        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -537,9 +528,6 @@
         "middle": "abc",
         "short": "ef",
         "past_end": ""
-      },
-      "unsupported": {
-        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -651,9 +639,6 @@
         "first_macro_time": 2613546542,
         "last_macro_time": 2629510359,
         "micro_sum": 638976
-      },
-      "unsupported": {
-        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     }
   ]
