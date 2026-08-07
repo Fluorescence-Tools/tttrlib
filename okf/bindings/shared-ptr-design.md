@@ -93,7 +93,7 @@ reference, which is exactly what `test/js/lifetime.test.mjs` checks.
 `test/js/lifetime.test.mjs` covers a `shared_ptr` result outliving the call that
 produced it, surviving collection of the object it came from, and thousands of
 proxies of the same object releasing cleanly. Nothing has been run under a
-sanitiser — see [open items](/open-items.md).
+sanitiser — see [open items](/bindings/open-items.md).
 
 [^upstream]: SWIG's own shared_ptr typemaps (r/ version, used as the starting point)
 [^napi-ctor]: js_overloaded_ctor / js_dtoroverride templates

@@ -1,0 +1,288 @@
+# PRD-010 — Reusable neural network + surrogate models, AD gradients, optimiser benchmarks
+
+> **PRD #:** 010 · **Status:** In progress · **Created:** 2026-07-20 · **Owner:** tpeulen
+> **Related:** PRD-005 (photon simulator, reuses `SimPcgRandom`), ChiSurf OKF `prd-60`
+> (amortised neural estimator for H2MM)
+
+## Summary
+
+Add a small, general **`NeuralNet`** class to tttrlib — a feed-forward MLP that both trains and
+infers, with scikit-learn-compatible semantics and a language-neutral JSON model format. Build the
+**H2MM surrogate estimator** on top of it, and separately evaluate **forward-mode automatic
+differentiation** as a replacement for the central-difference gradients used by the L-BFGS fitting
+path.
+
+The net is deliberately domain-agnostic: a surrogate model supplies only its own feature extractor
+and output decoder. That is the reusable part — H2MM is simply the first consumer.
+
+## Problem / motivation
+
+**The H2MM surrogate is Python-only.** ChiSurf has an optional amortised neural estimator that
+summarises a photon dataset into ~24 permutation-invariant features and maps them to
+`(prior, trans, obs)` in a single forward pass, instead of iterating Baum-Welch EM. It trains with
+scikit-learn and is stored as a **pickle**. Meanwhile the EM engine it competes against already has
+a fast C++ implementation here (`include/H2MM.h`), so ChiSurf dispatches `em` to C++ but falls back
+to numba + scikit-learn for the surrogate. Consequences: the surrogate cannot be used from tttrlib
+at all (C++/R/Java callers, or a Python environment without scikit-learn), and the artefact is
+unsafe to share and unreadable outside Python.
+
+**Fitting pays for numerical gradients.** `include/i_lbfgs.h` is an L-BFGS minimiser with
+central-difference gradients (`fgrad1/2/4`), costing 2N objective evaluations per gradient.
+Consumers: `DecayFit23.cpp` (4 params), `DecayFit24.cpp` (5), `DecayFit26.cpp` (1),
+`ImageLocalization.cpp` (18).
+
+## Measured evidence
+
+Measured on an M1 Pro (clang 17, `-O2`) against a synthetic objective replicating this library's
+shape (4-exponential decay, recursive IRF convolution, Poisson 2I*, 1024 channels, 8 parameters).
+
+**Automatic differentiation is right for fitting and catastrophic for neural networks.** The
+`autodiff` library's reverse mode has no tape, no topological sort and no memoization —
+`AddExpr::propagate` recurses into both children unconditionally, so a shared DAG is traversed as a
+tree. A dense layer is the pathological case. For a 24→256→256→128→10 net (106k parameters), one
+sample:
+
+| approach | time |
+|---|---|
+| hand-written backprop (Eigen GEMM), batch=32 | 0.68 ms/minibatch (0.021 ms/sample) |
+| `autodiff::var` | 7251 ms (tape build 8.8 ms, **propagate 7242 ms**) |
+
+≈341,000× slower per sample. Over 2500 samples × 300 epochs: ~16 s versus ~170 years. Eigen-backed
+`Matrix<var,...>` does not help — `reverse/var/eigen.hpp` supplies only `NumTraits`, so Eigen falls
+back to its generic scalar path.
+
+For fitting (8 parameters, 1024 channels):
+
+| approach | cost | vs objective |
+|---|---|---|
+| plain `double` objective | 0.0147 ms | 1.0× |
+| central differences (2N=16 evaluations) | 0.2329 ms | 15.8× |
+| forward `dual`, N seeded passes | 0.1518 ms | 10.3× |
+| **vectorized forward** (`Dual<double,Array<double,N,1>>`) | **0.0320 ms** | **2.2×** |
+| reverse `var`, 1 pass | >10 min | ~230,000× |
+
+Vectorized forward scales sublinearly in N (1.6× speedup at N=1, 7.6× at N=8, 16.8× at N=16) against
+central differences' strict 2N, and matches scalar `dual` to 1.29e-14.
+
+## Decisions
+
+- **Neural network training uses explicit backpropagation, not AD.** Backprop for a dense layer is a
+  transposed GEMM; there is nothing to differentiate that is not already known in closed form.
+- **Reverse-mode AD is rejected for both jobs.** For fitting it is slower than the finite differences
+  it would replace.
+- **Eigen is an acceptable dependency**: header-only with no link step. This is the distinction that
+  ruled out mlpack (BLAS/LAPACK via Armadillo) while admitting Eigen.
+- **Public headers stay Eigen-free.** `NeuralNet.h` exposes `std::vector<double>` and raw pointers,
+  matching this library's existing SWIG conventions; Eigen is confined to the `.cpp`.
+- **JSON model files** via the already-vendored `nlohmann_json`.
+
+## Scope
+
+### Phase 1 — `NeuralNet` (done)
+
+`include/NeuralNet.h`, `src/NeuralNet.cpp`, `ext/python/NeuralNet.i`,
+`test/python/test_neural_net.py`.
+
+- `StandardScaler` with scikit-learn semantics (population std, zero-variance → scale 1).
+- `Activation`: `Identity`, `ReLU`, `Tanh`, `Sigmoid`, parsed from scikit-learn names.
+- `DenseLayer` with row-major `n_out × n_in` weights (scikit-learn's `coefs_` are transposed).
+- `NeuralNet::train` — Adam with bias correction, minibatching, Glorot-uniform init, L2 on weights,
+  early stopping with best-weight restore. Seeded by `SimPcgRandom` (PRD-005), no new RNG.
+- `NeuralNet::predict` / `predict_batch`, JSON round-trip, and **validation at load** so a malformed
+  model fails immediately rather than mid-forward.
+
+### Phase 2 — `H2mmSurrogate` (done)
+
+`include/H2MMSurrogate.h`, `src/H2MMSurrogate.cpp`, `ext/python/H2MMSurrogate.i`,
+`test/python/h2mm/test_surrogate.py`. Thin adapter: feature extraction → `NeuralNet` → decode to
+`H2mmModel`, plus training-set simulation and training. Added const CSR accessors to `H2MM`
+(`get_streams`/`get_gap_slot`/`get_offsets`) rather than befriending the surrogate.
+
+Feature parity was the whole risk, and needed three separate fixes:
+
+1. **Histogram binning.** `numpy.histogram` computes the index as `(v-lo)/(hi-lo)*nbins`, *not*
+   `(v-lo)/width` — the two round differently for values on a bin edge — then corrects it against
+   the edges `linspace` actually produced. Density normalises as `(n/db)/n.sum()` over in-range
+   samples only.
+2. **FMA contraction.** Fusing `wsum += streams[k]*scale` in the sliding-window sum changes it by
+   ~1e-16, enough to move a value across a bin edge and shift a whole count into the neighbouring
+   bin. Measured 33 of 200 photons differing with contraction on, 0 with it off. The file now
+   compiles with strict multiply-then-add (`#pragma clang fp contract(off)` / GCC equivalent); the
+   loop is memory-bound so the FMA bought nothing.
+3. **Sliding versus recomputed window.** The windowed mean must use the running two-pointer sum, not
+   a fresh `slice.mean()` per photon. This one was a bug in the *test's* reference, not the port —
+   worth noting because the "cleaner" formulation is the wrong one.
+
+Validated against the real ChiSurf/numba implementation to 1e-12, not only against a
+reimplementation.
+
+### Phase 3 — AD gradients (measure only; convert nothing)
+
+Vendor `autodiff`, add a vectorized-forward gradient provider to `i_lbfgs.h` as an opt-in policy,
+and produce per-path numbers against **both scalar and AVX builds**. Each consumer is converted, or
+not, on its own measured result in a later phase.
+
+Prerequisites recorded for that decision:
+
+1. The enabling `NumberTraits<Eigen::Array<double,N,1>>` specialization is **undocumented and
+   unsupported upstream**. Pin the vendored version and test vectorized gradients against scalar
+   `dual`, so a future bump fails red rather than producing silently wrong derivatives.
+2. `fconv_avx` / `fconv_per_avx` use intrinsics and **cannot be templated**, so the AD path loses
+   them while central differences keep them. The measured 7× is scalar-versus-scalar.
+3. `sanitise_parameters` clamps `tau` and `gamma`. Under AD a clamped parameter propagates an exactly
+   zero derivative and L-BFGS can stall at the bound, where central differences give a nonzero
+   one-sided estimate. Reparameterize (`tau = exp(u)`, `gamma = sigmoid(v)`) rather than clamp.
+4. Baseline first: the current step `h = eps*|x|` is not optimal for central differences
+   (≈ ε^(1/3)|x|). Retuning is free and is the honest baseline AD must beat.
+
+Note the accuracy argument is weak and should not be oversold: measured relative error of the current
+scheme is 2e-9 to 2e-6, ample for L-BFGS curvature pairs. The real wins are cost per gradient and
+robustness of the `EpsG` termination test near the optimum — which is why `ImageLocalization.cpp`
+carries a hand-tuned `seteps(1e-12)`.
+
+### Phase 4 — benchmarks (done)
+
+`benchmarks/bench_nn.py` and `benchmarks/bench_ad_gradients.cpp`. Measured on an M1 Pro, arm64 conda
+env.
+
+**Neural net and surrogate** (400 training datasets, 150 bursts × 80 photons, 2 states):
+
+| task | result |
+|---|---|
+| `generate_training_set` | ~0.9 ms per simulated dataset |
+| `train_mlp` tttrlib | 277–333 ms |
+| `train_mlp` scikit-learn | 585–1003 ms (noisy; ~2–3× slower) |
+| held-out MAE | tttrlib 0.1019 vs scikit-learn 0.1006 |
+| `extract_features` | 0.31 ms / 12 000 photons |
+| `surrogate_predict` | 0.34 ms |
+| `em_fit` (warm, 1 restart) | 3.3 ms |
+
+Two results worth keeping in view:
+
+- **The network is not the bottleneck.** Feature extraction is 0.31 ms of the 0.34 ms forward pass,
+  so the MLP is ~10% of it. Library choice was never going to matter for speed here.
+- **A full surrogate trains in seconds.** At 5000 samples: 4.6 s to simulate, 3.5 s to fit.
+
+Training-set size versus accuracy (30 evaluation trials each, held-out MAE on 400 datasets):
+
+| n_train | held-out MAE | sur (sep<0.2) | EM (sep<0.2) | sur (sep≥0.2) | EM (sep≥0.2) |
+|---|---|---|---|---|---|
+| 500 | 0.1118 | 0.0255 | 0.0669 | 0.0235 | 0.0067 |
+| 1000 | 0.0876 | 0.0182 | 0.0669 | 0.0136 | 0.0067 |
+| 2500 | 0.0774 | 0.0143 | 0.0669 | 0.0137 | 0.0067 |
+| 5000 | 0.0729 | 0.0168 | 0.0669 | 0.0096 | 0.0067 |
+
+**Do not quote an averaged surrogate-versus-EM accuracy number.** The average is dominated by
+whichever regime the trial mix favours. Stratified by state separation the picture is unambiguous
+and stable: the surrogate is ~4× better than EM where the states are barely separated and EM is
+unidentifiable, and EM stays better on well-separated states at every training size tested. The
+surrogate's error is nearly flat in separation because it regresses toward a prior over models; EM's
+error is 0.0067 when identifiable and 0.0669 when not. EM maximising likelihood is not the same as
+being close to the truth: verified a case where more restarts found a *higher* likelihood
+(−8052.873 → −8052.838) that was *less* accurate (0.027 → 0.080). That is correct behaviour of
+`fit()`, not a bug.
+
+**AD gradients** (`bench_ad_gradients.cpp`, NCH=1024, objective replicating `fconv`'s recursion +
+Poisson 2I*, cost quoted as a multiple of one objective evaluation):
+
+| N | objective | CD `h=eps·|x|` | CD `h=eps^⅓·|x|` | AD | AD vs tuned CD |
+|---|---|---|---|---|---|
+| 1 (DecayFit26) | 0.0074 ms | 3.07× (err 1.8e-09) | 3.07× (err 3.5e-09) | 1.95× exact | **1.57×** |
+| 4 (DecayFit23) | 0.0134 ms | 8.01× (err 1.5e-07) | 7.23× (err 5.1e-08) | 1.56× exact | **4.63×** |
+| 5 (DecayFit24) | 0.0121 ms | 9.19× (err 1.5e-07) | 9.17× (err 5.1e-08) | 1.69× exact | **5.44×** |
+| 8 | 0.0150 ms | 15.36× (err 6.8e-07) | 14.72× (err 8.4e-08) | 2.05× exact | **7.18×** |
+| 18 (ImageLocalization) | 0.0252 ms | 35.89× (err 4.8e-06) | 35.88× (err 7.8e-07) | 3.65× exact | **9.83×** |
+
+Conclusions for the later conversion decision:
+
+- **Retuning the finite-difference step is a free ~6× accuracy win** (`eps·|x|` → `eps^⅓·|x|`, e.g.
+  4.8e-06 → 7.8e-07 at N=18) at essentially no cost in time. Worth doing on its own merits,
+  independent of AD.
+- ~~**`ImageLocalization` (N=18) is the strongest AD candidate**: 9.8× on gradient cost~~ —
+  **corrected below.** That row used a decay objective at N=18; `ImageLocalization` is neither.
+- **`DecayFit26` (N=1) is not worth converting** at 1.57×.
+- The **AVX caveat stands**: these are scalar-versus-scalar numbers. `fconv_avx` cannot be templated,
+  so a converted `DecayFit` path loses it while the finite-difference path keeps it. The real ratio
+  for AVX-enabled models is narrower and must be measured before converting those paths.
+
+autodiff was **not** vendored into `thirdparty/`, since this phase converts nothing; the benchmark
+builds against a checkout.
+
+### Phase 3b — the SIMD comparison, and two corrections (`bench_ad_vectorized.cpp`)
+
+**Does AD still win when central differences keep the vectorized kernel? Yes, with a narrower
+margin.** Measured with the real dispatcher (NEON on this AArch64 host, 2 doubles/register):
+
+| N | objective speedup from SIMD | AD vs CD-scalar | AD vs CD-**SIMD** |
+|---|---|---|---|
+| 4 (2 exp) | 1.25× | 4.64× | **3.70×** |
+| 8 (4 exp) | 1.41× | 7.21× | **5.16×** |
+| 16 (8 exp) | 1.59× | 9.17× | **5.80×** |
+
+AVX packs 4 doubles per register to NEON's 2, so on x86 the vectorized objective should gain more
+and the AD margin narrow further. That is an **extrapolation, not a measurement** — this host cannot
+execute AVX at all.
+
+**Correction 1 — `ImageLocalization` was mischaracterised.** It is a 2D Gaussian PSF fit
+(`target2DGaussian` → `model{,Two,Three}2DGaussian` + Poisson `W2DG`) and never calls `fconv`, so no
+SIMD kernel is at stake. It also never optimises 18 free parameters: entries 12..17 are flags and
+outputs and are fixed, and `i_lbfgs` minimises in the reduced free-parameter space, so N is 6/9/12
+for one/two/three Gaussians. On its real objective, AD is **3.95×–5.44×** faster than tuned central
+differences — not 9.83×.
+
+**Correction 2 — retuning the FD step is not a universal win.** On the 2D Gaussian objective the
+central-difference error is already 1.5e-08–2.2e-07 and retuning changes little. The ~6× accuracy
+improvement holds for the decay objective, not everywhere.
+
+### Blocker for converting `ImageLocalization`: `varinbounds` is not a clamp
+
+`localization::varinbounds` (`src/ImageLocalization.cpp:45`) reads:
+
+```cpp
+if (var < min || var > max) var = (max - min) / 2;   // teleport to the midpoint
+```
+
+It does not clamp to the bound — it **jumps the parameter to the middle of the range**, and
+`target2DGaussian` writes the result back into the caller's array, so the objective is not a pure
+function of its input. `varlowerbound` similarly sets `var = min + 1`.
+
+This already corrupts the *existing* central-difference gradient whenever a step straddles a bound.
+Demonstrated at `x0 = 15.0` with `xlen = 15` and `h = 1e-6·|x|`: `f(x−h)` is evaluated at 15.0 and
+`f(x+h)` at **7.5**, so the difference quotient divides a step of 7.5 by 3e-05. The gradient
+component is meaningless there.
+
+So converting to AD is **not** a mechanical templating job, and doing it first would be the wrong
+order:
+
+- Under AD the reset branch propagates an exactly-zero derivative, so L-BFGS can stall at the bound
+  where central differences currently produce (wrong, but nonzero) motion. Behaviour would change.
+- The in-place write-back must be removed before the objective can be differentiated at all.
+- The flags/outputs interleaved into `vars` (12..17) must be separated from the parameters.
+
+**Recommended order:** fix the bound handling first — replace the teleport with a genuine clamp, or
+better, reparameterize (`x0 = xlen·sigmoid(u)`) so the constraint is smooth and L-BFGS is better
+conditioned — then convert. Fixing the bounds is a behaviour change to existing fits and should be
+validated on real localization data on its own, separately from the AD work.
+
+## Definition of done
+
+- [x] `NeuralNet` trains, infers, round-trips JSON, and rejects malformed models.
+- [x] Agrees with scikit-learn's forward pass to 1e-10 on imported weights.
+- [x] 24 tests in `test/python/test_neural_net.py`; no regression in the existing suite.
+- [x] `H2mmSurrogate` reproduces the ChiSurf feature vector to 1e-12 (cross-checked against the real
+      numba implementation, not a reimplementation).
+- [x] 25 tests in `test/python/h2mm/test_surrogate.py`; full suite 701 passed, 0 failed.
+- [x] AD gradients benchmarked per parameter count on the real objective shape (scalar; the AVX
+      comparison remains open and gates converting the `DecayFit` paths).
+- [x] ChiSurf routes its surrogate engines through tttrlib when a JSON surrogate is present, with
+      8 cross-engine agreement tests proving a scikit-learn-trained surrogate gives identical
+      estimates through either path.
+- [x] Worked example: `examples/single_molecule/plot_h2mm_surrogate.py`.
+
+## Still open
+
+- Convert (or decline to convert) each `i_lbfgs.h` consumer on its measured AVX-versus-scalar
+  numbers. Retune the central-difference step first — it is free and is the baseline AD must beat.
+- Reparameterize the clamped `tau`/`gamma` before any AD conversion: under AD a clamped parameter
+  propagates an exactly zero derivative and L-BFGS can stall at the bound, where central differences
+  currently give a nonzero one-sided estimate.

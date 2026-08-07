@@ -66,7 +66,7 @@ never run — treat its first run as part of the work, not as a regression check
 | No directors | SWIG's Node-API backend generates none, so `PdaCallback` cannot be subclassed — the same limitation R has. PDA's built-in models are unaffected. |
 | No Promises | Everything is synchronous. Use a `worker_thread`. |
 | Not the browser | A native addon for Node. WASM is a separate question; PRD-016 records the cost. |
-| shared_ptr lifetime | See [shared_ptr design](/shared-ptr-design.md). |
+| shared_ptr lifetime | See [shared_ptr design](/bindings/shared-ptr-design.md). |
 | `std::set` unsupported | `SetInt32` is an unused template — nothing in the wrapped API returns or takes a `std::set`, so this costs nothing today. |
 
 # Also worth knowing

@@ -1177,7 +1177,7 @@
   so **use at least 100 replicates**. States must be ordered canonically before
   summarising or the spread measures label switching instead of uncertainty.
 
-- **PRD-011 rewritten** as `PRDs/PRD-011-photon-hmm.md` (Done), replacing
+- **PRD-011 rewritten** as `okf/prds/PRD-011-photon-hmm.md` (Done), replacing
   `PRD-011-physics-aware-h2mm.md`. The old framing -- "make H2MM physics-aware"
   -- was the source of most of its difficulties, and several premises were
   contradicted by measurement. Corrected: tttrlib owns MAP/Gibbs/`evaluate` and

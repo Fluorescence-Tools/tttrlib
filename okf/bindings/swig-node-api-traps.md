@@ -102,7 +102,7 @@ what it is not.
 
 | Fact | Consequence |
 |---|---|
-| `javascript/napi/` ships no `boost_shared_ptr.i`, `std_set.i`, `std_list.i`, `std_wstring.i` | `%shared_ptr` and those templates must be guarded or supplied — see [shared_ptr design](/shared-ptr-design.md) |
+| `javascript/napi/` ships no `boost_shared_ptr.i`, `std_set.i`, `std_list.i`, `std_wstring.i` | `%shared_ptr` and those templates must be guarded or supplied — see [shared_ptr design](/bindings/shared-ptr-design.md) |
 | `std_vector.i` / `std_map.i` wrap containers as opaque proxies | Conversions to TypedArray / plain object are hand-written in `ext/js/jsarrays.i` |
 | `SWIG_Object` is `Napi::Value`; `env` is in scope in typemaps | `SWIG_exception_fail` works *inside* typemaps, unlike in `%extend` bodies |
 | `SWIG_NAPI_AppendOutput` turns an Undefined result into a one-element Array | A single argout must be assigned directly, or `tttr.macroTimes()` returns `[array]` instead of `array` |

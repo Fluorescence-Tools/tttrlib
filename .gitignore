@@ -23,9 +23,22 @@ venv
 !bin/tttrlib
 
 # Local planning and agent state
-PRDs/
 PLANS/
 .omx/
+
+# AI coding tools (assistant state, caches, local config)
+.claude/
+.cursor/
+.aider*
+.codeium/
+.continue/
+.copilot*
+.gemini*
+.crush/
+.windsurf/
+.tabnine*
+.idx/
+.zed/
 
 # Windows artifacts
 nul

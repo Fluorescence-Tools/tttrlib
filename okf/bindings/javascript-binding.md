@@ -46,7 +46,7 @@ guards the whole needs.
 | PDA, decay convolution, decay fits | yes |
 | Photon simulator | yes |
 | DataStore, CSV, histograms, registry, TIFF | yes |
-| Columnar HDF5 (`Hdf5Table.i`) | **no** — see [open items](/open-items.md) |
+| Columnar HDF5 (`Hdf5Table.i`) | **no** — see [open items](/bindings/open-items.md) |
 
 # Layout
 
@@ -98,11 +98,11 @@ without a rebuild — the reason this targets `-napi` rather than the V8 backend
 
 # Related
 
-* [SWIG Node-API traps](/swig-node-api-traps.md) — what cost time, worth reading
+* [SWIG Node-API traps](/bindings/swig-node-api-traps.md) — what cost time, worth reading
   before touching `ext/js/*.i`
-* [shared_ptr design](/shared-ptr-design.md) — why it is not SWIG's version
-* [Open items](/open-items.md) — what is not done
-* [PTU web viewer](/ptu-webapp.md) — the reference application
+* [shared_ptr design](/bindings/shared-ptr-design.md) — why it is not SWIG's version
+* [Open items](/bindings/open-items.md) — what is not done
+* [PTU web viewer](/bindings/ptu-webapp.md) — the reference application
 
 [^prd-016]: PRD-016 — JavaScript bindings via SWIG Node-API
 [^swig-napi]: SWIG 4.2 JavaScript (Node-API) documentation
