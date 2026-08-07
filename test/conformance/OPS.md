@@ -304,3 +304,93 @@ file.
 `hdf5.write` writes with the library default mode (update) and no compression;
 a case that needs truncate says so with `hdf5.write_mode`, which does not exist —
 add it only when a case genuinely needs it.
+
+## `pto.*`
+
+The container, and PRD-020's targeted reads.
+
+| op | on | args | result |
+|---|---|---|---|
+| `pto.create` | — | `[path, title]` | file handle, open for writing |
+| `pto.open` | — | `[path]` | file handle, read-only |
+| `pto.close` | file | — | — |
+| `pto.commit` | file | — | boolean |
+| `pto.add_file` | file | `[kind, encoding, name, path]` | integer uid |
+| `pto.add_store` | file | `[kind, name, $store]` | integer uid |
+| `pto.n_objects` | file | — | integer |
+| `pto.names` / `pto.kinds` | file | — | string list, in object order |
+| `pto.size_of` | file | `[$uid]` | integer — payload bytes |
+| `pto.read_text` | file | `[$uid, at, n]` | string |
+| `pto.store_columns` / `pto.store_groups` | file | `[$uid]` | string list |
+| `pto.read_store` | file | `[$uid, [columns], first_row, n_rows]` | store handle |
+| `pto.build_cues` | file | `[$uid, spacing]` | integer — cues built |
+| `pto.cue_events` | file | `[$uid]` | list of integers |
+| `pto.events` | — | `[path, selector, first, n]` | TTTR handle |
+
+**A uid is random**, so it is raw material everywhere it appears: bound, passed
+on, never expected. What a case compares is a name, a count, a column, or text.
+
+It is 53 random bits rather than 64 *because* of this suite. R and JavaScript
+represent every integer as a double, so a wider uid comes back from those two
+runners as a different number and cannot be handed back to the call that
+produced it. See `random_uid` in `modules/io/pto/src/io_pto.cpp`.
+
+`pto.read_text` decodes the payload bytes as **latin-1** — the one text encoding
+that round-trips an arbitrary octet in all four languages, so a case can pin a
+byte range without four different bytes-to-string conventions getting in the
+way. An empty column list in `pto.read_store` means every column, and `n_rows`
+of 0 means to the end; that is the library's own convention, not the runner's.
+
+`pto.build_cues` raises when it builds none, so a case that expects an object to
+be indexable says so by not passing `throws`.
+
+## `stream.*`
+
+Decoding a buffer of undecoded records, and reading a container in pieces
+(PRD-021).
+
+| op | on | args | result |
+|---|---|---|---|
+| `tttr.new` | — | — | an empty TTTR handle, to decode into |
+| `stream.n_records` | — | `[path, container_type]` | integer — records, without decoding one |
+| `stream.record_type` | — | `[path, container_type]` | integer — the record encoding |
+| `stream.ranged` | — | `[path, container_type]` | boolean — readable in pieces? |
+| `stream.record_name` | — | `[record_type]` | string, e.g. `"SPC-130"` |
+| `stream.record_bytes` | — | `[record_type]` | integer — 0 when there is no fixed width |
+| `stream.can_decode` | — | `[record_type]` | boolean |
+| `stream.read_records` | — | `[path, container_type, first, n]` | record buffer (bytes) |
+| `stream.state` | — | — | a decode state handle |
+| `stream.overflows` | state | — | integer — macro time overflows counted so far |
+| `stream.decode` | tttr | `[$buffer, record_type, $state]` | integer — events appended |
+| `stream.events` | — | `[path, container_type, first, n]` | TTTR handle, decoded |
+| `stream.apply_channels` | tttr | `[container_type]` | — |
+
+**The container is an integer here, not a name** — unlike `tttr.open`, which
+takes `"SPC-130"`. These ops are about a container's *record stream* rather than
+about opening one, and the record-type constants the same cases carry are
+integers too, so one convention beats two. The registry publishes the id.
+
+`stream.read_records` yields a **byte buffer**, and the element ops (`len`,
+`nth`) work on it. It is deliberately not widened to a numeric array: a whole
+container is millions of bytes and `stream.decode` takes bytes anyway.
+
+A chunked decode is written out as steps — two `stream.read_records` and two
+`stream.decode` sharing one `stream.state` — rather than hidden behind an op
+that loops. The claim being tested is that *the library does not have to own the
+loop*, so an op that owned it would be testing the runner.
+
+## `bhset.*`
+
+The whole Becker & Hickl `.set` sidecar (PRD-021 part 3), as opposed to the five
+imaging tags the photon reader folds into a header.
+
+| op | on | args | result |
+|---|---|---|---|
+| `bhset.n` | — | `[path]` | integer — parameters parsed |
+| `bhset.sections` | — | `[path]` | string list, ascending |
+| `bhset.value` | — | `[path, section, name]` | string |
+
+**Values are strings**, including the numeric-looking ones. A `.set` declares
+its own type per parameter and a parser that guesses is wrong about one field in
+a hundred and silent about it, so the interpretation is the caller's — which
+means the expectation in a case is `"6.554e-08"` and not `6.554e-08`.

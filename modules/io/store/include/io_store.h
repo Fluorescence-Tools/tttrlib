@@ -176,14 +176,77 @@ std::uint64_t write_store_at(std::FILE* f, const data::DataStore& store);
 void read_store_into(data::DataStore& out, const std::string& filename,
                      std::uint64_t base, std::uint64_t bytes);
 
+/*!
+ * \brief Both knobs at once: a column subset of a store embedded at `base`.
+ *
+ * The combination a container makes routine. A store inside a PTO is always the
+ * `base`/`bytes` case, so without this a caller reading one could never ask for
+ * a subset of its columns -- the single combination that matters was the single
+ * one the API omitted.
+ *
+ * \see pto_read_store, which is the reason this exists.
+ */
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes,
+                     const std::vector<std::string>& columns);
+
+/*!
+ * \brief A column subset **and** a row range of an embedded store.
+ *
+ * A row range is a projection along the other axis from a column subset, and
+ * costs the same kind of nothing: the directory records where every column's
+ * blob begins and how wide its elements are, so a range is an offset and a
+ * length per column. What a table viewer needs -- paging a million-row burst
+ * table otherwise decodes a million rows to show fifty.
+ *
+ * Fixed-width columns are exact. A bit-packed column (bool, and every validity
+ * mask) reads only the words its range falls in and is repacked to start at bit
+ * zero. A dictionary-encoded text column reads its codes for the range and the
+ * whole dictionary, which is small by construction.
+ *
+ * The range is applied to every table in the tree, each clamped to its own
+ * length: a group with fewer rows than `first_row` comes back empty rather than
+ * throwing. `n_rows` of 0 means "to the end".
+ *
+ * The store that comes back reports the range's length as its `n_rows`. It is a
+ * window, not the file: writing it back would write the window.
+ */
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes,
+                     const std::vector<std::string>& columns,
+                     std::uint64_t first_row, std::uint64_t n_rows);
+
 /// The column names of the root table, in order, without reading any data.
 /// Empty for a file that is not one of ours.
 std::vector<std::string> store_columns(const std::string& filename,
                                        const std::string& group = "");
 
+/// \see store_columns, for a store that begins `base` bytes into `filename`.
+std::vector<std::string> store_columns(const std::string& filename,
+                                       std::uint64_t base, std::uint64_t bytes,
+                                       const std::string& group = "");
+
 /// Every group path in the file, depth first, without reading any data.
 /// Empty for a file that is not one of ours.
 std::vector<std::string> store_groups(const std::string& filename);
+
+/// \see store_groups, for a store that begins `base` bytes into `filename`.
+std::vector<std::string> store_groups(const std::string& filename,
+                                      std::uint64_t base, std::uint64_t bytes);
+
+/*!
+ * \brief How many bytes the store reader has moved since the process started.
+ *
+ * A counter, because the claim "the reader did not touch those bytes" is not
+ * one a wall clock can make: a warm page cache measures the cache. Every read
+ * the store reader does goes through one place, and this is what that place
+ * counts. Test scaffolding, and cheap enough to leave in.
+ *
+ * Not synchronised, because nothing in this library reads a store from more
+ * than one thread. Take a difference around a single call and compare it to a
+ * difference around another; the absolute value means nothing.
+ */
+std::uint64_t store_bytes_read();
 
 }  // namespace io
 }  // namespace tttrlib

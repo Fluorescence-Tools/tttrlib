@@ -36,6 +36,11 @@ beside the ``.spc``. tttrlib reads it for ``SP_IMG_X`` / ``SP_IMG_Y`` /
 modules run their TAC independently of the macro clock, so the micro-time
 resolution genuinely cannot be derived from the 4-byte header.
 
+Those five are what a *photon reader* needs, and about four per cent of the
+file; the rest is the hardware configuration the measurement was taken with.
+:func:`tttrlib.read_set_file` and :func:`tttrlib.bh_set` return all of it --
+see :ref:`bh_set_full`.
+
 **SPC-600 must be named.** Its two modes cannot be distinguished from SPC-130 or
 SPC-QC by content, so tttrlib will not guess: pass the container name
 explicitly.

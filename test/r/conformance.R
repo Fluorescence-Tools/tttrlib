@@ -80,6 +80,15 @@ row_major <- function(x) {
 # keeps the type, which is exactly what is wanted.
 flat <- function(on) if (is.list(on)) unlist(on) else on
 
+# A wrapped VectorString as an R list of strings. SWIG-R converts a vector of
+# NUMBERS to a native R vector and a vector of anything else to a proxy, so this
+# is needed for the string ones and not for the byte ones.
+vector_strings <- function(v) {
+  n <- VectorString_size(v)
+  if (n == 0L) return(list())
+  as.list(vapply(0:(n - 1L), function(k) VectorString___getitem__(v, k), ""))
+}
+
 new_store_with <- function() DataStore()
 
 add_typed <- function(store, name, values, type_name) {
@@ -383,7 +392,10 @@ OPS <- list(
   "registry.categories" = function(on, a) as.list(as.character(registry_categories())),
 
   # -- files ----------------------------------------------------------------
-  "file.write_text" = function(on, a) writeLines(a[[2]], a[[1]]),
+  # cat(sep=""), not writeLines(): writeLines appends a newline, and the other
+  # three runners write the string's bytes and nothing else. A case that pins a
+  # byte range then reads one byte too many here and nowhere else.
+  "file.write_text" = function(on, a) cat(a[[2]], file = a[[1]], sep = ""),
 
   # -- hdf5 -----------------------------------------------------------------
   "hdf5.write" = function(on, a)
@@ -394,7 +406,154 @@ OPS <- list(
     s
   },
   "hdf5.groups" = function(on, a) as.list(as.character(hdf5_table_groups(a[[1]]))),
-  "hdf5.has" = function(on, a) hdf5_table_has(a[[1]], a[[2]])
+  "hdf5.has" = function(on, a) hdf5_table_has(a[[1]], a[[2]]),
+
+  # -- pto --------------------------------------------------------------------
+  #
+  # A uid arrives as an R numeric, which is a double -- exact only because PTO
+  # mints 53-bit uids, for this reason and JavaScript's. Do not round-trip a
+  # uid from an older container through here and expect it back.
+  "pto.create" = function(on, a) {
+    f <- PtoFile()
+    if (!PtoFile_create(f, a[[1]], a[[2]])) stop(PtoFile_error(f))
+    f
+  },
+  "pto.open" = function(on, a) {
+    f <- PtoFile()
+    if (!PtoFile_open(f, a[[1]], FALSE)) stop(PtoFile_error(f))
+    f
+  },
+  "pto.close" = function(on, a) PtoFile_close(on),
+  "pto.commit" = function(on, a) PtoFile_commit(on),
+  "pto.add_file" = function(on, a) {
+    uid <- PtoFile_add_file(on, a[[1]], a[[2]], a[[3]], a[[4]], 0)
+    if (uid == 0) stop(PtoFile_error(on))
+    uid
+  },
+  "pto.add_store" = function(on, a) {
+    uid <- pto_add_store(on, a[[1]], a[[2]], a[[3]], 0)
+    if (uid == 0) stop(PtoFile_error(on))
+    uid
+  },
+  "pto.n_objects" = function(on, a) PtoFile_n_objects(on),
+  # A std::vector of a wrapped struct stays an ExternalReference in R -- unlike
+  # a VectorString, which the R library coerces to a character vector -- so it
+  # is read through its size/__getitem__ accessors, and those are 0-based.
+  "pto.names" = function(on, a) {
+    v <- PtoFile_objects(on)
+    n <- PtoObjectVector_size(v)
+    if (n == 0L) list() else as.list(vapply(
+      0:(n - 1L), function(k) PtoObject_name_get(PtoObjectVector___getitem__(v, k)), ""))
+  },
+  "pto.kinds" = function(on, a) {
+    v <- PtoFile_objects(on)
+    n <- PtoObjectVector_size(v)
+    if (n == 0L) list() else as.list(vapply(
+      0:(n - 1L), function(k) PtoObject_kind_get(PtoObjectVector___getitem__(v, k)), ""))
+  },
+  "pto.size_of" = function(on, a) PtoObject_size_get(PtoFile_object(on, a[[1]])),
+  # latin-1: the one encoding that round-trips an arbitrary octet in all four
+  # runners, so a case can pin a byte range without four bytes-to-string rules.
+  "pto.read_text" = function(on, a) {
+    bytes <- as.raw(as.integer(PtoFile_read(on, a[[1]], a[[2]], a[[3]])))
+    if (length(bytes) == 0L) "" else rawToChar(bytes)
+  },
+  "pto.store_columns" = function(on, a)
+    as.list(as.character(pto_store_columns(on, a[[1]], ""))),
+  "pto.store_groups" = function(on, a)
+    as.list(as.character(pto_store_groups(on, a[[1]]))),
+  # The numbered overloads directly, because the generated `pto_read_store`
+  # dispatcher cannot be satisfied at all: it tests
+  # `extends(argtypes[4], '_p_std__vectorT_std__string_t')`, so it wants a
+  # wrapped VectorString -- and the typemap behind the wrapper it then calls is
+  # std_vector.i's, which does Rf_coerceVector(..., STRSXP) and fails with
+  # "cannot coerce type 'externalptr' to vector of type 'character'". A plain
+  # character vector satisfies the typemap and not the dispatcher; the proxy
+  # satisfies the dispatcher and not the typemap. Skipping the dispatcher is the
+  # only way through, and is the same class of SWIG-R codegen defect as the
+  # scoped-enum one noted in ext/r/tttrlib.i.
+  "pto.read_store" = function(on, a) {
+    out <- DataStore()
+    wanted <- as.character(unlist(a[[2]]))
+    if (a[[3]] != 0 || a[[4]] != 0)
+      pto_read_store__SWIG_2(on, a[[1]], out, wanted, a[[3]], a[[4]])
+    else if (length(wanted) > 0)
+      pto_read_store__SWIG_1(on, a[[1]], out, wanted)
+    else
+      pto_read_store__SWIG_0(on, a[[1]], out)
+    out
+  },
+  "pto.build_cues" = function(on, a) {
+    n <- PtoFile_build_cues(on, a[[1]], a[[2]])
+    if (n == 0) stop(PtoFile_error(on))
+    n
+  },
+  "pto.cue_events" = function(on, a) {
+    v <- PtoFile_cues(on, a[[1]])
+    n <- PtoCueVector_size(v)
+    if (n == 0L) list() else as.list(vapply(
+      0:(n - 1L), function(k) PtoCue_event_get(PtoCueVector___getitem__(v, k)), 0))
+  },
+  "pto.events" = function(on, a) {
+    t <- TTTR()
+    if (pto_read_events(paste0(a[[1]], "|", a[[2]]), a[[3]], a[[4]], t) == 0)
+      stop(paste("could not read events from", a[[1]]))
+    t
+  },
+
+  # -- record streams (PRD-021) -------------------------------------------------
+  # A record buffer comes back as an ordinary R vector, the same way
+  # PtoFile_read's payload does above -- so length() works on it and
+  # as.integer() feeds it straight back to decode_records, whose rarrays.i
+  # typemap coerces an INTSXP. That is why this runner needs no byte plumbing at
+  # all while Java needs a copy loop out of a VectorUint8 proxy.
+  "tttr.new" = function(on, a) TTTR(),
+  "stream.n_records" = function(on, a)
+    container_n_records(a[[1]], as.integer(a[[2]])),
+  "stream.record_type" = function(on, a)
+    ContainerRecords_record_type_get(container_records(a[[1]], as.integer(a[[2]]))),
+  "stream.ranged" = function(on, a)
+    ContainerRecords_ranged_get(container_records(a[[1]], as.integer(a[[2]]))),
+  "stream.record_name" = function(on, a) record_type_name(as.integer(a[[1]])),
+  "stream.record_bytes" = function(on, a) record_bytes(as.integer(a[[1]])),
+  "stream.can_decode" = function(on, a) record_type_is_decodable(as.integer(a[[1]])),
+  "stream.read_records" = function(on, a)
+    as.integer(container_read_records(a[[1]], a[[3]], a[[4]], as.integer(a[[2]]))),
+  "stream.state" = function(on, a) TTTRDecodeState(),
+  "stream.overflows" = function(on, a) TTTRDecodeState_overflow_counter_get(on),
+  "stream.decode" = function(on, a)
+    TTTR_decode_records(on, as.integer(a[[1]]), as.integer(a[[2]]), a[[3]]),
+  "stream.events" = function(on, a) {
+    t <- TTTR()
+    if (container_read_events(a[[1]], a[[3]], a[[4]], t, as.integer(a[[2]])) == 0)
+      stop(paste("could not read records from", a[[1]]))
+    t
+  },
+  "stream.apply_channels" = function(on, a)
+    TTTR_apply_container_channels(on, as.integer(a[[1]])),
+
+  # -- the Becker & Hickl ".set" sidecar (PRD-021) ------------------------------
+  "bhset.n" = function(on, a)
+    BhSetParameterVector_size(read_set_file(a[[1]])),
+  "bhset.sections" = function(on, a) {
+    v <- read_set_file(a[[1]])
+    n <- BhSetParameterVector_size(v)
+    if (n == 0L) return(list())
+    sections <- vapply(0:(n - 1L), function(k)
+      BhSetParameter_section_get(BhSetParameterVector___getitem__(v, k)), "")
+    as.list(sort(unique(sections)))
+  },
+  "bhset.value" = function(on, a) {
+    v <- read_set_file(a[[1]])
+    n <- BhSetParameterVector_size(v)
+    for (k in seq_len(n) - 1L) {
+      p <- BhSetParameterVector___getitem__(v, k)
+      if (BhSetParameter_section_get(p) == a[[2]] &&
+          BhSetParameter_name_get(p) == a[[3]])
+        return(BhSetParameter_value_get(p))
+    }
+    stop(paste0("no ", a[[2]], "/", a[[3]], " in ", a[[1]]))
+  }
 )
 
 # The eleven typed ds.add_*/ds.column_* ops differ only in the type name, so

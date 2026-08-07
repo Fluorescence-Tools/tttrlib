@@ -256,6 +256,9 @@ void write_node(BlobStream& out, Writer& dir, const data::DataStore& store) {
 
 // --- reading -----------------------------------------------------------------
 
+/// Every byte the store reader has moved. \see store_bytes_read.
+std::uint64_t g_bytes_read = 0;
+
 struct Blobs {
     std::FILE* f = nullptr;
     std::uint64_t file_bytes = 0;
@@ -271,6 +274,7 @@ struct Blobs {
         if (std::fseek(f, static_cast<long>(base + r.offset), SEEK_SET) != 0 ||
             std::fread(into, 1, static_cast<std::size_t>(r.bytes), f) != r.bytes)
             throw std::runtime_error("store file: could not read a column");
+        g_bytes_read += r.bytes;
     }
     std::vector<unsigned char> read(const BlobRef& r) const {
         std::vector<unsigned char> out(static_cast<std::size_t>(r.bytes));
@@ -291,17 +295,91 @@ struct ColumnFilter {
     }
 };
 
+/*!
+ * \brief Which rows to read, and how much of a column that turns out to be.
+ *
+ * A node applies this to its own length: a group shorter than `first` comes
+ * back empty rather than throwing, because the tree is one file and its tables
+ * need not agree on how long they are.
+ */
+struct RowRange {
+    bool everything = true;
+    std::uint64_t first = 0;
+    std::uint64_t count = 0;      ///< 0 with `everything` false means "to the end"
+
+    /// How many of `have` rows this range selects, and where it starts.
+    std::uint64_t take(std::uint64_t have) const {
+        if (everything) return have;
+        if (first >= have) return 0;
+        const std::uint64_t left = have - first;
+        return count == 0 || count > left ? left : count;
+    }
+    std::uint64_t start() const { return everything ? 0 : first; }
+};
+
+/// The part of a fixed-width blob that holds rows [first, first + n).
+BlobRef slice(const BlobRef& r, std::uint64_t first, std::uint64_t n,
+              std::size_t width) {
+    BlobRef s;
+    s.offset = r.offset + first * width;
+    s.bytes = n * width;
+    return s;
+}
+
+/*!
+ * \brief Bits [first, first + count) of a bit-packed blob, repacked from bit 0.
+ *
+ * Only the words the range falls in are read, which is the point -- but a range
+ * that does not start on a word boundary has to be shifted down, so the result
+ * is a new buffer rather than the file's own bytes.
+ */
+std::vector<std::uint64_t> read_bits(const Blobs& blobs, const BlobRef& r,
+                                     std::uint64_t first, std::uint64_t count) {
+    const std::size_t out_words = static_cast<std::size_t>((count + 63) / 64);
+    std::vector<std::uint64_t> out(out_words, 0);
+    if (count == 0) return out;
+
+    const std::uint64_t first_word = first / 64;
+    const std::uint64_t last_word = (first + count + 63) / 64;
+    const std::uint64_t have_words = r.bytes / 8;
+    if (first_word >= have_words) return out;
+    const std::uint64_t stop = last_word < have_words ? last_word : have_words;
+
+    BlobRef part;
+    part.offset = r.offset + first_word * 8;
+    part.bytes = (stop - first_word) * 8;
+    std::vector<std::uint64_t> raw(static_cast<std::size_t>(stop - first_word));
+    blobs.read(part, raw.data());
+
+    const unsigned shift = static_cast<unsigned>(first % 64);
+    for (std::size_t w = 0; w < out_words; w++) {
+        std::uint64_t lo = w < raw.size() ? raw[w] : 0;
+        std::uint64_t value = shift == 0 ? lo : (lo >> shift);
+        if (shift != 0 && w + 1 < raw.size()) value |= raw[w + 1] << (64 - shift);
+        out[w] = value;
+    }
+    // Whatever the last word carried past the end of the range is not part of
+    // it; a mask that kept those bits would report rows that were not asked for.
+    const unsigned tail = static_cast<unsigned>(count % 64);
+    if (tail != 0) out[out_words - 1] &= (1ULL << tail) - 1;
+    return out;
+}
+
 void read_node(Reader& dir, const Blobs& blobs, data::DataStore& store,
-               const ColumnFilter& want) {
+               const ColumnFilter& want, const RowRange& rows) {
     store.set_label(dir.str());
-    store.set_n_rows(static_cast<std::size_t>(dir.u64()));
+    const std::uint64_t node_rows = dir.u64();
+    const std::uint64_t take = rows.take(node_rows);
+    const std::uint64_t from = rows.start();
+    store.set_n_rows(static_cast<std::size_t>(take));
 
     const std::uint64_t row_bits = dir.u64();
     const BlobRef row_blob = dir.blob();
     if (row_bits > 0) {
-        std::vector<std::uint64_t> words(static_cast<std::size_t>(row_blob.bytes / 8));
-        blobs.read(row_blob, words.data());
-        store.set_row_mask_bits(words.data(), static_cast<std::size_t>(row_bits));
+        const std::uint64_t bits = rows.everything ? row_bits : take;
+        std::vector<std::uint64_t> words = read_bits(blobs, row_blob, from, bits);
+        if (bits > 0)
+            store.set_row_mask_bits(words.data(), static_cast<std::size_t>(bits));
     }
 
     const std::uint32_t n_columns = dir.u32();
@@ -320,38 +398,45 @@ void read_node(Reader& dir, const Blobs& blobs, data::DataStore& store,
         if (type == data::ColumnType::String) dict_blob = dir.blob();
         if (!want(name)) continue;
 
+        // A column's own length, not the node's: they agree in a file this
+        // library wrote, and clamping to both costs nothing if they ever do not.
+        const std::uint64_t got = rows.take(n);
+        const std::uint64_t at = rows.start() < n ? rows.start() : n;
+
         data::Column& column = store.column(store.add_column(name, type));
         if (type == data::ColumnType::Bool) {
-            std::vector<std::uint64_t> words(static_cast<std::size_t>(data_blob.bytes / 8));
-            blobs.read(data_blob, words.data());
-            column.set_bits(words.data(), static_cast<std::size_t>(n));
+            std::vector<std::uint64_t> words = read_bits(blobs, data_blob, at, got);
+            column.set_bits(words.data(), static_cast<std::size_t>(got));
         } else if (type == data::ColumnType::String) {
+            // The whole dictionary, whatever the range: it is the labels, not
+            // the rows, and is small by construction.
             const std::vector<unsigned char> raw = blobs.read(dict_blob);
             Reader d{raw.data(), raw.size(), 0};
             std::vector<std::string> dictionary(d.u32());
             for (std::string& s : dictionary) s = d.str();
             column.set_dictionary(dictionary);
-            std::vector<int> codes(static_cast<std::size_t>(n));
-            blobs.read(data_blob, codes.data());
-            column.set_codes(codes.data(), static_cast<int>(n));
+            std::vector<int> codes(static_cast<std::size_t>(got));
+            blobs.read(slice(data_blob, at, got, 4), codes.data());
+            column.set_codes(codes.data(), static_cast<int>(got));
         } else {
             // Straight into the column's own buffer. resize_uninitialized does
             // not fill it first, so nothing is written twice.
-            column.resize_uninitialized(static_cast<std::size_t>(n));
-            blobs.read(data_blob, column.data_ptr());
+            column.resize_uninitialized(static_cast<std::size_t>(got));
+            blobs.read(slice(data_blob, at, got, element_bytes(type)),
+                       column.data_ptr());
         }
 
         if (flags & kColumnHasMask) {
-            std::vector<std::uint64_t> words(static_cast<std::size_t>(mask_blob.bytes / 8));
-            blobs.read(mask_blob, words.data());
-            column.set_mask_bits(words.data(), static_cast<std::size_t>(mask_bits));
+            const std::uint64_t bits = rows.everything ? mask_bits : got;
+            std::vector<std::uint64_t> words = read_bits(blobs, mask_blob, at, bits);
+            column.set_mask_bits(words.data(), static_cast<std::size_t>(bits));
         }
     }
 
     const std::uint32_t n_groups = dir.u32();
     for (std::uint32_t g = 0; g < n_groups; g++) {
         const std::string name = dir.str();
-        read_node(dir, blobs, store.add_group(name), want);
+        read_node(dir, blobs, store.add_group(name), want, rows);
     }
 }
 
@@ -511,13 +596,30 @@ bool write_store(const std::string& filename, const data::DataStore& store) {
     return ok;
 }
 
-void read_store_into(data::DataStore& out, const std::string& filename) {
-    ColumnFilter want;
-    OpenStore file(filename);
+namespace {
+
+/*!
+ * \brief The one reader. Both knobs, both independent, both optional.
+ *
+ * The four public overloads are this call with two arguments set differently;
+ * they were four copies of these six lines until the one combination that
+ * mattered -- a column subset of a store embedded in a container -- turned out
+ * to be the one nobody had written down.
+ */
+void read_region(data::DataStore& out, const std::string& filename,
+                 std::uint64_t base, std::uint64_t bytes,
+                 const ColumnFilter& want, const RowRange& rows) {
+    OpenStore file(filename, base, bytes);
     Reader dir{file.directory.data(), file.directory.size(), 0};
     Blobs blobs{file.f.get(), file.file_bytes, file.base};
     out.release();
-    read_node(dir, blobs, out, want);
+    read_node(dir, blobs, out, want, rows);
+}
+
+}  // namespace
+
+void read_store_into(data::DataStore& out, const std::string& filename) {
+    read_region(out, filename, 0, 0, ColumnFilter(), RowRange());
 }
 
 void read_store_into(data::DataStore& out, const std::string& filename,
@@ -525,22 +627,41 @@ void read_store_into(data::DataStore& out, const std::string& filename,
     ColumnFilter want;
     want.everything = false;
     want.wanted = &columns;
-    OpenStore file(filename);
-    Reader dir{file.directory.data(), file.directory.size(), 0};
-    Blobs blobs{file.f.get(), file.file_bytes, file.base};
-    out.release();
-    read_node(dir, blobs, out, want);
+    read_region(out, filename, 0, 0, want, RowRange());
 }
 
 void read_store_into(data::DataStore& out, const std::string& filename,
                      std::uint64_t base, std::uint64_t bytes) {
-    ColumnFilter want;
-    OpenStore file(filename, base, bytes);
-    Reader dir{file.directory.data(), file.directory.size(), 0};
-    Blobs blobs{file.f.get(), file.file_bytes, file.base};
-    out.release();
-    read_node(dir, blobs, out, want);
+    read_region(out, filename, base, bytes, ColumnFilter(), RowRange());
 }
+
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes,
+                     const std::vector<std::string>& columns) {
+    ColumnFilter want;
+    want.everything = false;
+    want.wanted = &columns;
+    read_region(out, filename, base, bytes, want, RowRange());
+}
+
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     std::uint64_t base, std::uint64_t bytes,
+                     const std::vector<std::string>& columns,
+                     std::uint64_t first_row, std::uint64_t n_rows) {
+    ColumnFilter want;
+    // An empty list here means every column, not none: the row range is what
+    // the caller came for, and asking for a window of nothing is not a thing
+    // anyone means.
+    want.everything = columns.empty();
+    want.wanted = &columns;
+    RowRange rows;
+    rows.everything = false;
+    rows.first = first_row;
+    rows.count = n_rows;
+    read_region(out, filename, base, bytes, want, rows);
+}
+
+std::uint64_t store_bytes_read() { return g_bytes_read; }
 
 data::DataStore read_store(const std::string& filename) {
     data::DataStore out;
@@ -557,10 +678,11 @@ bool is_store_file(const std::string& filename) {
 }
 
 std::vector<std::string> store_columns(const std::string& filename,
+                                       std::uint64_t base, std::uint64_t bytes,
                                        const std::string& group) {
     std::vector<std::string> columns;
     try {
-        OpenStore file(filename);
+        OpenStore file(filename, base, bytes);
         Reader dir{file.directory.data(), file.directory.size(), 0};
         std::vector<std::string> paths;
         walk_paths(dir, std::string(), paths, &columns, group, group.empty());
@@ -570,16 +692,26 @@ std::vector<std::string> store_columns(const std::string& filename,
     return columns;
 }
 
-std::vector<std::string> store_groups(const std::string& filename) {
+std::vector<std::string> store_columns(const std::string& filename,
+                                       const std::string& group) {
+    return store_columns(filename, 0, 0, group);
+}
+
+std::vector<std::string> store_groups(const std::string& filename,
+                                      std::uint64_t base, std::uint64_t bytes) {
     std::vector<std::string> paths;
     try {
-        OpenStore file(filename);
+        OpenStore file(filename, base, bytes);
         Reader dir{file.directory.data(), file.directory.size(), 0};
         walk_paths(dir, std::string(), paths, nullptr, std::string(), false);
     } catch (const std::exception&) {
         return {};
     }
     return paths;
+}
+
+std::vector<std::string> store_groups(const std::string& filename) {
+    return store_groups(filename, 0, 0);
 }
 
 }  // namespace io

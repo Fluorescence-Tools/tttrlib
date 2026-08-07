@@ -198,9 +198,9 @@ def _tag(tttr, name, default=None):
 def test_the_container_declares_what_it_needs_to_be_told():
     """A .ttr carries neither its clock nor its laser nor its channel count.
 
-    Every other built-in container describes itself completely, and takes no
-    parameters at all. This one publishes what it needs as JSON Schema, in the
-    registry, so a caller in any language can ask instead of being told.
+    Every other built-in container describes itself completely. This one
+    publishes what it needs as JSON Schema, in the registry, so a caller in any
+    language can ask instead of being told.
     """
     entry = tttrlib.registry("file_container")["BRIGHTEYES-TTR"]
     schema = entry["params_schema"]
@@ -209,8 +209,16 @@ def test_the_container_declares_what_it_needs_to_be_told():
         "auto_calibrate_tdc", "drop_filler",
     }
     assert schema["properties"]["sysclk_MHz"]["default"] == 240.0
-    # and nothing else does
-    assert tttrlib.registry("file_container")["PTU"]["params_schema"] == {}
+    # and it is still the only one that cannot be READ without being told. The
+    # other schemas in the registry are ranges (PRD-021): optional, and about
+    # how much of a file to decode rather than about what the bytes mean.
+    for name, other in tttrlib.registry("file_container").items():
+        if name == "BRIGHTEYES-TTR":
+            continue
+        assert set(other["params_schema"].get("properties", {})) <= {
+            "first_record", "n_records", "first_event", "n_events",
+        }, f"{name} declares a parameter that is not a range"
+    assert not tttrlib.registry("file_container")["PHOTON-HDF5"]["params_schema"]
 
 
 def test_parameters_reach_the_reader(ttr_path):

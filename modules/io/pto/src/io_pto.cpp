@@ -341,18 +341,50 @@ private:
 /*!
  * \brief A fresh object identity: 53 random bits, never zero.
  *
- * 53 and not 64, and the reason is not the format -- ``FileUID`` is a uint64 and
- * stays one. It is that two of the four bindings represent every integer as a
- * double, so a uid above 2^53 comes back from JavaScript or R as a *different
- * number*, and an identity that does not survive being handed to the caller is
- * not an identity. 9x10^15 values leaves the collision probability for a
- * container with a million objects around 10^-4.
+ * \par Why 53 and not 64
+ * Nothing in EBML or Matroska asks for this. RFC 8794 makes an unsigned integer
+ * element a full ``uint64``, libebml's ``EbmlUInteger`` stores one and accepts
+ * any encoded size up to eight octets, and Matroska constrains its UIDs only
+ * with ``range: not 0`` -- mkvmerge mints full 64-bit random ones. A 53-bit
+ * value is simply a ``uint64`` that happens to be small, so this is a writer's
+ * choice the format permits and not a format change: ``FileUID`` is a uint64 on
+ * disk and a reader must treat it as one.
+ *
+ * The choice is about the bindings. R has no integer type at all beyond a
+ * 32-bit ``int`` -- its numeric IS a double -- and JavaScript's Number is one
+ * too, so a uid above 2\f$^{53}\f$ comes back from either as a *different
+ * number*, and an identity that changes on its way to the caller is not an
+ * identity.
+ *
+ * \par What it does not fix
+ * Only the uids this library mints. A conformant PTO written elsewhere may
+ * carry a full 64-bit ``FileUID``, and that one is still inexact in R. There is
+ * no lossless representation of a uint64 in base R, so nothing here can fix
+ * that; JavaScript could carry it as a BigInt if the ergonomic cost were ever
+ * judged worth it.
+ *
+ * \see unused_uid, which is what actually makes a uid unique. 53 bits leaves a
+ * birthday collision probability of ~6x10^-11 for a thousand objects, but a
+ * probability is not a guarantee and the file is the thing that has to be
+ * right.
  */
 std::uint64_t random_uid() {
     static std::mt19937_64 rng(std::random_device{}());
     std::uint64_t v = 0;
     while (v == 0) v = rng() >> 11;
     return v;
+}
+
+/// A uid no object in `slots` already has. \see Impl::fresh_uid.
+template <class Slots>
+std::uint64_t unused_uid(const Slots& slots) {
+    for (;;) {
+        const std::uint64_t v = random_uid();
+        bool taken = false;
+        for (std::size_t i = 0; i < slots.size(); i++)
+            if (slots[i].meta.uid == v) { taken = true; break; }
+        if (!taken) return v;
+    }
 }
 
 }  // namespace
@@ -638,7 +670,7 @@ struct PtoFile::Impl {
         if (!writable) { fail("opened read-only"); return 0; }
 
         Slot s;
-        s.meta.uid = random_uid();
+        s.meta.uid = unused_uid(slots);
         s.meta.kind = kind;
         s.meta.encoding = encoding;
         s.meta.name = name;
@@ -1640,7 +1672,7 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     if (!m.writable) { m.fail("opened read-only"); return 0; }
 
     PtoFile::Impl::Slot s;
-    s.meta.uid = random_uid();
+    s.meta.uid = unused_uid(m.slots);
     s.meta.kind = kind;
     s.meta.encoding = "dstore";
     s.meta.name = name;

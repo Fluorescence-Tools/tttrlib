@@ -1,0 +1,223 @@
+{
+  "area": "stream",
+  "doc": "PRD-021. Decoding a buffer of undecoded records, reading a container in pieces, and the whole Becker & Hickl \".set\" sidecar. All three existed inside the library and none of them was reachable: every decoder sat behind TTTR(filename), thirteen of the fourteen containers were all-or-nothing on read, and the sidecar parser was in no binding at all. Which is why these belong here rather than only in the Python suite -- the reason a downstream package re-implemented an SPC-130 decoder was that its language could not reach this one.",
+  "cases": [
+    {
+      "id": "stream.a_container_says_how_many_records_it_holds",
+      "doc": "Without decoding one. The count comes from the header and the file size, so it is available on a four-gigabyte file for the price of a few kilobytes -- and it is larger than the event count, because an overflow record is not an event.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "stream.n_records", "args": ["$data0", 2], "as": "n_records"},
+        {"op": "stream.record_type", "args": ["$data0", 2], "as": "record_type"},
+        {"op": "stream.ranged", "args": ["$data0", 2], "as": "ranged"},
+        {"op": "stream.record_name", "args": ["$record_type"], "as": "name"},
+        {"op": "stream.record_bytes", "args": ["$record_type"], "as": "width"},
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "whole"},
+        {"op": "tttr.size", "on": "whole", "as": "n_events"}
+      ],
+      "expect": {
+        "n_records": 299999,
+        "record_type": 7,
+        "ranged": true,
+        "name": "SPC-130",
+        "width": 4,
+        "n_events": 183657
+      }
+    },
+    {
+      "id": "stream.a_buffer_decodes_to_what_the_file_reader_produces",
+      "doc": "Criterion 1. The undecoded bytes of the whole container, handed to the decoder as a buffer, give the macro times, micro times and routing channels TTTR(file) gives.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "stream.read_records", "args": ["$data0", 2, 0, 0], "as": "buffer"},
+        {"op": "len", "on": "buffer", "as": "n_bytes"},
+        {"op": "tttr.new", "as": "decoded"},
+        {"op": "stream.state", "as": "state"},
+        {"op": "stream.decode", "on": "decoded", "args": ["$buffer", 7, "$state"], "as": "n_decoded"},
+        {"op": "tttr.size", "on": "decoded", "as": "n_events"},
+        {"op": "tttr.macro_times", "on": "decoded", "as": "macro"},
+        {"op": "sum", "on": "macro", "as": "macro_sum"},
+        {"op": "tttr.micro_times", "on": "decoded", "as": "micro"},
+        {"op": "sum", "on": "micro", "as": "micro_sum"},
+        {"op": "tttr.routing_channels", "on": "decoded", "as": "channels"},
+        {"op": "unique_sorted", "on": "channels", "as": "used_channels"},
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "whole"},
+        {"op": "tttr.macro_times", "on": "whole", "as": "ref_macro"},
+        {"op": "sum", "on": "ref_macro", "as": "ref_macro_sum"},
+        {"op": "tttr.micro_times", "on": "whole", "as": "ref_micro"},
+        {"op": "sum", "on": "ref_micro", "as": "ref_micro_sum"}
+      ],
+      "expect": {
+        "n_bytes": 1199996,
+        "n_decoded": 183657,
+        "n_events": 183657,
+        "macro_sum": 443406877425185,
+        "micro_sum": 242477881,
+        "used_channels": [0, 1, 8, 9],
+        "ref_macro_sum": 443406877425185,
+        "ref_micro_sum": 242477881
+      }
+    },
+    {
+      "id": "stream.the_state_carries_the_overflow_count_across_a_boundary",
+      "doc": "Criterion 2, and the only thing the decoder state exists for. A macro time overflow is a record of its own, so the second half of a stream decoded without the first half's overflow count comes back with every macro time short -- and nothing fails. Two chunks with the state, compared against the same records in one call: same events, same macro time sum. The loop is written out rather than hidden in the runner, because 'the library does not have to own the loop' is the claim being tested.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.new", "as": "chunked"},
+        {"op": "stream.state", "as": "state"},
+        {"op": "stream.read_records", "args": ["$data0", 2, 0, 100000], "as": "first"},
+        {"op": "stream.decode", "on": "chunked", "args": ["$first", 7, "$state"], "as": "n_first"},
+        {"op": "stream.read_records", "args": ["$data0", 2, 100000, 100000], "as": "second"},
+        {"op": "stream.decode", "on": "chunked", "args": ["$second", 7, "$state"], "as": "n_second"},
+        {"op": "stream.overflows", "on": "state", "as": "overflows"},
+        {"op": "tttr.size", "on": "chunked", "as": "n_chunked"},
+        {"op": "tttr.macro_times", "on": "chunked", "as": "chunked_macro"},
+        {"op": "sum", "on": "chunked_macro", "as": "chunked_sum"},
+        {"op": "last", "on": "chunked_macro", "as": "chunked_last"},
+        {"op": "tttr.new", "as": "one_call"},
+        {"op": "stream.state", "as": "fresh"},
+        {"op": "stream.read_records", "args": ["$data0", 2, 0, 200000], "as": "both"},
+        {"op": "stream.decode", "on": "one_call", "args": ["$both", 7, "$fresh"], "as": "n_one_call"},
+        {"op": "tttr.macro_times", "on": "one_call", "as": "one_call_macro"},
+        {"op": "sum", "on": "one_call_macro", "as": "one_call_sum"},
+        {"op": "last", "on": "one_call_macro", "as": "one_call_last"}
+      ],
+      "expect": {
+        "n_first": 58205,
+        "n_second": 62960,
+        "overflows": 767725,
+        "n_chunked": 121165,
+        "chunked_sum": 200386680763924,
+        "chunked_last": 3144531259,
+        "n_one_call": 121165,
+        "one_call_sum": 200386680763924,
+        "one_call_last": 3144531259
+      }
+    },
+    {
+      "id": "stream.a_record_type_that_cannot_be_decoded_from_a_buffer_declines",
+      "doc": "Criterion 3. Every registered record type is either reachable through the decoder or says by name that it is not. The ones that are not are not gaps in a table -- a BrightEyes word means nothing without the instrument's sample clock, and an SM stream interleaves two word widths -- so 'SM' is the answer, not 'record type 11'.",
+      "steps": [
+        {"op": "stream.can_decode", "args": [7], "as": "spc130"},
+        {"op": "stream.can_decode", "args": [4], "as": "hht3v2"},
+        {"op": "stream.can_decode", "args": [15], "as": "spcqc"},
+        {"op": "stream.can_decode", "args": [11], "as": "sm"},
+        {"op": "stream.can_decode", "args": [17], "as": "brighteyes"},
+        {"op": "stream.record_name", "args": [11], "as": "sm_name"},
+        {"op": "stream.record_name", "args": [17], "as": "brighteyes_name"},
+        {"op": "stream.record_bytes", "args": [9], "as": "spc600_4096_width"},
+        {"op": "stream.record_bytes", "args": [11], "as": "sm_width"}
+      ],
+      "expect": {
+        "spc130": true,
+        "hht3v2": true,
+        "spcqc": true,
+        "sm": false,
+        "brighteyes": false,
+        "sm_name": "SM",
+        "brighteyes_name": "BRIGHTEYES-TTR",
+        "spc600_4096_width": 6,
+        "sm_width": 0
+      }
+    },
+    {
+      "id": "stream.a_ptu_reads_in_pieces_too",
+      "doc": "Criterion 4 for a second container, and a different record layout: PicoQuant T3 counts overflows in the sync field rather than in a record of its own, so the state carries a different thing across the same boundary.",
+      "data": ["pq/ptu/pq_ptu_hh_t3.ptu"],
+      "steps": [
+        {"op": "stream.record_type", "args": ["$data0", 0], "as": "record_type"},
+        {"op": "stream.record_name", "args": ["$record_type"], "as": "name"},
+        {"op": "tttr.new", "as": "chunked"},
+        {"op": "stream.state", "as": "state"},
+        {"op": "stream.read_records", "args": ["$data0", 0, 0, 50000], "as": "first"},
+        {"op": "stream.decode", "on": "chunked", "args": ["$first", "$record_type", "$state"], "as": "n_first"},
+        {"op": "stream.read_records", "args": ["$data0", 0, 50000, 50000], "as": "second"},
+        {
+          "op": "stream.decode",
+          "on": "chunked",
+          "args": ["$second", "$record_type", "$state"],
+          "as": "n_second"
+        },
+        {"op": "tttr.macro_times", "on": "chunked", "as": "macro"},
+        {"op": "sum", "on": "macro", "as": "macro_sum"},
+        {"op": "last", "on": "macro", "as": "macro_last"},
+        {"op": "stream.events", "args": ["$data0", 0, 0, 100000], "as": "in_one_call"},
+        {"op": "tttr.macro_times", "on": "in_one_call", "as": "ref_macro"},
+        {"op": "sum", "on": "ref_macro", "as": "ref_sum"},
+        {"op": "last", "on": "ref_macro", "as": "ref_last"}
+      ],
+      "expect": {
+        "record_type": 4,
+        "name": "HHT3v2",
+        "n_first": 37667,
+        "n_second": 37669,
+        "macro_sum": 1314823869201,
+        "macro_last": 34664956,
+        "ref_sum": 1314823869201,
+        "ref_last": 34664956
+      }
+    },
+    {
+      "id": "stream.a_container_that_cannot_be_read_in_pieces_says_so",
+      "doc": "Criterion 4's other half. Photon-HDF5 stores decoded arrays rather than a record stream, so there is no record `first` to seek to. A named decline, not a silent full read -- the silent one is what a caller finds out about from a memory graph three months later. Container 0 (PTU) IS ranged and container 5 is not, and the decline is decided from the registry before the file is opened, which is why this case needs no Photon-HDF5 file and does not need the HDF5 build option either.",
+      "tmp": 1,
+      "steps": [
+        {"op": "file.write_text", "args": ["$tmp0", "not an HDF5 file"]},
+        {"op": "stream.ranged", "args": ["$tmp0", 5], "as": "ranged"},
+        {"op": "stream.read_records", "args": ["$tmp0", 5, 0, 10], "as": "refused", "throws": true}
+      ],
+      "expect": {"ranged": false, "refused": true}
+    },
+    {
+      "id": "stream.the_set_sidecar_parses_into_sections",
+      "doc": "PRD-021 part 3, on a sidecar the case writes itself so it runs everywhere rather than only where the reference data is. Four things are pinned that a hand-rolled parser gets wrong: the section a parameter came from, the two-letter group tag, the type letter the file declares, and a value containing a comma -- #SP splits on the FIRST and LAST comma, never on every one, because a path is a legal value. Parsing stops at BIN_PARA_BEGIN: what follows is a binary blob, and a line parser run over binary finds parameters that are not there.",
+      "tmp": 1,
+      "steps": [
+        {
+          "op": "file.write_text",
+          "args": [
+            "$tmp0",
+            "*IDENTIFICATION\n  ID        : SPC Setup Script File\n  Title     : synthetic\n*END\n\n*SETUP\n  SYS_PARA_BEGIN:\n  #PR [PR_PDEV,I,18]\n  #SP [SP_TAC_R,F,6.554e-08]\n  #SP [SP_ADC_RE,I,4096]\n  #SP [SP_IMG_X,I,256]\n  #SP [SP_SCF_FN,S,C:\\BHdata\\a,b.cfg]\n  #DI [DI_SCALE,I,0]\n  SYS_PARA_END:\n  TRACE_PARA_BEGIN:\n  #TR #0 [1,255,1,1]0]1,1,1,0]\n  #TR #1 [1,16711680,1,1]0]1,1,1,0]\n  TRACE_PARA_END:\n  BIN_PARA_BEGIN:\n  #SP [SP_NOT_A_PARAMETER,I,1]\n*END\n\n"
+          ]
+        },
+        {"op": "bhset.n", "args": ["$tmp0"], "as": "n_parameters"},
+        {"op": "bhset.sections", "args": ["$tmp0"], "as": "sections"},
+        {"op": "bhset.value", "args": ["$tmp0", "IDENTIFICATION", "ID"], "as": "identification"},
+        {"op": "bhset.value", "args": ["$tmp0", "SYS_PARA", "SP_TAC_R"], "as": "tac_range"},
+        {"op": "bhset.value", "args": ["$tmp0", "SYS_PARA", "SP_SCF_FN"], "as": "value_with_a_comma"},
+        {"op": "bhset.value", "args": ["$tmp0", "TRACE_PARA", "#1"], "as": "indexed_row"}
+      ],
+      "expect": {
+        "n_parameters": 10,
+        "sections": ["IDENTIFICATION", "SYS_PARA", "TRACE_PARA"],
+        "identification": "SPC Setup Script File",
+        "tac_range": "6.554e-08",
+        "value_with_a_comma": "C:\\BHdata\\a,b.cfg",
+        "indexed_row": "[1,16711680,1,1]0]1,1,1,0]"
+      }
+    },
+    {
+      "id": "stream.the_whole_set_sidecar_not_five_tags",
+      "doc": "Criterion 5, on a real SPCM sidecar. read_bh_set_file extracts SP_IMG_X, SP_IMG_Y, SP_PIX_CLK and, for SPC-QC, SP_TAC_R and SP_ADC_RE -- the right scope for a photon reader, and about four per cent of the file. The rest is the hardware configuration the measurement was taken with, and it is what a caller driving an SPC card wants.",
+      "data": ["bh/bh_spcqc004.set"],
+      "steps": [
+        {"op": "bhset.n", "args": ["$data0"], "as": "n_parameters"},
+        {"op": "bhset.sections", "args": ["$data0"], "as": "sections"},
+        {"op": "bhset.value", "args": ["$data0", "SYS_PARA", "SP_TAC_R"], "as": "tac_range"},
+        {"op": "bhset.value", "args": ["$data0", "SYS_PARA", "SP_ADC_RE"], "as": "adc_resolution"},
+        {"op": "bhset.value", "args": ["$data0", "SYS_PARA", "SP_IMG_X"], "as": "img_x"},
+        {"op": "bhset.value", "args": ["$data0", "SYS_PARA", "SP_CFD_LL"], "as": "cfd_lower_limit"},
+        {"op": "bhset.value", "args": ["$data0", "IDENTIFICATION", "ID"], "as": "identification"}
+      ],
+      "expect": {
+        "n_parameters": 207,
+        "sections": ["IDENTIFICATION", "SYS_PARA", "TRACE_PARA", "WIND_PARA"],
+        "tac_range": "6.554e-08",
+        "adc_resolution": "4096",
+        "img_x": "256",
+        "cfd_lower_limit": "-129.41176",
+        "identification": "SPC Setup Script File"
+      }
+    }
+  ]
+}

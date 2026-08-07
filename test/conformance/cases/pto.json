@@ -1,0 +1,137 @@
+{
+  "area": "pto",
+  "doc": "PTO, the PhoTon cOntainer, and the targeted reads of PRD-020. The container's whole claim on the read side is that reading part of it costs the part -- a column subset of an embedded table, a row window of one, a byte range of any payload, a range of events in a photon stream. That claim has to hold in every binding, because the reason a container exists is that the file outlives the program that wrote it.",
+  "cases": [
+    {
+      "id": "pto.objects_come_back_with_their_labels",
+      "doc": "The container round trip, reduced to something comparable: what went in, listed by name and kind after the file was closed and reopened.",
+      "tmp": 2,
+      "steps": [
+        {"op": "file.write_text", "args": ["$tmp1", "instrument bytes, all forty of them"]},
+        {"op": "pto.create", "args": ["$tmp0", "titration 03"], "as": "w"},
+        {"op": "ds.new", "as": "bursts"},
+        {"op": "ds.add_f64", "on": "bursts", "args": ["Tau", [1.0, 2.0, 3.0, 4.0]]},
+        {"op": "ds.add_i32", "on": "bursts", "args": ["n_photons", [10, 20, 30, 40]]},
+        {"op": "pto.add_store", "on": "w", "args": ["table", "bursts", "$bursts"], "as": "uid_table"},
+        {"op": "pto.add_file", "on": "w", "args": ["attachment", "raw", "run.raw", "$tmp1"], "as": "uid_raw"},
+        {"op": "pto.commit", "on": "w", "as": "committed"},
+        {"op": "pto.close", "on": "w"},
+        {"op": "pto.open", "args": ["$tmp0"], "as": "r"},
+        {"op": "pto.n_objects", "on": "r", "as": "n"},
+        {"op": "pto.names", "on": "r", "as": "names"},
+        {"op": "pto.kinds", "on": "r", "as": "kinds"},
+        {"op": "pto.close", "on": "r"}
+      ],
+      "expect": {"committed": true, "n": 2, "names": ["bursts", "run.raw"], "kinds": ["table", "attachment"]}
+    },
+    {
+      "id": "pto.a_column_subset_of_an_embedded_store",
+      "doc": "PRD-020 part 1. An embedded store is always a region of a bigger file, so before pto_read_store took a column list a caller could ask for a subset of a store's columns OR for a store inside a container, never both -- and the container only ever produces the second.",
+      "tmp": 1,
+      "steps": [
+        {"op": "pto.create", "args": ["$tmp0", ""], "as": "w"},
+        {"op": "ds.new", "as": "bursts"},
+        {"op": "ds.add_f64", "on": "bursts", "args": ["Tau", [1.5, 2.5, 3.5, 4.5, 5.5]]},
+        {"op": "ds.add_i32", "on": "bursts", "args": ["n_photons", [10, 20, 30, 40, 50]]},
+        {"op": "ds.add_u8", "on": "bursts", "args": ["channel", [0, 1, 0, 1, 0]]},
+        {"op": "pto.add_store", "on": "w", "args": ["table", "bursts", "$bursts"], "as": "uid"},
+        {"op": "pto.commit", "on": "w"},
+        {"op": "pto.close", "on": "w"},
+        {"op": "pto.open", "args": ["$tmp0"], "as": "r"},
+        {"op": "pto.store_columns", "on": "r", "args": ["$uid"], "as": "listed"},
+        {"op": "pto.store_groups", "on": "r", "args": ["$uid"], "as": "groups"},
+        {"op": "pto.read_store", "on": "r", "args": ["$uid", ["Tau", "channel"], 0, 0], "as": "part"},
+        {"op": "ds.column_names", "on": "part", "as": "got_columns"},
+        {"op": "ds.n_rows", "on": "part", "as": "rows"},
+        {"op": "ds.column_f64", "on": "part", "args": ["Tau"], "as": "tau"},
+        {"op": "sum", "on": "tau", "as": "tau_sum"},
+        {"op": "pto.close", "on": "r"}
+      ],
+      "expect": {
+        "listed": ["Tau", "n_photons", "channel"],
+        "groups": [],
+        "got_columns": ["Tau", "channel"],
+        "rows": 5,
+        "tau_sum": 17.5
+      },
+      "tolerance": {"tau_sum": 1e-12}
+    },
+    {
+      "id": "pto.a_row_window_of_an_embedded_store",
+      "doc": "PRD-020 part 3, and what a table viewer needs: paging a table used to decode all of it to show a page. The window is a projection along the other axis from a column subset, and dictionary-encoded text is the case that can be got wrong -- the codes are sliced and the dictionary is not.",
+      "tmp": 1,
+      "steps": [
+        {"op": "pto.create", "args": ["$tmp0", ""], "as": "w"},
+        {"op": "ds.new", "as": "t"},
+        {"op": "ds.add_f64", "on": "t", "args": ["v", [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]]},
+        {
+          "op": "ds.add_string",
+          "on": "t",
+          "args": ["label", ["a", "b", "c", "a", "b", "c", "a", "b", "c", "a"]]
+        },
+        {"op": "pto.add_store", "on": "w", "args": ["table", "t", "$t"], "as": "uid"},
+        {"op": "pto.commit", "on": "w"},
+        {"op": "pto.close", "on": "w"},
+        {"op": "pto.open", "args": ["$tmp0"], "as": "r"},
+        {"op": "pto.read_store", "on": "r", "args": ["$uid", [], 3, 4], "as": "page"},
+        {"op": "ds.n_rows", "on": "page", "as": "rows"},
+        {"op": "ds.column_f64", "on": "page", "args": ["v"], "as": "v"},
+        {"op": "to_list", "on": "v", "as": "values"},
+        {"op": "ds.column_strings", "on": "page", "args": ["label"], "as": "labels"},
+        {"op": "pto.close", "on": "r"}
+      ],
+      "expect": {"rows": 4, "values": [3.0, 4.0, 5.0, 6.0], "labels": ["a", "b", "c", "a"]},
+      "tolerance": {"values": 1e-12}
+    },
+    {
+      "id": "pto.a_byte_range_of_a_payload",
+      "doc": "PRD-020 part 2. Reading `n` bytes from `at` rather than the whole payload, including the short read past the end that a file read would also do -- an error there would make paging through a payload need the length first.",
+      "tmp": 2,
+      "steps": [
+        {"op": "file.write_text", "args": ["$tmp1", "0123456789abcdef"]},
+        {"op": "pto.create", "args": ["$tmp0", ""], "as": "w"},
+        {"op": "pto.add_file", "on": "w", "args": ["attachment", "raw", "blob.bin", "$tmp1"], "as": "uid"},
+        {"op": "pto.commit", "on": "w"},
+        {"op": "pto.close", "on": "w"},
+        {"op": "pto.open", "args": ["$tmp0"], "as": "r"},
+        {"op": "pto.size_of", "on": "r", "args": ["$uid"], "as": "size"},
+        {"op": "pto.read_text", "on": "r", "args": ["$uid", 0, 4], "as": "head"},
+        {"op": "pto.read_text", "on": "r", "args": ["$uid", 10, 3], "as": "middle"},
+        {"op": "pto.read_text", "on": "r", "args": ["$uid", 14, 100], "as": "short"},
+        {"op": "pto.read_text", "on": "r", "args": ["$uid", 400, 4], "as": "past_end"},
+        {"op": "pto.close", "on": "r"}
+      ],
+      "expect": {"size": 16, "head": "0123", "middle": "abc", "short": "ef", "past_end": ""}
+    },
+    {
+      "id": "pto.a_range_of_an_embedded_photon_stream",
+      "doc": "PRD-020 part 4. A real instrument file embedded in a container, indexed with cues, then read in the middle. Macro times are the check that matters: a decode starting at a cue has no idea how many overflows preceded it, and the cue's own macro time is the only thing that closes the gap.",
+      "data": ["bh/bh_spc132.spc"],
+      "tmp": 1,
+      "steps": [
+        {"op": "pto.create", "args": ["$tmp0", ""], "as": "w"},
+        {"op": "pto.add_file", "on": "w", "args": ["photons", "spc-130", "m001.spc", "$data0"], "as": "uid"},
+        {"op": "pto.commit", "on": "w"},
+        {"op": "pto.build_cues", "on": "w", "args": ["$uid", 50000], "as": "n_cues"},
+        {"op": "pto.cue_events", "on": "w", "args": ["$uid"], "as": "cue_events"},
+        {"op": "pto.commit", "on": "w"},
+        {"op": "pto.close", "on": "w"},
+        {"op": "pto.events", "args": ["$tmp0", "m001.spc", 100000, 500], "as": "part"},
+        {"op": "tttr.size", "on": "part", "as": "n"},
+        {"op": "tttr.macro_times", "on": "part", "as": "mt"},
+        {"op": "first", "on": "mt", "as": "first_macro_time"},
+        {"op": "last", "on": "mt", "as": "last_macro_time"},
+        {"op": "tttr.micro_times", "on": "part", "as": "ut"},
+        {"op": "sum", "on": "ut", "as": "micro_sum"}
+      ],
+      "expect": {
+        "n_cues": 4,
+        "cue_events": [0, 50000, 100000, 150000],
+        "n": 500,
+        "first_macro_time": 2613546542,
+        "last_macro_time": 2629510359,
+        "micro_sum": 638976
+      }
+    }
+  ]
+}

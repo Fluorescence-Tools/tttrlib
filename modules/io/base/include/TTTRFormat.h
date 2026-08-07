@@ -165,6 +165,20 @@ struct FileFormat {
      */
     std::string parameters_schema;
 
+    /*!
+     * \brief Whether this container can be read in pieces.
+     *
+     * True for the containers that are a header followed by fixed-width
+     * records, where record `first` is a seek away, and for PTO, which indexes
+     * its payloads. False everywhere else, and the false is the useful half: a
+     * caller asking for a range of a Photon-HDF5 or a FLIM LABS file gets a
+     * named decline rather than a silent full read.
+     *
+     * Declared here so it is discoverable through the registry, next to
+     * \ref parameters_schema, which is where the range is asked for.
+     */
+    bool ranged_reads = false;
+
     /// Record encodings valid inside this container. Empty means "any", which
     /// is true of Photon-HDF5: it stores decoded arrays, not records.
     std::vector<int> record_types;

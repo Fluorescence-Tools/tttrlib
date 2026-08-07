@@ -48,6 +48,12 @@
 %include "Channel.i"
 %include "BurstFilter.i"
 %include "BurstFeatureExtractor.i"
+/* Burst features: BVA and 2CDE. BurstFeature.i first -- BVA and TwoCDE derive
+   from it, and its %exception governs both. */
+%include "BurstFeature.i"
+%include "BVA.i"
+%include "TwoCDE.i"
+%include "NeuralNet.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
@@ -57,7 +63,18 @@
    without their declarations SWIG emits an unqualified `hist::Axis`. */
 %include "HistogramNd.i"
 %include "DataStore.i"
+/* CSV: reads and writes a DataStore, so it follows DataStore.i. */
+%include "CsvReader.i"
+%include "CsvWriter.i"
 %include "Hdf5Table.i"
+%include "StoreFile.i"
+%include "Pto.i"
+
+/* Decoding a buffer, reading a container in pieces, and the whole B&H
+   ".set" sidecar (PRD-021). RecordStream.i must follow TTTR.i and Pto.i:
+   it decodes into a TTTR and returns the raw bytes as a std::vector. */
+%include "RecordStream.i"
+%include "BhSet.i"
 
 /* Correlation of data */
 %include "Correlator.i"

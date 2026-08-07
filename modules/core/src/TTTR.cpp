@@ -6,6 +6,7 @@
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
+#include "TTTRStream.h"
 #include "PluginHost.h"
 #include "io_be.h"
 #include "io_fl.h"
@@ -1297,9 +1298,18 @@ void TTTR::backfill_cz_routing_channels() {
 if (is_verbose()) {
     std::clog << "-- Confocor3 channel: " << channel << std::endl;
 }
-    for(size_t i = 0; i < n_records_in_file; i++) {
+    // Over the events, not over the records in the file: every ConfoCor3 record
+    // is an event so the two agree for a whole-file read, and only the events
+    // exist at all for a stream decoded out of a buffer.
+    for(size_t i = 0; i < n_valid_events; i++) {
         routing_channels[i] = channel;
     }
+}
+
+void TTTR::apply_container_channels(int container_type) {
+    if (header == nullptr) return;
+    if (container_type == CZ_CONFOCOR3_CONTAINER) backfill_cz_routing_channels();
+    else if (container_type == BH_SPCQC_CONTAINER) compact_spcqc_routing_channels();
 }
 
 /*!
@@ -1346,7 +1356,9 @@ static bool detect_sf_ht3_records(std::FILE* fp, size_t records_begin) {
 }
 
 int TTTR::read_records_file(const char *fn, int container_type,
-                            std::uint64_t base, std::uint64_t region_bytes) {
+                            std::uint64_t base, std::uint64_t region_bytes,
+                            std::uint64_t records_at, std::uint64_t records_end,
+                            bool decode) {
     fp = open_file(std::string(fn), "rb");
     if (fp == nullptr) return 0;
     header = new TTTRHeader(fp, container_type, false, base);
@@ -1373,13 +1385,24 @@ if (is_verbose()) {
             header->set_tttr_record_type(tttr_record_type);
         }
     }
+    // A cue names a byte offset inside the stream, so the first record is not
+    // always the one after the header.
+    if (records_at != 0) fp_records_begin = static_cast<size_t>(records_at);
+    const std::uint64_t stop = records_end != 0
+            ? records_end
+            : (region_bytes == 0 ? 0 : base + region_bytes);
     n_records_in_file = get_number_of_records_by_file_size(
-            fp, header->header_end, header->get_bytes_per_record(),
-            region_bytes == 0 ? 0 : base + region_bytes);
+            fp, fp_records_begin, header->get_bytes_per_record(),
+            static_cast<size_t>(stop));
 if (is_verbose()) {
     std::clog << "-- TTTR record type: " << tttr_record_type << std::endl;
     std::clog << "-- TTTR number of records: " << n_records_in_file << std::endl;
 }
+    if (!decode) {
+        fclose(fp);
+        fp = nullptr;
+        return 1;
+    }
     allocate_memory_for_records(n_records_in_file);
     read_records();
     fclose(fp);
@@ -1405,6 +1428,32 @@ int TTTR::read_embedded(const char *fn, int container_type,
         shrink_to_fit();
     }
     return ok;
+}
+
+int TTTR::read_embedded_range(const char *fn, int container_type,
+                              unsigned long long base, unsigned long long bytes,
+                              unsigned long long records_at,
+                              unsigned long long records_end,
+                              const std::string& set_text) {
+    filename = fn;
+    tttr_container_type = container_type;
+    bh_set_text = set_text;
+    const int ok = read_records_file(fn, container_type, base, bytes,
+                                     records_at, records_end);
+    if (ok) {
+        find_used_routing_channels();
+        shrink_to_fit();
+    }
+    return ok;
+}
+
+int TTTR::open_embedded(const char *fn, int container_type,
+                        unsigned long long base, unsigned long long bytes,
+                        const std::string& set_text) {
+    filename = fn;
+    tttr_container_type = container_type;
+    bh_set_text = set_text;
+    return read_records_file(fn, container_type, base, bytes, 0, 0, false);
 }
 
 int TTTR::read_file(const char *fn, int container_type) {
@@ -1490,7 +1539,33 @@ if (is_verbose()) {
         // formats own 0-999 permanently, so the range is the dispatch.
         read_plugin_file(fn, container_type);
     } else {
-        read_records_file(fn, container_type);
+        // A record range, through the reader parameters rather than through a
+        // constructor: TTTR(spec, first, n) is ambiguous with
+        // TTTR(const char*, int, bool). PTO hit the same wall (PRD-020).
+        std::uint64_t first_record = 0, n_records = 0;
+        if (tttr_container_parameters.find_first_not_of(" \t\r\n") != std::string::npos) {
+            const auto j = nlohmann::json::parse(tttr_container_parameters, nullptr, false);
+            if (j.is_object()) {
+                first_record = j.value("first_record", std::uint64_t(0));
+                n_records = j.value("n_records", std::uint64_t(0));
+            }
+        }
+        if (first_record != 0 || n_records != 0) {
+            // two opens: a record width has to be known before a record range
+            // is a byte range. kilobytes, against the file that prompted this
+            const auto info = tttrlib::container_records(fn, container_type);
+            if (!info.ranged || info.bytes_per_record == 0) {
+                std::cerr << "-- ERROR: " << info.reason << std::endl;
+                return 0;
+            }
+            const std::uint64_t begin =
+                    info.records_begin + first_record * info.bytes_per_record;
+            const std::uint64_t end =
+                    n_records == 0 ? 0 : begin + n_records * info.bytes_per_record;
+            read_records_file(fn, container_type, 0, 0, begin, end);
+        } else {
+            read_records_file(fn, container_type);
+        }
     }
 
     // A reader allocates for the record count in the file and then finds fewer
@@ -1661,11 +1736,14 @@ if (is_verbose()) {
 }
 
 /*!
- * Runtime-to-compile-time dispatch for record decoding: selects the
- * process_records_batch specialization for a record type.
- * @return false if the record type is unknown
+ * The record decode, plus the one line of diagnostics this file wants from it.
+ *
+ * The dispatch itself moved to TTTRRecordReader.h so a caller that walks a
+ * record stream without materialising it -- the PTO cue builder -- uses the
+ * same decode rather than a second copy of a fifteen-case switch. It stays
+ * silent there, because that caller reports through its own error channel.
  */
-static bool dispatch_process_records_batch(
+static bool decode_batch_or_complain(
         int record_type,
         const signed char* buffer,
         size_t num_records,
@@ -1677,32 +1755,13 @@ static bool dispatch_process_records_batch(
         signed char* event_types,
         size_t& valid_count
 ) {
-    #define TTTRLIB_CASE_PROCESS(RT) \
-        case RT: process_records_batch<RT>( \
-            buffer, num_records, bytes_per_record, overflow_counter, \
-            macro_times, micro_times, routing_channels, event_types, \
-            valid_count); return true;
-    switch(record_type) {
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT3)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT2)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v1)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v2)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v1)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v2)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T3)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T2)
-        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_SF_HT3)
-        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC130)
-        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X04)
-        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X06)
-        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_256)
-        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_4096)
-        TTTRLIB_CASE_PROCESS(CZ_RECORD_TYPE_CONFOCOR3)
-        default:
-            std::cerr << "ERROR: Unsupported TTTR record type: " << record_type << std::endl;
-            return false;
-    }
-    #undef TTTRLIB_CASE_PROCESS
+    if (dispatch_process_records_batch(record_type, buffer, num_records,
+                                       bytes_per_record, overflow_counter,
+                                       macro_times, micro_times, routing_channels,
+                                       event_types, valid_count))
+        return true;
+    std::cerr << "ERROR: Unsupported TTTR record type: " << record_type << std::endl;
+    return false;
 }
 
 // Optimized template-dispatched record reading
@@ -1767,7 +1826,7 @@ void TTTR::read_records(
             unsigned long long* temp_ptr = temp_macro_buffer - events_before;
             
             // Template dispatch based on record type for compile-time optimization
-            if (!dispatch_process_records_batch(
+            if (!decode_batch_or_complain(
                     tttr_record_type,
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
                     temp_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events)) {
@@ -1813,7 +1872,7 @@ void TTTR::read_records(
             number_of_objects = fread(tmp, bytes_per_record, adjusted_chunk, fp);
             
             // Template dispatch based on record type for compile-time optimization
-            if (!dispatch_process_records_batch(
+            if (!decode_batch_or_complain(
                     tttr_record_type,
                     tmp, number_of_objects, bytes_per_record, overflow_counter,
                     macro_ptr, micro_ptr, routing_ptr, event_ptr, n_valid_events)) {
@@ -3410,6 +3469,59 @@ void TTTR::append(
                 macro_time_offset
         );
     }
+}
+
+std::size_t TTTR::decode_records(
+        unsigned char* records, int n_bytes,
+        int record_type,
+        TTTRDecodeState* state
+){
+    if (!record_type_is_decodable(record_type)) {
+        throw std::invalid_argument(
+                "decode_records: " + record_type_name(record_type) +
+                " cannot be decoded from a buffer alone");
+    }
+    const std::size_t width = record_bytes(record_type);
+    if (records == nullptr || n_bytes <= 0) return 0;
+    const std::size_t n_rec = (std::size_t) n_bytes / width;
+    if (n_rec == 0) return 0;
+
+    // the decoder writes 64-bit macro times into a column the compressed form
+    // does not have; expand first, exactly as append_events does
+    if (macro_time_compression_enabled) decompress_macro_times();
+
+    const std::size_t before = n_valid_events;
+    reallocate_memory_for_records(before + n_rec, false);
+
+    // no state: a stream of its own. right for one buffer, wrong for two.
+    TTTRDecodeState standalone;
+    TTTRDecodeState* s = state != nullptr ? state : &standalone;
+
+    std::uint64_t overflow = s->overflow_counter;
+    // process_records_batch writes at [valid_count], so this is the append point
+    std::size_t valid = before;
+    if (!dispatch_process_records_batch(
+            record_type, (const signed char*) records, n_rec, width, overflow,
+            macro_times, micro_times, routing_channels, event_types, valid)) {
+        throw std::invalid_argument(
+                "decode_records: no decoder for " + record_type_name(record_type));
+    }
+
+    s->overflow_counter = overflow;
+    s->n_records += n_rec;
+    s->n_events += valid - before;
+
+    n_valid_events = valid;
+    n_records_read += n_rec;
+    overflow_counter = overflow;
+    // What the object holds is now known, and a writer asked to save it needs
+    // to be told. Only set when nothing said otherwise, so decoding a buffer
+    // into a TTTR read from a file cannot relabel the file's records.
+    if (tttr_record_type < 0) {
+        tttr_record_type = record_type;
+        if (header != nullptr) header->set_tttr_record_type(record_type);
+    }
+    return valid - before;
 }
 
 void TTTR::append_event(

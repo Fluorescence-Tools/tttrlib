@@ -21,6 +21,32 @@ namespace {
  * with each of them, so a divergence is a test failure rather than a format
  * that quietly stops being recognised.
  */
+/*!
+ * \brief The range parameters every fixed-width record stream accepts.
+ *
+ * One string rather than seven, because the answer is the same for all of
+ * them: records are a fixed width, so record `first` is a seek. Declared as a
+ * schema like every other reader parameter, so a caller discovers that a
+ * container can be read in pieces instead of being told.
+ *
+ * Records, not events: how many records a container holds is known from its
+ * size without decoding a single one, and how many *events* is not.
+ */
+const char* const kRecordRangeSchema = R"({
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "first_record": {
+      "type": "integer", "title": "First record", "default": 0, "minimum": 0,
+      "description": "Skip this many records before decoding. Macro times then count from that record, because the overflow count there is not in the records -- see container_read_records for the composition that keeps them absolute."
+    },
+    "n_records": {
+      "type": "integer", "title": "Records to read", "default": 0, "minimum": 0,
+      "description": "How many records to decode, or 0 for all of them from first_record on."
+    }
+  }
+})";
+
 std::vector<FileFormat> builtin_formats() {
     std::vector<FileFormat> f;
 
@@ -202,6 +228,29 @@ std::vector<FileFormat> builtin_formats() {
     itt1.record_types = {FL_RECORD_TYPE_ITT1};
     itt1.default_record_type = FL_RECORD_TYPE_ITT1;
     f.push_back(itt1);
+
+    // The containers that are a header followed by fixed-width records. For
+    // these, and only these, record `first` is a seek rather than a scan, so
+    // they can be read in pieces. Set here in one place rather than on each
+    // format above, so the list is readable as a list -- and so the formats
+    // that are NOT on it (Photon-HDF5, SM, Photonscore, BrightEyes, FLIM LABS)
+    // are visibly absent rather than each missing a line.
+    for (auto& fmt : f) {
+        switch (fmt.container_type) {
+            case PQ_PTU_CONTAINER:
+            case PQ_HT3_CONTAINER:
+            case BH_SPC130_CONTAINER:
+            case BH_SPC600_256_CONTAINER:
+            case BH_SPC600_4096_CONTAINER:
+            case CZ_CONFOCOR3_CONTAINER:
+            case BH_SPCQC_CONTAINER:
+                fmt.ranged_reads = true;
+                fmt.parameters_schema = kRecordRangeSchema;
+                break;
+            default:
+                break;
+        }
+    }
 
     for (auto& fmt : f) {
         if (fmt.summary.empty()) fmt.summary = "TTTR container: " + fmt.label;

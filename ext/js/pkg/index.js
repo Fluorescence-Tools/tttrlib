@@ -478,6 +478,199 @@ if (typeof native.write_hdf5_table === 'function') {
 }
 
 // ---------------------------------------------------------------------------
+// The native store file, and PTO -- the container it goes inside
+// ---------------------------------------------------------------------------
+if (typeof native.read_store_into === 'function') {
+  /**
+   * Read a native `.dstore` file back into a DataStore. Mirrors Python's
+   * loadStore(): one read per column, straight into the column's own buffer.
+   *
+   * @param {string[]=} columns only these, if given. The file's directory says
+   *   where each one is, so the rest are never touched.
+   */
+  exported.loadStore = function (filename, columns = undefined) {
+    const store = new native.DataStore();
+    if (columns === undefined) native.read_store_into(store, filename);
+    else native.read_store_into(store, filename, columns.map(String));
+    return store;
+  };
+
+  /** Write a DataStore to a native `.dstore` file. \see loadStore. */
+  exported.saveStore = (filename, store) => native.write_store(filename, store);
+
+  /**
+   * Read a store that begins `base` bytes into a file -- one embedded in a PTO
+   * container, say. `bytes` of 0 means to the end of the file.
+   */
+  exported.loadStoreRegion = function (filename, base, bytes, opts = {}) {
+    const { columns, firstRow = 0, nRows = 0 } = opts;
+    const store = new native.DataStore();
+    const names = (columns ?? []).map(String);
+    if (firstRow || nRows)
+      native.read_store_into(store, filename, base, bytes, names, firstRow, nRows);
+    else if (names.length) native.read_store_into(store, filename, base, bytes, names);
+    else native.read_store_into(store, filename, base, bytes);
+    return store;
+  };
+}
+
+if (typeof native.pto_read_store === 'function') {
+  /**
+   * Read an embedded `dstore` object back as a DataStore.
+   *
+   * The container's whole point on the read side: a store inside a `.pto` is a
+   * region of a bigger file, and its directory says where every column and
+   * every row of every column is. Two columns of a four-gigabyte table costs
+   * two seeks; fifty rows of a million-row burst table costs fifty rows.
+   *
+   * @param {string[]=} opts.columns only these columns.
+   * @param {number=} opts.firstRow skip this many rows of every table.
+   * @param {number=} opts.nRows how many to read, or 0 for all of them on.
+   */
+  exported.ptoStore = function (file, uid, opts = {}) {
+    const { columns, firstRow = 0, nRows = 0 } = opts;
+    const store = new native.DataStore();
+    const names = (columns ?? []).map(String);
+    if (firstRow || nRows) native.pto_read_store(file, uid, store, names, firstRow, nRows);
+    else if (names.length) native.pto_read_store(file, uid, store, names);
+    else native.pto_read_store(file, uid, store);
+    return store;
+  };
+
+  /**
+   * Read a range of events out of a photon object in a container.
+   *
+   *   ptoEvents('run.pto|m001.ptu', 1_000_000, 1000)
+   *
+   * With cues built over the object (`PtoFile#build_cues`) the decode starts at
+   * the nearest cue at or before `firstEvent`; without them the payload is
+   * decoded whole and sliced, which is correct and no faster than opening it.
+   */
+  exported.ptoEvents = function (spec, firstEvent = 0, nEvents = 0) {
+    const out = new native.TTTR();
+    if (!native.pto_read_events(spec, firstEvent, nEvents, out))
+      throw new Error(`pto_read_events: could not read events from ${spec}`);
+    return out;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Record streams: decoding a buffer, and reading a container in pieces
+// ---------------------------------------------------------------------------
+//
+// The JavaScript half of RecordStream.i's %pythoncode. `container_read_records`
+// already hands back a Uint8Array and `decode_records` already takes one, so
+// these are about the loop and the two after-the-last-chunk steps, not about
+// marshalling.
+if (typeof native.container_records === 'function') {
+  /**
+   * Decode a buffer of undecoded records into a TTTR.
+   *
+   * The entry point for records that are not in a file -- read off a card,
+   * arrived over a socket, or lifted out of a container you unpacked yourself.
+   * `state` carries the macro time overflow count across chunk boundaries;
+   * leaving it out decodes `buffer` as a stream of its own, which is right for
+   * a single buffer and wrong for the second chunk of one.
+   *
+   * @param {Uint8Array|Uint32Array} buffer records, as bytes or 32-bit words.
+   * @param {number} recordType one of the `RECORD_*` constants.
+   * @param {object=} state a TTTRDecodeState, created if not given.
+   * @param {object=} tttr append to this rather than to a new TTTR.
+   * @returns {{tttr: object, state: object, nEvents: number}}
+   */
+  exported.decodeRecords = function (buffer, recordType, state, tttr) {
+    const bytes = buffer instanceof Uint8Array
+      ? buffer
+      : new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    const s = state ?? new native.TTTRDecodeState();
+    const t = tttr ?? new native.TTTR();
+    return { tttr: t, state: s, nEvents: Number(t.decode_records(bytes, recordType, s)) };
+  };
+
+  /**
+   * Read a container's records in pieces, decoding each chunk into one TTTR.
+   *
+   *   for (const { tttr, done, total } of tttrlib.containerChunks('run.ptu'))
+   *     report(done / total);
+   *
+   * `tttr` is the same object each time, grown. After the last step it equals
+   * `new TTTR('run.ptu')` event for event -- the carried state is what makes
+   * that true.
+   */
+  exported.containerChunks = function* (spec, chunk = 1 << 20, containerType = -1) {
+    const info = native.container_records(spec, containerType);
+    if (!info.ranged) throw new Error(info.reason);
+    const data = new native.TTTR();
+    const state = new native.TTTRDecodeState();
+    const width = Number(info.bytes_per_record);
+    let at = 0;
+    const total = Number(info.n_records);
+    while (at < total) {
+      const raw = native.container_read_records(spec, at, chunk, info.container_type);
+      if (!raw.length) break;
+      data.decode_records(raw, info.record_type, state);
+      at += raw.length / width;
+      yield { tttr: data, done: at, total };
+    }
+    // Two containers keep part of the routing channel in the header rather than
+    // in the records; a no-op for the other five. Once, at the end.
+    data.set_header(new native.TTTRHeader(String(spec).split('|')[0], info.container_type));
+    data.apply_container_channels(info.container_type);
+    data.find_used_routing_channels();
+    // Appending grew the store by a factor, so it holds more rows than events.
+    data.shrink_to_fit();
+  };
+
+  /**
+   * Records [first, first + n) of a container, decoded.
+   *
+   * Macro times count from `firstRecord` rather than from the start of the
+   * file: the overflow count at that record is not in the records, and finding
+   * it means reading everything before it. For absolute times over a whole
+   * file use `containerChunks`.
+   */
+  exported.containerEvents = function (spec, firstRecord = 0, nRecords = 0,
+                                       containerType = -1) {
+    const out = new native.TTTR();
+    if (!native.container_read_events(spec, firstRecord, nRecords, out, containerType))
+      throw new Error(`container_read_events: could not read records from ${spec}`);
+    return out;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The whole Becker & Hickl ".set" sidecar
+// ---------------------------------------------------------------------------
+if (typeof native.read_set_file === 'function') {
+  /**
+   * A `.set` sidecar as `{section: {name: value}}`.
+   *
+   *   const s = tttrlib.bhSet('measurement.set');
+   *   s.SYS_PARA.SP_TAC_R;          // '6.554e-08'
+   *   s.IDENTIFICATION.Title;
+   *
+   * Values are the text the file holds, not numbers. A `.set` is a device
+   * configuration file and its types are per-parameter; the declared type
+   * letter is available from the flat form, `native.read_set_file`.
+   *
+   * @param {string} filename read this file.
+   * @param {string=} content parse this instead, for a sidecar that came out
+   *   of a container rather than off a disk.
+   */
+  exported.bhSet = function (filename, content) {
+    const flat = content === undefined
+      ? native.read_set_file(filename)
+      : native.parse_set(content);
+    const out = {};
+    for (let i = 0; i < flat.size(); i++) {
+      const p = flat.get(i);
+      (out[p.section] ??= {})[p.name] = p.value;
+    }
+    return out;
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Simulator: the object/JSON entry point (Python: SimEngine.from_dict)
 // ---------------------------------------------------------------------------
 if (native.SimEngine && typeof native.SimEngine.from_json === 'function') {

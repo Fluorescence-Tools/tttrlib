@@ -7,6 +7,21 @@
 %include "std_string.i"
 %include "std_vector.i"
 
+// io_store.h and io_pto.h are spelled in <cstdint> types throughout, and only
+// the Python backend resolves `std::uint64_t` on its own. Everywhere else it
+// stays an unknown type and every offset, size and UID comes out as an opaque
+// SWIGTYPE proxy -- so a Java caller could open a container and then do nothing
+// with what it told them. `stdint.i` would fix it and cannot be included here:
+// see the note at the top of misc_types.i about int64_t on glibc. This says the
+// one thing that is needed instead.
+//
+// Not for R: `unsigned long long` there goes through as.integer(), which is
+// 32-bit and silently NA above 2^31. ext/r/tttrlib.i gives std::uint64_t its
+// own typemaps, and %apply here would overwrite them.
+#ifndef SWIGR
+%apply unsigned long long { std::uint64_t };
+#endif
+
 %include "io_store.h"
 
 // %pythoncode is a Python-only directive. The other bindings (R, Java) never
@@ -42,6 +57,31 @@ def load_store(filename, columns=None):
         read_store_into(store, filename)
     else:
         read_store_into(store, filename, VectorString(list(columns)))
+    return store
+
+
+def load_store_region(filename, base, nbytes, columns=None,
+                      first_row=0, n_rows=0):
+    """Read a store that begins ``base`` bytes into ``filename``.
+
+    A store written into the middle of something bigger -- a PTO container --
+    is still a self-contained store, and this is how it is read where it lies.
+    :func:`tttrlib.pto_store` is the same thing with the region looked up from
+    an object UID, and is what a caller with a container should use.
+
+    :param nbytes: the length of the region, or 0 for "to the end of the file".
+    :param columns: read only these columns, if given.
+    :param first_row: skip this many rows of every table in the tree.
+    :param n_rows: how many rows to read, or 0 for all of them onwards.
+    """
+    store = DataStore()
+    names = VectorString(list(columns) if columns is not None else [])
+    if first_row or n_rows:
+        read_store_into(store, filename, base, nbytes, names, first_row, n_rows)
+    elif columns is not None:
+        read_store_into(store, filename, base, nbytes, names)
+    else:
+        read_store_into(store, filename, base, nbytes)
     return store
 
 

@@ -174,6 +174,37 @@ inline void get_array(
 class TTTRMask;
 
 /*!
+ * \brief What a record stream carries from one chunk of it to the next.
+ *
+ * A record stream is not a sequence of independent records. Every format in
+ * this library counts macro time overflows in records of their own, so the
+ * macro time of an event depends on every record before it -- and a caller
+ * decoding a stream in pieces has to hand that count back in, or every event
+ * after the first chunk boundary is wrong by however many overflows were
+ * dropped. Nothing fails when it goes wrong: the times are simply short.
+ *
+ * A default-constructed state decodes a buffer standalone. The state returned
+ * by one \ref TTTR::decode_records continues the same stream in the next.
+ *
+ * Cheap to copy on purpose: it is three integers and a caller may want to keep
+ * one per stream, or snapshot one to rewind to.
+ */
+struct TTTRDecodeState {
+    /// Macro time overflows counted so far. This is the part that matters.
+    std::uint64_t overflow_counter = 0;
+
+    /// Records handed to the decoder so far, valid or not.
+    std::uint64_t n_records = 0;
+
+    /// Events the decoder emitted so far. Fewer than \ref n_records: an
+    /// overflow record and an invalid record are not events.
+    std::uint64_t n_events = 0;
+
+    /// Forget the stream and start again.
+    void reset() { overflow_counter = 0; n_records = 0; n_events = 0; }
+};
+
+/*!
  * \class TTTR
  * \brief Time-Tagged Time-Resolved (TTTR) data class.
  *
@@ -379,10 +410,22 @@ private:
      *
      * \param fn Filename of the TTTR file.
      * \param container_type The container type (see TTTRHeaderTypes.h).
+     * \param base Where the container starts in the file.
+     * \param region_bytes How long the container is, or 0 for "to the end".
+     * \param records_at Absolute file offset of the first record to decode, or
+     *        0 for the end of the header. Not the same thing when a cue says
+     *        where in the stream the caller actually wants to start.
+     * \param records_end Absolute file offset to stop at, or 0 for the end of
+     *        the region.
+     * \param decode false parses the header and works out the record type and
+     *        count, and reads no records at all. \see open_embedded.
      * \return 1 on success, 0 otherwise.
      */
     int read_records_file(const char *fn, int container_type,
-                          std::uint64_t base = 0, std::uint64_t region_bytes = 0);
+                          std::uint64_t base = 0, std::uint64_t region_bytes = 0,
+                          std::uint64_t records_at = 0,
+                          std::uint64_t records_end = 0,
+                          bool decode = true);
 
     /*!
      * \brief A .set sidecar supplied by the caller rather than found on disk.
@@ -405,6 +448,37 @@ private:
      * not in the records; back-fill the routing channel array from the header.
      */
     void backfill_cz_routing_channels();
+
+public:
+
+    /*!
+     * \brief Apply the channel conventions a container keeps outside its records.
+     *
+     * Two of the containers that can be read in pieces do not put the whole
+     * routing channel in the record. A Carl Zeiss ConfoCor3 record has no
+     * channel field at all -- the header names the single channel the file
+     * holds. An SPC-QC record splits the detector across a router signal and a
+     * module input, and how wide the router signal actually is, is in the
+     * header (see @ref compact_spcqc_routing_channels).
+     *
+     * @ref read_file does this itself. A caller that decoded the records by
+     * hand (@ref decode_records) has to, or its channels are the raw ones:
+     * 0, 16, 32 rather than 0, 1, 2 for a three-input QC measurement, and 0
+     * rather than the ConfoCor3's channel. Every other container puts the
+     * channel in the record and this is a no-op for them.
+     *
+     * Call it **once, over the whole stream, after the last chunk**. The QC
+     * width is settled by looking at every photon, and a second call would
+     * shift channels that have already been compacted.
+     *
+     * Needs a header for the container -- \see set_header, and the
+     * `TTTRHeader(filename, container_type)` constructor that produces one.
+     *
+     * @param container_type The container the records came from.
+     */
+    void apply_container_channels(int container_type);
+
+private:
 
     /*!
      * \brief Compact SPC-QC routing channels down to the routing width in use.
@@ -741,6 +815,54 @@ public:
                       const std::string& set_text = "");
 
     /*!
+     * \brief Decode only part of an embedded record stream.
+     *
+     * \ref read_embedded starts at the header's end and runs to the end of the
+     * region. This starts and stops wherever a caller says, which is what makes
+     * a PTO cue worth having: the cue names a byte offset, and decoding from it
+     * costs the records after it rather than every record before it.
+     *
+     * The header is still parsed at `base` -- it is a few kilobytes and it is
+     * what says how wide a record is -- so the only thing skipped is the decode.
+     *
+     * Macro times come back relative to `records_at`, because the overflow
+     * count at that point is not in the records. A caller that knows the true
+     * macro time there (a cue's `time`) adds the difference.
+     *
+     * \param records_at absolute file offset of the first record to decode.
+     * \param records_end absolute file offset to stop at, or 0 for the end.
+     * \return 1 on success, 0 on failure.
+     */
+    int read_embedded_range(const char *fn, int container_type,
+                            unsigned long long base, unsigned long long bytes,
+                            unsigned long long records_at,
+                            unsigned long long records_end,
+                            const std::string& set_text = "");
+
+    /*!
+     * \brief Parse an embedded stream's header and decode none of it.
+     *
+     * Leaves @ref fp_records_begin, @ref tttr_record_type and
+     * @ref n_records_in_file filled and the event arrays empty -- everything
+     * needed to walk the records by hand, which is what the PTO cue builder
+     * does rather than materialising a stream in order to index it.
+     *
+     * \return 1 on success, 0 on failure.
+     */
+    int open_embedded(const char *fn, int container_type,
+                      unsigned long long base, unsigned long long bytes,
+                      const std::string& set_text = "");
+
+    /// Absolute file offset of the first record, i.e. where the header ended.
+    /// \see open_embedded, which is how a caller gets one worth having.
+    size_t get_records_begin() const { return fp_records_begin; }
+
+    /// Which record layout the header settled on, including the ones only the
+    /// record stream reveals (a HydraHarp v1 HT3 that turns out to be
+    /// SF-compressed). \see open_embedded.
+    int get_tttr_record_type() const { return tttr_record_type; }
+
+    /*!
      * \brief Writes the TTTR data to a Photonscore ".photons" (D7) file.
      *
      * Reconstructs the position/photon datasets from the flat stream: each
@@ -920,6 +1042,56 @@ public:
         signed char *event_types, int n_event_types,
         bool shift_macro_time = true,
         long long macro_time_offset = 0
+    );
+
+    /*!
+     * \brief Decode a buffer of undecoded records and append the events.
+     *
+     * The entry point for records that are not in a file: a buffer read off an
+     * SPC card, arrived over a socket, or lifted out of a container the caller
+     * unpacked itself. Every decoder in this library was reachable only through
+     * \ref read_file before this, so anyone holding a buffer had to write the
+     * decoder a second time -- and a second decoder with nothing holding it to
+     * this one is how two implementations come to disagree about an overflow
+     * run months later, on somebody's data, with no error anywhere.
+     *
+     * The same \ref RecordProcessor specialisations the file readers dispatch
+     * to, so every record type is covered by construction rather than one at a
+     * time.
+     *
+     * \code
+     * TTTR t;
+     * TTTRDecodeState s;
+     * while (const auto chunk = card.read()) {
+     *     t.decode_records(chunk.data(), chunk.size(), BH_RECORD_TYPE_SPC130, &s);
+     * }
+     * \endcode
+     *
+     * \param records Raw record bytes. Not interpreted beyond \p record_type.
+     * \param n_bytes How many bytes; a trailing partial record is ignored, and
+     *        the caller is expected to hand it back at the head of the next
+     *        buffer.
+     * \param record_type One of the record-type constants in TTTRHeaderTypes.h.
+     * \param state Carried across chunks. nullptr decodes \p records as a
+     *        stream of its own, which is right for a single buffer and wrong
+     *        for the second chunk of one.
+     * \return The number of events appended.
+     * \throws std::invalid_argument if \p record_type cannot be decoded from a
+     *         buffer alone. The message names the type; see
+     *         \ref record_type_is_decodable for which those are and why.
+     *
+     * \note Appending grows the event store by a factor rather than exactly,
+     *       so afterwards it holds more rows than there are events. Every
+     *       accessor reports \ref n_valid_events and is unaffected; \ref data,
+     *       which hands over the columns themselves, would show the slack as a
+     *       tail of zeros. Call \ref shrink_to_fit once, after the last chunk,
+     *       if the table is what you want -- doing it per chunk is what the
+     *       growth factor exists to avoid.
+     */
+    std::size_t decode_records(
+            unsigned char* records, int n_bytes,
+            int record_type,
+            TTTRDecodeState* state = nullptr
     );
 
     /**

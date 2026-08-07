@@ -57,6 +57,11 @@ json file_container_entries() {
         entry["params_schema"] = f.parameters_schema.empty()
                 ? json::object()
                 : json::parse(f.parameters_schema, nullptr, false);
+        // Whether the container can be read in pieces, which is what decides
+        // whether the range in params_schema means anything. A progress bar, a
+        // first look at a large file and a live view of one still being written
+        // are all this flag; without it a caller has to try and see.
+        entry["ranged_reads"] = f.ranged_reads;
         entry["canonical_extension"] = f.write_extension();
         // Tells a consumer which container ints are safe to persist. Built-in
         // formats own 0-999 permanently; a plugin's id is session-local, so for

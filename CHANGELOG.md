@@ -3,6 +3,53 @@
 ## [Unreleased]
 
 ### Added
+- **A buffer of undecoded records can be decoded** (PRD-021). Every decoder sat
+  behind `TTTR(filename)`, so a caller holding records from a card, a socket or
+  a container it unpacked itself had to write the decoder a second time — and a
+  copy with nothing holding it to the original is how two implementations come
+  to disagree about an overflow run months later, on somebody's data, with no
+  error anywhere. `TTTR.decode_records(buffer, record_type, state)` uses the
+  same `RecordProcessor` specialisations the file readers dispatch to, so every
+  record type is covered by construction. `TTTRDecodeState` carries the macro
+  time overflow count across chunk boundaries, which is the whole reason the
+  interface has a state rather than being one function; without it a stream
+  decoded in pieces comes back with every macro time after the first boundary
+  short, and nothing fails. The four encodings that need something the record
+  stream does not carry — SM, BrightEyes-TTM, both FLIM LABS taggers — decline
+  by name.
+- **Seven containers can now be read in pieces**, not just PTO: PTU, HT3,
+  SPC-130, SPC-600 (both), CZ-RAW and SPC-QC. `container_records(spec)` reports
+  the record count from the header and the file size without decoding one,
+  `container_read_records(spec, first, n)` reads a range undecoded, and the two
+  compose with `decode_records` into a chunked reader — five lines in any of the
+  four bindings, giving results identical to a whole-file read. `ranged_reads`
+  in the `file_container` registry says which containers this applies to, and
+  the ones it does not apply to decline by name rather than quietly reading all
+  of it. `container_events` and the `first_record` / `n_records` reader
+  parameters cover the common case without a loop; both report macro times
+  counted from `first_record`, for the reason documented on them.
+- **The whole Becker & Hickl `.set` sidecar, in every binding.**
+  `read_set_file` / `parse_set` return every `#SP`, `#PR`, `#DI`, `#TR` and
+  `#WI` parameter with its section, its group, the type letter the file
+  declares and its value — 222 and 207 parameters for the two reference
+  sidecars, against the five `read_bh_set_file` extracts for the header. Values
+  stay text: a `.set` declares its types per parameter and a parser that guesses
+  is wrong about one field in a hundred and silent about it. `bh_set()` in
+  Python arranges them as `{section: {name: value}}`. `read_bh_set_file` keeps
+  its own scope and still feeds only the imaging tags into the header.
+
+### Fixed
+- **The R conformance runner passes for the first time** (80/80). Three bugs,
+  all in `test/r/conformance.R` and none in the library, from PRD-020's ops
+  having been written without an R toolchain to run them against:
+  `file.write_text` used `writeLines`, which appends a newline the other three
+  runners do not, so a case pinning a byte range read one byte too many in R
+  alone; and `pto_read_store`'s generated R dispatcher cannot be satisfied at
+  all — it requires a wrapped `VectorString` while the typemap behind the
+  wrapper it dispatches to coerces to `STRSXP`, so the proxy satisfies one and a
+  character vector the other. The numbered overload (`pto_read_store__SWIG_1`)
+  is called directly instead. Same class of SWIG-R codegen defect as the
+  scoped-enum one already noted in `ext/r/tttrlib.i`.
 - **`write_csv` — a `DataStore` written out as CSV**, in Python and JavaScript,
   to a file or to a string. Only the selected rows when the store is gated, the
   same as `write_hdf5_table`; column subset and order, three quoting modes, a

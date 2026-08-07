@@ -35,6 +35,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRMask.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRRange.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRSelection.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRStream.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Channel.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FileCheck.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MicrotimeLinearization.cpp"
@@ -42,6 +43,6 @@ tttrlib_add_module(
     DEPENDS  io plugin io_ps io_sm io_cz io_bh io_pq io_be io_fl io_hdf5 util
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES Histogram.i HistogramNd.i DataStore.i TTTR.i TTTRHeader.i TTTRRange.i TTTRSelection.i TTTRMask.i
-                    Channel.i FileCheck.i
+                    Channel.i FileCheck.i RecordStream.i
     TEST_DIR test/python/tttr
 )

@@ -41,7 +41,27 @@
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *routing_channels, int n_routing_channels)} 
 %apply (signed char * IN_ARRAY1, int DIM1) {(signed char *event_types, int n_event_types)}
 // Bulk routing-channel replacement (TTTR::set_routing_channel).
-%apply (signed char * IN_ARRAY1, int DIM1) {(signed char *input, int n_input)} 
+%apply (signed char * IN_ARRAY1, int DIM1) {(signed char *input, int n_input)}
+
+// TTTR::decode_records -- a buffer of undecoded records. Bytes, because that is
+// the one shape that also covers a format whose record is not word aligned
+// (SPC-600 in 4096-channel mode is six bytes wide).
+%apply (unsigned char* IN_ARRAY1, int DIM1) {(unsigned char* records, int n_bytes)}
+
+// TTTRDecodeState is spelled in <cstdint> types, and only the Python and
+// JavaScript backends resolve `std::uint64_t` on their own. In Java it stays an
+// unknown type, so the overflow counter -- the whole reason the struct exists --
+// comes back as an opaque SWIGTYPE proxy a caller can do nothing with.
+// StoreFile.i says the same thing for the container types, but is parsed after
+// this header, so it comes too late for these three members.
+//
+// Not for R: `unsigned long long` there goes through as.integer(), which is
+// 32-bit and silently NA above 2^31 -- and an overflow count on a long
+// acquisition reaches that. ext/r/tttrlib.i gives std::uint64_t its own
+// double-backed typemaps, and %apply here would overwrite them.
+#ifndef SWIGR
+%apply unsigned long long { std::uint64_t };
+#endif
 
 // Release the Python GIL around heavy, Python-object-free file I/O so other
 // threads can run while a file is loaded. numpy typemaps marshal under the GIL
@@ -51,6 +71,7 @@ TTTRLIB_NOGIL(TTTR::read_records)   // all overloads, src/TTTR.cpp:796+
 TTTRLIB_NOGIL(TTTR::read_hdf_file)  // src/TTTR.cpp:282
 TTTRLIB_NOGIL(TTTR::read_sm_file)   // src/TTTR.cpp:392
 TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
+TTTRLIB_NOGIL(TTTR::decode_records) // pure record decoding, no Python objects
 
 #ifdef SWIGPYTHON
 // Burst boundaries come back as a NumPy int64 array directly (the flat

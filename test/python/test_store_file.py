@@ -212,6 +212,98 @@ def test_a_column_that_is_not_there_is_simply_absent(tree, tmp_path):
     assert part.names == ["f64"]
 
 
+# -- a window of rows ---------------------------------------------------------
+#
+# The projection along the other axis from a column subset. A table viewer that
+# shows fifty rows of a million should read fifty rows of a million.
+
+def test_a_row_range_of_a_fixed_width_column_is_the_slice(tree, tmp_path):
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    win = tttrlib.load_store_region(path, 0, 0, first_row=17, n_rows=23)
+    assert win.n_rows() == 23
+    for name in ("f64", "f32", "i64", "u64", "i16", "u8"):
+        np.testing.assert_array_equal(win[name].numpy(),
+                                      tree[name].numpy()[17:17 + 23], name)
+
+
+def test_a_row_range_of_a_bit_packed_column_is_shifted_down(tree, tmp_path):
+    """The trap: bools and validity masks are bits, and a range that does not
+    start on a word boundary has to be repacked from bit zero. Offsets 1 and 63
+    are the two that catch a shift written the wrong way round."""
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    for first, n in ((0, 64), (1, 62), (63, 1), (7, 40), (33, 31)):
+        win = tttrlib.load_store_region(path, 0, 0, first_row=first, n_rows=n)
+        np.testing.assert_array_equal(win["flag"].numpy(),
+                                      tree["flag"].numpy()[first:first + n],
+                                      "%d+%d" % (first, n))
+
+
+def test_a_row_range_of_a_text_column_returns_the_right_labels(tree, tmp_path):
+    """The codes are sliced; the dictionary is not, being labels rather than
+    rows and small by construction."""
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    win = tttrlib.load_store_region(path, 0, 0, first_row=11, n_rows=9)
+    want = [tree["text"].numpy()[i] for i in range(11, 20)]
+    assert [win["text"].numpy()[i] for i in range(9)] == want
+    assert list(win["text"].dictionary()) == list(tree["text"].dictionary())
+
+
+def test_a_row_range_reads_far_fewer_bytes_than_the_table(tmp_path):
+    """Criterion 10, and the point of the whole part. Counted rather than
+    timed: a wall clock on a warm page cache measures the cache."""
+    n = 1_000_000
+    s = tttrlib.DataStore("big")
+    s.set_n_rows(n)
+    s.add("a", np.arange(n, dtype=np.float64))
+    s.add("b", np.arange(n, dtype=np.int64))
+    path = str(tmp_path / "big.dstore")
+    tttrlib.save_store(path, s)
+
+    before = tttrlib.store_bytes_read()
+    tttrlib.load_store(path)
+    whole = tttrlib.store_bytes_read() - before
+
+    before = tttrlib.store_bytes_read()
+    win = tttrlib.load_store_region(path, 0, 0, first_row=500_000, n_rows=50)
+    window = tttrlib.store_bytes_read() - before
+
+    assert win.n_rows() == 50
+    np.testing.assert_array_equal(win["a"].numpy(),
+                                  np.arange(500_000, 500_050, dtype=np.float64))
+    assert window < whole / 1000, "%d bytes for 50 rows of %d" % (window, whole)
+
+
+def test_a_range_past_the_end_of_a_table_is_empty_not_an_error(tree, tmp_path):
+    """A tree is one file and its tables need not agree on how long they are, so
+    a group shorter than first_row comes back empty rather than throwing."""
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    win = tttrlib.load_store_region(path, 0, 0, first_row=100, n_rows=10)
+    assert win.n_rows() == 0
+    assert win.group_paths() == tree.group_paths(), "the tree is still the tree"
+    assert win.group("results").n_rows() == 10, "4096 rows, so 100..110 exists"
+
+
+def test_a_row_range_runs_short_rather_than_over(tree, tmp_path):
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    win = tttrlib.load_store_region(path, 0, 0, first_row=60, n_rows=1000)
+    assert win.n_rows() == 4
+    np.testing.assert_array_equal(win["f64"].numpy(), tree["f64"].numpy()[60:])
+
+
+def test_a_row_range_can_be_narrowed_to_columns_too(tree, tmp_path):
+    path = str(tmp_path / "t.dstore")
+    tttrlib.save_store(path, tree)
+    win = tttrlib.load_store_region(path, 0, 0, columns=["f64"],
+                                    first_row=17, n_rows=23)
+    assert win.names == ["f64"]
+    np.testing.assert_array_equal(win["f64"].numpy(), tree["f64"].numpy()[17:40])
+
+
 # -- asking about a file ------------------------------------------------------
 
 def test_is_store_file_is_silent_on_anything(tmp_path, capfd):

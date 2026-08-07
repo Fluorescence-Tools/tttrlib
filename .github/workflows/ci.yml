@@ -169,6 +169,10 @@ jobs:
       # The four files the conformance cases name. A missing one skips its cases
       # with a reason rather than failing, so a silent gap is easy to acquire --
       # keep this list in step with `data:` in test/conformance/cases/*.json.
+      # One case is knowingly not covered here: stream.the_whole_set_sidecar_not
+      # _five_tags needs bh/bh_spcqc004.set, which is not on the mirror. The
+      # sidecar parser itself IS exercised in CI, by a case that writes its own
+      # .set (stream.the_set_sidecar_parses_into_sections).
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu

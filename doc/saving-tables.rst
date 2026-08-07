@@ -74,6 +74,30 @@ saying where each column lives:
 
     tttrlib.load_store("run.dstore", columns=["Tau"])
 
+That works along the other axis too, and for a store that lives inside
+something bigger. The directory records where every column's blob begins and
+how wide its elements are, so a **row range** is an offset and a length per
+column — which is what a table viewer needs, since paging a million-row burst
+table otherwise decodes a million rows to show fifty:
+
+.. code-block:: python
+
+    # rows 500 000-500 050 of two columns, of a store embedded at `base`
+    page = tttrlib.load_store_region("run.pto", base, nbytes,
+                                     columns=["Tau", "n_photons"],
+                                     first_row=500_000, n_rows=50)
+
+Fixed-width columns are exact. A bit-packed column (bool, and every validity
+mask) reads only the words its range falls in and is repacked to start at bit
+zero. A dictionary-encoded text column reads its codes for the range and the
+whole dictionary, which is small by construction. The range applies to every
+table in the tree, each clamped to its own length: a group shorter than
+``first_row`` comes back empty rather than raising.
+
+A caller with a **container** rather than a raw offset uses
+:func:`tttrlib.pto_store`, which is the same read with the region looked up
+from an object UID. See :doc:`formats/pto`.
+
 What it is actually faster at
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

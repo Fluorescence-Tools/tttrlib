@@ -279,6 +279,60 @@ export declare function writeHdf5(
   mode?: number): boolean;
 
 // ---------------------------------------------------------------------------
+// Record streams, and the Becker & Hickl ".set" sidecar
+// ---------------------------------------------------------------------------
+/** What a container holds, learned without decoding any of it. */
+export interface ContainerRecords {
+  container_type: number;
+  record_type: number;
+  n_records: number;
+  bytes_per_record: number;
+  records_begin: number;
+  /** False when this container cannot be read in pieces; `reason` says why. */
+  ranged: boolean;
+  reason: string;
+}
+
+/** Opaque decoder state; carries the macro time overflow count across chunks. */
+export interface TTTRDecodeState {
+  overflow_counter: number;
+  n_records: number;
+  n_events: number;
+}
+
+/**
+ * Decode a buffer of undecoded records into a TTTR.
+ *
+ * Omitting `state` decodes `buffer` as a stream of its own, which is right for
+ * a single buffer and wrong for the second chunk of one.
+ */
+export declare function decodeRecords(
+  buffer: Uint8Array | Uint32Array, recordType: number,
+  state?: TTTRDecodeState, tttr?: TTTR
+): { tttr: TTTR; state: TTTRDecodeState; nEvents: number };
+
+/**
+ * Read a container's records in pieces. After the last step the yielded TTTR
+ * equals `new TTTR(spec)` event for event.
+ */
+export declare function containerChunks(
+  spec: string, chunk?: number, containerType?: number
+): Generator<{ tttr: TTTR; done: number; total: number }>;
+
+/**
+ * Records [first, first + n) of a container, decoded. Macro times count from
+ * `firstRecord`, not from the start of the file -- see containerChunks.
+ */
+export declare function containerEvents(
+  spec: string, firstRecord?: number, nRecords?: number, containerType?: number
+): TTTR;
+
+/** A Becker & Hickl `.set` sidecar as `{section: {name: value}}`, all text. */
+export declare function bhSet(
+  filename: string, content?: string
+): Record<string, Record<string, string>>;
+
+// ---------------------------------------------------------------------------
 // Module-level
 // ---------------------------------------------------------------------------
 /**

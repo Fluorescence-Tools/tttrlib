@@ -5,8 +5,10 @@
 tttrlib_add_module(
     NAME     io_bh
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/io_bh.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/io_bh_set.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util io
     EXTERNAL_DEPS tttrlib::json
+    SWIG_INTERFACES BhSet.i
     TEST_DIR test/python/tttr
 )

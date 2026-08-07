@@ -652,6 +652,154 @@ final class ConformanceInterpreter {
             case "hdf5.groups": return vectorStrings(tttrlib.hdf5_table_groups(s(a, 0)));
             case "hdf5.has": return tttrlib.hdf5_table_has(s(a, 0), s(a, 1));
 
+            // -- pto ---------------------------------------------------------
+            //
+            // A uid is a long here and a double in the case file's bindings,
+            // which is exact only because PTO mints 53-bit uids: two of the
+            // four bindings have no integer wider than a double.
+            case "pto.create": {
+                PtoFile f = new PtoFile();
+                if (!f.create(s(a, 0), s(a, 1))) throw new ConformanceException(f.error());
+                return f;
+            }
+            case "pto.open": {
+                PtoFile f = new PtoFile();
+                if (!f.open(s(a, 0))) throw new ConformanceException(f.error());
+                return f;
+            }
+            case "pto.close": ((PtoFile) on).close(); return null;
+            case "pto.commit": return ((PtoFile) on).commit();
+            case "pto.add_file": {
+                java.math.BigInteger uid =
+                        ((PtoFile) on).add_file(s(a, 0), s(a, 1), s(a, 2), s(a, 3));
+                if (uid.signum() == 0) throw new ConformanceException(((PtoFile) on).error());
+                return uid.doubleValue();
+            }
+            case "pto.add_store": {
+                java.math.BigInteger uid = tttrlib.pto_add_store(
+                        (PtoFile) on, s(a, 0), s(a, 1), (DataStore) a.get(2));
+                if (uid.signum() == 0) throw new ConformanceException(((PtoFile) on).error());
+                return uid.doubleValue();
+            }
+            case "pto.n_objects": return (double) ((PtoFile) on).n_objects();
+            case "pto.names": {
+                PtoObjectVector v = ((PtoFile) on).objects();
+                List<String> out = new ArrayList<>((int) v.size());
+                for (int k = 0; k < v.size(); k++) out.add(v.get(k).getName());
+                return out;
+            }
+            case "pto.kinds": {
+                PtoObjectVector v = ((PtoFile) on).objects();
+                List<String> out = new ArrayList<>((int) v.size());
+                for (int k = 0; k < v.size(); k++) out.add(v.get(k).getKind());
+                return out;
+            }
+            case "pto.size_of":
+                return ((PtoFile) on).object(uid(a, 0)).getSize().doubleValue();
+            case "pto.read_text": {
+                short[] raw = vectorBytes(((PtoFile) on).read(
+                        uid(a, 0), java.math.BigInteger.valueOf(i(a, 1)), i(a, 2)));
+                // latin-1, the one encoding that round-trips an arbitrary octet
+                // in all four runners.
+                char[] cs = new char[raw.length];
+                for (int k = 0; k < raw.length; k++) cs[k] = (char) (raw[k] & 0xFF);
+                return new String(cs);
+            }
+            case "pto.store_columns":
+                return vectorStrings(tttrlib.pto_store_columns((PtoFile) on, uid(a, 0)));
+            case "pto.store_groups":
+                return vectorStrings(tttrlib.pto_store_groups((PtoFile) on, uid(a, 0)));
+            case "pto.read_store": {
+                DataStore out = new DataStore();
+                VectorString names = new VectorString();
+                for (String c : texts(a.get(1))) names.add(c);
+                java.math.BigInteger first = java.math.BigInteger.valueOf(i(a, 2));
+                java.math.BigInteger count = java.math.BigInteger.valueOf(i(a, 3));
+                if (i(a, 2) != 0 || i(a, 3) != 0)
+                    tttrlib.pto_read_store((PtoFile) on, uid(a, 0), out, names, first, count);
+                else if (names.size() > 0)
+                    tttrlib.pto_read_store((PtoFile) on, uid(a, 0), out, names);
+                else
+                    tttrlib.pto_read_store((PtoFile) on, uid(a, 0), out);
+                return out;
+            }
+            case "pto.build_cues": {
+                java.math.BigInteger n = ((PtoFile) on).build_cues(
+                        uid(a, 0), java.math.BigInteger.valueOf(i(a, 1)));
+                if (n.signum() == 0) throw new ConformanceException(((PtoFile) on).error());
+                return n.doubleValue();
+            }
+            case "pto.cue_events": {
+                PtoCueVector v = ((PtoFile) on).cues(uid(a, 0));
+                List<Object> out = new ArrayList<>((int) v.size());
+                for (int k = 0; k < v.size(); k++) out.add(v.get(k).getEvent().doubleValue());
+                return out;
+            }
+            case "pto.events": {
+                TTTR t = new TTTR();
+                if (tttrlib.pto_read_events(s(a, 0) + "|" + s(a, 1),
+                        java.math.BigInteger.valueOf(i(a, 2)),
+                        java.math.BigInteger.valueOf(i(a, 3)), t) == 0)
+                    throw new ConformanceException("could not read events from " + s(a, 0));
+                return t;
+            }
+
+            // -- record streams (PRD-021) -------------------------------------
+            case "tttr.new": return new TTTR();
+            case "stream.n_records":
+                return tttrlib.container_n_records(s(a, 0), i(a, 1)).doubleValue();
+            case "stream.record_type":
+                return (double) tttrlib.container_records(s(a, 0), i(a, 1)).getRecord_type();
+            case "stream.ranged":
+                return tttrlib.container_records(s(a, 0), i(a, 1)).getRanged();
+            case "stream.record_name": return tttrlib.record_type_name(i(a, 0));
+            case "stream.record_bytes": return (double) tttrlib.record_bytes(i(a, 0));
+            case "stream.can_decode": return tttrlib.record_type_is_decodable(i(a, 0));
+            case "stream.read_records":
+                // A record buffer stays byte[] rather than becoming double[]:
+                // the whole of a container is millions of bytes and the decode
+                // takes a byte[] anyway, so widening it would cost eight times
+                // the memory to hand the same bytes straight back.
+                return bytesOf(tttrlib.container_read_records(s(a, 0),
+                        java.math.BigInteger.valueOf(i(a, 2)),
+                        java.math.BigInteger.valueOf(i(a, 3)), i(a, 1)));
+            case "stream.state": return new TTTRDecodeState();
+            case "stream.overflows":
+                return ((TTTRDecodeState) on).getOverflow_counter().doubleValue();
+            case "stream.decode":
+                return (double) ((TTTR) on).decode_records((byte[]) a.get(0), i(a, 1),
+                        (TTTRDecodeState) a.get(2));
+            case "stream.events": {
+                TTTR t = new TTTR();
+                if (tttrlib.container_read_events(s(a, 0),
+                        java.math.BigInteger.valueOf(i(a, 2)),
+                        java.math.BigInteger.valueOf(i(a, 3)), t, i(a, 1)) == 0)
+                    throw new ConformanceException("could not read records from " + s(a, 0));
+                return t;
+            }
+            case "stream.apply_channels":
+                ((TTTR) on).apply_container_channels(i(a, 0));
+                return null;
+
+            // -- the Becker & Hickl ".set" sidecar (PRD-021) ------------------
+            case "bhset.n": return (double) tttrlib.read_set_file(s(a, 0)).size();
+            case "bhset.sections": {
+                BhSetParameterVector v = tttrlib.read_set_file(s(a, 0));
+                java.util.TreeSet<String> seen = new java.util.TreeSet<>();
+                for (int k = 0; k < v.size(); k++) seen.add(v.get(k).getSection());
+                return new ArrayList<String>(seen);
+            }
+            case "bhset.value": {
+                BhSetParameterVector v = tttrlib.read_set_file(s(a, 0));
+                for (int k = 0; k < v.size(); k++) {
+                    BhSetParameter p = v.get(k);
+                    if (p.getSection().equals(s(a, 1)) && p.getName().equals(s(a, 2)))
+                        return p.getValue();
+                }
+                throw new ConformanceException(
+                        "no " + s(a, 1) + "/" + s(a, 2) + " in " + s(a, 0));
+            }
+
             default:
                 Object typed = typedColumnOp(op, on, a);
                 if (typed != NOT_HANDLED) return typed;
@@ -787,14 +935,33 @@ final class ConformanceInterpreter {
         return out;
     }
 
+    /// A PTO uid, which crosses the case file as a double. \see pto.create.
+    private static java.math.BigInteger uid(List<Object> a, int k) {
+        return java.math.BigInteger.valueOf((long) Math.round((Double) a.get(k)));
+    }
+
+    private static short[] vectorBytes(VectorUint8 v) {
+        short[] out = new short[(int) v.size()];
+        for (int k = 0; k < out.length; k++) out[k] = v.get(k);
+        return out;
+    }
+
     private static List<String> vectorStrings(VectorString v) {
         List<String> out = new ArrayList<>((int) v.size());
         for (int k = 0; k < v.size(); k++) out.add(v.get(k));
         return out;
     }
 
+    /// A record buffer, as the byte[] TTTR.decode_records takes.
+    private static byte[] bytesOf(VectorUint8 v) {
+        byte[] out = new byte[(int) v.size()];
+        for (int k = 0; k < out.length; k++) out[k] = (byte) (v.get(k) & 0xFF);
+        return out;
+    }
+
     private static int lengthOf(Object on) {
         if (on instanceof double[]) return ((double[]) on).length;
+        if (on instanceof byte[]) return ((byte[]) on).length;
         if (on instanceof List) return ((List<?>) on).size();
         if (on instanceof String) return ((String) on).length();
         throw new ConformanceException("expected a sequence, got " + on);
@@ -802,6 +969,7 @@ final class ConformanceInterpreter {
 
     private static Object element(Object on, int k) {
         if (on instanceof double[]) return ((double[]) on)[k];
+        if (on instanceof byte[]) return (double) (((byte[]) on)[k] & 0xFF);
         if (on instanceof List) return ((List<?>) on).get(k);
         throw new ConformanceException("expected a sequence, got " + on);
     }

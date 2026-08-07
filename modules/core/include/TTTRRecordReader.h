@@ -5,6 +5,8 @@
 #include <iostream>
 #include <cstdint>
 #include <cstring>
+#include <string>
+#include <vector>
 #include "TTTRRecordTypes.h"
 #include "TTTRHeaderTypes.h"
 #include "info.h"
@@ -689,6 +691,160 @@ inline void process_records_batch(
         process_one(record_ptr);
         record_ptr += bytes_per_record;
     }
+}
+
+/*!
+ * \brief Runtime-to-compile-time dispatch: decode a batch of records.
+ *
+ * Selects the process_records_batch specialization for a record type. Public
+ * because a caller that wants to walk a record stream without materialising it
+ * -- the PTO cue builder is the one that does -- needs the same decode TTTR
+ * uses, and a second copy of it would be a second place for a record layout to
+ * be wrong.
+ *
+ * \return false if the record type is unknown.
+ */
+inline bool dispatch_process_records_batch(
+    int record_type,
+    const signed char* buffer,
+    size_t num_records,
+    size_t bytes_per_record,
+    uint64_t& overflow_counter,
+    unsigned long long* macro_times,
+    unsigned short* micro_times,
+    signed char* routing_channels,
+    signed char* event_types,
+    size_t& valid_count
+) {
+    #define TTTRLIB_CASE_PROCESS(RT) \
+        case RT: process_records_batch<RT>( \
+            buffer, num_records, bytes_per_record, overflow_counter, \
+            macro_times, micro_times, routing_channels, event_types, \
+            valid_count); return true;
+    switch(record_type) {
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT3)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_PHT2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v1)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT3v2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v1)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_HHT2v2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T3)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_GENERIC_T2)
+        TTTRLIB_CASE_PROCESS(PQ_RECORD_TYPE_SF_HT3)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC130)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X04)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPCQC_X06)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_256)
+        TTTRLIB_CASE_PROCESS(BH_RECORD_TYPE_SPC600_4096)
+        TTTRLIB_CASE_PROCESS(CZ_RECORD_TYPE_CONFOCOR3)
+        default:
+            return false;
+    }
+    #undef TTTRLIB_CASE_PROCESS
+}
+
+// ============================================================================
+// RECORD TYPE METADATA
+// What a caller holding a buffer needs to know before it can decode one: how
+// wide a record is, whether this library can decode it at all, and what to call
+// it when it cannot. The three used to be spread over the file readers, where a
+// caller without a file could not reach them.
+// ============================================================================
+
+/*!
+ * \brief Bytes one record of \p record_type occupies in a stream, or 0.
+ *
+ * Zero means the encoding has no fixed width this library can state -- SM
+ * records interleave two different word sizes, and a Photon-HDF5 container
+ * stores decoded arrays rather than records.
+ */
+inline std::size_t record_bytes(int record_type) {
+    switch (record_type) {
+        case PQ_RECORD_TYPE_PHT3:
+        case PQ_RECORD_TYPE_PHT2:
+        case PQ_RECORD_TYPE_HHT3v1:
+        case PQ_RECORD_TYPE_HHT3v2:
+        case PQ_RECORD_TYPE_HHT2v1:
+        case PQ_RECORD_TYPE_HHT2v2:
+        case PQ_RECORD_TYPE_GENERIC_T3:
+        case PQ_RECORD_TYPE_GENERIC_T2:
+        case PQ_RECORD_TYPE_SF_HT3:
+        case BH_RECORD_TYPE_SPC130:
+        case BH_RECORD_TYPE_SPCQC_X04:
+        case BH_RECORD_TYPE_SPCQC_X06:
+        case BH_RECORD_TYPE_SPC600_256:
+        case CZ_RECORD_TYPE_CONFOCOR3:
+            return 4;
+        case BH_RECORD_TYPE_SPC600_4096:
+            return 6;
+        case BE_RECORD_TYPE_TTR:
+            return 2;   // a bare uint16 word stream
+        case FL_RECORD_TYPE_STT1:
+            return 17;  // {u8 event, f64 micro ns, f64 macro ns}
+        case FL_RECORD_TYPE_ITT1:
+            return 9;   // {u8 event, f64 time ns}
+        default:
+            return 0;
+    }
+}
+
+/*!
+ * \brief A stable name for \p record_type, e.g. "SPC-130".
+ *
+ * Used where a decode has to decline: "SM cannot be decoded from a buffer" is
+ * an answer a caller can act on, and "record type 11" is not.
+ */
+inline std::string record_type_name(int record_type) {
+    switch (record_type) {
+        case PQ_RECORD_TYPE_PHT3:       return "PHT3";
+        case PQ_RECORD_TYPE_PHT2:       return "PHT2";
+        case PQ_RECORD_TYPE_HHT3v1:     return "HHT3v1";
+        case PQ_RECORD_TYPE_HHT3v2:     return "HHT3v2";
+        case PQ_RECORD_TYPE_HHT2v1:     return "HHT2v1";
+        case PQ_RECORD_TYPE_HHT2v2:     return "HHT2v2";
+        case PQ_RECORD_TYPE_GENERIC_T3: return "GENERIC_T3";
+        case PQ_RECORD_TYPE_GENERIC_T2: return "GENERIC_T2";
+        case PQ_RECORD_TYPE_SF_HT3:     return "SF_HT3";
+        case BH_RECORD_TYPE_SPC130:     return "SPC-130";
+        case BH_RECORD_TYPE_SPCQC_X04:  return "SPC-QC-x04";
+        case BH_RECORD_TYPE_SPCQC_X06:  return "SPC-QC-x06";
+        case BH_RECORD_TYPE_SPC600_256: return "SPC-600_256";
+        case BH_RECORD_TYPE_SPC600_4096:return "SPC-600_4096";
+        case CZ_RECORD_TYPE_CONFOCOR3:  return "CZ-CONFOCOR3";
+        case SM_RECORD_TYPE:            return "SM";
+        case BE_RECORD_TYPE_TTR:        return "BRIGHTEYES-TTR";
+        case FL_RECORD_TYPE_STT1:       return "FLIMLABS-STT1";
+        case FL_RECORD_TYPE_ITT1:       return "FLIMLABS-ITT1";
+        default:                        return "record type " + std::to_string(record_type);
+    }
+}
+
+/*!
+ * \brief True if a buffer of these records can be decoded on its own.
+ *
+ * The encodings that cannot are not gaps in the dispatch table; each needs
+ * something that is not in the record stream. A CZ ConfoCor3 record carries no
+ * channel -- the header does. A BrightEyes word means nothing without the
+ * instrument's sample clock. FLIM LABS records are read out of a JSON envelope
+ * that says which of the two layouts they are. SM interleaves word widths.
+ *
+ * \note CZ-CONFOCOR3 *is* decodable here, and its channel comes back as
+ *       whatever the caller left in the array, because the record does not
+ *       carry one. See TTTR::backfill_cz_routing_channels.
+ */
+inline bool record_type_is_decodable(int record_type) {
+    return record_bytes(record_type) > 0 &&
+           record_type != BE_RECORD_TYPE_TTR &&
+           record_type != FL_RECORD_TYPE_STT1 &&
+           record_type != FL_RECORD_TYPE_ITT1;
+}
+
+/// Every record type \ref record_type_is_decodable accepts, ascending.
+inline std::vector<int> decodable_record_types() {
+    std::vector<int> out;
+    for (int rt = 1; rt <= FL_RECORD_TYPE_ITT1; rt++)
+        if (record_type_is_decodable(rt)) out.push_back(rt);
+    return out;
 }
 
 #endif //TTTRLIB_PQ_H

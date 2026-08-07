@@ -632,6 +632,99 @@ def _op_hdf5_has(on, args):
     return bool(tttrlib.hdf5_table_has(str(args[0]), str(args[1])))
 
 
+# ---------------------------------------------------------------------------
+# pto.*
+# ---------------------------------------------------------------------------
+#
+# A uid is 53 random bits -- narrow enough to survive a double, which is what
+# two of the four bindings represent every integer as, and still random -- so it
+# is raw material in every case it appears in: bound, passed on, never expected.
+# Everything comparable here is a name, a count, a column, or bytes decoded as
+# latin-1, the one text encoding that round-trips an arbitrary octet in all four
+# languages.
+
+def _op_pto_create(on, args):
+    f = tttrlib.PtoFile()
+    if not f.create(str(args[0]), str(args[1])):
+        raise ConformanceError(f.error())
+    return f
+
+
+def _op_pto_open(on, args):
+    f = tttrlib.PtoFile()
+    if not f.open(str(args[0])):
+        raise ConformanceError(f.error())
+    return f
+
+
+def _op_pto_add_file(on, args):
+    uid = on.add_file(str(args[0]), str(args[1]), str(args[2]), str(args[3]))
+    if uid == 0:
+        raise ConformanceError(on.error())
+    return int(uid)
+
+
+def _op_pto_add_store(on, args):
+    uid = tttrlib.pto_add_store(on, str(args[0]), str(args[1]), args[2])
+    if uid == 0:
+        raise ConformanceError(on.error())
+    return int(uid)
+
+
+def _op_pto_read_store(on, args):
+    return tttrlib.pto_store(on, int(args[0]), columns=list(args[1]) or None,
+                             first_row=int(args[2]), n_rows=int(args[3]))
+
+
+def _op_pto_read_text(on, args):
+    return on.read(int(args[0]), int(args[1]), int(args[2])).decode("latin-1")
+
+
+def _op_pto_build_cues(on, args):
+    n = on.build_cues(int(args[0]), int(args[1]))
+    if n == 0:
+        raise ConformanceError(on.error())
+    return int(n)
+
+
+def _op_pto_events(on, args):
+    return tttrlib.pto_events("%s|%s" % (args[0], args[1]),
+                              int(args[2]), int(args[3]))
+
+
+# ---------------------------------------------------------------------------
+# stream.* -- decoding a buffer, and reading a container in pieces (PRD-021)
+# ---------------------------------------------------------------------------
+#
+# The ops are deliberately primitive enough that a chunked decode is written out
+# as steps rather than hidden inside a runner-side loop: two `stream.read_records`
+# and two `stream.decode` sharing one `stream.state`. That is the whole point of
+# the feature -- the library does not own the loop -- so a case that hid the loop
+# would be testing the runner.
+
+def _op_stream_read_records(on, args):
+    # A uint8 array rather than the bytes the binding hands back, so `len` and
+    # the other element ops mean the same thing here as in the three runners
+    # whose natural shape for this is a typed array.
+    raw = tttrlib.container_read_records(str(args[0]), int(args[2]), int(args[3]),
+                                         int(args[1]))
+    return np.frombuffer(raw, dtype=np.uint8)
+
+
+def _op_stream_decode(on, args):
+    return int(on.decode_records(_as_array(args[0]), int(args[1]), args[2]))
+
+
+def _op_stream_events(on, args):
+    return tttrlib.container_events(str(args[0]), int(args[2]), int(args[3]),
+                                    int(args[1]))
+
+
+def _op_bhset_value(on, args):
+    parsed = tttrlib.bh_set(str(args[0]))
+    return str(parsed[str(args[1])][str(args[2])])
+
+
 _OPS = {
     # generic
     "len": _op_len, "sum": _op_sum, "mean": _op_mean,
@@ -770,6 +863,51 @@ _OPS = {
     "hdf5.read": _op_hdf5_read,
     "hdf5.groups": _op_hdf5_groups,
     "hdf5.has": _op_hdf5_has,
+
+    # pto
+    "pto.create": _op_pto_create,
+    "pto.open": _op_pto_open,
+    "pto.close": lambda on, a: on.close(),
+    "pto.commit": lambda on, a: bool(on.commit()),
+    "pto.add_file": _op_pto_add_file,
+    "pto.add_store": _op_pto_add_store,
+    "pto.n_objects": lambda on, a: int(on.n_objects()),
+    "pto.names": lambda on, a: [str(o.name) for o in on.objects()],
+    "pto.kinds": lambda on, a: [str(o.kind) for o in on.objects()],
+    "pto.size_of": lambda on, a: int(on.object(int(a[0])).size),
+    "pto.read_text": _op_pto_read_text,
+    "pto.store_columns": lambda on, a: [str(s) for s in
+                                        tttrlib.pto_store_columns(on, int(a[0]))],
+    "pto.store_groups": lambda on, a: [str(s) for s in
+                                       tttrlib.pto_store_groups(on, int(a[0]))],
+    "pto.read_store": _op_pto_read_store,
+    "pto.build_cues": _op_pto_build_cues,
+    "pto.cue_events": lambda on, a: [int(c.event) for c in on.cues(int(a[0]))],
+    "pto.events": _op_pto_events,
+
+    # record streams (PRD-021)
+    "tttr.new": lambda on, a: tttrlib.TTTR(),
+    "stream.n_records": lambda on, a: int(
+        tttrlib.container_n_records(str(a[0]), int(a[1]))),
+    "stream.record_type": lambda on, a: int(
+        tttrlib.container_records(str(a[0]), int(a[1])).record_type),
+    "stream.ranged": lambda on, a: bool(
+        tttrlib.container_records(str(a[0]), int(a[1])).ranged),
+    "stream.record_name": lambda on, a: str(tttrlib.record_type_name(int(a[0]))),
+    "stream.record_bytes": lambda on, a: int(tttrlib.record_bytes(int(a[0]))),
+    "stream.can_decode": lambda on, a: bool(
+        tttrlib.record_type_is_decodable(int(a[0]))),
+    "stream.read_records": _op_stream_read_records,
+    "stream.state": lambda on, a: tttrlib.TTTRDecodeState(),
+    "stream.overflows": lambda on, a: int(on.overflow_counter),
+    "stream.decode": _op_stream_decode,
+    "stream.events": _op_stream_events,
+    "stream.apply_channels": lambda on, a: on.apply_container_channels(int(a[0])),
+
+    # the Becker & Hickl ".set" sidecar (PRD-021)
+    "bhset.n": lambda on, a: len(tttrlib.read_set_file(str(a[0]))),
+    "bhset.sections": lambda on, a: sorted(tttrlib.bh_set(str(a[0])).keys()),
+    "bhset.value": _op_bhset_value,
 }
 
 for _s in _ADD_DTYPE:
@@ -812,6 +950,13 @@ YIELDS_COMPARABLE = {
     "hdf5.write", "hdf5.groups", "hdf5.has",
     "registry.categories",
     "bitmask.size", "bitmask.count",
+    "pto.commit", "pto.n_objects", "pto.names", "pto.kinds", "pto.size_of",
+    "pto.read_text", "pto.store_columns", "pto.store_groups",
+    "pto.build_cues", "pto.cue_events",
+    "stream.n_records", "stream.record_type", "stream.ranged",
+    "stream.record_name", "stream.record_bytes", "stream.can_decode",
+    "stream.decode", "stream.overflows",
+    "bhset.n", "bhset.sections", "bhset.value",
 }
 
 RAW_MATERIAL = {
@@ -835,8 +980,14 @@ RAW_MATERIAL = {
     "correlator.correlation", "phasor.from_bincounts",
     "mask.new", "mask.select_channels", "mask.select_count_rate", "mask.mask_array",
     "tiff.write_f64", "tiff.read_f64",
+    # pto -- a uid is random, and a file or store handle is a handle
+    "pto.create", "pto.open", "pto.add_file", "pto.add_store",
+    "pto.read_store", "pto.events",
+    # record streams -- a TTTR, a decode state and a record buffer are handles
+    "tttr.new", "stream.state", "stream.read_records", "stream.events",
     # side effects that bind nothing worth expecting
     "ds.add_string", "ds.set_label", "ds.select_range", "file.write_text",
+    "pto.close", "stream.apply_channels",
 }
 RAW_MATERIAL |= {f"ds.add_{s}" for s in _ADD_DTYPE}
 RAW_MATERIAL |= {f"ds.column_{s}" for s in _ADD_DTYPE}

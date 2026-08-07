@@ -572,6 +572,106 @@ calibration. The headerless SPC-600 containers assume a fixed clock; verify
 
 .. _bh_set_sidecar:
 
+.. _record_streams:
+
+Decoding a buffer, and reading a container in pieces
+----------------------------------------------------
+
+Everything above assumes a file. A caller holding *records* — read off an SPC
+card, arrived over a socket, lifted out of a container it unpacked itself —
+has a buffer and no file, and a caller looking at a very large file wants the
+first hundred thousand records rather than all four billion.
+
+Both are the same two calls, and they compose.
+
+Decoding a buffer
+~~~~~~~~~~~~~~~~~
+
+:meth:`tttrlib.TTTR.decode_records` takes undecoded record bytes, a record
+type, and a **decode state**, and appends the events to a ``TTTR``:
+
+.. code-block:: python
+
+   import tttrlib
+
+   data = tttrlib.TTTR()
+   state = tttrlib.TTTRDecodeState()
+   for chunk in card.read():                     # bytes, or a uint32 array
+       tttrlib.decode_records(chunk, tttrlib.RECORD_SPC130, state, data)
+
+The state is the part that makes this an interface rather than one function.
+Every format here counts macro time overflows in records of their own, so the
+macro time of an event depends on every record before it. A caller decoding a
+stream in pieces has to hand that count back in, or **every event after the
+first chunk boundary is wrong** — and nothing fails when it goes wrong; the
+times are simply short. Passing a default-constructed state decodes a buffer
+standalone; passing the returned one continues the same stream.
+
+Every record encoding the file readers dispatch on is reachable this way. The
+four that are not — SM, BrightEyes-TTM and the two FLIM LABS taggers — decline
+**by name**, because each needs something that is not in the record stream:
+
+.. code-block:: python
+
+   tttrlib.record_type_is_decodable(tttrlib.RECORD_SM)   # False
+   tttrlib.decode_records(buf, tttrlib.RECORD_SM)        # ValueError: ... SM ...
+
+Reading a container in pieces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Seven containers are a header followed by fixed-width records, so record
+``first`` is a seek:
+
+.. code-block:: python
+
+   info = tttrlib.container_records("run.ptu")
+   info.n_records        # from the header and the file size, nothing decoded
+   info.record_type      # including the ones only the record stream reveals
+   info.ranged           # False for a container that cannot be read in pieces
+
+   raw = tttrlib.container_read_records("run.ptu", first=0, n=100_000)
+
+``container_chunks`` is the loop written out, for a progress bar or a first
+look at a large file:
+
+.. code-block:: python
+
+   for data, done, total in tttrlib.container_chunks("run.ptu", chunk=1 << 20):
+       print(f"{done}/{total}")
+   # after the last iteration `data` equals tttrlib.TTTR("run.ptu"), event
+   # for event -- the carried state is what makes that true
+
+Appending grows the event store by a factor rather than exactly, so after
+decoding by hand it holds more rows than there are events. Every accessor
+reports the event count and is unaffected; ``TTTR.data()``, which hands over
+the columns themselves, would show the slack as a tail of zeros. Call
+``shrink_to_fit()`` once, after the last chunk — ``container_chunks`` does.
+
+The registry says which containers this applies to, next to the range
+parameters they accept::
+
+   tttrlib.registry("file_container")["PTU"]["ranged_reads"]           # True
+   tttrlib.registry("file_container")["PHOTON-HDF5"]["ranged_reads"]   # False
+
+A container that cannot be read in pieces declines by name rather than
+quietly reading all of it.
+
+.. warning::
+
+   :func:`tttrlib.container_events` (and the ``first_record`` / ``n_records``
+   reader parameters) report **macro times counted from** ``first_record``,
+   not from the start of the file. They have to: the overflow count at that
+   record is not in the records, and finding it means reading everything
+   before it — the cost a ranged read exists to avoid. For absolute times over
+   a whole file, read it in chunks from 0 and carry one state, which is what
+   ``container_chunks`` does.
+
+Two containers keep part of the routing channel outside the records — a Carl
+Zeiss ConfoCor3 record has no channel field at all, and an SPC-QC record
+splits the detector across a router signal and a module input whose width is
+in the header. :meth:`tttrlib.TTTR.apply_container_channels` applies that,
+once, after the last chunk; it is a no-op for the other five.
+
 Becker & Hickl ``.set`` sidecar and imaging round-trip
 ------------------------------------------------------
 
@@ -617,6 +717,51 @@ a CLSM image with no extra arguments:
 
 The hint only applies when the caller does not pass an explicit
 ``reading_routine``; pass one to override it.
+
+.. _bh_set_full:
+
+Reading the whole ``.set``, not just the imaging tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The five tags above are the right scope for a *photon reader*: they are what
+the 4-byte ``.spc`` header cannot carry, and nothing else in the sidecar
+changes how a record decodes. They are also about four per cent of the file.
+The rest is the hardware configuration the measurement was taken with — CFD
+levels, TAC range and gain, sync divider, collection time, dead-time
+compensation — and anything that *drives* an SPC card wants it.
+
+:func:`tttrlib.read_set_file` returns every parameter, and
+:func:`tttrlib.bh_set` arranges them as ``{section: {name: value}}``:
+
+.. code-block:: python
+
+   s = tttrlib.bh_set("measurement.set")
+   s["SYS_PARA"]["SP_TAC_R"]        # '6.554e-08'
+   s["SYS_PARA"]["SP_CFD_LL"]       # '-129.41176'
+   s["IDENTIFICATION"]["Title"]     # 'sample_c10'
+
+   flat = tttrlib.read_set_file("measurement.set")   # ordered, with types
+   flat[0].section, flat[0].group, flat[0].name, flat[0].type, flat[0].value
+
+``parse_set(content)`` does the same for a sidecar that came out of a
+container rather than off a disk.
+
+**Values stay text**, including the numeric-looking ones. A ``.set`` is a
+device configuration file and its types are per-parameter — the ``I``, ``F``,
+``B``, ``S``, ``C`` letters are what the file itself declares, and they do not
+always mean what they look like. A parser that converts is a parser that is
+wrong about one field in a hundred and silent about it, so the interpretation
+is left to the caller and the declared type comes back alongside the text.
+
+Sections are preserved: ``IDENTIFICATION`` from the header block, then
+``SYS_PARA``, ``TRACE_PARA`` and ``WIND_PARA`` from the ``*SETUP`` block.
+Parsing stops at ``BIN_PARA_BEGIN:`` — everything after it is a binary blob of
+window geometry and colours, and a line parser run over binary finds
+parameters that are not there.
+
+``read_bh_set_file`` keeps its own scope. It still feeds only the imaging tags
+into the header, and it must: a photon reader that started returning a hundred
+device settings would change what every ``.spc`` header contains.
 
 Tested conversion scripts
 -------------------------

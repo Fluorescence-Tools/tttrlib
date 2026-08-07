@@ -370,6 +370,105 @@ function makeOps(ctx) {
     },
     'hdf5.groups': (on, a) => Array.from(tttrlib.hdf5_table_groups(a[0])),
     'hdf5.has': (on, a) => tttrlib.hdf5_table_has(a[0], a[1]),
+
+    // -- pto -----------------------------------------------------------------
+    //
+    // A uid crosses as a plain number, which is exact only because PTO mints
+    // 53-bit uids for this reason: two of the four bindings have no integer
+    // type wider than a double, and an identity that changes on its way to the
+    // caller is not one.
+    'pto.create': (on, a) => {
+      const f = new tttrlib.PtoFile();
+      if (!f.create(a[0], a[1])) throw new Error(f.error());
+      return f;
+    },
+    'pto.open': (on, a) => {
+      const f = new tttrlib.PtoFile();
+      if (!f.open(a[0])) throw new Error(f.error());
+      return f;
+    },
+    'pto.close': (on) => { on.close(); },
+    'pto.commit': (on) => on.commit(),
+    'pto.add_file': (on, a) => {
+      const uid = on.add_file(a[0], a[1], a[2], a[3]);
+      if (!uid) throw new Error(on.error());
+      return uid;
+    },
+    'pto.add_store': (on, a) => {
+      const uid = tttrlib.pto_add_store(on, a[0], a[1], a[2]);
+      if (!uid) throw new Error(on.error());
+      return uid;
+    },
+    'pto.n_objects': (on) => Number(on.n_objects()),
+    'pto.names': (on) => ptoObjects(on).map((o) => o.name),
+    'pto.kinds': (on) => ptoObjects(on).map((o) => o.kind),
+    'pto.size_of': (on, a) => Number(on.object(a[0]).size),
+    'pto.read_text': (on, a) =>
+      Buffer.from(on.read(a[0], a[1], a[2])).toString('latin1'),
+    'pto.store_columns': (on, a) => Array.from(tttrlib.pto_store_columns(on, a[0])),
+    'pto.store_groups': (on, a) => Array.from(tttrlib.pto_store_groups(on, a[0])),
+    'pto.read_store': (on, a) => {
+      // A plain Array of strings, not a VectorString: jsarrays.i converts one
+      // and its typecheck requires IsArray(), so passing the wrapped vector is
+      // the one thing overload resolution will not accept.
+      const s = new tttrlib.DataStore();
+      const names = a[1].map(String);
+      if (a[2] || a[3]) tttrlib.pto_read_store(on, a[0], s, names, a[2], a[3]);
+      else if (names.length) tttrlib.pto_read_store(on, a[0], s, names);
+      else tttrlib.pto_read_store(on, a[0], s);
+      return s;
+    },
+    'pto.build_cues': (on, a) => {
+      const n = Number(on.build_cues(a[0], a[1]));
+      if (!n) throw new Error(on.error());
+      return n;
+    },
+    'pto.cue_events': (on, a) => {
+      const cues = on.cues(a[0]);
+      return Array.from({ length: cues.size() }, (_, i) => Number(cues.get(i).event));
+    },
+    'pto.events': (on, a) => {
+      const t = new tttrlib.TTTR();
+      if (!tttrlib.pto_read_events(`${a[0]}|${a[1]}`, a[2], a[3], t))
+        throw new Error(`could not read events from ${a[0]}`);
+      return t;
+    },
+
+    // -- record streams (PRD-021) ---------------------------------------------
+    // container_read_records hands back a Uint8Array (jsarrays.i marshals
+    // std::vector<unsigned char> as one), which is exactly what decode_records
+    // takes, so a chunked decode composes with no conversion in between.
+    'tttr.new': () => new tttrlib.TTTR(),
+    'stream.n_records': (on, a) => Number(tttrlib.container_n_records(a[0], a[1])),
+    'stream.record_type': (on, a) => Number(tttrlib.container_records(a[0], a[1]).record_type),
+    'stream.ranged': (on, a) => tttrlib.container_records(a[0], a[1]).ranged,
+    'stream.record_name': (on, a) => tttrlib.record_type_name(a[0]),
+    'stream.record_bytes': (on, a) => Number(tttrlib.record_bytes(a[0])),
+    'stream.can_decode': (on, a) => tttrlib.record_type_is_decodable(a[0]),
+    'stream.read_records': (on, a) => tttrlib.container_read_records(a[0], a[2], a[3], a[1]),
+    'stream.state': () => new tttrlib.TTTRDecodeState(),
+    'stream.overflows': (on) => Number(on.overflow_counter),
+    'stream.decode': (on, a) => Number(on.decode_records(a[0], a[1], a[2])),
+    'stream.events': (on, a) => {
+      const t = new tttrlib.TTTR();
+      if (!tttrlib.container_read_events(a[0], a[2], a[3], t, a[1]))
+        throw new Error(`could not read records from ${a[0]}`);
+      return t;
+    },
+    'stream.apply_channels': (on, a) => { on.apply_container_channels(a[0]); },
+
+    // -- the Becker & Hickl ".set" sidecar (PRD-021) --------------------------
+    'bhset.n': (on, a) => tttrlib.read_set_file(a[0]).size(),
+    'bhset.sections': (on, a) => {
+      const seen = new Set();
+      for (const p of vectorItems(tttrlib.read_set_file(a[0]))) seen.add(p.section);
+      return Array.from(seen).sort();
+    },
+    'bhset.value': (on, a) => {
+      for (const p of vectorItems(tttrlib.read_set_file(a[0])))
+        if (p.section === a[1] && p.name === a[2]) return p.value;
+      throw new Error(`no ${a[1]}/${a[2]} in ${a[0]}`);
+    },
   };
 
   for (const sfx of Object.keys(COLUMN_TYPES)) {
@@ -377,6 +476,15 @@ function makeOps(ctx) {
     ops[`ds.column_${sfx}`] = columnTyped(sfx);
   }
   return ops;
+}
+
+/** A SWIG std::vector proxy has size()/get(i) and no iterator. */
+function vectorItems(v) {
+  return Array.from({ length: v.size() }, (_, i) => v.get(i));
+}
+
+function ptoObjects(file) {
+  return vectorItems(file.objects());
 }
 
 function elementOf(on, k) {
