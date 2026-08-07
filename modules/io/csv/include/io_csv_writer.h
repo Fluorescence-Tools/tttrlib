@@ -145,6 +145,43 @@ struct CsvWriteOptions {
      */
     std::string nan_string = "nan";
 
+    /*!
+     * Where a metadata block goes, if anywhere. \see CsvWriteOptions::metadata
+     *
+     * `Off` rather than `None`, for the reason CsvQuoting is `Never`: SWIG has
+     * to escape a Python keyword, and `Metadata__None` with its two underscores
+     * is not an API to ship.
+     */
+    enum class Metadata { Off, Leading, Trailing };
+
+    /*!
+     * \brief Write the store's description as JSON Lines, before or after the
+     *        data.
+     *
+     * CSV carries values and nothing else, so a table written to it loses its
+     * label and every column's units. This puts them back in the file without
+     * changing what the file IS: each line is prefixed with \ref comment, so
+     * any reader that skips comments -- pandas with `comment='#'`, and this
+     * library's own reader with `CsvOptions::comment` -- sees exactly the same
+     * table as before.
+     *
+     * JSON **Lines**, one object per line, rather than one blob: a line that a
+     * later version does not understand is skipped instead of making the whole
+     * block unreadable, and `grep` still works on it.
+     *
+     * ```
+     * #{"tttrlib":"table","version":1,"label":"acquisition","n_rows":4096}
+     * #{"column":"Tau","dtype":"float64","metadata":{"units":"ns"}}
+     * ```
+     *
+     * `Trailing` for a file something appends to, `Leading` for one a human
+     * opens.
+     */
+    Metadata metadata = Metadata::Off;
+
+    /// The character a metadata line begins with. \see metadata
+    char comment = '#';
+
     // A Bool column written as 1/0 would be inferred as an integer on the way
     // back in, which is why these are words and not digits.
     std::string true_string = "true";

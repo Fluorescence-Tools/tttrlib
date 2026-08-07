@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "io_csv.h"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
@@ -280,6 +282,7 @@ public:
                 if (m != MAP_FAILED) {
                     mapped_ = static_cast<const char*>(m);
                     size_ = static_cast<std::size_t>(st.st_size);
+                    limit_ = size_;
                     // WILLNEED only. MADV_SEQUENTIAL also tells the kernel it
                     // may drop pages behind the read, which is right for a
                     // one-shot scan and wrong here -- reading the same file
@@ -296,6 +299,7 @@ public:
 #endif
         owned_ = read_into_vector(filename);
         size_ = owned_.size();
+        limit_ = size_;
     }
 
     ~FileBytes() {
@@ -308,8 +312,12 @@ public:
     FileBytes& operator=(const FileBytes&) = delete;
 
     const char* data() const { return mapped_ != nullptr ? mapped_ : owned_.data(); }
-    std::size_t size() const { return size_; }
-    bool empty() const { return size_ == 0; }
+    /// The bytes the PARSER may see, which is the whole file unless a trailing
+    /// comment block has been scanned off. Deliberately not `size_`: that one
+    /// is the mapping's length and munmap needs it back exactly.
+    std::size_t size() const { return limit_; }
+    void set_limit(std::size_t n) { limit_ = n < size_ ? n : size_; }
+    bool empty() const { return limit_ == 0; }
     char operator[](std::size_t i) const { return data()[i]; }
 
 private:
@@ -318,6 +326,7 @@ private:
     const char* mapped_ = nullptr;
     std::vector<char> owned_;
     std::size_t size_ = 0;
+    std::size_t limit_ = 0;
     int fd_ = -1;
 };
 
@@ -445,18 +454,90 @@ struct Parsed {
     std::size_t data_start = 0;
 };
 
+/*!
+ * \brief Where the data begins and ends once comment lines are set aside, and
+ *        the lines themselves.
+ *
+ * Recognised as a LEADING block and a TRAILING block, not line by line
+ * anywhere. That is what `write_csv(metadata=...)` produces, and it is what
+ * keeps the parser's hot loop exactly as it was: the alternative is a test per
+ * record in a reader whose whole point is how few of those it does.
+ */
+struct Comments {
+    std::size_t begin = 0;      ///< first byte of the data
+    std::size_t end = 0;        ///< one past its last byte
+    std::vector<std::string> lines;
+};
+
+Comments scan_comments(const FileBytes& buf, char marker) {
+    Comments c;
+    c.end = buf.size();
+    if (marker == '\0' || buf.empty()) return c;
+
+    const char* d = buf.data();
+    while (c.begin < c.end && d[c.begin] == marker) {
+        std::size_t eol = c.begin;
+        while (eol < c.end && d[eol] != '\n') eol++;
+        std::size_t stop = eol;
+        if (stop > c.begin && d[stop - 1] == '\r') stop--;
+        c.lines.emplace_back(d + c.begin + 1, stop - c.begin - 1);
+        c.begin = eol < c.end ? eol + 1 : eol;
+    }
+
+    // Backwards from the end, one line at a time, while each begins with the
+    // marker. A file that is nothing but comments has already been consumed by
+    // the loop above, which is why this stops at `begin`.
+    for (;;) {
+        std::size_t stop = c.end;
+        while (stop > c.begin && (d[stop - 1] == '\n' || d[stop - 1] == '\r')) stop--;
+        if (stop == c.begin) break;
+        std::size_t start = stop;
+        while (start > c.begin && d[start - 1] != '\n') start--;
+        if (d[start] != marker) break;
+        c.lines.emplace_back(d + start + 1, stop - start - 1);
+        c.end = start;
+    }
+    return c;
+}
+
+/*!
+ * \brief Put back what `write_csv(metadata=...)` set aside.
+ *
+ * JSON Lines: one object per line, so a line that is not ours, or not JSON at
+ * all, is skipped rather than making the file unreadable. A comment is a
+ * comment first and metadata second.
+ */
+void apply_comment_metadata(data::DataStore& store,
+                            const std::vector<std::string>& lines) {
+    for (const std::string& line : lines) {
+        const nlohmann::json j = nlohmann::json::parse(line, nullptr, false);
+        if (j.is_discarded() || !j.is_object()) continue;
+        if (j.contains("label") && j["label"].is_string())
+            store.set_label(j["label"].get<std::string>());
+        const auto name = j.find("column");
+        if (name == j.end() || !name->is_string()) continue;
+        const int c = store.find(name->get<std::string>());
+        if (c < 0) continue;
+        const auto meta = j.find("metadata");
+        if (meta != j.end() && meta->is_object())
+            store.column(c).set_metadata(meta->dump());
+    }
+}
+
 /// Header row and column names.
-Parsed read_header(const FileBytes& buf, const CsvOptions& o) {
+Parsed read_header(const FileBytes& buf, const CsvOptions& o,
+                   std::size_t start = 0) {
     Parsed p;
-    if (buf.empty()) return p;
+    if (buf.empty() || start >= buf.size()) return p;
     std::vector<Field> fields;
-    const std::size_t after = split_record(buf.data(), 0, buf.size(), o.delimiter, o.quote, fields);
+    const std::size_t after =
+            split_record(buf.data(), start, buf.size(), o.delimiter, o.quote, fields);
     if (o.has_header) {
         for (const Field& f : fields) p.names.push_back(unquote(f, o.quote));
         p.data_start = after;
     } else {
         for (std::size_t i = 0; i < fields.size(); i++) p.names.push_back("f" + std::to_string(i));
-        p.data_start = 0;
+        p.data_start = start;
     }
     return p;
 }
@@ -643,10 +724,16 @@ void read_csv_into(data::DataStore& store, const std::string& filename,
     auto t_all = clock_now();
 
     auto t0 = clock_now();
-    const FileBytes buf(filename);
+    FileBytes buf(filename);
     if (profile) std::fprintf(stderr, "  open/map   %6.1f ms\n", since(t0));
     store = data::DataStore();
-    Parsed p = read_header(buf, options);
+
+    // Set aside before anything is parsed, so the header is the first DATA line
+    // and the last data row is the last one the block splitter sees.
+    const Comments comments = scan_comments(buf, options.comment);
+    buf.set_limit(comments.end);
+
+    Parsed p = read_header(buf, options, comments.begin);
     if (p.names.empty()) return;
     const std::size_t n_cols = p.names.size();
 
@@ -887,6 +974,9 @@ void read_csv_into(data::DataStore& store, const std::string& filename,
         for (std::size_t r = 0; r < total; r++) if (!v[r]) { any_missing = true; break; }
         if (any_missing) col.set_mask(v, static_cast<int>(total));
     }
+    // Last, because it names columns and they have to exist first.
+    apply_comment_metadata(store, comments.lines);
+
     if (profile) {
         std::fprintf(stderr, "  pack/mask  %6.1f ms\n", since(t0));
         std::fprintf(stderr, "  TOTAL      %6.1f ms\n", since(t_all));

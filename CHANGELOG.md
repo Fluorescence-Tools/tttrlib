@@ -111,6 +111,26 @@
   in one group and not another leaves that group with fewer columns rather than
   making the read an error.
 
+- **`write_csv(metadata="leading"|"trailing")` and `read_csv(comment=...)`.**
+  CSV carries values and nothing else, so a table written to it lost its label
+  and every column's units. The description now rides beside the data as JSON
+  **Lines** — one object per line, each prefixed with a comment character — so
+  any reader that skips comments sees exactly the table it saw before:
+
+  ```
+  #{"tttrlib":"table","version":1,"label":"acquisition","n_rows":4096}
+  #{"column":"Tau","dtype":"float64","metadata":{"units":"ns"}}
+  Tau,n
+  ```
+
+  JSON Lines rather than one blob so a line a later version does not understand
+  is skipped instead of making the block unreadable, and `grep` still works.
+  A column with nothing to say gets no line — nothing acquires a description by
+  being written. `read_csv(comment="#")` puts it all back.
+  The reader recognises comments as a **leading and a trailing block**, not line
+  by line: that is what this writes, and it keeps the parser's hot loop free of
+  a test per record. Its header used to say comment lines were out of scope
+  entirely; that note now says which half is in and why.
 - **`write_csv(nan_rep=...)`** — what a float `NaN` is written as. `na_rep`
   covers a cell the mask says was never measured; a `NaN` is a *value*, and the
   store keeps the two apart on purpose. CSV has one blank field for both, so

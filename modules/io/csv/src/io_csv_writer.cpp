@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "io_csv_writer.h"
 
+#include <nlohmann/json.hpp>
+
 #include "decimal_exact.h"
 
 #include <algorithm>
@@ -498,6 +500,9 @@ struct Job {
     std::vector<const Column*> columns;
     Fmt fmt;
     std::string header;
+    /// The metadata block, already prefixed and newline-terminated, or empty.
+    std::string meta_block;
+    bool meta_leads = false;
     std::string eol;
     std::size_t n_rows = 0;
     const data::BitMask* row_mask = nullptr;
@@ -562,6 +567,39 @@ Job prepare(const DataStore& store, const CsvWriteOptions& options) {
     j.fmt.false_string = render(options.false_string, j.fmt, mode);
     j.fmt.nan_string = render(options.nan_string, j.fmt, mode);
 
+    // Before the metadata block, which reports it.
+    j.n_rows = store.n_rows();
+
+    // One JSON object per line, each prefixed so any reader that skips comments
+    // sees the same table it always did. Built here rather than in run(), which
+    // formats rows and should not also know what a description is.
+    if (options.metadata != CsvWriteOptions::Metadata::Off) {
+        j.meta_leads = options.metadata == CsvWriteOptions::Metadata::Leading;
+        auto line = [&](const nlohmann::json& o) {
+            j.meta_block += options.comment;
+            j.meta_block += o.dump();
+            j.meta_block += options.eol;
+        };
+        nlohmann::json head = nlohmann::json::object();
+        head["tttrlib"] = "table";
+        head["version"] = 1;
+        if (!store.label().empty()) head["label"] = store.label();
+        head["n_rows"] = j.n_rows;
+        line(head);
+        for (const Column* c : j.columns) {
+            nlohmann::json entry = nlohmann::json::object();
+            entry["column"] = c->name();
+            entry["dtype"] = data::column_type_name(c->type());
+            if (!c->metadata().empty()) {
+                nlohmann::json m = nlohmann::json::parse(c->metadata(), nullptr, false);
+                if (!m.is_discarded()) entry["metadata"] = m;
+            }
+            // Only when there is something beyond the name to say. A column
+            // with no description should not grow one by being written.
+            if (entry.contains("metadata") || !c->metadata().empty()) line(entry);
+        }
+    }
+
     j.plans.resize(j.columns.size());
     for (std::size_t k = 0; k < j.columns.size(); k++) {
         const Column& c = *j.columns[k];
@@ -599,7 +637,6 @@ Job prepare(const DataStore& store, const CsvWriteOptions& options) {
         j.header.assign(h.data(), h.size());
     }
 
-    j.n_rows = store.n_rows();
     if (options.selected_only && store.has_row_mask()) j.row_mask = &store.row_mask();
     j.block_rows = std::max<std::size_t>(1, options.block_rows);
 
@@ -635,8 +672,16 @@ void format_block(const Job& j, std::size_t r0, std::size_t r1, Out& o) {
  * file, so a table that does not fit in memory still writes.
  */
 bool run(const Job& j, const std::function<bool(const char*, std::size_t)>& sink) {
+    if (j.meta_leads && !j.meta_block.empty() &&
+        !sink(j.meta_block.data(), j.meta_block.size())) return false;
     if (!j.header.empty() && !sink(j.header.data(), j.header.size())) return false;
-    if (j.n_rows == 0 || j.plans.empty()) return true;
+    if (j.n_rows == 0 || j.plans.empty()) {
+        // The trailing block still goes out: a table with no rows has a label
+        // and column descriptions like any other.
+        if (!j.meta_leads && !j.meta_block.empty())
+            return sink(j.meta_block.data(), j.meta_block.size());
+        return true;
+    }
 
     const std::size_t n_blocks = (j.n_rows + j.block_rows - 1) / j.block_rows;
     std::vector<Out> buffers(j.threads);
@@ -661,6 +706,8 @@ bool run(const Job& j, const std::function<bool(const char*, std::size_t)>& sink
         for (std::size_t w = 0; w < wave; w++)
             if (!sink(buffers[w].data(), buffers[w].size())) return false;
     }
+    if (!j.meta_leads && !j.meta_block.empty())
+        return sink(j.meta_block.data(), j.meta_block.size());
     return true;
 }
 

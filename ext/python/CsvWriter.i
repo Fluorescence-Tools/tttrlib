@@ -24,6 +24,7 @@ def write_csv(filename, store, delimiter=",", quote='"', header=True,
               true_string="true",
               false_string="false", float_precision=0, float_decimals=-1,
               keep_decimal_point=False, selected_only=True, columns=None,
+              metadata="none", comment="#",
               threads=0, block_rows=16384):
     """Write a DataStore as CSV, in parallel.
 
@@ -49,6 +50,17 @@ def write_csv(filename, store, delimiter=",", quote='"', header=True,
     :param keep_decimal_point: write an integral value as "12.0" rather than
         "12", so an all-integral column still reads back as a float from a
         reader that infers types from the text (pandas does)
+    :param metadata: "leading", "trailing" or "none". CSV carries values and
+        nothing else, so a table written to it loses its label and every
+        column's units. This puts them back as JSON Lines -- one object per
+        line, each prefixed with ``comment`` -- so any reader that skips
+        comments sees exactly the table it saw before::
+
+            #{"tttrlib":"table","version":1,"label":"acquisition","n_rows":4096}
+            #{"column":"Tau","dtype":"float64","metadata":{"units":"ns"}}
+
+        ``read_csv(comment="#")`` puts them back on the store.
+    :param comment: the character a metadata line begins with
     :param selected_only: write only the selected rows when the store is gated
     :param columns: which columns, by name and in this order
 
@@ -84,6 +96,18 @@ def write_csv(filename, store, delimiter=",", quote='"', header=True,
     o.float_decimals = int(float_decimals)
     o.keep_decimal_point = keep_decimal_point
     o.selected_only = selected_only
+    if isinstance(metadata, str):
+        _where = {"none": CsvWriteOptions.Metadata_Off,
+                  "off": CsvWriteOptions.Metadata_Off,
+                  "leading": CsvWriteOptions.Metadata_Leading,
+                  "trailing": CsvWriteOptions.Metadata_Trailing}
+        if metadata not in _where:
+            raise ValueError("metadata must be one of %s, not %r"
+                             % (sorted(_where), metadata))
+        o.metadata = _where[metadata]
+    else:
+        o.metadata = metadata
+    o.comment = comment
     o.threads = int(threads)
     o.block_rows = int(block_rows)
     if columns is not None:

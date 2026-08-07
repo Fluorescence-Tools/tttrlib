@@ -25,10 +25,18 @@
  * \section csv_scope What it does not do
  *
  * Quoting per RFC 4180, `\n` and `\r\n`, and UTF-8/ASCII. Not: other encodings,
- * escape characters outside doubled quotes, or comment lines. A file needing
- * those should go through pandas -- the goal is to be fast on the files that
- * actually get opened, not to be a general CSV library, and the difference is
- * what keeps this finishable and correct.
+ * or escape characters outside doubled quotes. A file needing those should go
+ * through pandas -- the goal is to be fast on the files that actually get
+ * opened, not to be a general CSV library, and the difference is what keeps
+ * this finishable and correct.
+ *
+ * Comment lines were on that list and are now half off it: \ref
+ * CsvOptions::comment skips a LEADING and a TRAILING block, which is what
+ * `write_csv`'s metadata block is and what a file annotated by hand usually
+ * has. A comment between two data rows is still not supported, and the reason
+ * is the same one that put comments on the list: recognising them anywhere
+ * costs a test per record in a reader whose whole point is how few of those it
+ * does.
  */
 
 #include <cstddef>
@@ -75,6 +83,22 @@ struct CsvOptions {
 
     /// Explicit types by column name, bypassing inference for those columns.
     std::vector<std::string> force_text_columns = {};
+
+    /*!
+     * \brief Lines beginning with this are not data. `\0` (the default) is off.
+     *
+     * Recognised as a **leading block and a trailing block**, not line by line
+     * anywhere in the file. That is what \ref write_csv writes with
+     * `metadata`, and it is what keeps the parser's hot loop as it was: the
+     * alternative is a test per record in a reader whose whole point is how few
+     * of those it does. A comment between two data rows is not supported and
+     * will be parsed as a row.
+     *
+     * A line that parses as one of this library's metadata objects restores
+     * what it carries -- the store's label, a column's description. One that
+     * does not is simply skipped, so a file commented by hand still reads.
+     */
+    char comment = '\0';
 };
 
 /*!

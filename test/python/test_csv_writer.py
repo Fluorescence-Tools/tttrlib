@@ -484,3 +484,118 @@ def test_an_unknown_quoting_names_the_ones_that_work():
     with pytest.raises(ValueError) as e:
         tttrlib.write_csv(None, s, quoting="bogus")
     assert "needed" in str(e.value) and "bogus" in str(e.value)
+
+
+# -- what CSV loses, put back beside it ---------------------------------------
+
+
+def _described():
+    s = tttrlib.DataStore("acquisition")
+    s.set_n_rows(3)
+    s.add("Tau", np.array([1.0, 2.0, 3.0]))
+    s.add("n", np.arange(3, dtype=np.int32))
+    s["Tau"].set_units("ns")
+    s["Tau"].set_attribute("of", "run.ptu")
+    return s
+
+
+def test_the_label_and_the_units_survive_csv(tmp_path):
+    """CSV carries values and nothing else, so a table written to it loses its
+    label and every column's units. A JSON Lines block beside the data puts
+    them back without changing what the file IS."""
+    s = _described()
+    for where in ("leading", "trailing"):
+        p = str(tmp_path / (where + ".csv"))
+        tttrlib.write_csv(p, s, metadata=where)
+        back = tttrlib.read_csv(p, comment="#")
+
+        assert back.n_rows() == 3, where
+        assert back.names == ["Tau", "n"], where
+        assert back.label() == "acquisition", where
+        assert back["Tau"].units() == "ns", where
+        assert back["Tau"].attribute("of") == "run.ptu", where
+
+
+def test_the_block_goes_where_it_was_asked_to(tmp_path):
+    out = tttrlib.write_csv(None, _described(), metadata="leading")
+    assert out.startswith("#{"), "leading means before the header"
+    assert "\nTau,n\n" in out
+
+    out = tttrlib.write_csv(None, _described(), metadata="trailing")
+    assert out.startswith("Tau,n\n"), "trailing means after the data"
+    assert out.rstrip().endswith("}")
+
+
+def test_it_is_json_lines_and_not_one_blob():
+    """One object per line, so a line a later version does not understand is
+    skipped rather than making the block unreadable -- and grep still works."""
+    import json
+
+    out = tttrlib.write_csv(None, _described(), metadata="leading")
+    lines = [l for l in out.split("\n") if l.startswith("#")]
+    assert len(lines) == 2, "a header object and one per described column"
+    head = json.loads(lines[0][1:])
+    assert head["tttrlib"] == "table" and head["version"] == 1
+    assert head["label"] == "acquisition" and head["n_rows"] == 3
+    col = json.loads(lines[1][1:])
+    assert col["column"] == "Tau" and col["dtype"] == "float64"
+    assert col["metadata"]["units"] == "ns"
+
+
+def test_a_column_with_nothing_to_say_gets_no_line():
+    """Nothing acquires a description by being written."""
+    out = tttrlib.write_csv(None, _described(), metadata="leading")
+    assert '"column":"n"' not in out.replace(" ", "")
+
+
+def test_the_default_writes_no_block():
+    assert "#" not in tttrlib.write_csv(None, _described())
+
+
+def test_a_reader_that_skips_comments_sees_the_same_table(tmp_path):
+    """The property that makes this safe: the file is still the file. Checked
+    against this library's own reader with the option off -- which is the same
+    position pandas is in with `comment='#'` unset."""
+    s = _described()
+    plain = str(tmp_path / "plain.csv")
+    described = str(tmp_path / "described.csv")
+    tttrlib.write_csv(plain, s)
+    tttrlib.write_csv(described, s, metadata="trailing")
+
+    a = tttrlib.read_csv(plain)
+    b = tttrlib.read_csv(described, comment="#")
+    assert a.names == b.names and a.n_rows() == b.n_rows()
+    np.testing.assert_array_equal(a["Tau"].numpy(), b["Tau"].numpy())
+
+
+def test_a_comment_line_is_skipped_even_when_it_is_not_ours(tmp_path):
+    """A comment is a comment first and metadata second: a file annotated by
+    hand still reads."""
+    p = str(tmp_path / "hand.csv")
+    open(p, "w").write("# written by hand, not JSON at all\nx,y\n1,2\n#and a trailer\n")
+    back = tttrlib.read_csv(p, comment="#")
+    assert back.names == ["x", "y"] and back.n_rows() == 1
+    np.testing.assert_array_equal(back["x"].numpy(), [1])
+
+
+def test_a_metadata_line_for_a_column_that_is_gone_is_ignored(tmp_path):
+    """Written whole, read as a subset -- the block names a column the caller
+    did not ask for, and that is not an error."""
+    p = str(tmp_path / "sub.csv")
+    tttrlib.write_csv(p, _described(), metadata="leading", columns=["n"])
+    back = tttrlib.read_csv(p, comment="#")
+    assert back.names == ["n"]
+
+
+def test_an_unknown_metadata_placement_names_the_ones_that_work():
+    with pytest.raises(ValueError) as e:
+        tttrlib.write_csv(None, _described(), metadata="sideways")
+    assert "leading" in str(e.value) and "sideways" in str(e.value)
+
+
+def test_the_comment_character_is_the_callers_choice(tmp_path):
+    p = str(tmp_path / "semi.csv")
+    tttrlib.write_csv(p, _described(), metadata="leading", comment=";")
+    assert open(p).read().startswith(";{")
+    back = tttrlib.read_csv(p, comment=";")
+    assert back.label() == "acquisition" and back.n_rows() == 3

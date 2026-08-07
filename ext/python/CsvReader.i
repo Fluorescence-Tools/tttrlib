@@ -17,7 +17,8 @@
 %pythoncode %{
 def read_csv(filename, delimiter=",", quote='"', has_header=True,
              use_float32=False, threads=0, block_size=16 << 20,
-             newlines_in_values=False, na_values=None, text_columns=None):
+             newlines_in_values=False, na_values=None, text_columns=None,
+             comment=None):
     """Read a CSV into a DataStore, in parallel, without an intermediate copy.
 
     :param use_float32: store inferred real columns as float32 -- half the
@@ -44,6 +45,12 @@ def read_csv(filename, delimiter=",", quote='"', has_header=True,
         o.na_values = VectorString(list(na_values))
     if text_columns is not None:
         o.force_text_columns = VectorString(list(text_columns))
+    if comment is not None:
+        # Recognised as a LEADING and a TRAILING block, not line by line
+        # anywhere: that is what write_csv(metadata=...) produces, and it keeps
+        # the parser's hot loop free of a test per record. A line that parses as
+        # one of this library's metadata objects restores what it carries.
+        o.comment = comment
     store = DataStore()
     # Filled in place: returning a store by value would have SWIG copy the whole
     # table at the moment it is largest.
