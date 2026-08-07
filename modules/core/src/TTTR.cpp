@@ -1087,7 +1087,9 @@ bool TTTR::write_ttr_file(const std::string& filename, TTTRHeader* hdr) {
         // have produced, so the writer needs the same parameters as the reader.
         tttrlib::io::TtrParams params =
                 tttrlib::io::ttr_params_from_json(tttr_container_parameters);
-        tttrlib::io::write_ttr(filename, macro_times, micro_times,
+        tttrlib::io::write_ttr(filename,
+                               reinterpret_cast<const std::uint64_t*>(macro_times),
+                               micro_times,
                                routing_channels, event_types,
                                n_valid_events, params);
     } catch (const std::exception& e) {

@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <cmath>
+#include <cstring>
 
 template <typename T>
 inline void linspace(double start, double stop, T *bin_edges, int n_bins){
