@@ -138,6 +138,50 @@ The copy is not free — it is the one on the largest array in the process.
 
 ---
 
+# Coverage gaps
+
+Not defects. Places where something works and is verified in **one** language,
+recorded because "it compiles" is not "it passes" — and the R runner proved
+that distinction on 2026-08-07, failing six of eight new conformance cases that
+Python had green.
+
+## CSV options are not in the conformance suite, in any language
+
+`test/conformance/cases/csvfile.json` has three cases and all three go through
+default options:
+
+```python
+tttrlib._write_csv_native(path, store, tttrlib.CsvWriteOptions())
+tttrlib.read_csv_into(store, path, tttrlib.CsvOptions())
+```
+
+So the round trip, the digits and the column order are pinned in four
+languages, and **every knob is pinned in Python only**:
+
+| Not covered cross-language | Added |
+|---|---|
+| `nan_rep` — what a `NaN` is written as | 2026-08-07 |
+| `metadata` / `comment` — the JSON Lines block | 2026-08-07 |
+| `na_rep`, `true_string`, `false_string` quoting | earlier |
+| `quoting`, `float_precision`, `float_decimals` | earlier |
+| `na_values`, `text_columns`, `use_float32` | earlier |
+
+Why it matters here specifically: the metadata block is the one CSV feature
+whose *point* is that another program reads the file. A binding that built the
+options struct wrongly would write a file this library reads back perfectly and
+nothing else does — which is exactly the failure that has no local symptom.
+
+**What closing it looks like.** The op signatures are the work, not the cases:
+`csvfile.write` and `csvfile.read` take no options today, so they need an
+options argument that four runners each build. Once they do, one case per knob
+is cheap. Worth doing when the next CSV option lands rather than as its own
+task — the ops only need generalising once.
+
+Nothing is known to be wrong. This records that nothing is known to be right
+either, outside Python.
+
+---
+
 # Enhancements
 
 Not defects — things a downstream migration needs and cannot express today.
