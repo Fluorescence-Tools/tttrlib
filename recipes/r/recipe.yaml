@@ -32,6 +32,7 @@ requirements:
     - libtiff
     - highfive
     - nlohmann_json
+    - eigen
     - if: osx
       then: llvm-openmp
     - if: linux

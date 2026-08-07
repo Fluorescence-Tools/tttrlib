@@ -23,7 +23,6 @@ venv
 !bin/tttrlib
 
 # Local planning and agent state
-PLANS/
 .omx/
 
 # AI coding tools (assistant state, caches, local config)

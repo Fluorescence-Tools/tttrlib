@@ -662,7 +662,7 @@ jobs:
           # The retry loop guards the remaining downloads (hdf5/zlib mirrors).
           $attempts = 3
           for ($i = 1; $i -le $attempts; $i++) {
-            & $vcpkg install hdf5[core,zlib]:x64-windows --recurse --no-print-usage
+          & $vcpkg install hdf5[core,zlib]:x64-windows eigen3:x64-windows --recurse --no-print-usage
             if ($LASTEXITCODE -eq 0) { break }
             if ($i -eq $attempts) { exit 1 }
             Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"

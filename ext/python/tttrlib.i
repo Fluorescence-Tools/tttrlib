@@ -139,7 +139,7 @@ def experimental(cls):
 %include "HMMConstraints.i"
 %include "HMM.i"
 %include "NeuralNet.i"
-%include "HmmSurrogate.i"
+%include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"

@@ -27,6 +27,7 @@ toolchain, and honest status of work in progress.
 # Design
 
 * [Folding chisurf's PDA3c into tttrlib's `pda` module](design/pda-3colour-fold-in.md) - implemented as `PdaBurstLikelihood`; the plan, what was done, and what stays in chisurf
+* [Photon Simulator subsystem plan (PRD-005)](design/plan-005-photon-simulator.md) - architecture and guardrails for the additive `Sim`-prefixed simulation engine
 
 # ImageJ / Fiji plugin
 

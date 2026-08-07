@@ -2,6 +2,11 @@
 
 ## 2026-08-07
 
+* **Fold-in**: Moved the photon-simulator implementation plan from the
+  gitignored `PLANS/` directory into [design/](/design/plan-005-photon-simulator.md),
+  next to its PRD. `PLANS/` is gone; the `.gitignore` line that excluded it is
+  gone too, for the same reason as `PRDs/` before it.
+
 * **Reorganization**: Sorted the bundle into subfolders and folded the PRDs in.
   The flat layout (ten files at the root) became thematic directories —
   `bindings/`, `testing/`, `design/`, `handover/`, `prds/` — with `index.md` and
