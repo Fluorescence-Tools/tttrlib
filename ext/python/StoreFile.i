@@ -15,12 +15,28 @@
 // see the note at the top of misc_types.i about int64_t on glibc. This says the
 // one thing that is needed instead.
 //
-// Not for R: `unsigned long long` there goes through as.integer(), which is
-// 32-bit and silently NA above 2^31. ext/r/tttrlib.i gives std::uint64_t its
-// own typemaps, and %apply here would overwrite them.
+// Not for R, which gives std::uint64_t its own typemaps in ext/r/tttrlib.i:
+// `unsigned long long` there goes through as.integer(), which is 32-bit and
+// silently NA above 2^31, and a %apply here would overwrite the fix with the
+// very thing it corrects.
 #ifndef SWIGR
 %apply unsigned long long { std::uint64_t };
 #endif
+
+// A SWIG VectorString is not a list and has no __eq__, so
+// store_groups(f) == ['a', 'b'] would be False however right the answer was --
+// every caller ends up writing list(...) round it. group_names/group_paths on
+// DataStore already get this treatment; these are the same shape and should
+// not be the exception. Must precede the %include: a pythonappend declared
+// after the header it applies to is silently ignored.
+#ifdef SWIGPYTHON
+%feature("pythonappend") tttrlib::io::store_groups %{
+    val = list(val)
+%}
+%feature("pythonappend") tttrlib::io::store_columns %{
+    val = list(val)
+%}
+#endif  // SWIGPYTHON
 
 %include "io_store.h"
 

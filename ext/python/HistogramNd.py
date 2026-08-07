@@ -200,9 +200,18 @@ def to_numpy(self, flow=False):
     return (self.view(flow),) + tuple(a.edges for a in self.axes)
 
 
-def __array__(self, dtype=None):
+def __array__(self, dtype=None, copy=None):
+    # `copy` is numpy 2's, which passes it and warns on a signature that cannot
+    # take it. numpy 1 never passes it, so the three-argument form is right for
+    # both. The view is already the histogram's own buffer, so copy=False is
+    # satisfiable unless a dtype change is also asked for.
     a = self.view(False)
-    return a if dtype is None else a.astype(dtype)
+    if dtype is not None and _np_hist.dtype(dtype) != a.dtype:
+        if copy is False:
+            raise ValueError("cannot view %s counts as %s without a copy"
+                             % (a.dtype, _np_hist.dtype(dtype)))
+        return a.astype(dtype)
+    return a.copy() if copy is True else a
 
 
 def __repr__(self):

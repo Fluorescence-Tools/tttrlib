@@ -26,6 +26,10 @@
     (const unsigned char* image, int ny, int nx)
 }
 %apply (signed char* IN_ARRAY1, int DIM1) { (const signed char* v, int n) }
+// DataStore::take_into. Named distinctly, like everything else here: %apply is
+// global and keyed by the parameter names, so a generic (int*, int) pair would
+// redefine that pair for every other interface file.
+%apply (int* IN_ARRAY1, int DIM1) { (const int* take_rows, int n_take_rows) }
 %apply (unsigned long long* IN_ARRAY1, int DIM1) { (const unsigned long long* v, int n) }
 %apply (unsigned int* IN_ARRAY1, int DIM1) { (const unsigned int* v, int n) }
 %apply (unsigned short* IN_ARRAY1, int DIM1) { (const unsigned short* v, int n) }
@@ -81,6 +85,16 @@ TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::group)
 TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::add_group)
 TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::ensure_group)
 
+// A Column is borrowed too, and every zero-copy array is reached through one,
+// so the same rule has to hold for EVERY way of getting a column -- not just
+// for the two that go through DataStore.py. `store.column(0).numpy()` and
+// `store.column_by_name("x").numpy()` handed back arrays that outlived the
+// store and read reused memory: see BUGS.md, where a 1000-row CSV column came
+// back with row 2 as 6.001000000000001e-05 instead of 6.0, and a burst table
+// read 84 of 154 rows of `First Photon` as 3.3e-319.
+TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::column)
+TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::column_by_name)
+
 // A SWIG VectorString is not a list and has no __eq__, so group_names() ==
 // ['a', 'b'] would be False however right the answer was. Everything else on
 // this surface hands back a real list -- `names` builds one by hand at
@@ -89,6 +103,9 @@ TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::ensure_group)
     val = list(val)
 %}
 %feature("pythonappend") tttrlib::data::DataStore::group_paths %{
+    val = list(val)
+%}
+%feature("pythonappend") tttrlib::data::DataStore::column_names %{
     val = list(val)
 %}
 #endif  // SWIGPYTHON

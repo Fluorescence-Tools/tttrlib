@@ -24,17 +24,74 @@ def add(self, name, values):
 
 
 def __getitem__(self, key):
-    c = self.column_by_name(key) if isinstance(key, str) else self.column(int(key))
-    # A Column proxy is a BORROWED reference into the store, so holding one
-    # does not keep the store alive -- and a zero-copy view into the column
-    # then points at freed memory. Attaching the store here makes the chain
-    # view -> column -> store unbreakable.
-    c._store = self
+    """A column of this store by name or index, or anything in the tree by path.
+
+    A column of this store is looked up FIRST, always, and the tree only once
+    that has already missed. Two things follow, and both are the point:
+
+    * a hit takes exactly the call it always took -- no scan for a separator is
+      added to the hottest lookup in the class, because the miss IS the signal;
+    * a column literally named ``Sg/Sr`` -- an ordinary name for a signal ratio,
+      and a case with a test of its own -- still wins over the path ``Sg/Sr``.
+      The column-wins rule, one level up.
+
+    A bare name that is only a group still raises, as it always has. That is
+    the ambiguity PRD-019 refused; ``store / "results"`` reaches a group, and
+    so does ``store["results/"]``.
+    """
+    if isinstance(key, str):
+        try:
+            c = self.column_by_name(key)
+        except ValueError:
+            if "/" not in key:
+                raise
+            return _ds_resolve(self, key)
+    else:
+        c = self.column(int(key))
+    # borrowed reference: the chain view -> column -> root has to be unbreakable
+    c._store = getattr(self, "_store", None) or self
     return c
 
 
+def __setitem__(self, key, values):
+    """Add or replace a column, by name or by path.
+
+    ``store["meta/source"] = np.array(["run.ptu"])`` creates the group if it is
+    not there. Replacing an existing column of that name is what assignment
+    means, so it is what happens.
+    """
+    if isinstance(key, str) and "/" in key:
+        head, _, leaf = key.strip("/").rpartition("/")
+        target = self.ensure_group(head) if head else self
+    else:
+        target, leaf = self, key
+    i = target.find(leaf) if isinstance(leaf, str) else int(leaf)
+    if i >= 0:
+        target.remove_column(i)
+    return target.add(leaf, values)
+
+
 def __contains__(self, name):
-    return self.find(name) >= 0
+    # The same order as __getitem__, so the two always agree: a column of this
+    # store first, the tree only once find() has said no.
+    if self.find(name) >= 0:
+        return True
+    if not (isinstance(name, str) and "/" in name):
+        return False
+    try:
+        _ds_resolve(self, name)
+    except KeyError:
+        return False
+    return True
+
+
+def __truediv__(self, other):
+    """A path into the tree, pathlib-style: ``store / "results" / "Tau"``.
+
+    Composes only -- nothing is looked up until the path is used. See
+    :class:`StorePath`.
+    """
+    return StorePath(self, _ds_split_path(other))
 
 
 def __len__(self):
@@ -301,7 +358,14 @@ def histogram(self, *names, **kwargs):
     The selection and every column's validity mask are honoured, and nothing is
     converted: a float32 column is read as float32, a string column as its
     dictionary codes on a category axis.
+
+    A name may be a PATH -- ``store.histogram("results/Tau", "results/E")`` --
+    and the call is then made on that group. Every axis has to come from the
+    same one: a histogram fills from one table, and two groups have different
+    row counts and no row correspondence, so axes from two of them are not a
+    thing that can be filled. Mixing them raises rather than answering.
     """
+    self, names = _ds_hist_retarget(self, names, kwargs, ("weight",))
     bins = kwargs.pop("bins", 128)
     rng = kwargs.pop("range", None)
     edges = kwargs.pop("edges", None)
@@ -332,7 +396,11 @@ def profile(self, *names, **kwargs):
     The selection and the validity of every column involved are honoured, and a
     non-finite sample is skipped rather than allowed to poison the bin -- see
     ``fill_histogram_sample`` in ``DataStore.h``.
+
+    Names and ``sample`` may be paths, on the same one-table rule as
+    ``histogram``.
     """
+    self, names = _ds_hist_retarget(self, names, kwargs, ("sample", "weight"))
     sample = kwargs.pop("sample", None)
     weight = kwargs.pop("weight", None)
     bins = kwargs.pop("bins", 128)
@@ -370,6 +438,87 @@ def memory_report(self):
     return out
 
 
+def walk(self):
+    """``(path, DataStore)`` for this store and every group under it.
+
+    Depth first, parent before child, this store first as ``""`` -- the order
+    ``group_paths()`` already guarantees, so a caller can rely on having seen a
+    group before anything inside it.
+    """
+    yield "", self
+    for p in self.group_paths():
+        yield p, self.group(p)
+
+
+def paths(self):
+    """Every column in the tree, by path, depth first.
+
+    The same key space ``memory_report()`` reports in and ``store[...]``
+    accepts, so ``[store[p] for p in store.paths()]`` is every column there is.
+    """
+    out = list(self.column_names())
+    for p in self.group_paths():
+        out.extend(p + "/" + n for n in self.group(p).column_names())
+    return out
+
+
+def glob(self, pattern):
+    """This store's own columns whose name matches `pattern`, as paths."""
+    return [StorePath(self, (n,))
+            for n in self.column_names() if _fnmatch_ds.fnmatchcase(n, pattern)]
+
+
+def rglob(self, pattern):
+    """Every column in the tree whose NAME matches `pattern`, as paths.
+
+    ``store.rglob("Tau")`` is every Tau anywhere, ``store.rglob("*")`` is every
+    column. Matched on the last component, as ``pathlib`` matches ``rglob``.
+
+    Columns only, unlike pathlib -- a group is a table and there is nothing
+    useful to do with a mixed list of tables and columns. ``walk()`` is the
+    one that yields groups.
+    """
+    return [StorePath(self, _ds_split_path(p)) for p in self.paths()
+            if _fnmatch_ds.fnmatchcase(p.rpartition("/")[2], pattern)]
+
+
+def tree(self, max_lines=40):
+    """The tree as text, for looking at an unfamiliar file.
+
+    ``print(store.tree())`` after ``load_store`` says what is in it -- which
+    groups, how many rows each, and the columns with their dtypes.
+    """
+    def one(store, prefix, out):
+        names = store.group_names()
+        for k, name in enumerate(names):
+            last = k == len(names) - 1
+            g = store.group(name)
+            cols = ", ".join("%s %s" % (c.name(), c.dtype) for c in g.columns)
+            out.append("%s%s %s   %d row%s, %d column%s%s" % (
+                prefix, "└──" if last else "├──", name,
+                g.n_rows(), "" if g.n_rows() == 1 else "s",
+                g.n_columns(), "" if g.n_columns() == 1 else "s",
+                ("   [%s]" % cols) if cols else ""))
+            if len(out) >= max_lines:
+                return
+            one(g, prefix + ("    " if last else "│   "), out)
+            if len(out) >= max_lines:
+                return
+
+    head = repr(self)
+    if self.label():
+        head = "%s %s" % (self.label(), head)
+    if self.n_columns():
+        head += "\n    [%s]" % ", ".join(
+            "%s %s" % (c.name(), c.dtype) for c in self.columns)
+    out = []
+    one(self, "", out)
+    total = len(self.group_paths())
+    if len(out) >= max_lines and total > len(out):
+        out.append("... %d more" % (total - len(out)))
+    return "\n".join([head] + out)
+
+
 @property
 def groups(self):
     """The direct child groups as ``{name: DataStore}``, in insertion order.
@@ -395,3 +544,27 @@ def __repr__(self):
             self.n_rows(), self.n_columns(), self.n_groups(), self.nbytes() / 1e6)
     return "DataStore(%d rows, %d columns, %.1f MB)" % (
         self.n_rows(), self.n_columns(), self.nbytes() / 1e6)
+
+
+def take(self, rows):
+    """A new store holding rows `rows`, in that order.
+
+    A copy, not a view: a column owns its buffer. Column order, dtypes,
+    metadata, dictionaries and validity all come across; the row selection does
+    not, because the result IS the selection.
+    """
+    out = DataStore()
+    self.take_into(out, _np_ds.ascontiguousarray(rows, dtype=_np_ds.int32))
+    return out
+
+
+def compact(self):
+    """A new store holding the rows the selection keeps.
+
+    The one every ``select_*`` was missing. There are 29 ways to express a gate
+    and, until this, not one that yielded a store you could hand on or write
+    back out -- so a filtered table had to become a data frame to be saved.
+    """
+    out = DataStore()
+    self.compact_into(out)
+    return out

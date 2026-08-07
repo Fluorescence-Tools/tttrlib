@@ -7,6 +7,19 @@
 %include "std_string.i"
 %include "std_vector.i"
 
+// The group listing as a real list, for the same reason DataStore's
+// group_names is one: a SWIG VectorString has no __eq__, so comparing the
+// answer to ['/results', '/meta'] is False however right it is. Must precede
+// the %include -- a pythonappend declared after it is silently ignored.
+#ifdef SWIGPYTHON
+%feature("pythonappend") tttrlib::io::hdf5_table_groups %{
+    val = list(val)
+%}
+%feature("pythonappend") tttrlib::io::read_hdf5_table_columns %{
+    val = list(val)
+%}
+#endif  // SWIGPYTHON
+
 %include "io_hdf5_table.h"
 
 // %pythoncode is a Python-only directive. The other bindings (R, Java) never

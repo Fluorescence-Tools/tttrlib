@@ -114,6 +114,26 @@ inline bool is_floating(ColumnType t) {
     return t == ColumnType::Float64 || t == ColumnType::Float32;
 }
 
+/// The dtype's name, as the bindings spell it. For error messages that have to
+/// say which two types would not combine.
+inline const char* column_type_name(ColumnType t) {
+    switch (t) {
+        case ColumnType::Float64: return "float64";
+        case ColumnType::Float32: return "float32";
+        case ColumnType::Int64:   return "int64";
+        case ColumnType::Int32:   return "int32";
+        case ColumnType::Int16:   return "int16";
+        case ColumnType::Int8:    return "int8";
+        case ColumnType::UInt64:  return "uint64";
+        case ColumnType::UInt32:  return "uint32";
+        case ColumnType::UInt16:  return "uint16";
+        case ColumnType::UInt8:   return "uint8";
+        case ColumnType::Bool:    return "bool";
+        case ColumnType::String:  return "str";
+    }
+    return "float64";
+}
+
 /// Bytes per element of a stored column, for reporting memory use.
 inline int column_type_size(ColumnType t) {
     switch (t) {
@@ -579,6 +599,100 @@ public:
     void append_i64(const long long* v, std::size_t n) { i64_.insert(i64_.end(), v, v + n); n_ = i64_.size(); }
     void append_codes(const int* v, std::size_t n) { codes_.insert(codes_.end(), v, v + n); n_ = codes_.size(); }
 
+    // --- combining and subsetting -----------------------------------------
+    //
+    // The three primitives DataStore::append_rows and DataStore::take are built
+    // from. They live here because they need the typed vectors, and putting the
+    // eleven-way switch in one place is the whole point: a twelfth column type
+    // is one line in visit_pair rather than three loops to find.
+
+    /*!
+     * \brief Append `src`'s values to this column.
+     *
+     * \throws std::invalid_argument if the types differ. Promoting silently --
+     *         a float32 column meeting a float64 one -- would lose the dtype
+     *         this whole class exists to keep, and quietly.
+     */
+    void append_from(const Column& src) {
+        if (src.type_ != type_)
+            throw std::invalid_argument(
+                    "cannot append a " + std::string(column_type_name(src.type_)) +
+                    " column to a " + column_type_name(type_) + " one: '" + name_ + "'");
+        const std::size_t before = n_, add = src.n_;
+        if (type_ == ColumnType::String) {
+            for (std::size_t i = 0; i < add; i++) push_string(src.string_at(i));
+        } else if (type_ == ColumnType::Bool) {
+            BitMask b = bits_;
+            b.assign(before + add, false);
+            for (std::size_t i = 0; i < before; i++) b.set(i, bits_.test(i));
+            for (std::size_t i = 0; i < add; i++) b.set(before + i, src.bits_.test(i));
+            bits_ = b;
+            n_ = before + add;
+        } else {
+            visit_pair(*this, src, [&](auto& dst, const auto& s) {
+                dst.insert(dst.end(), s.begin(), s.end());
+            });
+            n_ = before + add;
+        }
+        append_mask_from(src, before, add);
+    }
+
+    /*!
+     * \brief Extend by `n` rows that were never measured.
+     *
+     * The values are zeroed and the validity mask says so, which is what lets a
+     * column absent from one store keep its dtype through a concat instead of
+     * being widened to hold a NaN.
+     */
+    void append_missing(std::size_t n) {
+        const std::size_t before = n_;
+        if (type_ == ColumnType::String) {
+            for (std::size_t i = 0; i < n; i++) push_string(std::string());
+        } else if (type_ == ColumnType::Bool) {
+            BitMask b;
+            b.assign(before + n, false);
+            for (std::size_t i = 0; i < before; i++) b.set(i, bits_.test(i));
+            bits_ = b;
+            n_ = before + n;
+        } else {
+            visit_pair(*this, *this, [&](auto& dst, const auto&) {
+                dst.resize(before + n);
+            });
+            n_ = before + n;
+        }
+        materialise_mask(before);
+        for (std::size_t i = 0; i < n; i++) mask_.set(before + i, false);
+    }
+
+    /// Gather rows `rows[0..n)` of `src` into this column, which is emptied first.
+    void take_from(const Column& src, const int* rows, std::size_t n) {
+        metadata_ = src.metadata_;
+        name_ = src.name_;
+        units_ = src.units_;
+        type_ = src.type_;
+        if (type_ == ColumnType::String) {
+            dictionary_.clear(); lookup_.clear(); codes_.clear(); n_ = 0;
+            for (std::size_t k = 0; k < n; k++) push_string(src.string_at(rows[k]));
+        } else if (type_ == ColumnType::Bool) {
+            bits_.assign(n, false);
+            for (std::size_t k = 0; k < n; k++) bits_.set(k, src.bits_.test(rows[k]));
+            n_ = n;
+        } else {
+            visit_pair(*this, src, [&](auto& dst, const auto& s) {
+                dst.clear();
+                dst.resize(n);
+                for (std::size_t k = 0; k < n; k++) dst[k] = s[rows[k]];
+            });
+            n_ = n;
+        }
+        if (src.mask_.empty()) {
+            mask_.clear();
+        } else {
+            mask_.assign(n, true);
+            for (std::size_t k = 0; k < n; k++) mask_.set(k, src.mask_.test(rows[k]));
+        }
+    }
+
     // --- reading ----------------------------------------------------------
 
     const std::vector<std::string>& dictionary() const { return dictionary_; }
@@ -745,6 +859,48 @@ public:
     }
 
 private:
+    /*!
+     * \brief Call `f(a.vec, b.vec)` on the typed vector this column holds.
+     *
+     * The one place that knows the ten numeric cases. Bool and String are not
+     * here on purpose: a bit-packed payload and a dictionary are not vectors of
+     * values and every caller has to treat them separately anyway.
+     */
+    template <class F>
+    static void visit_pair(Column& a, const Column& b, F&& f) {
+        switch (a.type_) {
+            case ColumnType::Float64: f(a.f64_, b.f64_); break;
+            case ColumnType::Float32: f(a.f32_, b.f32_); break;
+            case ColumnType::Int64:   f(a.i64_, b.i64_); break;
+            case ColumnType::Int32:   f(a.i32_, b.i32_); break;
+            case ColumnType::Int16:   f(a.i16_, b.i16_); break;
+            case ColumnType::Int8:    f(a.i8_,  b.i8_);  break;
+            case ColumnType::UInt64:  f(a.u64_, b.u64_); break;
+            case ColumnType::UInt32:  f(a.u32_, b.u32_); break;
+            case ColumnType::UInt16:  f(a.u16_, b.u16_); break;
+            case ColumnType::UInt8:   f(a.u8_,  b.u8_);  break;
+            default: break;
+        }
+    }
+
+    /// Give the first `n` rows an explicit all-valid mask, so a later set()
+    /// does not read as "everything before this was missing too".
+    void materialise_mask(std::size_t n) {
+        if (!mask_.empty()) { if (mask_.size() < n_) { BitMask m; m.assign(n_, true);
+                for (std::size_t i = 0; i < mask_.size(); i++) m.set(i, mask_.test(i));
+                mask_ = m; } return; }
+        mask_.assign(n_, true);
+        (void) n;
+    }
+
+    /// Carry `src`'s validity into rows [`at`, `at` + `n`) of this column.
+    void append_mask_from(const Column& src, std::size_t at, std::size_t n) {
+        if (mask_.empty() && src.mask_.empty()) return;   // all valid, stays implicit
+        materialise_mask(at);
+        for (std::size_t i = 0; i < n; i++)
+            mask_.set(at + i, src.mask_.empty() ? true : src.mask_.test(i));
+    }
+
     //: The authority. `name_` and `units_` are caches kept in step by the
     //: setters -- there are two ways in, and both have to update both, or a
     //: column reports one name and serialises another.
@@ -1017,6 +1173,83 @@ public:
             if (c.size() != n_rows_) bad.push_back(c.name());
         return bad;
     }
+
+    // --- combining and subsetting ------------------------------------------
+    //
+    // The two binary operations `concat` is a fold over, and the one that
+    // materialises a selection. Binary rather than variadic because a fold is
+    // the same thing and is far easier to wrap for four languages; the
+    // variadic `concat(stores, axis=..., join=...)` lives in each binding.
+    //
+    // They act on THIS store's columns, not on the tree. Concatenating two
+    // roots that each hold a `results` group is ambiguous -- are the results
+    // tables being stacked, or the roots? -- and row counts differ per group
+    // anyway. Concatenating groups is `a.group("r").append_rows(b.group("r"))`,
+    // said out loud. Same rule as the histogram fill, which also takes one
+    // store; PRD-019 introduced no cross-group operation and this adds none.
+
+    /// How a column present in one store and not the other is treated.
+    enum class Join {
+        Outer,   ///< keep it; the rows that had no value are marked not-measured
+        Inner,   ///< keep only the columns both stores have
+    };
+
+    /// What to do when both stores have a column of the same name.
+    enum class OnDuplicate {
+        Refuse,     ///< say which name clashed, and change nothing
+        KeepFirst,  ///< keep this store's, drop the other's
+    };
+
+    /*!
+     * \brief Append `other`'s rows to this store.
+     *
+     * Columns line up by NAME, not by position: two burst tables written by
+     * different runs need not have listed their columns in the same order. A
+     * column whose type differs between the two throws rather than being
+     * promoted -- widening a float32 to meet a float64 loses the dtype the
+     * store exists to keep, and does it silently.
+     *
+     * With \ref Join::Outer a column missing from one side keeps its dtype and
+     * the rows that had no value are marked not-measured. That is the advantage
+     * over a data frame here, and it is not a small one: pandas has to widen an
+     * int64 column to float64 to hold a NaN, and the dtype cannot be recovered
+     * afterwards.
+     *
+     * \throws std::invalid_argument on a type conflict, naming the column.
+     */
+    void append_rows(const DataStore& other, Join join = Join::Outer);
+
+    /*!
+     * \brief Put `other`'s columns beside this store's.
+     *
+     * For files describing the SAME rows -- several analyses of one burst
+     * table. Row counts must match: a mismatch throws and names both counts
+     * rather than skipping the file, because a merge that quietly drops a
+     * measurement is worse than one that stops.
+     *
+     * \throws std::invalid_argument on a row-count mismatch, or on a duplicate
+     *         column name unless \ref OnDuplicate::KeepFirst is asked for.
+     */
+    void append_columns(const DataStore& other,
+                        OnDuplicate on_duplicate = OnDuplicate::Refuse);
+
+    /*!
+     * \brief Fill `out` with rows `take_rows[0..n)` of this store.
+     *
+     * A copy, not a view: a `Column` owns its buffer and cannot borrow one, and
+     * making it able to is a far larger change than this is worth. Column
+     * order, dtypes, metadata, dictionaries and validity all come across. The
+     * row selection does not, because the result IS the selection.
+     *
+     * Groups are not descended into -- their row counts are their own, so one
+     * index list cannot mean anything across them.
+     */
+    void take_into(DataStore& out, const int* take_rows, int n_take_rows) const;
+
+    /// \see take_into, for the rows the selection currently keeps. What every
+    /// `select_*` was missing: 29 ways to express a gate and not one that
+    /// yielded a store you could hand on or write back out.
+    void compact_into(DataStore& out) const;
 
     // --- selection --------------------------------------------------------
 

@@ -73,8 +73,38 @@
  * blob:    u64 offset, u64 bytes            -- 8-byte aligned, always
  * \endcode
  *
- * Four choices worth stating, because each is a trade someone will otherwise
+ * Five choices worth stating, because each is a trade someone will otherwise
  * reverse:
+ *
+ * - **Columnar, not row-interleaved.** A table suggests rows, so this is the
+ *   one that looks wrong until it is measured. On a 1M-row, 6-column burst
+ *   table (40 MB, 40-byte row):
+ *
+ *   | | columnar | interleaved |
+ *   |---|---|---|
+ *   | one column, every row | 8 MB | 40 MB -- must stride over every row |
+ *   | 50 rows, every column | 2 kB, 6 reads | 2 kB, 1 read |
+ *
+ *   The page costs the *same bytes* either way, because the directory gives an
+ *   offset and a length per column; interleaving would save five `pread`s and
+ *   nothing else. A column scan costs 5x. And a column scan is what this
+ *   library does -- a histogram fill reads one or two columns over every row,
+ *   a gate reads one and writes a bitmask, and every burst feature is the same
+ *   shape.
+ *
+ *   Three things also stop working if rows are interleaved. A `DataStore` is
+ *   already one typed vector per column, so an interleaved file needs a
+ *   transpose on the way in and out -- the conversion layer this format exists
+ *   to avoid. Columns have different widths, so a row is a packed struct that
+ *   is either padded (waste) or unaligned (and the mmap-a-column note below
+ *   stops being possible). And bit-packed validity masks and dictionary-encoded
+ *   text are both defined ALONG a column; per row they are neither compact nor
+ *   addressable.
+ *
+ *   The real cost of columnar is **appending rows**, which touches every
+ *   column. If that becomes a requirement the answer is row groups -- columnar
+ *   within a chunk of rows, as Parquet and ORC do -- and not interleaving,
+ *   because row groups keep the column scan and add the append.
  *
  * - **The directory is last.** The writer streams blobs forward and never seeks
  *   back to patch an offset; the reader does one seek to the tail. That is what

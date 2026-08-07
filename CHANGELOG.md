@@ -3,6 +3,59 @@
 ## [Unreleased]
 
 ### Added
+- **A `DataStore` tree is reached with `/`, the way `pathlib` reaches a
+  filesystem.** A store has been a tree since the data-groups work, and getting
+  at a column was a four-link chain — `store.group("results")["Tau"].numpy()`.
+  Now `store / "results" / "Tau"` composes a path and looks nothing up until it
+  is used, so a path can be built before the group exists, held, passed on and
+  resolved later. `store["results/Tau"]` is the same key space resolved at
+  once, `store["meta/source"] = arr` writes and creates the groups it needs,
+  and `walk()`, `paths()`, `rglob()` and `tree()` make an unfamiliar `.dstore`
+  explorable at a prompt. `add_group("meta", {"source": ["run.ptu"]})` replaces
+  the add-then-loop-then-`set_n_rows` callers were writing by hand.
+  **A key without a separator is unchanged**: `store["Tau"]` is a column, a
+  name that is only a group still raises, and a column is looked up *before*
+  the tree — so a column genuinely named `Sg/Sr` still wins over the path.
+- **Histograms take paths**, on the rule that a histogram fills from one table:
+  `(store / "results" / "Tau").histogram(bins=100)` and
+  `store.histogram("results/Tau", "results/E")`. Axes from two different groups
+  raise and say why — the groups have different row counts and no row
+  correspondence, so it is not something that can be filled. `weight=` and
+  `profile(sample=)` take paths on the same rule.
+- **`np.asarray(column)` and `np.mean(column)` work**, without spelling
+  `.numpy()`.
+
+### Fixed
+- **A column's zero-copy array outlived its `DataStore` and read reused
+  memory** (BUGS.md). Nothing in the returned array's base chain owned the
+  buffer or referenced the store: the owner rode on an ndarray subclass, and
+  numpy collapses a base chain through any array that does not own its data —
+  subclass or not — so `np.asarray(col.numpy())` handed back an array whose
+  base was the raw SWIG view, with the owner dropped on the way. It did not
+  raise; it returned plausible numbers with occasional wrong ones. The filed
+  reproduction read row 2 of a 1000-row CSV column as `0.0` or
+  `6.001000000000001e-05` instead of `6.0` in six runs of eight, and downstream
+  a burst table read 84 of 154 rows of `First Photon` as `3.3e-319` instead of
+  `2755`.
+
+  Two halves to the fix, and only both together close it. The owner is now an
+  object that is *not* an ndarray, which is where numpy's collapse stops — so
+  the root of every derived view owns the buffer, and the collapse works in the
+  library's favour. And **every** way of getting a column now carries the store:
+  `store.column(0)` and `store.column_by_name("x")` are wrapped C++ and had no
+  link back at all, so they dangled even with the first half in place. Zero-copy
+  is unchanged, and the reproduction from BUGS.md is now a test.
+
+  `hist_support._OwnedView` is the same shape and, checked, does *not* have the
+  same problem — its chain is two views deep so the collapse lands on a view
+  that still carries the owner, and an axis's `edges` and a profile's `mean()`
+  are ARGOUTVIEWM, where numpy owns the buffer outright.
+- `Column.__array__` and `HistogramNd.__array__` take numpy 2's `copy=`
+  keyword, which it passes and warns about on a signature that cannot.
+- `column_names()`, `store_groups()`, `store_columns()`, `hdf5_table_groups()`
+  and `read_hdf5_table_columns()` return real lists, so `== [...]` is true
+  without wrapping every call in `list()`. `group_names()`/`group_paths()`
+  already did.
 - **A buffer of undecoded records can be decoded** (PRD-021). Every decoder sat
   behind `TTTR(filename)`, so a caller holding records from a card, a socket or
   a container it unpacked itself had to write the decoder a second time — and a

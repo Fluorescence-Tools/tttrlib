@@ -49,15 +49,70 @@ The native file
     import tttrlib, numpy as np
 
     store = tttrlib.DataStore("acquisition")
-    results = store.add_group("results")
-    results.set_n_rows(4096)
-    results.add("Tau", np.linspace(0.5, 5.0, 4096))
-    meta = store.add_group("meta")
-    meta.set_n_rows(1)
-    meta.add("source", np.array(["run.ptu"], dtype=object))
+    store.add_group("results", {"Tau": np.linspace(0.5, 5.0, 4096)})
+    store.add_group("meta", {"source": np.array(["run.ptu"], dtype=object)})
 
     tttrlib.save_store("run.dstore", store)
     back = tttrlib.load_store("run.dstore")
+
+    back / "results" / "Tau"                 # the column, reached by path
+    np.mean(back / "results" / "Tau")
+
+The row count of a group follows from its first column, as ``add`` already does
+it. Spelling it out — ``add_group`` then a loop then ``set_n_rows`` — still
+works and is what the one-call form does underneath.
+
+.. _dstore_paths:
+
+Reaching into the tree
+~~~~~~~~~~~~~~~~~~~~~~
+
+A store is a tree, so getting at a column used to be a four-link chain. ``/``
+composes a path the way :mod:`pathlib` does — it looks nothing up until the
+path is used, so a path can be built before the group exists, held, and
+resolved later:
+
+.. code-block:: python
+
+    p = back / "results" / "Tau"     # nothing looked up yet
+    p.numpy()                        # resolved here
+    np.mean(p)                       # and here
+    p.dtype, len(p), p.parent, p.name
+
+    back["results/Tau"]              # the same key space, resolved at once
+    back["a/b/x"]
+    back["results/"]                 # a group -> DataStore
+
+    print(back.tree())               # what is in this file?
+    back.paths()                     # every column, by path
+    for path, group in back.walk():  # depth first, parent before child
+        ...
+    back.rglob("Tau")                # every Tau anywhere, as paths
+
+Writing works the same way, creating the groups it needs:
+
+.. code-block:: python
+
+    back["meta/instrument"] = np.array(["MicroTime 200"], dtype=object)
+
+**A key without a separator is unchanged.** ``store["Tau"]`` is a column and
+always was, and a name that is only a group still raises — reaching a group by
+name is ``store / "results"`` or ``store.group("results")``. A column is also
+looked up *before* the tree, so a column genuinely called ``Sg/Sr`` still wins
+over the path ``Sg/Sr``.
+
+Histograms take paths too, on one rule: **a histogram fills from one table.**
+Two groups have different row counts and no row correspondence, so axes from
+two of them are not something that can be filled, and asking raises rather than
+answering.
+
+.. code-block:: python
+
+    (back / "results" / "Tau").histogram(bins=100)      # one column, one line
+    back.histogram("results/Tau", "results/E", bins=64)
+    back.profile("results/x", "results/y", sample="results/tau")
+
+    back.histogram("results/Tau", "meta/source")        # ValueError, and says why
 
 The contract is ``load(save(s)) == s``. Two consequences worth knowing:
 
@@ -66,6 +121,108 @@ The contract is ``load(save(s)) == s``. Two consequences worth knowing:
   every row *and* the gate, because its job is to give the store back.
 * **Bool survives.** HDF5 has no boolean type, so a bool column written that way
   comes back as ``uint8``. Here it comes back as a bool column.
+
+.. _dstore_columns:
+
+How several columns sit in the file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nothing is interleaved and nothing is row-major. **Each column's values are one
+contiguous run, in the column's own dtype**, and a directory at the tail of the
+file says where each run begins:
+
+.. code-block:: text
+
+    [48-byte header] [blob] [blob] ... [directory]
+
+    node:    label, n_rows, row_mask{n_bits, blob}, n_columns, [column],
+             n_groups, [name, node]
+    column:  name, type, n, flags, data blob, mask blob, dictionary blob
+    blob:    u64 offset, u64 bytes          -- 8-byte aligned, always
+
+A column is up to **three** blobs: its data, its validity mask, and — for text,
+which is dictionary-encoded — its labels. So reading a subset costs one seek to
+the tail for the directory, then one read per wanted blob; the rest of the file
+is never touched.
+
+Measured on a 1M-row burst table of four columns, 28.0 MB, counting bytes
+rather than seconds (a wall clock on a warm page cache measures the cache):
+
+.. list-table::
+   :header-rows: 1
+
+   * - read
+     - bytes moved
+   * - the whole table
+     - 28 000 000
+   * - ``columns=["Tau", "E"]``
+     - 16 000 000
+   * - ``columns=["Tau"]``
+     - 8 000 000
+
+Exactly the columns asked for, and nothing else. ``tttrlib.store_bytes_read()``
+is the counter — take a difference around one call and compare it to a
+difference around another.
+
+**HDF5 is the same shape**: a group holding one 1-D dataset per column, a
+sub-group per child. That is why a table written there loads with no conversion
+and no transpose.
+
+What differs today is only what the API offers, and it differs in both
+directions — so the two are not yet interchangeable from a caller's side:
+
+.. list-table::
+   :header-rows: 1
+
+   * -
+     - ``.dstore``
+     - HDF5
+     - PTO
+   * - read one group
+     - —
+     - ``read_hdf5(f, group)``
+     - —
+   * - read a column subset
+     - ``load_store(f, columns=)``
+     - —
+     - ``pto_store(f, uid, columns=)``
+   * - read a row range
+     - ``load_store_region`` only
+     - —
+     - ``pto_store(f, uid, first_row=, n_rows=)``
+   * - list the groups
+     - ``store_groups(f)`` → ``results``
+     - ``hdf5_table_groups(f)`` → ``/results``
+     - ``pto_store_groups(f, uid)``
+   * - remove a group
+     - —
+     - ``hdf5_table_remove(f, group)``
+     - ``PtoFile`` methods
+
+Note the leading slash: the string identifying a group depends on which file it
+came out of, which is the value a caller passes straight back in. Closing all of
+this — one vocabulary, the gaps filled natively — is PRD-023.
+
+Two things about ``columns=`` that are worth knowing before you rely on them,
+because neither is guessable:
+
+* **It matches by name in EVERY table of the tree, not just the root.** A tree
+  whose root, ``g1`` and ``a/b`` each hold a ``Tau`` gives you all three — each
+  with its own row count, because they are different tables that happen to share
+  a column name. Pass a group as well if you meant one of them.
+* **The tree comes back whole either way.** The structure *is* the directory, so
+  filtering columns costs nothing structural: a table with no matching column
+  comes back empty but keeps its ``n_rows``, and so is still distinguishable
+  from a table that genuinely has no rows.
+
+.. code-block:: python
+
+    part = tttrlib.load_store("run.dstore", columns=["Tau"])
+    [(p, n.n_rows(), n.column_names()) for p, n in part.walk()]
+    # [('',    4, ['Tau']),
+    #  ('g1',  9, ['Tau']),
+    #  ('a',   0, []),          <- kept, with its row count
+    #  ('a/b', 2, ['Tau'])]
 
 Reading part of a file costs only that part — the file carries a directory
 saying where each column lives:

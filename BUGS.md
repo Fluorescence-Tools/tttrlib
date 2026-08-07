@@ -3,9 +3,41 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+*Nothing open.*
+
 ---
 
-## `Column.numpy()` hands out a view that does not keep the `DataStore` alive
+## FIXED — `Column.numpy()` hands out a view that does not keep the `DataStore` alive
+
+> **Fixed 2026-08-07.** Both halves of the suggested fix, because the first
+> alone does not close it:
+>
+> * The owner is now an object that is **not** an ndarray
+>   (`_DsBuffer` in `ext/python/datastore_support.py`), so numpy's chain
+>   collapse stops at something that owns the buffer. The report is right that
+>   the collapse then works in the library's favour: the root of every derived
+>   view is the owning object.
+> * **Every** way of getting a column carries the store, not just the two that
+>   went through `DataStore.py`. `store.column(0)` and
+>   `store.column_by_name("x")` are wrapped C++ with no link back at all, and
+>   still dangled with the first half in place — they now get the same
+>   `TTTRLIB_DS_KEEP_ROOT` append as `group`/`add_group`/`ensure_group`.
+>
+> The owner is the `Column` proxy rather than the `DataStore` the report
+> suggests, and reaches the store through `Column._store`; with the second half
+> above that link now always exists, so the chain
+> `array → _DsBuffer → Column → DataStore` holds for every accessor.
+>
+> The reproduction below is a test —
+> `test/python/test_datastore_paths.py::test_a_csv_column_survives_the_store_it
+> _was_read_from`, run eight times as filed — beside one per accessor and one
+> asserting the root of a collapsed chain still owns the buffer.
+>
+> Zero-copy is unchanged: writing through `np.asarray(col)` still reaches the
+> C++ buffer.
+>
+> Kept here rather than deleted because the analysis is the useful part, and
+> the same trap is one `ARGOUTVIEW` away in any other binding.
 
 **Found:** 2026-08-07 · **Severity:** silent wrong data · **Affects:** `DataStore`
 (any store, `.dstore` and CSV-read alike) · **tttrlib 0.27.0, macOS arm64,
@@ -100,6 +132,10 @@ asserting the arrays survive their store. Note that `np.asarray(x, dtype=...)`
 is **not** a copy when the dtype already matches, which is exactly how this got
 into shipped code.
 
+**No longer needed.** `chisurf/core/datastore.py:207` carries the warning and
+the copy rule; both can go once the downstream pins a tttrlib with the fix.
+The copy is not free — it is the one on the largest array in the process.
+
 ---
 
 # Enhancements
@@ -147,7 +183,12 @@ tree and the row selection. Two notes from using it:
   downstream at a wash against uncompressed HDF5 on bulk I/O and dramatically
   faster than compressed. What keeps HDF5 in the picture downstream is that the
   burst and imaging files are *interchange* formats read by other programs.
-* **The column-lifetime defect above applies to a store loaded from `.dstore`
-  exactly as it does to any other**, and is more likely to bite there, because
-  `load_store` is the call whose result a caller naturally lets go of after
-  pulling arrays out of it.
+* ~~**The column-lifetime defect above applies to a store loaded from
+  `.dstore`** exactly as it does to any other, and is more likely to bite
+  there, because `load_store` is the call whose result a caller naturally lets
+  go of after pulling arrays out of it.~~ **Fixed** — see the entry above. The
+  copy-or-keep workaround is no longer needed anywhere.
+* Reaching into the tree is now pathlib-shaped: `store / "results" / "Tau"`,
+  `store["results/Tau"]`, `store.tree()`, `store.rglob("Tau")`, and
+  `add_group("meta", {...})` for the build side. Histograms take paths too.
+  See `doc/saving-tables.rst`.

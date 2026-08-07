@@ -104,6 +104,31 @@ def set_numpy(self, values):
     return self
 
 
+def __array__(self, dtype=None, copy=None):
+    """`np.asarray(column)` and every numpy function that calls it.
+
+    The other half of why the old chains read badly: ``store.group("r")["Tau"]
+    .numpy()`` has two verbs in it, and ``np.mean(col)`` had to be
+    ``np.mean(col.numpy())``. Hands back what ``numpy()`` does, so the
+    ``_DsView`` that keeps the store alive is unchanged.
+
+    `copy` is numpy 2's: False means "give me a view or refuse". A string
+    column can never satisfy it -- it is dictionary-encoded and the strings do
+    not exist contiguously, so reading it always builds an array.
+    """
+    a = self.numpy()
+    if copy is False and self.type() == ColumnType_String:
+        raise ValueError(
+            "a string column is dictionary-encoded, so it cannot be viewed "
+            "without a copy")
+    if dtype is not None and _np_ds.dtype(dtype) != a.dtype:
+        if copy is False:
+            raise ValueError("cannot view a %s column as %s without a copy"
+                             % (a.dtype, _np_ds.dtype(dtype)))
+        return a.astype(dtype)
+    return a.copy() if copy is True else a
+
+
 def __len__(self):
     return self.size()
 

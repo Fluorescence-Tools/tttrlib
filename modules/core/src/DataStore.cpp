@@ -87,6 +87,108 @@ void Column::set_attribute(const std::string& key, const std::string& value) {
     if (key == "name" && !value.empty()) name_ = value;
 }
 
+// --- combining and subsetting ---------------------------------------------
+
+void DataStore::append_rows(const DataStore& other, Join join) {
+    if (&other == this)
+        throw std::invalid_argument("append_rows: a store cannot be appended to itself");
+
+    const std::size_t before = n_rows_, added = other.n_rows_;
+
+    // Types first, over every column both sides have, so a conflict is found
+    // BEFORE anything has been appended. Half-appending and then throwing would
+    // leave a store no caller could put back.
+    for (const Column& c : other.columns_) {
+        const int i = find(c.name());
+        if (i >= 0 && columns_[i].type() != c.type())
+            throw std::invalid_argument(
+                    "append_rows: column '" + c.name() + "' is " +
+                    column_type_name(columns_[i].type()) + " here and " +
+                    column_type_name(c.type()) + " there");
+    }
+
+    if (join == Join::Inner) {
+        // Drop what the other side does not have, before appending, so the
+        // result is the intersection rather than the union with holes in it.
+        for (int i = n_columns() - 1; i >= 0; i--)
+            if (other.find(columns_[i].name()) < 0) remove_column(i);
+    }
+
+    for (Column& mine : columns_) {
+        const int j = other.find(mine.name());
+        if (j >= 0) mine.append_from(other.column(j));
+        else mine.append_missing(added);          // Outer; Inner dropped it above
+    }
+
+    if (join == Join::Outer) {
+        for (const Column& c : other.columns_) {
+            if (find(c.name()) >= 0) continue;
+            // New to us: the rows we already had were never measured for it.
+            const int k = add_column(c.name(), c.type());
+            columns_[k].set_metadata(c.metadata());
+            columns_[k].append_missing(before);
+            columns_[k].append_from(c);
+        }
+    }
+
+    n_rows_ = before + added;
+    // A gate over the old rows says nothing about the new ones, and silently
+    // extending it either way would be a guess. Clearing is the honest move and
+    // it is what select_all() means.
+    row_mask_.clear();
+}
+
+void DataStore::append_columns(const DataStore& other, OnDuplicate on_duplicate) {
+    if (&other == this)
+        throw std::invalid_argument("append_columns: a store cannot be appended to itself");
+    if (other.n_rows_ != n_rows_)
+        throw std::invalid_argument(
+                "append_columns: " + std::to_string(n_rows_) + " rows here and " +
+                std::to_string(other.n_rows_) + " there; these describe different rows");
+
+    if (on_duplicate == OnDuplicate::Refuse) {
+        for (const Column& c : other.columns_)
+            if (find(c.name()) >= 0)
+                throw std::invalid_argument(
+                        "append_columns: both stores have a column '" + c.name() +
+                        "'; pass keep-first to keep this one");
+    }
+
+    for (const Column& c : other.columns_) {
+        if (find(c.name()) >= 0) continue;        // KeepFirst
+        const int k = add_column(c.name(), c.type());
+        columns_[k].set_metadata(c.metadata());
+        columns_[k].append_from(c);
+    }
+}
+
+void DataStore::take_into(DataStore& out, const int* take_rows, int n_take_rows) const {
+    const std::size_t n = n_take_rows < 0 ? 0 : static_cast<std::size_t>(n_take_rows);
+    for (std::size_t k = 0; k < n; k++)
+        if (take_rows[k] < 0 || static_cast<std::size_t>(take_rows[k]) >= n_rows_)
+            throw std::invalid_argument(
+                    "take: row " + std::to_string(take_rows[k]) + " is outside a store of " +
+                    std::to_string(n_rows_) + " rows");
+
+    out.release();
+    out.set_label(label_);
+    for (const Column& c : columns_) {
+        const int k = out.add_column(c.name(), c.type());
+        out.columns_[k].take_from(c, take_rows, n);
+    }
+    out.n_rows_ = n;
+    // No row mask: the result IS the selection. Copying the old one across
+    // would gate the gate.
+}
+
+void DataStore::compact_into(DataStore& out) const {
+    std::vector<int> rows;
+    rows.reserve(n_selected());
+    for (std::size_t i = 0; i < n_rows_; i++)
+        if (row_selected(i)) rows.push_back(static_cast<int>(i));
+    take_into(out, rows.empty() ? nullptr : rows.data(), static_cast<int>(rows.size()));
+}
+
 /*!
  * The single registry instance.
  *
