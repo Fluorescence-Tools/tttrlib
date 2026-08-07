@@ -1,6 +1,6 @@
 {
   "area": "tttr",
-  "doc": "The canonical cross-language values. These cases are the PRD-001 constants, which used to be typed by hand into three test files; this is now the only place they exist.",
+  "doc": "The canonical cross-language values. These constants used to be typed by hand into three test files; this is now the only place they exist.",
   "cases": [
     {
       "id": "tttr.spc130.size",

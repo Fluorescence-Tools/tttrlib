@@ -1,6 +1,6 @@
 /*!
  * \file SimEngine.cpp
- * \brief Diffusion + photophysics + emission engine (see SimEngine.h, PRD-005).
+ * \brief Diffusion + photophysics + emission engine (see SimEngine.h).
  *
  * Reimplements the legacy `smdif_ov3` scientific core over grid-based fields:
  * excitation `Iex(pos)` drives emission at rate `Iex·Σ_j q_j·det_j(pos)`, with a

@@ -1,7 +1,7 @@
 /*!
  * \file SimMicrotimeEncoder.h
  * \brief Encode abstract simulated photon records (macro-window + arrival time +
- *        channel) into hardware TCSPC records (PRD-005).
+ *        channel) into hardware TCSPC records.
  *
  * The target record layout is selected via `SimRecordFormat`; the method names are
  * format-agnostic. Only the Becker & Hickl SPC-130/132 layout is realised here (a

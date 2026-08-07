@@ -1,4 +1,4 @@
-"""Flow, occlusion and pair-correlation tests for the photon simulator (PRD-005)."""
+"""Flow, occlusion and pair-correlation tests for the photon simulator."""
 import json
 
 import numpy as np

@@ -1,7 +1,7 @@
 /*!
  * \file SimGrid.h
  * \brief 3D voxel grid with trilinear interpolation — the field representation for
- *        excitation and detection profiles in the photon simulator (PRD-005).
+ *        excitation and detection profiles in the photon simulator.
  *
  * The simulator is fully grid-based: excitation and each detector's detection
  * profile are `SimGrid`s sampled at continuous molecule positions by trilinear

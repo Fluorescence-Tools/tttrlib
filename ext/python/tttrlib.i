@@ -152,7 +152,7 @@ def experimental(cls):
 %include "Pto.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
-   ".set" sidecar (PRD-021). RecordStream.i must follow TTTR.i and Pto.i:
+   ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
    it decodes into a TTTR and returns the raw bytes as a std::vector. */
 %include "RecordStream.i"
 %include "BhSet.i"
@@ -182,5 +182,5 @@ def experimental(cls):
 %include "DecayFit.i"
 // %include "DecayFitMLEWrapper.i"  // Not ready yet
 
-/* Photon simulator (PRD-005) */
+/* Photon simulator */
 %include "Sim.i"

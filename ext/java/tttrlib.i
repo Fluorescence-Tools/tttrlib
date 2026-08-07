@@ -37,7 +37,7 @@
 %include "info.h"
 %include "misc_types.i"
 /* The registry: pure data, identical in every language, and the one case
-   that covers a lot of surface at once (PRD-015). */
+   that covers a lot of surface at once. */
 %include "Registry.i"
 %include "FileCheck.i"
 %include "TTTRHeader.i"
@@ -65,7 +65,7 @@
 
 %include "Histogram.i"
 
-/* Columnar tables and their HDF5 form (PRD-019). HistogramNd.i must come first:
+/* Columnar tables and their HDF5 form. HistogramNd.i must come first:
    DataStore.h's free functions name tttrlib::hist::Axis and HistogramNd, and
    without their declarations SWIG emits an unqualified `hist::Axis`. */
 %include "HistogramNd.i"
@@ -78,7 +78,7 @@
 %include "Pto.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
-   ".set" sidecar (PRD-021). RecordStream.i must follow TTTR.i and Pto.i:
+   ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
    it decodes into a TTTR and returns the raw bytes as a std::vector. */
 %include "RecordStream.i"
 %include "BhSet.i"

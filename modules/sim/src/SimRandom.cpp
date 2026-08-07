@@ -1,6 +1,6 @@
 /*!
  * \file SimRandom.cpp
- * \brief MT19937 implementation for the photon simulator (see SimRandom.h, PRD-005).
+ * \brief MT19937 implementation for the photon simulator (see SimRandom.h).
  *
  * Seed/twist/tempering are the standard MT19937 (Matsumoto & Nishimura 2002 init,
  * Cokus twist). Reproduces the legacy integer stream bit-for-bit; the normal

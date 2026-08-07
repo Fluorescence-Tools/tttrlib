@@ -1541,7 +1541,7 @@ if (is_verbose()) {
     } else {
         // A record range, through the reader parameters rather than through a
         // constructor: TTTR(spec, first, n) is ambiguous with
-        // TTTR(const char*, int, bool). PTO hit the same wall (PRD-020).
+        // TTTR(const char*, int, bool). PTO hit the same wall.
         std::uint64_t first_record = 0, n_records = 0;
         if (tttr_container_parameters.find_first_not_of(" \t\r\n") != std::string::npos) {
             const auto j = nlohmann::json::parse(tttr_container_parameters, nullptr, false);
@@ -3028,7 +3028,7 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     // FLIM LABS is read-only. Writing one means baking in the choice of what a
     // macro time tick is (see io_fl.h) and emitting it as if the instrument
     // had; that choice has never been checked against a file the instrument
-    // wrote, because no such file is published. See PRD-012.
+    // wrote, because no such file is published.
     if(container_type == FL_STT1_CONTAINER || container_type == FL_ITT1_CONTAINER){
         std::cerr << "ERROR in TTTR::write: tttrlib reads FLIM LABS time-tagger files "
                      "but does not write them." << std::endl;

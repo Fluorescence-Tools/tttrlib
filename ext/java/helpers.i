@@ -55,7 +55,7 @@
   }
 }
 
-// ── PRD-002: generalized 1-D output-array marshalling for Java ──────────────
+// ── Generalized 1-D output-array marshalling for Java ──────────────────────
 // SWIG-Java cannot bind a void "output-pointer" getter
 //   void CLASS::METHOD(CTYPE** out, int* n)
 // to an array return (a void method has no jresult). This macro stamps an
@@ -143,7 +143,7 @@ int tiff_read_f64_into(const std::string& path,
 }  // namespace tttrlib
 %}
 
-// ── Column data, for Java (PRD-019) ────────────────────────────────────────
+// ── Column data, for Java ──────────────────────────────────────────────────
 // Column's typed getters have the same "output pointer" shape as the ones
 // above, with one difference that matters: a *view* points INTO the column and
 // the column keeps owning it. %ARRAY_INTO free()s what it copied, which here

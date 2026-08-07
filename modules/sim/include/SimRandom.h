@@ -7,9 +7,9 @@
  * stream bit-for-bit; the normal-variate helper `random4nrm` is **corrected** to
  * use an explicit `int32_t` reinterpretation so the Gaussian is symmetric on every
  * platform (the legacy `(long)` cast was positive-only where `sizeof(long)==8`,
- * biasing diffusion — see PRD-005). State is 32-bit for cross-platform determinism.
+ * biasing diffusion). State is 32-bit for cross-platform determinism.
  *
- * Part of the additive photon-simulation subsystem (PRD-005). Does not modify any
+ * Part of the additive photon-simulation subsystem. Does not modify any
  * existing tttrlib class.
  */
 #ifndef TTTRLIB_SIMRANDOM_H

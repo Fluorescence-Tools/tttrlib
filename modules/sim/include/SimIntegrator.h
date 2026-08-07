@@ -1,6 +1,6 @@
 /*!
  * \file SimIntegrator.h
- * \brief Time-base and RNG settings for the photon-simulation engine (PRD-005).
+ * \brief Time-base and RNG settings for the photon-simulation engine.
  *
  * Record/TAC encoding lives on SimMicrotimeEncoder; this holds only what the
  * diffusion/emission engine needs. Additive; does not modify existing tttrlib.
@@ -56,7 +56,7 @@ struct SimIntegrator {
     /// once per window — faster/simpler but results depend on thread count and partition.
     SimRngScope rng_scope = SimRngScope::PerMolecule;
 
-    /// Per-molecule coasting (opt-in throughput, PRD-007 G2). A molecule far from BOTH the
+    /// Per-molecule coasting (opt-in throughput). A molecule far from BOTH the
     /// focus and the box surface sleeps — its diffusion/state/emission are skipped — and is
     /// caught up exactly on wake. The coast is bounded by the molecule's own distance to the
     /// nearest boundary (÷ coast_safety), so a sleeper can reach neither the focus (no missed

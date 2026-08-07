@@ -6,8 +6,7 @@ where the format carries them -- event types).
 
 Cross-format transcodes are lossy in documented ways (bit-depth clipping,
 dropped micro times, dropped markers); the tests assert exactly what
-survives each trip. See PRDs/PRD-006-tttr-file-roundtrip-io.md and
-doc/file_formats.rst.
+survives each trip. See doc/file_formats.rst.
 """
 from __future__ import division
 

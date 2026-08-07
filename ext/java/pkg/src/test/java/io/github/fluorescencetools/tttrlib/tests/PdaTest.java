@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * JUnit port of test/java/PdaTest.java (PRD-001 cross-language reference).
+ * JUnit port of test/java/PdaTest.java (the cross-language reference).
  */
 public class PdaTest {
 

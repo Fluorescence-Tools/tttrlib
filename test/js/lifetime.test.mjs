@@ -2,7 +2,7 @@
 //
 // Object lifetime across the binding boundary.
 //
-// PRD-016 names this as the risk that bites hardest, because its failure mode is
+// This is the risk that bites hardest, because its failure mode is
 // a segfault rather than an exception: a TypedArray that outlives the C++ object
 // owning its memory, or a shared_ptr whose last reference is dropped while
 // JavaScript still holds a proxy. Neither shows up in a test that only checks

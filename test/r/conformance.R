@@ -541,7 +541,7 @@ OPS <- list(
     t
   },
 
-  # -- record streams (PRD-021) -------------------------------------------------
+  # -- record streams -------------------------------------------------
   # A record buffer comes back as an ordinary R vector, the same way
   # PtoFile_read's payload does above -- so length() works on it and
   # as.integer() feeds it straight back to decode_records, whose rarrays.i
@@ -572,7 +572,7 @@ OPS <- list(
   "stream.apply_channels" = function(on, a)
     TTTR_apply_container_channels(on, as.integer(a[[1]])),
 
-  # -- the Becker & Hickl ".set" sidecar (PRD-021) ------------------------------
+  # -- the Becker & Hickl ".set" sidecar ------------------------------
   "bhset.n" = function(on, a)
     BhSetParameterVector_size(read_set_file(a[[1]])),
   "bhset.sections" = function(on, a) {

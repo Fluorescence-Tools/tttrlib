@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// SWIG bindings for the additive photon-simulation subsystem (PRD-005).
+// SWIG bindings for the additive photon-simulation subsystem.
 // All classes are Sim-prefixed and live in namespace tttrlib.
 
 %{
@@ -46,7 +46,7 @@
 // Python surface, so every such block now needs the guard. The JavaScript
 // equivalents of these conveniences live in ext/js/pkg/index.js.
 #ifdef SWIGPYTHON
-// Thin numpy PSF builders (convenience only; wrap the C++ fillers). PRD-008.
+// Thin numpy PSF builders (convenience only; wrap the C++ fillers).
 %extend tttrlib::SimGrid {
     %pythoncode %{
         @staticmethod
@@ -160,7 +160,7 @@ namespace tttrlib {
 %include "SimIntegrator.h"
 %include "SimMicrotimeEncoder.h"
 
-// Thin ergonomic layer on the driver (convenience only). PRD-008.
+// Thin ergonomic layer on the driver (convenience only).
 // Python-only; see the note above.
 #ifdef SWIGPYTHON
 %extend tttrlib::SimEngine {
@@ -326,7 +326,7 @@ namespace tttrlib {
         def to_tttr(self, dt, n_channels, ch_conversion=None, n_microtime_channels=4096,
                     microtime_resolution=0.004069, laser_period=13.596, pulsed=False,
                     seed=1, container="SPC-130", reverse_tac=True):
-            """Encode the photon stream and return it as a ``tttrlib.TTTR`` (PRD-007 G7).
+            """Encode the photon stream and return it as a ``tttrlib.TTTR``.
 
             One-call export: builds a Becker&Hickl SPC-132 record stream with a
             ``SimMicrotimeEncoder`` and reads it back as a ``TTTR``. ``dt``/``n_channels``

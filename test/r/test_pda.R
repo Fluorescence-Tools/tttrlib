@@ -1,5 +1,5 @@
 # Cross-language PDA (photon distribution analysis) reference test for the R
-# bindings (PRD-001). Asserts the same S1S2 probability matrix as
+# bindings. Asserts the same S1S2 probability matrix as
 # test/python/pda/test_pda_cross_language.py and test/java/PdaTest.java.
 #
 # R note: the 5-argument Pda(...) constructor is used (the 6-arg form with an

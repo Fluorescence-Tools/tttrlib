@@ -200,8 +200,8 @@ Known limitations
    * - No Promises
      - Everything is synchronous; see *Everything blocks* above.
    * - Not the browser
-     - This is a native addon for Node. A WASM build is a separate question;
-       PRD-016 records what it would cost.
+     - This is a native addon for Node. A WASM build is a separate question, and
+       not a small one.
    * - shared_ptr lifetime
      - An object constructed in JavaScript and handed to C++ code that stores a
        ``std::shared_ptr`` is passed with a null deleter: C++ holding it does not
@@ -233,13 +233,13 @@ Ordered by what would bite first.
        cross-language values, which is what catches a broken binding — but it is
        not the file-for-file parity the phrase suggests. Closing it properly
        means either porting the Python suite or generating both from one shared
-       case list, which is what PRD-015 exists for.
+       case list.
    * - **Only macOS arm64 has been built**
      - Linux and Windows are untried. The ``build_test_js_lnx`` CI job is written
        but has never run, so treat its first run as part of the work rather than
        as a regression check.
    * - **No prebuilt binaries, nothing published**
-     - PRD-016's M5 asks for ``prebuildify`` binaries for linux-x64/arm64,
+     - The plan is ``prebuildify`` binaries for linux-x64/arm64,
        darwin-x64/arm64 and win32-x64, loaded by ``node-gyp-build``, and an npm
        release. The package metadata is in place; the pipeline is not.
    * - **The copy fallback has never executed**
@@ -248,7 +248,7 @@ Ordered by what would bite first.
        refuses. Building with ``-DTTTRLIB_JS_COPY_ARRAYS`` and running the suite
        would cover it.
    * - **No sanitiser run**
-     - PRD-016 asks for the "drop the owner, then read the view" case under ASAN.
+     - The "drop the owner, then read the view" case wants a run under ASAN.
        ``test/js/lifetime.test.mjs`` covers the shared_ptr and GC side in ordinary
        builds, but nothing has been run under a sanitiser.
    * - **Columnar HDF5 is not wrapped**
@@ -257,7 +257,7 @@ Ordered by what would bite first.
        ``readHdf5()`` / ``writeHdf5()`` are already in ``index.js`` behind a
        feature check, so nothing else changes.
    * - **The full conformance list**
-     - PRD-016's M6 wants PRD-015's case list green. The canonical reference
+     - The shared case list should be green here too. The canonical reference
        values pass; that list does not exist yet.
 
 Testing status

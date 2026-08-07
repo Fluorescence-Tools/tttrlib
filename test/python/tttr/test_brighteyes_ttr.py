@@ -210,7 +210,7 @@ def test_the_container_declares_what_it_needs_to_be_told():
     }
     assert schema["properties"]["sysclk_MHz"]["default"] == 240.0
     # and it is still the only one that cannot be READ without being told. The
-    # other schemas in the registry are ranges (PRD-021): optional, and about
+    # other schemas in the registry are ranges: optional, and about
     # how much of a file to decode rather than about what the bytes mean.
     for name, other in tttrlib.registry("file_container").items():
         if name == "BRIGHTEYES-TTR":

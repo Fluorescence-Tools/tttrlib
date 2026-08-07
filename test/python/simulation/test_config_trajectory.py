@@ -1,4 +1,4 @@
-"""JSON configuration, RNG selection, and trajectory output tests (PRD-005)."""
+"""JSON configuration, RNG selection, and trajectory output tests."""
 import json
 
 import numpy as np

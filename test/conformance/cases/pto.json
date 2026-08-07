@@ -1,6 +1,6 @@
 {
   "area": "pto",
-  "doc": "PTO, the PhoTon cOntainer, and the targeted reads of PRD-020. The container's whole claim on the read side is that reading part of it costs the part -- a column subset of an embedded table, a row window of one, a byte range of any payload, a range of events in a photon stream. That claim has to hold in every binding, because the reason a container exists is that the file outlives the program that wrote it.",
+  "doc": "PTO, the PhoTon cOntainer, and its targeted reads. The container's whole claim on the read side is that reading part of it costs the part -- a column subset of an embedded table, a row window of one, a byte range of any payload, a range of events in a photon stream. That claim has to hold in every binding, because the reason a container exists is that the file outlives the program that wrote it.",
   "cases": [
     {
       "id": "pto.objects_come_back_with_their_labels",
@@ -124,7 +124,7 @@
     },
     {
       "id": "pto.a_column_subset_of_an_embedded_store",
-      "doc": "PRD-020 part 1. An embedded store is always a region of a bigger file, so before pto_read_store took a column list a caller could ask for a subset of a store's columns OR for a store inside a container, never both -- and the container only ever produces the second.",
+      "doc": "An embedded store is always a region of a bigger file, so before pto_read_store took a column list a caller could ask for a subset of a store's columns OR for a store inside a container, never both -- and the container only ever produces the second.",
       "tmp": 1,
       "steps": [
         {
@@ -284,7 +284,7 @@
     },
     {
       "id": "pto.a_row_window_of_an_embedded_store",
-      "doc": "PRD-020 part 3, and what a table viewer needs: paging a table used to decode all of it to show a page. The window is a projection along the other axis from a column subset, and dictionary-encoded text is the case that can be got wrong -- the codes are sliced and the dictionary is not.",
+      "doc": "What a table viewer needs: paging a table used to decode all of it to show a page. The window is a projection along the other axis from a column subset, and dictionary-encoded text is the case that can be got wrong -- the codes are sliced and the dictionary is not.",
       "tmp": 1,
       "steps": [
         {
@@ -425,7 +425,7 @@
     },
     {
       "id": "pto.a_byte_range_of_a_payload",
-      "doc": "PRD-020 part 2. Reading `n` bytes from `at` rather than the whole payload, including the short read past the end that a file read would also do -- an error there would make paging through a payload need the length first.",
+      "doc": "Reading `n` bytes from `at` rather than the whole payload, including the short read past the end that a file read would also do -- an error there would make paging through a payload need the length first.",
       "tmp": 2,
       "steps": [
         {
@@ -532,7 +532,7 @@
     },
     {
       "id": "pto.a_range_of_an_embedded_photon_stream",
-      "doc": "PRD-020 part 4. A real instrument file embedded in a container, indexed with cues, then read in the middle. Macro times are the check that matters: a decode starting at a cue has no idea how many overflows preceded it, and the cue's own macro time is the only thing that closes the gap.",
+      "doc": "A real instrument file embedded in a container, indexed with cues, then read in the middle. Macro times are the check that matters: a decode starting at a cue has no idea how many overflows preceded it, and the cue's own macro time is the only thing that closes the gap.",
       "data": [
         "bh/bh_spc132.spc"
       ],

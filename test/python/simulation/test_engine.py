@@ -1,4 +1,4 @@
-"""Core photon-simulation engine tests (PRD-005): RNG, diffusion, emission, encoder."""
+"""Core photon-simulation engine tests: RNG, diffusion, emission, encoder."""
 import numpy as np
 import pytest
 
@@ -81,7 +81,7 @@ def test_open_volume_equilibrates_population():
 
 
 def test_per_molecule_skip_preserves_statistics():
-    """PRD-007 G2: per-molecule coasting keeps count-rate and open-volume population.
+    """Per-molecule coasting keeps count-rate and open-volume population.
 
     Far molecules sleep and catch up exactly on wake; the coast is bounded by the
     distance to the nearest boundary (focus or box surface), so a sleeper reaches

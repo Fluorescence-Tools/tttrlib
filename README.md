@@ -48,9 +48,9 @@ fluorescence decay analysis, FLIM, CLSM, and image scanning microscopy.
 > cross-language reference values. The R and Java bindings share the same tested
 > C++ core but wrap a smaller slice of the API and their language-specific layers
 > have lighter test coverage — we are working to mirror the Python tests
-> everywhere (plan:
-> [PRDs/PRD-001-cross-language-test-parity.md](PRDs/PRD-001-cross-language-test-parity.md)). Please report
-> any binding-specific issues.
+> everywhere, through the shared conformance suite in
+> [test/conformance](test/conformance). Please report any binding-specific
+> issues.
 
 ## Performance — faster than the GPU, on the CPU
 

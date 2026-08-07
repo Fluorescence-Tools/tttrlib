@@ -218,7 +218,7 @@ std::vector<FileFormat> builtin_formats() {
     stt1.extensions = {"bin"};
     stt1.record_types = {FL_RECORD_TYPE_STT1};
     stt1.default_record_type = FL_RECORD_TYPE_STT1;
-    stt1.can_write = false;   // see PRD-012: not before the reader has seen a real file
+    stt1.can_write = false;   // not before the reader has seen a real file
     f.push_back(stt1);
 
     FileFormat itt1 = stt1;

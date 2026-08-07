@@ -67,16 +67,12 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 // integer exactly to 2^53, so this is a straight improvement of 22 bits and it
 // covers every offset and size short of an 8-petabyte file.
 //
-// It does NOT cover a PTO object's FileUID, which is 64 random bits and lands
-// above 2^53 essentially always. R has no lossless representation of a uint64 --
-// its numeric IS a double, and base R has no 64-bit integer type -- so a uid
-// read from R is a nearby value, not that uid, and handing it back finds no
-// object. That is a limitation of the language, recorded rather than papered
-// over: the PTO conformance cases declare themselves unsupported in R for this
-// reason, and a fix means representing a uid as a character string (exact, and
-// out of step with every other 64-bit value in this binding) or depending on
-// bit64. Narrowing the uid so it fits was tried and reverted -- putting one
-// language's ceiling into every file on disk is the wrong trade.
+// It does NOT cover a PTO object's FileUID, and must not: even a double stores
+// only every 2048th integer at uid magnitudes. A uid crosses to R as a
+// character string instead -- see the SWIGR typemaps in ext/python/Pto.i, which
+// are name-matched and therefore win over this one for the `uid` parameters.
+// Everything here is a magnitude rather than an identity, and a double carries
+// those exactly.
 //
 // Applied to std::uint64_t by name rather than to `unsigned long long`, so the
 // existing R behaviour of every other 64-bit parameter in the library is
@@ -92,7 +88,7 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 %include "info.h"
 %include "misc_types.i"
 /* The registry: pure data, identical in every language, and the one case
-   that covers a lot of surface at once (PRD-015). */
+   that covers a lot of surface at once. */
 %include "Registry.i"
 %include "FileCheck.i"
 %include "TTTRHeader.i"
@@ -120,7 +116,7 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 
 %include "Histogram.i"
 
-/* Columnar tables and their HDF5 form (PRD-019). The R conformance runner
+/* Columnar tables and their HDF5 form. The R conformance runner
    exercises the same group-tree cases as the other three bindings.
    HistogramNd.i comes first and is not optional: DataStore.h's free functions
    name tttrlib::hist::Axis and HistogramNd, and without their declarations SWIG
@@ -135,7 +131,7 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 %include "Pto.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
-   ".set" sidecar (PRD-021). RecordStream.i must follow TTTR.i and Pto.i:
+   ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
    it decodes into a TTTR and returns the raw bytes as a std::vector. */
 %include "RecordStream.i"
 %include "BhSet.i"

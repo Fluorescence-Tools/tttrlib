@@ -1,4 +1,4 @@
-"""ALEX (alternating laser excitation) in the photon simulator (PRD-005).
+"""ALEX (alternating laser excitation) in the photon simulator.
 
 Real ALEX alternates the green (donor) and red (acceptor) laser on the MACRO-time /
 diffusion timescale — unlike PIE, which separates excitation sources by micro-time. The

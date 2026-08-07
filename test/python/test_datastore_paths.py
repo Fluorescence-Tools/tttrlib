@@ -1,6 +1,6 @@
 """Reaching into a DataStore tree from Python, pathlib-style.
 
-A store is a tree (PRD-019) and reaching into it used to be a four-link chain,
+A store is a tree and reaching into it used to be a four-link chain,
 ``store.group("results")["Tau"].numpy()``. ``/`` composes a path and nothing is
 looked up until the path is used, exactly as ``pathlib.Path("a") / "b"`` does
 not touch the filesystem.
@@ -9,8 +9,8 @@ Two rules the tests here exist to hold down:
 
 * **A slash-free key is unchanged.** ``store["meta"]`` is the column it always
   was; only a key carrying a separator walks the tree. That is the ambiguity
-  PRD-019 refused -- a str key must not switch between a column and a group
-  depending on what happens to exist -- and ``test_datastore_groups.py::
+  the tree refuses to have -- a str key must not switch between a column and
+  a group depending on what happens to exist -- and ``test_datastore_groups.py::
   test_find_never_sees_a_group`` still passes untouched as the guard.
 * **A path is a name, not a pointer.** It resolves on every use and caches
   nothing, so it cannot outlive a ``remove_group`` into a dangling proxy, and

@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "correlator.curve.size_3_5",
-      "doc": "The PRD-001 constant: n_bins=3, n_casc=5.",
+      "doc": "The canonical constant: n_bins=3, n_casc=5.",
       "steps": [{"op": "correlator.curve_size", "args": [3, 5], "as": "size"}],
       "expect": {"size": 16}
     },

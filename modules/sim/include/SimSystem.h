@@ -1,7 +1,7 @@
 /*!
  * \file SimSystem.h
  * \brief The simulated sample: species/states, transition kinetics, background, box
- *        geometry, and the fluorophore population (PRD-005).
+ *        geometry, and the fluorophore population.
  *
  * Fluorophores may be provided three ways (combinable): a multi-channel integer
  * emitter grid (primary, from a TIFF read in Python), explicit discrete emitters,

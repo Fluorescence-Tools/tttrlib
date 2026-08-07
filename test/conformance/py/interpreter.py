@@ -754,7 +754,7 @@ def _op_pto_events(on, args):
 
 
 # ---------------------------------------------------------------------------
-# stream.* -- decoding a buffer, and reading a container in pieces (PRD-021)
+# stream.* -- decoding a buffer, and reading a container in pieces
 # ---------------------------------------------------------------------------
 #
 # The ops are deliberately primitive enough that a chunked decode is written out
@@ -962,7 +962,7 @@ _OPS = {
     "pto.cue_events": lambda on, a: [int(c.event) for c in on.cues(int(a[0]))],
     "pto.events": _op_pto_events,
 
-    # record streams (PRD-021)
+    # record streams
     "tttr.new": lambda on, a: tttrlib.TTTR(),
     "stream.n_records": lambda on, a: int(
         tttrlib.container_n_records(str(a[0]), int(a[1]))),
@@ -981,7 +981,7 @@ _OPS = {
     "stream.events": _op_stream_events,
     "stream.apply_channels": lambda on, a: on.apply_container_channels(int(a[0])),
 
-    # the Becker & Hickl ".set" sidecar (PRD-021)
+    # the Becker & Hickl ".set" sidecar
     "bhset.n": lambda on, a: len(tttrlib.read_set_file(str(a[0]))),
     "bhset.sections": lambda on, a: sorted(tttrlib.bh_set(str(a[0])).keys()),
     "bhset.value": _op_bhset_value,

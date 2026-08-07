@@ -891,7 +891,7 @@ CLSMImage::CLSMImage(
             // “frame marker provided” path ===
             create_frames(true);
 
-            // PRD-004: a frame marker is configured but the stream contains none
+            // A frame marker is configured but the stream contains none
             // (a single-frame FLIM acquisition, e.g. some PicoHarp/SymPhoTime PTU
             // files). Fall back to one full-span frame so the line markers still
             // reconstruct an image instead of an empty 0-frame stack.
@@ -1653,7 +1653,7 @@ void CLSMImage::remove_incomplete_frames() {
         i_frame++;
     }
 
-    // PRD-004: if NOTHING is complete (e.g. a single-frame FLIM acquisition whose
+    // If NOTHING is complete (e.g. a single-frame FLIM acquisition whose
     // only frame has fewer line markers than the header-declared n_lines), don't
     // throw the whole image away. Salvage the frame(s) with the most lines and
     // adopt that count as n_lines, reconstructing a (possibly partial) image

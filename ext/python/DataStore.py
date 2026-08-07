@@ -36,7 +36,7 @@ def __getitem__(self, key):
       The column-wins rule, one level up.
 
     A bare name that is only a group still raises, as it always has. That is
-    the ambiguity PRD-019 refused; ``store / "results"`` reaches a group, and
+    the ambiguity this refuses to have; ``store / "results"`` reaches a group, and
     so does ``store["results/"]``.
     """
     if isinstance(key, str):

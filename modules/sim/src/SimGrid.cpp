@@ -1,6 +1,6 @@
 /*!
  * \file SimGrid.cpp
- * \brief 3D voxel grid implementation (see SimGrid.h, PRD-005).
+ * \brief 3D voxel grid implementation (see SimGrid.h).
  */
 #include "SimGrid.h"
 #include <cmath>

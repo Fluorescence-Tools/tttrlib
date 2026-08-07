@@ -1,7 +1,7 @@
 /*!
  * \file SimSystem.cpp
  * \brief SimSystem implementation — population helpers and emitter-grid expansion
- *        (see SimSystem.h, PRD-005).
+ *        (see SimSystem.h).
  */
 #include "SimSystem.h"
 

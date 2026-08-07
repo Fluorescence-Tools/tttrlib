@@ -409,10 +409,10 @@ function makeOps(ctx) {
 
     // -- pto -----------------------------------------------------------------
     //
-    // A uid is 64 random bits, so it crosses as a BigInt -- a Number is a
-    // double and would come back as a DIFFERENT uid, one that no longer names
-    // the object it was read from. jsarrays.i has the typemaps; here it means a
-    // uid binding is a BigInt and is passed straight back, never through Number().
+    // A uid crosses as a BigInt: jsarrays.i routes 64-bit scalars through
+    // Napi::BigInt, so it is exact whatever the writer chose. Bound it and pass
+    // it straight back -- never through Number(), which is the double that made
+    // a uid come back naming no object before those typemaps existed.
     'pto.create': (on, a) => {
       const f = new tttrlib.PtoFile();
       if (!f.create(a[0], a[1])) throw new Error(f.error());
@@ -470,7 +470,7 @@ function makeOps(ctx) {
       return t;
     },
 
-    // -- record streams (PRD-021) ---------------------------------------------
+    // -- record streams ---------------------------------------------
     // container_read_records hands back a Uint8Array (jsarrays.i marshals
     // std::vector<unsigned char> as one), which is exactly what decode_records
     // takes, so a chunked decode composes with no conversion in between.
@@ -493,7 +493,7 @@ function makeOps(ctx) {
     },
     'stream.apply_channels': (on, a) => { on.apply_container_channels(a[0]); },
 
-    // -- the Becker & Hickl ".set" sidecar (PRD-021) --------------------------
+    // -- the Becker & Hickl ".set" sidecar --------------------------
     'bhset.n': (on, a) => tttrlib.read_set_file(a[0]).size(),
     'bhset.sections': (on, a) => {
       const seen = new Set();

@@ -1,4 +1,4 @@
-"""PRD-007 G2: the photon-budget stopping contract on the independent/async engine.
+"""The photon-budget stopping contract on the independent/async engine.
 
 The independent engine simulates each molecule's whole timeline over a fixed horizon `W`,
 which makes it embarrassingly parallel and ~an order of magnitude faster than the window

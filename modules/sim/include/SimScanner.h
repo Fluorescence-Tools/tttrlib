@@ -1,6 +1,6 @@
 /*!
  * \file SimScanner.h
- * \brief Discrete CLSM raster scanner driven by a per-pixel dwell-time array (PRD-005).
+ * \brief Discrete CLSM raster scanner driven by a per-pixel dwell-time array.
  *
  * Beam-scan model: the excitation + detection fields translate together over a fixed
  * fluorophore field along a raster path; per pixel the fields are positioned at the

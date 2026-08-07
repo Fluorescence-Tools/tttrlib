@@ -1,5 +1,5 @@
 """
-PRD-004 regression: single-frame FLIM PTU (line markers, no frame marker).
+Regression: single-frame FLIM PTU (line markers, no frame marker).
 
 Some PicoHarp/SymPhoTime PTU acquisitions declare a frame-start marker in the
 header but never emit one -- the whole acquisition is a single frame. Before the
@@ -31,7 +31,7 @@ DATA_PRESENT = (
     and os.path.exists(single_frame_filename)
 )
 
-# Pinned in PRD-004 (M1). The photons are on routing channel 1; channel 15
+# Pinned reference values. The photons are on routing channel 1; channel 15
 # carries the marker/sync events.
 N_EVENTS = 722915
 SHAPE = (1, 652, 256)

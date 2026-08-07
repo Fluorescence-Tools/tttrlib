@@ -1,7 +1,7 @@
 """FLIM LABS time-tagger files (``STT1`` and ``ITT1``).
 
 **Every fixture here is synthetic.** No FLIM LABS sample data is published --
-see ``flimlabs_writer.py`` and PRD-012 -- so these tests check the reader
+see ``flimlabs_writer.py`` -- so these tests check the reader
 against the specification, which is unambiguous, and against the vendor's own
 reader scripts, which are its source. What they cannot check is that the
 instrument writes what the specification says. Until a real file exists, treat

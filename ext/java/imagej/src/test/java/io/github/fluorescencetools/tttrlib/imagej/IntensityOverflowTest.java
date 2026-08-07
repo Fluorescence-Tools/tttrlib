@@ -77,7 +77,7 @@ class IntensityOverflowTest {
         s.setMarker_line_start(MARKER_LINE_START);
         s.setMarker_line_stop(MARKER_LINE_STOP);
         final VectorInt32 frameMarkers = new VectorInt32();
-        frameMarkers.add(MARKER_FRAME_START);   // configured but absent -> PRD-004 salvage
+        frameMarkers.add(MARKER_FRAME_START);   // configured but absent -> salvage path
         s.setMarker_frame_start(frameMarkers);
         s.setN_pixel_per_line(1);
         s.setN_lines(2);

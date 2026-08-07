@@ -4,8 +4,8 @@ One committed list of cases, four thin runners. The same operation on the same
 file must produce the same number in Python, R, Java and JavaScript — and the
 number lives here, once, rather than being re-typed into four test files.
 
-This is PRD-015. It replaces the mechanism of PRD-001, whose hand-copied
-constants did not survive contact with a third binding, let alone a fourth.
+It replaces hand-copied constants in four separate test files, which did not
+survive contact with a third binding, let alone a fourth.
 
 ## The one rule
 

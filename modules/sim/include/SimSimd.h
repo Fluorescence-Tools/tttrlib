@@ -1,6 +1,6 @@
 /*!
  * \file SimSimd.h
- * \brief Vectorised 32-bit RNG and normals for the simulator's propagation kernel (PRD-005).
+ * \brief Vectorised 32-bit RNG and normals for the simulator's propagation kernel.
  *
  * The engine's per-molecule step is ~45 ns, of which the drift+diffusion+boundary kernel is
  * ~11 ns, and it scales perfectly linearly with molecule count, so vectorising across

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * JUnit port of test/java/CLSMTest.java (PRD-001 cross-language reference).
+ * JUnit port of test/java/CLSMTest.java (the cross-language reference).
  */
 public class CLSMTest {
 

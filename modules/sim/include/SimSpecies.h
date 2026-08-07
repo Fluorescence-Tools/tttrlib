@@ -1,6 +1,6 @@
 /*!
  * \file SimSpecies.h
- * \brief One photophysical species/state of a simulated fluorophore (PRD-005).
+ * \brief One photophysical species/state of a simulated fluorophore.
  *
  * In the diffusion-photon model a molecule occupies one of N species/states; it
  * emits with a per-channel brightness and may transition between states (the

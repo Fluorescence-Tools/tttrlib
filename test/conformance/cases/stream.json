@@ -1,6 +1,6 @@
 {
   "area": "stream",
-  "doc": "PRD-021. Decoding a buffer of undecoded records, reading a container in pieces, and the whole Becker & Hickl \".set\" sidecar. All three existed inside the library and none of them was reachable: every decoder sat behind TTTR(filename), thirteen of the fourteen containers were all-or-nothing on read, and the sidecar parser was in no binding at all. Which is why these belong here rather than only in the Python suite -- the reason a downstream package re-implemented an SPC-130 decoder was that its language could not reach this one.",
+  "doc": "Decoding a buffer of undecoded records, reading a container in pieces, and the whole Becker & Hickl \".set\" sidecar. All three existed inside the library and none of them was reachable: every decoder sat behind TTTR(filename), thirteen of the fourteen containers were all-or-nothing on read, and the sidecar parser was in no binding at all. Which is why these belong here rather than only in the Python suite -- the reason a downstream package re-implemented an SPC-130 decoder was that its language could not reach this one.",
   "cases": [
     {
       "id": "stream.a_container_says_how_many_records_it_holds",
@@ -170,7 +170,7 @@
     },
     {
       "id": "stream.the_set_sidecar_parses_into_sections",
-      "doc": "PRD-021 part 3, on a sidecar the case writes itself so it runs everywhere rather than only where the reference data is. Four things are pinned that a hand-rolled parser gets wrong: the section a parameter came from, the two-letter group tag, the type letter the file declares, and a value containing a comma -- #SP splits on the FIRST and LAST comma, never on every one, because a path is a legal value. Parsing stops at BIN_PARA_BEGIN: what follows is a binary blob, and a line parser run over binary finds parameters that are not there.",
+      "doc": "On a sidecar the case writes itself so it runs everywhere rather than only where the reference data is. Four things are pinned that a hand-rolled parser gets wrong: the section a parameter came from, the two-letter group tag, the type letter the file declares, and a value containing a comma -- #SP splits on the FIRST and LAST comma, never on every one, because a path is a legal value. Parsing stops at BIN_PARA_BEGIN: what follows is a binary blob, and a line parser run over binary finds parameters that are not there.",
       "tmp": 1,
       "steps": [
         {

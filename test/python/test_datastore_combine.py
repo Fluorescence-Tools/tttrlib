@@ -1,6 +1,6 @@
 """Combining and subsetting stores: concat, take, compact.
 
-PRD-023 Part 4. `BUGS.md` counts these in the shipped downstream package —
+`BUGS.md` counts these in the shipped downstream package —
 `concat` at 24 call sites in 13 files, `take`/`compact` at 9 plus every filtered
 export — and without them a caller that reads N files gets N stores it cannot
 make into one table, so it keeps building data frames and the store never

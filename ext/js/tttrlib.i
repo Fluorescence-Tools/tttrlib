@@ -95,14 +95,14 @@
 // The columnar HDF5 reader has landed in the Python module, which is what the
 // note here used to be waiting for. ext/js/pkg/index.js already exposed
 // readHdf5()/writeHdf5() behind a feature check, so adding this line is all it
-// took; test/js/conformance.test.mjs runs the PRD-019 group-tree cases through
+// took; test/js/conformance.test.mjs runs the group-tree cases through
 // it. This list is again identical to ext/python/tttrlib.i's.
 %include "Hdf5Table.i"
 %include "StoreFile.i"
 %include "Pto.i"
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
-   ".set" sidecar (PRD-021). RecordStream.i must follow TTTR.i and Pto.i:
+   ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
    it decodes into a TTTR and returns the raw bytes as a std::vector. */
 %include "RecordStream.i"
 %include "BhSet.i"
@@ -130,5 +130,5 @@
 /* DecayFit(s) */
 %include "DecayFit.i"
 
-/* Photon simulator (PRD-005) */
+/* Photon simulator */
 %include "Sim.i"

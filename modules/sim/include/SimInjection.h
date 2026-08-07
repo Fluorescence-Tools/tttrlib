@@ -1,6 +1,6 @@
 /*!
  * \file SimInjection.h
- * \brief Boundary-flux mathematics for the open-volume simulator (PRD-005).
+ * \brief Boundary-flux mathematics for the open-volume simulator.
  *
  * The open volume is an absorbing ellipsoid held in steady state by injecting molecules
  * across its surface. These are the distributions that flux obeys, split out of

@@ -1,4 +1,4 @@
-"""PIE via micro-time windows (PRD-008).
+"""PIE via micro-time windows.
 
 Pulsed-interleaved excitation is modelled with routing channels + a per-species
 ``SimDecay.t0`` that places emission in the prompt (donor-excitation) or the

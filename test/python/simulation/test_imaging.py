@@ -1,4 +1,4 @@
-"""CLSM scanning + FLIM micro-time tests (PRD-005)."""
+"""CLSM scanning + FLIM micro-time tests."""
 import numpy as np
 import pytest
 
@@ -67,7 +67,7 @@ def test_flim_recovers_arbitrary_decay_pattern():
 
 
 def test_background_micro_time_follows_pattern():
-    """PRD-007 G1: background photons carry a configurable micro-time distribution."""
+    """Background photons carry a configurable micro-time distribution."""
     n, dt = 512, 0.032
     bg_pat = np.exp(-np.arange(n) * dt / 0.5); bg_pat[:3] = 0.0   # scatter-like
     s = tttrlib.SimSystem()

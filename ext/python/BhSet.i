@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// The whole Becker & Hickl ".set" sidecar (PRD-021, part 3).
+// The whole Becker & Hickl ".set" sidecar.
 //
 // `read_bh_set_file` -- the five imaging tags a photon reader needs -- is a
 // TTTRHeader method and is wrapped with it. This is the other ~115 parameters,

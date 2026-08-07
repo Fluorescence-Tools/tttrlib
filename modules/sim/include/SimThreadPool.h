@@ -1,6 +1,6 @@
 /*!
  * \file SimThreadPool.h
- * \brief Minimal persistent std::thread pool with a chunked parallel_for (PRD-005).
+ * \brief Minimal persistent std::thread pool with a chunked parallel_for.
  *
  * Explicit threading for the simulation engine — no OpenMP. Workers persist across
  * calls so per-window dispatch avoids thread-creation overhead. `parallel_for`

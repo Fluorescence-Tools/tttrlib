@@ -1,6 +1,6 @@
 /*!
  * \file SimXoshiroRandom.h
- * \brief xoshiro256++ PRNG — the fast, default RNG backend for the simulator (PRD-005).
+ * \brief xoshiro256++ PRNG — the fast, default RNG backend for the simulator.
  *
  * xoshiro256++ (Blackman & Vigna, public domain) is a small, very fast generator.
  * Seeding the 256-bit state from a base seed + stream id via splitmix64 is cheap

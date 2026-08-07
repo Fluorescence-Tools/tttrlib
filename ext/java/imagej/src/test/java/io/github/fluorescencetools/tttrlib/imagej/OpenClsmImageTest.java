@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Headless {@link OpenClsmImage} test.
  *
  * <p>Pins the same canonical values as the Python reference test and
- * {@code test/java/CLSMTest.java} (PRD-001 cross-language parity), and
+ * {@code test/java/CLSMTest.java} (the cross-language reference), and
  * additionally asserts the axis wiring that the Dataset migration introduced.</p>
  */
 class OpenClsmImageTest {
@@ -38,7 +38,7 @@ class OpenClsmImageTest {
     private static final long REF_SUM = 3364714L;
     private static final int REF_MAX = 26;
 
-    // PRD-004 single-frame PTU, pinned by the Python reference test.
+    // Single-frame PTU, pinned by the Python reference test.
     private static final int SF_LINES = 652, SF_PIXEL = 256;
     private static final long SF_SUM = 713854L;
 
@@ -53,7 +53,7 @@ class OpenClsmImageTest {
         return new File(dataRoot(), "imaging/pq/ht3/pq_ht3_clsm.ht3");
     }
 
-    /** PRD-004: a SymPhoTime PTU with line markers but no frame marker. */
+    /** A SymPhoTime PTU with line markers but no frame marker. */
     private static File singleFramePtuFile() {
         return new File(dataRoot(), "imaging/pq/PicoHarp_SymPhoTime/Example_PTU_PicoHarp.ptu");
     }
@@ -138,7 +138,7 @@ class OpenClsmImageTest {
     }
 
     /**
-     * PRD-004: a PTU whose header declares a frame marker the stream never emits
+     * A PTU whose header declares a frame marker the stream never emits
      * used to open as an empty stack ("no image" in the plugin). It must now
      * reconstruct the single full-span frame -- 652 real scan lines, not the
      * nominal ImgHdr_PixY = 256.

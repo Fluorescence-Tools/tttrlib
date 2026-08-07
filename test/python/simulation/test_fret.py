@@ -1,4 +1,4 @@
-"""FRET via routing channels (PRD-008): proximity ratios and dynamic exchange.
+"""FRET via routing channels: proximity ratios and dynamic exchange.
 
 These validate the core claim of the routing-channel model — that FRET is encoded
 purely by per-species per-channel brightness ``q`` and exchange by ``k_nrad`` — with

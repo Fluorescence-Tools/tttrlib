@@ -702,11 +702,11 @@ final class ConformanceInterpreter {
 
             // -- pto ---------------------------------------------------------
             //
-            // A uid is 64 random bits and stays a BigInteger all the way
-            // through: binding it as a double would round it into a different
-            // uid, which is exactly the bug the JavaScript runner avoids with
-            // BigInt. It is raw material either way -- bound, passed on, never
-            // compared -- so nothing needs it to be a number.
+            // A uid stays a BigInteger all the way through. Java could hold it
+            // in a long and there is nothing to gain by converting: it is raw
+            // material -- bound, passed on, never compared. (PTO mints 53-bit
+            // uids so the two runners whose numbers are doubles can do the same
+            // round trip; Java is not the binding that needed it.)
             case "pto.create": {
                 PtoFile f = new PtoFile();
                 if (!f.create(s(a, 0), s(a, 1))) throw new ConformanceException(f.error());
@@ -794,7 +794,7 @@ final class ConformanceInterpreter {
                 return t;
             }
 
-            // -- record streams (PRD-021) -------------------------------------
+            // -- record streams -------------------------------------
             case "tttr.new": return new TTTR();
             case "stream.n_records":
                 return tttrlib.container_n_records(s(a, 0), i(a, 1)).doubleValue();
@@ -831,7 +831,7 @@ final class ConformanceInterpreter {
                 ((TTTR) on).apply_container_channels(i(a, 0));
                 return null;
 
-            // -- the Becker & Hickl ".set" sidecar (PRD-021) ------------------
+            // -- the Becker & Hickl ".set" sidecar ------------------
             case "bhset.n": return (double) tttrlib.read_set_file(s(a, 0)).size();
             case "bhset.sections": {
                 BhSetParameterVector v = tttrlib.read_set_file(s(a, 0));

@@ -1,6 +1,6 @@
 /*!
  * \file SimDecay.h
- * \brief Per-species decay pattern for micro-time (FLIM) sampling (PRD-005).
+ * \brief Per-species decay pattern for micro-time (FLIM) sampling.
  *
  * A decay pattern is an arbitrary probability density over micro-time (its own axis:
  * bin width `dt`, offset `t0`, arbitrary length — so the micro-time *range* can vary

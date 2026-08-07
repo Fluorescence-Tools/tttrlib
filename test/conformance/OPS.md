@@ -343,7 +343,7 @@ add it only when a case genuinely needs it.
 
 ## `pto.*`
 
-The container, and PRD-020's targeted reads.
+The container, and its targeted reads.
 
 | op | on | args | result |
 |---|---|---|---|
@@ -383,7 +383,7 @@ be indexable says so by not passing `throws`.
 ## `stream.*`
 
 Decoding a buffer of undecoded records, and reading a container in pieces
-(PRD-021).
+
 
 | op | on | args | result |
 |---|---|---|---|
@@ -417,7 +417,7 @@ loop*, so an op that owned it would be testing the runner.
 
 ## `bhset.*`
 
-The whole Becker & Hickl `.set` sidecar (PRD-021 part 3), as opposed to the five
+The whole Becker & Hickl `.set` sidecar, as opposed to the five
 imaging tags the photon reader folds into a header.
 
 | op | on | args | result |

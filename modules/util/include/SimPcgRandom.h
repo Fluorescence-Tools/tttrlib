@@ -1,6 +1,6 @@
 /*!
  * \file SimPcgRandom.h
- * \brief PCG (pcg32, O'Neill) PRNG — a selectable RNG backend (PRD-005).
+ * \brief PCG (pcg32, O'Neill) PRNG — a selectable RNG backend.
  *
  * A compact inline implementation of PCG32 (pcg_setseq_64_xsh_rr_32, the pcg-cpp
  * default family). PCG has excellent statistical quality (passes TestU01 BigCrush),

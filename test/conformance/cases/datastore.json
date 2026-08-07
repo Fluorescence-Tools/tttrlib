@@ -1,10 +1,10 @@
 {
   "area": "datastore",
-  "doc": "The DataStore group tree and its HDF5 round trip -- PRD-019's acceptance criteria, run from every binding that wraps DataStore. Criterion 21 of that PRD is these cases passing in four languages.",
+  "doc": "The DataStore group tree and its HDF5 round trip -- the acceptance criteria, run from every binding that wraps DataStore. The criterion is these cases passing in four languages.",
   "cases": [
     {
       "id": "datastore.group_handle_survives_50_adds",
-      "doc": "PRD-019 criterion 2. The handle taken before the fifty adds still names the same group, with its label, row count and data intact. This is the columns-vector reallocation bug, not repeated -- a container that moves its children would fail here and nowhere else.",
+      "doc": "The handle taken before the fifty adds still names the same group, with its label, row count and data intact. This is the columns-vector reallocation bug, not repeated -- a container that moves its children would fail here and nowhere else.",
       "steps": [
         {"op": "ds.new", "as": "root"},
         {"op": "ds.add_group", "on": "root", "args": ["keep"], "as": "keep"},
@@ -132,7 +132,7 @@
     },
     {
       "id": "datastore.tree_roundtrip",
-      "doc": "PRD-019 criterion 11. Names, order, nesting, column order, dtypes and a dictionary-encoded string column all survive write then read.",
+      "doc": "Names, order, nesting, column order, dtypes and a dictionary-encoded string column all survive write then read.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "s"},
@@ -178,7 +178,7 @@
     },
     {
       "id": "datastore.write_group_leaves_siblings",
-      "doc": "PRD-019 criteria 12 and 13, the case that used to fail. /results then /meta leaves both readable; rewriting /results drops a column that was only in the first write and does not touch /meta.",
+      "doc": "The case that used to fail. /results then /meta leaves both readable; rewriting /results drops a column that was only in the first write and does not touch /meta.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "r1"},
@@ -210,7 +210,7 @@
     },
     {
       "id": "datastore.table_groups_listing_order",
-      "doc": "PRD-019 criterion 14, first half. The groups are written zulu first, and they list alphabetically -- because the writer records sibling order in a `groups` attribute only when it writes a tree in ONE call, and two separate write_hdf5 calls never touch the root. Insertion order across a single write is pinned by datastore.tree_roundtrip; this case pins what happens when a file is built one group at a time, which is the other half of what the API is for.",
+      "doc": "The groups are written zulu first, and they list alphabetically -- because the writer records sibling order in a `groups` attribute only when it writes a tree in ONE call, and two separate write_hdf5 calls never touch the root. Insertion order across a single write is pinned by datastore.tree_roundtrip; this case pins what happens when a file is built one group at a time, which is the other half of what the API is for.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "a"},
@@ -229,7 +229,7 @@
     },
     {
       "id": "datastore.table_groups_on_foreign_file",
-      "doc": "PRD-019 criterion 14, second half. Probing a file that is not HDF5 is a normal thing to do, so it answers empty instead of throwing -- and must not print to stderr while doing it.",
+      "doc": "Probing a file that is not HDF5 is a normal thing to do, so it answers empty instead of throwing -- and must not print to stderr while doing it.",
       "tmp": 1,
       "steps": [
         {"op": "file.write_text", "args": ["$tmp0", "this is not an HDF5 file"]},
@@ -241,7 +241,7 @@
     },
     {
       "id": "datastore.read_absent_group_throws",
-      "doc": "PRD-019 criterion 16, first half.",
+      "doc": "A column and a group may share a name, and a store with groups still round trips.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "s"},
@@ -255,7 +255,7 @@
     },
     {
       "id": "datastore.read_zero_row_table",
-      "doc": "PRD-019 criterion 16, second half: columns but no rows reads back as a zero-row store, keeping its column names and types, rather than as an error or as nothing.",
+      "doc": "Columns but no rows reads back as a zero-row store, keeping its column names and types, rather than as an error or as nothing.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "s"},
@@ -273,7 +273,7 @@
     },
     {
       "id": "datastore.group_paths_and_names",
-      "doc": "PRD-019 criteria 4 and 5: ensure_group is idempotent and makes intermediates, group_names is insertion order and group_paths is depth first with every parent before its children.",
+      "doc": "ensure_group is idempotent and makes intermediates, group_names is insertion order and group_paths is depth first with every parent before its children.",
       "steps": [
         {"op": "ds.new", "as": "s"},
         {"op": "ds.add_group", "on": "s", "args": ["zulu"]},
@@ -303,7 +303,7 @@
     },
     {
       "id": "datastore.path_forms",
-      "doc": "PRD-019 criterion 3: a leading and a trailing separator are optional, and the rejected forms throw rather than being reinterpreted.",
+      "doc": "A leading and a trailing separator are optional, and the rejected forms throw rather than being reinterpreted.",
       "steps": [
         {"op": "ds.new", "as": "s"},
         {"op": "ds.ensure_group", "on": "s", "args": ["a/b"]},
@@ -325,7 +325,7 @@
     },
     {
       "id": "datastore.column_and_group_namespaces_are_separate",
-      "doc": "PRD-019 criterion 9: a store may carry a column and a group of the same name, and neither accessor sees the other.",
+      "doc": "A store may carry a column and a group of the same name, and neither accessor sees the other.",
       "steps": [
         {"op": "ds.new", "as": "s"},
         {"op": "ds.add_f64", "on": "s", "args": ["meta", [1.0, 2.0]]},
@@ -346,7 +346,7 @@
     },
     {
       "id": "datastore.selection_writes_only_selected_rows",
-      "doc": "PRD-019 criterion 20: a gated store writes only the rows it has selected.",
+      "doc": "A gated store writes only the rows it has selected.",
       "tmp": 1,
       "steps": [
         {"op": "ds.new", "as": "s"},

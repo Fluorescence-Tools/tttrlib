@@ -1,4 +1,4 @@
-"""State-trajectory (event-based) output of the photon simulator (PRD-005).
+"""State-trajectory (event-based) output of the photon simulator.
 
 The engine already reports positions/states on a fixed stride. That cannot represent a state
 that is entered and left between two samples, so these tests pin the event log against the

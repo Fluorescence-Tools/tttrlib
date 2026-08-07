@@ -6,7 +6,7 @@ the ``.bin`` files come only from the GUI apps driving real hardware, and the
 whole org's public repositories contain code and PDFs and nothing else. So this
 writer exists to exercise the reader against the *specification*, which is
 unambiguous, and it cannot catch a misreading of what the instrument actually
-writes. See PRD-012 for the standing request for a real file.
+writes. A real file remains a standing request to the vendor.
 
 The layout is the one all five FLIM LABS ``.bin`` formats share -- four ASCII
 magic bytes, a little-endian ``uint32`` header length, a JSON header, then

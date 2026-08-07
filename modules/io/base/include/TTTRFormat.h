@@ -126,7 +126,7 @@ struct FileFormat {
      * Deliberately C-shaped -- `const char*`, `void*`, `int` -- because the
      * modules are separate shared libraries and this crosses between them. A
      * `std::string` or a `TTTR&` here would tie every module to one compiler's
-     * library ABI, which is the thing PRD-018 is about. `tttr` is a
+     * library ABI, which is exactly what a plugin boundary cannot afford. `tttr` is a
      * `tttrlib::TTTR*`; `spec` is the whole thing the caller passed, selector
      * and all, because splitting it is the format's business.
      *

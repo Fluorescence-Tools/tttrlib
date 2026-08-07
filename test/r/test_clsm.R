@@ -1,4 +1,4 @@
-# Cross-language CLSM reference test for the R bindings (PRD-001).
+# Cross-language CLSM reference test for the R bindings.
 # Asserts the SAME reconstruction as Python (test/python/clsm) and Java
 # (test/java/CLSMTest.java): dimensions and total intensity of a CLSM image.
 #

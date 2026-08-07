@@ -109,4 +109,4 @@ version without a rebuild.
   built-in models are unaffected.
 - **Promises.** Everything is synchronous; see *Blocking* above.
 - **The browser.** This is a native addon for Node. A WASM build is a separate
-  question (PRD-016 records what it would cost).
+  question, and not a small one.

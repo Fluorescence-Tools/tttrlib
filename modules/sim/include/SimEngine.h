@@ -1,7 +1,7 @@
 /*!
  * \file SimEngine.h
  * \brief Diffusion + photophysics + emission engine — the OpenMM-style "context"
- *        of the photon simulator (PRD-005).
+ *        of the photon simulator.
  *
  * Reimplements the scientific core of the legacy "Burbulator" `smdif_ov3`:
  * Brownian dynamics of single fluorophores, N-state photophysics/FRET, and

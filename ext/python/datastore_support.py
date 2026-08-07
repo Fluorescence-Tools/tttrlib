@@ -153,14 +153,14 @@ def _ds_col(store, c):
 
 # --- paths through the tree --------------------------------------------------
 #
-# A store is a tree (PRD-019) and reaching into it used to be a four-link chain,
+# A store is a tree and reaching into it used to be a four-link chain,
 # `store.group("results")["Tau"].numpy()`. These give it pathlib's shape: `/`
 # composes a path and nothing is looked up until the path is used.
 #
 # `store[...]` still means COLUMN and a slash-free key still behaves exactly as
 # it did -- only a key containing a separator walks the tree. That keeps the
-# ambiguity PRD-019 refused refused: a str key must not switch between a column
-# and a group depending on what happens to exist.
+# ambiguity refused: a str key must not switch between a column and a group
+# depending on what happens to exist.
 
 
 def _ds_split_path(path):

@@ -1,4 +1,4 @@
-"""Fluorescence anisotropy tests (PRD-005): photoselection + Perrin depolarisation."""
+"""Fluorescence anisotropy tests: photoselection + Perrin depolarisation."""
 import numpy as np
 import pytest
 

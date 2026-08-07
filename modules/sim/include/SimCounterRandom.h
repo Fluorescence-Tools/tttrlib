@@ -1,6 +1,6 @@
 /*!
  * \file SimCounterRandom.h
- * \brief Counter-based RNG for the parallel simulation engine (PRD-005).
+ * \brief Counter-based RNG for the parallel simulation engine.
  *
  * \deprecated This class is retained for backward compatibility with the
  * simulation engine. New code should use the centralized \ref tttrlib::Random

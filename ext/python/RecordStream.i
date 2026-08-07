@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// Decoding a buffer of records, and reading a container in pieces (PRD-021).
+// Decoding a buffer of records, and reading a container in pieces.
 //
 // Must come AFTER TTTR.i (the buffer is decoded INTO a TTTR) and after Pto.i,
 // which is where the `std::vector<unsigned char>` marshalling lives for Python,

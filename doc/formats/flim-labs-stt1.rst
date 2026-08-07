@@ -109,8 +109,8 @@ Why it is read-only
 Writing one means emitting the tick choice above as though the instrument had
 made it. That choice has never been checked against a file the instrument wrote,
 because no such file is published -- see below. An ``STT1`` writer is nearly
-free and is noted in PRD-006 as a round-trip aid; it should not exist before the
-reader has seen real data.
+free and would be a useful round-trip aid; it should not exist before the reader
+has seen real data.
 
 .. warning::
 

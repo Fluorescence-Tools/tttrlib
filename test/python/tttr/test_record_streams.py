@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Decoding a buffer, reading a container in pieces, and the whole .set sidecar.
 
-PRD-021. Three gaps in the same seam, all of them "the library can do this and
+Three gaps in the same seam, all of them "the library can do this and
 does not expose it":
 
 1. every decoder sat behind ``TTTR(filename)``, so a caller holding a buffer --
@@ -96,7 +96,7 @@ class TestRecordTypeMetadata(unittest.TestCase):
         self.assertEqual(tttrlib.record_bytes(tttrlib.RECORD_SM), 0)
 
     def test_decodable_set_is_the_dispatch_table(self):
-        """PRD-021 criterion 3: every registered type is reachable, or declines."""
+        """Every registered type is reachable, or declines."""
         decodable = set(tttrlib.decodable_record_types())
         for rt in range(1, 20):
             buffer = np.zeros(32, dtype=np.uint8)
@@ -294,7 +294,7 @@ class TestRangedReads(unittest.TestCase):
 
     def test_the_range_as_a_reader_parameter(self):
         """TTTR(spec, first, n) cannot be a constructor -- it is ambiguous with
-        TTTR(const char*, int, bool). PRD-020 hit this and went through
+        TTTR(const char*, int, bool). The PTO reader hit this and went through
         set_container_parameters; so does this."""
         data = tttrlib.TTTR()
         data.set_container_parameters('{"first_record": 0, "n_records": 1000}')

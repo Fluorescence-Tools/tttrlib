@@ -1,6 +1,6 @@
 /*!
  * \file SimMicrotimeEncoder.cpp
- * \brief TCSPC record encoder implementation (see SimMicrotimeEncoder.h, PRD-005).
+ * \brief TCSPC record encoder implementation (see SimMicrotimeEncoder.h).
  *
  * The Becker & Hickl SPC-130/132 path is a faithful port of legacy
  * `data2spc132_tac` / `write_spc132_file`: kept arithmetically identical (same

@@ -1,4 +1,4 @@
-"""PSF fillers (PRD-008): Gaussian-Lorentzian and numeric/measured radial PSFs.
+"""PSF fillers: Gaussian-Lorentzian and numeric/measured radial PSFs.
 
 A numeric radial PSF sampled from a Gaussian must reproduce the analytic
 ``gaussian3d`` field (and hence its count rate); the Gaussian-Lorentzian MDF

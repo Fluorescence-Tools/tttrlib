@@ -3,8 +3,8 @@
 // Hand-written type declarations for tttrlib.
 //
 // SWIG's Node-API backend does not emit .d.ts (the SWIG JavaScript Evolution
-// fork does, via %typemap(ts); PRD-016 records why this project stays on
-// upstream SWIG and writes this file by hand instead). It therefore covers the
+// fork does, via %typemap(ts), but this project stays on upstream SWIG and
+// writes this file by hand instead). It therefore covers the
 // classes a caller reaches for first, precisely, and admits the rest through an
 // index signature rather than pretending to be exhaustive and going stale
 // silently. `tttrlib.native` is the untyped escape hatch.
