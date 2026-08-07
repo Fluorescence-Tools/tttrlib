@@ -637,6 +637,20 @@ enough ``Void`` or at the end of the ``Segment``, turn the old one into
 ``Void``, rewrite the index, commit. **The UID survives; the offset does not**,
 which is why nothing except the index may hold offsets.
 
+Note what does **not** happen: nothing is reshuffled. The object being rewritten
+is the only one that can move, and it moves only when it no longer fits. Every
+other object stays exactly where it is, whatever its size — which is the whole
+point, because the object that does not fit is the burst table and the object
+beside it is eight gigabytes of photons. An object that is never updated is
+never moved, so a photon stream added once keeps its offset for the life of the
+file, and the :ref:`cues <pto_cues>` over it stay valid for the life of the file
+too. A relocated object's cues do not: they index bytes that are no longer
+there, so a writer **must** drop them, and this one does.
+
+Space left behind is reused by the next object that fits in it, so a file does
+not grow on every update — only when nothing already free is big enough.
+Repeated growth still fragments, and ``compact`` is the answer.
+
 Deleting is turning the ``AttachedFile`` into ``Void`` and dropping its index
 entry. Tags targeting it become dangling, which is allowed — an application may
 want to remember that something was there. A writer may remove them; it must not
@@ -646,6 +660,15 @@ Compacting is copying every live element to a new file, dropping the ``Void``\ s
 and renaming over the original. UIDs are preserved, offsets are not. It is the
 only way space comes back, and it is the same bargain HDF5 makes with
 ``h5repack``.
+
+A compacted file is not necessarily free of ``Void``: the padding that puts each
+payload on a boundary is structural, not a hole, and it stays. A writer that
+wants none at all — for an archive, or a copy about to be sent somewhere — may
+drop the padding too, at the cost of :ref:`unaligned payloads <pto_align>`, and
+a writer that expects the file to keep being edited may do the opposite and
+reserve room after every object so the next few updates rewrite in place.
+tttrlib spells these ``compact(to, tight=True)`` and
+``compact(to, reserve=0.25)``.
 
 .. _pto_commit:
 
@@ -710,15 +733,29 @@ Without the per-object entries a reader can still find every object by walking
 With a dozen objects that is a dozen seeks, which is why the per-object entries
 are optional.
 
+.. _pto_align:
+
 Alignment, and reading a payload in place
 -----------------------------------------
 
 EBML guarantees no alignment: an element header is a variable number of octets,
-so ``FileData`` lands wherever it lands. For a payload a caller wants to
-``mmap`` and use without copying — a column of ``double`` — a writer **should**
-insert a ``Void`` immediately before the ``AttachedFile`` sized so that
-``FileData``'s data begins on an 8-byte boundary, and **should** record nothing
-about having done so.
+so ``FileData`` lands wherever the object's name and encoding strings happen to
+leave it. That is fine for bytes and wrong for what a payload actually is here —
+a PTU record stream is ``uint32``, a ``.dstore`` column is ``double`` — and a
+caller that wants to ``mmap`` the file and point at one without copying needs
+the first byte on a boundary.
+
+So a writer **should** insert a ``Void`` immediately before the ``Attachments``
+element, sized so that ``FileData``'s data begins on an 8-byte boundary, and
+**should** record nothing about having done so. Eight rather than four costs
+nothing to say and covers the 32-bit case as well; it is also the alignment
+``.dstore`` uses for its own blobs, and those offsets are relative to the store,
+so an embedded store is only aligned inside if it begins aligned outside.
+
+tttrlib does this, on every path that lays an object down — including the one an
+object takes when it outgrows its room and is relocated, which is a fresh
+lay-down and not a move. The padding is the reason a compacted file still
+carries a little ``Void``: at most a boundary's worth per object.
 
 A reader **must not assume it**. Check the offset; map it if it is aligned, copy
 it if it is not. An alignment guarantee that a conformant writer may omit is not
@@ -735,7 +772,13 @@ A conformant **reader** must:
   to walking the ``Segment`` if neither verifies;
 - skip unknown element IDs by their Data Size, at every level;
 - treat a ``SimpleTag`` with an unrecognised value element as a tag whose value
-  it cannot represent, not as a broken file.
+  it cannot represent, not as a broken file;
+- bound every allocation by what the file can actually contain before believing
+  a Data Size, since that number comes out of the file;
+- treat a ``FileUID`` as a full ``uinteger``, whatever range the writer used;
+- treat payload alignment and :ref:`cues <pto_cues>` as advisory — both are
+  writer SHOULDs, so check the offset and seek to the nearest cue *at or
+  before* the target rather than trusting either.
 
 It does **not** need to understand ``dstore``, or any encoding at all, to list a
 file's objects and read its tags. That is deliberate: everything the container
@@ -744,22 +787,55 @@ twenty-odd IDs.
 
 A conformant **writer** must:
 
-- give every object a non-zero ``FileUID``, unique in the file;
+- give every object a ``FileUID`` that is non-zero and **unique in the file**;
+- write every ``FileUID`` in **eight octets**, whatever its value;
 - write the ``Segment`` Data Size in eight octets and keep it current;
 - write ``PtoKind`` and ``PtoEncoding`` on every object;
 - follow the two-``SeekHead`` commit, including the flushes;
-- never rewrite the live ``SeekHead``;
-- leave ``Void`` of zero or at least two octets, never one.
+- leave ``Void`` of zero or at least two octets, never one;
+- never rewrite the live ``SeekHead``.
 
-It **should** write ``FileData`` last with an over-wide size VINT, reserve
-``Void`` after payloads it expects to grow, and write ``MuxingApp`` and
-``DateUTC`` so a file can be traced to what made it.
+It **should** write ``FileData`` last with an over-wide size VINT, pad so the
+payload starts 8-byte aligned, reserve ``Void`` after payloads it expects to
+grow, and write ``MuxingApp`` and ``DateUTC`` so a file can be traced to what
+made it.
 
-A ``FileUID`` is a uint64 and a reader must treat it as one. tttrlib **mints**
-53-bit uids, and that is a writer's choice rather than a rule: two of its four
-bindings represent every integer as a double, so a larger uid comes back from
-JavaScript or R as a different number, and an identity that does not survive
-being handed to the caller is not an identity.
+.. _pto_fileuid:
+
+The FileUID
+~~~~~~~~~~~
+
+A ``uinteger``, non-zero, and unique within the file — the same contract
+Matroska gives ``TrackUID``. Random is the obvious way to get it and random is
+**not** unique: a writer has to check a fresh uid against the objects already
+there, which costs a scan of a list that is tens of entries long.
+
+The **eight-octet width is a real requirement**, not a style. ``FileUID`` is the
+one element ever rewritten where it lies: when an object outgrows its room it is
+written afresh with a new uid, and the old uid is then written back over it to
+keep the identity. Packed to the smallest width that held it, a replacement can
+be *shorter* — and every sibling after it, ``PtoKind`` and ``PtoEncoding``
+among them, is then read from the wrong offset. Nothing fails at the time of
+writing; the object simply comes back later with an empty encoding.
+
+.. note::
+
+   **tttrlib mints uids below 2**\ :sup:`53`. That is a writer's choice the
+   format permits, not a rule: the element is a full ``uinteger``, a reader must
+   treat it as one, and a container from another writer may use the whole range
+   and is read correctly here.
+
+   The bound was introduced because a 64-bit integer did not reach every
+   binding: a JavaScript ``Number`` and an R ``numeric`` are both IEEE doubles,
+   so a wider uid came back a *nearby value* naming no object. Both are now
+   fixed where the fix belonged — in the binding. JavaScript routes 64-bit
+   scalars through ``BigInt``; R carries a uid as a character string, the only
+   thing base R holds exactly. **A container using the whole range is read
+   correctly everywhere.**
+
+   The bound stays because it costs nothing observable — 9×10\ :sup:`15`
+   identities, with uniqueness enforced rather than left to chance — and a uid
+   that fits a double is one fewer thing for the next binding to get wrong.
 
 Reading part of one
 -------------------
@@ -787,6 +863,14 @@ point below reads its part and not the whole:
 
     # events 10^6 .. 10^6+1000 of an embedded photon stream, via its cues
     tttrlib.pto_events("run.pto|m001.ptu", 1_000_000, 1000)
+
+and reclaiming space, once a file has been edited enough to be worth it:
+
+.. code-block:: python
+
+    f.compact("run-lean.pto")                 # holes gone, payloads aligned
+    f.compact("run-archive.pto", tight=True)  # no Void at all; unaligned
+    f.compact("run-work.pto", reserve=0.25)   # room to keep editing in place
 
 and on the way in, ``add_file`` embeds a file without holding it:
 

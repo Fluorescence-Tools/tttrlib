@@ -462,9 +462,38 @@ public:
     /// has accumulated enough holes to be worth compacting.
     std::vector<PtoExtent> free_extents() const;
 
-    /// Copy the live objects to a new file, dropping the free space. UIDs are
-    /// preserved; offsets are not. The only way space comes back.
-    bool compact(const std::string& to);
+    /*!
+     * \brief Copy the live objects to a new file, dropping the free space.
+     *
+     * The only way space comes back — the same bargain HDF5 makes with
+     * `h5repack`. UIDs are preserved and offsets are not, so nothing but the
+     * index may hold an offset. Tags, annotations and cues come across: a cue
+     * addresses a byte offset *into* a payload, and this moves payloads without
+     * changing a byte inside one.
+     *
+     * Payloads are streamed, never held, so compacting an eight-gigabyte
+     * container costs a megabyte of memory.
+     *
+     * The two knobs are the trade between a small file and a file that stays
+     * small. Neither is right for everyone, which is why neither is the only
+     * behaviour:
+     *
+     * \param tight drop the padding that puts each payload on an 8-byte
+     *        boundary as well, so the result carries no reclaimable `Void` at
+     *        all. The file is as small as the format allows and its payloads
+     *        can no longer be mapped and used in place. For an archive or a
+     *        copy that is about to be sent somewhere; alignment is a SHOULD, so
+     *        the result is still conformant. \see \ref pto_align.
+     * \param reserve room to leave after every object, as a fraction of its
+     *        payload — 0.25 gives a 4 MiB table a megabyte to grow into. The
+     *        opposite trade: a bigger file that absorbs the next few updates
+     *        without relocating anything, which is what a container being
+     *        edited wants. Default 0, which is what a container being archived
+     *        wants.
+     *
+     * The default is neither: holes gone, payloads aligned, nothing reserved.
+     */
+    bool compact(const std::string& to, bool tight = false, double reserve = 0.0);
 
 private:
     struct Impl;

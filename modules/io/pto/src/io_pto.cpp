@@ -117,6 +117,35 @@ const std::uint64_t kSeekHeadReserve = 8192;
 /// can hold nothing at all and must never be left.
 const std::uint64_t kMinVoid = 2;
 
+/*!
+ * \brief Every payload starts on a multiple of this.
+ *
+ * EBML guarantees no alignment -- an element header is a variable number of
+ * octets, so `FileData` would otherwise begin wherever the name and the encoding
+ * strings happened to leave it. That is fine for bytes and wrong for everything
+ * a payload actually is here: a PTU record stream is `uint32`, a `.dstore`
+ * column is `double`, and a reader that wants to map the file and point at one
+ * without copying needs the first byte on a boundary.
+ *
+ * Eight, not four, and it costs nothing to say eight: it satisfies the 32-bit
+ * case as well, and it is the alignment `.dstore` already uses for its own
+ * blobs -- those offsets are relative to the store, so the store has to start
+ * 8-aligned for them to be 8-aligned in the file.
+ *
+ * A writer pads with `Void`, records nothing about having done so, and a reader
+ * must still check rather than assume: the specification makes this a SHOULD,
+ * and an alignment a conformant writer may omit is not one a reader may rely on.
+ */
+const std::uint64_t kPayloadAlign = 8;
+
+/// Bytes of padding that put `at` on a \ref kPayloadAlign boundary, never
+/// leaving a gap of one octet -- which is the one size a Void cannot be.
+std::uint64_t align_pad(std::uint64_t at) {
+    std::uint64_t pad = (kPayloadAlign - (at % kPayloadAlign)) % kPayloadAlign;
+    if (pad != 0 && pad < kMinVoid) pad += kPayloadAlign;
+    return pad;
+}
+
 // --- EBML primitives --------------------------------------------------------
 
 int id_octets(std::uint32_t id) {
@@ -139,6 +168,20 @@ int uint_octets(std::uint64_t v) {
     int n = 0;
     while (v != 0) { n++; v >>= 8; }
     return n == 0 ? 1 : n;
+}
+
+/*!
+ * \brief Bytes of element header in front of an object's payload.
+ *
+ * `head_bytes` is the AttachedFile's own children -- uid, kind, encoding, name
+ * -- whose length varies with the strings. Everything else here is a fixed
+ * width, which is what makes the payload's landing position computable before a
+ * byte is written, and therefore what makes \ref align_pad possible.
+ */
+std::uint64_t header_before_payload(std::size_t head_bytes) {
+    return id_octets(kAttachments) + kWideSize +
+           id_octets(kAttachedFile) + kWideSize +
+           head_bytes + id_octets(kFileData) + kWideSize;
 }
 
 std::uint32_t crc32_ebml(const unsigned char* p, std::size_t n) {
@@ -339,39 +382,42 @@ private:
 };
 
 /*!
- * \brief A fresh object identity: 53 random bits, never zero.
+ * \brief A fresh object identity: 53 random bits in a 64-bit element, never zero.
  *
- * \par Why 53 and not 64
- * Nothing in EBML or Matroska asks for this. RFC 8794 makes an unsigned integer
- * element a full ``uint64``, libebml's ``EbmlUInteger`` stores one and accepts
- * any encoded size up to eight octets, and Matroska constrains its UIDs only
- * with ``range: not 0`` -- mkvmerge mints full 64-bit random ones. A 53-bit
- * value is simply a ``uint64`` that happens to be small, so this is a writer's
- * choice the format permits and not a format change: ``FileUID`` is a uint64 on
- * disk and a reader must treat it as one.
+ * \par The storage is a uint64 and stays one
+ * Nothing is narrowed on disk. RFC 8794 makes an unsigned integer element a
+ * whole ``uint64``, libebml's ``EbmlUInteger`` stores one, and Matroska
+ * constrains its UIDs with ``range: not 0`` and nothing else. A ``FileUID``
+ * here is written in eight octets whatever its value -- it has to be, because
+ * it is the one element rewritten in place when an object relocates, and a
+ * narrower replacement would shift every sibling after it. Any conformant
+ * reader gets a uint64 and must treat it as one.
  *
- * The choice is about the bindings. R has no integer type at all beyond a
- * 32-bit ``int`` -- its numeric IS a double -- and JavaScript's Number is one
- * too, so a uid above 2\f$^{53}\f$ comes back from either as a *different
- * number*, and an identity that changes on its way to the caller is not an
- * identity.
+ * \par The value is bounded, and why that is now belt-and-braces
+ * What is bounded is the number this writer *chooses*, to 2\f$^{53}\f$ - 1.
  *
- * \par What it does not fix
- * Only the uids this library mints. A conformant PTO written elsewhere may
- * carry a full 64-bit ``FileUID``, and that one is still inexact in R. There is
- * no lossless representation of a uint64 in base R, so nothing here can fix
- * that; JavaScript could carry it as a BigInt if the ergonomic cost were ever
- * judged worth it.
+ * It was load-bearing when it was introduced: a `Number` in JavaScript and a
+ * `numeric` in R are both IEEE doubles, so a wider uid came back from either
+ * binding as a *different number* -- one naming no object, with
+ * `f.read(f.add_file(...), 0, 4)` failing on "no object with that uid".
  *
- * \see unused_uid, which is what actually makes a uid unique. 53 bits leaves a
- * birthday collision probability of ~6x10^-11 for a thousand objects, but a
- * probability is not a guarantee and the file is the thing that has to be
- * right.
+ * Both bindings have since been fixed at the binding, which is where the fix
+ * belonged: JavaScript routes 64-bit scalars through `BigInt` (see
+ * ext/js/jsarrays.i -- the arrays always did), and R carries a uid as a
+ * character string, the only thing base R holds exactly without `bit64` (see
+ * the SWIGR typemaps in ext/python/Pto.i). A container from another writer that
+ * uses the whole range is therefore read correctly everywhere.
+ *
+ * The bound stays because it costs nothing observable -- 9x10\f$^{15}\f$
+ * identities, with uniqueness inside a file guaranteed by \ref unused_uid
+ * rather than left to chance -- and because a uid that fits a double is one
+ * fewer thing to get wrong in the next binding.
+ *
  */
 std::uint64_t random_uid() {
     static std::mt19937_64 rng(std::random_device{}());
     std::uint64_t v = 0;
-    while (v == 0) v = rng() >> 11;
+    while (v == 0) v = rng() >> 11;      // 53 bits; see above
     return v;
 }
 
@@ -439,6 +485,10 @@ struct PtoFile::Impl {
 
     std::vector<std::pair<std::uint64_t, std::uint64_t> > freelist;
 
+    /// Whether a payload is padded onto a \ref kPayloadAlign boundary. Always,
+    /// except while \ref PtoFile::compact is writing a `tight` copy.
+    bool align_payloads = true;
+
     bool fail(const std::string& why) { err = why; return false; }
 
     Slot* find(std::uint64_t uid) {
@@ -474,19 +524,78 @@ struct PtoFile::Impl {
         freelist.swap(out);
     }
 
-    /// A run of `bytes` for a whole element. Reuses a hole where one fits --
-    /// exactly, or with room left for a Void -- and grows the Segment otherwise.
+    /*!
+     * \brief A run of `bytes` for a whole element.
+     *
+     * Reuses a hole where one fits -- exactly, or with room left for a Void --
+     * and grows the Segment otherwise.
+     *
+     * Carving the front of a hole leaves a remainder that MUST be given its own
+     * Void header before this returns. The hole is one Void covering the whole
+     * span, and the caller is about to write its element over that header; the
+     * remainder would then be the tail of the old element's bytes with nothing
+     * saying so, and the next reader walking the Segment parses whatever
+     * happens to be there. It reads as "an element could not be read" at an
+     * offset in the middle of a healthy file, which is the *reader* reporting
+     * damage that the writer did.
+     */
     std::uint64_t allocate(std::uint64_t bytes) {
         for (std::size_t i = 0; i < freelist.size(); i++) {
             const std::uint64_t have = freelist[i].second;
             if (have != bytes && have < bytes + kMinVoid) continue;
             const std::uint64_t at = freelist[i].first;
             if (have == bytes) freelist.erase(freelist.begin() + i);
-            else { freelist[i].first += bytes; freelist[i].second -= bytes; }
+            else {
+                freelist[i].first += bytes;
+                freelist[i].second -= bytes;
+                write_void(freelist[i].first, freelist[i].second);
+            }
             return at;
         }
         const std::uint64_t at = seg_data + seg_bytes;
         seg_bytes += bytes;
+        return at;
+    }
+
+    /*!
+     * \brief \see allocate, for an element whose payload must land on a boundary.
+     *
+     * The padding cannot be decided before the address is, and the address
+     * cannot be chosen without knowing the padding -- a hole big enough for the
+     * element may not be big enough once its own alignment is paid for. So the
+     * two are worked out together, per candidate, and exactly `*pad + bytes` is
+     * claimed. Over-allocating a boundary's worth and giving the remainder back
+     * as slack was the first attempt; it left every object trailing up to
+     * sixteen bytes of Void that nothing ever wanted.
+     *
+     * \param align false packs it tight and leaves the payload wherever the
+     *        header ends. \see PtoFile::compact.
+     */
+    std::uint64_t allocate_aligned(std::uint64_t bytes, std::uint64_t before_payload,
+                                   bool align, std::uint64_t* pad) {
+        *pad = 0;
+        if (!align) return allocate(bytes);
+        for (std::size_t i = 0; i < freelist.size(); i++) {
+            const std::uint64_t at = freelist[i].first;
+            const std::uint64_t p = align_pad(at + before_payload);
+            const std::uint64_t need = p + bytes;
+            const std::uint64_t have = freelist[i].second;
+            if (have != need && have < need + kMinVoid) continue;
+            if (have == need) freelist.erase(freelist.begin() + i);
+            else {
+                // \see allocate -- the remainder needs its own Void header, for
+                // the same reason and with the same failure mode if it does not
+                // get one.
+                freelist[i].first += need;
+                freelist[i].second -= need;
+                write_void(freelist[i].first, freelist[i].second);
+            }
+            *pad = p;
+            return at;
+        }
+        const std::uint64_t at = seg_data + seg_bytes;
+        *pad = align_pad(at + before_payload);
+        seg_bytes += *pad + bytes;
         return at;
     }
 
@@ -688,7 +797,13 @@ struct PtoFile::Impl {
         const std::uint64_t elem_total = id_octets(kAttachments) + kWideSize + att_total;
 
         if (reserve != 0 && reserve < kMinVoid) reserve = kMinVoid;
-        const std::uint64_t at = allocate(elem_total + reserve);
+
+        const std::uint64_t before_payload = header_before_payload(head.b.size());
+        std::uint64_t pad = 0;
+        const std::uint64_t at_raw =
+                allocate_aligned(elem_total + reserve, before_payload, align_payloads, &pad);
+        const std::uint64_t at = at_raw + pad;
+        if (pad != 0 && !write_void(at_raw, pad)) return 0;
 
         Buf prefix;
         prefix.put_id(kAttachments);
@@ -698,7 +813,12 @@ struct PtoFile::Impl {
         prefix.raw(head.b.data(), head.b.size());
         prefix.put_id(kFileData);
         prefix.put_size(n, kWideSize);
-
+        // The arithmetic above and the bytes just built must agree, or the
+        // payload lands somewhere other than where it was aligned to.
+        if (prefix.b.size() != before_payload) {
+            fail("internal: the object header is not the size it was computed to be");
+            return 0;
+        }
         s.elem_at = at;
         s.elem_bytes = elem_total;
         s.seg_size_at = at + id_octets(kAttachments);
@@ -1630,18 +1750,34 @@ bool PtoFile::commit() {
     return true;
 }
 
-bool PtoFile::compact(const std::string& to) {
+bool PtoFile::compact(const std::string& to, bool tight, double reserve) {
     Impl& m = *p_;
     m.err.clear();
+    if (reserve < 0.0) return m.fail("a negative reserve is not a fraction");
     PtoFile out;
     if (!out.create(to, m.title)) return m.fail(out.error());
     out.set_writing_app(m.writing_app);
+    out.p_->align_payloads = !tight;
     for (std::size_t i = 0; i < m.slots.size(); i++) {
         const PtoObject& o = m.slots[i].meta;
-        std::vector<unsigned char> bytes = read(o.uid);
-        const std::uint64_t made = out.add(o.kind, o.encoding, o.name,
-                                           bytes.data(), bytes.size());
-        if (made == 0) return m.fail(out.error());
+        const std::uint64_t room =
+                static_cast<std::uint64_t>(static_cast<double>(o.size) * reserve);
+        // Streamed, not read: this is the one operation that touches every
+        // payload in the file, so materialising them would make compacting an
+        // eight-gigabyte container need eight gigabytes of memory -- for the
+        // job whose entire purpose is to make the file smaller.
+        bool copied = true;
+        const std::uint64_t made = out.p_->emit_object(
+                o.kind, o.encoding, o.name, o.size, room,
+                [&](File& dst) {
+                    copied = stream(o.uid, [&](const void* block, std::size_t n) {
+                        return dst.write(block, n);
+                    });
+                    return copied;
+                });
+        // A failed copy already left its reason in this file's error, since
+        // `stream` reads from here; a failed write left it in the new one's.
+        if (made == 0) return copied ? m.fail(out.error()) : false;
         // Keep the identity: everything that refers to this object refers to it
         // by uid, and compaction is not supposed to be observable.
         Impl::Slot* s = out.p_->find(made);
@@ -1690,7 +1826,21 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     // appends -- there is no hole to look for one that fits. The three sizes
     // are written wide and patched afterwards, which is what RFC 8794 permits
     // an over-wide Data Size for.
-    const std::uint64_t at = m.seg_data + m.seg_bytes;
+    //
+    // The payload is aligned the same way \ref PtoFile::emit_object aligns one,
+    // and it matters more here than anywhere: a .dstore's own blob offsets are
+    // 8-aligned RELATIVE TO THE STORE, so they are only 8-aligned in the file
+    // if the store itself begins on a boundary.
+    const std::uint64_t before_payload = header_before_payload(head.b.size());
+    const std::uint64_t at_raw = m.seg_data + m.seg_bytes;
+    const std::uint64_t pad =
+            m.align_payloads ? align_pad(at_raw + before_payload) : 0;
+    if (pad != 0) {
+        if (!m.write_void(at_raw, pad)) return 0;
+        m.seg_bytes += pad;
+    }
+    const std::uint64_t at = at_raw + pad;
+
     Buf prefix;
     prefix.put_id(kAttachments);
     prefix.put_size(0, kWideSize);
@@ -1699,6 +1849,10 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     prefix.raw(head.b.data(), head.b.size());
     prefix.put_id(kFileData);
     prefix.put_size(0, kWideSize);
+    if (prefix.b.size() != before_payload) {
+        m.fail("internal: the object header is not the size it was computed to be");
+        return 0;
+    }
 
     if (!m.f.at(at, prefix.b.data(), prefix.b.size())) { m.fail("write failed"); return 0; }
 

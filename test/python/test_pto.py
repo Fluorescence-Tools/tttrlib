@@ -150,6 +150,64 @@ def test_the_index_checksum_is_a_real_crc32(made):
     assert checked == 2
 
 
+def test_libebml_agrees_this_is_a_valid_pto(made):
+    """The one check on the framing that is not written against our own parser.
+
+    Every other EBML assertion here reads the file with code from this
+    repository, which means a consistent misreading of RFC 8794 would satisfy
+    the writer and the reader together and pass all of them. This hands the same
+    file to libebml -- the reference implementation Matroska is built on -- and
+    lets it disagree.
+
+    Opt-in, because tttrlib must not acquire a dependency on libebml: the whole
+    argument for the format is that a reader needs an EBML parser and twenty
+    element IDs, not a framework. See test/tools/README.md for the two commands
+    that build the checker and the variable that turns this on.
+    """
+    import subprocess
+
+    checker = os.environ.get("TTTRLIB_PTO_EBML_CHECK", "").strip()
+    if not checker or not os.path.exists(checker):
+        pytest.skip("set TTTRLIB_PTO_EBML_CHECK; see test/tools/README.md")
+    # --aligned as well: this container came from the default writer, which
+    # aligns. A `compact(tight=True)` copy would rightly fail that flag.
+    done = subprocess.run([checker, made[0], "--aligned"], capture_output=True, text=True)
+    assert done.returncode == 0, done.stdout + done.stderr
+
+
+def test_every_payload_starts_on_an_eight_byte_boundary(made):
+    """EBML guarantees no alignment -- an element header is a variable number of
+    octets, so ``FileData`` would otherwise begin wherever the name and the
+    encoding strings happened to leave it.
+
+    That is fine for bytes and wrong for what a payload actually is: a PTU
+    record stream is ``uint32``, a ``.dstore`` column is ``double``, and a
+    ``.dstore``'s own blob offsets are 8-aligned *relative to the store*, so
+    they are only aligned in the file if the store itself begins on a boundary.
+    The writer pads with ``Void`` to make it so.
+    """
+    path = made[0]
+    f = tttrlib.PtoFile()
+    assert f.open(path), f.error()
+    for o in f.objects():
+        assert o.offset % 8 == 0, "%s starts at %d" % (o.name, o.offset)
+
+
+def test_alignment_survives_a_relocation(made):
+    """The padding is chosen when the object is laid down, so an object that
+    outgrows its room and is written somewhere else has to be aligned again --
+    it is a fresh lay-down, not a move."""
+    path, _, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+    before = f.object(uid_bursts).offset
+    tttrlib.pto_update_store(f, uid_bursts, store(30000, name="Tau"))
+    assert f.commit(), f.error()
+    assert f.object(uid_bursts).offset != before, "the object did not move"
+    for o in f.objects():
+        assert o.offset % 8 == 0, "%s starts at %d" % (o.name, o.offset)
+
+
 # -- objects -------------------------------------------------------------------
 
 def test_everything_put_in_comes_back(made):
@@ -290,6 +348,43 @@ def test_outgrowing_the_room_keeps_the_uid_and_moves_the_object(made):
     assert g.read(uid_raw) == original, "a neighbour was damaged"
 
 
+def test_nothing_but_the_rewritten_object_ever_moves(made):
+    """The claim the whole format rests on, stated as the shape it is used in:
+    a photon stream that is written once beside a table that keeps changing
+    size. The table grows, shrinks, and outgrows its room; the stream does not
+    move, is not rewritten, and stays byte-identical.
+
+    Growth inside the reserved room does not move even the table. Only
+    outgrowing it does, and then it is the only object that moves -- the file
+    is never reshuffled.
+    """
+    path, uid_photons, uid_bursts, uid_raw, original = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+    stream_at = f.object(uid_photons).offset
+    raw_at = f.object(uid_raw).offset
+    table_at = f.object(uid_bursts).offset
+
+    # Inside the 8 KiB reserved at creation: nothing moves at all.
+    for rows in (60, 200, 20, 400):
+        assert tttrlib.pto_update_store(f, uid_bursts, store(rows, name="Tau"))
+        assert f.commit(), f.error()
+        assert f.object(uid_bursts).offset == table_at, "%d rows moved it" % rows
+
+    # Past it: the table moves and nothing else does.
+    assert tttrlib.pto_update_store(f, uid_bursts, store(50_000, name="Tau"))
+    assert f.commit(), f.error()
+    assert f.object(uid_bursts).offset != table_at
+    assert f.object(uid_photons).offset == stream_at, "the photon stream moved"
+    assert f.object(uid_raw).offset == raw_at, "a neighbour moved"
+
+    photons = tttrlib.DataStore()
+    tttrlib.pto_read_store(f, uid_photons, photons)
+    np.testing.assert_array_equal(photons["macro_time"].numpy(),
+                                  np.arange(2000, dtype=np.uint64))
+    assert f.read(uid_raw) == original
+
+
 def test_the_space_a_moved_object_left_is_reused(made):
     path, _, uid_bursts, _, _ = made
     f = tttrlib.PtoFile()
@@ -304,6 +399,39 @@ def test_the_space_a_moved_object_left_is_reused(made):
     f.commit()
     f.close()
     assert os.path.getsize(path) == grew_to, "a hole was there and was not used"
+
+
+def test_the_unused_end_of_a_reused_hole_is_still_a_void(made):
+    """Carving the front of a hole must re-header what is left of it.
+
+    A hole is one Void spanning the whole freed run, and an element written
+    into its front overwrites that header. Without a fresh Void over the
+    remainder, the tail is the old element's bytes with nothing declaring them,
+    and the next reader to walk the Segment parses them as an element -- so the
+    file reads as damaged at an offset in the middle of it, reported by the
+    reader for something the writer did.
+
+    The sibling test above stops at "the hole was used"; that passes either
+    way, because it never reopens the file. This one reopens.
+    """
+    path, _, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    f.open(path, writable=True)
+    tttrlib.pto_update_store(f, uid_bursts, store(20000, name="Tau"))
+    f.commit()
+    hole = max(e.bytes for e in f.free_extents())
+    assert hole > 1024, "the freed run is too small for this to prove anything"
+    # Small enough to leave a remainder, which is the case that breaks.
+    f.add("table", "raw", "filler", b"x" * 64)
+    f.commit()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(path) is True, g.error()
+    assert g.n_objects() == 4
+    for o in g.objects():
+        assert g.read(o.uid) is not None
+    g.close()
 
 
 def test_removing_an_object(made):
@@ -575,8 +703,86 @@ def test_compacting_drops_the_holes_and_keeps_the_uids(made):
     assert g.has(uid_photons) and g.has(uid_bursts) and g.has(uid_raw)
     assert g.read(uid_raw) == original
     assert [t.name for t in g.tags_for(uid_bursts)] == ["chisurf.derived_from"]
-    assert sum(e.bytes for e in g.free_extents()) == 0
+    # Not zero: every payload is padded onto an 8-byte boundary, so a compacted
+    # file still carries at most a boundary's worth of Void per object. What
+    # compaction drops is the holes an update left, which are unbounded.
+    assert sum(e.bytes for e in g.free_extents()) < 8 * g.n_objects()
     assert os.path.getsize(lean_path) < fat
+
+
+def _fragmented(tmp_path, name="frag.pto"):
+    """A container with a hole in it: an object grown past its room, so the
+    space it used to occupy is dead."""
+    path = str(tmp_path / name)
+    f = tttrlib.PtoFile()
+    assert f.create(path, "fragmented"), f.error()
+    f.add("photons", "raw", "before.bin", b"P" * 200_000)
+    tab = tttrlib.pto_add_store(f, "table", "bursts", store(1000, name="Tau"), 0)
+    f.add("attachment", "raw", "after.bin", b"A" * 50_000)
+    assert f.commit(), f.error()
+    assert tttrlib.pto_update_store(f, tab, store(40_000, name="Tau")), f.error()
+    assert f.commit(), f.error()
+    assert sum(e.bytes for e in f.free_extents()) > 0, "nothing to compact"
+    return f, path
+
+
+def test_compact_by_default_leaves_only_the_alignment_padding(tmp_path):
+    """The holes go; the padding that puts each payload on a boundary stays,
+    because it is structure rather than waste."""
+    f, path = _fragmented(tmp_path)
+    lean = str(tmp_path / "lean.pto")
+    assert f.compact(lean), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(lean), g.error()
+    assert all(o.offset % 8 == 0 for o in g.objects()), "payloads lost their alignment"
+    assert sum(e.bytes for e in g.free_extents()) < 8 * g.n_objects()
+    assert os.path.getsize(lean) < os.path.getsize(path)
+
+
+def test_compact_tight_leaves_no_void_at_all(tmp_path):
+    """For an archive, or a copy about to be sent somewhere. The padding goes
+    too, so the payloads can no longer be mapped in place -- which is the trade,
+    and why it is not the default."""
+    f, path = _fragmented(tmp_path)
+    tight = str(tmp_path / "tight.pto")
+    loose = str(tmp_path / "loose.pto")
+    assert f.compact(tight, tight=True), f.error()
+    assert f.compact(loose), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(tight), g.error()
+    assert sum(e.bytes for e in g.free_extents()) == 0
+    assert not all(o.offset % 8 == 0 for o in g.objects()), \
+        "nothing was actually packed tighter"
+    assert os.path.getsize(tight) < os.path.getsize(loose)
+    # Still a container, and still readable.
+    assert g.read(g.find("after.bin")) == b"A" * 50_000
+    back = tttrlib.pto_store(g, g.find("bursts"))
+    assert back.n_rows() == 40_000
+
+
+def test_compact_can_reserve_room_for_what_comes_next(tmp_path):
+    """The opposite trade: a bigger file that absorbs the next few updates
+    without relocating anything. What a container still being edited wants."""
+    f, _ = _fragmented(tmp_path)
+    roomy = str(tmp_path / "roomy.pto")
+    assert f.compact(roomy, reserve=0.25), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(roomy, writable=True), g.error()
+    tab = g.find("bursts")
+    for o in g.objects():
+        assert o.capacity >= o.size * 1.2, "%s got no room" % o.name
+
+    # ...and it is real room: the table grows by a quarter without moving.
+    was = g.object(tab).offset
+    assert tttrlib.pto_update_store(g, tab, store(48_000, name="Tau")), g.error()
+    assert g.commit(), g.error()
+    assert g.object(tab).offset == was, "it relocated despite the reserve"
 
 
 # -- the shape it exists for ------------------------------------------------------
@@ -636,7 +842,7 @@ def test_one_measurement_in_one_file(tmp_path):
     assert back.n_rows() == 312
 
 
-# -- PRD-020: targeted reads and streaming -------------------------------------
+# -- targeted reads and streaming -------------------------------------
 #
 # The container was built so a multi-gigabyte payload is cheap to keep beside a
 # table that gets recomputed. Writing was streamed from the start; reading was
@@ -1029,6 +1235,27 @@ def test_embedding_a_gigabyte_does_not_hold_it_in_memory(tmp_path):
 
     assert uid, f.error()
     assert grew < 256, f"embedding {size_gb:.1f} GB grew RSS by {grew:.0f} MB"
+
+
+@pytest.mark.slow
+@needs_data
+def test_compacting_an_object_does_not_hold_it_in_memory(tmp_path):
+    """Compaction touches every payload in the file, so materialising them
+    would make compacting an eight-gigabyte container need eight gigabytes --
+    for the operation whose whole purpose is to make the file smaller."""
+    if not BIG_PTU.exists():
+        pytest.skip("no multi-gigabyte fixture")
+    path = str(tmp_path / "big.pto")
+    f = tttrlib.PtoFile()
+    f.create(path)
+    f.add_file("tttr_photon_stream", "ptu", BIG_PTU.name, str(BIG_PTU))
+    assert f.commit(), f.error()
+
+    before = _rss_mb()
+    assert f.compact(str(tmp_path / "big-lean.pto")), f.error()
+    grew = _rss_mb() - before
+    f.close()
+    assert grew < 256, f"compacting grew RSS by {grew:.0f} MB"
 
 
 @pytest.mark.slow

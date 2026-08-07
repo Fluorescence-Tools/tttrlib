@@ -14,7 +14,7 @@ PTO.MFDB — the MMFDB profile of the photon container
    *data IO* and *burst companions*;
    the gap is in the *assessment*.
 
-**Profile version 1.0.** Profiles PTO 1.0 (``DocType "pto"``). Read version 1.
+**Profile version 1.1.** Profiles PTO 1.0 (``DocType "pto"``). Read version 1.
 
 Purpose
 -------
@@ -79,7 +79,10 @@ File layout
      SeekHead ×2       the atomic commit
      Info              Title, WritingApp, SegmentUUID
      Attachments
-       AttachedFile    THE INSTRUMENT FILE — first, verbatim, immutable
+       AttachedFile    THE README — first object, ASCII, how to read this file
+     Attachments
+       AttachedFile    THE INSTRUMENT FILE — verbatim, immutable
+     Attachments       the measurement's mmCIF metadata, when it has any
      Attachments       every derived artifact, appended, each with its own reserve
      Tags              artifacts, operations, edges, version stamps
      PtoAnnotations    notes for people
@@ -87,6 +90,56 @@ File layout
 The instrument payload is the **first** object and is never rewritten, so its
 offset is stable for the life of the file and no recomputation can disturb it.
 Reserve belongs to the derived objects, which are the ones that change.
+
+The file explains itself
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The **first object is a plain-ASCII README**, ``artifact_kind = readme``,
+``data_format = text``. It is not documentation *about* the format; it is the
+format telling a reader what it is, in the file, in compact language:
+
+- that this is EBML (RFC 8794), and how an element is framed, so the bytes can
+  be walked by hand;
+- which element IDs matter, by number, so no table is needed elsewhere;
+- what the kinds and encodings mean, and that ``dstore`` is a columnar table with
+  a described header;
+- **how to get the original instrument file back** — find the
+  ``tttr_photon_stream`` object, write its ``FileData`` to a file, check it against
+  the recorded SHA-256;
+- that nothing is compressed, encrypted, or stored outside the file.
+
+The reason is not tidiness. A container outlives the software that wrote it, and
+the person who needs it most is the one for whom the library will not install.
+A specification in another repository is no use to them; a paragraph at the
+front of the file is.
+
+It is the first *object*, not the first byte — the container reserves space for
+its two indexes ahead of everything, so the text begins some kilobytes in and is
+found with ``strings`` rather than ``head -c 4096``. Nothing can precede it without
+changing the container format, which this profile does not do.
+
+What the measurement is
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Provenance says a burst table came from a photon stream by a burst search. It
+does not say which sample, which dyes, which buffer, which instrument — and a
+file that cannot answer those is a record of a *computation*, not of a
+*measurement*.
+
+So a container may carry an object of ``artifact_kind = sample_metadata``,
+``data_format = cif``: an mmCIF block in the same vocabulary as everything else —
+flrCIF for samples, probes and conditions, PDBx where it applies, ``mmfdb_*`` for
+what neither covers. It is carried **whole**, as a block, rather than flattened
+into tags, because a category with several rows (two probes, three detector
+channels) is a loop and a tag is a name/value pair.
+
+Two rules:
+
+- **Every name is checked against the dictionaries before it is written.** Prose
+  in a field that looks structured is worse than an absent field, because a
+  later reader cannot tell the two apart.
+- **A measurement with nothing to say says nothing.** No empty block is written.
+  An empty one would claim the measurement was described when it was not.
 
 An object is an artifact
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,6 +201,48 @@ So relations are declared, not counted:
 A row an analysis skipped is **absent**, not a sentinel. Absence is information;
 a placeholder row destroys it.
 
+What a column is, and what it is in
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A column carries a name and a dtype, which is enough to read a table and not
+enough to understand one. A burst duration is milliseconds; a lifetime is
+nanoseconds; a TAC channel is picoseconds. Historically that was recorded only
+in the column *name*, when whoever wrote it remembered — ``Duration (ms)`` and
+``Tau`` sit in the same table, and ``Count Rate (KHz)`` capitalises the kilo.
+
+So a column carries **one extensible description** rather than a growing list of
+fields, and the name is an attribute of it:
+
+::
+
+   {"name": "Duration", "units": "milliseconds", "item": "_mmfdb_burst.duration"}
+
+The keys are ``_mmfdb_column.*`` items — ``name``, ``units``, ``item``, ``description`` —
+and ``units`` takes a ``_mmfdb_column.units`` term. Spellings follow mmCIF's
+``ITEM_UNITS_LIST`` wherever it has the unit — 15 of the 28 are already its own,
+including ``nanoseconds`` and ``counts``. Its 78 codes have an odd gap: it carries
+``nanoseconds`` and ``femtoseconds`` but neither ``milliseconds`` nor ``picoseconds``,
+and no concentration, rate multiple or count of photons. Those 13 are defined in
+the MMFDB dictionary rather than invented per call site.
+
+The symbol a person reads — ``ns``, ``kHz`` — is ``_mmfdb_units.symbol``, in the same
+table, with the SI factor beside it. Nothing else may carry an abbreviation: a
+display that invents one is how ``Count Rate (KHz)`` came to capitalise the kilo.
+
+Two rules that matter more than they look:
+
+- **The description travels with the column, not with the file.** A
+  column-subset read gets the units too, which is the whole point — a caller
+  reading two columns out of a four-gigabyte table still learns what they are.
+- **No unit means the unit is unknown.** It does not mean dimensionless.
+  ``dimensionless`` is a positive claim, for a ratio that genuinely has none — an
+  efficiency, an anisotropy — and a writer that is unsure says nothing instead.
+
+Units are not parsed back out of column names. That convention is what this
+replaces: it is inconsistent, it is missing on exactly the columns that need it
+most, and a regular expression over it would be the same convention with more
+machinery on top and the same blind spots.
+
 Provenance
 ~~~~~~~~~~
 
@@ -173,8 +268,10 @@ unknown tags are skipped, exactly as EBML already treats unknown elements.
 Rules
 -----
 
-1. The instrument file is the first object, is stored verbatim, and is never
-   updated or removed.
+1. The first object is a plain-ASCII README describing the container and how to
+   recover the instrument file from it.
+11. The instrument file is the first *payload* object, is stored verbatim, and is
+   never updated or removed.
 2. Every object carries ``artifact_id``, ``checksum`` and ``checksum_algorithm``.
    Extraction verifies the checksum and fails on mismatch.
 3. Opening a file never hashes a payload. Verification is explicit.
