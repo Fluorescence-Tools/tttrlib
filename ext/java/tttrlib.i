@@ -53,7 +53,14 @@
 %include "BurstFeature.i"
 %include "BVA.i"
 %include "TwoCDE.i"
+/* Hidden Markov models. Restraints and constraints first: HMM.i names both.
+   HmmSurrogate.i must follow NeuralNet.i -- the surrogate IS a neural net, and
+   an earlier %include emits an unqualified `NeuralNet` that does not compile. */
+%include "HMMRestraints.i"
+%include "HMMConstraints.i"
+%include "HMM.i"
 %include "NeuralNet.i"
+%include "HmmSurrogate.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
@@ -98,6 +105,13 @@
 
 /* DecayFit(s) */
 %include "DecayFit.i"
+
+/* The photon simulator.
+   LAST, and that is load-bearing: Sim.i is the only place stdint.i is included,
+   and including it earlier changes how SWIG resolves int64_t in the R and Java
+   wrappers -- differently across SWIG versions. Keep it at the end, as
+   ext/python/tttrlib.i does. */
+%include "Sim.i"
 
 /* Java-only convenience helpers (bulk array accessors) */
 %include "helpers.i"

@@ -183,6 +183,27 @@ SWIGINTERN SEXP SWIG_R_AppendOutput(SEXP result, SEXP obj) {
   if ($1) free($1); UNPROTECT(1);
 }
 
+/* -------- keep the dim attribute on the way in --------------------------- *
+ *
+ * Every multi-dimensional `in` typemap above reads dim(x) to recover the
+ * shape, and every one of them calls Rf_coerceVector itself. SWIG's DEFAULT
+ * scoercein for an integer element type emits `x = as.integer(x)` in the R
+ * wrapper -- which drops the dim attribute before the C code ever sees it, so
+ * the shape silently degrades to (length, 1) or (length, 1, 1).
+ *
+ * That is not hypothetical: a (40, 256, 256) CLSM mask arrived as
+ * (2621440, 1, 1) and the reconstruction was rejected as the wrong shape. It
+ * only appeared once stdint.i entered the wrapper (it comes with Sim.i), which
+ * is what gave uint8_t a coercion it did not have before -- so the double-typed
+ * arrays were fine and the byte-typed one was not.
+ *
+ * An empty scoercein says "do nothing in R". The C typemap coerces.
+ */
+%typemap(scoercein) (DATA_TYPE* IN_ARRAY2, int DIM1, int DIM2)  %{ %}
+%typemap(scoercein) (DATA_TYPE* IN_ARRAY3, int DIM1, int DIM2, int DIM3) %{ %}
+%typemap(scoercein) (DATA_TYPE* INPLACE_ARRAY2, int DIM1, int DIM2) %{ %}
+%typemap(scoercein) (DATA_TYPE* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3) %{ %}
+
 /* -------- 1D output view: (T** ARGOUTVIEW_ARRAY1, int* DIM1) -------------- *
  * C++ owns the buffer; R copies it (no borrowed view) and does NOT free.    */
 %typemap(in, numinputs=0) (DATA_TYPE** ARGOUTVIEW_ARRAY1, int* DIM1)

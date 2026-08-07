@@ -61,16 +61,22 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 
 // ── uint64 is a double in R, not an integer ────────────────────────────────
 //
-// R has one numeric type and it is a double. SWIG's R backend routes every
-// integer wider than `int` through as.integer(), which is 32-bit and silently
-// NA above 2^31 -- so a PTO uid, a payload offset and a payload size, all
-// uint64, come back from R as NA, and a caller cannot even hand a uid it was
-// just given back to the function that produced it.
+// SWIG's R backend routes every integer wider than `int` through as.integer(),
+// which is 32-bit and silently NA above 2^31 -- so a payload offset and a
+// payload size, both uint64, came back from R as NA. A double carries an
+// integer exactly to 2^53, so this is a straight improvement of 22 bits and it
+// covers every offset and size short of an 8-petabyte file.
 //
-// A double carries an integer exactly to 2^53, which is why PTO mints 53-bit
-// uids (see io_pto.cpp random_uid): the identity is chosen to survive the
-// bindings it has to cross. Offsets and sizes above 2^53 would be an 8-petabyte
-// file, so the same representation covers those.
+// It does NOT cover a PTO object's FileUID, which is 64 random bits and lands
+// above 2^53 essentially always. R has no lossless representation of a uint64 --
+// its numeric IS a double, and base R has no 64-bit integer type -- so a uid
+// read from R is a nearby value, not that uid, and handing it back finds no
+// object. That is a limitation of the language, recorded rather than papered
+// over: the PTO conformance cases declare themselves unsupported in R for this
+// reason, and a fix means representing a uid as a character string (exact, and
+// out of step with every other 64-bit value in this binding) or depending on
+// bit64. Narrowing the uid so it fits was tried and reverted -- putting one
+// language's ceiling into every file on disk is the wrong trade.
 //
 // Applied to std::uint64_t by name rather than to `unsigned long long`, so the
 // existing R behaviour of every other 64-bit parameter in the library is
@@ -102,7 +108,14 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 %include "BurstFeature.i"
 %include "BVA.i"
 %include "TwoCDE.i"
+/* Hidden Markov models. Restraints and constraints first: HMM.i names both.
+   HmmSurrogate.i must follow NeuralNet.i -- the surrogate IS a neural net, and
+   an earlier %include emits an unqualified `NeuralNet` that does not compile. */
+%include "HMMRestraints.i"
+%include "HMMConstraints.i"
+%include "HMM.i"
 %include "NeuralNet.i"
+%include "HmmSurrogate.i"
 %include "MicrotimeLinearization.i"
 
 %include "Histogram.i"
@@ -149,3 +162,10 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 
 /* DecayFit(s) */
 %include "DecayFit.i"
+
+/* The photon simulator.
+   LAST, and that is load-bearing: Sim.i is the only place stdint.i is included,
+   and including it earlier changes how SWIG resolves int64_t in the R and Java
+   wrappers -- differently across SWIG versions. Keep it at the end, as
+   ext/python/tttrlib.i does. */
+%include "Sim.i"

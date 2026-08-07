@@ -26,6 +26,25 @@ TTTRLIB_NOGIL(tttrlib::BVA::compute)
 #endif
 
 %include "BVA.h"
+%extend tttrlib::BVA {
+// A non-overloaded entry point for the burst-array form.
+//
+// SWIG's R overload dispatcher calls extends(class(arg), ...), and since R 4.0
+// class(matrix) is TWO values -- c("matrix", "array") -- so extends() raises
+// "'class1' must be the name of a class or a class definition" and NO overload
+// can be selected. Any overloaded R function taking a matrix hits this.
+//
+// One signature and no default arguments means SWIG emits a single function
+// and no dispatcher, so the matrix arrives. The overloaded compute() is
+// unchanged and is what every other language keeps using.
+    void compute_bursts(long long* bursts, int n_bursts, int n_cols,
+                        int number_of_photons_per_slice,
+                        double minimum_window_length) {
+        $self->compute(bursts, n_bursts, n_cols,
+                       number_of_photons_per_slice, minimum_window_length);
+    }
+}
+
 
 #ifdef SWIGPYTHON
 %extend tttrlib::BVA {

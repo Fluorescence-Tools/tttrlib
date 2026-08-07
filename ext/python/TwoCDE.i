@@ -12,6 +12,23 @@
 TTTRLIB_NOGIL(tttrlib::TwoCDE::compute)
 
 %include "TwoCDE.h"
+%extend tttrlib::TwoCDE {
+// A non-overloaded entry point for the burst-array form.
+//
+// SWIG's R overload dispatcher calls extends(class(arg), ...), and since R 4.0
+// class(matrix) is TWO values -- c("matrix", "array") -- so extends() raises
+// "'class1' must be the name of a class or a class definition" and NO overload
+// can be selected. Any overloaded R function taking a matrix hits this.
+//
+// One signature and no default arguments means SWIG emits a single function
+// and no dispatcher, so the matrix arrives. The overloaded compute() is
+// unchanged and is what every other language keeps using.
+    void compute_bursts(long long* bursts, int n_bursts, int n_cols,
+                        double tau, int variant, int kernel) {
+        $self->compute(bursts, n_bursts, n_cols, tau, variant, kernel);
+    }
+}
+
 
 #ifdef SWIGPYTHON
 %extend tttrlib::TwoCDE {
