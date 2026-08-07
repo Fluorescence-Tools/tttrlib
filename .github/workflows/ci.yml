@@ -29,7 +29,7 @@ jobs:
       - id: check
         run: |
           BRANCH="${{ github.ref }}"
-          if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/development" ]]; then
+          if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/dev" ]]; then
             echo "is_main=true" >> $GITHUB_OUTPUT
             BUILD_SPEC=$(python -c "print(' '.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split()))")
             echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
@@ -517,7 +517,7 @@ jobs:
           name: conformance-matrix
           path: doc/conformance.rst
 
-  # ── Full builds + tests (main and development only) ───────────────────────
+  # ── Full builds + tests (main and dev only) ───────────────────────────────
 
   download_test_data:
     name: Download Test Data
@@ -1087,9 +1087,9 @@ jobs:
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
 
-  # ── Bioconda build test (linux only, development branch) ─────────────────────
+  # ── Bioconda build test (linux only, dev branch) ─────────────────────────
   # Clones the OFFICIAL bioconda-recipes, then patches only the version, source
-  # url, and sha256 so the current development commit is built. Everything else
+  # url, and sha256 so the current dev commit is built. Everything else
   # (build.sh, deps, test commands) stays exactly as upstream bioconda has it.
   # This catches breakage against the real recipe before a bioconda PR is filed.
 
@@ -1157,7 +1157,7 @@ jobs:
       (
         github.event_name == 'release' ||
         (
-          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') &&
           needs.test_pip_lnx.result == 'success' &&
           needs.test_conda_lnx.result == 'success' &&
           needs.test_pip_osx.result == 'success' &&
@@ -1284,8 +1284,8 @@ jobs:
           publish_dir: ./doc/_build/html/stable
           keep_files: true
           destination_dir: stable
-      - name: Deploy development documentation
-        if: github.ref == 'refs/heads/development'
+      - name: Deploy dev documentation
+        if: github.ref == 'refs/heads/dev'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
