@@ -447,6 +447,7 @@ INCLUDE(TTTRLibThirdParty)
 # of src/, on purpose.
 INCLUDE(TTTRLibModule)
 ADD_SUBDIRECTORY(modules)
+ADD_SUBDIRECTORY(tools)
 
 # The example drop-in plugin. Opt-in (-DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON) and
 # deliberately not linked against tttrlib: it exists so the plugin path can be

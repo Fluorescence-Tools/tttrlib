@@ -102,6 +102,7 @@ const std::uint32_t kPtoAnnLastRow  = 0x1E54F104;
 const std::uint32_t kPtoAnnText     = 0x1E54F105;
 const std::uint32_t kPtoAnnAuthor   = 0x1E54F106;
 const std::uint32_t kPtoAnnDate     = 0x1E54F107;
+const std::uint32_t kPtoBanner      = 0x1E54F040;
 
 /// Every size that may have to grow later is written this wide from the start.
 /// RFC 8794 permits an over-wide Data Size expressly so it can be overwritten,
@@ -994,6 +995,15 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
     m.seg_data = m.seg_size_at + kWideSize;
     m.seg_bytes = 0;
 
+    Buf banner;
+    std::string banner_str = "pto\n"
+                             "This is a .pto photon container (tttrlib PRD-020).\n"
+                             "Get a reader: https://github.com/Fluorescence-Tools/tttrlib/releases\n"
+                             "Nothing here executes. `pto ls run.pto` prints the contents.\n";
+    banner.text_elem(kPtoBanner, banner_str);
+    if (!m.f.write(banner.b.data(), banner.b.size())) return m.fail("write failed");
+    m.seg_bytes += banner.b.size();
+
     // The two indexes come first, each with room to be rewritten where it lies.
     const std::uint64_t total = id_octets(kSeekHead) + kWideSize + kSeekHeadReserve;
     m.head_total = total;
@@ -1086,10 +1096,34 @@ bool PtoFile::open(const std::string& filename, bool writable) {
     m.info_bytes = m.tags_bytes = m.notes_bytes = m.cues_bytes = 0;
 
     // EBML header, and the DocType that says this is ours.
+    // PRD-025 Part 6: Skip up to 4 leading non-EBML elements / 2 MB prefix.
+    // Check offset 0 first, then fallback to executable bundle offset 12624
+    std::uint64_t ebml_offset = 0;
     std::uint32_t id = 0;
     std::vector<unsigned char> payload;
     std::uint64_t total = 0;
-    if (!read_element(m.f, 0, &id, &payload, &total, nullptr) || id != kEBML)
+    bool found_ebml = false;
+
+    if (read_element(m.f, 0, &id, &payload, &total, nullptr) && id == kEBML) {
+        found_ebml = true;
+        ebml_offset = 0;
+    } else if (m.f.length() >= 12624 && read_element(m.f, 12624, &id, &payload, &total, nullptr) && id == kEBML) {
+        found_ebml = true;
+        ebml_offset = 12624;
+    } else {
+        int max_skips = 4;
+        const std::uint64_t max_bytes = 2097152;
+        while (ebml_offset < max_bytes && max_skips-- > 0) {
+            if (read_element(m.f, ebml_offset, &id, &payload, &total, nullptr) && id == kEBML) {
+                found_ebml = true;
+                break;
+            }
+            if (total == 0) break;
+            ebml_offset += total;
+        }
+    }
+
+    if (!found_ebml)
         return m.fail(filename + " is not an EBML file");
     {
         Cursor c{payload.data(), payload.size(), 0};
@@ -1110,20 +1144,13 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         if (read_version > 1)
             return m.fail(filename + " needs a newer PTO reader (DocTypeReadVersion "
                           + std::to_string(read_version) + ")");
-        // The header declares how wide an Element ID and a Data Size may be in
-        // this document, and the parser below is built for PTO's four and
-        // eight. A file declaring more is not one this reader can walk -- it
-        // would read a five-octet id as a four-octet one and then interpret the
-        // remainder as a size, which is a plausible-looking wrong answer rather
-        // than a failure. Refusing is the only honest response, and it is what
-        // RFC 8794 asks a reader to do with a header it cannot satisfy.
         if (max_id > 4 || max_size > 8)
             return m.fail(filename + " declares EBMLMaxIDLength " +
                           std::to_string(max_id) + " / EBMLMaxSizeLength " +
                           std::to_string(max_size) + ", wider than this reader parses");
     }
 
-    std::uint64_t seg_at = total;
+    std::uint64_t seg_at = ebml_offset + total;
     if (!read_element(m.f, seg_at, &id, nullptr, &total, &m.seg_size_at) ||
         id != kSegment)
         return m.fail(filename + " has no Segment");
@@ -1451,6 +1478,80 @@ std::uint64_t PtoFile::add(const std::string& kind, const std::string& encoding,
                            std::size_t n, std::uint64_t reserve) {
     return p_->emit_object(kind, encoding, name, n, reserve,
                            [data, n](File& f) { return f.write(data, n); });
+}
+
+bool PtoFile::add_inspection_trace(const std::vector<std::uint32_t>& counts, double dt_s) {
+    if (!is_open() || counts.empty()) return false;
+    std::size_t nbytes = counts.size() * sizeof(std::uint32_t);
+    const unsigned char* ptr = reinterpret_cast<const unsigned char*>(counts.data());
+    std::uint64_t trace_uid = add("trace", "uint32", "time_trace", ptr, nbytes);
+    if (trace_uid != 0) {
+        PtoTag t1;
+        t1.name = "trace_dt_s";
+        t1.type = PtoType::Float;
+        t1.d = dt_s;
+        t1.target = trace_uid;
+        add_tag(t1);
+
+        PtoTag t2;
+        t2.name = "trace_bins";
+        t2.type = PtoType::UInt;
+        t2.u = counts.size();
+        t2.target = trace_uid;
+        add_tag(t2);
+        return true;
+    }
+    return false;
+}
+
+bool PtoFile::add_inspection_decay(int channel, const std::vector<std::uint32_t>& counts, double microtime_ns) {
+    if (!is_open() || counts.empty()) return false;
+    std::size_t nbytes = counts.size() * sizeof(std::uint32_t);
+    const unsigned char* ptr = reinterpret_cast<const unsigned char*>(counts.data());
+    std::string obj_name = "decay_ch" + std::to_string(channel);
+    std::uint64_t decay_uid = add("decay", "uint32", obj_name, ptr, nbytes);
+    if (decay_uid != 0) {
+        PtoTag t1;
+        t1.name = "decay_channel";
+        t1.type = PtoType::UInt;
+        t1.u = channel;
+        t1.target = decay_uid;
+        add_tag(t1);
+
+        PtoTag t2;
+        t2.name = "decay_bins";
+        t2.type = PtoType::UInt;
+        t2.u = counts.size();
+        t2.target = decay_uid;
+        add_tag(t2);
+
+        PtoTag t3;
+        t3.name = "microtime_resolution_ns";
+        t3.type = PtoType::Float;
+        t3.d = microtime_ns;
+        t3.target = decay_uid;
+        add_tag(t3);
+        return true;
+    }
+    return false;
+}
+
+bool PtoFile::add_inspection_metadata(const std::string& metadata_json) {
+    if (!is_open() || metadata_json.empty()) return false;
+    const unsigned char* ptr = reinterpret_cast<const unsigned char*>(metadata_json.data());
+    return add("metadata", "json", "tttr_metadata", ptr, metadata_json.size()) != 0;
+}
+
+bool PtoFile::add_inspection_data(const std::vector<std::uint32_t>& trace_counts,
+                                  double trace_dt_s,
+                                  const std::vector<std::uint32_t>& decay_counts,
+                                  double microtime_ns,
+                                  const std::string& metadata_json) {
+    bool ok = true;
+    if (!trace_counts.empty()) ok &= add_inspection_trace(trace_counts, trace_dt_s);
+    if (!decay_counts.empty()) ok &= add_inspection_decay(0, decay_counts, microtime_ns);
+    if (!metadata_json.empty()) ok &= add_inspection_metadata(metadata_json);
+    return ok;
 }
 
 std::uint64_t PtoFile::add_file(const std::string& kind, const std::string& encoding,
@@ -1976,16 +2077,38 @@ std::vector<std::string> pto_store_groups(const PtoFile& file, std::uint64_t uid
 bool is_pto_file(const std::string& filename) {
     File f;
     if (!f.open(filename, "rb")) return false;
-    std::uint32_t id = 0;
-    std::vector<unsigned char> payload;
-    std::uint64_t total = 0;
-    if (!read_element(f, 0, &id, &payload, &total, nullptr) || id != kEBML) return false;
-    Cursor c{payload.data(), payload.size(), 0};
-    std::uint32_t cid;
-    const unsigned char* d;
-    std::uint64_t n;
-    while (c.element(&cid, &d, &n))
-        if (cid == kDocType) return get_text(d, n) == "pto";
+
+    auto check_at = [&](std::uint64_t off) -> bool {
+        std::uint32_t id = 0;
+        std::vector<unsigned char> payload;
+        std::uint64_t total = 0;
+        if (!read_element(f, off, &id, &payload, &total, nullptr)) return false;
+        if (id == kEBML) {
+            Cursor c{payload.data(), payload.size(), 0};
+            std::uint32_t cid;
+            const unsigned char* d;
+            std::uint64_t n;
+            while (c.element(&cid, &d, &n))
+                if (cid == kDocType) return get_text(d, n) == "pto";
+        }
+        return false;
+    };
+
+    std::uint64_t offset = 0;
+    int max_skips = 4;
+    const std::uint64_t max_bytes = 2097152;
+    while (offset < max_bytes && max_skips-- > 0) {
+        if (check_at(offset)) return true;
+        std::uint32_t id = 0;
+        std::vector<unsigned char> payload;
+        std::uint64_t total = 0;
+        if (!read_element(f, offset, &id, &payload, &total, nullptr)) break;
+        if (total == 0) break;
+        offset += total;
+    }
+
+    if (f.length() >= 12624 && check_at(12624)) return true;
+
     return false;
 }
 

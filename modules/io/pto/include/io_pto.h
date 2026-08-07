@@ -293,6 +293,16 @@ public:
                       const std::string& name, const unsigned char* data,
                       std::size_t n, std::uint64_t reserve = 0);
 
+    /// Embed cheap inspection data (time trace, fluorescence decays, TTTR metadata) into the PTO container.
+    bool add_inspection_trace(const std::vector<std::uint32_t>& counts, double dt_s);
+    bool add_inspection_decay(int channel, const std::vector<std::uint32_t>& counts, double microtime_ns);
+    bool add_inspection_metadata(const std::string& metadata_json);
+    bool add_inspection_data(const std::vector<std::uint32_t>& trace_counts,
+                            double trace_dt_s,
+                            const std::vector<std::uint32_t>& decay_counts,
+                            double microtime_ns,
+                            const std::string& metadata_json = "");
+
     /*!
      * \brief Replace an object's payload, keeping its UID.
      *
