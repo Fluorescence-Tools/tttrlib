@@ -14,7 +14,9 @@ const char* const kStoreExtension = ".dstore";
 
 namespace {
 
-const std::uint32_t kVersion = 1;
+/// 2 added a per-column metadata string; see PRD-022. A version 1 file
+/// reads under 2 with empty metadata.
+const std::uint32_t kVersion = 2;
 const std::uint32_t kFlagLittleEndian = 1u << 0;
 const std::size_t kMagicBytes = 8;
 const std::size_t kHeaderBytes = 48;
@@ -92,6 +94,10 @@ struct Writer {
 struct Reader {
     const unsigned char* p = nullptr;
     std::size_t n = 0, i = 0;
+    /// Format version of the file this directory came from. The directory is
+    /// positional, so a field added in a later version has to be consumed
+    /// exactly when it is present -- including for a column being skipped.
+    std::uint32_t version = kVersion;
 
     void need(std::size_t k) const {
         if (i + k > n) throw std::runtime_error("store file: the directory is truncated");
@@ -234,6 +240,12 @@ void write_node(BlobStream& out, Writer& dir, const data::DataStore& store) {
         const data::BitMask& mask = column.mask();
         dir.u64(mask.size());
         dir.blob(out.blob(mask.words(), mask.nbytes()));
+
+        // The column's description. The name is written above as a field of its
+        // own as well, even though it is an attribute of this: a subset read
+        // decides whether to skip a column before it has any reason to parse,
+        // and store_columns() promises the names without reading data.
+        dir.str(column.metadata());
 
         // The dictionary of a text column, as its own little block: a count and
         // then each string with its length. Written through the same blob path
@@ -391,6 +403,9 @@ void read_node(Reader& dir, const Blobs& blobs, data::DataStore& store,
         const BlobRef data_blob = dir.blob();
         const std::uint64_t mask_bits = dir.u64();
         const BlobRef mask_blob = dir.blob();
+        // Read even for a column about to be skipped: the directory is
+        // positional, so not consuming it here misaligns every column after.
+        const std::string meta = dir.version >= 2 ? dir.str() : std::string();
         if (!known_column_type(raw_type))
             throw std::runtime_error("store file: unknown column type for '" + name + "'");
         const data::ColumnType type = static_cast<data::ColumnType>(raw_type);
@@ -404,6 +419,7 @@ void read_node(Reader& dir, const Blobs& blobs, data::DataStore& store,
         const std::uint64_t at = rows.start() < n ? rows.start() : n;
 
         data::Column& column = store.column(store.add_column(name, type));
+        if (!meta.empty()) column.set_metadata(meta);
         if (type == data::ColumnType::Bool) {
             std::vector<std::uint64_t> words = read_bits(blobs, data_blob, at, got);
             column.set_bits(words.data(), static_cast<std::size_t>(got));
@@ -446,6 +462,7 @@ struct OpenStore {
     std::vector<unsigned char> directory;
     std::uint64_t file_bytes = 0;
     std::uint64_t base = 0;
+    std::uint32_t format_version = kVersion;
 
     OpenStore(const std::string& filename, std::uint64_t base_ = 0,
               std::uint64_t region = 0)
@@ -468,6 +485,7 @@ struct OpenStore {
         std::memcpy(&declared, head + 32, 8);
         std::memcpy(&checksum, head + 40, 4);
 
+        format_version = version;
         if (version > kVersion)
             throw std::runtime_error(filename + " was written by a newer tttrlib"
                                      " (store format version " +
@@ -508,6 +526,11 @@ void walk_paths(Reader& dir, const std::string& prefix,
         const std::string name = dir.str();
         const std::uint8_t type = dir.u8();
         dir.u64(); dir.u8(); dir.blob(); dir.u64(); dir.blob();
+        // The metadata string, in the same place the reader expects it. This
+        // walk touches no blob, but it still has to *step over* every field:
+        // the directory is positional, and one unconsumed string here shifts
+        // every column and group after it.
+        if (dir.version >= 2) dir.str();
         if (type == static_cast<std::uint8_t>(data::ColumnType::String)) dir.blob();
         if (columns != nullptr && here) columns->push_back(name);
     }
@@ -610,7 +633,7 @@ void read_region(data::DataStore& out, const std::string& filename,
                  std::uint64_t base, std::uint64_t bytes,
                  const ColumnFilter& want, const RowRange& rows) {
     OpenStore file(filename, base, bytes);
-    Reader dir{file.directory.data(), file.directory.size(), 0};
+    Reader dir{file.directory.data(), file.directory.size(), 0, file.format_version};
     Blobs blobs{file.f.get(), file.file_bytes, file.base};
     out.release();
     read_node(dir, blobs, out, want, rows);
@@ -683,7 +706,7 @@ std::vector<std::string> store_columns(const std::string& filename,
     std::vector<std::string> columns;
     try {
         OpenStore file(filename, base, bytes);
-        Reader dir{file.directory.data(), file.directory.size(), 0};
+        Reader dir{file.directory.data(), file.directory.size(), 0, file.format_version};
         std::vector<std::string> paths;
         walk_paths(dir, std::string(), paths, &columns, group, group.empty());
     } catch (const std::exception&) {
@@ -702,7 +725,7 @@ std::vector<std::string> store_groups(const std::string& filename,
     std::vector<std::string> paths;
     try {
         OpenStore file(filename, base, bytes);
-        Reader dir{file.directory.data(), file.directory.size(), 0};
+        Reader dir{file.directory.data(), file.directory.size(), 0, file.format_version};
         walk_paths(dir, std::string(), paths, nullptr, std::string(), false);
     } catch (const std::exception&) {
         return {};

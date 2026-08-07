@@ -274,8 +274,57 @@ public:
     Column() = default;
     Column(std::string name, ColumnType type) : name_(std::move(name)), type_(type) {}
 
+    /*!
+     * \brief The column's name, and the key it is looked up by.
+     *
+     * An attribute of \ref metadata rather than a field beside it, cached here
+     * because lookup is the hot path and parsing JSON per lookup would not be.
+     * Returned by reference: no allocation, no parse.
+     */
     const std::string& name() const { return name_; }
-    void set_name(std::string s) { name_ = std::move(s); }
+
+    /// Set the name, and the ``name`` attribute of \ref metadata with it.
+    void set_name(std::string s);
+
+    /*!
+     * \brief Everything known about the column, as a JSON object.
+     *
+     * A column carries one extensible description instead of a growing list of
+     * members: units, the dictionary item it corresponds to, a longer label.
+     * Adding one is another key rather than a change to this class, to the
+     * `.dstore` directory record, to four bindings and to the format version.
+     *
+     * The store neither validates nor interprets what is in here. ``units`` is
+     * conventional and is what this exists for -- a burst duration in
+     * milliseconds and a lifetime in nanoseconds otherwise say so only in their
+     * column names, when whoever wrote them remembered.
+     *
+     * Empty when the column has none; nothing fabricates an object.
+     */
+    const std::string& metadata() const { return metadata_; }
+
+    /*!
+     * \brief Replace the description.
+     *
+     * \param json a JSON **object**, or the empty string for none.
+     * \throws std::invalid_argument if it does not parse, or is not an object.
+     *         Rejecting here rather than storing it means the failure is at the
+     *         call that got it wrong, not at some later read.
+     */
+    void set_metadata(const std::string& json);
+
+    /// One attribute, or ``""`` when absent, so a caller never has to parse.
+    std::string attribute(const std::string& key) const;
+
+    /// Set one attribute, creating the description if there was none.
+    void set_attribute(const std::string& key, const std::string& value);
+
+    /// The ``units`` attribute -- what this was built for. ``""`` when unsaid.
+    const std::string& units() const { return units_; }
+
+    /// Set the ``units`` attribute.
+    void set_units(std::string s);
+
     ColumnType type() const { return type_; }
     std::size_t size() const { return n_; }
     bool is_numeric() const { return type_ != ColumnType::String; }
@@ -696,7 +745,12 @@ public:
     }
 
 private:
+    //: The authority. `name_` and `units_` are caches kept in step by the
+    //: setters -- there are two ways in, and both have to update both, or a
+    //: column reports one name and serialises another.
+    std::string metadata_;
     std::string name_;
+    std::string units_;
     ColumnType type_ = ColumnType::Float64;
     std::size_t n_ = 0;
 

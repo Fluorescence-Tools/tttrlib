@@ -459,3 +459,192 @@ def test_what_the_native_format_is_actually_faster_at(tmp_path, capsys):
 
     assert write_packed > write_native * 20, "the win over compressed HDF5 has gone"
     assert read_one < read_native / 5, "a partial read is reading the whole table"
+
+
+# -- PRD-022: a column is described, not just named -------------------------------
+
+import struct as _struct
+
+
+def _units_store():
+    s = tttrlib.DataStore("t")
+    s.set_n_rows(10)
+    s.add("Duration", np.arange(10, dtype=np.float64))
+    s.add("Tau", np.linspace(1.0, 4.0, 10))
+    s.add("label", ["a"] * 10)
+    s[0].set_units("milliseconds")
+    s[1].set_units("nanoseconds")
+    s[2].set_attribute("description", "a text column")
+    return s
+
+
+def test_a_column_carries_its_description_through_a_file(tmp_path):
+    """A burst duration is milliseconds and a lifetime is nanoseconds, and until
+    a column could say so that was recorded only in its name -- when whoever
+    wrote it remembered. `Duration (ms)` and `Tau` sit in the same table."""
+    path = str(tmp_path / "u.dstore")
+    tttrlib.write_store(path, _units_store())
+
+    back = tttrlib.DataStore()
+    tttrlib.read_store_into(back, path)
+    assert [(back[i].name(), back[i].units()) for i in range(back.n_columns())] == [
+        ("Duration", "milliseconds"),
+        ("Tau", "nanoseconds"),
+        ("label", ""),
+    ]
+    assert back[2].attribute("description") == "a text column"
+
+
+def test_a_column_subset_keeps_the_description(tmp_path):
+    """The description travels with the column, not with the file -- which is
+    the point: a caller reading two columns of a four-gigabyte table still
+    learns what they are."""
+    path = str(tmp_path / "u.dstore")
+    tttrlib.write_store(path, _units_store())
+    sub = tttrlib.DataStore()
+    tttrlib.read_store_into(sub, path, tttrlib.VectorString(["Tau"]))
+    assert sub.n_columns() == 1
+    assert sub[0].units() == "nanoseconds"
+
+
+def test_listing_columns_still_steps_over_the_description(tmp_path):
+    """The directory is positional. store_columns touches no blob but still has
+    to step over every field, and one unconsumed string shifts every column and
+    group after it."""
+    path = str(tmp_path / "u.dstore")
+    store = _units_store()
+    store.add_group("child").set_n_rows(2)
+    tttrlib.write_store(path, store)
+    assert list(tttrlib.store_columns(path)) == ["Duration", "Tau", "label"]
+    assert "child" in list(tttrlib.store_groups(path))
+
+
+def test_a_column_with_no_description_does_not_grow_one(tmp_path):
+    """Nothing fabricates a JSON object: a column that was never described
+    reports nothing, and naming it does not describe it."""
+    s = tttrlib.DataStore("t")
+    s.set_n_rows(2)
+    s.add("x", np.zeros(2))
+    assert s[0].metadata() == ""
+    assert s[0].attribute("units") == ""
+    s[0].set_name("y")
+    assert s[0].metadata() == ""
+
+    path = str(tmp_path / "p.dstore")
+    tttrlib.write_store(path, s)
+    back = tttrlib.DataStore()
+    tttrlib.read_store_into(back, path)
+    assert back[0].metadata() == ""
+
+
+def test_the_name_and_the_description_cannot_disagree():
+    """Two ways in, and both have to update both -- or a column reports one
+    name and serialises another."""
+    s = tttrlib.DataStore("t")
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    s[0].set_units("seconds")
+    s[0].set_name("b")
+    assert s[0].name() == "b"
+    assert '"name":"b"' in s[0].metadata().replace(" ", "")
+
+    s[0].set_metadata('{"name": "c", "units": "hours"}')
+    assert s[0].name() == "c"
+    assert s[0].units() == "hours"
+
+
+def test_metadata_that_is_not_a_json_object_is_refused():
+    """Rejected at the call that got it wrong, not at some later read."""
+    s = tttrlib.DataStore("t")
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    for bad in ("not json", "[1,2,3]", '"a string"', "42"):
+        with pytest.raises(Exception):
+            s[0].set_metadata(bad)
+
+
+def _downgrade_to_v1(src, dst):
+    """Rewrite a version 2 store as a genuine version 1 one.
+
+    Built rather than committed as a binary so the fixture cannot rot: it is
+    produced from whatever the current writer emits, with the one field version
+    2 added removed again. The directory layout it walks is the writer's --
+    a string is a u32 length and its bytes, a blob is two u64s.
+    """
+    raw = bytearray(open(src, "rb").read())
+    version, = _struct.unpack_from("<I", raw, 8)
+    assert version == 2, version
+    dir_offset, dir_bytes = _struct.unpack_from("<QQ", raw, 16)
+    d = raw[dir_offset : dir_offset + dir_bytes]
+
+    out = bytearray()
+    i = 0
+
+    def take(n):
+        nonlocal i
+        out.extend(d[i : i + n])
+        i += n
+
+    def take_str():
+        nonlocal i
+        k, = _struct.unpack_from("<I", d, i)
+        take(4 + k)
+
+    def drop_str():
+        nonlocal i
+        k, = _struct.unpack_from("<I", d, i)
+        i += 4 + k
+
+    def node():
+        nonlocal i
+        take_str()                      # label
+        take(8)                         # n_rows
+        take(8 + 16)                    # row mask size + blob
+        n_columns, = _struct.unpack_from("<I", d, i)
+        take(4)
+        for _ in range(n_columns):
+            take_str()                  # name
+            type_code = d[i]
+            take(1 + 8 + 1)             # type, size, flags
+            take(16)                    # data blob
+            take(8 + 16)                # mask bits + blob
+            drop_str()                  # <- the version 2 field
+            if type_code == 11:         # String: dictionary blob
+                take(16)
+        n_groups, = _struct.unpack_from("<I", d, i)
+        take(4)
+        for _ in range(n_groups):
+            take_str()
+            node()
+
+    node()
+    assert i == len(d), f"walked {i} of {len(d)} directory bytes"
+
+    def fnv1a(b):
+        h = 0x811C9DC5
+        for byte in b:
+            h = ((h ^ byte) * 0x01000193) & 0xFFFFFFFF
+        return h
+
+    body = raw[:dir_offset]
+    new = bytearray(body) + out
+    _struct.pack_into("<I", new, 8, 1)                       # version
+    _struct.pack_into("<QQ", new, 16, dir_offset, len(out))  # directory
+    _struct.pack_into("<Q", new, 32, len(new))               # declared size
+    _struct.pack_into("<I", new, 40, fnv1a(bytes(out)))      # checksum
+    open(dst, "wb").write(bytes(new))
+
+
+def test_a_version_1_file_still_reads(tmp_path):
+    """The format gained a field; files written before it did not."""
+    v2 = str(tmp_path / "v2.dstore")
+    v1 = str(tmp_path / "v1.dstore")
+    tttrlib.write_store(v2, _units_store())
+    _downgrade_to_v1(v2, v1)
+
+    back = tttrlib.DataStore()
+    tttrlib.read_store_into(back, v1)
+    assert [back[i].name() for i in range(back.n_columns())] == ["Duration", "Tau", "label"]
+    assert all(back[i].metadata() == "" for i in range(back.n_columns()))
+    np.testing.assert_array_equal(back["Duration"].numpy(), np.arange(10, dtype=np.float64))
+    assert list(tttrlib.store_columns(v1)) == ["Duration", "Tau", "label"]
