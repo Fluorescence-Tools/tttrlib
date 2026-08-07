@@ -211,8 +211,14 @@ function(tttrlib_finalize_modules)
     # are not "unclaimed" either and the check still passes while covering less.
     # Moving the io_* modules under io/ dropped the count from 73 to 67 without
     # a word.
-    file(GLOB_RECURSE all_sources "${CMAKE_SOURCE_DIR}/src/*.cpp")
-    file(GLOB_RECURSE module_sources "${CMAKE_SOURCE_DIR}/modules/*.cpp")
+    #
+    # PROJECT_SOURCE_DIR, not CMAKE_SOURCE_DIR: when a consumer embeds tttrlib
+    # via add_subdirectory, CMAKE_SOURCE_DIR is the consumer's root, so this
+    # would glob the consumer's src/ and flag every one of its files as an
+    # unclaimed tttrlib source. PROJECT_SOURCE_DIR is tttrlib's own root because
+    # project() is called here, and stays so for any subdirectory consumer.
+    file(GLOB_RECURSE all_sources "${PROJECT_SOURCE_DIR}/src/*.cpp")
+    file(GLOB_RECURSE module_sources "${PROJECT_SOURCE_DIR}/modules/*.cpp")
     list(APPEND all_sources ${module_sources})
     list(REMOVE_DUPLICATES all_sources)
 
