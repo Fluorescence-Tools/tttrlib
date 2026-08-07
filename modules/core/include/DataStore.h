@@ -1426,6 +1426,23 @@ public:
     /// yielded a store you could hand on or write back out.
     void compact_into(DataStore& out) const;
 
+    /*!
+     * \brief Fill `out` with an independent copy of this store, tree and all.
+     *
+     * Deep: every column owns its own buffer afterwards, so writing through one
+     * store's values does not touch the other's. The group tree, dtypes,
+     * dictionaries, validity, descriptions, labels and the row selection all
+     * come across -- unlike \ref take_into and \ref compact_into, which drop
+     * the selection because their result *is* one.
+     *
+     * The copy constructor did this already. It is a named method as well
+     * because that is what a caller looks for, and because a constructor is not
+     * how the other three bindings say it: `take_into` and `compact_into` are
+     * reachable from all four and this has to be too, or "copy the store before
+     * mutating it" is a Python-only idea.
+     */
+    void copy_into(DataStore& out) const;
+
     // --- selection --------------------------------------------------------
 
     bool has_row_mask() const { return !row_mask_.empty(); }

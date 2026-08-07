@@ -546,6 +546,23 @@ def __repr__(self):
         self.n_rows(), self.n_columns(), self.nbytes() / 1e6)
 
 
+def copy(self):
+    """An independent copy of this store, tree and all.
+
+    A deep copy: every column owns its own buffer afterwards, so writing
+    through ``copy()["Tau"].numpy()`` does not touch the original. The group
+    tree, dtypes, dictionaries, validity, descriptions, labels and the row
+    selection all come across.
+
+    The copy constructor did this already and nobody could find it, so callers
+    were writing ``take(range(n))`` -- which allocates an index array the size
+    of the table and says nothing about the intent.
+    """
+    out = DataStore()
+    self.copy_into(out)
+    return out
+
+
 def take(self, rows):
     """A new store holding rows `rows`, in that order.
 

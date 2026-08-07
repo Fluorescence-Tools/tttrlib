@@ -562,3 +562,23 @@ def concat(stores, axis="rows", join="outer", on_duplicate="refuse"):
         for s in items[1:]:
             out.append_columns(s, dups[on_duplicate])
     return out
+
+
+def _ds_compare(self, other, op):
+    """One elementwise comparison, dodging the decode where it can.
+
+    A dictionary-encoded column compared against a single string is the case
+    the downstream actually filters on, and going through the decoded labels
+    would be a Python string comparison per row. The same answer is one
+    dictionary lookup plus an integer compare over the codes -- in C, with the
+    column never decoded. A label that is not in the dictionary cannot match
+    any row, which is an answer rather than an error.
+    """
+    np = _np_ds
+    if self.type() == ColumnType_String and isinstance(other, str) \
+            and op in ("eq", "ne"):
+        labels = list(self.dictionary())
+        code = labels.index(other) if other in labels else -1
+        same = np.asarray(self.codes()) == code
+        return same if op == "eq" else ~same
+    return getattr(np.asarray(self), "__%s__" % op)(other)

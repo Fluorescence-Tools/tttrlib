@@ -74,6 +74,13 @@
   in one group and not another leaves that group with fewer columns rather than
   making the read an error.
 
+- **`DataStore.copy()`**, in C++ so all four bindings have it. The copy
+  constructor did this already and nobody could find it, so callers were
+  writing `take(range(n))` — which allocates an index array the size of the
+  table and says nothing about the intent. Deep: every column owns its own
+  buffer afterwards, and the tree, dtypes, dictionaries, validity,
+  descriptions, labels and the row selection all come across.
+
 ### Changed
 - **A column's description is stored as msgpack**, in both formats, rather than
   as JSON text. The reason is types: JSON has one number type, so an integer
@@ -87,6 +94,18 @@
   the same place and holds text, so only the decode differs.
 
 ### Fixed
+- **`column == value` returned `False` instead of a mask.** SWIG's default
+  identity comparison, so `store.select(column == "m000.spc")` selected
+  nothing, raised nothing, and looked like a run with no matching bursts —
+  a wrong answer that is silent, which is worse than a missing feature.
+  All six comparisons are now elementwise, like an array. A dictionary-encoded
+  column compared against a single string takes the dictionary rather than the
+  decoded labels: the same answer, one lookup plus an integer compare over the
+  codes, measured **374× faster** on 500 000 rows and with the column never
+  decoded. A label that is in no row matches nothing rather than raising.
+  `Column` stays hashable — defining `__eq__` in Python would otherwise set
+  `__hash__` to `None` and break a column used as a dict key somewhere with no
+  connection to this.
 - **HDF5 dropped a column's description entirely**, which made the two formats
   disagree about what a column *is*: a lifetime written in nanoseconds came
   back through HDF5 saying nothing about nanoseconds, so what a caller got

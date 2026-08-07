@@ -323,6 +323,13 @@ void DataStore::compact_into(DataStore& out) const {
     take_into(out, rows.empty() ? nullptr : rows.data(), static_cast<int>(rows.size()));
 }
 
+void DataStore::copy_into(DataStore& out) const {
+    // The copy constructor is the whole implementation; assigning through it
+    // keeps one definition of what "a copy of a store" means rather than a
+    // second walk of the tree that has to be kept in step with it.
+    out = *this;
+}
+
 /*!
  * The single registry instance.
  *

@@ -278,3 +278,85 @@ def test_selection_is_bit_packed():
     s.where("x", -1.0, 1.0)
     # one bit per row, not one byte
     assert s.nbytes() - s["x"].nbytes() < n / 8 + 4096
+
+
+# -- a column compares like an array, and a store copies ----------------------
+
+
+def test_a_column_compares_elementwise_rather_than_by_identity():
+    """This returned a bare ``False`` -- SWIG's default -- so a selection built
+    from ``column == value`` matched nothing and raised nothing. A wrong answer
+    that is silent is worse than a missing feature."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(4)
+    s.add("t", np.arange(4.0))
+
+    np.testing.assert_array_equal(s["t"] == 1.0, [False, True, False, False])
+    np.testing.assert_array_equal(s["t"] != 1.0, [True, False, True, True])
+    np.testing.assert_array_equal(s["t"] > 1.0, [False, False, True, True])
+    np.testing.assert_array_equal(s["t"] <= 1.0, [True, True, False, False])
+
+
+def test_a_comparison_drives_a_selection():
+    """The call site the silent False broke."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(4)
+    s.add("lab", np.array(["m0", "m1", "m0", "m2"], dtype=object))
+    s.select(np.asarray(s["lab"] == "m0"))
+    assert s.n_selected() == 2
+
+
+def test_a_text_comparison_goes_through_the_dictionary():
+    """Same answer as decoding the column, without decoding it: one dictionary
+    lookup and an integer compare over the codes."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(6)
+    labels = np.array(["a", "b", "c", "a", "b", "a"], dtype=object)
+    s.add("lab", labels)
+
+    np.testing.assert_array_equal(s["lab"] == "a", np.asarray(s["lab"]) == "a")
+    np.testing.assert_array_equal(s["lab"] != "b", np.asarray(s["lab"]) != "b")
+
+
+def test_a_label_that_is_not_in_the_dictionary_matches_nothing():
+    """An answer, not an error: asking whether any row is 'x' is a fair
+    question even when no row is."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(3)
+    s.add("lab", np.array(["a", "b", "a"], dtype=object))
+    assert not np.any(s["lab"] == "nope")
+    assert np.all(s["lab"] != "nope")
+
+
+def test_a_column_is_still_hashable():
+    """Defining __eq__ in Python sets __hash__ to None, which would make a
+    column in a set or a dict key start failing somewhere unrelated."""
+    s = tttrlib.DataStore()
+    s.set_n_rows(1)
+    s.add("a", np.zeros(1))
+    assert isinstance(hash(s["a"]), int)
+    assert len({s["a"], s["a"]}) <= 2
+
+
+def test_a_store_copies_deeply():
+    """``take(range(n))`` was the workaround: it allocates an index array the
+    size of the table and says nothing about the intent."""
+    s = tttrlib.DataStore("run")
+    s.set_n_rows(3)
+    s.add("t", np.arange(3.0))
+    s.add("n", np.arange(3, dtype=np.int32))
+    g = s.add_group("results")
+    g.set_n_rows(2)
+    g.add("Tau", np.arange(2.0))
+    s.where("t", 0.0, 2.0)
+
+    c = s.copy()
+    assert c.label() == "run"
+    assert c.names == ["t", "n"] and c["n"].dtype == "int32"
+    assert c.group_paths() == ["results"]
+    assert c.n_selected() == s.n_selected(), "the selection is part of the store"
+
+    c["t"].numpy()[0] = 99.0
+    assert s["t"].numpy()[0] == 0.0, "the copy shares a buffer with the original"
+    c.group("results")["Tau"].numpy()[0] = 99.0
+    assert s.group("results")["Tau"].numpy()[0] == 0.0, "the tree is shared"

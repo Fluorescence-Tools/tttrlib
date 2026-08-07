@@ -147,3 +147,41 @@ def __repr__(self):
         extra += ", masked"
     return "Column(%r, %s, %d rows%s, %.1f kB)" % (
         self.name(), self.dtype, self.size(), extra, self.nbytes() / 1024.0)
+
+
+def __eq__(self, other):
+    """Elementwise, like an array -- NOT identity.
+
+    This used to be SWIG's default, so `column == "m000.spc"` was `False`
+    rather than a mask, and a selection built from it quietly matched nothing.
+    A wrong answer that raises nothing is worse than a missing feature, which
+    is why this is here ahead of the rest of the array protocol.
+    """
+    return _ds_compare(self, other, "eq")
+
+
+def __ne__(self, other):
+    return _ds_compare(self, other, "ne")
+
+
+def __lt__(self, other):
+    return _ds_compare(self, other, "lt")
+
+
+def __le__(self, other):
+    return _ds_compare(self, other, "le")
+
+
+def __gt__(self, other):
+    return _ds_compare(self, other, "gt")
+
+
+def __ge__(self, other):
+    return _ds_compare(self, other, "ge")
+
+
+# Defining __eq__ in Python sets __hash__ to None, which would make every
+# Column unhashable -- and a column in a set or a dict key would start failing
+# somewhere with no connection to this change. Columns were hashable by
+# identity before and stay that way.
+__hash__ = object.__hash__
