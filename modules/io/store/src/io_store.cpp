@@ -560,6 +560,63 @@ void walk_paths(Reader& dir, const std::string& prefix,
     }
 }
 
+/*!
+ * \brief Leave `dir` positioned at the start of `want`'s node record.
+ *
+ * The same positional walk as walk_paths and for the same reason -- the
+ * directory has no index, so reaching a node means stepping over every field of
+ * every node before it. That costs a scan of the directory and not one byte of
+ * payload, which is the whole point: the directory is a few kilobytes and the
+ * groups it skips are gigabytes.
+ *
+ * Returns false when the path is not in the file, leaving `dir` wherever it
+ * got to -- a caller that gets false must not go on to read.
+ */
+void skip_node(Reader& dir);
+
+bool seek_to_group(Reader& dir, const std::string& prefix,
+                   const std::string& want) {
+    dir.str();                                       // label
+    dir.u64();                                       // n_rows
+    dir.u64(); dir.blob();                           // row mask
+    const std::uint32_t n_columns = dir.u32();
+    for (std::uint32_t c = 0; c < n_columns; c++) {
+        dir.str();                                   // name
+        const std::uint8_t type = dir.u8();
+        dir.u64(); dir.u8(); dir.blob(); dir.u64(); dir.blob();
+        if (dir.version >= 2) dir.str();
+        if (type == static_cast<std::uint8_t>(data::ColumnType::String)) dir.blob();
+    }
+    const std::uint32_t n_groups = dir.u32();
+    for (std::uint32_t g = 0; g < n_groups; g++) {
+        const std::string name = dir.str();
+        const std::string path = prefix.empty() ? name : prefix + "/" + name;
+        if (path == want) return true;
+        // `want` is under this child when it starts with the child's path AND
+        // the next character is the separator -- not merely when it starts with
+        // the name, or `results2` would be entered looking for `results/x`.
+        if (want.size() > path.size() && want.compare(0, path.size(), path) == 0 &&
+            want[path.size()] == '/') {
+            return seek_to_group(dir, path, want);
+        }
+        skip_node(dir);
+    }
+    return false;
+}
+
+/// Step over one node and everything under it. \see seek_to_group
+void skip_node(Reader& dir) {
+    seek_to_group(dir, std::string(), std::string());
+}
+
+/// A leading and a trailing separator are optional, matching the tree walker.
+std::string normalise_group(const std::string& group) {
+    std::size_t b = 0, e = group.size();
+    while (b < e && group[b] == '/') b++;
+    while (e > b && group[e - 1] == '/') e--;
+    return group.substr(b, e - b);
+}
+
 }  // namespace
 
 namespace {
@@ -648,11 +705,21 @@ namespace {
  */
 void read_region(data::DataStore& out, const std::string& filename,
                  std::uint64_t base, std::uint64_t bytes,
-                 const ColumnFilter& want, const RowRange& rows) {
+                 const ColumnFilter& want, const RowRange& rows,
+                 const std::string& group = std::string()) {
     OpenStore file(filename, base, bytes);
     Reader dir{file.directory.data(), file.directory.size(), 0, file.format_version};
     Blobs blobs{file.f.get(), file.file_bytes, file.base};
     out.release();
+
+    const std::string path = normalise_group(group);
+    if (!path.empty()) {
+        // Seeking costs a scan of the directory and no payload at all, so the
+        // groups stepped over are free however large they are.
+        if (!seek_to_group(dir, std::string(), path))
+            throw std::runtime_error("store file: no group '" + path + "' in " +
+                                     filename);
+    }
     read_node(dir, blobs, out, want, rows);
 }
 
@@ -687,7 +754,8 @@ void read_store_into(data::DataStore& out, const std::string& filename,
 void read_store_into(data::DataStore& out, const std::string& filename,
                      std::uint64_t base, std::uint64_t bytes,
                      const std::vector<std::string>& columns,
-                     std::uint64_t first_row, std::uint64_t n_rows) {
+                     std::uint64_t first_row, std::uint64_t n_rows,
+                     const std::string& group) {
     ColumnFilter want;
     // An empty list here means every column, not none: the row range is what
     // the caller came for, and asking for a window of nothing is not a thing
@@ -698,7 +766,27 @@ void read_store_into(data::DataStore& out, const std::string& filename,
     rows.everything = false;
     rows.first = first_row;
     rows.count = n_rows;
-    read_region(out, filename, base, bytes, want, rows);
+    read_region(out, filename, base, bytes, want, rows, group);
+}
+
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     const std::string& group) {
+    read_region(out, filename, 0, 0, ColumnFilter(), RowRange(), group);
+}
+
+bool store_has(const std::string& filename, const std::string& group) {
+    const std::string path = normalise_group(group);
+    try {
+        OpenStore file(filename, 0, 0);
+        if (path.empty()) return true;              // the root is always there
+        Reader dir{file.directory.data(), file.directory.size(), 0,
+                   file.format_version};
+        return seek_to_group(dir, std::string(), path);
+    } catch (const std::exception&) {
+        // Probing a file that is not one of ours is a normal thing to do, and
+        // the same silence hdf5_table_has answers with.
+        return false;
+    }
 }
 
 std::uint64_t store_bytes_read() { return g_bytes_read; }

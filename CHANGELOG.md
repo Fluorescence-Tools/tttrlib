@@ -52,6 +52,28 @@
   rows, so a range naming the source's rows says nothing true about the
   result's.
 
+- **Every partial read now works on both formats.** They had complementary
+  holes — `.dstore` could take a column subset and a row range but not one
+  group, HDF5 could take one group and neither of the others — so a caller who
+  swapped an extension to get a subset read got the opposite, and the two were
+  not interchangeable however alike they looked. `load_store(f, group=...)`
+  reads one group of a `.dstore`, `read_hdf5(f, columns=..., first_row=...,
+  n_rows=...)` reads part of an HDF5 table, and `store_has(f, group)` asks
+  without reading. Each is native, not a whole read that is then sliced: a
+  group is reached by a scan of the directory, and a row range is a hyperslab
+  HDF5 resolves to the chunks it falls in.
+  `hdf5_bytes_read()` joins `store_bytes_read()`, because "the columns you did
+  not ask for were never read" is a claim about work not done and a wall clock
+  on a warm page cache measures the cache. Measured on the same tree written
+  both ways, **the same request now moves the same bytes through either
+  format** — 800 400 for the whole file, 320 000 for one column, 2 000 for a
+  fifty-row window, 160 000 for one group.
+  Two things worth knowing: reading one group gives back the tree *below* it
+  and not the tree above, which is what makes the result a store in its own
+  right rather than a view; and `columns=` is matched **per node**, so a name
+  in one group and not another leaves that group with fewer columns rather than
+  making the read an error.
+
 ### Changed
 - **A column's description is stored as msgpack**, in both formats, rather than
   as JSON text. The reason is types: JSON has one number type, so an integer

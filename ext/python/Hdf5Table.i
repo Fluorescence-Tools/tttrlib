@@ -28,7 +28,8 @@
 // equivalents of these conveniences live in ext/js/pkg/index.js.
 #ifdef SWIGPYTHON
 %pythoncode %{
-def read_hdf5(filename, group="/", with_groups=True):
+def read_hdf5(filename, group="/", with_groups=True, columns=None,
+              first_row=0, n_rows=0):
     """Read a columnar HDF5 table, and the tree under it, into a DataStore.
 
     One 1-D dataset per column, which is what a DataStore already is -- so the
@@ -52,13 +53,32 @@ def read_hdf5(filename, group="/", with_groups=True):
     Photon-HDF5 or pandas file read at the root gives back whichever parts are
     tables and ignores the rest.
 
+    ``columns`` and the row range are native, not a slice of a whole read: one
+    dataset per column is already the layout, so a column not asked for is
+    never opened, and a row range becomes a hyperslab HDF5 resolves to the
+    chunks it falls in. ``tttrlib.hdf5_bytes_read()`` is how that is checked
+    rather than asserted -- take a difference around one call and compare it to
+    a difference around another.
+
     :param group: the group to read; "/" for the file root
     :param with_groups: False to read only that group's own columns
+    :param columns: read only these columns, if given. Matched per node, so a
+        name in one group and not another leaves that other group with fewer
+        columns rather than making the read an error.
+    :param first_row: skip this many rows of every table read.
+    :param n_rows: how many rows, or 0 for all of them onwards. Each table is
+        clamped to its own length, so a group shorter than ``first_row`` comes
+        back empty rather than raising.
     """
     store = DataStore()
     # Filled in place: returning a store by value would have SWIG copy the whole
     # table at the moment it is largest.
-    read_hdf5_table_into(store, filename, group, with_groups)
+    if columns is None and not first_row and not n_rows:
+        read_hdf5_table_into(store, filename, group, with_groups)
+    else:
+        names = VectorString(list(columns) if columns is not None else [])
+        read_hdf5_table_into(store, filename, group, with_groups, names,
+                             first_row, n_rows)
     return store
 
 

@@ -454,14 +454,34 @@ if (typeof native.write_csv === 'function' && native.CsvWriteOptions) {
 }
 
 if (typeof native.read_hdf5_table_into === 'function') {
-  /** Read a columnar HDF5 table into a DataStore. Mirrors Python's read_hdf5(). */
-  exported.readHdf5 = function (filename, group = '/') {
+  /**
+   * Read a columnar HDF5 table into a DataStore. Mirrors Python's read_hdf5().
+   *
+   * `columns` and the row range are native: a dataset not asked for is never
+   * opened, and a range becomes a hyperslab HDF5 resolves to the chunks it
+   * falls in. `hdf5BytesRead()` is how that is checked rather than asserted.
+   *
+   * @param {string[]=} opts.columns only these, matched per node.
+   * @param {number=} opts.firstRow skip this many rows of every table read.
+   * @param {number=} opts.nRows how many, or 0 for all of them on.
+   */
+  exported.readHdf5 = function (filename, group = '/', opts = {}) {
+    const { withGroups = true, columns, firstRow = 0, nRows = 0 } = opts;
     const store = new native.DataStore();
     // Filled in place: returning by value would copy the whole table at the
     // moment it is largest.
-    native.read_hdf5_table_into(store, filename, group);
+    if (columns === undefined && !firstRow && !nRows) {
+      native.read_hdf5_table_into(store, filename, group, withGroups);
+    } else {
+      native.read_hdf5_table_into(store, filename, group, withGroups,
+                                  (columns ?? []).map(String), firstRow, nRows);
+    }
     return store;
   };
+
+  /** Bytes the HDF5 table reader has moved since the process started. */
+  if (typeof native.hdf5_bytes_read === 'function')
+    exported.hdf5BytesRead = () => native.hdf5_bytes_read();
 }
 if (typeof native.write_hdf5_table === 'function') {
   /**
@@ -485,15 +505,38 @@ if (typeof native.read_store_into === 'function') {
    * Read a native `.dstore` file back into a DataStore. Mirrors Python's
    * loadStore(): one read per column, straight into the column's own buffer.
    *
-   * @param {string[]=} columns only these, if given. The file's directory says
-   *   where each one is, so the rest are never touched.
+   * Three independent knobs, none of which reads what it did not ask for.
+   * `storeBytesRead()` is how that is checked rather than asserted.
+   *
+   * @param {string[]=} opts.columns only these, if given. The file's directory
+   *   says where each one is, so the rest are never touched.
+   * @param {string=} opts.group read this group as the root. The tree BELOW it
+   *   comes back with it and the tree above does not, which is what makes the
+   *   result a store in its own right rather than a view.
+   * @param {number=} opts.firstRow skip this many rows of every table read.
+   * @param {number=} opts.nRows how many, or 0 for all of them on.
+   *
+   * An array second argument is still the column list, which is what this took
+   * before there were three knobs.
    */
-  exported.loadStore = function (filename, columns = undefined) {
+  exported.loadStore = function (filename, opts = undefined) {
+    const o = Array.isArray(opts) ? { columns: opts } : (opts ?? {});
+    const { columns, group, firstRow = 0, nRows = 0 } = o;
     const store = new native.DataStore();
-    if (columns === undefined) native.read_store_into(store, filename);
-    else native.read_store_into(store, filename, columns.map(String));
+    if (columns === undefined && group === undefined && !firstRow && !nRows) {
+      native.read_store_into(store, filename);
+    } else if (group === undefined && !firstRow && !nRows) {
+      native.read_store_into(store, filename, columns.map(String));
+    } else {
+      native.read_store_into(store, filename, 0, 0, (columns ?? []).map(String),
+                             firstRow, nRows, group ?? '');
+    }
     return store;
   };
+
+  /** Whether a `.dstore` holds this group. Reads the directory, no payload. */
+  if (typeof native.store_has === 'function')
+    exported.storeHas = (filename, group = '') => native.store_has(filename, group);
 
   /** Write a DataStore to a native `.dstore` file. \see loadStore. */
   exported.saveStore = (filename, store) => native.write_store(filename, store);

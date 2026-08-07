@@ -271,7 +271,32 @@ export interface CsvReadOptions {
 }
 
 export declare function readCsv(filename: string, options?: CsvReadOptions): DataStore;
-export declare function readHdf5(filename: string, group?: string): DataStore;
+/** Options for a partial table read. Each knob is native, not a slice. */
+export interface TableReadOptions {
+  /** Only these columns; matched per node. */
+  columns?: string[];
+  /** Skip this many rows of every table read. */
+  firstRow?: number;
+  /** How many rows, or 0 for all of them on. */
+  nRows?: number;
+}
+
+export declare function readHdf5(
+  filename: string,
+  group?: string,
+  opts?: TableReadOptions & { withGroups?: boolean },
+): DataStore;
+
+/** Bytes the HDF5 table reader has moved since the process started. */
+export declare function hdf5BytesRead(): number;
+
+export declare function loadStore(
+  filename: string,
+  opts?: string[] | (TableReadOptions & { group?: string }),
+): DataStore;
+
+/** Whether a `.dstore` holds this group. Reads the directory, no payload. */
+export declare function storeHas(filename: string, group?: string): boolean;
 export declare const Hdf5WriteMode_Update: number;
 export declare const Hdf5WriteMode_Truncate: number;
 export declare function writeHdf5(

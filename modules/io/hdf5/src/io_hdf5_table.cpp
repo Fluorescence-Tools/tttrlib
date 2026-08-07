@@ -26,6 +26,14 @@ void read_hdf5_table_into(data::DataStore&, const std::string&, const std::strin
     throw std::runtime_error("not built with Photon HDF interface");
 }
 
+void read_hdf5_table_into(data::DataStore&, const std::string&, const std::string&,
+                          bool, const std::vector<std::string>&,
+                          std::uint64_t, std::uint64_t) {
+    throw std::runtime_error("not built with Photon HDF interface");
+}
+
+std::uint64_t hdf5_bytes_read() { return 0; }
+
 data::DataStore read_hdf5_table(const std::string&, const std::string&, bool) {
     throw std::runtime_error("not built with Photon HDF interface");
 }
@@ -114,34 +122,120 @@ hid_t file_type_of(data::ColumnType type) {
     return H5T_IEEE_F64LE;
 }
 
+/*!
+ * \brief How many bytes this reader has moved. \see hdf5_bytes_read
+ *
+ * Counted where the read is issued rather than estimated afterwards, because
+ * the claim being made is "the rows outside the window were never read" and an
+ * estimate cannot support it.
+ */
+std::uint64_t g_bytes_read = 0;
+
+/*!
+ * \brief A window on one column's dataset, as a pair of dataspaces.
+ *
+ * `H5S_ALL` for both when the whole column is wanted, which is the same
+ * argument the reader passed before there was a window -- so the unwindowed
+ * path is byte for byte what it was.
+ *
+ * HDF5 selects natively: a hyperslab on the file space means the library reads
+ * the chunks the range falls in and no others. Nothing is read and discarded,
+ * which is the entire reason this is here rather than in a slicing layer above.
+ */
+class Slab {
+public:
+    Slab(hid_t ds, std::uint64_t first, std::uint64_t count) {
+        if (count == 0) return;                      // the whole dataset
+        file_ = H5Dget_space(ds);
+        if (file_ < 0) { file_ = H5S_ALL; return; }
+        const hsize_t start[1] = {static_cast<hsize_t>(first)};
+        const hsize_t n[1] = {static_cast<hsize_t>(count)};
+        H5Sselect_hyperslab(file_, H5S_SELECT_SET, start, nullptr, n, nullptr);
+        mem_ = H5Screate_simple(1, n, nullptr);
+    }
+    ~Slab() {
+        if (file_ != H5S_ALL) H5Sclose(file_);
+        if (mem_ != H5S_ALL) H5Sclose(mem_);
+    }
+    Slab(const Slab&) = delete;
+    Slab& operator=(const Slab&) = delete;
+
+    hid_t file() const { return file_; }
+    hid_t mem() const { return mem_; }
+private:
+    hid_t file_ = H5S_ALL;
+    hid_t mem_ = H5S_ALL;
+};
+
+/// What a caller asked for, carried down to the per-column reads.
+struct ReadOptions {
+    /// Null or empty for every column. Matched per node, so a name absent from
+    /// one group does not make that group an error.
+    const std::vector<std::string>* columns = nullptr;
+    std::uint64_t first_row = 0;
+    /// 0 for "to the end", which is also what "no window was asked for" means.
+    std::uint64_t n_rows = 0;
+
+    bool wants(const std::string& name) const {
+        if (columns == nullptr || columns->empty()) return true;
+        for (const std::string& s : *columns) if (s == name) return true;
+        return false;
+    }
+    /// The rows of a dataset of `n` this window covers, clamped to it. A group
+    /// shorter than `first_row` comes back empty rather than throwing, matching
+    /// what the native format does with the same knob.
+    std::uint64_t take(std::uint64_t n) const {
+        if (n_rows == 0 && first_row == 0) return n;
+        if (first_row >= n) return 0;
+        const std::uint64_t left = n - first_row;
+        return n_rows == 0 || n_rows > left ? left : n_rows;
+    }
+    std::uint64_t start(std::uint64_t n) const {
+        return first_row < n ? first_row : n;
+    }
+    bool windowed() const { return first_row != 0 || n_rows != 0; }
+};
+
 /// Write the column buffer straight into the column, with no per-value loop.
 void read_numeric_column(hid_t ds, data::Column& column,
-                         data::ColumnType type, std::size_t n) {
-    column.resize_uninitialized(n);
-    if (n == 0) return;
+                         data::ColumnType type, std::size_t n,
+                         std::uint64_t at, std::uint64_t got) {
+    column.resize_uninitialized(got);
+    if (got == 0) return;
+    const Slab slab(ds, at, got);
     if (type == data::ColumnType::Bool) {
         // Bit-packed in the store, a byte per row on disk.
-        std::vector<unsigned char> bytes(n, 0);
-        H5Dread(ds, H5T_NATIVE_UINT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, bytes.data());
-        column.set_bool(bytes.data(), static_cast<int>(n));
+        std::vector<unsigned char> bytes(got, 0);
+        H5Dread(ds, H5T_NATIVE_UINT8, slab.mem(), slab.file(), H5P_DEFAULT,
+                bytes.data());
+        column.set_bool(bytes.data(), static_cast<int>(got));
+        g_bytes_read += got;
         return;
     }
-    H5Dread(ds, mem_type_of(type), H5S_ALL, H5S_ALL, H5P_DEFAULT, column.data_ptr());
+    H5Dread(ds, mem_type_of(type), slab.mem(), slab.file(), H5P_DEFAULT,
+            column.data_ptr());
+    g_bytes_read += got * static_cast<std::uint64_t>(data::column_type_size(type));
+    (void)n;
 }
 
-void read_string_column(hid_t ds, hid_t type, data::Column& column, std::size_t n) {
+void read_string_column(hid_t ds, hid_t type, data::Column& column,
+                        std::uint64_t at, std::uint64_t got) {
+    const std::size_t n = static_cast<std::size_t>(got);
+    const Slab slab(ds, at, got);
     const hid_t mem = H5Tcopy(H5T_C_S1);
     H5Tset_size(mem, H5T_VARIABLE);
     H5Tset_cset(mem, H5T_CSET_UTF8);
     if (H5Tis_variable_str(type)) {
         std::vector<char*> raw(n, nullptr);
-        if (n > 0) H5Dread(ds, mem, H5S_ALL, H5S_ALL, H5P_DEFAULT, raw.data());
-        for (std::size_t i = 0; i < n; i++)
+        if (n > 0) H5Dread(ds, mem, slab.mem(), slab.file(), H5P_DEFAULT, raw.data());
+        for (std::size_t i = 0; i < n; i++) {
             column.push_string(raw[i] != nullptr ? std::string(raw[i]) : std::string());
+            g_bytes_read += raw[i] != nullptr ? std::strlen(raw[i]) : 0;
+        }
         if (n > 0) {
-            const hid_t space = H5Dget_space(ds);
+            const hid_t space = slab.mem() != H5S_ALL ? slab.mem() : H5Dget_space(ds);
             H5Dvlen_reclaim(mem, space, H5P_DEFAULT, raw.data());
-            H5Sclose(space);
+            if (slab.mem() == H5S_ALL) H5Sclose(space);
         }
     } else {
         // Fixed-length strings, which is what a NumPy "S8" column becomes.
@@ -150,8 +244,9 @@ void read_string_column(hid_t ds, hid_t type, data::Column& column, std::size_t 
         if (n > 0) {
             const hid_t fixed = H5Tcopy(H5T_C_S1);
             H5Tset_size(fixed, width);
-            H5Dread(ds, fixed, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.data());
+            H5Dread(ds, fixed, slab.mem(), slab.file(), H5P_DEFAULT, buffer.data());
             H5Tclose(fixed);
+            g_bytes_read += n * width;
         }
         for (std::size_t i = 0; i < n; i++) {
             const char* start = buffer.data() + i * width;
@@ -272,11 +367,15 @@ bool is_integer_type(data::ColumnType type) {
  * created, because the answer is what decides its type.
  */
 bool read_codes(hid_t ds, const std::vector<std::string>& dictionary,
-                std::size_t n, std::vector<std::int32_t>* out) {
+                std::uint64_t at, std::uint64_t got,
+                std::vector<std::int32_t>* out) {
+    const std::size_t n = static_cast<std::size_t>(got);
     out->assign(n, 0);
-    if (n > 0 && H5Dread(ds, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+    const Slab slab(ds, at, got);
+    if (n > 0 && H5Dread(ds, H5T_NATIVE_INT32, slab.mem(), slab.file(), H5P_DEFAULT,
                          out->data()) < 0)
         return false;
+    g_bytes_read += n * 4;
     const std::int32_t limit = static_cast<std::int32_t>(dictionary.size());
     for (std::int32_t code : *out)
         if (code < 0 || code >= limit) return false;
@@ -406,7 +505,8 @@ namespace {
 
 /// One group's datasets into one store. Takes an hid_t and decides nothing
 /// about the file, so the tree walk can call it per node.
-void read_table_into(hid_t group, data::DataStore& out, const std::string& filename) {
+void read_table_into(hid_t group, data::DataStore& out, const std::string& filename,
+                     const ReadOptions& opts) {
     std::vector<std::string> names = declared_order(group);
     const std::vector<std::string> present = dataset_names(group);
     if (names.empty()) {
@@ -417,6 +517,11 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
     std::size_t n_rows = 0;
     bool first = true;
     for (const std::string& name : names) {
+        // Matched per node, not per file: a name that is in one group and not
+        // another leaves that other group with fewer columns rather than making
+        // the read an error. Skipped before the dataset is opened, which is
+        // what makes a subset read cost the subset.
+        if (!opts.wants(name)) continue;
         hid_t ds = H5Dopen2(group, name.c_str(), H5P_DEFAULT);
         std::string dataset_name = name;
         if (ds < 0) {
@@ -437,9 +542,11 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
         data::ColumnType column_type = data::ColumnType::Float64;
         const std::size_t n = static_cast<std::size_t>(dims[0]);
         const bool usable = rank == 1 && store_type_of(type, &column_type) &&
-                            (first || n == n_rows);
+                            (first || opts.take(n) == n_rows);
+        const std::uint64_t at = opts.start(n);
+        const std::uint64_t got = opts.take(n);
         if (usable) {
-            if (first) { n_rows = n; first = false; }
+            if (first) { n_rows = static_cast<std::size_t>(got); first = false; }
             // Codes plus a dictionary attribute is a text column. Both have to
             // be read before the column exists, because whether they are
             // consistent is what decides the column's type.
@@ -449,7 +556,7 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
                            has_attribute(ds, kDictionaryAttribute);
             if (encoded) {
                 dictionary = read_string_attribute(ds, kDictionaryAttribute);
-                encoded = read_codes(ds, dictionary, n, &codes);
+                encoded = read_codes(ds, dictionary, at, got, &codes);
                 if (!encoded)
                     std::cerr << "hdf5 table: " << name
                               << " has a dictionary attribute its values do not "
@@ -461,11 +568,11 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
             data::Column& column = out.column(index);
             if (encoded) {
                 column.set_dictionary(dictionary);
-                column.set_codes(codes.data(), static_cast<int>(n));
+                column.set_codes(codes.data(), static_cast<int>(got));
             } else if (column_type == data::ColumnType::String) {
-                read_string_column(ds, type, column, n);
+                read_string_column(ds, type, column, at, got);
             } else {
-                read_numeric_column(ds, column, column_type, n);
+                read_numeric_column(ds, column, column_type, n, at, got);
             }
 
             // After the column exists and before its mask: the description may
@@ -481,11 +588,14 @@ void read_table_into(hid_t group, data::DataStore& out, const std::string& filen
             if (H5Lexists(group, mask_name.c_str(), H5P_DEFAULT) > 0) {
                 const hid_t mds = H5Dopen2(group, mask_name.c_str(), H5P_DEFAULT);
                 if (mds >= 0) {
-                    std::vector<unsigned char> bytes(n, 1);
-                    if (n > 0)
-                        H5Dread(mds, H5T_NATIVE_UINT8, H5S_ALL, H5S_ALL,
-                                H5P_DEFAULT, bytes.data());
-                    column.set_mask(bytes.data(), static_cast<int>(n));
+                    std::vector<unsigned char> bytes(static_cast<std::size_t>(got), 1);
+                    if (got > 0) {
+                        const Slab mask_slab(mds, at, got);
+                        H5Dread(mds, H5T_NATIVE_UINT8, mask_slab.mem(),
+                                mask_slab.file(), H5P_DEFAULT, bytes.data());
+                        g_bytes_read += got;
+                    }
+                    column.set_mask(bytes.data(), static_cast<int>(got));
                     H5Dclose(mds);
                 }
             }
@@ -1110,8 +1220,9 @@ bool has_table_below(hid_t group) {
 }
 
 /// The tree at `group`, rebuilt under `out`.
-void read_tree_into(hid_t group, data::DataStore& out, const std::string& filename) {
-    read_table_into(group, out, filename);
+void read_tree_into(hid_t group, data::DataStore& out, const std::string& filename,
+                    const ReadOptions& opts) {
+    read_table_into(group, out, filename, opts);
 
     // The true names the writer recorded, so a percent-encoded link comes back
     // under the name the store used. Anything not in the attribute is a group
@@ -1130,7 +1241,7 @@ void read_tree_into(hid_t group, data::DataStore& out, const std::string& filena
         const bool ours = std::find(declared.begin(), declared.end(), name) != declared.end();
         if (ours || has_table_below(child)) {
             data::DataStore& into = out.ensure_group(name);
-            read_tree_into(child, into, filename);
+            read_tree_into(child, into, filename, opts);
         }
         H5Gclose(child);
     }
@@ -1140,6 +1251,14 @@ void read_tree_into(hid_t group, data::DataStore& out, const std::string& filena
 
 void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
                           const std::string& group_name, bool with_groups) {
+    read_hdf5_table_into(out, filename, group_name, with_groups,
+                         std::vector<std::string>(), 0, 0);
+}
+
+void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
+                          const std::string& group_name, bool with_groups,
+                          const std::vector<std::string>& columns,
+                          std::uint64_t first_row, std::uint64_t n_rows) {
     const QuietHdf5 quiet;
     const hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file < 0) throw std::runtime_error("cannot open " + filename);
@@ -1151,8 +1270,12 @@ void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
         throw std::runtime_error("no group " + group_name + " in " + filename);
     }
 
-    if (with_groups) read_tree_into(group, out, filename);
-    else read_table_into(group, out, filename);
+    ReadOptions opts;
+    opts.columns = &columns;
+    opts.first_row = first_row;
+    opts.n_rows = n_rows;
+    if (with_groups) read_tree_into(group, out, filename, opts);
+    else read_table_into(group, out, filename, opts);
 
     if (!path.empty()) H5Gclose(group);
     H5Fclose(file);
@@ -1168,6 +1291,8 @@ void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
     if (out.n_columns() == 0 && out.n_groups() == 0)
         throw std::runtime_error("no table in " + group_name + " of " + filename);
 }
+
+std::uint64_t hdf5_bytes_read() { return g_bytes_read; }
 
 
 bool write_hdf5_table(const std::string& filename, const data::DataStore& store,

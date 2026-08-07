@@ -36,6 +36,7 @@
  */
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -82,6 +83,44 @@ bool hdf5_table_available();
  */
 void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
                           const std::string& group = "/", bool with_groups = true);
+
+/*!
+ * \brief \see read_hdf5_table_into, reading only some columns and some rows.
+ *
+ * Both knobs are native, not a slice of a whole read. One dataset per column is
+ * already the layout, so a column subset is a shorter loop and the datasets not
+ * asked for are never opened. A row range is a hyperslab, which HDF5 resolves
+ * to the chunks it falls in -- nothing is read and discarded. \ref
+ * hdf5_bytes_read is how that claim is checked rather than asserted.
+ *
+ * \param columns empty for every column. Matched per node, so a name in one
+ *        group and not another leaves that other group with fewer columns
+ *        rather than making the read an error.
+ * \param first_row the first row of every table in the tree.
+ * \param n_rows how many, or 0 for "to the end". Each table is clamped to its
+ *        own length, so a group shorter than `first_row` comes back empty
+ *        rather than throwing -- the same rule the native format follows.
+ *
+ * The store that comes back reports the window's length as its `n_rows`. It is
+ * a window, not the file: writing it back would write the window.
+ */
+void read_hdf5_table_into(data::DataStore& out, const std::string& filename,
+                          const std::string& group, bool with_groups,
+                          const std::vector<std::string>& columns,
+                          std::uint64_t first_row, std::uint64_t n_rows);
+
+/*!
+ * \brief How many bytes this reader has moved since the process started.
+ *
+ * The counterpart of \ref store_bytes_read, and here for the same reason: "the
+ * columns you did not ask for were never read" is a claim about work not done,
+ * and a wall clock on a warm page cache measures the cache. Take a difference
+ * around one call and compare it to a difference around another.
+ *
+ * Counts payload -- values, codes, masks -- and not the structure HDF5 reads to
+ * find them.
+ */
+std::uint64_t hdf5_bytes_read();
 
 /// \see read_hdf5_table_into. Returns by value, which for a large table means a
 /// second copy at the peak -- prefer the in-place form from a binding.

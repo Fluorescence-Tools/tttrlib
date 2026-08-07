@@ -244,7 +244,38 @@ void read_store_into(data::DataStore& out, const std::string& filename,
 void read_store_into(data::DataStore& out, const std::string& filename,
                      std::uint64_t base, std::uint64_t bytes,
                      const std::vector<std::string>& columns,
-                     std::uint64_t first_row, std::uint64_t n_rows);
+                     std::uint64_t first_row, std::uint64_t n_rows,
+                     const std::string& group = std::string());
+
+/*!
+ * \brief Read ONE group as the root of `out`.
+ *
+ * The third knob, and the cheapest of the three: the directory names every node
+ * and every column's offset, so reaching a group is a scan of the directory --
+ * a few kilobytes -- and not one byte of any group stepped over, however large
+ * they are.
+ *
+ * A leading and a trailing separator are optional, as everywhere else a group
+ * path is taken. The empty string is the root, which is the whole file.
+ *
+ * The tree BELOW the group comes back with it; the tree above it does not. That
+ * is what makes the result a store in its own right rather than a view -- it
+ * writes straight back out as a file whose root is the group asked for.
+ *
+ * \throws std::runtime_error if the group is not in the file. A caller who
+ *         wants to ask rather than to read has \ref store_has.
+ */
+void read_store_into(data::DataStore& out, const std::string& filename,
+                     const std::string& group);
+
+/*!
+ * \brief Whether the file holds this group.
+ *
+ * A directory read, touching no payload. Silent on any input, including files
+ * that are not ours: probing is a normal thing to do, and this matches
+ * \ref hdf5_table_has, which answers the same question about the other format.
+ */
+bool store_has(const std::string& filename, const std::string& group = "");
 
 /// The column names of the root table, in order, without reading any data.
 /// Empty for a file that is not one of ours.

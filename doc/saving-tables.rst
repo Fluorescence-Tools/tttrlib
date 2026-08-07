@@ -168,8 +168,10 @@ difference around another.
 sub-group per child. That is why a table written there loads with no conversion
 and no transpose.
 
-What differs today is only what the API offers, and it differs in both
-directions — so the two are not yet interchangeable from a caller's side:
+Every partial read works on both, and each is native — a shorter loop over the
+directory, and a hyperslab. **Emulation was rejected**: reading a whole file and
+slicing gives the right answer at the wrong cost, so a caller who swapped an
+extension to get a subset read would have got the opposite.
 
 .. list-table::
    :header-rows: 1
@@ -179,28 +181,73 @@ directions — so the two are not yet interchangeable from a caller's side:
      - HDF5
      - PTO
    * - read one group
-     - —
+     - ``load_store(f, group=)``
      - ``read_hdf5(f, group)``
      - —
    * - read a column subset
      - ``load_store(f, columns=)``
-     - —
+     - ``read_hdf5(f, columns=)``
      - ``pto_store(f, uid, columns=)``
    * - read a row range
-     - ``load_store_region`` only
-     - —
+     - ``load_store(f, first_row=, n_rows=)``
+     - ``read_hdf5(f, first_row=, n_rows=)``
      - ``pto_store(f, uid, first_row=, n_rows=)``
+   * - ask whether a group is there
+     - ``store_has(f, group)``
+     - ``hdf5_table_has(f, group)``
+     - —
    * - list the groups
      - ``store_groups(f)`` → ``results``
      - ``hdf5_table_groups(f)`` → ``/results``
      - ``pto_store_groups(f, uid)``
+   * - bytes moved, for checking the above
+     - ``store_bytes_read()``
+     - ``hdf5_bytes_read()``
+     - ``store_bytes_read()``
    * - remove a group
      - —
      - ``hdf5_table_remove(f, group)``
      - ``PtoFile`` methods
 
+Measured on the same tree written both ways — four root columns of 20 000
+rows, one group of one column, one small nested group:
+
+.. list-table::
+   :header-rows: 1
+
+   * - read
+     - ``.dstore``
+     - HDF5
+   * - the whole file
+     - 800 400
+     - 800 400
+   * - ``columns=["Tau"]``
+     - 320 000
+     - 320 000
+   * - ``first_row=100, n_rows=50``
+     - 2 000
+     - 2 000
+   * - one group
+     - 160 000
+     - 160 000
+
+The same request moves the same bytes through either format. That is the
+property that makes them interchangeable, and it is asserted with the counters
+above rather than with a wall clock — on a warm page cache a clock measures the
+cache.
+
 Note the leading slash: the string identifying a group depends on which file it
-came out of, which is the value a caller passes straight back in.
+came out of, which is the value a caller passes straight back in. Both readers
+accept it either way, leading and trailing separators being optional.
+
+Two things about reading one group, because neither is guessable:
+
+* The tree **below** the group comes back with it; the tree **above** does not.
+  That is what makes the result a store in its own right rather than a view —
+  it writes straight back out as a file whose root is the group asked for.
+* ``columns=`` is matched **per node**. A name that is in one group and not
+  another leaves that other group with fewer columns rather than making the
+  read an error.
 
 Two things about ``columns=`` that are worth knowing before you rely on them,
 because neither is guessable:

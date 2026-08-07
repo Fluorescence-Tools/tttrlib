@@ -45,7 +45,7 @@
 // Python surface, so every such block needs the guard.
 #ifdef SWIGPYTHON
 %pythoncode %{
-def load_store(filename, columns=None):
+def load_store(filename, columns=None, group=None, first_row=0, n_rows=0):
     """Read a native ``.dstore`` file back into a DataStore.
 
     The counterpart of :func:`save_store`, and the fast way to put a table on
@@ -58,21 +58,40 @@ def load_store(filename, columns=None):
     Use HDF5 instead (:func:`read_hdf5`) when the file has to be read by
     something that is not tttrlib.
 
+    Three independent knobs, and none of them reads what it did not ask for.
+    ``tttrlib.store_bytes_read()`` is how that is checked rather than asserted:
+    take a difference around one call and compare it to another.
+
     :param columns: read only these columns, if given. The file's directory
         says where each one is, so the rest are never touched -- two columns
         out of a four-gigabyte store costs two seeks. The group tree is rebuilt
         whole either way, being the directory.
+    :param group: read this group as the root, if given. The tree BELOW it
+        comes back with it; the tree above it does not, which is what makes the
+        result a store in its own right rather than a view -- it writes
+        straight back out as a file whose root is the group asked for.
+        Reaching it costs a scan of the directory and no payload at all.
+        Use :func:`store_has` to ask rather than to read.
+    :param first_row: skip this many rows of every table read.
+    :param n_rows: how many rows, or 0 for all of them onwards. Each table is
+        clamped to its own length, so a group shorter than ``first_row`` comes
+        back empty rather than raising.
     :raises RuntimeError: if the file is missing, not a store file, written by
-        a newer version, or corrupt. A reader that quietly returned an empty
-        table could not be told from one that read an empty table.
+        a newer version, corrupt, or has no such group. A reader that quietly
+        returned an empty table could not be told from one that read an empty
+        table.
     """
     store = DataStore()
     # Filled in place: returning a store by value would have SWIG copy the
     # whole tree at the moment it is largest.
-    if columns is None:
+    if columns is None and group is None and not first_row and not n_rows:
         read_store_into(store, filename)
-    else:
+    elif group is None and not first_row and not n_rows:
         read_store_into(store, filename, VectorString(list(columns)))
+    else:
+        names = VectorString(list(columns) if columns is not None else [])
+        read_store_into(store, filename, 0, 0, names, first_row, n_rows,
+                        group if group is not None else "")
     return store
 
 
