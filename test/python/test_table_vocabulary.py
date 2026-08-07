@@ -264,12 +264,70 @@ def test_writing_a_group_builds_an_hdf5_file_one_group_at_a_time(tmp_path):
     assert sorted(tttrlib.table_groups(p)) == ["first", "second"]
 
 
-def test_a_format_with_one_tree_refuses_a_group_write(tmp_path, store):
-    """`.dstore` and CSV hold one tree and one table, so a partial write is not
-    something they can do — and silently replacing the file would be worse."""
-    for name in ("out.dstore", "out.csv"):
-        with pytest.raises(RuntimeError):
-            tttrlib.write_table(str(tmp_path / name), store, group="results")
+@hdf5_only
+def test_a_group_write_leaves_its_siblings_alone_in_every_format(tmp_path):
+    """The same result whatever each does underneath. HDF5 replaces the group
+    in place; the native format reads, replaces and writes back, because it
+    holds one tree and cannot patch part of it. The caller is not told which,
+    and the file contents are the same either way."""
+    def one(name, value):
+        s = tttrlib.DataStore()
+        s.set_n_rows(2)
+        s.add(name, np.array([value, value]))
+        return s
+
+    for filename in ("built.dstore", "built.h5"):
+        p = str(tmp_path / filename)
+        assert tttrlib.write_table(p, one("x", 1.0), group="first")
+        assert tttrlib.write_table(p, one("y", 2.0), group="second")
+        assert tttrlib.write_table(p, one("x", 9.0), group="first")   # replace
+
+        assert sorted(tttrlib.table_groups(p)) == ["first", "second"], filename
+        np.testing.assert_array_equal(
+            tttrlib.read_table(p, group="first")["x"].numpy(), [9.0, 9.0])
+        np.testing.assert_array_equal(
+            tttrlib.read_table(p, group="second")["y"].numpy(), [2.0, 2.0])
+
+
+def test_csv_refuses_a_group_write(tmp_path, store):
+    """One flat table with nowhere to put a tree. The two tree formats do it by
+    rewriting; CSV cannot do it at all, so it says so."""
+    with pytest.raises(RuntimeError) as e:
+        tttrlib.write_table(str(tmp_path / "out.csv"), store, group="results")
+    assert "write_table" in str(e.value), "the message names the verb that failed"
+    assert "CSV" in str(e.value)
+
+
+def test_the_registry_publishes_what_each_format_can_be_asked(tmp_path):
+    """So a caller can ask rather than try. The entry that matters most is not
+    a capability but a COST: writing one group of a `.dstore` rewrites the file,
+    and on four gigabytes a caller is entitled to know before they call."""
+    import json
+
+    d = json.loads(tttrlib.registry_category_json("table_format"))
+    assert set(d) == {"dstore", "hdf5", "pto", "csv"}
+    assert d["csv"]["groups"] is False and d["csv"]["row_range"] is False
+    assert d["hdf5"]["rewrites_on_partial_write"] is False
+    assert d["dstore"]["rewrites_on_partial_write"] is True
+    assert "table_format" in list(tttrlib.registry_categories())
+
+
+def test_no_call_but_write_table_changes_a_file(tmp_path, store):
+    """Part 0's rule, asserted rather than assumed: a change happens in memory
+    and a write is what puts it in a file."""
+    import hashlib
+
+    p = str(tmp_path / "frozen.dstore")
+    tttrlib.write_table(p, store)
+    before = hashlib.sha256(open(p, "rb").read()).hexdigest()
+
+    tttrlib.read_table(p)
+    tttrlib.read_table(p, group="results", columns=["Tau"], first_row=1, n_rows=2)
+    tttrlib.table_groups(p)
+    tttrlib.table_columns(p, "results")
+    tttrlib.table_has(p, "results")
+
+    assert hashlib.sha256(open(p, "rb").read()).hexdigest() == before
 
 
 def test_write_table_takes_the_format_from_the_extension(tmp_path, store):

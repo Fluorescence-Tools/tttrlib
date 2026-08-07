@@ -68,8 +68,9 @@ std::string bare_group(const std::string& group) {
 /// The one place a knob a format does not have is refused. Ignoring it would
 /// give a caller a whole-file read where they asked for part of one, which is
 /// the failure this whole surface exists to remove.
-void refuse(const char* what, TableFormat f, const std::string& spec) {
-    throw std::runtime_error(std::string("read_table: ") + what +
+void refuse(const char* verb, const char* what, TableFormat f,
+            const std::string& spec) {
+    throw std::runtime_error(std::string(verb) + ": " + what +
                              " is not something a " + table_format_name(f) +
                              " file has (" + spec + ")");
 }
@@ -154,8 +155,9 @@ void read_table_into(data::DataStore& out, const std::string& spec,
             return;
 
         case TableFormat::Csv: {
-            if (!want.empty()) refuse("a group", f, spec);
-            if (first_row != 0 || n_rows != 0) refuse("a row range", f, spec);
+            if (!want.empty()) refuse("read_table", "a group", f, spec);
+            if (first_row != 0 || n_rows != 0)
+                refuse("read_table", "a row range", f, spec);
             CsvOptions options;
             read_csv_into(out, path, options);
             if (!columns.empty()) {
@@ -214,10 +216,24 @@ bool write_table(const std::string& spec, const data::DataStore& store,
     const std::string want = bare_group(group);
 
     switch (f) {
-        case TableFormat::Store:
-            // One file, one tree: a partial write is not something it can do.
-            if (!want.empty()) refuse("a group to write into", f, spec);
-            return write_store(path, store);
+        case TableFormat::Store: {
+            if (want.empty()) return write_store(path, store);
+            // A group write is a read, a replace and a write back. The format
+            // holds one tree and cannot patch part of it in place, so this
+            // rewrites -- which is the same rule the caller is already under
+            // (a change happens in memory; a write puts it in a file) and is
+            // why `rewrites_on_partial_write` is published in the registry.
+            // The caller is not told which formats patch and which rewrite,
+            // because the resulting file is the same either way.
+            data::DataStore whole;
+            try {
+                read_store_into(whole, path, 0, 0, std::vector<std::string>(), 0, 0, "");
+            } catch (const std::exception&) {
+                // Nothing there yet: the group write creates the file.
+            }
+            whole.ensure_group(want) = store;
+            return write_store(path, whole);
+        }
 
         case TableFormat::Hdf5:
             return write_hdf5_table(path, store, want.empty() ? "/" : want, 0,
@@ -225,7 +241,8 @@ bool write_table(const std::string& spec, const data::DataStore& store,
                                                  : Hdf5WriteMode::Update);
 
         case TableFormat::Csv:
-            if (!want.empty()) refuse("a group to write into", f, spec);
+            if (!want.empty())
+                refuse("write_table", "a group to write into", f, spec);
             return write_csv(path, store);
 
         case TableFormat::Pto: {
@@ -234,7 +251,6 @@ bool write_table(const std::string& spec, const data::DataStore& store,
                 throw std::runtime_error(
                         "write_table: name the object to write: "
                         "\"" + path + "|<object>\"");
-            if (!want.empty()) refuse("a group to write into", f, spec);
             PtoFile file;
             if (!file.open(path, true) && !file.create(path))
                 throw std::runtime_error("write_table: cannot open " + path);
@@ -242,10 +258,23 @@ bool write_table(const std::string& spec, const data::DataStore& store,
             // writer picks it. An object of the same name already there is
             // updated rather than duplicated, matching what writing a group of
             // an HDF5 file does.
-            for (const PtoObject& o : file.objects())
-                if (o.name == selector && o.encoding == "dstore")
-                    return pto_update_store(file, o.uid, store);
-            return pto_add_store(file, "table", selector, store) != 0;
+            for (const PtoObject& o : file.objects()) {
+                if (o.name != selector || o.encoding != "dstore") continue;
+                if (want.empty()) return pto_update_store(file, o.uid, store);
+                // Same read-modify-write as the native format, for the same
+                // reason: the object IS a store, so replacing one group of it
+                // is replacing the object.
+                data::DataStore whole;
+                read_store_into(whole, path, o.offset, o.size,
+                                std::vector<std::string>(), 0, 0, "");
+                whole.ensure_group(want) = store;
+                return pto_update_store(file, o.uid, whole);
+            }
+            if (want.empty())
+                return pto_add_store(file, "table", selector, store) != 0;
+            data::DataStore fresh;
+            fresh.ensure_group(want) = store;
+            return pto_add_store(file, "table", selector, fresh) != 0;
         }
 
         case TableFormat::Unknown:

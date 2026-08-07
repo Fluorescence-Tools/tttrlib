@@ -81,6 +81,14 @@
   In the conformance case list, with the same steps run against a `.dstore`, an
   HDF5 file and a store inside a PTO from all four languages: that is what
   "interchangeable" means, and without it this would be only a fourth spelling.
+  `write_table(spec, store, group=...)` works on both tree formats and leaves
+  the siblings alone whichever way each does it — HDF5 replaces the group in
+  place, the native format and PTO read, replace and write back, and the caller
+  is not told which because the resulting file is the same. The new
+  **`table_format` registry category** publishes what each can be asked for, and
+  the entry that matters most is not a capability but a cost:
+  `rewrites_on_partial_write`, which a caller with a four-gigabyte file is
+  entitled to know before they call rather than after.
 - **Every partial read now works on both formats.** They had complementary
   holes — `.dstore` could take a column subset and a row range but not one
   group, HDF5 could take one group and neither of the others — so a caller who

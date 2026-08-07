@@ -6,7 +6,7 @@
       "id": "registry.categories",
       "doc": "The categories, in the order the registry lists them.",
       "steps": [{"op": "registry.categories", "as": "cats"}, {"op": "len", "on": "cats", "as": "n"}],
-      "expect": {"cats": ["burst_search", "file_container", "plugin", "fit", "fit_setup", "objective"], "n": 6}
+      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective"], "n": 7}
     },
     {
       "id": "registry.whole_blob_names_its_categories",

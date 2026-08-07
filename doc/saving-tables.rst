@@ -233,6 +233,20 @@ chosen from the file — so a caller swaps a format by swapping a filename rathe
 than by rewriting their call sites, and one reading a folder of mixed files
 carries no branch per format.
 
+A group write works on both tree formats and leaves the siblings alone —
+HDF5 replaces the group in place, the native format and PTO read, replace and
+write back. The caller is not told which, because the resulting file is the
+same either way. The cost is not the same, so it is published rather than
+hidden:
+
+.. code-block:: python
+
+    import json
+    caps = json.loads(tttrlib.registry_category_json("table_format"))
+    caps["dstore"]["rewrites_on_partial_write"]   # True  -- reads and rewrites
+    caps["hdf5"]["rewrites_on_partial_write"]     # False -- replaces in place
+    caps["csv"]["groups"]                         # False -- no tree at all
+
 Five, not six: **there is no** ``table_remove``. Removing a group is
 ``read_table`` → :meth:`remove_group` → ``write_table``, which is the rule the
 whole surface rests on — a change happens in memory, and a write is what puts

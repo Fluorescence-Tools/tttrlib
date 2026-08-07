@@ -125,6 +125,67 @@ json plugin_entries() {
 
 /// Assemble the whole registry once; cheap enough to rebuild per call, and doing
 /// so avoids a static initialisation order dependency on container_names.
+/*!
+ * \brief What each table format can be asked for, so a caller can ask rather
+ *        than try.
+ *
+ * The same shape as `file_container` above, and here for the same reason: the
+ * knowledge existed only inside the dispatcher's switch, so a caller choosing
+ * where to put a table had to attempt the call and catch.
+ *
+ * `rewrites_on_partial_write` is the one entry that is not a capability but a
+ * COST, and it is the one worth publishing most. Writing one group of a
+ * `.dstore` reads the file, replaces that group and writes it back -- the
+ * caller is not told, because the resulting file is the same either way, and
+ * on four gigabytes they are entitled to know before they call rather than
+ * after. HDF5 replaces the group in place and does not.
+ */
+json table_format_entries() {
+    struct Row {
+        const char* name;
+        const char* label;
+        const char* summary;
+        const char* extensions;
+        bool groups, columns, row_range, write_group, rewrites;
+    };
+    // Written out rather than derived: unlike a container format, these are
+    // properties of the READER this library has for each, not of the file
+    // format, so there is nothing to derive them from.
+    static const Row rows[] = {
+        {"dstore", "the native store file",
+         "Speed and exact fidelity, for what only this library reads. Keeps "
+         "every dtype including bool, the row selection and the label.",
+         ".dstore", true,  true,  true,  true,  true},
+        {"hdf5",   "columnar HDF5",
+         "Interoperability: one 1-D dataset per column, readable by h5py, "
+         "pandas and MATLAB. No bool type and no label.",
+         ".h5,.hdf5", true, true, true,  true,  false},
+        {"pto",    "a store inside a container",
+         "A table as one object of a PTO, addressed as `file.pto|name`. The "
+         "container holds many, each of which is a whole tree.",
+         ".pto",  true,  true,  true,  true,  true},
+        {"csv",    "one flat table",
+         "The lowest common denominator: no tree, no dtypes, no masks, and "
+         "readable by anything. Identified by extension, having no magic bytes.",
+         ".csv,.tsv", false, true, false, false, true},
+    };
+    json out = json::object();
+    for (const Row& r : rows) {
+        json entry = json::object();
+        entry["name"] = r.name;
+        entry["label"] = r.label;
+        entry["summary"] = r.summary;
+        entry["extensions"] = r.extensions;
+        entry["groups"] = r.groups;
+        entry["columns"] = r.columns;
+        entry["row_range"] = r.row_range;
+        entry["write_group"] = r.write_group;
+        entry["rewrites_on_partial_write"] = r.rewrites;
+        out[r.name] = entry;
+    }
+    return out;
+}
+
 json build() {
     // Before anything is enumerated, not after. Asking the registry what
     // tttrlib can do is one of the three moments a plugin has to already be
@@ -137,6 +198,7 @@ json build() {
     json root = json::object();
     root["burst_search"] = json::parse(TTTR::burst_search_algorithms_json());
     root["file_container"] = file_container_entries();
+    root["table_format"] = table_format_entries();
     root["plugin"] = plugin_entries();
     root["fit"] = json::parse(fit_models_json());
     root["fit_setup"] = json::parse(fit_setup_json());
