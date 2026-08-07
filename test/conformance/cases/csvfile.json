@@ -1,0 +1,54 @@
+{
+  "area": "csvfile",
+  "doc": "A DataStore written to CSV and read back. Text is the one format where a binding's number formatting shows: a float written with too few digits does not survive the round trip, and each language has its own default. Until the R and Java modules gained CsvReader.i and CsvWriter.i this could only be tested in two languages.",
+  "cases": [
+    {
+      "id": "csvfile.roundtrip_keeps_the_values",
+      "doc": "Three float64 values out and back. Exact equality, not a tolerance: a CSV writer that rounded would fail here, and that is the point.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["x", [1.5, 2.5, 3.5]]},
+        {"op": "csvfile.write", "args": ["$tmp0", "$s"]},
+        {"op": "csvfile.read", "args": ["$tmp0"], "as": "back"},
+        {"op": "ds.n_rows", "on": "back", "as": "rows"},
+        {"op": "ds.n_columns", "on": "back", "as": "cols"},
+        {"op": "ds.column_names", "on": "back", "as": "names"},
+        {"op": "ds.column_f64", "on": "back", "args": ["x"], "as": "v"},
+        {"op": "to_list", "on": "v", "as": "values"}
+      ],
+      "expect": {"rows": 3, "cols": 1, "names": ["x"], "values": [1.5, 2.5, 3.5]},
+      "tolerance": {"values": 1e-12}
+    },
+    {
+      "id": "csvfile.a_value_that_needs_all_its_digits",
+      "doc": "A number whose shortest exact decimal is seventeen digits. If the writer prints fewer, the value that comes back is a nearby double and this fails -- which is what a default formatter tends to do.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["x", [0.1, 0.30000000000000004, 1e-300]]},
+        {"op": "csvfile.write", "args": ["$tmp0", "$s"]},
+        {"op": "csvfile.read", "args": ["$tmp0"], "as": "back"},
+        {"op": "ds.column_f64", "on": "back", "args": ["x"], "as": "v"},
+        {"op": "to_list", "on": "v", "as": "values"}
+      ],
+      "expect": {"values": [0.1, 0.30000000000000004, 1e-300]},
+      "tolerance": {"values": 1e-12}
+    },
+    {
+      "id": "csvfile.several_columns_keep_their_order",
+      "doc": "CSV has no type header, so the reader infers; what it must not do is reorder or rename.",
+      "tmp": 1,
+      "steps": [
+        {"op": "ds.new", "as": "s"},
+        {"op": "ds.add_f64", "on": "s", "args": ["zulu", [1.0, 2.0]]},
+        {"op": "ds.add_f64", "on": "s", "args": ["alpha", [3.0, 4.0]]},
+        {"op": "csvfile.write", "args": ["$tmp0", "$s"]},
+        {"op": "csvfile.read", "args": ["$tmp0"], "as": "back"},
+        {"op": "ds.column_names", "on": "back", "as": "names"},
+        {"op": "ds.n_columns", "on": "back", "as": "cols"}
+      ],
+      "expect": {"names": ["zulu", "alpha"], "cols": 2}
+    }
+  ]
+}

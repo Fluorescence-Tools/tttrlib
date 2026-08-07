@@ -1,0 +1,38 @@
+{
+  "area": "burstfeature",
+  "doc": "BVA and 2CDE over the reference file's bursts. Both take the burst bounds as an (n, 2) block; the cases pass them flat and each runner shapes them, the same rule as hist.update and tiff.write_f64.\n\nThese could only be tested in Python and JavaScript until the R and Java modules gained BVA.i and TwoCDE.i -- and reaching them from R needed compute_bursts(), because SWIG's R overload dispatcher cannot accept a matrix at all.",
+  "cases": [
+    {
+      "id": "burstfeature.bva_proximity_ratio_per_burst",
+      "doc": "One mean proximity ratio per burst. A proximity ratio is a fraction, so the sum over 293 bursts is a strong shape check that no single value can fake.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.burst_search", "on": "t", "args": [30, 10, 0.001, "sliding_window"], "as": "b"},
+        {"op": "feature.new", "args": ["bva", "$t", [0], [8]], "as": "bva"},
+        {"op": "feature.compute", "on": "bva", "args": ["$b", 4, 0.01]},
+        {"op": "feature.values", "on": "bva", "as": "pr"},
+        {"op": "len", "on": "pr", "as": "n_bursts"},
+        {"op": "count_gt", "on": "pr", "args": [0], "as": "n_positive"},
+        {"op": "max", "on": "pr", "as": "largest"}
+      ],
+      "expect": {"n_bursts": 293, "n_positive": 293, "largest": 0.7708333333333334},
+      "tolerance": {"largest": 1e-12}
+    },
+    {
+      "id": "burstfeature.two_cde_per_burst",
+      "doc": "One 2CDE value per burst, over the same bounds -- so the two features must agree on how many bursts there are, which is the cheapest way to catch a stride error in either.",
+      "data": ["bh/bh_spc132.spc"],
+      "steps": [
+        {"op": "tttr.open", "args": ["$data0", "SPC-130"], "as": "t"},
+        {"op": "tttr.burst_search", "on": "t", "args": [30, 10, 0.001, "sliding_window"], "as": "b"},
+        {"op": "feature.new", "args": ["twocde", "$t", [0], [8]], "as": "cde"},
+        {"op": "feature.compute", "on": "cde", "args": ["$b", 0.0001]},
+        {"op": "feature.values", "on": "cde", "as": "v"},
+        {"op": "len", "on": "v", "as": "n_bursts"},
+        {"op": "count_gt", "on": "v", "args": [0], "as": "n_positive"}
+      ],
+      "expect": {"n_bursts": 293, "n_positive": 271}
+    }
+  ]
+}

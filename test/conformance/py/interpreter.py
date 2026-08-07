@@ -427,6 +427,67 @@ def _op_mask_array(on, args):
 
 
 # ---------------------------------------------------------------------------
+# nn.* / csvfile.* / feature.*
+# ---------------------------------------------------------------------------
+#
+# Three subsystems that reached only Python and JavaScript until the R and Java
+# modules gained them. Cases here are what stops that from silently regressing.
+
+def _op_nn_from_json(on, args):
+    return tttrlib.NeuralNet.from_json_string(str(args[0]))
+
+
+def _op_nn_predict(on, args):
+    return np.asarray(on.predict(tttrlib.VectorDouble([float(v) for v in args[0]])),
+                      dtype=np.float64)
+
+
+def _op_csv_write(on, args):
+    # _write_csv_native, not write_csv: the latter is a %pythoncode convenience
+    # taking keyword arguments, so it exists only in Python. The native call --
+    # (filename, store, CsvWriteOptions) -- is the one every binding exports.
+    tttrlib._write_csv_native(str(args[0]), args[1], tttrlib.CsvWriteOptions())
+
+
+def _op_csv_read(on, args):
+    store = tttrlib.DataStore()
+    tttrlib.read_csv_into(store, str(args[0]), tttrlib.CsvOptions())
+    return store
+
+
+def _bursts_2d(flat):
+    """A flat start/stop list as the (n, 2) block BVA and 2CDE take.
+
+    The vocabulary passes arrays flat and each runner shapes them -- the same
+    rule as hist.update and tiff.write_f64.
+    """
+    a = np.asarray(flat, dtype=np.int64)
+    return a.reshape(-1, 2)
+
+
+def _op_feature_new(on, args):
+    cls = tttrlib.BVA if str(args[0]) == "bva" else tttrlib.TwoCDE
+    f = cls(args[1])
+    f.set_donor(tttrlib.VectorInt32([int(c) for c in args[2]]))
+    f.set_acceptor(tttrlib.VectorInt32([int(c) for c in args[3]]))
+    return f
+
+
+def _op_feature_compute(on, args):
+    bursts = _bursts_2d(args[0])
+    if isinstance(on, tttrlib.BVA):
+        on.compute_bursts(bursts, int(args[1]), float(args[2]))
+    else:
+        on.compute_bursts(bursts, float(args[1]), 0, 0)
+
+
+def _op_feature_values(on, args):
+    v = (on.get_proximity_ratio_mean() if isinstance(on, tttrlib.BVA)
+         else on.get_two_cde())
+    return np.asarray(v, dtype=np.float64)
+
+
+# ---------------------------------------------------------------------------
 # phasor.*
 # ---------------------------------------------------------------------------
 #
@@ -800,6 +861,22 @@ _OPS = {
     "mask.size": lambda on, a: int(on.size()),
     "mask.mask_array": _op_mask_array,
 
+    # neural net
+    "nn.from_json": _op_nn_from_json,
+    "nn.predict": _op_nn_predict,
+    "nn.n_layers": lambda on, a: int(on.n_layers()),
+    "nn.n_inputs": lambda on, a: int(on.n_inputs()),
+    "nn.n_outputs": lambda on, a: int(on.n_outputs()),
+
+    # csv files
+    "csvfile.write": _op_csv_write,
+    "csvfile.read": _op_csv_read,
+
+    # burst features
+    "feature.new": _op_feature_new,
+    "feature.compute": _op_feature_compute,
+    "feature.values": _op_feature_values,
+
     # phasor
     "phasor.g": lambda on, a: float(tttrlib.DecayPhasor.g(float(a[0]), float(a[1]),
                                                           float(a[2]), float(a[3]))),
@@ -941,6 +1018,7 @@ YIELDS_COMPARABLE = {
     "tttr.macro_time_at", "tttr.micro_time_at", "tttr.routing_channel_at",
     "tttr.micro_time_resolution", "tttr.macro_time_resolution",
     "correlator.curve_size", "phasor.g", "phasor.s", "mask.size",
+    "nn.n_layers", "nn.n_inputs", "nn.n_outputs",
     "clsm.n_frames", "clsm.n_lines", "clsm.n_pixel",
     "fit.names", "fit.setup_names", "fit.result_names", "fit.objective",
     "ds.n_rows", "ds.n_columns", "ds.n_groups", "ds.column_names",
@@ -978,6 +1056,8 @@ RAW_MATERIAL = {
     "burst.new", "burst.find", "burst.properties",
     "correlator.new", "correlator.set_tttr", "correlator.x_axis",
     "correlator.correlation", "phasor.from_bincounts",
+    "nn.from_json", "nn.predict", "csvfile.write", "csvfile.read",
+    "feature.new", "feature.compute", "feature.values",
     "mask.new", "mask.select_channels", "mask.select_count_rate", "mask.mask_array",
     "tiff.write_f64", "tiff.read_f64",
     # pto -- a uid is random, and a file or store handle is a handle

@@ -1,0 +1,44 @@
+{
+  "area": "neuralnet",
+  "doc": "The feed-forward network, built from an explicit JSON spec so the forward pass is arithmetic anyone can check by hand rather than a number to trust. It reads no file, so nothing here can be skipped for want of data. Until the R and Java modules gained NeuralNet.i this could only be tested in two languages.",
+  "cases": [
+    {
+      "id": "neuralnet.forward_pass_is_arithmetic",
+      "doc": "Two layers with known weights. [1, 2] through a 3x2 relu layer gives [0.5, 1.1, 1.7] -- all positive, so relu is the identity here -- and summing those with a bias of 0.5 gives 3.8. A binding that transposed the weight matrix would get a different, equally plausible number, which is why the weights are asymmetric.",
+      "steps": [
+        {
+          "op": "nn.from_json",
+          "args": [
+            "{\"layers\":[{\"n_in\":2,\"n_out\":3,\"activation\":\"relu\",\"weight\":[0.1,0.2,0.3,0.4,0.5,0.6],\"bias\":[0,0,0]},{\"n_in\":3,\"n_out\":1,\"activation\":\"identity\",\"weight\":[1,1,1],\"bias\":[0.5]}]}"
+          ],
+          "as": "net"
+        },
+        {"op": "nn.n_layers", "on": "net", "as": "n_layers"},
+        {"op": "nn.n_inputs", "on": "net", "as": "n_inputs"},
+        {"op": "nn.n_outputs", "on": "net", "as": "n_outputs"},
+        {"op": "nn.predict", "on": "net", "args": [[1.0, 2.0]], "as": "y"},
+        {"op": "len", "on": "y", "as": "n_out"},
+        {"op": "first", "on": "y", "as": "value"}
+      ],
+      "expect": {"n_layers": 2, "n_inputs": 2, "n_outputs": 1, "n_out": 1, "value": 3.8},
+      "tolerance": {"value": 1e-12}
+    },
+    {
+      "id": "neuralnet.relu_clips_the_negative_side",
+      "doc": "The same network with a negative input. The first layer's outputs go negative and relu floors them at zero, so the answer is the bias alone -- the one case that tells relu apart from the identity.",
+      "steps": [
+        {
+          "op": "nn.from_json",
+          "args": [
+            "{\"layers\":[{\"n_in\":2,\"n_out\":3,\"activation\":\"relu\",\"weight\":[0.1,0.2,0.3,0.4,0.5,0.6],\"bias\":[0,0,0]},{\"n_in\":3,\"n_out\":1,\"activation\":\"identity\",\"weight\":[1,1,1],\"bias\":[0.5]}]}"
+          ],
+          "as": "net"
+        },
+        {"op": "nn.predict", "on": "net", "args": [[-1.0, -2.0]], "as": "y"},
+        {"op": "first", "on": "y", "as": "value"}
+      ],
+      "expect": {"value": 0.5},
+      "tolerance": {"value": 1e-12}
+    }
+  ]
+}

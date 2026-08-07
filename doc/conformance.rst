@@ -30,6 +30,16 @@ burst.spc130.find_bursts  ✓       ✓  ✓     ✓
 burst.spc130.properties   ✓       ✓  ✓     ✓
 ========================  ======  =  ====  ==========
 
+burstfeature
+------------
+
+==========================================  ======  =  ====  ==========
+case                                        Python  R  Java  JavaScript
+==========================================  ======  =  ====  ==========
+burstfeature.bva_proximity_ratio_per_burst  ✓       ✓  ✓     ✓
+burstfeature.two_cde_per_burst              ✓       ✓  ✓     ✓
+==========================================  ======  =  ====  ==========
+
 clsm
 ----
 
@@ -54,6 +64,17 @@ correlator.curve.size_grows_with_cascades     ✓       ✓  ✓     ✓
 correlator.spc130.cross_correlation           ✓       ✓  ✓     ✓
 correlator.spc130.geometry_changes_the_curve  ✓       ✓  ✓     ✓
 ============================================  ======  =  ====  ==========
+
+csvfile
+-------
+
+=========================================  ======  =  ====  ==========
+case                                       Python  R  Java  JavaScript
+=========================================  ======  =  ====  ==========
+csvfile.roundtrip_keeps_the_values         ✓       ✓  ✓     ✓
+csvfile.a_value_that_needs_all_its_digits  ✓       ✓  ✓     ✓
+csvfile.several_columns_keep_their_order   ✓       ✓  ✓     ✓
+=========================================  ======  =  ====  ==========
 
 datastore
 ---------
@@ -99,6 +120,16 @@ histogram.out_of_range_samples_are_not_counted   ✓       ✓  ✓     ✓
 histogram.empty_update_leaves_every_bin_at_zero  ✓       ✓  ✓     ✓
 ===============================================  ======  =  ====  ==========
 
+neuralnet
+---------
+
+======================================  ======  =  ====  ==========
+case                                    Python  R  Java  JavaScript
+======================================  ======  =  ====  ==========
+neuralnet.forward_pass_is_arithmetic    ✓       ✓  ✓     ✓
+neuralnet.relu_clips_the_negative_side  ✓       ✓  ✓     ✓
+======================================  ======  =  ====  ==========
+
 pda
 ---
 
@@ -120,6 +151,19 @@ phasor.irf_rotation                ✓       ✓  ✓     ✓
 phasor.from_a_decay_histogram      ✓       ✓  ✓     ✓
 phasor.too_few_photons_is_refused  ✓       ✓  ✓     ✓
 =================================  ======  =  ====  ==========
+
+pto
+---
+
+========================================  ======  ===  ====  ==========
+case                                      Python  R    Java  JavaScript
+========================================  ======  ===  ====  ==========
+pto.objects_come_back_with_their_labels   ✓       n/a  ✓     n/a
+pto.a_column_subset_of_an_embedded_store  ✓       n/a  ✓     n/a
+pto.a_row_window_of_an_embedded_store     ✓       n/a  ✓     n/a
+pto.a_byte_range_of_a_payload             ✓       n/a  ✓     n/a
+pto.a_range_of_an_embedded_photon_stream  ✓       n/a  ✓     n/a
+========================================  ======  ===  ====  ==========
 
 registry
 --------
@@ -145,6 +189,22 @@ selection.spc130.two_channels_is_the_union  ✓       ✓  ✓     ✓
 selection.spc130.mask_false_marks_nothing   ✓       ✓  ✓     ✓
 selection.spc130.count_rate                 ✓       ✓  ✓     ✓
 ==========================================  ======  =  ====  ==========
+
+stream
+------
+
+==================================================================  ======  =  ====  ==========
+case                                                                Python  R  Java  JavaScript
+==================================================================  ======  =  ====  ==========
+stream.a_container_says_how_many_records_it_holds                   ✓       ✓  ✓     ✓
+stream.a_buffer_decodes_to_what_the_file_reader_produces            ✓       ✓  ✓     ✓
+stream.the_state_carries_the_overflow_count_across_a_boundary       ✓       ✓  ✓     ✓
+stream.a_record_type_that_cannot_be_decoded_from_a_buffer_declines  ✓       ✓  ✓     ✓
+stream.a_ptu_reads_in_pieces_too                                    ✓       ✓  ✓     ✓
+stream.a_container_that_cannot_be_read_in_pieces_says_so            ✓       ✓  ✓     ✓
+stream.the_set_sidecar_parses_into_sections                         ✓       ✓  ✓     ✓
+stream.the_whole_set_sidecar_not_five_tags                          ✓       ✓  ✓     ✓
+==================================================================  ======  =  ====  ==========
 
 tiff
 ----
@@ -187,9 +247,36 @@ Totals
 ==========  ======  ======  =======  ===========
             passed  failed  skipped  unsupported
 ==========  ======  ======  =======  ===========
-Python      67      0       0        0
-R           67      0       0        0
-Java        67      0       0        0
-JavaScript  67      0       0        0
+Python      87      0       0        0
+R           82      0       0        5
+Java        87      0       0        0
+JavaScript  82      0       0        5
 ==========  ======  ======  =======  ===========
+
+Declared gaps
+-------------
+
+A binding that cannot express a case says so in the case file, with a
+reason. These are the gaps the suite knows about; anything else that
+does not run is a bug.
+
+``pto.objects_come_back_with_their_labels`` — **JavaScript**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.objects_come_back_with_their_labels`` — **R**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_column_subset_of_an_embedded_store`` — **JavaScript**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_column_subset_of_an_embedded_store`` — **R**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_row_window_of_an_embedded_store`` — **JavaScript**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_row_window_of_an_embedded_store`` — **R**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_byte_range_of_a_payload`` — **JavaScript**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_byte_range_of_a_payload`` — **R**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_range_of_an_embedded_photon_stream`` — **JavaScript**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
+
+``pto.a_range_of_an_embedded_photon_stream`` — **R**: a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.
 

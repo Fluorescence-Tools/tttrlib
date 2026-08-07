@@ -281,6 +281,46 @@ OPS <- list(
   # TTTRMask__get_indices__SWIG_0, with no stable dispatcher to call.
   "mask.mask_array" = function(on, a) as.numeric(unlist(TTTRMask_get_mask_array(on))),
 
+  # -- neural net ---------------------------------------------------------------
+  "nn.from_json" = function(on, a) NeuralNet_from_json_string(a[[1]]),
+  "nn.predict" = function(on, a)
+    as.numeric(NeuralNet_predict(on, as.numeric(unlist(a[[1]])))),
+  "nn.n_layers" = function(on, a) NeuralNet_n_layers(on),
+  "nn.n_inputs" = function(on, a) NeuralNet_n_inputs(on),
+  "nn.n_outputs" = function(on, a) NeuralNet_n_outputs(on),
+
+  # -- csv files ----------------------------------------------------------------
+  "csvfile.write" = function(on, a) write_csv(a[[1]], a[[2]], CsvWriteOptions()),
+  "csvfile.read" = function(on, a) {
+    s <- DataStore(); read_csv_into(s, a[[1]], CsvOptions()); s
+  },
+
+  # -- burst features -----------------------------------------------------------
+  # compute_bursts, not compute: SWIG's R overload dispatcher cannot take a
+  # matrix (class(matrix) is two values since R 4.0), and compute() is
+  # overloaded. See the note in ext/python/BVA.i.
+  "feature.new" = function(on, a) {
+    f <- if (a[[1]] == "bva") BVA(a[[2]]) else TwoCDE(a[[2]])
+    if (a[[1]] == "bva") {
+      BVA_set_donor(f, as.integer(unlist(a[[3]]))); BVA_set_acceptor(f, as.integer(unlist(a[[4]])))
+    } else {
+      TwoCDE_set_donor(f, as.integer(unlist(a[[3]]))); TwoCDE_set_acceptor(f, as.integer(unlist(a[[4]])))
+    }
+    attr(f, "kind") <- a[[1]]
+    f
+  },
+  "feature.compute" = function(on, a) {
+    m <- matrix(as.numeric(unlist(a[[1]])), ncol = 2, byrow = TRUE)
+    if (identical(attr(on, "kind"), "bva"))
+      BVA_compute_bursts(on, m, as.integer(a[[2]]), as.numeric(a[[3]]))
+    else
+      TwoCDE_compute_bursts(on, m, as.numeric(a[[2]]), 0L, 0L)
+  },
+  "feature.values" = function(on, a)
+    if (identical(attr(on, "kind"), "bva"))
+      as.numeric(BVA_get_proximity_ratio_mean(on))
+    else as.numeric(TwoCDE_get_two_cde(on)),
+
   # -- phasor -------------------------------------------------------------------
   "phasor.g" = function(on, a)
     DecayPhasor_g(as.numeric(a[[1]]), as.numeric(a[[2]]),

@@ -168,6 +168,42 @@ read row by row.
 | `mask.size` | mask | — | integer |
 | `mask.mask_array` | mask | — | array, one byte per event (1 = marked) |
 
+## `nn.*` — neural net
+
+| op | on | args | result |
+|---|---|---|---|
+| `nn.from_json` | — | `[spec]` | NeuralNet handle |
+| `nn.predict` | net | `[[inputs]]` | array |
+| `nn.n_layers` / `nn.n_inputs` / `nn.n_outputs` | net | — | integer |
+
+## `csvfile.*`
+
+| op | on | args | result |
+|---|---|---|---|
+| `csvfile.write` | — | `[path, $store]` | — |
+| `csvfile.read` | — | `[path]` | store handle |
+
+`csvfile.write` calls the **native** writer, not Python's `write_csv`: the
+latter is a `%pythoncode` convenience taking keyword arguments and exists in
+one language.
+
+## `feature.*` — burst features
+
+| op | on | args | result |
+|---|---|---|---|
+| `feature.new` | — | `[kind, $tttr, [donor], [acceptor]]` | BVA or TwoCDE handle; kind is `"bva"` or `"twocde"` |
+| `feature.compute` | feature | `[$bursts, …]` | — |
+| `feature.values` | feature | — | array, one value per burst |
+
+`feature.compute` takes the burst bounds as the **flat** `tttr.burst_search`
+binding and each runner shapes them `(n, 2)` — the same rule as `hist.update`.
+It calls `compute_bursts`, the non-overloaded entry point, because SWIG's R
+overload dispatcher cannot accept a matrix at all (`class(matrix)` is two
+values since R 4.0).
+
+`feature.compute`'s trailing arguments differ by kind: BVA takes
+`[photons_per_slice, minimum_window]`, 2CDE takes `[tau]`.
+
 ## `phasor.*`
 
 | op | on | args | result |

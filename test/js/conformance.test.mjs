@@ -267,6 +267,42 @@ function makeOps(ctx) {
     'mask.size': (on) => Number(on.size()),
     'mask.mask_array': (on) => on.get_mask_array(),
 
+    // -- neural net -----------------------------------------------------------
+    'nn.from_json': (on, a) => tttrlib.NeuralNet.from_json_string(a[0]),
+    'nn.predict': (on, a) => Float64Array.from(on.predict(Float64Array.from(a[0]))),
+    'nn.n_layers': (on) => Number(on.n_layers()),
+    'nn.n_inputs': (on) => Number(on.n_inputs()),
+    'nn.n_outputs': (on) => Number(on.n_outputs()),
+
+    // -- csv files ------------------------------------------------------------
+    'csvfile.write': (on, a) => { tttrlib.write_csv(a[0], a[1], new tttrlib.CsvWriteOptions()); },
+    'csvfile.read': (on, a) => {
+      const s = new tttrlib.DataStore();
+      tttrlib.read_csv_into(s, a[0], new tttrlib.CsvOptions());
+      return s;
+    },
+
+    // -- burst features -------------------------------------------------------
+    'feature.new': (on, a) => {
+      const f = a[0] === 'bva' ? new tttrlib.BVA(a[1]) : new tttrlib.TwoCDE(a[1]);
+      // std::vector<int>, so Int32Array -- an Int8Array is refused.
+      f.set_donor(Int32Array.from(a[2]));
+      f.set_acceptor(Int32Array.from(a[3]));
+      f.__kind = a[0];
+      return f;
+    },
+    'feature.compute': (on, a) => {
+      // The bounds arrive as the burst_search binding itself, which is already
+      // a BigInt64Array -- Math.round would throw on a BigInt.
+      const flat = BigInt64Array.from(a[0],
+        (v) => (typeof v === 'bigint' ? v : BigInt(Math.round(v))));
+      const bursts = { data: flat, shape: [flat.length / 2, 2] };
+      if (on.__kind === 'bva') on.compute_bursts(bursts, a[1], a[2]);
+      else on.compute_bursts(bursts, a[1], 0, 0);
+    },
+    'feature.values': (on) =>
+      on.__kind === 'bva' ? on.get_proximity_ratio_mean() : on.get_two_cde(),
+
     // -- phasor ---------------------------------------------------------------
     'phasor.g': (on, a) => tttrlib.DecayPhasor.g(a[0], a[1], a[2], a[3]),
     'phasor.s': (on, a) => tttrlib.DecayPhasor.s(a[0], a[1], a[2], a[3]),
@@ -373,10 +409,10 @@ function makeOps(ctx) {
 
     // -- pto -----------------------------------------------------------------
     //
-    // A uid crosses as a plain number, which is exact only because PTO mints
-    // 53-bit uids for this reason: two of the four bindings have no integer
-    // type wider than a double, and an identity that changes on its way to the
-    // caller is not one.
+    // A uid is 64 random bits, so it crosses as a BigInt -- a Number is a
+    // double and would come back as a DIFFERENT uid, one that no longer names
+    // the object it was read from. jsarrays.i has the typemaps; here it means a
+    // uid binding is a BigInt and is passed straight back, never through Number().
     'pto.create': (on, a) => {
       const f = new tttrlib.PtoFile();
       if (!f.create(a[0], a[1])) throw new Error(f.error());

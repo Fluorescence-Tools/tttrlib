@@ -463,6 +463,54 @@ final class ConformanceInterpreter {
                 return out;
             }
 
+            // -- neural net -----------------------------------------------------
+            case "nn.from_json": return NeuralNet.from_json_string(s(a, 0));
+            case "nn.predict":
+                return vectorDoubles(((NeuralNet) on).predict(doubleVector(numbers(a.get(0)))));
+            case "nn.n_layers": return (double) ((NeuralNet) on).n_layers();
+            case "nn.n_inputs": return (double) ((NeuralNet) on).n_inputs();
+            case "nn.n_outputs": return (double) ((NeuralNet) on).n_outputs();
+
+            // -- csv files ------------------------------------------------------
+            case "csvfile.write":
+                tttrlib.write_csv(s(a, 0), (DataStore) a.get(1), new CsvWriteOptions());
+                return null;
+            case "csvfile.read": {
+                DataStore store = new DataStore();
+                tttrlib.read_csv_into(store, s(a, 0), new CsvOptions());
+                return store;
+            }
+
+            // -- burst features -------------------------------------------------
+            case "feature.new": {
+                VectorInt32 don = new VectorInt32(), acc = new VectorInt32();
+                for (double v : numbers(a.get(2))) don.add((int) Math.round(v));
+                for (double v : numbers(a.get(3))) acc.add((int) Math.round(v));
+                if (s(a, 0).equals("bva")) {
+                    BVA f = new BVA((TTTR) a.get(1));
+                    f.set_donor(don); f.set_acceptor(acc);
+                    return f;
+                }
+                TwoCDE f = new TwoCDE((TTTR) a.get(1));
+                f.set_donor(don); f.set_acceptor(acc);
+                return f;
+            }
+            case "feature.compute": {
+                double[] flat = numbers(a.get(0));
+                long[][] bursts = new long[flat.length / 2][2];
+                for (int k = 0; k < bursts.length; k++) {
+                    bursts[k][0] = Math.round(flat[2 * k]);
+                    bursts[k][1] = Math.round(flat[2 * k + 1]);
+                }
+                if (on instanceof BVA) ((BVA) on).compute_bursts(bursts, i(a, 1), d(a, 2));
+                else ((TwoCDE) on).compute_bursts(bursts, d(a, 1), 0, 0);
+                return null;
+            }
+            case "feature.values":
+                return on instanceof BVA
+                        ? vectorDoubles(((BVA) on).get_proximity_ratio_mean())
+                        : vectorDoubles(((TwoCDE) on).get_two_cde());
+
             // -- phasor ---------------------------------------------------------
             case "phasor.g": return DecayPhasor.g(d(a, 0), d(a, 1), d(a, 2), d(a, 3));
             case "phasor.s": return DecayPhasor.s(d(a, 0), d(a, 1), d(a, 2), d(a, 3));
@@ -654,9 +702,11 @@ final class ConformanceInterpreter {
 
             // -- pto ---------------------------------------------------------
             //
-            // A uid is a long here and a double in the case file's bindings,
-            // which is exact only because PTO mints 53-bit uids: two of the
-            // four bindings have no integer wider than a double.
+            // A uid is 64 random bits and stays a BigInteger all the way
+            // through: binding it as a double would round it into a different
+            // uid, which is exactly the bug the JavaScript runner avoids with
+            // BigInt. It is raw material either way -- bound, passed on, never
+            // compared -- so nothing needs it to be a number.
             case "pto.create": {
                 PtoFile f = new PtoFile();
                 if (!f.create(s(a, 0), s(a, 1))) throw new ConformanceException(f.error());
@@ -673,13 +723,13 @@ final class ConformanceInterpreter {
                 java.math.BigInteger uid =
                         ((PtoFile) on).add_file(s(a, 0), s(a, 1), s(a, 2), s(a, 3));
                 if (uid.signum() == 0) throw new ConformanceException(((PtoFile) on).error());
-                return uid.doubleValue();
+                return uid;
             }
             case "pto.add_store": {
                 java.math.BigInteger uid = tttrlib.pto_add_store(
                         (PtoFile) on, s(a, 0), s(a, 1), (DataStore) a.get(2));
                 if (uid.signum() == 0) throw new ConformanceException(((PtoFile) on).error());
-                return uid.doubleValue();
+                return uid;
             }
             case "pto.n_objects": return (double) ((PtoFile) on).n_objects();
             case "pto.names": {
@@ -935,9 +985,15 @@ final class ConformanceInterpreter {
         return out;
     }
 
-    /// A PTO uid, which crosses the case file as a double. \see pto.create.
+    /**
+     * A PTO uid argument. Bound as a BigInteger by the ops that produce one --
+     * 64 random bits do not survive a double -- and accepted as a Double too so
+     * a case could still write one as a literal.
+     */
     private static java.math.BigInteger uid(List<Object> a, int k) {
-        return java.math.BigInteger.valueOf((long) Math.round((Double) a.get(k)));
+        Object v = a.get(k);
+        if (v instanceof java.math.BigInteger) return (java.math.BigInteger) v;
+        return java.math.BigInteger.valueOf((long) Math.round((Double) v));
     }
 
     private static short[] vectorBytes(VectorUint8 v) {
