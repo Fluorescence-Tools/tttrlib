@@ -122,8 +122,7 @@
         ]
       },
       "unsupported": {
-        "r": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.",
-        "js": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings."
+        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -286,8 +285,7 @@
         "tau_sum": 1e-12
       },
       "unsupported": {
-        "r": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.",
-        "js": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings."
+        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -431,8 +429,7 @@
         "values": 1e-12
       },
       "unsupported": {
-        "r": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.",
-        "js": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings."
+        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -542,8 +539,7 @@
         "past_end": ""
       },
       "unsupported": {
-        "r": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.",
-        "js": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings."
+        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     },
     {
@@ -657,8 +653,7 @@
         "micro_sum": 638976
       },
       "unsupported": {
-        "r": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings.",
-        "js": "a 64-bit FileUID does not survive this binding's native number, so a uid read here is a nearby value rather than that uid and cannot be handed back. Every case in this area binds a uid and passes it on. R's numeric is a double and base R has no 64-bit integer; JavaScript's Number is a double and only 64-bit ARRAYS cross as BigInt today (see ext/js/jsarrays.i). Python's int and Java's BigInteger both carry it, so the cases still run in two bindings."
+        "r": "R has no 64-bit integer type -- integer is 32-bit and numeric is a double -- so a uid above 2^53 is read back as a nearby value and the lookup fails with 'no object with that uid'. Measured: the uid 14523661926200792394 comes back as 14523661926200793088. This is the language, not the wrapper: JavaScript had the same symptom and it was a missing BigInt typemap, fixed in ext/js/jsarrays.i, so these cases now run there."
       }
     }
   ]

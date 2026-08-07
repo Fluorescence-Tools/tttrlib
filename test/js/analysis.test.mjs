@@ -212,9 +212,12 @@ describe('simulator', { skip: !tttrlib.SimEngine && 'built without the photon si
   test('a run produces the requested photons on both channels', () => {
     const eng = engine(20000);
     eng.run();
-    assert.ok(eng.n_photons() >= 20000, `only ${eng.n_photons()} photons`);
+    // n_photons() is uint64_t, so it comes back as a BigInt -- see the scalar
+    // typemaps in ext/js/jsarrays.i. Comparing it against a length needs the
+    // conversion to be explicit.
+    assert.ok(eng.n_photons() >= 20000n, `only ${eng.n_photons()} photons`);
     const ch = eng.channel();
-    assert.equal(ch.length, eng.n_photons());
+    assert.equal(ch.length, Number(eng.n_photons()));
     // Two channels of equal brightness: neither may be starved.
     const frac0 = Array.from(ch).filter((c) => c === 0).length / ch.length;
     assert.ok(Math.abs(frac0 - 0.5) < 0.05, `channel 0 got ${frac0}`);
@@ -265,7 +268,7 @@ describe('simulator', { skip: !tttrlib.SimEngine && 'built without the photon si
   test('default_json() parses and builds an engine', () => {
     const cfg = tttrlib.SimEngine.default_json();
     assert.equal(typeof JSON.parse(cfg), 'object');
-    assert.equal(tttrlib.SimEngine.from_json(cfg).n_photons(), 0);
+    assert.equal(tttrlib.SimEngine.from_json(cfg).n_photons(), 0n);
   });
 });
 

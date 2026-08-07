@@ -423,6 +423,73 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %}
 
 // ===========================================================================
+// 64-bit integer SCALARS as BigInt
+// ===========================================================================
+//
+// The arrays have always been exact: a macro-time channel comes back as a
+// BigUint64Array and sums past 2^53 without loss. The SCALARS did not --
+// SWIG's Node-API backend routes long long and unsigned long long through
+// Napi::Number, which is an IEEE double, so anything above 2^53 came back
+// silently rounded:
+//
+//     python  uid  14523661926200792394
+//     js      uid  14523661926200793000     off by 606, no warning
+//
+// That is not a JavaScript limitation. BigInt is ES2020 and this binding
+// already relies on it for the arrays; only the scalar path was missing.
+//
+// Scoped to `long long` and `unsigned long long` deliberately. `size_t` and
+// `unsigned long` are also 64-bit on LP64, but they carry counts and lengths --
+// n_rows(), size() -- which every caller does arithmetic on. Turning those into
+// BigInt would break `n + 1` everywhere for no correctness gain, since a count
+// that large is not reachable. std::uint64_t resolves to unsigned long long on
+// macOS and to unsigned long on Linux, so the %apply below names both spellings.
+%typemap(out) long long, const long long&
+  %{ $result = Napi::BigInt::New(env, (int64_t) $1); %}
+%typemap(out) unsigned long long, const unsigned long long&
+  %{ $result = Napi::BigInt::New(env, (uint64_t) $1); %}
+
+// Input accepts a BigInt or a Number. A Number is allowed because most values
+// in this API are small and a caller should not have to write 0n everywhere;
+// it is rejected when it is not an exact integer, so nothing is lost quietly.
+%typemap(in) long long %{
+  if ($input.IsBigInt()) {
+    bool lossless_ = false;
+    $1 = (long long) $input.As<Napi::BigInt>().Int64Value(&lossless_);
+    if (!lossless_) SWIG_exception_fail(SWIG_OverflowError,
+        "BigInt does not fit in a signed 64-bit integer");
+  } else if ($input.IsNumber()) {
+    double d_ = $input.As<Napi::Number>().DoubleValue();
+    if (d_ != (double)(long long) d_) SWIG_exception_fail(SWIG_ValueError,
+        "a 64-bit integer argument needs a BigInt when it is not an exact integer");
+    $1 = (long long) d_;
+  } else {
+    SWIG_exception_fail(SWIG_TypeError, "expected a BigInt or a Number");
+  }
+%}
+%typemap(in) unsigned long long %{
+  if ($input.IsBigInt()) {
+    bool lossless_ = false;
+    $1 = (unsigned long long) $input.As<Napi::BigInt>().Uint64Value(&lossless_);
+    if (!lossless_) SWIG_exception_fail(SWIG_OverflowError,
+        "BigInt does not fit in an unsigned 64-bit integer");
+  } else if ($input.IsNumber()) {
+    double d_ = $input.As<Napi::Number>().DoubleValue();
+    if (d_ < 0 || d_ != (double)(unsigned long long) d_)
+      SWIG_exception_fail(SWIG_ValueError,
+        "a 64-bit integer argument needs a BigInt when it is not an exact integer");
+    $1 = (unsigned long long) d_;
+  } else {
+    SWIG_exception_fail(SWIG_TypeError, "expected a BigInt or a Number");
+  }
+%}
+
+// Overload resolution has to accept both spellings too, or a BigInt argument
+// makes every candidate fail to match.
+%typemap(typecheck, precedence=SWIG_TYPECHECK_INT64) long long, unsigned long long
+  %{ $1 = $input.IsBigInt() || $input.IsNumber(); %}
+
+// ===========================================================================
 // %js_numpy_typemaps(DATA_TYPE, NAPI_TYPE, JS_NAME)
 //   DATA_TYPE : C++ element type (double, unsigned long long, ...)
 //   NAPI_TYPE : napi_typedarray_type enumerator (napi_float64_array, ...)

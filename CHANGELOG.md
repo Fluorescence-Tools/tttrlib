@@ -39,6 +39,22 @@
   its own scope and still feeds only the imaging tags into the header.
 
 ### Fixed
+- **A 64-bit integer returned as a scalar lost precision in JavaScript.** The
+  arrays were always exact — a macro-time channel comes back as a
+  `BigUint64Array` and sums past 2^53 without loss — but SWIG's Node-API
+  backend routed `long long` and `unsigned long long` scalars through
+  `Number`, an IEEE double. A PTO uid of `14523661926200792394` read back as
+  `14523661926200793000`: off by 606, silently. Those scalars are `BigInt`
+  now. Counts stay `Number`: `size_t` and `unsigned long` carry lengths that
+  callers do arithmetic on and cannot reach 2^53.
+
+  **Breaking for JavaScript callers** of anything declared `int64_t` or
+  `uint64_t` — `SimEngine.n_photons()` is the common one. `Number(x)` converts
+  where a plain number is wanted.
+
+  R has the same symptom for a different reason and no such fix: its `integer`
+  is 32-bit and its `numeric` is a double, so a uid is not representable at
+  all. The PTO conformance cases are declared unsupported there.
 - **The R conformance runner passes for the first time** (80/80). Three bugs,
   all in `test/r/conformance.R` and none in the library, from PRD-020's ops
   having been written without an R toolchain to run them against:
