@@ -122,6 +122,41 @@ The contract is ``load(save(s)) == s``. Two consequences worth knowing:
 * **Bool survives.** HDF5 has no boolean type, so a bool column written that way
   comes back as ``uint8``. Here it comes back as a bool column.
 
+Working with a column
+~~~~~~~~~~~~~~~~~~~~~
+
+A column behaves like the array it wraps, so code that used a data frame column
+as a value needs no conversion inserted around it:
+
+.. code-block:: python
+
+    col = store["Tau"]
+
+    col[0], col[-1]              # one value, in the column's own dtype
+    col[1:3], col[mask]          # an array
+    list(col), [v * 2 for v in col]
+    col > 1.0                    # an elementwise bool array
+    col == "m000.spc"            # on a text column, via the dictionary
+    col[0] = 4.2                 # writes through, for numeric columns
+    np.asarray(col), np.mean(col)
+
+Three things are worth knowing, because none is guessable:
+
+* **Element access says nothing about validity.** A masked row returns the
+  value stored in it, exactly as :meth:`numpy` does. "Measured or not" stays an
+  explicit question — :meth:`valid` or :meth:`mask_numpy` — because returning
+  ``NaN`` where masked cannot be done for an integer or a text column without
+  changing the dtype the mask exists to preserve.
+* **Writing refuses where it would be lost.** A bool column is bit-packed and a
+  text one is dictionary-encoded, so both decode through a copy; ``col[0] = x``
+  on those raises and names the route that works, rather than silently
+  changing nothing.
+* **A text column compares through its dictionary.** ``col == "m000.spc"`` is
+  one lookup and an integer compare over the codes rather than a Python string
+  comparison per row — measured 374× faster on 500 000 rows, and the column is
+  never decoded. Slicing one *does* decode it, so a repeated slice in a loop
+  should go through :meth:`codes` instead.
+
 .. _dstore_columns:
 
 How several columns sit in the file

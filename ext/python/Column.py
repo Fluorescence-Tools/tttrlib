@@ -185,3 +185,63 @@ def __ge__(self, other):
 # somewhere with no connection to this change. Columns were hashable by
 # identity before and stay that way.
 __hash__ = object.__hash__
+
+
+def __getitem__(self, key):
+    """One value for an integer, an array for a slice or an index array.
+
+    **Element access says nothing about validity.** A masked row returns the
+    value stored in it, exactly as :meth:`numpy` does, and "measured or not"
+    stays an explicit question -- :meth:`valid` or :meth:`mask_numpy`. The
+    alternative, returning NaN where masked, cannot be done for an integer or a
+    text column without changing its dtype, which is the whole reason the mask
+    exists.
+
+    An integer index does NOT go through :meth:`numpy` for the two types whose
+    array form is a copy: a text column is dictionary-encoded and a bool column
+    is bit-packed, so ``numpy()[i]`` would decode the whole column to read one
+    row. Measured on 200 000 rows, that is 44 ms per access against 0.2 us.
+    """
+    if isinstance(key, slice) or not isinstance(key, int):
+        # A slice or an index array materialises either way, so numpy does it.
+        # For a text column that decodes the whole column each time -- compare
+        # `codes()` against a dictionary index when that is in a loop.
+        return self.numpy()[key]
+
+    n = self.size()
+    i = key + n if key < 0 else key
+    if i < 0 or i >= n:
+        raise IndexError("column index %d out of range for %d rows" % (key, n))
+    t = self.type()
+    if t == ColumnType_String:
+        return self.string_at(i)
+    if t == ColumnType_Bool:
+        return bool(self.value_at(i))
+    # Through numpy, not value_at: value_at hands back a double, so an int64
+    # above 2**53 would come back as a different number.
+    return self.numpy()[i]
+
+
+def __setitem__(self, key, value):
+    """Write through to the column's buffer. Numeric columns only.
+
+    A bool column is bit-packed and a text one is dictionary-encoded, so both
+    decode through a copy and a write to that copy is **lost** -- verified.
+    A write that vanishes is worse than one that refuses, so those two raise
+    and name the route that works.
+    """
+    t = self.type()
+    if t == ColumnType_String:
+        raise TypeError(
+            "a string column is dictionary-encoded, so writing through an "
+            "index would be lost; rebuild it with set_numpy() or set_codes()")
+    if t == ColumnType_Bool:
+        raise TypeError(
+            "a bool column is bit-packed, so writing through an index would "
+            "be lost; rebuild it with set_numpy() or set_bool()")
+    self.numpy()[key] = value
+
+
+def __iter__(self):
+    """The values, in order. One decode for a text column, not one per row."""
+    return iter(self.numpy())

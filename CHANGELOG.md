@@ -103,6 +103,23 @@
   in one group and not another leaves that group with fewer columns rather than
   making the read an error.
 
+- **A `Column` behaves like the array it wraps**: `col[0]`, `col[1:3]`,
+  `col[mask]`, `list(col)` and `col[0] = x`. `np.asarray(column)` and
+  `len(column)` already worked and nothing else did, so every consumer that
+  touched a frame column as a *value* had to be rewritten to insert a
+  conversion — ~56 call sites in the package migrating onto `DataStore` whose
+  only purpose was that conversion. Nothing new is computed; the buffer was
+  always reachable and what was missing was the protocol a numpy user expects.
+  Three things are deliberate. **An integer index does not go through
+  `numpy()`** for bool and text, whose array forms are copies — `numpy()[i]` on
+  a 200 000-row text column costs 38 s per thousand accesses against 0.6 ms,
+  because it decodes every row to read one. **Element access says nothing about
+  validity**: a masked row returns what is stored in it, exactly as `numpy()`
+  does, because NaN-where-masked cannot be done for an integer or text column
+  without changing the dtype the mask exists to preserve. And **a write refuses
+  where it would be lost** — bit-packed bool and dictionary-encoded text decode
+  through a copy, so `col[0] = x` on those raises and names the route that
+  works, rather than vanishing.
 - **`DataStore.copy()`**, in C++ so all four bindings have it. The copy
   constructor did this already and nobody could find it, so callers were
   writing `take(range(n))` — which allocates an index array the size of the

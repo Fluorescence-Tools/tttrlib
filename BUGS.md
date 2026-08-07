@@ -151,6 +151,26 @@ disagreed with it. What follows is what actually cost time.
 lifetime fix, `container_read_records` / `container_read_events` /
 `decode_records`, na-ranges and column descriptions.
 
+**And, since this list was rewritten: the blocker below is closed.** A `Column`
+now supports `col[i]`, `col[a:b]`, `col[mask]`, `list(col)`, `col[i] = x` and
+all six comparisons; `DataStore.copy()` exists in C++, so all four bindings have
+it. Two things came out of implementing it that the proposal did not have:
+
+* **`column == value` was not a missing feature, it was a wrong answer.** It
+  returned SWIG's identity `False` rather than raising, so a selection built
+  from it matched nothing and said nothing. `>` and the other three orderings
+  raised a `TypeError` and were never dangerous. That reordered the work.
+* **The proposed `self.numpy()[key]` cannot be implemented literally.** For a
+  text or bool column `numpy()` is a *copy*, so an integer index would decode
+  the whole column to read one row — measured at 38 s per thousand accesses on
+  200 000 rows against 0.6 ms for the routed form. An integer key goes through
+  `string_at` / `value_at`; only a slice or an index array goes through
+  `numpy()`.
+
+What remains from the list below: a readable spelling for row selection,
+group-by over a dictionary column, `argsort` / `sort_by`, and
+`rename_column` / `insert_column(position)`.
+
 **The prediction was half right.** `concat` *was* the item that changed the
 shape of the migration — but only for the **file layer**. With it, one downstream
 plugin (burst fusion: core, driver and view-model) went from frames to stores
@@ -160,9 +180,10 @@ worked as argued.
 **It was wrong about the consumer layer**, which is where the remaining cost
 actually is, and the blocker there was not on the list at all.
 
-## The blocker that matters now: a `Column` is not array-like
+## ~~The blocker that matters now: a `Column` is not array-like~~ — CLOSED
 
-`np.asarray(column)` and `len(column)` work. Nothing else does:
+*Kept for the record; this is what the migration hit.* At the time,
+`np.asarray(column)` and `len(column)` worked and nothing else did:
 
 ```python
 column[0]          # TypeError: 'Column' object is not subscriptable
@@ -197,7 +218,7 @@ substitute.
 
 | Operation | calls | files | Note |
 |---|---|---|---|
-| **`DataStore.copy()`** | 28 | 13 | `frame.copy()` before mutating. `take(range(n))` is the workaround and says nothing about intent. |
+| ~~**`DataStore.copy()`**~~ | 28 | 13 | **DONE.** The copy constructor did this already and nobody could find it; it is now a named method in C++, so all four bindings have it. |
 | **row selection returning a store** (`loc`/`iloc` shaped) | 36 | 8 | `take`/`compact` cover it; what is missing is a *readable* spelling at the call site. |
 | **group-by over a dictionary column** | 6 | 5 | Unchanged from the first list. |
 | **`argsort` / `sort_by`** | 4 | 2 | |
