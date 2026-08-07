@@ -3,7 +3,80 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-*Nothing open.*
+## A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
+
+Found driving ChiSurf's burst pipeline end to end over a `.pto` built from ten
+`.spc` files: search, change one setting, search again. Each run writes an
+object of kind `burst_table` named `bursts` — correctly, because the older
+result is meant to stay reachable. But `PtoFile.objects()` gives a reader
+nothing to *choose* between them with except tags it has to know to look up
+(`_mmfdb_operation.settings_hash`), and `find(name)` resolves a name that is
+not unique.
+
+The consequence in a reader that does the obvious thing: ndX read every
+`bursts` object and concatenated them side by side, lining up three unrelated
+analyses of 4621, 2318 and 1099 rows against each other and padding the short
+ones — no error, a plot of a mixture of three searches.
+
+```python
+import tttrlib
+f = tttrlib.PtoFile(); f.open("m000.pto")
+names = [(o.uid, o.kind, o.name) for o in f.objects()]
+# [(…, 'burst_table', 'bursts'), (…, 'burst_table', 'bursts'), (…, 'burst_table', 'bursts')]
+f.find("bursts")   # one uid, and nothing says which
+```
+
+Worked around on the reader side (take the last object of the right
+`operation_type`, then only tables whose parent is that one). Two things would
+make that unnecessary, and the second matters more:
+
+* **`objects()` should promise write order.** The workaround leans on it and
+  the header does not say it holds.
+* **A container should be able to say which object is current for a given
+  `(kind, name)`** — a `superseded_by` edge, or a `current` flag the writer
+  moves. Every reader otherwise re-implements "newest wins" and they will not
+  agree; a reader that guesses wrong shows old numbers with no sign of it.
+
+Related and smaller: `Measurement.metadata()` returns `""` for a container
+written by `Measurement.create()`, so nothing at the file level says what the
+measurement *is* while every object below it is richly tagged.
+
+## Tags are appended, never replaced, and nothing dedupes an edge
+
+Same session. Re-running an analysis updates its table in place (good — the
+container does not grow an object per re-run) but every tag written during that
+update is *added* to the object's tag list. The parent edge is written each
+time, so a container analysed three times claimed the same source four times:
+
+```python
+m.parents(uid)   # [6005969235780289] * 4 — one source, recorded four times
+```
+
+Fixed on the ChiSurf side by reading `parents()` first and skipping what is
+already there, which is a workaround for something the writer should not allow:
+`add_tag` on a `PtoType_UID` item that already holds that exact value should
+replace, or the API should expose `set_tag`/`clear_tags(uid, item)` so a caller
+can express "these are the parents" rather than "add a parent".
+
+Worth checking whether the same doubling affects the scalar tags — an object
+re-described three times may hold three `_mmfdb_artifact.row_grain` values with
+readers silently taking the first.
+
+## Not a bug, recorded so it is not re-derived: `.pto` round-trips CLSM markers exactly
+
+`Leica_SP5.ptu` packed into a `.pto` and read back through the container gives
+byte-identical event types, marker routing counts and `CLSMImage` geometry:
+
+```
+event_types  {0: 6596261, 1: 118288}   markers {1: 59133, 2: 58924, 4: 21, 6: 210}
+CLSMImage    n_frames=1 n_lines=7921 n_pixel=256 counts=443139     # both
+```
+
+The `no complete frames; salvaging 1 frame(s) with 7921 line(s)` warning that
+comes with it is **not** a container problem — the raw `.ptu` produces it too.
+It is a marker-configuration question in `CLSMImage` (this file's frame marker
+appears 21 times and is not being used), and it makes the intensity image of a
+standard fixture a 256×7921 stripe instead of 31 frames of 256×256.
 
 ---
 
