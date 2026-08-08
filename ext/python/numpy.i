@@ -115,8 +115,13 @@
     if (py_obj == NULL          ) return "C NULL value";
     if (py_obj == Py_None       ) return "Python None" ;
     if (PyCallable_Check(py_obj)) return "callable"    ;
+%#if PY_MAJOR_VERSION < 3
     if (PyString_Check(  py_obj)) return "string"      ;
     if (PyInt_Check(     py_obj)) return "int"         ;
+%#else
+    if (PyBytes_Check(  py_obj)) return "bytes"       ;
+    if (PyLong_Check(    py_obj)) return "int"         ;
+%#endif
     if (PyFloat_Check(   py_obj)) return "float"       ;
     if (PyDict_Check(    py_obj)) return "dict"        ;
     if (PyList_Check(    py_obj)) return "list"        ;
@@ -2008,7 +2013,11 @@
   (PyObject* array = NULL)
 {
   npy_intp dims[1];
+%#if PY_MAJOR_VERSION < 3
   if (!PyInt_Check($input))
+%#else
+  if (!PyLong_Check($input))
+%#endif
   {
     const char* typestring = pytype_string($input);
     PyErr_Format(PyExc_TypeError,
@@ -2036,7 +2045,11 @@
   (PyObject* array = NULL)
 {
   npy_intp dims[1];
+%#if PY_MAJOR_VERSION < 3
   if (!PyInt_Check($input))
+%#else
+  if (!PyLong_Check($input))
+%#endif
   {
     const char* typestring = pytype_string($input);
     PyErr_Format(PyExc_TypeError,
