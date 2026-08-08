@@ -11,10 +11,13 @@ import unittest
 from pathlib import Path
 
 import numpy as np
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 import pytest
 
 _EXAMPLES = Path(__file__).resolve().parents[3] / "examples" / "single_molecule"
@@ -40,6 +43,11 @@ def _run(path):
 
 
 class TestHmmExample(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if not HAS_MATPLOTLIB:
+            raise unittest.SkipTest("matplotlib not installed")
+
     @pytest.mark.heavy  # 8s
     def test_example_runs_and_recovers_states(self):
         self.assertTrue(EXAMPLE.exists(), f"missing example: {EXAMPLE}")

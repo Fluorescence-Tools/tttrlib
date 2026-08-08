@@ -10,10 +10,13 @@ import runpy
 import unittest
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 import numpy as np
 
@@ -29,6 +32,8 @@ class TestDecayFitInterfaceExample(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if not HAS_MATPLOTLIB:
+            raise unittest.SkipTest("matplotlib not installed")
         if not EXAMPLE.exists():
             raise AssertionError(f"missing example: {EXAMPLE}")
         show = plt.show
