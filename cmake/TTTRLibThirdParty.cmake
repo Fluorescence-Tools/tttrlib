@@ -41,6 +41,14 @@ elseif(TARGET nlohmann_json::nlohmann_json)
 endif()
 add_library(tttrlib::json ALIAS tttrlib_json)
 
+# --- cxxopts ------------------------------------------------------------------
+# Vendored single-header command-line parser (MIT), used by the tttr CLI.
+# Reached as "cxxopts.hpp", so the include directory is thirdparty/cxxopts/.
+_tttrlib_define_interface(tttrlib_cxxopts)
+target_include_directories(tttrlib_cxxopts INTERFACE
+        "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts")
+add_library(tttrlib::cxxopts ALIAS tttrlib_cxxopts)
+
 # --- pocketfft ----------------------------------------------------------------
 # Vendored and header-only. Reached as "pocketfft/pocketfft_hdronly.h", so the
 # include directory is thirdparty/ rather than thirdparty/pocketfft/.

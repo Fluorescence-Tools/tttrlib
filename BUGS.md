@@ -3,6 +3,24 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## `disassemble` does not create the directories an object's name implies
+
+**2026-08-07.** An object name is written out as a *relative path* — which is
+useful, and is what ChiSurf now relies on to address a container like a folder
+(`m000.pto/countrate_All 0.2000#60/bursts`). But the writer does not create the
+directories the name implies, so the first name containing a separator fails:
+
+```
+PtoMfdbError: could not disassemble into /tmp/unpack:
+    cannot create /tmp/unpack/countrate_All 0.2000#30/bursts
+```
+
+Worked around by walking `objects()` and `mkdir(parents=True)`-ing each name's
+parent before the call. Either the writer should do that, or it should say that
+a name is a flat identifier and reject a separator — the present behaviour
+accepts the name and then fails on it, which is the one option that teaches
+nothing.
+
 ## A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
 
 Found driving ChiSurf's burst pipeline end to end over a `.pto` built from ten

@@ -16,6 +16,14 @@
 #include <sys/stat.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+int ptoview_main(int argc, char** argv, const PtoReadFileInfo* info_arg);
+#ifdef __cplusplus
+}
+#endif
+
 static bool g_json = false;
 static bool g_quiet = false;
 static bool g_verbose = false;
@@ -36,9 +44,8 @@ static bool is_known_cmd(const char* c) {
 
 static void print_usage(void) {
     printf(
-        "pto - The PhoTon cOntainer tool (tttrlib PRD-025)\n\n"
+        "PhoTon cOntainer (PTO) - Self-Executing Container (tttrlib PRD-025)\n\n"
         "Usage:\n"
-        "  pto [GLOBAL...] <command> [ARGS...] <file.pto>\n"
         "  ./file.pto [GLOBAL...] [<command>] [ARGS...]\n\n"
         "Commands:\n"
         "  ls, objects              List objects and tags in table format (default)\n"
@@ -49,7 +56,7 @@ static void print_usage(void) {
         "  tags [selector]          List typed metadata tags for container/object\n"
         "  verify                   Validate container EBML framing & CRC checksums\n"
         "  ui, --tui                Launch interactive terminal user interface (TUI)\n"
-        "  bundle <in.pto>          Create executable polyglot bundle (-o out.pto)\n"
+        "  bundle <in.pto>          Create executable container bundle (-o out.pto)\n"
         "  help, -h, --help         Print this help message\n\n"
         "Globals:\n"
         "  --json                   Output machine-readable JSON format\n"
@@ -60,13 +67,11 @@ static void print_usage(void) {
         "  --tui                    Launch interactive TUI reader mode\n"
         "  --version                Print version information\n\n"
         "Examples:\n"
-        "  pto ls run.pto\n"
-        "  pto info run.pto\n"
-        "  pto --tui run.pto\n"
         "  ./run.pto\n"
+        "  ./run.pto info\n"
         "  ./run.pto --tui\n"
         "  ./run.pto cat time_trace > trace.bin\n"
-        "  pto extract m000.ptu -o ./output/ run.pto\n"
+        "  ./run.pto extract m000.ptu -o ./output/\n"
     );
 }
 
@@ -345,64 +350,116 @@ static int cmd_bundle(const char* in_pto, const char* out_com) {
         return 4;
     }
 
-    /* 12624-byte Cosmopolitan APE Polyglot Prefix (P = 12624, P % 8 == 0) */
-    unsigned char ape_head[12618];
-    memset(ape_head, ' ', sizeof(ape_head));
+    /* Check if Cosmopolitan APE machine binary reader (build/pto.com) exists */
+    FILE* fbin = fopen("build/pto.com", "rb");
+    if (!fbin) fbin = fopen("./pto.com", "rb");
+    if (!fbin) fbin = fopen("./tools/pto.com", "rb");
 
-    const char shell_script[] =
-        ": << 'EOF'\n"
-        "@echo off\n"
-        "set \"PTO_FILE=%~f0\"\n"
-        "if \"%PTO_READER%\"==\"\" where ptoview >nul 2>&1 && set \"PTO_READER=ptoview\"\n"
-        "if \"%PTO_READER%\"==\"\" where pto >nul 2>&1 && set \"PTO_READER=pto\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0ptoview.exe\" set \"PTO_READER=%~dp0ptoview.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0pto.exe\" set \"PTO_READER=%~dp0pto.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\tools\\ptoview.exe\" set \"PTO_READER=%~dp0build\\tools\\ptoview.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\tools\\pto.exe\" set \"PTO_READER=%~dp0build\\tools\\pto.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\ptoview.exe\" set \"PTO_READER=%~dp0build\\ptoview.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\pto.exe\" set \"PTO_READER=%~dp0build\\pto.exe\"\n"
-        "if \"%PTO_READER%\"==\"\" set \"PTO_READER=pto\"\n"
-        "\"%PTO_READER%\" \"%PTO_FILE%\" %*\n"
-        "exit /b %ERRORLEVEL%\n"
-        "EOF\n"
-        "pD='\n'\n"
-        "R=\"${PTO_READER:-}\"\n"
-        "tui=0\n"
-        "for a in \"$@\"; do\n"
-        "  if [ \"$a\" = \"--tui\" ] || [ \"$a\" = \"ui\" ] || [ \"$a\" = \"tui\" ]; then tui=1; break; fi\n"
-        "done\n"
-        "if [ -z \"$R\" ]; then\n"
-        "  if [ $tui -eq 1 ]; then\n"
-        "    if command -v ptoview >/dev/null 2>&1; then R=ptoview\n"
-        "    elif [ -x ./ptoview ]; then R=./ptoview\n"
-        "    elif [ -x ./build/tools/ptoview ]; then R=./build/tools/ptoview\n"
-        "    elif [ -x ./tools/ptoview ]; then R=./tools/ptoview\n"
-        "    else R=ptoview; fi\n"
-        "  else\n"
-        "    if command -v pto >/dev/null 2>&1; then R=pto\n"
-        "    elif [ -x ./pto ]; then R=./pto\n"
-        "    elif [ -x ./build/tools/pto ]; then R=./build/tools/pto\n"
-        "    elif [ -x ./tools/pto ]; then R=./tools/pto\n"
-        "    else R=pto; fi\n"
-        "  fi\n"
-        "fi\n"
-        "exec \"$R\" \"$0\" \"$@\"\n"
-        "exit 0\n";
-    memcpy(ape_head, shell_script, strlen(shell_script));
+    if (fbin) {
+        /* Embed native Cosmopolitan APE binary prefix directly */
+        fseek(fbin, 0, SEEK_END);
+        long bin_size = ftell(fbin);
+        fseek(fbin, 0, SEEK_SET);
 
-    fwrite(ape_head, 1, sizeof(ape_head), fout);
+        unsigned char* bin_buf = (unsigned char*)malloc(bin_size);
+        if (bin_buf && fread(bin_buf, 1, bin_size, fbin) == (size_t)bin_size) {
+            fwrite(bin_buf, 1, bin_size, fout);
+            uint64_t pad = (8 - (bin_size % 8)) % 8;
+            if (pad > 0) {
+                unsigned char pad_buf[8] = {0};
+                fwrite(pad_buf, 1, pad, fout);
+            }
+            free(bin_buf);
+        }
+        fclose(fbin);
+    } else {
+        /* 12624-byte Cosmopolitan APE Polyglot Script Prefix (P = 12624, P % 8 == 0) */
+        unsigned char ape_head[12618];
+        memset(ape_head, ' ', sizeof(ape_head));
 
-    /* Void element (6 bytes) to bring P to 12624 (12624 % 8 == 0) */
-    unsigned char void_pad[6] = {PTO_ID_VOID, 0x84, 0x00, 0x00, 0x00, 0x00};
-    fwrite(void_pad, 1, sizeof(void_pad), fout);
+        ape_head[0] = 0x4D; ape_head[1] = 0x5A; ape_head[2] = 0x71; ape_head[3] = 0x46; /* MZqF */
+        ape_head[4] = '='; ape_head[5] = '\''; ape_head[6] = '\n';
+
+        /* e_lfanew pointer at 0x3C pointing to PE header at 0x80 */
+        ape_head[0x3C] = 0x80; ape_head[0x3D] = 0x00; ape_head[0x3E] = 0x00; ape_head[0x3F] = 0x00;
+
+        /* PE Signature 'PE\0\0' at 0x80 */
+        ape_head[0x80] = 'P'; ape_head[0x81] = 'E'; ape_head[0x82] = 0; ape_head[0x83] = 0;
+        /* IMAGE_FILE_HEADER at 0x84 (20 bytes) */
+        ape_head[0x84] = 0x64; ape_head[0x85] = 0x86; /* Machine: AMD64 (0x8664) */
+        ape_head[0x86] = 0x01; ape_head[0x87] = 0x00; /* NumberOfSections: 1 */
+        ape_head[0x94] = 0xF0; ape_head[0x95] = 0x00; /* SizeOfOptionalHeader: 240 (0xF0) */
+        ape_head[0x96] = 0x22; ape_head[0x97] = 0x00; /* Characteristics: EXECUTABLE | LARGE_ADDRESS_AWARE */
+
+        /* IMAGE_OPTIONAL_HEADER64 at 0x98 (240 bytes) */
+        ape_head[0x98] = 0x0B; ape_head[0x99] = 0x02; /* Magic: PE32+ (0x020B) */
+        ape_head[0x9A] = 0x02; ape_head[0x9B] = 0x19; /* Linker Version: 2.25 */
+        ape_head[0x9C] = 0x00; ape_head[0x9D] = 0x10; ape_head[0x9E] = 0x00; ape_head[0x9F] = 0x00; /* SizeOfCode: 4096 */
+        ape_head[0xA0] = 0x00; ape_head[0xA1] = 0x10; ape_head[0xA2] = 0x00; ape_head[0xA3] = 0x00; /* SizeOfInitializedData: 4096 */
+        ape_head[0xA8] = 0x00; ape_head[0xA9] = 0x10; ape_head[0xAA] = 0x00; ape_head[0xAB] = 0x00; /* AddressOfEntryPoint: 0x1000 */
+        ape_head[0xAC] = 0x00; ape_head[0xAD] = 0x10; ape_head[0xAE] = 0x00; ape_head[0xAF] = 0x00; /* BaseOfCode: 0x1000 */
+        ape_head[0xB2] = 0x40; /* ImageBase = 0x00400000 */
+        ape_head[0xB8] = 0x00; ape_head[0xB9] = 0x10; ape_head[0xBA] = 0x00; ape_head[0xBB] = 0x00; /* SectionAlignment = 4096 */
+        ape_head[0xBC] = 0x00; ape_head[0xBD] = 0x02; ape_head[0xBE] = 0x00; ape_head[0xBF] = 0x00; /* FileAlignment = 512 */
+        ape_head[0xC0] = 0x06; ape_head[0xC8] = 0x06; /* OS / Subsystem Version 6.0 */
+        ape_head[0xD0] = 0x00; ape_head[0xD1] = 0x20; ape_head[0xD2] = 0x00; ape_head[0xD3] = 0x00; /* SizeOfImage = 0x2000 */
+        ape_head[0xD4] = 0x00; ape_head[0xD5] = 0x04; ape_head[0xD6] = 0x00; ape_head[0xD7] = 0x00; /* SizeOfHeaders = 0x400 */
+        ape_head[0xDC] = 0x03; ape_head[0xDD] = 0x00; /* Subsystem: 3 (IMAGE_SUBSYSTEM_WINDOWS_CUI = Console App) */
+        ape_head[0xE2] = 0x80; /* StackReserve = 8MB */
+        ape_head[0xE9] = 0x10; /* StackCommit = 4KB */
+        ape_head[0xF2] = 0x10; /* HeapReserve = 1MB */
+        ape_head[0xF9] = 0x10; /* HeapCommit = 4KB */
+
+        ape_head[0xFD] = '\''; ape_head[0xFE] = '\n';
+
+        const char shell_script[] =
+            ": << 'EOF'\n"
+            "@echo off\n"
+            "set \"PTO_FILE=%~f0\"\n"
+            "if \"%PTO_READER%\"==\"\" where ptoview >nul 2>&1 && set \"PTO_READER=ptoview\"\n"
+            "if \"%PTO_READER%\"==\"\" where pto >nul 2>&1 && set \"PTO_READER=pto\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0ptoview.exe\" set \"PTO_READER=%~dp0ptoview.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0pto.exe\" set \"PTO_READER=%~dp0pto.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\tools\\ptoview.exe\" set \"PTO_READER=%~dp0build\\tools\\ptoview.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\tools\\pto.exe\" set \"PTO_READER=%~dp0build\\tools\\pto.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\ptoview.exe\" set \"PTO_READER=%~dp0build\\ptoview.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" if exist \"%~dp0build\\pto.exe\" set \"PTO_READER=%~dp0build\\pto.exe\"\n"
+            "if \"%PTO_READER%\"==\"\" set \"PTO_READER=pto\"\n"
+            "\"%PTO_READER%\" \"%PTO_FILE%\" %*\n"
+            "exit /b %ERRORLEVEL%\n"
+            "EOF\n"
+            "pD='\n'\n"
+            "R=\"${PTO_READER:-}\"\n"
+            "tui=0\n"
+            "for a in \"$@\"; do\n"
+            "  if [ \"$a\" = \"--tui\" ] || [ \"$a\" = \"ui\" ] || [ \"$a\" = \"tui\" ]; then tui=1; break; fi\n"
+            "done\n"
+            "if [ -z \"$R\" ]; then\n"
+            "  if [ $tui -eq 1 ]; then\n"
+            "    if command -v ptoview >/dev/null 2>&1; then R=ptoview\n"
+            "    elif [ -x ./ptoview ]; then R=./ptoview\n"
+            "    elif [ -x ./build/tools/ptoview ]; then R=./build/tools/ptoview\n"
+            "    elif [ -x ./tools/ptoview ]; then R=./tools/ptoview\n"
+            "    else R=ptoview; fi\n"
+            "  else\n"
+            "    if command -v pto >/dev/null 2>&1; then R=pto\n"
+            "    elif [ -x ./pto ]; then R=./pto\n"
+            "    elif [ -x ./build/tools/pto ]; then R=./build/tools/pto\n"
+            "    elif [ -x ./tools/pto ]; then R=./tools/pto\n"
+            "    else R=pto; fi\n"
+            "  fi\n"
+            "fi\n"
+            "exec \"$R\" \"$0\" \"$@\"\n"
+            "exit 0\n";
+        memcpy(ape_head + 0x100, shell_script, strlen(shell_script));
+        fwrite(ape_head, 1, sizeof(ape_head), fout);
+
+        /* Void element (6 bytes) to bring P to 12624 (12624 % 8 == 0) */
+        unsigned char void_pad[6] = {PTO_ID_VOID, 0x84, 0x00, 0x00, 0x00, 0x00};
+        fwrite(void_pad, 1, sizeof(void_pad), fout);
+    }
 
     uint64_t P = (uint64_t)ftell(fout);
-    if (P != 12624 || P % 8 != 0) {
-        fprintf(stderr, "error: internal bundling assertion failed: P = %" PRIu64 " is not a multiple of 8\n", P);
-        free(container_buf);
-        fclose(fout);
-        return 1;
-    }
 
     fwrite(container_buf + payload_offset, 1, file_size - payload_offset, fout);
     free(container_buf);
@@ -446,6 +503,8 @@ int main(int argc, char** argv) {
             g_force_mode = 1;
         } else if (strcmp(arg, "--name") == 0) {
             g_force_mode = 2;
+        } else if (strcmp(arg, "--tui") == 0 || strcmp(arg, "ui") == 0 || strcmp(arg, "tui") == 0) {
+            /* Recognized TUI flag */
         } else if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0) {
             print_usage();
             return 0;
@@ -467,7 +526,11 @@ int main(int argc, char** argv) {
 
     /* Search for a known command among arguments */
     for (int k = 1; k < argc; k++) {
-        if (argv[k][0] != '-') {
+        if (strcmp(argv[k], "--tui") == 0 || strcmp(argv[k], "ui") == 0 || strcmp(argv[k], "tui") == 0) {
+            cmd = "ui";
+            cmd_idx = k;
+            break;
+        } else if (argv[k][0] != '-') {
             if (k > 1 && strcmp(argv[k - 1], "-o") == 0) continue;
             if (is_known_cmd(argv[k])) {
                 cmd = argv[k];
@@ -581,7 +644,9 @@ int main(int argc, char** argv) {
     }
 
     int status = 0;
-    if (strcmp(cmd, "ls") == 0 || strcmp(cmd, "objects") == 0) {
+    if (strcmp(cmd, "ui") == 0 || strcmp(cmd, "tui") == 0 || strcmp(cmd, "--tui") == 0) {
+        status = ptoview_main(argc, argv, infop);
+    } else if (strcmp(cmd, "ls") == 0 || strcmp(cmd, "objects") == 0) {
         status = cmd_ls(infop);
     } else if (strcmp(cmd, "tree") == 0) {
         status = cmd_tree(infop);

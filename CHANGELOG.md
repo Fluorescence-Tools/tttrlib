@@ -182,6 +182,30 @@
   the same place and holds text, so only the decode differs.
 
 ### Fixed
+- **Two processes could open the same `.pto` for writing, and neither was
+  told.** `PtoFile::open(writable=true)` used `"r+b"` and `create` used `"w+b"`,
+  with no lock and no question asked, so both writers succeeded immediately.
+  Each holds its own slot table, freelist and generation counter and nothing is
+  visible until `commit()`, so they allocate from freelists computed before
+  either committed: the last commit decides what the file says, and the loser's
+  bytes stay in it, reachable through the winner's index. The observed damage
+  was a burst table holding rows no single code path produces — `Duration
+  (ms) = 0.0` beside 1951 photons, and a mean macro time of 7.1e12 ms in a 707 s
+  measurement — with the photon streams clean and two independent decoders
+  reading the table back identically.
+  A writer now takes an **exclusive advisory lock** on the container
+  (`flock(LOCK_EX | LOCK_NB)`, `LockFileEx` with `LOCKFILE_FAIL_IMMEDIATELY`)
+  and a second one is refused with *"… is open for writing elsewhere"*.
+  **Readers are untouched** — a viewer open during an analysis is the normal
+  case, and the commit-on-write design already has the reader seeing the
+  pre-commit state. **The refusal is immediate**, never a wait: a writer that
+  blocks is indistinguishable from a writer that hung. `create` takes the lock
+  *before* it truncates, so being refused cannot destroy the file. The lock is
+  released by `close()`, by the failure path of a rejected `open` — it is taken
+  before the container is parsed, so everything the parser rejects would
+  otherwise stay locked — and by the kernel when a writer dies, which is what a
+  sidecar lock file cannot promise. Filesystems with no locking (some network
+  mounts) open as before rather than becoming unusable.
 - **`write_csv` wrote its constant cells unquoted**, so `na_rep="a,b"` produced
   a file with a phantom column that did not read back — while the header three
   lines away quoted the same string correctly. The null, true, false and NaN

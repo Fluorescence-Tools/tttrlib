@@ -41,4 +41,8 @@ add_subdirectory(registry)   # calls into burst
 add_subdirectory(hmm)
 add_subdirectory(pda)
 
+# The tttr CLI. Last: it reads the module include-dir property, which is only
+# complete once every other module has declared itself.
+add_subdirectory(cli)
+
 tttrlib_finalize_modules()

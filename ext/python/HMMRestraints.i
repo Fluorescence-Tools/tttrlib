@@ -25,8 +25,6 @@
 
 %include "HMMRestraints.h"
 
-%exception;   // scoped to this header only
-
 #ifdef SWIGPYTHON
 %extend tttrlib::HmmRestraints {
 %pythoncode %{

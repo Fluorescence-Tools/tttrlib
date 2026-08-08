@@ -110,8 +110,6 @@ TTTRLIB_NOGIL(TTTR::burst_search_bayesian_blocks)
 
 %include "TTTR.h"
 
-%exception;   // scoped to this header only
-
 #ifdef SWIGPYTHON
 %extend TTTR{%pythoncode "./ext/python/TTTR.py"}
 #endif

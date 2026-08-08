@@ -83,9 +83,16 @@ TTTRLIB_NOGIL(tttrlib::HMM::sample_paths)
 // Same ordering reason as above: HMM.h's `sample` returns an HmmPosterior.
 %include "HMMBayes.h"
 
-%include "HMM.h"
+// Return the HMM decoded photon/state offsets only where 64-bit containers
+// are representable (Python via numpy, Java via long[]); R/JS cannot proxy
+// std::vector<int64_t> and, on LP64 Linux, SWIG would not even emit a
+// compilable R/JS wrapper for them.
+#if defined(SWIGR) || defined(SWIGJAVASCRIPT)
+%ignore tttrlib::HMM::get_offsets;
+%ignore tttrlib::HMM::get_photon_index;
+#endif
 
-%exception;   // scoped to this header only
+%include "HMM.h"
 
 #ifdef SWIGPYTHON
 %extend tttrlib::HmmModel {

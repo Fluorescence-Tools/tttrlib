@@ -1,6 +1,9 @@
 # PRD-025 — A container you can read
 
-> **PRD #:** 025 · **Status:** 🔵 Proposed · **Created:** 2026-08-07 · **Updated:** 2026-08-07 · **Owner:** tpeulen
+> **PRD #:** 025 · **Status:** 🔵 Proposed · **Created:** 2026-08-07 · **Updated:** 2026-08-08 · **Owner:** tpeulen
+
+> [!NOTE]
+> **Change of Plan (2026-08-08):** Executable binary target is restricted strictly to **Linux** (ELF64) and **macOS** (Mach-O 64-bit) binary framing. Multi-platform APE / PE-COFF wrapping has been superseded. Full C99 decoding instructions, ASCII parsing code for coding agents, and embedded TTTR format (`fmt`) definitions are specified in [`pto-binary-decoding.md`](file:///Users/tpeulen/dev/tttrlib/okf/specs/pto-binary-decoding.md).
 
 ## Summary
 

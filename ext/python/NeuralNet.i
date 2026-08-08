@@ -25,8 +25,6 @@ TTTRLIB_NOGIL(tttrlib::NeuralNet::train)
 
 %include "NeuralNet.h"
 
-%exception;
-
 #ifdef SWIGPYTHON
 %extend tttrlib::NeuralNet {
     %pythoncode %{

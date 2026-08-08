@@ -33,9 +33,6 @@ TTTRLIB_NOGIL(tttrlib::HmmSurrogate::generate_training_set)
         return {X, Y};
     }
 }
-
-%exception;
-
 #ifdef SWIGPYTHON
 %extend tttrlib::HmmSurrogate {
     %pythoncode %{

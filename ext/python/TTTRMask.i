@@ -65,5 +65,3 @@
 }
 
 %include "TTTRMask.h"
-
-%exception;   // scoped to this header only

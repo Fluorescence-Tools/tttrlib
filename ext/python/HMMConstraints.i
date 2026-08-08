@@ -28,8 +28,6 @@
 
 %include "HMMConstraints.h"
 
-%exception;   // scoped to this header only
-
 #ifdef SWIGPYTHON
 %extend tttrlib::HmmConstraints {
 

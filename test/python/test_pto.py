@@ -12,6 +12,7 @@ so the parts tested here are the parts that are actually about photons.
 """
 import os
 import struct
+import textwrap
 
 import numpy as np
 import pytest
@@ -1513,3 +1514,145 @@ def test_a_header_declaring_wider_ids_than_we_parse_is_refused(small_container, 
     f = tttrlib.PtoFile()
     assert f.open(str(out)) is False
     assert "wider" in f.error()
+
+
+# -- one writer at a time ------------------------------------------------------
+#
+# Two writers each hold their own slot table, freelist and generation counter,
+# and nothing is visible until commit(), so they allocate from freelists
+# computed before either committed. The last commit wins, and the loser's bytes
+# are still in the file being pointed at by the winner's index -- which is how a
+# burst table came back with a duration of zero beside 1951 photons. Nothing
+# afterwards says two writers were there, so this has to be refused up front.
+
+
+def _in_another_process(body, *args):
+    """Run `body` in a fresh interpreter, and give back what it printed."""
+    import subprocess
+    import sys
+    src = "import tttrlib, os, sys\n" + textwrap.dedent(body)
+    r = subprocess.run([sys.executable, "-c", src, *map(str, args)],
+                       capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    return r.stdout.strip()
+
+
+def test_a_second_writer_is_refused_while_the_first_holds_the_file(made):
+    path = made[0]
+    first = tttrlib.PtoFile()
+    assert first.open(path, True), first.error()
+    try:
+        out = _in_another_process("""
+            f = tttrlib.PtoFile()
+            print("ok" if f.open(sys.argv[1], True) else "refused", f.error())
+            """, path)
+    finally:
+        first.close()
+    assert out.startswith("refused"), out
+    assert "open for writing elsewhere" in out
+
+
+def test_a_refused_writer_fails_at_once_rather_than_waiting(made):
+    """A writer that blocks is indistinguishable from one that hung: an
+    analysis legitimately taking a minute gives the caller no way to tell."""
+    import time
+    path = made[0]
+    first = tttrlib.PtoFile()
+    assert first.open(path, True), first.error()
+    try:
+        t0 = time.time()
+        second = tttrlib.PtoFile()
+        assert second.open(path, True) is False
+        assert time.time() - t0 < 2.0
+    finally:
+        first.close()
+
+
+def test_a_reader_is_not_locked_out_while_a_writer_holds_the_file(made):
+    """A viewer open during an analysis is the normal case, and the format
+    already accounts for the reader seeing the pre-commit state."""
+    path, uid_photons = made[0], made[1]
+    first = tttrlib.PtoFile()
+    assert first.open(path, True), first.error()
+    try:
+        reader = tttrlib.PtoFile()
+        assert reader.open(path, False), reader.error()
+        assert reader.n_objects() == 3
+        assert len(reader.read(uid_photons)) > 0
+        reader.close()
+
+        out = _in_another_process("""
+            f = tttrlib.PtoFile()
+            print("ok" if f.open(sys.argv[1], False) else "refused", f.n_objects())
+            """, path)
+        assert out == "ok 3", out
+    finally:
+        first.close()
+
+
+def test_create_refuses_rather_than_truncating_a_held_container(made):
+    """`create` truncates, so it has to take the lock before it does -- not
+    fopen("w+b") and then ask. Getting this backwards destroys the file it is
+    about to be told it may not have."""
+    path = made[0]
+    before = os.path.getsize(path)
+    first = tttrlib.PtoFile()
+    assert first.open(path, True), first.error()
+    try:
+        usurper = tttrlib.PtoFile()
+        assert usurper.create(path, "usurper") is False
+        assert "open for writing elsewhere" in usurper.error()
+        assert first.n_objects() == 3
+    finally:
+        first.close()
+    assert os.path.getsize(path) == before
+
+
+def test_closing_releases_the_lock(made):
+    path = made[0]
+    first = tttrlib.PtoFile()
+    assert first.open(path, True), first.error()
+    first.close()
+    second = tttrlib.PtoFile()
+    assert second.open(path, True), second.error()
+    second.close()
+
+
+def test_a_refused_open_does_not_leave_the_file_locked(tmp_path):
+    """The failure path has to drop the lock too. It is taken before the
+    container is parsed, so everything the parser rejects -- not EBML, not PTO,
+    damaged, too new -- runs with the lock held."""
+    junk = tmp_path / "junk.pto"
+    junk.write_bytes(b"nothing like an EBML header" * 8)
+
+    bad = tttrlib.PtoFile()
+    assert bad.open(str(junk), True) is False
+    assert "not an EBML file" in bad.error()
+
+    again = tttrlib.PtoFile()
+    assert again.open(str(junk), True) is False
+    assert "not an EBML file" in again.error(), "the rejected open kept the lock"
+
+    out = _in_another_process("""
+        f = tttrlib.PtoFile()
+        f.open(sys.argv[1], True)
+        print(f.error())
+        """, str(junk))
+    assert "not an EBML file" in out, "the rejected open kept the lock"
+
+
+def test_a_writer_that_dies_does_not_lock_the_file_forever(made):
+    """The lock is on the descriptor, so the kernel drops it when the process
+    goes -- no stale lock to clean up, which a sidecar file cannot promise."""
+    path = made[0]
+    out = _in_another_process("""
+        f = tttrlib.PtoFile()
+        f.open(sys.argv[1], True)
+        print("held")
+        sys.stdout.flush()
+        os._exit(0)                     # no close(), no destructor
+        """, path)
+    assert out == "held"
+    after = tttrlib.PtoFile()
+    assert after.open(path, True), after.error()
+    after.close()

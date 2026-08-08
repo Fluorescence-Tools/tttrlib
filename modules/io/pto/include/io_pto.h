@@ -248,10 +248,31 @@ public:
     PtoFile(const PtoFile&) = delete;
     PtoFile& operator=(const PtoFile&) = delete;
 
-    /// Create an empty container, replacing anything already at `filename`.
+    /*!
+     * \brief Create an empty container, replacing anything already at `filename`.
+     *
+     * Takes the writer lock (see \ref open) *before* truncating, so being
+     * refused cannot destroy a container someone else is writing.
+     */
     bool create(const std::string& filename, const std::string& title = "");
 
-    /// Open an existing one. \param writable false opens it read-only.
+    /*!
+     * \brief Open an existing one. \param writable false opens it read-only.
+     *
+     * \par One writer at a time
+     * A writable open takes an exclusive advisory lock on the file and returns
+     * false at once -- never blocking -- if another process or another
+     * `PtoFile` already holds it; \ref error then says it is open for writing
+     * elsewhere. Two writers each carry their own slot table, freelist and
+     * generation counter and nothing is visible until \ref commit, so letting
+     * both proceed means the second commit publishes an index over the first
+     * writer's bytes. A read-only open never takes the lock, because a viewer
+     * open during an analysis is the normal case and this format already has
+     * the reader seeing the pre-commit state.
+     *
+     * The lock lives on the descriptor: \ref close drops it, so does a failed
+     * open, and so does the process ending, however it ends.
+     */
     bool open(const std::string& filename, bool writable = false);
 
     bool is_open() const;

@@ -106,7 +106,7 @@ typedef struct {
     uint64_t created;
     char muxing_app[256];
     char writing_app[256];
-    char banner[1024];
+    char banner[4096];
     uint64_t doctype_version;
     uint64_t doctype_read_version;
     uint64_t ebml_offset;

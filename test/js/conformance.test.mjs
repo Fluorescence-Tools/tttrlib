@@ -414,9 +414,9 @@ function makeOps(ctx) {
     // typemaps.
     'table.read': (on, a) => {
       const s = new tttrlib.DataStore();
-      tttrlib.read_table_into(s, a[0], a[1] ?? '',
-                              new tttrlib.VectorString(a[2] ?? []),
-                              a[3] ?? 0, a[4] ?? 0);
+      const cols = a[2] ?? [];
+      tttrlib.read_table_into(s, a[0], a[1] ?? '', cols,
+                              BigInt(a[3] ?? 0), BigInt(a[4] ?? 0));
       return s;
     },
     'table.write': (on, a) => tttrlib.write_table(a[0], a[1], a[2] ?? '', false),

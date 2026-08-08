@@ -500,7 +500,7 @@ extern "C" int ptoview_main(int argc, char** argv, const PtoReadFileInfo* info_a
     return 0;
 }
 
-#ifndef PTO_HAS_TUI
+#ifndef PTO_NO_MAIN
 int main(int argc, char** argv) {
     return ptoview_main(argc, argv, NULL);
 }

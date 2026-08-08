@@ -43,6 +43,8 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [022](PRD-022-column-metadata.md) | A column is described, not just named | 🟢 Done |
 | [023](PRD-023-one-table-access-vocabulary.md) | One vocabulary for a table in a file, whatever the file is | 🟢 Done |
 | [024](PRD-024-one-way-to-open-a-file.md) | What is this file, and open it as that | 🔵 Proposed |
+| [025](PRD-025-executable-pto-containers.md) | A container you can read | 🔵 Proposed |
+| [026](PRD-026-mfd-sim-to-ndx-pto-pipeline.md) | Simulated MFD burst pipeline to an ndx-conformant `.pto` | 🔵 Proposed |
 
 **019** is yellow rather than green for one reason: criterion 21 asks for the
 same assertions from Python, R, Java and JavaScript in the PRD-015 conformance

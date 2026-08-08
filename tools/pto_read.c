@@ -311,29 +311,21 @@ int pto_read_open(const char* filename, PtoReadFileInfo* info) {
     info->file_size = (uint64_t)ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    /* Check offset 0 first, then fallback to executable bundle offset 12624 */
+    /* Check offset 0 first, then scan for PTO_ID_EBML in Cosmopolitan APE binary prefix */
     bool found_ebml = false;
     uint32_t id = 0, hlen = 0;
     uint64_t size = 0;
     if (read_elem_header(fp, 0, &id, &size, &hlen) && id == PTO_ID_EBML) {
         found_ebml = true;
         info->ebml_offset = 0;
-    } else if (info->file_size >= 12624 && read_elem_header(fp, 12624, &id, &size, &hlen) && id == PTO_ID_EBML) {
-        found_ebml = true;
-        info->ebml_offset = 12624;
     } else {
-        /* Scan up to 4 elements / 2MB prefix */
-        uint64_t offset = 0;
-        int max_skips = 4;
-        const uint64_t max_bytes = 2097152;
-        while (offset < max_bytes && max_skips-- > 0) {
-            if (read_elem_header(fp, offset, &id, &size, &hlen) && id == PTO_ID_EBML) {
+        uint64_t max_bytes = info->file_size > 8388608 ? 8388608 : info->file_size;
+        for (uint64_t off = 0; off + 4 <= max_bytes; off++) {
+            if (read_elem_header(fp, off, &id, &size, &hlen) && id == PTO_ID_EBML) {
                 found_ebml = true;
-                info->ebml_offset = offset;
+                info->ebml_offset = off;
                 break;
             }
-            if (size == 0) break;
-            offset += hlen + size;
         }
     }
 

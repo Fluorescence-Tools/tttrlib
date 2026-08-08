@@ -10,12 +10,27 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <functional>
 #include <random>
 #include <stdexcept>
+
+// For the writer lock: an exclusive advisory lock on the container, taken
+// before it is truncated, so two writers cannot both believe they own it.
+#ifdef _WIN32
+#  include <windows.h>
+#  include <io.h>
+#  include <fcntl.h>
+#  include <share.h>
+#  include <sys/stat.h>
+#else
+#  include <fcntl.h>
+#  include <sys/file.h>
+#  include <unistd.h>
+#endif
 
 namespace tttrlib {
 namespace io {
@@ -340,8 +355,29 @@ std::string get_text(const unsigned char* p, std::uint64_t n) {
 
 // --- the file ---------------------------------------------------------------
 
+#ifdef _WIN32
+/*!
+ * \brief Where the writer lock lives: one byte far past any real end of file.
+ *
+ * A Windows byte-range lock is mandatory -- it stops other processes *reading*
+ * the locked range, not just writing it -- so locking byte 0 would shut out the
+ * readers this lock exists to leave alone. A byte nothing will ever hold data
+ * at makes it a pure flag. POSIX has no equivalent problem: `flock` takes no
+ * range and readers never ask for the lock.
+ */
+const std::uint32_t kLockOffsetLo = 0;
+const std::uint32_t kLockOffsetHi = 0x7FFFFFFF;
+#endif
+
 class File {
 public:
+    /// What \ref open_exclusive did about the lock.
+    enum LockResult {
+        kLockTaken,       ///< we hold it
+        kLockBusy,        ///< someone else holds it; nothing was opened
+        kLockUnsupported  ///< the filesystem has no locks; the file is open anyway
+    };
+
     File() = default;
     ~File() { close(); }
     File(const File&) = delete;
@@ -352,9 +388,99 @@ public:
         f_ = std::fopen(path.c_str(), mode);
         return f_ != nullptr;
     }
+
+    /*!
+     * \brief Open for writing, holding an exclusive advisory lock.
+     *
+     * The lock is taken on the descriptor before the file is truncated, so a
+     * `create` against a container someone else is writing fails without having
+     * destroyed it -- which is why this cannot be `fopen("w+b")` plus a lock.
+     *
+     * \param create make the file if it is missing, and truncate it. False
+     *        opens an existing file and fails if there is none.
+     * \param why set on every return; see \ref LockResult.
+     */
+    bool open_exclusive(const std::string& path, bool create, LockResult* why) {
+        close();
+        *why = kLockTaken;
+#ifdef _WIN32
+        const int flags = _O_RDWR | _O_BINARY | (create ? (_O_CREAT) : 0);
+        int fd = -1;
+        if (::_sopen_s(&fd, path.c_str(), flags, _SH_DENYNO,
+                       _S_IREAD | _S_IWRITE) != 0 || fd < 0)
+            return false;
+        HANDLE h = reinterpret_cast<HANDLE>(::_get_osfhandle(fd));
+        if (h != INVALID_HANDLE_VALUE) {
+            OVERLAPPED ov;
+            std::memset(&ov, 0, sizeof(ov));
+            ov.Offset = kLockOffsetLo;
+            ov.OffsetHigh = kLockOffsetHi;
+            if (::LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY,
+                             0, 1, 0, &ov)) {
+                locked_ = true;
+            } else {
+                const DWORD e = ::GetLastError();
+                if (e == ERROR_LOCK_VIOLATION || e == ERROR_SHARING_VIOLATION) {
+                    ::_close(fd);
+                    *why = kLockBusy;
+                    return false;
+                }
+                *why = kLockUnsupported;
+            }
+        } else {
+            *why = kLockUnsupported;
+        }
+        if (create && ::_chsize_s(fd, 0) != 0) { ::_close(fd); return false; }
+        f_ = ::_fdopen(fd, "r+b");
+#else
+        const int flags = O_RDWR | (create ? O_CREAT : 0);
+        int fd = ::open(path.c_str(), flags, 0666);
+        if (fd < 0) return false;
+        int rc = 0;
+        do { rc = ::flock(fd, LOCK_EX | LOCK_NB); } while (rc != 0 && errno == EINTR);
+        if (rc == 0) {
+            locked_ = true;
+        } else if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EACCES) {
+            ::close(fd);
+            *why = kLockBusy;
+            return false;
+        } else {
+            // Some network mounts have no flock at all. Refusing to open there
+            // would trade a rare race for a filesystem the library cannot use.
+            *why = kLockUnsupported;
+        }
+        if (create && ::ftruncate(fd, 0) != 0) { ::close(fd); return false; }
+        f_ = ::fdopen(fd, "r+b");
+#endif
+        if (f_ == nullptr) {
+            unlock_fd(fd);
+#ifdef _WIN32
+            ::_close(fd);
+#else
+            ::close(fd);
+#endif
+            locked_ = false;
+            return false;
+        }
+        return true;
+    }
+
     bool ok() const { return f_ != nullptr; }
     std::FILE* get() const { return f_; }
-    void close() { if (f_) { std::fclose(f_); f_ = nullptr; } }
+    void close() {
+        if (f_) {
+            if (locked_) {
+#ifdef _WIN32
+                unlock_fd(::_fileno(f_));
+#else
+                unlock_fd(::fileno(f_));
+#endif
+                locked_ = false;
+            }
+            std::fclose(f_);
+            f_ = nullptr;
+        }
+    }
 
     bool seek(std::uint64_t off) {
         return std::fseek(f_, static_cast<long>(off), SEEK_SET) == 0;
@@ -379,7 +505,23 @@ public:
     void flush() { std::fflush(f_); }
 
 private:
+    static void unlock_fd(int fd) {
+        if (fd < 0) return;
+#ifdef _WIN32
+        HANDLE h = reinterpret_cast<HANDLE>(::_get_osfhandle(fd));
+        if (h == INVALID_HANDLE_VALUE) return;
+        OVERLAPPED ov;
+        std::memset(&ov, 0, sizeof(ov));
+        ov.Offset = kLockOffsetLo;
+        ov.OffsetHigh = kLockOffsetHi;
+        ::UnlockFileEx(h, 0, 1, 0, &ov);
+#else
+        ::flock(fd, LOCK_UN);
+#endif
+    }
+
     std::FILE* f_ = nullptr;
+    bool locked_ = false;
 };
 
 /*!
@@ -491,6 +633,19 @@ struct PtoFile::Impl {
     bool align_payloads = true;
 
     bool fail(const std::string& why) { err = why; return false; }
+
+    /// Fail out of \ref PtoFile::open or \ref PtoFile::create. Closing the file
+    /// is the point: it drops the writer lock, so a container rejected halfway
+    /// through parsing does not stay locked for the life of the process.
+    bool fail_open(const std::string& why) { close_failed(); return fail(why); }
+    /// The same, for a step that has already set \ref err.
+    bool fail_open() { close_failed(); return false; }
+
+    void close_failed() {
+        f.close();
+        writable = false;
+        dirty = false;
+    }
 
     Slot* find(std::uint64_t uid) {
         for (Slot& s : slots) if (s.meta.uid == uid) return &s;
@@ -943,12 +1098,23 @@ PtoFile::~PtoFile() { delete p_; }
 bool PtoFile::is_open() const { return p_->f.ok(); }
 const std::string& PtoFile::filename() const { return p_->path; }
 const std::string& PtoFile::error() const { return p_->err; }
-void PtoFile::close() { p_->f.close(); }
+/// Releases the writer lock. Clearing `writable` with it keeps a later `update`
+/// from taking the write path on a file that is no longer there.
+void PtoFile::close() {
+    p_->f.close();
+    p_->writable = false;
+    p_->dirty = false;
+}
 
 bool PtoFile::create(const std::string& filename, const std::string& title) {
     Impl& m = *p_;
     m.err.clear();
-    if (!m.f.open(filename, "w+b")) return m.fail("cannot create " + filename);
+    File::LockResult lock = File::kLockTaken;
+    if (!m.f.open_exclusive(filename, true, &lock)) {
+        if (lock == File::kLockBusy)
+            return m.fail(filename + " is open for writing elsewhere");
+        return m.fail("cannot create " + filename);
+    }
     m.path = filename;
     m.writable = true;
     m.slots.clear();
@@ -985,13 +1151,13 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
         c.uint_elem(kDocTypeReadVer, 1);
         head.master(kEBML, c);
     }
-    if (!m.f.at(0, head.b.data(), head.b.size())) return m.fail("write failed");
+    if (!m.f.at(0, head.b.data(), head.b.size())) return m.fail_open("write failed");
 
     Buf seg;
     seg.put_id(kSegment);
     seg.put_size(0, kWideSize);
     m.seg_size_at = head.b.size() + id_octets(kSegment);
-    if (!m.f.write(seg.b.data(), seg.b.size())) return m.fail("write failed");
+    if (!m.f.write(seg.b.data(), seg.b.size())) return m.fail_open("write failed");
     m.seg_data = m.seg_size_at + kWideSize;
     m.seg_bytes = 0;
 
@@ -999,9 +1165,46 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
     std::string banner_str = "pto\n"
                              "This is a .pto photon container (tttrlib PRD-020).\n"
                              "Get a reader: https://github.com/Fluorescence-Tools/tttrlib/releases\n"
-                             "Nothing here executes. `pto ls run.pto` prints the contents.\n";
+                             "\n"
+                             "=== HOW TO DECODE THIS BINARY (Linux & macOS / POSIX) ===\n"
+                             "1. Framing: EBML Document (DocType \"pto\"). Header Magic: 0x1A45DFA3. Segment Magic: 0x18538067.\n"
+                             "2. VINT Integer Decoding (1-8 bytes): First byte's leading zero count N determines VINT byte width (N+1).\n"
+                             "   Mask highest 1-bit for sizes; preserve all bits for Element IDs.\n"
+                             "3. Target Payload Elements:\n"
+                             "   - AttachedFile (0x61A7): Container of one object.\n"
+                             "   - FileUID (0x46AE): 64-bit uint object handle.\n"
+                             "   - PtoKind (0x1E54F001): ASCII string (e.g. \"tttr.stream\").\n"
+                             "   - FileData (0x465C): Binary payload (8-byte aligned on disk).\n"
+                             "\n"
+                             "=== EMBEDDED TTTR STREAM FORMAT DEFINITION (fmt) ===\n"
+                             "Payload (PtoKind = \"tttr.stream\") starts with a binary header:\n"
+                             "  - magic: \"PQTTTR\" or \"TTTR32\" (6 bytes ASCII)\n"
+                             "  - version: Format version string (8 bytes)\n"
+                             "  - record_type: uint32_t (0 = PTU T3, 1 = PTU T2, 2 = BH SPC-130)\n"
+                             "  - macro_sync_rate: uint32_t (Laser sync rate in Hz)\n"
+                             "  - macro_time_resolution: double (Macrotime clock period in seconds)\n"
+                             "  - micro_time_resolution: double (TAC/TCSPC bin width in seconds)\n"
+                             "  - number_of_records: uint64_t (Count of 32-bit photon records)\n"
+                             "\n"
+                             "Sequential 32-bit Record Layout (PTU T3, record_type = 0):\n"
+                             "  - Bit 31     : Special event flag (1 = Special/Overflow, 0 = Photon)\n"
+                             "  - Bits 30..25: Channel (6 bits, 0..63)\n"
+                             "  - Bits 24..10: Microtime TAC Bins (15 bits, 0..32767)\n"
+                             "  - Bits 9..0  : Macrotime Sync Ticks (10 bits, 0..1023)\n"
+                             "  - Overflow Rule: If Special == 1 and Channel == 63, macro_offset += 1024.\n"
+                             "  - Photon Time: (macro_offset + macrotime) * macro_time_resolution.\n"
+                             "\n"
+                             "=== ASCII C99 DECODER PSEUDOCODE ===\n"
+                             "size_t read_vint(const uint8_t *b, uint64_t *v, int mask) {\n"
+                             "    int n = 1; uint8_t m = 0x80;\n"
+                             "    while ((b[0] & m) == 0) { m >>= 1; n++; }\n"
+                             "    *v = mask ? (b[0] & ~m) : b[0];\n"
+                             "    for (int i = 1; i < n; i++) *v = (*v << 8) | b[i];\n"
+                             "    return n;\n"
+                             "}\n"
+                             "/* Walk Segment -> AttachedFile (0x61A7) -> FileData (0x465C) */\n";
     banner.text_elem(kPtoBanner, banner_str);
-    if (!m.f.write(banner.b.data(), banner.b.size())) return m.fail("write failed");
+    if (!m.f.write(banner.b.data(), banner.b.size())) return m.fail_open("write failed");
     m.seg_bytes += banner.b.size();
 
     // The two indexes come first, each with room to be rewritten where it lies.
@@ -1013,17 +1216,17 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
         Buf e;
         e.put_id(kSeekHead);
         e.put_size(kSeekHeadReserve, kWideSize);
-        if (!m.f.at(m.head_at[i], e.b.data(), e.b.size())) return m.fail("write failed");
-        if (!m.write_void(m.head_at[i] + e.b.size(), kSeekHeadReserve)) return false;
+        if (!m.f.at(m.head_at[i], e.b.data(), e.b.size())) return m.fail_open("write failed");
+        if (!m.write_void(m.head_at[i] + e.b.size(), kSeekHeadReserve)) return m.fail_open();
     }
     // An empty but valid index, rather than a full commit: committing here
     // would place an Info element before the caller has set anything, and the
     // next commit would then have to move it and leave a hole behind. A file
     // that was just created should not already need compacting.
-    if (!m.write_seekhead(0, 1)) return false;
+    if (!m.write_seekhead(0, 1)) return m.fail_open();
     m.live = 0;
     m.generation = 1;
-    if (!m.patch_segment_size()) return m.fail("write failed");
+    if (!m.patch_segment_size()) return m.fail_open("write failed");
     m.f.flush();
     m.dirty = true;
     return true;
@@ -1083,8 +1286,19 @@ bool read_element(File& f, std::uint64_t at, std::uint32_t* id,
 bool PtoFile::open(const std::string& filename, bool writable) {
     Impl& m = *p_;
     m.err.clear();
-    if (!m.f.open(filename, writable ? "r+b" : "rb"))
+    if (writable) {
+        // A writer takes the container; a reader never does. A viewer open
+        // while an analysis writes is the normal case, and the format already
+        // has the reader seeing the pre-commit state.
+        File::LockResult lock = File::kLockTaken;
+        if (!m.f.open_exclusive(filename, false, &lock)) {
+            if (lock == File::kLockBusy)
+                return m.fail(filename + " is open for writing elsewhere");
+            return m.fail("cannot open " + filename);
+        }
+    } else if (!m.f.open(filename, "rb")) {
         return m.fail("cannot open " + filename);
+    }
     m.path = filename;
     m.writable = writable;
     m.slots.clear();
@@ -1097,7 +1311,7 @@ bool PtoFile::open(const std::string& filename, bool writable) {
 
     // EBML header, and the DocType that says this is ours.
     // PRD-025 Part 6: Skip up to 4 leading non-EBML elements / 2 MB prefix.
-    // Check offset 0 first, then fallback to executable bundle offset 12624
+    // Check offset 0 first, then scan for PTO_ID_EBML in Cosmopolitan APE binary prefix
     std::uint64_t ebml_offset = 0;
     std::uint32_t id = 0;
     std::vector<unsigned char> payload;
@@ -1111,20 +1325,27 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         found_ebml = true;
         ebml_offset = 12624;
     } else {
-        int max_skips = 4;
-        const std::uint64_t max_bytes = 2097152;
-        while (ebml_offset < max_bytes && max_skips-- > 0) {
-            if (read_element(m.f, ebml_offset, &id, &payload, &total, nullptr) && id == kEBML) {
+        std::uint64_t max_bytes = m.f.length() > 8388608 ? 8388608 : m.f.length();
+        for (std::uint64_t off = 8; off + 4 <= max_bytes; off += 8) {
+            if (read_element(m.f, off, &id, &payload, &total, nullptr) && id == kEBML) {
                 found_ebml = true;
+                ebml_offset = off;
                 break;
             }
-            if (total == 0) break;
-            ebml_offset += total;
+        }
+        if (!found_ebml) {
+            for (std::uint64_t off = 1; off + 4 <= max_bytes; off++) {
+                if (read_element(m.f, off, &id, &payload, &total, nullptr) && id == kEBML) {
+                    found_ebml = true;
+                    ebml_offset = off;
+                    break;
+                }
+            }
         }
     }
 
     if (!found_ebml)
-        return m.fail(filename + " is not an EBML file");
+        return m.fail_open(filename + " is not an EBML file");
     {
         Cursor c{payload.data(), payload.size(), 0};
         std::uint32_t cid;
@@ -1140,12 +1361,12 @@ bool PtoFile::open(const std::string& filename, bool writable) {
             else if (cid == kEBMLMaxIDLength) max_id = get_uint(d, n);
             else if (cid == kEBMLMaxSizeLen) max_size = get_uint(d, n);
         }
-        if (doctype != "pto") return m.fail(filename + " is not a PTO file");
+        if (doctype != "pto") return m.fail_open(filename + " is not a PTO file");
         if (read_version > 1)
-            return m.fail(filename + " needs a newer PTO reader (DocTypeReadVersion "
+            return m.fail_open(filename + " needs a newer PTO reader (DocTypeReadVersion "
                           + std::to_string(read_version) + ")");
         if (max_id > 4 || max_size > 8)
-            return m.fail(filename + " declares EBMLMaxIDLength " +
+            return m.fail_open(filename + " declares EBMLMaxIDLength " +
                           std::to_string(max_id) + " / EBMLMaxSizeLength " +
                           std::to_string(max_size) + ", wider than this reader parses");
     }
@@ -1153,7 +1374,7 @@ bool PtoFile::open(const std::string& filename, bool writable) {
     std::uint64_t seg_at = ebml_offset + total;
     if (!read_element(m.f, seg_at, &id, nullptr, &total, &m.seg_size_at) ||
         id != kSegment)
-        return m.fail(filename + " has no Segment");
+        return m.fail_open(filename + " has no Segment");
     m.seg_data = m.seg_size_at + kWideSize;
     m.seg_bytes = total - (m.seg_data - seg_at);
 
@@ -1165,7 +1386,7 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         std::uint32_t cid;
         std::uint64_t ctotal;
         if (!read_element(m.f, at, &cid, nullptr, &ctotal, nullptr) || ctotal == 0)
-            return m.fail(filename + " is damaged: an element at " +
+            return m.fail_open(filename + " is damaged: an element at " +
                           std::to_string(at) + " could not be read");
         Child c; c.at = at; c.total = ctotal; c.id = cid;
         children.push_back(c);
@@ -1233,7 +1454,7 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         }
         found++;
     }
-    if (found < 2) return m.fail(filename + " has no index");
+    if (found < 2) return m.fail_open(filename + " has no index");
     m.live = best < 0 ? 0 : best;
     m.generation = best_gen;
 
@@ -2094,20 +2315,15 @@ bool is_pto_file(const std::string& filename) {
         return false;
     };
 
-    std::uint64_t offset = 0;
-    int max_skips = 4;
-    const std::uint64_t max_bytes = 2097152;
-    while (offset < max_bytes && max_skips-- > 0) {
-        if (check_at(offset)) return true;
-        std::uint32_t id = 0;
-        std::vector<unsigned char> payload;
-        std::uint64_t total = 0;
-        if (!read_element(f, offset, &id, &payload, &total, nullptr)) break;
-        if (total == 0) break;
-        offset += total;
-    }
-
+    if (check_at(0)) return true;
     if (f.length() >= 12624 && check_at(12624)) return true;
+    std::uint64_t max_bytes = f.length() > 8388608 ? 8388608 : f.length();
+    for (std::uint64_t off = 8; off + 4 <= max_bytes; off += 8) {
+        if (check_at(off)) return true;
+    }
+    for (std::uint64_t off = 1; off + 4 <= max_bytes; off++) {
+        if (check_at(off)) return true;
+    }
 
     return false;
 }

@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# rattler-build recipe for the `tttr` CLI and the C++ shared library.
+#
+# The Python package (tttrlib) is built by conda-recipe/py/recipe.yaml; it
+# statically links the C++ core into the SWIG extension and does not ship
+# libtttrlib. This recipe builds the shared library + the `tttr` command-line
+# tool and installs both into the environment, so `conda install tttr` puts
+# `bin/tttr` and `lib/libtttrlib.{so,dylib}` on PATH / the link path.
+context:
+  version: ${{ env.get("PKG_VERSION", default="0.27.0") }}
+
+package:
+  name: tttr
+  version: ${{ version }}
+
+source:
+  path: ../..
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - ${{ compiler('c') }}
+    - ${{ compiler('cxx') }}
+    - cmake
+    - ninja
+    - if: not win
+      then:
+        - make
+        - pkg-config
+  host:
+    - hdf5
+    - libtiff
+    - highfive
+    - nlohmann_json
+    - eigen
+    - if: osx
+      then: llvm-openmp
+    - if: linux
+      then: libgomp
+  run:
+    - hdf5
+    - libtiff
+    - if: osx
+      then: llvm-openmp
+    - if: linux
+      then: libgomp
+
+tests:
+  - script:
+      - tttr --help
+      - tttr formats
+      - tttr detectors --help
+      - printf '%s' '{"last_used":"X","setups":{"X":{"detectors":{"Green":{"chs":[0,1]},"Red":{"chs":[2,3]}}}}}'>/tmp/d.json && tttr detectors /tmp/d.json
+
+about:
+  homepage: https://github.com/fluorescence-tools/tttrlib
+  summary: Command-line tool for reading, writing and converting TTTR data.
+  description: |
+    The `tttr` CLI reads, writes, correlates and exports time-tagged
+    time-resolved data. It ships the C++ shared library (libtttrlib) it links
+    against, so installing this package makes `tttr` and `libtttrlib` available
+    in the environment without the Python bindings.
+  license: BSD-3-Clause
+  license_file: LICENSE.txt
+  repository: https://github.com/fluorescence-tools/tttrlib
+
+extra:
+  recipe-maintainers:
+    - tpeulen

@@ -252,4 +252,19 @@ using json = nlohmann::json;
 %}
 #endif
 
+// R has no 64-bit integers, and a JavaScript Number is exact only below 2^53,
+// so neither backend can proxy a std::vector<int64_t>/map<...,vector<int64_t>>
+// result faithfully. On LP64 Linux int64_t is 'long', which SWIG then cannot
+// marshal as the long long containers below; the generated R/JS wrapper would
+// not even compile. These are the burst-photon index accessors; the languages
+// that need them (Python via numpy, Java via long[]) keep them, and R/JS read
+// the same data through to_json_string() instead.
+#if defined(SWIGR) || defined(SWIGJAVASCRIPT)
+%ignore tttrlib::BurstFilter::get_burst_indices;
+%ignore tttrlib::BurstFilter::get_burst_channel_indices;
+%ignore tttrlib::BurstFilter::apply_mask;
+%ignore tttrlib::BurstFilter::pairs_to_interleaved;
+%ignore tttrlib::BurstFilter::interleaved_to_pairs;
+#endif
+
 %include "BurstFilter.h"

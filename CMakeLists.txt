@@ -340,6 +340,13 @@ ELSE()
   LINK_LIBRARIES(nlohmann_json::nlohmann_json)
 ENDIF()
 
+# cxxopts — vendored single-header command-line parser for the tttr CLI
+# (modules/cli). The whole-library targets compile every module source, so the
+# header must be on the project-wide include path, exactly like nlohmann/json.
+IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/cxxopts.hpp")
+  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts)
+ENDIF()
+
 # Eigen — header-only dense linear algebra (no link step). Used by NeuralNet for
 # the batched GEMMs of training/inference, and later by the forward-mode AD
 # gradient provider. Vendored copy wins; otherwise fall back to the system one.

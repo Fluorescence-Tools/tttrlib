@@ -385,7 +385,6 @@ namespace tttrlib {
 }
 
 %include "SimEngine.h"
-%exception;   // reset to the previous global handler
 
 %newobject tttrlib::SimEngine::from_json;   // Python owns the returned engine
 

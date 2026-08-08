@@ -24,6 +24,13 @@ using json = nlohmann::json;
     }
 }
 
+// R and JS cannot proxy map<string, vector<vector<int64_t>>> (see BurstFilter.i
+// for the same reasoning); they read channel indices via to_json_string().
+#if defined(SWIGR) || defined(SWIGJAVASCRIPT)
+%ignore tttrlib::BurstFeatureExtractor::get_burst_channel_indices;
+%ignore tttrlib::BurstFeatureExtractor::channel_indices_;
+#endif
+
 %include "BurstFeatureExtractor.h"
 
 %extend tttrlib::BurstFeatureExtractor {

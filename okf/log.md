@@ -1,5 +1,51 @@
 # Bundle update log
 
+## 2026-08-08
+
+* **Replacement**: Replaced the click-based `bin/tttrlib` Python runner with a
+  compiled C++ CLI, `tttr`, living under `modules/cli` (cxxopts + cxxopts, built
+  via `tttrlib_add_module`, installed flat to `bin/tttr` + `lib/libtttrlib`). The
+  dispatch table in `cli_main.cpp` is a six-line switch; each subcommand owns its
+  own cxxopts schema in `modules/cli/src/cmd_*.cpp`.
+
+* **Progress, two layers**: A general progress ticker now lives in the library at
+  `modules/util` (`ProgressTicker`, `ProgressEvent`, `ProgressSink`) — see
+  [/design/tttr-cli-progress.md](/design/tttr-cli-progress.md). It does no I/O; the
+  CLI (`cli_progress.cpp`) installs one sink that fans each event to a tty bar on
+  stderr and to machine-readable JSONL (`--progress CHANNEL`), so a GUI can build
+  `cli -> progress -> gui`. `tick` events are throttled to 60 ms in the library;
+  `begin`/`finish` and the final tick are never dropped. The lifecycle bug in
+  `cmd_convert` (no `set_total`/`finish`, so events printed `total=0` and never
+  closed) is fixed.
+
+* **Detector setups, chiSurf-compatible**: The instrument definition is pure JSON
+  (no compiled-in detector knowledge — the binary only routes routing channels).
+  `detector_setup.{h,cpp}` read/serialize the chiSurf `detector_setups.json`
+  schema; unknown chiSurf keys are accepted and ignored. `sm` and `image export`
+  share `--setup FILE --setup-name NAME --detector NAME`; a single detector's
+  `chs` filters `sm`, and per-detector `chs` become per-TIFF groups in image
+  export. Authoring is terminal-based: `tttr detectors FILE --add [--name N]`
+  prompts for detectors/gates/windows and writes a chiSurf-shaped file, setting
+  `last_used`. (If chiSurf has migrated setups to MMFDB, export a JSON file for
+  the CLI.) Full contract in [/specs/tttr-runner.md](/specs/tttr-runner.md).
+
+* **PTO CLI fixes**: `cmd_image` and `cmd_pto` both shipped `argc -= 2; argv += 2`
+  after stripping the subcommand, which made cxxopts read the input file as the
+  program name — the positional was silently dropped. Now `argc -= 1; argv += 1`.
+  `cmd_pto extract` disambiguates `FILE OBJECT DIR` (one object) from `FILE DIR`
+  (extract-all into a directory) by treating a stoull-parseable or file-known
+  uid/name as OBJECT.
+
+* **Install caveats (not code bugs)**: `cmake --install` is blocked by
+  `include/tttrlib` being a symlink into the repo; the workaround is to copy
+  `bin/tttr` and `lib/libtttrlib.dylib` into the prefix by hand. The binary's
+  `@loader_path/../lib` RPATH resolves from the conda env without
+  `DYLD_LIBRARY_PATH` (verified). `tttr convert` cannot write PTO — `TTTR::write`
+  has no PTO writer and emits a corrupt file; build PTO fixtures via the Python
+  bindings. The LSP (clangd) in this workspace reports phantom
+  "pp_file_not_found"/"no member named value in std::" errors because the include
+  path isn't fed to the language server — the real targets build clean.
+
 ## 2026-08-07
 
 * **Fold-in**: Moved the photon-simulator implementation plan from the
