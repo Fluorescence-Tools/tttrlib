@@ -82,7 +82,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
       - name: Configure and build R module
         run: |
           cmake -S . -B build-r -G Ninja \
@@ -147,7 +147,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
       - name: Configure and build JNI module
         run: |
           cmake -S . -B build-java -G Ninja \
@@ -210,7 +210,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
       # SWIG's Node-API backend generates against node-addon-api's napi.h, which
       # is an npm package rather than a system header.
       - name: Install Node-API headers
@@ -451,7 +451,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake
+          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake
       - name: Cache test data
         id: cache
         uses: actions/cache@v4
@@ -1179,7 +1179,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
+          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake pandoc doxygen graphviz
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
