@@ -296,13 +296,19 @@ jobs:
           java-version: '17'
       - name: Install SWIG (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build
+        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build libeigen3-dev
       - name: Install SWIG (macOS)
         if: runner.os == 'macOS'
-        run: brew install swig ninja
+        run: brew install swig ninja eigen
       - name: Install SWIG (Windows)
         if: runner.os == 'Windows'
-        run: choco install swig ninja -y
+        shell: pwsh
+        run: |
+          choco install swig ninja -y
+          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
+          & $vcpkg install eigen3:x64-windows --recurse --no-print-usage
+          $eigenRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "CMAKE_PREFIX_PATH=$eigenRoot" >> $env:GITHUB_ENV
       - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
         run: |
           cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DCMAKE_BUILD_TYPE=Release
