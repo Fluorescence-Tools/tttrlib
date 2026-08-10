@@ -265,16 +265,26 @@ Open:
 
 * bff, quest and the other repositories write no `_mmfdb_*` terms today. If one
   starts, it reads mmfdb — it does not start a dictionary.
-* **`_mmfdb_operation.algorithm` is only partly populated.** `ChiSurf`'s
-  `put_table` and `write_burst_artifact` accept and validate it, the burst-MLE
-  writer sets `mle`, and `burst_selection`'s container writer passes one
-  through — but its *callers* do not supply it yet, and several writers
-  (`burst_fusion`, `calibration`, `burst_gs`, `burst_ebfret`) name no estimator
-  because none of the enumerated ones is honestly theirs. That is the correct
-  state, not a gap to paper over: **absent means unrecorded, and a guessed term
-  is worse than none.** Closing it means either the writer naming its estimator
-  or the enumeration gaining the term it needs — the second is a change to
-  mmfdb, per rule 4.
-* **The enumeration is not complete for every operation.** `burst_fusion` and
-  `calibration` have no member that describes them. When one is needed, add it
-  to mmfdb rather than reaching for the nearest existing word.
+* ~~**`_mmfdb_operation.algorithm` is only partly populated.**~~ **Closed
+  2026-08-10.** Every writer that *knows* its estimator now records it:
+
+  | writer | term | from |
+  |---|---|---|
+  | burst-MLE lifetime | `mle` | fixed — it is Fit2x |
+  | burst search | `sliding_window` / `bocpd` / `kalman` / `cusum_sprt`, or the registry name | `used_filter`, and `tttrlib_search.algorithm` for the tttrlib mode |
+  | IRF extraction | `gaussian_prompt_fit` / `skew_normal_prompt_fit` / `measured_prompt` | `irf_model` |
+  | burst fusion | `recurrence_probability` | fixed |
+  | `tttr sm` | `mle`, `variance`, `kernel_density`, and the search method | already wired |
+
+  Four terms were added to mmfdb rather than approximated with existing ones
+  (rule 4), each checked against what the code does rather than what its name
+  suggests: `count_rate_filter` selects photons per time window and
+  `burst_filter` is the L/m/T form of the same test, so both map to
+  `sliding_window`; the IRF is three genuinely different instrument responses,
+  not one.
+
+  **Still deliberately blank:** `burst_gs`, `burst_ebfret` and any mode not in
+  the mapping tables. A writer whose method has no honest term records nothing —
+  absent means unrecorded, and a guessed term is worse than none. Pinned by
+  `test_every_writer_that_knows_its_estimator_records_it`, which checks the
+  mapping tables against the live vocabulary rather than by eye.
