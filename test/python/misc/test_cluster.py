@@ -2,10 +2,10 @@
 
 Two properties are load-bearing and neither is obvious from the signatures.
 
-**The spanning tree must be the same one every algorithm finds.** The two
-kernels here — Borůvka over the tree, and Prim — are chosen between by
-dimension, and a downstream caller keeps a third implementation in Python for
-environments without this library. A mutual-reachability weight is very often a
+**The spanning tree must be the same one every algorithm finds.** Two kernels
+are here — Borůvka over the tree, which is the one production uses, and Prim,
+which is kept because it is obviously correct — and a downstream caller keeps a
+third implementation in Python for environments without this library. A mutual-reachability weight is very often a
 *core distance*, and one core distance is the weight of every edge it dominates,
 so hundreds of edges tie and the minimum spanning tree is not unique. The edge
 order is therefore total (weight, then the sorted endpoint pair), which makes it
@@ -103,15 +103,33 @@ class TestMutualReachabilityMST(unittest.TestCase):
         This is the assertion that the total edge order exists for. Weight alone
         does not determine the tree, and without the endpoint tie-break these two
         drift apart on exactly the data the method is used on.
+
+        Swept over several shapes and seeds rather than checked once, because
+        the failure it guards against is a *tie* being skipped: it appears on
+        some point sets and not others, and a single fixture passed happily
+        while a comparison in squared space was quietly dropping tied edges.
         """
         for n_features in (1, 2, 3, 8, 16):
-            data = blobs(500, n_features)
-            tree = tttrlib.KDTree(data, tttrlib.KDTree.default_leaf_size(n_features))
-            core = tree.core_distances(5)
-            np.testing.assert_array_equal(
-                canonical(tree.mutual_reachability_mst(core, 1.0)),
-                canonical(tree.mst_prim(core, 1.0)),
-            )
+            for seed in (3, 11, 29):
+                for n_samples in (400, 900):
+                    data = blobs(n_samples, n_features, seed)
+                    tree = tttrlib.KDTree(
+                        data, tttrlib.KDTree.default_leaf_size(n_features)
+                    )
+                    core = tree.core_distances(5)
+                    boruvka = tree.mutual_reachability_mst(core, 1.0)
+                    prim = tree.mst_prim(core, 1.0)
+                    # The weights alone agreeing is the weaker claim and would
+                    # pass for any valid spanning tree; the edges must match.
+                    np.testing.assert_allclose(
+                        np.asarray(boruvka).reshape(-1, 3)[:, 2].sum(),
+                        np.asarray(prim).reshape(-1, 3)[:, 2].sum(),
+                        rtol=1e-12,
+                    )
+                    np.testing.assert_array_equal(
+                        canonical(boruvka), canonical(prim),
+                        err_msg=f"n={n_samples} d={n_features} seed={seed}",
+                    )
 
     def test_weight_is_never_below_either_core_distance(self):
         """Every edge weight is a mutual reachability, so it obeys its definition."""

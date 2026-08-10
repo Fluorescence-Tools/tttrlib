@@ -8,11 +8,21 @@
   row-major `(n x d)` table; `core_distances(X, k)` returns the distance to
   every point's k-th neighbour, and `mutual_reachability_mst(X, k, alpha)` the
   minimum spanning tree of the graph whose weight is
-  `max(core_i, core_j, d(i,j))`. Boruvka over the tree while the tree prunes,
-  Prim above the dimension where it stops (`tree_is_worthwhile`, measured at
-  about ten features). The module is in `math` because none of it knows what a
+  `max(core_i, core_j, d(i,j))`. Boruvka over the tree; Prim sits beside it as
+  the obviously-correct kernel the fast one is checked against, and nothing
+  dispatches to it. The module is in `math` because none of it knows what a
   photon is and a k-d tree over a table of doubles is wanted in several places
   at once.
+
+  **Candidate edges are compared in distance space, not in squared distance.**
+  The squared form is faster and was written first; it is wrong at the values
+  this has to get right, because the threshold derives from a weight that is
+  itself a square root and `sqrt(x) * sqrt(x)` is not `x`. A *tied* edge then
+  reads as one unit in the last place too far and is skipped, the endpoint
+  tie-break never sees it, and the kernel returns a different -- perfectly valid
+  -- spanning tree. Removing the squaring also made Boruvka faster than Prim at
+  every dimension measured up to thirty-two, which is why there is no
+  dimension-based dispatch between them.
 
   **The edge order is a compatibility surface.** Mutual-reachability weights tie
   constantly — a core distance is the weight of every edge it dominates — so the

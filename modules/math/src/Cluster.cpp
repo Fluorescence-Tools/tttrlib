@@ -475,13 +475,6 @@ std::vector<double> KDTree::mutual_reachability_mst(const std::vector<double>& c
 
                 const Node& nd = nodes_[static_cast<size_t>(node)];
                 if (nd.left < 0) {
-                    // Anything strictly beyond this radius cannot beat `best`,
-                    // because the mutual reachability is at least the distance.
-                    double limit_sq = std::numeric_limits<double>::infinity();
-                    if (bound < std::numeric_limits<double>::infinity()) {
-                        const double limit = bound * alpha;
-                        limit_sq = limit * limit;
-                    }
                     for (int s = nd.start; s < nd.stop; ++s) {
                         const int j = index_[s];
                         if (component[static_cast<size_t>(j)] == my_component) continue;
@@ -492,22 +485,22 @@ std::vector<double> KDTree::mutual_reachability_mst(const std::vector<double>& c
                         // distance loop, which is what pays in high dimensions.
                         if (core_j > bound) continue;
                         const double* row = data_ + static_cast<size_t>(j) * n_features_;
+                        // Distance space, not squared -- see the note in the
+                        // dual-tree kernel: `bound` is a square root, and
+                        // comparing acc against its square skips tied edges.
                         double acc = 0.0;
                         for (int f = 0; f < n_features_; ++f) {
                             const double diff = point[f] - row[f];
                             acc += diff * diff;
-                            if (acc > limit_sq) break;
                         }
-                        if (acc > limit_sq) continue;
                         double w = std::sqrt(acc) / alpha;
+                        if (w > bound) continue;
                         if (w < core_i) w = core_i;
                         if (w < core_j) w = core_j;
                         if (best_j < 0 || edge_less(w, i, j, best, i, best_j)) {
                             best = w;
                             best_j = j;
                             if (w < bound) bound = w;
-                            const double limit = bound * alpha;
-                            limit_sq = limit * limit;
                         }
                     }
                 } else {
@@ -637,12 +630,6 @@ std::vector<double> KDTree::mst_prim(const std::vector<double>& core, double alp
     return mst;
 }
 
-std::vector<double> KDTree::mutual_reachability_mst_auto(const std::vector<double>& core,
-                                                         double alpha) const {
-    return tree_is_worthwhile(n_features_) ? mutual_reachability_mst(core, alpha)
-                                           : mst_prim(core, alpha);
-}
-
 // ---------------------------------------------------------------------------
 // Flat entry points
 // ---------------------------------------------------------------------------
@@ -663,7 +650,7 @@ void mutual_reachability_mst(double* input, int n_input1, int n_input2, int min_
                              int* n_output2) {
     KDTree tree(input, n_input1, n_input2, KDTree::default_leaf_size(n_input2));
     const std::vector<double> core = tree.core_distances(min_samples);
-    const std::vector<double> mst = tree.mutual_reachability_mst_auto(core, alpha);
+    const std::vector<double> mst = tree.mutual_reachability_mst(core, alpha);
     *n_output1 = static_cast<int>(mst.size() / 3);
     *n_output2 = 3;
     const size_t bytes = mst.size() * sizeof(double);

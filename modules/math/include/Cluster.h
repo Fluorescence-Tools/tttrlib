@@ -20,7 +20,9 @@
 //   mutual_reachability_mst()   minimum spanning tree of the graph whose edge
 //                               weight is max(core_i, core_j, d(i,j)). Boruvka
 //                               with tree pruning, O(n log n) in practice
-//                               against the O(n^2) of the textbook Prim.
+//                               against the O(n^2) of the textbook Prim, which
+//                               is kept beside it as the obviously-correct
+//                               implementation the fast one is checked against.
 //
 // ---------------------------------------------------------------------------
 // The tie-break is part of the contract
@@ -93,32 +95,21 @@ public:
     /// `core_distances`); `alpha` divides the plain distance before the
     /// inflation, so values above one make the hierarchy more conservative.
     ///
-    /// Borůvka over the tree, which is `O(n log n)` while the tree prunes. Past
-    /// roughly a dozen dimensions it stops pruning and `mst_prim` is faster;
-    /// `mutual_reachability_mst_auto` picks between them. All three return the
-    /// same tree — see the note on the total edge order at the top of the file.
+    /// Borůvka over the tree, `O(n log n)` while the tree prunes. This is the
+    /// kernel to use; `mst_prim` returns the same tree and exists to check it.
     std::vector<double> mutual_reachability_mst(const std::vector<double>& core,
                                                 double alpha = 1.0) const;
 
-    /// The same tree by Prim's algorithm: `O(n^2 d)`, no tree, no pruning, and
-    /// no dependence on the dimension. In high dimensions a k-d tree visits
-    /// most of itself on every query, and this plain scan — which vectorises
-    /// and parallelises perfectly — wins outright.
+    /// The same tree by Prim's algorithm: `O(n^2 d)`, no tree, no pruning,
+    /// nothing clever. It is kept because it is *obviously* correct, which
+    /// makes it the thing the Borůvka above is checked against — the two must
+    /// return the same tree edge for edge, and that is what proves the total
+    /// edge order is doing its job. It was also the faster of the two above
+    /// about ten dimensions until the tie comparison moved into distance
+    /// space; that is no longer true at any dimension measured, so nothing
+    /// dispatches to it.
     std::vector<double> mst_prim(const std::vector<double>& core,
                                  double alpha = 1.0) const;
-
-    /// Borůvka or Prim, whichever suits the shape of the data.
-    std::vector<double> mutual_reachability_mst_auto(const std::vector<double>& core,
-                                                     double alpha = 1.0) const;
-
-    /// Whether a k-d tree is worth using on data of this shape.
-    ///
-    /// The crossover is a property of the geometry, not of this machine: a
-    /// bounding box in `d` dimensions overlaps a query ball in nearly every
-    /// direction once `d` is large, so the pruning that makes a tree `O(log n)`
-    /// stops firing. Measured on the mixed blob/uniform fixtures the tests use,
-    /// Borůvka wins comfortably up to eight dimensions and has lost by sixteen.
-    static bool tree_is_worthwhile(int n_features) { return n_features <= 10; }
 
     /// Leaf size to build with when the caller has no opinion.
     ///
@@ -134,9 +125,9 @@ public:
 
 private:
     struct Node {
-        int start = 0;  ///< first index into index_ owned by this node
-        int stop = 0;   ///< one past the last
-        int left = -1;  ///< child node, or -1 for a leaf
+        int start = 0;   ///< first index into index_ owned by this node
+        int stop = 0;    ///< one past the last
+        int left = -1;   ///< child node, or -1 for a leaf
         int right = -1;
     };
 
