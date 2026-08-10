@@ -29,9 +29,23 @@ PRDs for detail.
 ---
 
 ## Active
+- **[chisurf] ⚠ `test_numba_seam` is red at HEAD — six allow-list strikes landed
+  without their ported code, and it is not mine to fix**
+  - Timestamp: 2026-08-11
+  - Status: 🚫 blocked on the owners
+  - `bocpd.py`, `tcspc/corrections.py`, `tcspc/tcspc.py` and the three
+    `lltf/core/` modules import numba at HEAD but are no longer on
+    `test/numba_import_allowlist.txt`. All six are **already ported in the shared
+    working tree**, so the failure is invisible from that tree and shows up only
+    against a clean checkout. Verified identical at `HEAD~1` in an isolated
+    `git worktree` — pre-existing, not from the maxent commit below.
+  - Whoever owns those edits: please commit them. Striking the line and porting
+    the kernel are one change; split across two commits the guard reads as
+    broken rather than as correct. Recorded in `okf/references/known-issues.md`.
+
 - **[both] MaxEnt TCSPC moves fully into tttrlib; ChiSurf's numba copy goes**
-  - Timestamp: 2026-08-10
-  - Status: 🔄 in-progress
+  - Timestamp: 2026-08-11
+  - Status: ✅ done — tttrlib `2bcd7ea38`, chisurf `cf5f5ff93`
   - Scope: `tcspc_build_fi_lifetimes` / `tcspc_build_fi_distances` were exposed
     with their four output vectors as *arguments*, so no Python caller could
     reach them. Added NumPy bindings in `ext/python/MaxEntTcspc.i`; ChiSurf's
@@ -39,7 +53,10 @@ PRDs for detail.
   - Touching: **[tttrlib]** `ext/python/MaxEntTcspc.i`,
     `test/python/decayfit/test_maxent_tcspc.py` (dropped its
     `sys.path.insert('/Users/tpeulen/dev/chisurf')` reference — that comparison
-    was about to become a skip that reads like a pass);
+    was about to become a skip that reads like a pass), `test/python/conftest.py`
+    (it prepended a `build/ext` holding a **3.10** extension, so the whole Python
+    suite errored at collection under 3.12 — now only when the extension matches
+    the running interpreter);
     **[chisurf]** `chisurf/plugins/fluorescence_decay/maxent_decay/core/solver.py`,
     `test/numba_import_allowlist.txt`, `test/data/numba_parity/maxent_tcspc.npz`,
     `okf/subsystems/numba-retirement.md`, `okf/log.md`
