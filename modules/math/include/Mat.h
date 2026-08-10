@@ -383,7 +383,7 @@ inline Mat::each_col_proxy Mat::each_col() { return each_col_proxy(*this); }
 // compile ("use of undeclared identifier 'var'"). Stringify through a helper
 // so the caller's name reaches the pragma.
 #define TTTRLIB_PRAGMA(x) _Pragma(#x)
-#if defined(_OPENMP)
+#if defined(_OPENMP) && !defined(_MSC_VER)
   #define TTTRLIB_VEC _Pragma("omp simd")
   #define TTTRLIB_VEC_REDUCTION(var) TTTRLIB_PRAGMA(omp simd reduction(+ : var))
 #elif defined(__clang__)
@@ -690,7 +690,13 @@ inline void gemm_nn(int M, int N, int K,
 
 /// Reusable packing buffer — avoids per-call heap allocation in hot loops
 /// (training does thousands of GEMMs per epoch).
-inline thread_local std::vector<double> pack_buf;
+// Function-local rather than a namespace-scope inline thread_local: MinGW
+// emits the TLS init function in every TU and the DLL link fails on the
+// duplicate ("multiple definition of TLS init function").
+inline std::vector<double>& pack_buffer() {
+    static thread_local std::vector<double> buf;
+    return buf;
+}
 
 /// Cache-blocked transpose of an r×c row-major matrix into c×r row-major.
 /// Blocking at BT×BT keeps both source and destination tiles in L1, avoiding
@@ -732,6 +738,7 @@ inline void gemm_nt(int M, int N, int K,
         }
         return;
     }
+    std::vector<double>& pack_buf = pack_buffer();
     pack_buf.resize(static_cast<size_t>(K) * N);
     double* Bt = pack_buf.data();
     blocked_transpose(N, K, B, Bt);
@@ -758,6 +765,7 @@ inline void gemm_tn(int M, int N, int K,
         }
         return;
     }
+    std::vector<double>& pack_buf = pack_buffer();
     pack_buf.resize(static_cast<size_t>(M) * K);
     double* At = pack_buf.data();
     blocked_transpose(K, M, A, At);
@@ -995,7 +1003,7 @@ inline Mat ones(int n_rows, int n_cols) { return Mat(n_rows, n_cols, fill_ones);
         Mat r(a.n_rows(), a.n_cols());                                     \
         const size_t n = a.n_elem();                                       \
         const double* pa = a.memptr(); double* pr = r.memptr();            \
-        _Pragma("omp simd")                                                \
+        TTTRLIB_VEC                                                        \
         for (size_t i = 0; i < n; ++i) pr[i] = (expr);                     \
         return r;                                                          \
     }
@@ -1014,7 +1022,7 @@ TTTRLIB_MAT_ELEM_FN(sigmoid, 1.0 / (1.0 + std::exp(-pa[i])))
     inline void name##_inplace(Mat& a) {                                    \
         const size_t n = a.n_elem();                                        \
         double* pa = a.memptr();                                            \
-        _Pragma("omp simd")                                                 \
+        TTTRLIB_VEC                                                         \
         for (size_t i = 0; i < n; ++i) pa[i] = (expr);                      \
     }
 
