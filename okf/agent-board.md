@@ -29,6 +29,41 @@ PRDs for detail.
 ---
 
 ## Active
+- **[both] PRD-93: the four-repository split — scope boundaries, then cgdye into imp.bff**
+  - Timestamp: 2026-08-10 15:40
+  - Status: 🔄 in-progress — stages 0 and 2 done, stage 1 next
+  - Scope: Scope boundaries for tttrlib / imp.bff / imp-tricks / chisurf are
+    settled and written up in `chisurf/okf/references/imp-ecosystem.md`
+    (layering **tttrlib → imp.bff → imp-tricks → chisurf**; placement by *what
+    is the input*; tiebreaker *consumer wins*, which puts all of κ² in imp.bff).
+    Three rules are enforced by tests, each verified to fail on a deliberate
+    violation. Now migrating `cgdye` from imp-tricks into imp.bff, **including**
+    the FRETpredict rotamer library, which is data and ships as IMP module data.
+    **Done** — imp.bff `8fac573`, imp-tricks `34cf4de`: 67 py files + fps.py to
+    `imp.bff/pyext/src`, 45 MB / 227 library files to
+    `imp.bff/data/rotamer_library`, every loader on `get_data_path`. IMP.bff
+    tests 13/13, ChiSurf FRET suite unchanged at 6 failed / 122 passed. Nothing
+    under `IMP.bff.cgdye` is provided by two repos any more.
+  - Touching: **outside chisurf** — `imp.bff/` (pyext/src/cgdye, data/, test/),
+    `imp-tricks/src/IMP/bff/cgdye` (removed), `imp-tricks/junk/`,
+    `tttrlib/test/test_no_upward_imports.py`, `tttrlib/AGENTS.md`.
+    **Inside chisurf** — `okf/references/imp-ecosystem.md`,
+    `okf/subsystems/imp-module-conventions.md`, `okf/prds/prd-93.md`,
+    `okf/prds/index.md`, `okf/log.md`, plus already-landed edits to
+    `okf/workflows/imp-local-build.md`, `okf/workflows/testing.md`,
+    `okf/references/known-issues.md`.
+  - **Warning to other chisurf agents — two sessions committing in one worktree
+    delete each other's new files.** A commit builds its tree from the *shared*
+    index, so a file another session committed but never added to that index is
+    silently removed by your next `git commit`. It happened today: commit
+    `789117879` added two OKF pages and a concurrent commit dropped them
+    (recovered in `1ec04bc24`). If you commit while another agent is active,
+    check `git status` for files that vanished, and `git update-index --add
+    --cacheinfo` anything of theirs you did not intend to remove.
+  - **Golden rule now in force**: `/Users/tpeulen/dev/imp` takes **no local
+    commits** — it tracks `origin/develop` and is pulled `--ff-only`. A
+    `pre-commit` hook refuses. Change IMP.bff in `../imp.bff`.
+
 - **[chisurf] PRD-92 stage 1: the region/spot container contract**
   - Timestamp: 2026-08-10 11:50
   - Status: ✅ done
@@ -53,6 +88,62 @@ PRDs for detail.
     `okf/references/known-issues.md`. Not caused by the dictionary change.
   - Not touching yet: `chisurf/plugins/microscopy/sm_image_mle/` — the rename
     and the split land in later stages.
+
+- **[tttrlib] PRD-032: criterion-1 shape blocker removed; two more silent-fallback bugs**
+  - Timestamp: 2026-08-10
+  - Status: ✅ done (the unblock; the burst-search literal migration is teed up,
+    not started)
+  - **New module `modules/algorithm`** — the algorithm descriptor and
+    `register_algorithm`, depending on nothing but a JSON writer. Required, not
+    tidiness: `registry` depends on `burst`, so an algorithm module could not
+    depend on `registry` to register itself without closing a cycle. If you are
+    adding a module that registers algorithms, depend on `algorithm`.
+  - `AlgorithmDescriptor` gained `dispatch_name` (→ `method`, omitted when
+    empty) and `provider`; entries now carry `params_schema` beside
+    `settings_schema`. A category can migrate onto registrations without
+    changing shape — verified against a pre-change registry capture: 16
+    differences, **all additions, none removed or changed**.
+  - **Bugs found:** `bocpd` and `coincident` are advertised with a `method` and
+    both silently returned sliding-window bursts via the unknown-name fallback.
+    `bocpd` dispatches now; `coincident` raises and names
+    `burst_search_coincident` (its channel grouping cannot fit `(L, m, T)`).
+  - Touching: `modules/algorithm/**` (new), `modules/registry/CMakeLists.txt`,
+    `modules/CMakeLists.txt`, `modules/spectroscopy/burst/{CMakeLists.txt,src/BurstSearchDispatch.cpp}`,
+    `test/python/burstfilter/test_burst_search_dispatch.py`, PRD-032, CHANGELOG, log
+  - Verified: 295 passed across burstfilter/plugin/registry/conformance.
+  - **Heads-up, not mine:** `test/python/misc/test_deconvolution.py` (modified
+    12:25 today by another instance) has 7 failures on tight numerical
+    tolerances — centroid 16.2492 vs 16.25 to 6 places, sum 0.99989 vs 1.0 to 9
+    places. Nothing in the registry or dispatch work can move a deconvolution
+    centroid; flagging so it is not attributed here.
+
+- **[tttrlib] PRD-032 criteria 3+4: plugin burst searches are callable by name**
+  - Timestamp: 2026-08-10
+  - Status: ✅ done (for those two criteria)
+  - Scope: a plugin's burst search was in the registry and not reachable through
+    `TTTR::burst_search(name, ...)` — the `if/else` chain fell through to the
+    sliding window for unrecognised names, so the obvious call ran a *different
+    algorithm* and returned plausible bursts. Plugin searches now resolve
+    through the same dispatch table as built-ins, memoised on first lookup.
+  - **Also fixed, and it affects you if you build outside `build/<tag>/`:** the
+    plugin test suite was silently skipping. `_plugin_binary()` globbed only the
+    scikit-build layout, so a `build_new/` or `cmake-build-debug/` developer got
+    24 skips and a message telling them to enable the option they had enabled.
+    Now searches any `build*` dir and honours `TTTRLIB_EXAMPLE_PLUGIN`.
+    Fast lane went 46 skipped -> 23.
+  - Touching: `modules/spectroscopy/burst/{include/BurstSearchDispatch.h,src/BurstSearchDispatch.cpp}`,
+    `test/python/plugin/test_plugins.py`, `okf/prds/PRD-032-*.md`,
+    `CHANGELOG.md`, `okf/log.md`
+  - Verified: plugin suite 25 passed; registry JSON byte-identical to a
+    pre-change capture (0 differences); fast lane 2363 passed / 23 skipped.
+  - **PRD-032 criterion 1 (delete the three literals) is BLOCKED, not just
+    undone** — reasons in the PRD. Short version: `burst_search` and `fit` have
+    a consumer-visible entry shape the generic descriptor does not produce (so
+    the descriptor needs a dispatch-name field + aliases first), and retiring
+    `kOperationRegistry` faithfully needs each descriptor to move next to the
+    code that performs it — which for half those operations is PRD-026 work
+    that does not exist yet. Do not "migrate" it by moving eight entries into
+    eight blocks in the same file; that is the wording, not the point.
 
 - **[tttrlib] PRD-027 criterion 6: burst-search dispatch is a table**
   - Timestamp: 2026-08-10
@@ -246,6 +337,27 @@ PRDs for detail.
     renderer *existing* rather than being a `QWidget`, and `Renderer.widget()`
     returning a `QWidget` is what a second backend cannot satisfy.
     `test/test_headless_scene.py` compares backends **array by array**, no GPU.
+  - ✅ **chimol RUNS ON WGSL (2026-08-10, `da5a1f7d9`).**
+    `CHIMOL_RENDERER=wgpu` puts `renderer/wgpu_view.py::WgpuRenderer` in the real
+    application window — molecule, object panel, sequence strip and mouse-mode
+    block, all through the WGSL, on Metal. Falls back to OpenGL with a warning
+    when there is no adapter, so `qtgl.py` stays the default and is **not**
+    retired: picking, silhouettes, 3-D labels and the panel's menus/wizard are
+    still GL-only. **Three things useful outside chimol:**
+    1. **`request_draw` only schedules.** A `win.grab()` before the first
+       present captures an unpainted surface — a solid black viewport in an
+       otherwise perfect screenshot, which reads as "the renderer draws
+       nothing". Pumping the Qt event loop does not help. Use
+       `chimol/test/screenshot.py::force_render_canvases` (and `shoot()` now
+       calls it) if you ever screenshot a `rendercanvas` widget.
+    2. **A translucent Qt child cannot overlay a presented GPU surface.**
+       Without clearing its backing store, uncleared memory composites over the
+       frame (a rainbow cartoon came out salmon-and-blue — it looks exactly like
+       a channel-order bug); with the clear, the child simply *covers* the
+       surface and the molecule disappears. Anything overlaying a WebGPU/
+       chigame surface has to be composited **inside** the render pass.
+    3. **`renderer/camera_state.py` is now the one camera** for every non-GL
+       backend, PyMOL trackball included, and `qtgl` delegates to it.
   - ✅ **Phase 2 update 2026-08-10 — three findings other agents should know:**
     1. **A GL baseline can be contaminated and look fine.** The WGSL cartoon
        reading "markedly darker than the baseline, but only against a white
