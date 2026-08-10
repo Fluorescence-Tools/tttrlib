@@ -311,7 +311,9 @@ jobs:
           echo "CMAKE_PREFIX_PATH=$eigenRoot" >> $env:GITHUB_ENV
       - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
         run: |
-          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DCMAKE_BUILD_TYPE=Release
+          # STATIC modules: the plugin bundles ONE JNI library per platform, so the
+          # native must be self-contained rather than dlopen'ing sibling module .so's.
+          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
           cmake --build build-java --target tttrlibJava
         shell: bash
       - name: Collect native + proxies
