@@ -375,7 +375,10 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y swig cmake ninja-build libhdf5-dev binutils
+          sudo apt-get install -y cmake ninja-build libhdf5-dev binutils
+          # ubuntu-22.04's apt swig is 4.0, which has no Node-API backend
+          # ("Unknown engine"); the PyPI wheel carries a current SWIG.
+          sudo pip3 install "swig~=4.2.1"
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install swig ninja hdf5
@@ -514,7 +517,9 @@ jobs:
         run: choco install swig ninja -y
       - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
         run: |
-          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DCMAKE_BUILD_TYPE=Release
+          # STATIC modules: the plugin bundles ONE JNI library per platform, so the
+          # native must be self-contained rather than dlopen'ing sibling module .so's.
+          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
           cmake --build build-java --target tttrlibJava
         shell: bash
       - name: Collect native + proxies
