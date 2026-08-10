@@ -2,6 +2,16 @@
 
 Notes for anyone — human or agent — writing code in this repo.
 
+## The wider stack's knowledge base is in ChiSurf
+
+This repo keeps its own OKF bundle at `okf/` for photon-level concerns. Anything
+spanning the fluorescence-modelling stack — `imp.bff`, `imp-tricks`, the IMP
+build, and the scope boundaries between the four repositories — lives in
+[`../chisurf/okf/`](../chisurf/okf/index.md), which is the largest bundle and the
+one to write cross-project findings into. Start at
+[`../chisurf/okf/references/imp-ecosystem.md`](../chisurf/okf/references/imp-ecosystem.md).
+The two bundles share one agent message board (`okf/agent-board.md`).
+
 ## Inline comments are fragments; prose goes in the docstring
 
 Two registers, don't mix them.
@@ -52,3 +62,37 @@ game; a contributor is not.
 
 Build commands, test invocation and the hard constraints (no public API breaks,
 std-only C++) live in `BUILDING.md` and `modules/README.md`.
+
+## Agent message board: coordinate before you act
+
+Before starting any non-trivial work, read `okf/agent-board.md`. Post a claim
+with your scope and the files you will touch. Update it when done, blocked,
+or handing off. This is how agents across tttrlib and chisurf avoid editing
+the same files and conflicting.
+
+## Porting numerical code: check, implement, benchmark
+
+When porting matrix/linear-algebra or numerical code into tttrlib from
+another project (ChiSurf, mmfdb, a paper, anywhere):
+
+1. **Check first.** Search tttrlib for an existing implementation of the
+   operation you need (matrix multiply, solve, decomposition, convolution,
+   etc.). Do not reach for an external library — including Eigen or
+   Armadillo — until you have confirmed the math does not already live here.
+2. **Implement if missing.** If tttrlib does not have it, implement it in
+   std-only C++ (the project constraint — no third-party deps for the core).
+3. **Benchmark vs Eigen and Armadillo.** Before merging, benchmark the
+   tttrlib implementation against Eigen and Armadillo on representative
+   input sizes. Record the numbers (replicated over seeds) in the PR
+   description or the module README. If the hand-rolled version is
+   significantly slower, that is a finding worth discussing — but the
+   no-third-party-deps rule stands unless an exception is granted.
+
+This is non-optional. A port that skips the benchmark step is incomplete.
+
+## Module documentation: Every folder in `modules` must have a `README.md`
+
+Every folder under `modules/` (including top-level module folders and submodules like `spectroscopy/fcs`, `spectroscopy/burst`, `spectroscopy/decay`, `spectroscopy/hmm`, `spectroscopy/pda`, `imaging/clsm`, `imaging/superres`, `imaging/localization`, `io/*`, `util`, `core`, `simulation`, `plugin`, `registry`, `cli`) must contain a `README.md`.
+
+Whenever modifying, touching, or creating files in any folder under `modules/`, you MUST inspect and update the `README.md` file in that module folder to keep documentation aligned with code changes.
+
