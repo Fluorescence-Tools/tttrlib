@@ -20,7 +20,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/HMMState.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/HMMSurrogate.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util core burst decay sim
+    DEPENDS  util core burst decay sim math
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES HMM.i HMMConstraints.i HMMRestraints.i HmmSurrogate.i
     TEST_DIR test/python/hmm
