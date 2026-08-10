@@ -53,6 +53,57 @@ Design principles
 - **Drift is detectable.** A file records the dictionary revision its terms came
   from, so a later reader can tell a renamed term from a typo.
 
+What ChiSurf writes, and what it only reads
+-------------------------------------------
+
+The problem this profile closes is not that ChiSurf reads many formats — it must,
+because instruments and other programs write many, and a reader is an import
+path that costs nothing. It is that ChiSurf **wrote** many, for things that are
+one thing.
+
+The split is by direction, not by count:
+
+.. list-table::
+   :header-rows: 1
+
+   * - what
+     - ChiSurf writes
+     - why not a file of its own
+   * - a measurement — photons and everything derived from them
+     - ``.pto``
+     - the pieces are related, and a filename convention cannot say so
+   * - a curve — decay, correlation, anisotropy, IRF, model, residual
+     - a ``curve_point`` artifact
+     - five arrays and two units; the differences between curve types are what the *units* and the *kind* say
+   * - a table — bursts, dwells, pixels, molecules, tracks, states
+     - an artifact at its grain
+     - the grain is the difference; the storage is not
+   * - a raster
+     - TIFF, carried inside the container
+     - a scientific raster stays readable by every other tool
+   * - a project — datasets, fits, a session
+     - ``.csp``
+     - a different scope: many measurements
+   * - metadata for deposition
+     - mmCIF
+     - an export, in the vocabulary this profile already uses
+
+Everything else — the ``…4`` companion family, ``<source>.imaging.h5``, ``kristine``,
+``pycorrfit``, Photon-HDF5, CSV, the vv/vh stack — is an **import source** or an
+**export the user asks for by name**. Both are fine and both stay. What is not
+fine is a *new* way for ChiSurf to write something that already has a home.
+
+Before this, a curve could be saved as CSV, as YAML, through ``save_xy``, through
+the vv/vh stack, or through one of the FCS writers: five ChiSurf-authored ways
+to write the same five arrays, **none of which could say what the x axis was
+in**. An FCS lag axis is milliseconds and a TCSPC axis is nanoseconds; nothing
+about the numbers says which, and reading one for the other is a mistake that
+surfaces as a diffusion time wrong by a factor of a million rather than as an
+error.
+
+``test/test_formats_are_consolidated.py`` holds a **shrinking** allow-list of the
+modules still permitted to write a curve in a format of their own.
+
 Target architecture
 -------------------
 
@@ -255,6 +306,36 @@ item names: ``operation_type``, ``settings_json``, ``settings_hash``,
 settings **replaces** its artifact in place; changing a setting produces a new
 one. This is what keeps one file from accumulating, and it removes the need to
 encode parameters in a folder name.
+
+The path must be reconstructible
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Provenance here is not a label saying which tool ran. It is enough to answer
+*where did this number come from*, which means three things have to be present
+on every derived object:
+
+1. **What it came from** — ``_mmfdb_edge.source_node_id``, one tag per parent.
+   Several is normal; a fused burst has more than one source.
+2. **How it relates to it** — ``_mmfdb_edge.relationship_type``, a dictionary
+   term (``derived_from``, ``calibrated_by``, ``maps_rows_of``…), plus the join
+   columns when the grains differ.
+3. **What was done, with what** — ``operation_type`` and the **complete**
+   ``settings_json``, not a summary of it. A partial settings record is worse
+   than none: it looks reproducible and is not.
+
+These are three facts and are stored as three tags. They were briefly two: the
+parent's UID was written *under* ``relationship_type``, because
+``source_node_id`` — a column that has existed in the database schema since the
+table was first created — was never declared in the dictionary. Asking a file
+how a result related to what it came from therefore returned an integer, and
+the relation itself was never recorded at all. Declared in
+``mmfdb_flr_ext.dic`` 1.7.
+
+``Measurement.lineage(ref)`` walks it, breadth-first from an object to the
+instrument file; ``describe_lineage`` renders that as text. A container in which
+some derived object cannot reach the primary data is malformed, and
+``test/fio/test_pto.py`` checks every object in a real container rather than a
+synthesised one.
 
 Versions a file carries
 ~~~~~~~~~~~~~~~~~~~~~~~
