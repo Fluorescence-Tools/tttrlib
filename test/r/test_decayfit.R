@@ -10,11 +10,11 @@
 # The setup vector is built by `decay_fit_setup_vector`, never by hand: that
 # builder lives in C++ precisely so no binding has to count slot positions.
 
-REF_TWO_ISTAR      <- 23.802337
-REF_FIT_TAU        <- 0.74219
+REF_TWO_ISTAR      <- 23.791124
+REF_FIT_TAU        <- 0.721353
 REF_FIT_RS         <- 0.25974
 REF_FIT24_TI       <- 2.41049
-REF_FIT25_TI       <- 4.738831
+REF_FIT25_TI       <- 3.887975
 REF_FIT25_BEST_TAU <- 0.5
 REF_FIT26_TI       <- 2.218772
 
