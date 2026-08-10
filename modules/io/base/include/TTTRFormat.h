@@ -46,7 +46,9 @@ namespace tttrlib {
  * one platform. A pipe is not legal in a filename on Windows and is vanishingly
  * rare on anything else.
  */
-extern const char kSubfileSeparator;
+// An inline constexpr rather than an extern definition in one module: MSVC
+// cannot auto-import a data symbol from another module DLL, only functions.
+inline constexpr char kSubfileSeparator = '|';
 
 /// The container part of a spec -- everything before the last \ref
 /// kSubfileSeparator, or the whole thing when there is none.

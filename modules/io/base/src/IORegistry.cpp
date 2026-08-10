@@ -299,8 +299,6 @@ std::vector<const FileFormat*> IORegistry::by_extension(const std::string& exten
     return out;
 }
 
-const char kSubfileSeparator = '|';
-
 std::string subfile_path(const std::string& spec) {
     const std::size_t bar = spec.rfind(kSubfileSeparator);
     return bar == std::string::npos ? spec : spec.substr(0, bar);
