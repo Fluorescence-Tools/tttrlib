@@ -3,6 +3,56 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
+
+**2026-08-10, found from ChiSurf.** `solve_tcspc_mem_lifetime` covers the
+**lifetime-axis** MEM inversion and covers it well — priors, the `_esm` error
+estimates, `chisq`/`Q`/`S`/`niter`/`success` on `MemTcspcResult`. So ChiSurf's
+`solve_lifetime_mem` now delegates to it.
+
+Its sibling has nowhere to go. The **distance-axis** inversion — the one that
+returns *p(R<sub>DA</sub>)* instead of a lifetime distribution, which is the
+reason a FRET experiment runs MEM at all — has no counterpart here:
+
+```python
+>>> import tttrlib
+>>> [n for n in dir(tttrlib) if "mem" in n.lower() or "maxent" in n.lower()]
+['MemTcspcResult', 'maxent_invert', 'solve_tcspc_mem_lifetime', 'tcspc_run_mem']
+>>> [n for n in dir(tttrlib) if "fret" in n.lower() and "mem" in n.lower()]
+[]
+```
+
+So `chisurf/plugins/fluorescence_decay/maxent_decay/core/solver.py` still holds
+`solve_fret_mem` and everything under it, and that "everything" is the part
+worth having here rather than in a plugin:
+
+* `_build_Fi_distances` — the design matrix over a distance grid. Each column is
+  a donor decay quenched at the FRET rate for one R, built from `tau0`, `R0`,
+  a donor-only reference and its fraction. This is the piece that makes the
+  inversion a *distance* distribution rather than a lifetime one, and it is
+  where the physics lives.
+* `_build_Fi_lifetimes` — the lifetime-axis equivalent, presumably duplicating
+  what `solve_tcspc_mem_lifetime` already does internally.
+* `_run_mem` — the generic MEM engine both axes share.
+* `_quadpr_bound` — the bounded quadratic-programming step.
+
+**Why this is a bug and not a wish.** A library that ships half of a pair
+invites exactly what happened: the half that exists gets delegated, the half
+that does not stays behind, and the two drift — the shared `_run_mem` in the
+plugin is now a *second* MEM engine maintained against this one, with no test
+holding them together. The lifetime axis is also the less interesting half.
+
+**What would close it:** a `solve_tcspc_mem_fret` (or a distance-grid option on
+the existing entry point) taking the R grid, `tau0`, `R0` and the donor-only
+reference with its fraction, returning the same `MemTcspcResult`. Sharing the
+engine with `solve_tcspc_mem_lifetime` is the point — the two differ only in
+how the design matrix is built.
+
+Related, and the same shape of problem: **FCS MaxEnt** (`chisurf/core/models/fcs/maxent.py`)
+is a third MEM implementation, over a diffusion-time axis, also with no home
+here. If the engine were exposed with a pluggable design matrix, all three
+would be one solver and two matrix builders.
+
 ## `GopichSzabo::set_scheme` rejects any disconnected kinetic scheme
 
 **2026-08-10, found from ChiSurf.** `set_scheme` returns `false` whenever the
