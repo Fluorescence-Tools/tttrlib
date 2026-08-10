@@ -162,6 +162,11 @@ function(tttrlib_add_module)
                 # no such annotation anywhere in include/. Until the export macros
                 # land (they are ~97 sites), let CMake generate the .def file.
                 WINDOWS_EXPORT_ALL_SYMBOLS ON)
+        # __create_def cannot parse /GL (whole-program) objects and crashes;
+        # a module compiled with /GL- keeps the .def generation working.
+        if(MSVC)
+            target_compile_options(${target} PRIVATE /GL-)
+        endif()
         # Find siblings next to itself: modules and the extension are installed
         # into the same directory.
         #
