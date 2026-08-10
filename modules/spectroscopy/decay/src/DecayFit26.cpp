@@ -6,25 +6,25 @@
 
 
 static thread_local double Sp, Ss, Bp, Bs;
-static thread_local double penalty = 0.;
-
-
 void DecayFit26::correct_input(double* x, double* xm)
 {
 if (is_verbose()) {
     std::cout<<"correct_input26"<<std::endl;
 }
-    // correct input parameters (take care of unreasonable values)
-    xm[0] = x[0]; // fraction of pattern 1 is between 0 and 1
-    if (xm[0]<0.0) {
-        xm[0] = 0.0; // tau > 0
-        penalty = -x[0];
-    }
-    else if (xm[0]>1.0) {
-        xm[0] = 1.0; // tau > 0
-        penalty = x[0]-1.0;
-    }
-    else penalty = 0.;
+    // x[0] is the fraction of pattern 1 and belongs in [0, 1]. The clamp here
+    // is only what keeps the model arithmetically sensible; the *bound* is the
+    // optimiser's, via set_bounds in fit() below.
+    //
+    // This used to also set a thread-local `penalty` (-x[0] below zero,
+    // x[0]-1 above one) that targetf added to the objective. Unlike fit23's
+    // version of the same idea that one was correctly signed, so this is a
+    // tidy-up rather than a bug fix -- but it had fit23's other two problems:
+    // it duplicated a mechanism i_lbfgs already provides, and being added to
+    // the objective outside the model it would be invisible to an analytic
+    // gradient, which sees only what the registered callback returns. i_lbfgs
+    // adds a soft bound's penalty *and its gradient* to both the
+    // finite-difference and the analytic path.
+    xm[0] = x[0] < 0.0 ? 0.0 : (x[0] > 1.0 ? 1.0 : x[0]);
 if (is_verbose()) {
     std::cout<<"x[0]: " << x[0] <<std::endl;
     std::cout<<"xm[0]: " << xm[0] <<std::endl;
@@ -57,7 +57,7 @@ double DecayFit26::targetf(double* x, void* pv)
     // divide here Nchannels / 2, because Wcm multiplies Nchannels by two
     w = Wcm(expdata, M, Nchannels / 2);
 
-    return w/Nchannels + penalty;
+    return w/Nchannels;
 
 }
 
@@ -110,9 +110,13 @@ double DecayFit26::fit(double* x, short* fixed, DecayFitContext* p)
         bg[i]*=s2;
     }
     bfgs bfgs_o(targetf, 1);
+    // The fraction is in [0, 1]. A soft bound, not the clamp in correct_input:
+    // a clamped objective is flat outside the box, so nothing points back in.
+    bfgs_o.set_bounds(0, 0.0, 1.0);
         // Bounds are priors in this interface, so anything the caller attached
         // to a slot has to reach the optimiser that actually moves it. Without
         // this the bound was accepted, stored, serialised — and ignored.
+        // Applied after the default above so a caller-supplied prior wins.
         apply_context_bounds(bfgs_o, p, 1);
     info = bfgs_o.minimize(x,p);
 

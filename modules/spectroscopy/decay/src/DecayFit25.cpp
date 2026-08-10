@@ -10,7 +10,6 @@ static thread_local int fixedrho = 0;
 static thread_local int softbifl = 0;
 static thread_local int p2s_twoIstar = 0;
 static thread_local int firstcall = 1;
-static thread_local double penalty = 0.;
 
 
 static thread_local DecayFitCorrections fit_corrections;
@@ -26,7 +25,6 @@ void DecayFit25::correct_input(double* x, double* xm, double* corrections, int r
     fit_signals.corrections = &fit_corrections;
 
     xm[0] = x[0];
-    penalty = 0.;
     xm[2] = x[2];
     // gamma is taken from x[1] (clamped like fit23). Previously xm[1] was
     // read here before ever being written — an uninitialized stack read that
@@ -85,7 +83,7 @@ double DecayFit25::targetf(double* x, void* pv)
         Bgamma = xm[1]*(fit_signals.Sp+fit_signals.Ss);
         w -= Bgamma*log(fit_signals.Bexpected) - loggammaf(Bgamma+1.);
     }
-    return w/Nchannels + penalty;
+    return w/Nchannels;
 
 }
 

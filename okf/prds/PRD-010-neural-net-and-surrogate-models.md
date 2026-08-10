@@ -434,38 +434,69 @@ Verified against the pre-change code end to end: four ordinary starts give ident
 and 2I* to every printed digit; starts below the bound and at negative `tau` still reach the same
 minimum. `DecayFit26`'s equivalent penalty is correctly signed and left alone; `DecayFit25`'s is dead.
 
+### Phase 5e — the scaling limit, and a correction about `FitNExp` (done)
+
+**`FitNExp` was never an AD candidate.** It appears in this PRD's problem statement as an `i_lbfgs`
+consumer. It is not one: `DecayFitNExp.cpp` never constructs a `bfgs`. Lifetimes are optimised
+coordinate-wise by Brent and amplitudes are profiled out by EM, so there is no N-dimensional gradient
+to convert. Struck from the open list.
+
+**The AD advantage peaks and then decays, which nothing measured so far had shown.** Every decision
+in this PRD was taken at N <= 18. Both methods are O(N) -- central differences pay 2N objective
+evaluations, a vectorized forward pass makes every scalar carry an N-vector -- so the ratio is a race
+between two O(N) costs settled by constants and memory traffic. Measured on a 1024-channel
+multi-exponential decay (`benchmarks/bench_ad_scaling.cpp`):
+
+| n_exp | N | CD (x obj) | AD (x obj) | AD gain | MB per model intermediate |
+|---|---|--:|--:|--:|--:|
+| 2 | 4 | 7.9 | 1.6 | 4.8x | 0.04 |
+| 8 | 16 | 32.4 | 2.4 | **13.3x** | 0.13 |
+| 32 | 64 | 142 | 16.4 | 8.7x | 0.51 |
+| 128 | 256 | 586 | 161 | 3.7x | 2.01 |
+| 200 | 400 | 895 | 257 | **3.3x** | 3.13 |
+
+Central differences stay near-linear (895x against a theoretical 2N = 800x); AD goes *superlinear*,
+257x where pure O(N) predicts ~160x. The last column is the reason: a `Dual<double, GradVec<400>>` is
+3.2 kB, so one 1024-channel intermediate is 3.13 MB, far outside cache, while the finite-difference
+path re-walks a plain 8 kB array. In absolute terms one gradient at N = 400 costs 149 ms by AD
+against 518 ms by CD.
+
+So AD still wins at 200 exponentials, by 3.3x rather than the 13x its peak suggests. **At that size
+both are the wrong tool**: for a sum of exponentials the analytic gradient is closed form --
+d/d(amplitude) *is* the convolved exponential already computed -- so a hand-written gradient costs
+about one objective evaluation. The dip at N = 32 reproduces across runs and was not chased; it
+changes no decision.
+
 ## Still open
 
-The decision is **no longer gated on an x86 measurement**. Phase 3b measured against the real NEON
-dispatcher, not a scalar stand-in: AD is 3.70×/5.16×/5.80× ahead at N=4/8/16 *with* central
-differences keeping their SIMD kernel. AVX packs 4 doubles to NEON's 2 and would narrow that, but not
-by the ~4× it would take to flip the decision. Phase 5b then showed the conversion is mechanically
-feasible. What is left is engineering and one behaviour change:
+**Not gated on an x86 measurement.** Phase 3b measured against the real NEON dispatcher, not a scalar
+stand-in: AD is 3.70x/5.16x/5.80x ahead at N=4/8/16 *with* central differences keeping their SIMD
+kernel. AVX packs 4 doubles to NEON's 2 and would narrow that, but not by the ~4x it would take to
+flip the decision. Phase 5b showed the conversion is mechanically feasible, and Phase 5d moved the
+bounds onto the one mechanism `i_lbfgs` applies to the analytic path as well. What remains:
 
-1. **Retire the clamps in favour of the soft bounds that already exist.** `sanitise_parameters`
-   (`DecayFit23.cpp:36`) floors `tau` and `rho` and clamps `gamma`. Under AD a clamped parameter
-   propagates an exactly zero derivative and L-BFGS stalls at the bound. Phase 5c removed the
-   prerequisite that made this hard — the objective is now defined and gradient-bearing off-support —
-   and no new mechanism is needed: `i_lbfgs::set_bounds` is a soft exterior penalty *already wired
-   into the analytic-gradient path* (`i_lbfgs.h:313-320`), and `DecayFit23.cpp:408` already uses it
-   for `gamma`. So gamma currently carries **both** a soft bound and a clamp, and the clamp is the
-   harmful half. Work: delete the clamps, add `set_bounds` for `tau` and `rho`, and retire the
-   `fit_settings.penalty` hand-rolled penalty at `DecayFit23.cpp:142`.
+1. **Templated kernels in the library.** `fconv_per_cs`, `fconv_per` and friends need `template<T>`
+   scalar bodies -- Phase 5b transcribed one into a probe; the production header needs the real
+   thing -- with the intrinsic dispatch untouched for `double`.
+2. **A gradient callback per fit, and `set_gradient` wired.** It has exactly one caller in the whole
+   library (`ImageLocalization.cpp`).
+3. **Retune the central-difference step.** Still worth doing, but see Correction 3: it is
+   `sqrt_eps*|x|` today, not `eps*|x|`, so the win is smaller than Phase 4 claimed.
+4. **Decline `DecayFit26`.** N=1, measured at 1.57x; the templating costs more than the gradient
+   saves. Recorded as a decision, not an omission.
+5. **Only `DecayFit23` (N=4) and `DecayFit24` (N=5) are live candidates.** `FitNExp` is not one
+   (Phase 5e -- no gradient optimiser), `ImageLocalization` is done, `DecayFit26` is declined. Note
+   from Phase 5e that N=4 sits at the low end of the AD advantage curve (4.8x), not its peak.
 
-   Still a behaviour change to existing fits, so validate on real data **on its own**, before and
-   separately from AD. Do not land it inside the AD change; the two would be indistinguishable in
-   the diff.
+Two things deliberately left as behaviour changes for their own change:
 
-   Note the penalty stiffness `k = 1e6` is a guard-rail, not a prior width (as a prior it is
-   `sigma ~ 7e-4`), and `DecayFit23` minimises `W/Nchannels`, so a penalty added there is `N x` too
-   strong in log-posterior units. Harmless while these are numerical bounds; wrong the moment
-   anyone reports the result as a credible interval.
-2. **Templated kernels in the library.** `fconv_per_cs`, `fconv_per` and friends need `template<T>`
-   scalar bodies (the probe transcribed one; the production header needs the real thing), with the
-   intrinsic dispatch untouched for `double`.
-3. **A gradient callback per fit, and `set_gradient` wired.** Currently `set_gradient` has exactly
-   one caller in the whole library (`ImageLocalization.cpp:364`).
-4. **Retune the central-difference step** — still worth doing, but see Correction 3: it is
-   `sqrt_eps·|x|` today, not `eps·|x|`, so the win is smaller than Phase 4 claimed.
-5. **`DecayFit26` should be declined, not converted.** N=1, measured at 1.57×; the templating and the
-   reparameterisation cost more than the gradient saves.
+- **`gamma`'s hard clamp.** Unlike `tau` it has no arithmetic failure outside its range, so the clamp
+  is purely a modelling constraint. Keeping it is a deliberate decision, not an oversight.
+- **Penalty stiffness as a prior width.** `k = 1e6` is a guard-rail (`sigma ~ 7e-4` read as a prior),
+  and `DecayFit23` minimises `W/Nchannels`, so a penalty added there is `N x` too strong in
+  log-posterior units. Harmless while these are numerical bounds; wrong the moment anyone reports the
+  result as a credible interval.
+
+Not part of this PRD but found by it: `modules/imaging/localization/CMakeLists.txt` declares
+`TEST_DIR test/python/clsm`, which contains no localization tests -- the test is
+`test/python/misc/test_image_localization.py`.

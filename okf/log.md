@@ -1,5 +1,78 @@
 # Bundle update log
 
+## 2026-08-10 (18th entry)
+
+* **PRD-010 Phase 5e: the AD advantage peaks and then decays, and `FitNExp` was
+  never a candidate.** Two results from asking a question none of the earlier
+  benchmarks had: what happens at 200 exponentials?
+
+  **`FitNExp` has no gradient to convert.** It appears in PRD-010's problem
+  statement as an `i_lbfgs` consumer. It is not one — `DecayFitNExp.cpp` never
+  constructs a `bfgs`. Lifetimes are optimised coordinate-wise by Brent and
+  amplitudes are profiled out by EM. Struck from the open list; the premise had
+  survived unexamined since the PRD was written.
+
+  **Every AD decision so far was taken at N <= 18, and that is the good part of
+  the curve.** Both methods are O(N) — central differences pay 2N objective
+  evaluations, a vectorized forward pass makes every scalar carry an N-vector —
+  so the ratio is a race between two O(N) costs settled by constants and memory
+  traffic. Measured on a 1024-channel decay: the advantage peaks at **13.3x**
+  around 8–16 exponentials and falls to **3.3x** at 200 (N = 400). Central
+  differences stay near-linear (895x the objective against a theoretical 800x);
+  AD goes superlinear, 257x where pure O(N) predicts ~160x. The reason is size:
+  a `Dual<double, GradVec<400>>` is 3.2 kB, so one 1024-channel intermediate is
+  3.13 MB, far outside cache, while the finite-difference path re-walks a plain
+  8 kB array. AD still wins at 200 exponentials — but at that size both are the
+  wrong tool, because for a sum of exponentials the analytic gradient is closed
+  form and costs about one objective evaluation.
+
+  The generalisable point: **"AD is 10x faster" is a statement about a
+  parameter count, not about AD.** Quoting it without the N is how a
+  benchmark becomes folklore.
+
+  Also tidied `DecayFit25` and `DecayFit26` onto `set_bounds`. 25's hand-rolled
+  penalty was dead; 26's was correctly signed, unlike 23's, so that one was a
+  tidy rather than a bug fix — but it shared 23's other defect of being
+  invisible to an analytic gradient. `gamma`'s hard clamp in fit23 is kept
+  deliberately: unlike `tau` it has no arithmetic failure outside its range.
+
+## 2026-08-10 (17th entry)
+
+* **`_mmfdb_operation.algorithm` finished: every writer that knows its
+  estimator now records it.** The item was half-done — ChiSurf's writers
+  validated the term but no caller supplied one, so a container said *a burst
+  search happened* without saying which, and two selections of the same
+  measurement were indistinguishable except by a settings hash nobody can
+  read back into a method.
+
+  Four terms were added to mmfdb rather than approximated with existing ones,
+  which is rule 4 of `okf/specs/mmfdb-is-the-vocabulary.md`: the IRF is three
+  genuinely different instrument responses (`gaussian_prompt_fit`,
+  `skew_normal_prompt_fit`, `measured_prompt`) and burst fusion is a
+  `recurrence_probability` test. Wiring is a map per writer — `irf_model` in
+  the MLE exporter, `used_filter` in burst selection, fixed strings for fusion
+  and the MLE itself.
+
+  **Two things had to be checked rather than assumed, and both would have
+  produced a confidently wrong container.** `TttrlibSearchSettings.algorithm`
+  holds `"maxtree"` whether or not that search ran, so reading it
+  unconditionally stamps every container with a method it did not use; it is
+  read only when `used_filter` names that mode. And `COUNT_RATE` and `BURST`
+  look like two searches: `count_rate_filter` thresholds photons per time
+  window, `burst_filter` is the L/m/T form of the same test. Both are
+  `sliding_window`. Reading the two implementations is what settled it —
+  the names suggest otherwise.
+
+  `burst_gs` and `burst_ebfret` still record nothing, deliberately. **Absent
+  means unrecorded; a guessed term is worse than none, because a missing
+  provenance prompts a question and a wrong one is believed.** Pinned by
+  `test_every_writer_that_knows_its_estimator_records_it`, which checks each
+  mapping table against the live mmfdb enumeration instead of by eye, and by
+  six end-to-end cases carrying `used_filter` through
+  `selection -> write_container -> put_table` and reading the tag back out —
+  the term crosses three functions, any of which could drop it silently while
+  the settings hash still differed.
+
 ## 2026-08-10 (16th entry)
 
 * **PRD-010 Phase 5c/5d: bounds are priors, and acting on that found two bugs.**

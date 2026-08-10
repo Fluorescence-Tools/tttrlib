@@ -567,3 +567,49 @@ python make_version_plots.py           # -> plots/versions/*.png + summary.md
 - [Performance guide](doc/performance_guide.rst) — how to *use* tttrlib fast
   (selections, slicing, caching, memory, diagnostics).
 - [`CHANGELOG.md`](CHANGELOG.md) — per-release performance notes.
+
+### How far does the AD advantage go? Not as far as the small-N numbers suggest
+
+Every conversion decision above was taken at N ≤ 18, where AD beats tuned
+central differences by 4–10×. That is a statement about a parameter count, not
+about AD. A multi-exponential decay is not in that regime: 200 exponentials is
+N = 400 free parameters. Both methods are O(N) — central differences pay 2N
+objective evaluations, and a vectorized forward pass makes every scalar carry an
+N-vector — so the ratio is a race between two O(N) costs, decided by constants
+and by memory traffic.
+
+Measured on a 1024-channel multi-exponential decay
+(`benchmarks/bench_ad_scaling.cpp`):
+
+| n_exp | N | CD (× obj) | AD (× obj) | **AD gain** | bytes/dual | MB per model intermediate |
+|---|---|--:|--:|--:|--:|--:|
+| 2 | 4 | 7.9× | 1.6× | 4.8× | 40 | 0.04 |
+| 4 | 8 | 16.3× | 1.5× | 11.0× | 72 | 0.07 |
+| 8 | 16 | 32.4× | 2.4× | **13.3×** | 136 | 0.13 |
+| 16 | 32 | 66.7× | 11.6× | 5.7× | 264 | 0.26 |
+| 32 | 64 | 142× | 16.4× | 8.7× | 520 | 0.51 |
+| 64 | 128 | 293× | 36.5× | 8.0× | 1032 | 1.01 |
+| 128 | 256 | 586× | 161× | 3.7× | 2056 | 2.01 |
+| 200 | 400 | 895× | 257× | **3.3×** | 3208 | 3.13 |
+
+**The advantage peaks around 8–16 exponentials and then decays.** Central
+differences stay near-linear (895× against the theoretical 2N = 800×), while AD
+goes *superlinear*: 257× where pure O(N) predicts ~160×. The last column is why.
+A `Dual<double, GradVec<400>>` is 3.2 kB, so one 1024-channel intermediate is
+3.13 MB — far outside any cache — while the finite-difference path re-walks a
+plain 8 kB array 2N times.
+
+Absolute cost matters as much as the ratio: one gradient at N = 400 is 149 ms by
+AD against 518 ms by central differences. At ~100 iterations that is 15 s versus
+52 s. AD wins, and neither is cheap.
+
+**At that size both are the wrong tool.** For a sum of exponentials the analytic
+gradient is closed-form — ∂/∂amplitude *is* the convolved exponential already
+computed, and ∂/∂τ is a related recursion — so a hand-written gradient costs
+about one objective evaluation and would beat the AD column by roughly its 257×.
+The dip at N = 32 is reproducible across runs rather than noise; it was not
+chased, because it changes no decision.
+
+Note this is a scaling study of the *method*, not a to-do for `FitNExp`, which
+has no N-dimensional gradient to convert: it optimises lifetimes coordinate-wise
+with Brent and profiles amplitudes out by EM, and never constructs a `bfgs`.

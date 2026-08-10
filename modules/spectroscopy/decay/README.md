@@ -113,8 +113,25 @@ to the objective by hand — as the old `tau` penalty was — is invisible to th
 callback and would have made the analytic gradient wrong by exactly `-1` in the
 `tau` component below the bound.
 
-### Not changed
+### Also unified
 
-`DecayFit26`'s hand-rolled penalty is correctly signed (positive outside both
-bounds) and is left alone. `DecayFit25`'s is dead — always zero. Both are
-candidates for the same unification; neither is a bug today.
+`DecayFit25` and `DecayFit26` carried the same idea and are now on `set_bounds`
+too — see the section below.
+
+### The same tidy in `DecayFit25` and `DecayFit26`
+
+Both carried a thread-local `penalty` added to the objective in `targetf`.
+
+`DecayFit25`'s was **dead** — set to zero and never to anything else. Removed.
+
+`DecayFit26`'s was **correct**, unlike fit23's: `-x[0]` below zero and `x[0]-1`
+above one, both positive outside the box. So this was a tidy, not a bug fix.
+It still had fit23's other two problems — it duplicated a mechanism `i_lbfgs`
+already provides, and being added to the objective outside the model it is
+invisible to an analytic gradient, which sees only what the registered callback
+returns. Replaced by `set_bounds(0, 0.0, 1.0)`; the clamp in `correct_input`
+stays as the arithmetic guard.
+
+Verified the same way as fit23: every in-range starting point gives an identical
+fraction and 2I*; a start at `f = -0.3` differs in the sixth decimal with the
+same 2I*, i.e. the same minimum reached by a marginally different path.

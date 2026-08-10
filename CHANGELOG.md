@@ -18,6 +18,20 @@
   generated wrapper's exception path, and the full fast suite (2501
   passed).
 
+- **`benchmarks/bench_ad_scaling.cpp`** — how far the AD advantage actually
+  goes. Every conversion decision in PRD-010 was taken at N ≤ 18, where AD beats
+  tuned central differences by 4–10×. That is a statement about a parameter
+  count, not about AD. Measured out to 200 exponentials (N = 400): the advantage
+  **peaks at ~13× around 8–16 exponentials and decays to 3.3× at 200**. Central
+  differences stay near-linear (895× the objective against a theoretical
+  2N = 800×) while AD goes superlinear — 257× where pure O(N) predicts ~160×,
+  because a `Dual<double, GradVec<400>>` is 3.2 kB and one 1024-channel
+  intermediate is 3.13 MB, far outside cache. AD still wins there, but at that
+  size both are the wrong tool: for a sum of exponentials the analytic gradient
+  is closed form and costs about one objective evaluation. Full table in
+  `PERF.md`. Also corrects this PRD's premise that `FitNExp` is an `i_lbfgs`
+  consumer — it never constructs a `bfgs`, optimising lifetimes coordinate-wise
+  with Brent and profiling amplitudes out by EM.
 - **`npm install tttrlib` — the JavaScript binding is packageable** (PRD-016
   M5, the last open milestone). Prebuilt binaries for linux-x64, linux-arm64,
   darwin-x64, darwin-arm64 and win32-x64, resolved by `node-gyp-build` from
@@ -214,6 +228,26 @@
 
   `QREigen.h` is unaffected and always was: it is tttrlib's own non-symmetric
   eigensolver, not Eigen.
+
+### Changed
+- **`DecayFit25` and `DecayFit26` moved onto the same bound mechanism as
+  `DecayFit23`.** Both carried a thread-local `penalty` added to the objective
+  in `targetf`. `DecayFit25`'s was dead — set to zero and never anything else.
+  `DecayFit26`'s was *correct*, unlike `DecayFit23`'s (`-x[0]` below zero,
+  `x[0]-1` above one, both positive outside the box), so this is a tidy rather
+  than a bug fix — but it shared the other two problems: it duplicated a
+  mechanism `i_lbfgs` already provides, and being added outside the model it is
+  invisible to an analytic gradient, which sees only what the registered
+  callback returns. Replaced by `set_bounds(0, 0.0, 1.0)`; the clamp in
+  `correct_input` stays as the arithmetic guard.
+
+  Verified as for `DecayFit23`: every in-range starting fraction gives an
+  identical result and 2I*; a start at `f = -0.3` differs in the sixth decimal
+  with the same 2I*, i.e. the same minimum by a marginally different path.
+- **`gamma`'s hard clamp in `DecayFit23` is kept, deliberately.** Unlike `tau`
+  it has no arithmetic failure outside its range (the model is finite at
+  gamma = −0.2 and 1.5, measured), so the clamp is purely a modelling
+  constraint and there is no correctness reason to remove it.
 
 ### Fixed
 - **`pch_mixture` rejects a species count mismatch instead of reading past
