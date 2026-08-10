@@ -173,7 +173,11 @@ before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair --ignore-existing --no-mangle \"tttrlib_*.dll\" -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
-CMAKE_GENERATOR = "Visual Studio 17 2022"
+# Ninja, not the VS generator: the vcxproj "Auto build dll exports" path
+# dropped tttrlib::fit_vb from the hmm import library and the extension no
+# longer linked, while the Ninja __create_def path (what the conda build
+# uses) exports it. scikit-build-core activates MSVC for Ninja itself.
+CMAKE_GENERATOR = "Ninja"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
