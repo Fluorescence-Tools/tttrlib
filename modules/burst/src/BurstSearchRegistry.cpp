@@ -194,7 +194,10 @@ const char* const kBurstSearchRegistry = R"JSON({
         }
       }
     }
-  },
+  },)JSON"
+// MSVC C2026: one literal must stay under 16 KB; adjacent raw strings
+// concatenate back into the single registry document.
+R"JSON(
   "maxtree": {
     "name": "maxtree",
     "label": "Max-tree (threshold-free)",
