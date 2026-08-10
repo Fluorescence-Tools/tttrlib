@@ -254,6 +254,10 @@ IF(BUILD_PYTHON_INTERFACE)
     include(GNUInstallDirs)
     if(SKBUILD OR DEFINED ENV{SKBUILD})
         set(TTTRLIB_MODULE_INSTALL_DIR "${TTTRLIB_PY_PACKAGE_DIR}")
+    elseif(WIN32)
+        # No rpath on Windows: the loader finds a pyd's dependencies only
+        # next to the pyd itself, so the module DLLs go into the package.
+        set(TTTRLIB_MODULE_INSTALL_DIR "${TTTRLIB_PY_PACKAGE_DIR}")
     else()
         set(TTTRLIB_MODULE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}")
     endif()
