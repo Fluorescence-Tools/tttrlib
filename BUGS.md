@@ -3,6 +3,91 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## `GopichSzabo::set_scheme` rejects any disconnected kinetic scheme
+
+**2026-08-10, found from ChiSurf.** `set_scheme` returns `false` whenever the
+rate matrix has a repeated zero eigenvalue — an all-zero matrix, or any scheme
+with a state that does not exchange with the rest — and `log_likelihood` then
+reports `-inf`. The all-zero case is the **no-exchange limit** — the static mixture a dynamic photon-by-photon fit is
+compared against — so an optimiser exploring towards slow exchange hits a wall
+where the likelihood is in fact perfectly well defined, and a likelihood-ratio
+test against the static model cannot be computed at all.
+
+**It is not only the all-zero case.** Any scheme whose exchange graph is
+*disconnected* is rejected — including an ordinary three-state model in which
+one state simply does not exchange with the other two, which is a scheme a user
+would reasonably fit:
+
+| scheme | `set_scheme` |
+| --- | --- |
+| 2 states, all zeros | **False** |
+| 3 states, all zeros | **False** |
+| 3 states, two exchanging + one isolated | **False** |
+| 2 states, one-way only (0 → 1, rate 1e3) | True |
+| 2 states, off-diagonals 1e-12 | True |
+| 2 states, off-diagonals 1e-6 / 1e-3 / 1e3 | True |
+
+So the trigger is a repeated eigenvalue at zero — one per disconnected
+component — not the literal zero matrix. Note the last rows: a *one-way*
+scheme is accepted, and a perturbation as small as 1e-12 is enough to make the
+all-zero case pass, so the boundary is exact degeneracy rather than
+ill-conditioning.
+
+The zero generator is the *best*-conditioned input there is — its eigenvector
+basis is the identity. NumPy returns eigenvalues `[0, 0]` with `cond(V) = 1.0`.
+
+### Reproduction
+
+```python
+import numpy as np, tttrlib
+
+emission = np.array([[0.8, 0.2], [0.2, 0.8]])      # two states, two colours
+rates = np.zeros((2, 2))
+
+g = tttrlib.GopichSzabo()
+print(g.set_scheme(rates.flatten().tolist(),
+                   emission.flatten().tolist(), 2, 2))   # -> False, expected True
+```
+
+The correct answer for four photons `d, a, d, a` at 0, 1e-5, 2e-5, 3e-5 s is
+`log(0.5*(0.8*0.2*0.8*0.2) + 0.5*(0.2*0.8*0.2*0.8))` = `-3.66516292749662`,
+which ChiSurf's own implementation reproduces to 16 digits.
+
+### Where it goes wrong
+
+`set_scheme` has exactly one `return false`, from `eigendecompose`
+(`modules/spectroscopy/kinetics/src/GopichSzabo.cpp:44`). Two of the three
+stages under it already guard the zero case, so neither is the cause:
+
+* `qreigen_detail::balance` skips a row/column whose off-diagonal sum is zero,
+  so `scale` stays `1.0` and the later `/= s` cannot divide by zero;
+* `qreigen_detail::compute_eigenvectors` maps a zero `anorm` to `1.0`, so
+  `pivot_floor` stays finite.
+
+That leaves `francis_qr` or, more likely, `zinv`. Inverse iteration for a
+repeated eigenvalue solves the *same* exactly-singular system `(H - 0*I)x = b`
+for every eigenvector, so all `n` of them come back parallel; the eigenvector
+matrix is then rank deficient and `zinv` fails — even though the true
+eigenspace is the whole space and the identity would serve. Worth checking
+whether `cond` comes out `NaN` there too, since `NaN <= MAX_COND` is `false`
+and would swallow the failure the same way.
+
+The three-state "two exchanging + one isolated" row above is the confirmation:
+that generator has a *simple* zero eigenvalue for the connected pair and
+another for the isolated state, giving the repeated zero. So a fix that
+special-cases the all-zero matrix would not be enough — it has to handle a
+repeated eigenvalue with a full eigenspace generally, which is what LAPACK's
+`dtrevc`/`dhsein` do by orthogonalising successive inverse-iteration vectors
+against the ones already found.
+
+### Note for whoever fixes it
+
+ChiSurf no longer turns a rejected scheme into `-inf` — a *setup* failure is
+not an impossible model, and conflating the two is what made this silent for so
+long. It falls through to its own implementation instead, so the symptom is now
+"quietly slower at the static limit" rather than "wall in the likelihood".
+Fixing this here removes the need for that fall-through to ever fire.
+
 ## `disassemble` does not create the directories an object's name implies
 
 **2026-08-07.** An object name is written out as a *relative path* — which is
