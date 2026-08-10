@@ -16,6 +16,38 @@ afterwards. So an algorithm that only accepts the grid is an algorithm that
 cannot be used on the measurement; it can only be used on somebody's summary of
 it.
 
+## Where to pick this up
+
+1. **Apply the rule to the algorithms that do not yet follow it.** The status
+   table below is the worklist. `wiener_deconvolve` is the nearest one: it has
+   no event-wise formulation (closed form in Fourier space), so what it needs is
+   not a `_events` twin but a documented jitter path and a test that the two
+   agree. Anything new added to `modules/math` starts here.
+
+2. **The 3-D event-mode entry point does not exist.** `richardson_lucy_events`
+   is rank-generic in C++ but only `richardson_lucy_events_2d` is bound. An
+   axial stack is where deconvolution gains most, so this is the largest single
+   gap. The typemaps are the only work — see `Deconvolution.i`, and note that a
+   3-D `ARGOUTVIEWM` cannot reuse the 2-D output parameter names.
+
+3. **Weights are implemented and unbound.** `richardson_lucy_events` takes a
+   per-photon weight and the flat entry point passes `nullptr`. That is how a
+   caller applies a detection-efficiency correction, or bins coarsely on one
+   axis while staying event-wise on another. Cheap to expose; nothing depends on
+   it yet, which is why it was left.
+
+4. **The sensitivity term is computed and discarded.** It is the fraction of
+   each pixel's PSF that falls inside the frame, which is directly useful to a
+   caller — it says which pixels are poorly observed — and it is what makes the
+   bare sum not conserve flux near a border. Returning it would let callers
+   check `sum(f * s) == n_events`, which is the exact invariant and currently
+   only assertable indirectly.
+
+5. **Do not test the photon form against the standard form.** They are different
+   estimators — list mode divides by a sensitivity the grid form has no term for
+   — so a comparison measures only how far apart they are supposed to be. Test
+   against a transcription of the formula, as `test_deconvolution.py` does.
+
 ## The two forms
 
 Every algorithm ships **both**, and neither is optional:

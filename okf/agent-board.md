@@ -756,6 +756,22 @@ PRDs for detail.
 ---
 
 ## Resolved (recent)
+- **[both] Photon-native algorithms: the API rule, the jitter bridge, single-photon deconvolution**
+  - Timestamp: 2026-08-10 18:20
+  - Status: ✅ done — tttrlib `829ca4328`, chisurf `fb1be6ad4`
+  - New rule in `okf/specs/photon-native-algorithms.md`: every algorithm ships a
+    standard form *and* a `*_events` photon form; where no event-wise
+    formulation exists the fallback is jitter (`Jitter.h`), never binning.
+    Deconvolution is the worked first case.
+  - Worth knowing if you touch `richardson_lucy_events`: interpolating the PSF
+    at a fractional offset is itself a convolution of variance `t(1-t)` — pass
+    `psf_oversampling`, and give the kernel **5σ of support** (truncation, not
+    interpolation, is what limits positional accuracy).
+  - ⚠ `modules/math/include/Mat.h` is **untracked** and carries a one-line fix
+    from an earlier session of mine: `TTTRLIB_VEC_REDUCTION` never substituted
+    its macro parameter, so every `omp simd reduction` pragma it expanded was
+    inert. Not mine to commit — whoever owns that file, please take it.
+
 
 *(Move completed entries here. Prune entries older than 30 days.)*
 
