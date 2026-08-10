@@ -116,8 +116,11 @@ $result = swig::from($1);
 $result = swig::from(static_cast<std::vector< int64_t,std::allocator< int64_t > > >(*($1)));
 }
 
+// The cast matters: for a by-value return SWIG may hold $1 in a
+// SwigValueWrapper, and swig::from(wrapper) copies the wrapper -- a private
+// constructor. static_cast unwraps it either way.
 %typemap(out) std::vector< int64_t > {
-$result = swig::from($1);
+$result = swig::from(static_cast< std::vector< int64_t,std::allocator< int64_t > > >($1));
 }
 #endif
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
