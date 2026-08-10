@@ -214,7 +214,8 @@ jobs:
       # SWIG's Node-API backend generates against node-addon-api's napi.h, which
       # is an npm package rather than a system header.
       - name: Install Node-API headers
-        run: npm install --prefix ext/js/pkg
+        working-directory: ext/js/pkg
+        run: npm install
       - name: Configure and build the addon
         run: |
           cmake -S . -B build-js -G Ninja \
@@ -293,7 +294,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libhdf5-dev swig cmake ninja-build
       - name: Install Node-API headers
-        run: npm install --prefix ext/js/pkg
+        working-directory: ext/js/pkg
+        run: npm install
       - name: Build the addon with -fsanitize=address
         run: |
           cmake -S . -B build-js-asan -G Ninja \
@@ -402,7 +404,8 @@ jobs:
           echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
           echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
       - name: Install Node-API headers
-        run: npm install --prefix ext/js/pkg
+        working-directory: ext/js/pkg
+        run: npm install
       - name: Build, stage and verify the prebuild
         shell: bash
         run: node ext/js/pkg/scripts/prebuild.mjs

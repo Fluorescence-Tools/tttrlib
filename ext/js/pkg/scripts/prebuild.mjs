@@ -277,6 +277,10 @@ function main() {
       '-DBUILD_LIBRARY=OFF',
       // One self-contained .node instead of ~35 sibling module libraries.
       '-DTTTRLIB_MODULE_TYPE=STATIC',
+      // No HDF5: the prebuild must be self-contained, and the homebrew/vcpkg
+      // dylib chain (libhdf5 -> libsz -> libaec) fails the verify step. Same
+      // tradeoff the ImageJ natives make -- PTU/HT3/SPC need no HDF5.
+      '-DBUILD_PHOTON_HDF=OFF',
       // A published binary must run on every CPU of its architecture; WITH_AVX
       // would bake in AVX2 and SIGILL on anything older. The runtime dispatch
       // in include/info.h still selects AVX kernels where the CPU has them.
