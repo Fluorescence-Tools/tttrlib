@@ -2,17 +2,16 @@
 #
 # Third-party and build-configuration dependencies, as INTERFACE targets.
 #
-# Today every dependency is wired with directory-scope INCLUDE_DIRECTORIES() and
-# LINK_LIBRARIES() in the top-level CMakeLists.txt, which means every target in
-# the project gets every dependency: Eigen is a hard requirement of the whole
-# build for the sake of two source files, and nothing records which subsystem
-# actually needs what.
+# Historically every dependency was wired with directory-scope
+# INCLUDE_DIRECTORIES() and LINK_LIBRARIES() in the top-level CMakeLists.txt,
+# which means every target in the project gets every dependency, and nothing
+# records which subsystem actually needs what. Eigen was the case that made the
+# cost visible -- a hard `REQUIRED` of the whole build for two source files --
+# and it is now gone entirely (Mat.h and GradVec.h replaced it).
 #
 # The targets defined here name each dependency once so that a target can ask
-# for exactly what it uses. They are created ALONGSIDE the existing wiring and
-# nothing consumes them yet -- switching a target over is what removes it from
-# the directory scope, and that happens per module. Defining them first keeps
-# that later change to one line per module instead of an archaeology exercise.
+# for exactly what it uses. Switching a target over is what removes it from the
+# directory scope, and that happens per module.
 #
 # All of these are header-only (or resolve to an upstream imported target), so
 # "linking" them adds include directories and compile definitions, not a link
@@ -21,7 +20,6 @@
 #   tttrlib::json          nlohmann/json
 #   tttrlib::pocketfft     pocketfft (vendored, header-only FFT)
 #   tttrlib::autodiff      autodiff (vendored, forward-mode AD)
-#   tttrlib::eigen         Eigen3 (dense linear algebra)
 #   tttrlib::highfive      HighFive + HDF5   (only when BUILD_PHOTON_HDF)
 #   tttrlib::build_config  the project's own include dirs and compile definitions
 
@@ -63,18 +61,6 @@ _tttrlib_define_interface(tttrlib_autodiff)
 target_include_directories(tttrlib_autodiff INTERFACE
         "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 add_library(tttrlib::autodiff ALIAS tttrlib_autodiff)
-
-# --- Eigen --------------------------------------------------------------------
-# Header-only, no link step. Used by the neural net and the localization fit --
-# two subsystems, not the whole project, which is why this is worth naming.
-_tttrlib_define_interface(tttrlib_eigen)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen/Eigen/Core")
-    target_include_directories(tttrlib_eigen INTERFACE
-            "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen")
-elseif(TARGET Eigen3::Eigen)
-    target_link_libraries(tttrlib_eigen INTERFACE Eigen3::Eigen)
-endif()
-add_library(tttrlib::eigen ALIAS tttrlib_eigen)
 
 # --- HighFive / HDF5 ----------------------------------------------------------
 # The only consumer is io_hdf5, and it is now the only module that pays for HDF5
@@ -140,4 +126,4 @@ endif()
 add_library(tttrlib::build_config ALIAS tttrlib_build_config)
 
 message(STATUS "Third-party INTERFACE targets defined (tttrlib::json, ::pocketfft, "
-               "::autodiff, ::eigen, ::highfive, ::build_config)")
+               "::autodiff, ::highfive, ::build_config)")

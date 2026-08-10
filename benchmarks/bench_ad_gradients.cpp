@@ -17,10 +17,11 @@
 //   1. objective            — the cost unit everything else is quoted in
 //   2. central differences, h = eps*|x|        (what i_lbfgs.h does today)
 //   3. central differences, h = eps^(1/3)*|x|  (the retuned honest baseline)
-//   4. vectorized forward AD, Dual<double, Eigen::Array<double,N,1>>
+//   4. vectorized forward AD, Dual<double, GradVec<N>>
 //
-// Build (from benchmarks/, with autodiff and Eigen on the include path):
-//   clang++ -std=c++17 -O3 -I<autodiff> -I<eigen> bench_ad_gradients.cpp -o bench_ad
+// Build (from the repository root):
+//   c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+//       benchmarks/bench_ad_gradients.cpp -o /tmp/bench_ad
 //
 // Note the SIMD caveat: tttrlib's production `double` path can use fconv_simd(),
 // whose intrinsic kernels CANNOT be templated. The AD column therefore loses the
@@ -28,22 +29,22 @@
 // scalar numbers are an UPPER bound. bench_ad_vectorized.cpp measures the
 // with-SIMD comparison directly.
 
-#include <Eigen/Core>
-
 #include <autodiff/forward/dual.hpp>
+
+#include "GradVec.h"
 
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <vector>
 
-// autodiff's Dual can carry an Eigen array as its derivative part, giving all N
+// autodiff's Dual can carry a whole vector as its derivative part, giving all N
 // partials in a single pass. That combination is undocumented and needs this
 // trait specialization; without it dual.hpp fails to find NumericType.
 namespace autodiff {
 namespace detail {
 template <int N>
-struct NumberTraits<Eigen::Array<double, N, 1>> {
+struct NumberTraits<tttrlib::GradVec<N>> {
     using NumericType = double;
     static constexpr auto Order = 0;
 };
@@ -104,14 +105,13 @@ void grad_central(std::vector<double>& x, int n, double eps, std::vector<double>
 /// Vectorized forward-mode AD: all N partials in one pass.
 template <int N>
 void grad_ad(const std::vector<double>& x, std::vector<double>& g) {
-    using Arr = Eigen::Array<double, N, 1>;
+    using Arr = tttrlib::GradVec<N>;
     using DualN = autodiff::detail::Dual<double, Arr>;
 
     std::vector<DualN> xd(N);
     for (int j = 0; j < N; ++j) {
         xd[j].val = x[j];
-        xd[j].grad = Arr::Zero();
-        xd[j].grad[j] = 1.0;
+        xd[j].grad = Arr::Unit(j);
     }
     const DualN f = objective<DualN>(xd.data(), N);
     for (int j = 0; j < N; ++j) g[j] = f.grad[j];

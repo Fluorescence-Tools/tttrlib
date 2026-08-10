@@ -82,7 +82,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
       - name: Configure and build R module
         run: |
           cmake -S . -B build-r -G Ninja \
@@ -147,7 +147,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
       - name: Configure and build JNI module
         run: |
           cmake -S . -B build-java -G Ninja \
@@ -210,7 +210,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
       # SWIG's Node-API backend generates against node-addon-api's napi.h, which
       # is an npm package rather than a system header.
       - name: Install Node-API headers
@@ -268,6 +268,214 @@ jobs:
                   console.log('opened', r.nEvents, 'events');
                 });"
 
+  # ── AddressSanitizer over the JS binding ──────────────────────────────────
+  #
+  # PRD-016 asks for this and it is deliberately a Linux job: on macOS arm64,
+  # preloading the ASAN runtime into Node hangs before any JavaScript runs, with
+  # no addon loaded at all -- a platform problem, not a tttrlib one. The cases
+  # that matter are the lifetime ones (a TypedArray view outliving the object
+  # that owns its memory), which are use-after-free rather than exceptions and
+  # so are invisible to an ordinary test run.
+
+  asan_js_lnx:
+    name: ASAN over the JavaScript binding (lnx)
+    needs: build_test_js_lnx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+      - name: Install Node-API headers
+        run: npm install --prefix ext/js/pkg
+      - name: Build the addon with -fsanitize=address
+        run: |
+          cmake -S . -B build-js-asan -G Ninja \
+            -DBUILD_PYTHON_INTERFACE=OFF \
+            -DBUILD_JAVASCRIPT_INTERFACE=ON \
+            -DBUILD_LIBRARY=ON \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DTTTRLIB_LTO=OFF \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"
+          cmake --build build-js-asan --target tttrlibJs
+      - name: Download reference test data
+        run: |
+          mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
+          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
+          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+            https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
+          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+            https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
+          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+            https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
+      # LD_PRELOAD is required: node is not instrumented, so the ASAN runtime has
+      # to be first in the link order or the interceptors never install.
+      # detect_leaks=0 because Node leaks its own allocations at exit by design;
+      # this job is looking for invalid accesses, which are ours.
+      #
+      # TTTRLIB_ADDON is set explicitly -- index.js otherwise picks the
+      # most-recently-built build*/js-pkg/, and a job that silently tested an
+      # uninstrumented addon would report a clean ASAN run that never happened.
+      - name: Run the JavaScript tests under ASAN
+        env:
+          TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
+          TTTRLIB_ADDON: ${{ github.workspace }}/build-js-asan/js-pkg/tttrlib.node
+          ASAN_OPTIONS: detect_leaks=0:abort_on_error=1:allocator_may_return_null=1
+        run: |
+          export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+          node --expose-gc --test test/js/
+
+  # ── npm prebuilds and release (PRD-016 M5) ────────────────────────────────
+  #
+  # One prebuilt binary per platform, which is the whole point of Node-API: its
+  # ABI is stable across Node majors, so there is no per-version matrix here the
+  # way there is for the Python wheels.
+  #
+  # scripts/prebuild.mjs does the work and, crucially, rejects a build whose
+  # dynamic dependencies reach outside the prebuild directory. That check has to
+  # run on the machine that built the binary; by the time a user reports a
+  # missing libhdf5 the package is already published.
+
+  prebuild_js:
+    name: npm prebuild (${{ matrix.triple }})
+    needs: [setup, build_test_js_lnx]
+    if: >-
+      needs.setup.outputs.is_main == 'true' ||
+      github.event_name == 'release' ||
+      startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ubuntu-22.04, not -latest: the glibc the binary is built against is
+          # the OLDEST it can run on, so the prebuild is made on the oldest
+          # runner image still supported rather than the newest.
+          - { os: ubuntu-22.04,     triple: linux-x64 }
+          - { os: ubuntu-22.04-arm, triple: linux-arm64 }
+          - { os: macos-15-intel,   triple: darwin-x64 }
+          - { os: macos-15,         triple: darwin-arm64 }
+          - { os: windows-2022,     triple: win32-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swig cmake ninja-build libhdf5-dev binutils
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install swig ninja hdf5
+      - name: Install build dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install swig ninja -y
+          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
+          # hdf5[core,zlib]: see build_pip_win for why szip is skipped.
+          $attempts = 3
+          for ($i = 1; $i -le $attempts; $i++) {
+            & $vcpkg install hdf5[core,zlib]:x64-windows --recurse --no-print-usage
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($i -eq $attempts) { exit 1 }
+            Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"
+            Start-Sleep -Seconds 90
+          }
+          $root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "HDF5_ROOT=$root" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
+          echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
+      - name: Install Node-API headers
+        run: npm install --prefix ext/js/pkg
+      - name: Build, stage and verify the prebuild
+        shell: bash
+        run: node ext/js/pkg/scripts/prebuild.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-prebuild-${{ matrix.triple }}
+          path: ext/js/pkg/prebuilds/${{ matrix.triple }}/
+          if-no-files-found: error
+
+  # Merge the five prebuilds into one publishable package and prove it loads.
+  # `npm pack` output is uploaded on every qualifying run, so the exact tarball
+  # that would be published can be downloaded and inspected before anyone
+  # publishes it.
+
+  pack_js:
+    name: Assemble the npm package
+    needs: prebuild_js
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: npm-prebuild-*
+          path: ext/js/pkg/prebuilds
+      - name: Rename artifact directories to platform triples
+        run: |
+          cd ext/js/pkg/prebuilds
+          for d in npm-prebuild-*; do mv "$d" "${d#npm-prebuild-}"; done
+          ls -laR .
+      - name: Assemble and pack
+        run: node ext/js/pkg/scripts/pack.mjs --pack
+      - name: Smoke-test the packed tarball on this platform
+        run: |
+          TARBALL=$(ls npm-package/tttrlib-*.tgz)
+          mkdir -p /tmp/npm-smoke && cd /tmp/npm-smoke
+          npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/$TARBALL"
+          node -e "
+            const t = require('tttrlib');
+            const areas = Object.keys(t.registry()).length;
+            if (!areas) { console.error('registry is empty'); process.exit(1); }
+            console.log('installed tarball loads:', areas, 'registry areas');"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: npm-package/tttrlib-*.tgz
+          if-no-files-found: error
+
+  # Publishing is a release action and needs NPM_TOKEN in the repository secrets.
+  # Same trigger as publish_pypi, so npm and PyPI carry the same version.
+
+  publish_npm:
+    name: Publish to npm
+    needs: pack_js
+    if: >
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: dist
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "$(ls dist/tttrlib-*.tgz)" --access public
+
   # ── ImageJ/Fiji plugin: build per-OS JNI native, assemble & release the JAR ──
 
   imagej_native:
@@ -296,24 +504,17 @@ jobs:
           java-version: '17'
       - name: Install SWIG (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build libeigen3-dev
+        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build
       - name: Install SWIG (macOS)
         if: runner.os == 'macOS'
-        run: brew install swig ninja eigen
+        run: brew install swig ninja
       - name: Install SWIG (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: |
-          choco install swig ninja -y
-          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
-          & $vcpkg install eigen3:x64-windows --recurse --no-print-usage
-          $eigenRoot = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
-          echo "CMAKE_PREFIX_PATH=$eigenRoot" >> $env:GITHUB_ENV
+        run: choco install swig ninja -y
       - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
         run: |
-          # STATIC modules: the plugin bundles ONE JNI library per platform, so the
-          # native must be self-contained rather than dlopen'ing sibling module .so's.
-          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build build-java --target tttrlibJava
         shell: bash
       - name: Collect native + proxies
@@ -456,10 +657,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      # The controlled vocabulary every `.pto` is written in lives in mmfdb, and
+      # nowhere else (okf/specs/mmfdb-is-the-vocabulary.md). Checked out rather
+      # than pip-installed: the tests read four `.dic` files, and installing the
+      # package would pull its whole server-side dependency tree to do it.
+      # MMFDB_REQUIRED turns "mmfdb is missing" from a skip into a failure --
+      # a skipped conformance test reads as a pass in a CI summary, which is the
+      # exact blind spot the vocabulary rule exists to close.
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake
+          sudo apt-get install -y libhdf5-dev swig cmake
       - name: Cache test data
         id: cache
         uses: actions/cache@v4
@@ -475,6 +688,8 @@ jobs:
         env:
           TTTRLIB_DATA: ./tttr-data
           TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-python.json
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
         run: |
           python -m pip install --upgrade pip
           python -m pip install ".[test]" jsonschema
@@ -670,7 +885,7 @@ jobs:
           # The retry loop guards the remaining downloads (hdf5/zlib mirrors).
           $attempts = 3
           for ($i = 1; $i -le $attempts; $i++) {
-          & $vcpkg install hdf5[core,zlib]:x64-windows eigen3:x64-windows --recurse --no-print-usage
+          & $vcpkg install hdf5[core,zlib]:x64-windows --recurse --no-print-usage
             if ($LASTEXITCODE -eq 0) { break }
             if ($i -eq $attempts) { exit 1 }
             Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"
@@ -704,6 +919,11 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           name: pip-wheels-ubuntu-latest
@@ -719,6 +939,8 @@ jobs:
         shell: bash
         env:
           TTTRLIB_DATA: ./tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
         run: |
           python -m pip install --upgrade pip
           PY_VER="${{ matrix.python }}"
@@ -995,6 +1217,11 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           name: conda-packages-ubuntu-latest
@@ -1015,6 +1242,8 @@ jobs:
         shell: bash -l {0}
         env:
           TTTRLIB_DATA: ./tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
         run: |
           conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
           python -m pytest
@@ -1187,7 +1416,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev libeigen3-dev swig cmake pandoc doxygen graphviz
+          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}

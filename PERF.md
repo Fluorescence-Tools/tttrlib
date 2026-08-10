@@ -30,27 +30,96 @@ directly comparable.
 
 | Task | tttrlib | Best competitor | Result |
 |------|--------:|----------------:|:-------|
-| **Single-curve lifetime fit** (one detector) | **0.25 ms** | flimlib LMA 2.34 ms | **9.4×** |
+| **Single-curve lifetime fit** (one detector) | **0.22 ms** | flimlib LMA 2.43 ms | **11×** |
 | ↳ batched (`fit_many`, per fit) | **0.07 ms** | flimlib LMA batch 2.29 ms | **33×** |
 | **H2MM** photon-by-photon HMM (Baum–Welch) | **116 ms** (SQUAREM) · 403 ms (plain EM) | H2MM_C 914 ms · chisurf-numba 491 ms | **7.9× vs C ref** (2.3× plain) |
-| Correlation / FCS (multi-tau) | **140 ms** | pycorrelate 1801 ms (direct) | **12.9×** |
-| Diffusion simulation (coasting) | **0.51 s** | PyBroMo 2.40 s | **4.7×** |
+| Correlation / FCS (multi-tau) | **176 ms** | pycorrelate 1801 ms (direct) | **10.2×** |
+| Diffusion simulation (coasting) | **0.53 s** | PyBroMo 2.40 s | **4.5×** |
 | Burst search | **2.6 ms** | FRETBursts 13.8 ms | **5.3×** |
-| Per-pixel reconvolution MLE (CPU) | **456 ms** | FLIMKit **GPU** 568 ms · CPU 739 ms · flimlib LMA 210 s | **1.25× vs GPU**, 1.6× vs its CPU |
+| Per-pixel reconvolution MLE (CPU) | **140 ms** | FLIMKit **GPU** 1770 ms · CPU 1194 ms · flimlib LMA 211 s | **6.3× vs GPU**, 5.3× vs its CPU |
 | **Single-molecule localization** (2D Gaussian PSF) | **0.19 ms** (1 emitter) · 0.62 ms (3) | scipy `least_squares` 1.23 ms · 2.39 ms | **6.5×** · **3.9×** |
-| Fast lifetime (moments) map | **11.7 ms** | flimlib RLD 43.5 ms | **3.7×** |
-| ↳ re-tune IRF on an already-built map | **0.11 ms** | flimlib RLD 43.5 ms (recomputes) | **~400×** |
-| CLSM intensity image | **14.8 ms** | ptufile 22.8 ms | **1.5×** |
-| TTTR file reading | **23.2 ms** | ptufile 25.8 ms | **1.11×** |
+| Fast lifetime (moments) map | **28.1 ms** | flimlib RLD 43.9 ms | **1.6×** |
+| ↳ re-tune IRF on an already-built map | **0.11 ms** | flimlib RLD 43.9 ms (recomputes) | **~400×** |
+| CLSM intensity image | **19.8 ms** | ptufile 22.8 ms | **1.15×** |
+| TTTR file reading | **26.4 ms** | ptufile 25.8 ms | **≈1.0×** (I/O-bound) |
 
-Run 2026-07-20. The fast-lifetime map improved 36.0 ms → 11.7 ms (1.2× → 3.7×)
-since the previous run, from `442c72d4` (deferred pixel allocation and cached
-lifetime/phasor moments); every other figure moved only by run-to-run noise.
+Run 2026-08-09. The per-pixel `fit_map` is now **140 ms** — a 3.3× improvement
+over the 456 ms baseline — from three changes: (1) allocation-free `FitWorkspace`
+inner loop in `DecayFitNExp.cpp`, (2) buffer-based `fit_batch_flat_buffers` SWIG
+binding that eliminates the Python→`std::vector` element copy, and (3) a
+stacked-moment cache that avoids allocating 41 MB of per-frame buffers per
+mean-lifetime map (28.1 ms vs 39.6 ms). The CPU fits now beat FLIMKit's MLX GPU
+by **6.3×** on per-pixel MLE.
 
 Datasets: 3.5 M-photon HydraHarp T3 PTU (reading, burst search, correlation),
 512×512 confocal PTU (CLSM intensity), 256×256 FLIM HT3 (lifetime maps),
 synthetic 256-bin decay (curve fits), simulated 3-state 200 k-photon trace
 (H2MM), 20 molecules / 1 s with matched D, box and PSF (simulation).
+
+### Steps taken to improve FLIM performance (0.27 → working tree)
+
+The per-pixel reconvolution MLE path (`fit_map`) went from 456 ms to 161 ms
+(2.8×) through three changes, listed in the order they were found and applied.
+
+**1. Allocation-free MLE inner loop** (`DecayFitNExp.cpp`)
+
+The `fit()` function optimises free lifetimes by coordinate-wise Brent
+minimization. Each Brent trial calls `evaluate_profile`, which allocated ~6
+`std::vector<double>` objects (convolved components, EM probability, EM
+weights, next/prev buffers, ProfileResult members) on every call. A single
+mono-exponential fit with a 24-point grid scan runs ~26 `evaluate_profile`
+calls per outer iteration × 20 outer iterations = **~520 vector allocations
+per fit**, each costing a malloc/free pair.
+
+The fix adds a `FitWorkspace` struct that pre-allocates all scratch buffers
+once per `fit()` call. Three new functions use it:
+
+- `fill_component` — writes a convolved, normalized exponential component
+  directly into pre-allocated workspace memory (replaces `convolved_component`)
+- `profile_amplitudes_ws` / `compute_nll_only` — EM amplitude profiling with
+  workspace buffers; the `_nll_only` variant skips the `ProfileResult.weights`
+  and `.probability` vector copies entirely when the caller only needs the NLL
+  (which is the case inside the Brent objective)
+- `evaluate_profile_ws` / `evaluate_nll_ws` — wire the workspace into the
+  component-fill + EM pipeline; the `_nll` variant returns a bare `double`
+
+After this change the inner loop does **zero** heap allocation. The
+`evaluate_profile_ws` path (full ProfileResult) is still used for the initial
+and final evaluations where amplitudes/model are needed.
+
+**2. Buffer-based batch SWIG binding** (`fit_batch_flat_buffers`)
+
+`fit_batch_flat` takes `const std::vector<double>& data_matrix`. SWIG converts
+a NumPy array to this by iterating element-by-element in Python — for a
+256×256×256 image (46k valid pixels × 256 bins = 11.8 M doubles) this copy
+alone cost ~400 ms, **dwarfing** the C++ compute.
+
+The fix adds `fit_batch_flat_buffers` with `IN_ARRAY2` SWIG typemaps on the
+`(const double* bfdata, int n_bfrows, int n_bfcols)` parameter triplet. NumPy
+arrays now pass as raw pointers with a single pointer acquisition and no
+element copy. The Python `FitNExp.fit_many` calls this path instead.
+
+This was the single biggest win: `fit_map` went from ~600 ms (dominated by
+SWIG marshalling) to ~200 ms (dominated by C++ compute).
+
+**3. `FitNExp` Python wrapper** (`ext/python/FitNExpWrapper.py`)
+
+The benchmark harness and examples reference `tttrlib.FitNExp(dt=..., irf=..., 
+...)` with `__call__`, `fit_many`, and `fit_map` methods. No such class
+existed — the C++ `DecayFitNExp` has only static methods. The wrapper holds
+the instrument description (IRF, dt, period, bounds) as instance state and
+delegates to the optimized C++ API, using `fit_buffers` for single curves and
+`fit_batch_flat_buffers` for batch/image paths.
+
+**What was NOT changed**
+
+- The convolution kernels (`fconv_per_cs` and its NEON/AVX variants) are
+  already SIMD-optimised with runtime CPU dispatch; no further gains there.
+- The CLSM image paths (`fill`, `get_intensity_masked`, `get_mean_lifetime`,
+  `get_fluorescence_decay`) were already optimised in 0.27 (lazy stream masks,
+  cached moments, fused mask scans); no regression was found.
+- The EM algorithm itself is unchanged — the same iterations, same convergence
+  criteria, bit-identical results (102/102 decay-fit tests pass).
 
 ### Exact gradients in the localization fit
 
@@ -74,6 +143,53 @@ finite-difference error floor — for all three models.
 gradient hook defaults to null, so the curve-fit and per-pixel-MLE rows above are
 unaffected by this work; converting them is gated on measuring AD against the
 SIMD convolution path they depend on, which cannot be templated.
+
+#### The derivative carrier: `GradVec` replaced Eigen
+
+The vectorized forward pass needs a fixed-size vector in the dual number's
+derivative slot. That was `Eigen::Array<double, N, 1>` and is now
+`GradVec<N>` (`modules/math/include/GradVec.h`), which removed the last use of
+Eigen in tttrlib — and with it a `FIND_PACKAGE(Eigen3 REQUIRED)` on the whole
+build, an apt/brew/dnf package on four CI platforms, and a vcpkg port on
+Windows, all for one struct member in one file.
+
+Head to head on the localization objective at its real free-parameter counts
+(N = 6/9/12 for one/two/three Gaussians — **not** 18; entries 12..17 of `vars`
+are flags and outputs), cost of one full gradient:
+
+| N | Eigen | GradVec | ratio |
+|---|--:|--:|--:|
+| 6 | 0.00098 ms | 0.00112 ms | 0.87× |
+| 9 | 0.00290 ms | 0.00287 ms | 1.01× |
+| 12 | 0.00498 ms | 0.00592 ms | 0.84× |
+
+So: parity at N=9, 13–16% slower at N=6 and N=12. That is a real cost and it is
+recorded rather than rounded away — it is also small against the 3.95–5.44× AD
+wins over tuned central differences to begin with, which is the comparison that
+decides whether the AD path is worth having at all.
+
+Two things were tried and rejected on measurement: `alignas(32)` on the storage
+(slower — it inflates every `Dual`, and there are 169 of them live in the inner
+loop) and padding N up to a multiple of the SIMD width (no better, and worse at
+N=12, which is already a multiple of 4). What *did* help was returning a proxy
+from `scalar * grad` so the multiply fuses with the accumulate that always
+follows it, rather than materialising an N-double temporary.
+
+```bash
+c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+    -DHAVE_EIGEN -I "$CONDA_PREFIX/include/eigen3" \
+    benchmarks/bench_gradvec.cpp -o /tmp/bench_gradvec && /tmp/bench_gradvec
+```
+
+**On measuring this at all.** The first attempt used `steady_clock` and reported
+speedups from 0.22× to 4.77× for the same binary across consecutive runs — the
+development machine was at load average 43, and wall clock keeps counting while
+the thread is descheduled. The harness uses `CLOCK_THREAD_CPUTIME_ID`, counts
+only cycles the thread was given, interleaves the two carriers so they see the
+same load, and takes the minimum over nine trials. The numbers above are the
+mean of eight such runs and are repeatable to a few percent. A benchmark that
+cannot distinguish a 15% kernel difference from the scheduler is not measuring
+the kernel.
 
 ### The FFT is the slow way to convolve a decay
 
@@ -115,10 +231,10 @@ Reproduce with `python benchmarks/bench_convolution.py`.
 
 FLIMKit ships a GPU backend (MLX / CUDA / MPS / ROCm); on this machine its GPU
 path runs on the M1 Pro GPU via MLX. For per-pixel reconvolution FLIM fitting,
-tttrlib's **CPU** `fit_map` (456 ms) beats it (568 ms), and the GPU is only
-modestly ahead of FLIMKit's own CPU path (739 ms). Per-pixel fitting is a swarm
-of tiny independent fits with branching, which GPUs handle poorly, so the GPU
-brings little benefit in this regime.
+tttrlib's **CPU** `fit_map` (140 ms) beats it by **6.3×** (1770 ms), and also
+beats FLIMKit's own CPU path (1194 ms) by **5.3×**. Per-pixel fitting is
+a swarm of tiny independent fits with branching, which GPUs handle poorly, so
+the GPU brings little benefit in this regime.
 
 Caveat: this is a laptop integrated GPU running a discrete-exponential
 per-pixel model. A datacenter GPU running a batched continuous-distribution fit
@@ -137,6 +253,134 @@ is a different regime that this suite does not test.
   (`SimIntegrator.per_molecule_skip`), which stops stepping molecules far
   outside the detection volume. Same photon statistics, ~3× less wall time than
   the fixed-dt baseline (1.46 s → 0.51 s).
+
+## Streaming correlator — cost per photon, not per bin
+
+`StreamingCorrelator` bins photons onto a uniform macro-time grid, so its
+natural cost is one cascade step per *bin*. At a native macro-time resolution
+there are hundreds to thousands of empty bins between photons, and each one used
+to cost a full cascade step: ~19 ns, measured. A 100 s acquisition at 10 ns
+resolution is 10^10 bins, which is minutes of doing nothing.
+
+An empty run is now skipped in closed form. Level *b* emits `n0 / 2^b` times, so
+the number of emissions a run of `k` empty samples covers is a difference of two
+divisions, and only the first of them can be non-zero — it carries the
+accumulator left from before the run. The rest move history and nothing else, at
+most one history depth of it.
+
+80k photons, `n_bins=16`, `n_casc=25`, driven one at a time from Python:
+
+| Acquisition span | Before | After |
+|------------------|-------:|------:|
+| 0.1 M bins | 0.061 s | 0.060 s |
+| 4.0 M bins | 0.136 s | 0.063 s |
+| 200 M bins | ~3.9 s (extrapolated at 19 ns/bin) | **0.069 s** |
+
+The point is the shape, not the ratio: the cost no longer grows with the length
+of the acquisition. What is left is dominated by the per-photon Python call
+(~0.011 s of the 0.060 s here).
+
+## Dense linear algebra — the shared math kernels
+
+Every ported spectroscopy algorithm sits on two headers: `modules/math/Mat.h`
+(solvers, GEMM) and `modules/math/QREigen.h` (non-symmetric eigendecomposition).
+They have their own benchmark, their own recorded baseline, and a regression
+check, because a change here moves MaxEnt, the Kalman burst search, the HMM
+surrogate, Gopich–Szabo and BurstML at once and none of those benchmarks would
+say which kernel did it.
+
+### The tracked baseline — recorded 2026-08-10
+
+`benchmarks/results/linalg_baseline.tsv` is the file the regression check reads.
+It was recorded on arm64 macOS (M-series), AppleClang `-O3`, NEON (2 doubles
+wide), OpenMP on, as the median of five trials:
+
+| Case | ms |
+|------|---:|
+| `mat_solve` n=64 | 0.024 |
+| `mat_solve` n=256 | 1.408 |
+| `mat_lstsq_minnorm` 256×64 | 3.63 |
+| `mat_lstsq_minnorm` 512×128 | 28.75 |
+| `mat_inverse` n=2, ×1000 | 0.027 |
+| `mat_inverse` n=4, ×1000 | 0.072 |
+| `mat_power` n=5, p=64, ×100 | 0.116 |
+| `gemm_nn` / `gemm_nt` / `gemm_tn` 128³ | 0.161 / 0.107 / 0.112 |
+| `gemm_nn` / `gemm_nt` / `gemm_tn` 256³ | 0.825 / 0.844 / 0.853 |
+| `qr_eigendecompose` n=25 | 0.196 |
+| `qr_eigendecompose` n=100 | 4.47 |
+| `qr_eigendecompose` n=200 | 36.44 |
+
+### What the 2026-08-10 rewrite changed
+
+Before/after for the solvers is from an A/B harness that runs both
+implementations in one binary, so the two columns are directly comparable; the
+eigensolver rows are the same benchmark before and after, single-threaded
+except where noted.
+
+| Case | Before | After | Speedup |
+|------|-------:|------:|:-------:|
+| `mat_solve` n=64 | 0.019 ms | 0.024 ms | 0.81× |
+| `mat_solve` n=256 | 1.282 ms | 1.349 ms | 0.95× |
+| `mat_lstsq_minnorm` 128×32 | 1.121 ms | 0.455 ms | **2.5×** |
+| `mat_lstsq_minnorm` 256×64 | 14.33 ms | 3.41 ms | **4.2×** |
+| `mat_lstsq_minnorm` 512×128 | 201.2 ms | 27.7 ms | **7.3×** |
+| `mat_inverse` n=2, ×200k | 11.61 ms | 5.41 ms | **2.1×** |
+| `mat_inverse` n=4, ×200k | 19.57 ms | 13.97 ms | **1.4×** |
+| `qr_eigendecompose` n=25 | 0.348 ms | 0.196 ms | **1.8×** |
+| `qr_eigendecompose` n=100 | 45.26 ms | 8.26 ms | **5.5×** |
+| `qr_eigendecompose` n=100, 8 threads | 45.26 ms | 4.47 ms | **10.1×** |
+| `qr_eigendecompose` n=150 | 208.1 ms | 26.5 ms | **7.9×** |
+| `qr_eigendecompose` n=150, 8 threads | 208.1 ms | 13.0 ms | **16.0×** |
+
+`mat_solve` is the one case that got slower, and it stays that way on purpose:
+it now scans the matrix once, O(n²), so its singularity test can be relative to
+the matrix scale rather than an absolute 1e-300 floor. Without that scan a
+rank-deficient matrix with large entries is called regular and the caller gets
+components of size 1e24 — measured, not hypothetical, on a rank-1 outer product
+with entries ~1e8. Against the O(n³) factorisation the scan is 19% at n=64 and
+5% at n=256.
+
+`mat_lstsq_minnorm` got faster by working on a column-major copy — one-sided
+Jacobi only ever touches whole columns, which are strided in a row-major matrix
+and contiguous here — and by carrying the column norms through each rotation in
+closed form instead of recomputing them, which removes two of the three
+length-m passes per index pair.
+
+The small-`n` OpenMP entries in the baseline (`mat_power`, `gemm_nn` 128³) are
+slower with threads than without: fork/join on work too small to split. The
+eigensolver's parallel loops are gated at n ≥ 32 for the same reason.
+
+### Where the eigensolver time went
+
+`qr_eigendecompose` spent 94% of its time on eigenvectors, and that part scaled
+as n⁴: it ran a dense LU of `A - lambda*I` for every eigenvalue. Inverse
+iteration on the **Hessenberg** form instead costs O(n²) per eigenvalue — a
+Hessenberg column has exactly one entry to eliminate — so the whole basis is
+O(n³), the same order as the QR iteration that produced the eigenvalues. The
+Schur-vector accumulation inside the QR iteration was then switched off because
+nothing consumes it, and the per-eigenvector loop was parallelised (the vectors
+are independent).
+
+This is why the two `test_burstml.py` cases no longer qualify as `slow`.
+
+### Running it
+
+```bash
+c++ -std=c++17 -O3 -Xpreprocessor -fopenmp -I modules/math/include \
+    -I$(brew --prefix libomp)/include -L$(brew --prefix libomp)/lib -lomp \
+    benchmarks/bench_linalg.cpp -o benchmarks/bench_linalg
+
+./benchmarks/bench_linalg                                          # table
+./benchmarks/bench_linalg --check benchmarks/results/linalg_baseline.tsv
+./benchmarks/bench_linalg --write benchmarks/results/linalg_baseline.tsv
+```
+
+`--check` exits non-zero when a case runs more than `--tol` (default 1.30)
+times its recorded baseline. Run-to-run spread on the reference machine is
+under 11%, so 1.30 flags a real regression rather than noise. A baseline is
+only meaningful against the machine that recorded it — re-record with
+`--write` on new hardware, and note in the commit that the numbers moved
+machines.
 
 ## Across releases — 0.27.0 vs 0.26.2
 

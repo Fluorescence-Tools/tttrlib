@@ -94,6 +94,10 @@ version.provider = "scikit_build_core.metadata.setuptools_scm"
 [tool.pytest.ini_options]
 testpaths = ["test/python"]
 norecursedirs = ["examples", "doc", "build", "dist", ".git", "thirdparty"]
+# pytest-qt aborts collection with RC 4 when no Qt binding (PyQt5/6, PySide6)
+# is importable. The suite never uses Qt fixtures, so silence the plugin when
+# it is present but unusable rather than letting it gate the entire run.
+addopts = ["-p", "no:pytest-qt"]
 markers = [
   "integration: marks tests as integration tests requiring external resources",
   # Workload tiers, by measured setup+call+teardown. `--lane fast` runs the
@@ -114,6 +118,10 @@ markers = [
   "twocde: two-channel kernel density estimator",
   "hmm: photon-by-photon hidden Markov models",
   "pda: photon distribution analysis",
+  "kinetics: continuous-time Markov chain kinetics (Gopich-Szabo)",
+  "fluctuation: photon-counting histogram and FIDA",
+  "corrections: crosstalk, background and maximum-entropy inversion",
+  "streaming: online consumers for a live photon stream",
   "simulation: the diffusion / photon-emission simulator",
   "plugin: drop-in binary plugins — the ABI, the loader and containment",
   "misc: cross-cutting helpers",
@@ -130,7 +138,7 @@ test-skip = "*"
 [tool.cibuildwheel.macos]
 archs = ["universal2"]
 before-all = [
-    "brew install hdf5 eigen || brew upgrade hdf5 eigen || true",
+    "brew install hdf5 || brew upgrade hdf5 || true",
 ]
 before-build = "pip install delocate"
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
@@ -145,7 +153,7 @@ SKBUILD = "1"
 manylinux-x86_64-image = "manylinux_2_28"
 archs = ["x86_64"]
 before-all = [
-    "dnf install -y epel-release --nogpgcheck && dnf install -y --enablerepo=powertools --nogpgcheck cmake hdf5-devel eigen3-devel && rm -f /usr/local/bin/swig*",
+    "dnf install -y epel-release --nogpgcheck && dnf install -y --enablerepo=powertools --nogpgcheck cmake hdf5-devel && rm -f /usr/local/bin/swig*",
 ]
 repair-wheel-command = "auditwheel repair --plat manylinux_2_28_x86_64 -w {dest_dir} {wheel}"
 

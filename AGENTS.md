@@ -90,6 +90,17 @@ another project (ChiSurf, mmfdb, a paper, anywhere):
 
 This is non-optional. A port that skips the benchmark step is incomplete.
 
+**tttrlib has no external numerical dependency, and that is now literally
+true.** Eigen was the last one and is gone; `Mat.h`, `QREigen.h`, `NelderMead.h`,
+`i_lbfgs.h` and `GradVec.h` in `modules/math` are the library's own. The only
+files that include Eigen are `benchmarks/bench_mat.cpp` and
+`benchmarks/bench_gradvec.cpp`, which exist to measure against it — that is what
+step 3 looks like when it is done. Two things it taught, both cheap to reuse:
+record the measured *cost* of a replacement even when you keep it (`GradVec` is
+13–16% behind Eigen at two of three sizes, and the README says so), and time
+kernels with `CLOCK_THREAD_CPUTIME_ID` rather than wall clock — on a loaded
+machine wall clock reported the same binary as anywhere from 0.22× to 4.77×.
+
 ## Module documentation: Every folder in `modules` must have a `README.md`
 
 Every folder under `modules/` (including top-level module folders and submodules like `spectroscopy/fcs`, `spectroscopy/burst`, `spectroscopy/decay`, `spectroscopy/hmm`, `spectroscopy/pda`, `imaging/clsm`, `imaging/superres`, `imaging/localization`, `io/*`, `util`, `core`, `simulation`, `plugin`, `registry`, `cli`) must contain a `README.md`.

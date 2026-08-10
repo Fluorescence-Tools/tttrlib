@@ -8,7 +8,8 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`QREigen.h`**: Eigendecomposition of real non-symmetric matrices — Parlett-Reinsch balancing, Householder Hessenberg reduction, Francis double-shift QR with LAPACK's exceptional shift, and eigenvectors by inverse iteration on the Hessenberg form. Plus the complex dense kernels (`zmatmul`, `zmatvec`, `zinv`). Used by `BurstML` and `GopichSzabo`.
 - **`NelderMead.h`**: Header-only simplex optimiser for derivative-free problems.
 - **`NeuralNet.h` / `NeuralNet.cpp`**: Feed-forward multilayer perceptron with Adam training, explicit backprop, StandardScaler, and JSON serialisation. Uses `Mat.h` for all dense linear algebra.
-- **`i_lbfgs.h`**: Header-only limited-memory BFGS optimiser with central-difference numerical gradients and Armijo backtracking line search.
+- **`i_lbfgs.h`**: Header-only limited-memory BFGS optimiser with central-difference numerical gradients and Armijo backtracking line search. A consumer may supply an exact gradient instead; `imaging/localization` does.
+- **`GradVec.h`**: Fixed-size vector of doubles used as the *derivative part* of a vectorized forward-mode dual number, so one pass through an objective yields all N partial derivatives. See below.
 - **`Random.h`**: Centralised counter-based RNG (Philox / PCG / SplitMix64 / MT19937) with thread-safe deterministic parallel draws.
 - **`SimPcgRandom.h`**: Compact inline PCG32 PRNG for per-stream reproducible randomness.
 
@@ -17,9 +18,55 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - `util` (for CPU feature detection, verbose output)
 - nlohmann/json (for NeuralNet serialisation)
 
+No Eigen, and no other external linear algebra. `Mat.h` and `GradVec.h` between
+them removed the last two consumers; see below and `benchmarks/bench_mat.cpp`.
+
 ## Why a separate module?
 
 Previously these files lived in `util`, which meant every module that needed `Verbose.h` also transitively pulled the matrix library and neural net. The split separates "stuff that does math" from "stuff that does plumbing" (logging, progress, byte order, bit ops).
+
+## `GradVec.h` — the derivative slot of a vectorized dual number
+
+Forward-mode automatic differentiation carries one derivative alongside each
+value. Seed the derivative with an N-vector instead — `e_j` in slot `j` — and a
+single evaluation of the objective propagates all N partials at once. That is
+what makes forward mode cheaper than the 2N objective evaluations a central
+difference costs, and `GradVec<N>` is the thing carried.
+
+Its operator set is deliberately not general-purpose: it is exactly what
+`autodiff::detail::Dual<double, G>` calls on its `grad` member. Two details are
+load-bearing:
+
+* **`operator/=` divides; it does not multiply by a reciprocal.** `x / s` and
+  `x * (1/s)` differ in the last place, and autodiff's scalar `Dual<double,
+  double>` — the reference the vectorized path is tested against — divides. The
+  shortcut bought nothing and cost exact agreement.
+* **`scalar * grad` returns a proxy, not a vector.** autodiff never uses that
+  product alone; every occurrence is immediately accumulated (`grad += val *
+  aux` in the product rule, `grad -= val * other.grad` in the quotient rule).
+  Returning a `GradVec` would materialise an N-double temporary and then run a
+  second loop over it. `ScaledGradVec` lets the multiply and the accumulate fuse
+  into one pass — the one part of Eigen's expression-template machinery that
+  matters here. It also restored bitwise agreement with the scalar reference,
+  because the fused form contracts to the same FMA the scalar path does.
+
+**This replaced Eigen.** `Eigen::Array<double, N, 1>` was the last use of Eigen
+in tttrlib, and it made a header-only third-party package a hard `REQUIRED` of
+the entire build — CI installs on four platforms, a vcpkg port on Windows, a
+Homebrew keg and a `dnf` package in the wheel builds — for one struct member in
+one file. Measured head to head on the localization objective at its real
+free-parameter counts (`benchmarks/bench_gradvec.cpp`), `GradVec` is at parity
+at N=9 and 13–16% slower at N=6 and N=12. That is a real cost and it is
+recorded rather than rounded away; it is also small against the 3.95–5.44× that
+AD wins over central differences in the first place. Numbers and method are in
+[`PERF.md`](../../PERF.md).
+
+A `NumberTraits<GradVec<N>>` specialization is required before
+`Dual<double, GradVec<N>>` will compile. It lives with each consumer rather than
+in this header, so `GradVec.h` stays free of any autodiff include — and it is
+**undocumented upstream**, which is why `test/cpp/test_ad_gradient.cpp` compares
+the vectorized gradient against autodiff's own scalar `dual`. An autodiff bump
+that changed the contract would compile and silently produce wrong derivatives.
 
 ## Correctness and performance
 
@@ -119,6 +166,8 @@ The tie-break never sees it, and the kernel returns a different — perfectly
 valid — minimum spanning tree. That is the failure the whole total-order
 apparatus exists to prevent, and it hid for a while because the two kernels
 still agreed on most fixtures.
+
+
 ## Deconvolution.h — undoing a known blur
 
 `richardson_lucy` is the Poisson maximum-likelihood restoration: the fixed-point

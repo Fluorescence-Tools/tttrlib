@@ -60,6 +60,34 @@ python bench_localization.py          # 2D Gaussian PSF fit vs scipy
 python make_plots.py                  # -> plots/*.png
 ```
 
+### The C++ kernel benchmarks
+
+These are not part of the competitor suite: they need no venv, no test data and
+no Python, and they compare a tttrlib kernel against the third-party library it
+replaced or against another tttrlib kernel. Build them by hand from the
+repository root; each file's header comment carries its own command line.
+
+| file | question |
+|---|---|
+| `bench_mat.cpp` | `Mat.h` vs Eigen on the GEMM shapes tttrlib actually uses |
+| `bench_linalg.cpp` | the shared solvers, with a tracked baseline (`--check`) |
+| `bench_gradvec.cpp` | `GradVec<N>` vs `Eigen::Array<double,N,1>` as the AD derivative carrier |
+| `bench_ad_gradients.cpp` | AD vs central differences, per parameter count |
+| `bench_ad_vectorized.cpp` | the same, with central differences keeping the SIMD kernel |
+| `bench_sim_propagation_simd.cpp` | the simulator's propagation step |
+
+`bench_mat.cpp` and `bench_gradvec.cpp` are the only two files in the repository
+that include Eigen, and they do it to measure against it — Eigen is not a
+dependency of tttrlib. `bench_gradvec.cpp` builds and runs without it
+(drop `-DHAVE_EIGEN`), reporting the GradVec column alone.
+
+**If you are timing a kernel, do not use wall clock.** `bench_gradvec.cpp` uses
+`CLOCK_THREAD_CPUTIME_ID`, interleaves the two implementations so they see the
+same load, and takes the minimum over nine trials. The first version used
+`steady_clock` and reported speedups between 0.22× and 4.77× for the same binary
+on consecutive runs, because the machine was loaded and wall clock keeps counting
+while the thread is descheduled. Copy that pattern rather than rediscovering it.
+
 ## Cross-version tracking (perf + peak memory)
 
 `bench_versions.py` measures the same workloads across tttrlib releases, recording

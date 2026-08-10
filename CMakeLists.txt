@@ -133,10 +133,79 @@ ENDIF()
 OPTION(WITH_OPENMP "Enable OpenMP parallelization for correlation" ON)
 IF(WITH_OPENMP)
     FIND_PACKAGE(OpenMP)
+    # AppleClang ships no OpenMP runtime and no -fopenmp, so FIND_PACKAGE fails
+    # on macOS and the build then quietly turns OpenMP OFF for the *whole*
+    # library -- every #pragma omp in tttrlib becomes a comment and the parallel
+    # kernels run serial, at roughly an eighth of their speed, with nothing in
+    # the output but one WARNING. A libomp is nevertheless present in every
+    # environment tttrlib is built in (conda ships it as a dependency of the
+    # compilers, Homebrew as the `libomp` keg); it only has to be pointed at.
+    # Setting the cache variables FindOpenMP documents and asking again is the
+    # supported way to do that.
+    IF(APPLE AND NOT OpenMP_CXX_FOUND)
+        FIND_PATH(TTTRLIB_OMP_INCLUDE_DIR omp.h
+            HINTS "$ENV{CONDA_PREFIX}/include" "$ENV{PREFIX}/include"
+                  /opt/homebrew/opt/libomp/include /usr/local/opt/libomp/include)
+        FIND_LIBRARY(TTTRLIB_OMP_LIBRARY NAMES omp
+            HINTS "$ENV{CONDA_PREFIX}/lib" "$ENV{PREFIX}/lib"
+                  /opt/homebrew/opt/libomp/lib /usr/local/opt/libomp/lib)
+        IF(TTTRLIB_OMP_INCLUDE_DIR AND TTTRLIB_OMP_LIBRARY)
+            # Written into the CACHE, with FORCE, not as ordinary variables.
+            # The FIND_PACKAGE above has already cached OpenMP_CXX_FLAGS as
+            # NOTFOUND, and on the *second* configure of an existing build tree
+            # that cached NOTFOUND is what FindOpenMP reads back -- so the
+            # fallback worked exactly once, on the fresh cache, and any later
+            # cmake re-run (touching a CMakeLists is enough) silently turned
+            # OpenMP off again. The compile flags survive in CMAKE_CXX_FLAGS, so
+            # the failure is not a warning: the sources still emit omp calls and
+            # the link fails on _omp_set_num_threads.
+            SET(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${TTTRLIB_OMP_INCLUDE_DIR}"
+                CACHE STRING "CXX compiler flags for OpenMP parallelization" FORCE)
+            SET(OpenMP_CXX_LIB_NAMES "omp"
+                CACHE STRING "CXX compiler libraries for OpenMP parallelization" FORCE)
+            SET(OpenMP_omp_LIBRARY "${TTTRLIB_OMP_LIBRARY}"
+                CACHE FILEPATH "Path to the OpenMP runtime" FORCE)
+            FIND_PACKAGE(OpenMP)
+            IF(OpenMP_CXX_FOUND)
+                MESSAGE(STATUS "OpenMP: AppleClang served by ${TTTRLIB_OMP_LIBRARY}")
+            ENDIF()
+        ELSE()
+            MESSAGE(WARNING "OpenMP: no libomp found for AppleClang; the parallel "
+                            "kernels will run serial. Install it (conda: llvm-openmp, "
+                            "Homebrew: libomp) or set CMAKE_PREFIX_PATH.")
+        ENDIF()
+    ENDIF()
     IF(OpenMP_CXX_FOUND)
         MESSAGE(STATUS "OpenMP enabled: ${OpenMP_CXX_VERSION} (${CMAKE_HOST_SYSTEM_PROCESSOR})")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+        # The flags above only get the *compiler* to emit OpenMP calls; the
+        # runtime still has to be linked, and `OpenMP_EXE_LINKER_FLAGS` is empty
+        # for the hand-configured AppleClang path above (and would not reach
+        # library targets even when it is not). Every target declared from here
+        # down — the modules, the two whole-library targets, the SWIG modules
+        # and the tests — gets it, which is what the imported target is for.
+        LINK_LIBRARIES(OpenMP::OpenMP_CXX)
+        # ...and something has to be able to FIND that runtime at load time.
+        # conda's and Homebrew's libomp both carry an `@rpath/libomp.dylib`
+        # install name, so a binary linking it needs an rpath entry pointing at
+        # the directory it came from -- otherwise every executable and every
+        # extension module dies at startup with "Library not loaded:
+        # @rpath/libomp.dylib" and the only workaround is a DYLD_LIBRARY_PATH,
+        # which macOS SIP strips from anything but a shell. The tool's own
+        # `@loader_path/../lib` does not cover it: libomp is not installed
+        # beside libtttrlib.
+        # INSTALL_RPATH only. `CMAKE_BUILD_RPATH` entries are placed *first*, and
+        # the OpenMP prefix is usually a conda prefix — which commonly holds a
+        # `libtttrlib.dylib` symlink into some other build tree. Putting it ahead
+        # of the build's own directory made the tool load a stale library and
+        # start anyway, which is a worse failure than not starting at all. In the
+        # build tree CMake already adds what it linked; only the installed binary
+        # has to be told.
+        IF(APPLE AND TTTRLIB_OMP_LIBRARY)
+            GET_FILENAME_COMPONENT(TTTRLIB_OMP_DIR "${TTTRLIB_OMP_LIBRARY}" DIRECTORY)
+            LIST(APPEND CMAKE_INSTALL_RPATH "${TTTRLIB_OMP_DIR}")
+        ENDIF()
     ELSE()
         MESSAGE(WARNING "OpenMP requested but not found")
         SET(WITH_OPENMP OFF)
@@ -159,10 +228,47 @@ IF(BUILD_PHOTON_HDF)
     # file aborts the interpreter outright.
     IF(DEFINED HDF5_ROOT OR DEFINED ENV{HDF5_ROOT})
         SET(HDF5_NO_FIND_PACKAGE_CONFIG_FILE TRUE)
+    ELSEIF(DEFINED ENV{CONDA_PREFIX} AND EXISTS "$ENV{CONDA_PREFIX}/include/H5public.h")
+        # No explicit root, but the active conda env ships an HDF5. Its include
+        # directory ends up on the compile line either way (Python, libtiff and
+        # OpenMP hints all point into the env), so the HEADERS compiled against
+        # are the env's whatever find_package picks -- and on macOS the config
+        # package it picks is Homebrew's, a different ABI. That mismatch is
+        # silent until the first Photon-HDF5 write, which aborts the process.
+        # Same prefix for both halves; an explicit HDF5_ROOT still wins above.
+        SET(HDF5_ROOT "$ENV{CONDA_PREFIX}")
+        SET(HDF5_NO_FIND_PACKAGE_CONFIG_FILE TRUE)
+        MESSAGE(STATUS "HDF5: pinned to active conda env $ENV{CONDA_PREFIX}")
     ENDIF()
     FIND_PACKAGE(HDF5 COMPONENTS C)
     IF(HDF5_FOUND)
         MESSAGE(STATUS "HDF5 in use: ${HDF5_LIBRARIES}")
+    ENDIF()
+    # Refuse a cross-prefix HDF5 inside a conda env. An extension built in env
+    # A against env B's HDF5 carries an @rpath install name env A cannot
+    # resolve (ImportError at first use), and if it does load, h5py brings the
+    # env's own HDF5 into the same process — two ABIs, and the first write
+    # aborts. Both failures are silent at build time, which is why this is an
+    # error and not a warning. Skipped under conda-build, whose host prefix is
+    # the intended cross-prefix.
+    OPTION(TTTRLIB_ALLOW_HDF5_PREFIX_MISMATCH
+           "Permit an HDF5 from outside the active conda env" OFF)
+    IF(HDF5_FOUND AND DEFINED ENV{CONDA_PREFIX}
+       AND EXISTS "$ENV{CONDA_PREFIX}/include/H5public.h"
+       AND NOT DEFINED ENV{CONDA_BUILD} AND NOT DEFINED ENV{CONDA_BUILD_STATE}
+       AND NOT TTTRLIB_ALLOW_HDF5_PREFIX_MISMATCH)
+        LIST(GET HDF5_LIBRARIES 0 _tttrlib_hdf5_lib)
+        STRING(FIND "${_tttrlib_hdf5_lib}" "$ENV{CONDA_PREFIX}/" _tttrlib_hdf5_in_env)
+        IF(_tttrlib_hdf5_in_env EQUAL -1)
+            MESSAGE(FATAL_ERROR
+                "HDF5 resolved to ${_tttrlib_hdf5_lib}, but the active conda env "
+                "$ENV{CONDA_PREFIX} ships its own HDF5. A cross-prefix HDF5 either "
+                "fails to load (its @rpath is not on the env's search path) or "
+                "loads beside the env's copy and aborts on the first write. Unset "
+                "HDF5_ROOT (the configure then uses the env's HDF5), point it at "
+                "the env, or set TTTRLIB_ALLOW_HDF5_PREFIX_MISMATCH=ON if the "
+                "mismatch is intended.")
+        ENDIF()
     ENDIF()
 ENDIF()
 
@@ -351,20 +457,12 @@ IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts/cxxopts.hpp")
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cxxopts)
 ENDIF()
 
-# Eigen — header-only dense linear algebra (no link step). Used by NeuralNet for
-# the batched GEMMs of training/inference, and later by the forward-mode AD
-# gradient provider. Vendored copy wins; otherwise fall back to the system one.
-IF(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen/Eigen/Core")
-  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/eigen)
-ELSE()
-  # No version floor: Eigen's config treats a major bump as incompatible, so
-  # asking for "3.3" rejects Eigen 5.x. Everything used here is ancient API.
-  FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
-  MESSAGE(STATUS "Using system Eigen3 ${Eigen3_VERSION}")
-  # Eigen3::Eigen is an INTERFACE target (headers only, no link step); newer
-  # Eigen no longer sets the legacy EIGEN3_INCLUDE_DIR variable.
-  LINK_LIBRARIES(Eigen3::Eigen)
-ENDIF()
+# Eigen is gone. It was a `REQUIRED` of the whole project for two things: the
+# batched GEMMs in NeuralNet, now Mat.h (modules/math), and the derivative slot
+# of the vectorized forward-mode gradient in ImageLocalization, now GradVec<N>
+# (modules/math). Both replacements are measured against Eigen in
+# benchmarks/bench_mat.cpp and benchmarks/bench_gradvec.cpp. Nothing else in the
+# library ever used it -- `QREigen.h` is tttrlib's own eigensolver, not Eigen.
 
 # HighFive HDF5 reader
 IF(BUILD_PHOTON_HDF)
@@ -458,12 +556,45 @@ INCLUDE(TTTRLibThirdParty)
 # of src/, on purpose.
 INCLUDE(TTTRLibModule)
 ADD_SUBDIRECTORY(modules)
-ADD_SUBDIRECTORY(tools)
 
 # The example drop-in plugin. Opt-in (-DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON) and
 # deliberately not linked against tttrlib: it exists so the plugin path can be
 # tested end to end rather than only described.
 ADD_SUBDIRECTORY(examples/plugin)
+
+# Header-only C++ checks for the shared linear algebra. Opt-in
+# (-DTTTRLIB_BUILD_CPP_TESTS=ON) because they need nothing but an include path
+# and a compiler — no library, no Python, no test data — so they are also
+# runnable by hand; see test/cpp/README.md.
+#
+# test_ad_gradient additionally needs thirdparty/ for the autodiff headers: it
+# guards the vectorized forward-mode gradient, which is the one place a
+# third-party template and a tttrlib type have to agree on a contract that is
+# not documented upstream.
+OPTION(TTTRLIB_BUILD_CPP_TESTS "Build the header-only C++ math tests" OFF)
+IF(TTTRLIB_BUILD_CPP_TESTS)
+    ENABLE_TESTING()
+    FOREACH(_cpp_test test_mat_linalg test_qreigen test_ad_gradient)
+        ADD_EXECUTABLE(${_cpp_test} "${PROJECT_SOURCE_DIR}/test/cpp/${_cpp_test}.cpp")
+        TARGET_INCLUDE_DIRECTORIES(${_cpp_test}
+            PRIVATE "${PROJECT_SOURCE_DIR}/modules/math/include"
+                    "${PROJECT_SOURCE_DIR}/thirdparty")
+        ADD_TEST(NAME ${_cpp_test} COMMAND ${_cpp_test})
+    ENDFOREACH()
+
+    # test_decay_likelihood is the odd one out: the Poisson likelihoods are not
+    # header-only, so it compiles the two translation units it needs rather than
+    # linking the decay module. That keeps it runnable by hand from a bare
+    # checkout like the others, which is the property that makes these useful.
+    ADD_EXECUTABLE(test_decay_likelihood
+        "${PROJECT_SOURCE_DIR}/test/cpp/test_decay_likelihood.cpp"
+        "${PROJECT_SOURCE_DIR}/modules/spectroscopy/decay/src/DecayStatistics.cpp"
+        "${PROJECT_SOURCE_DIR}/modules/util/src/Verbose.cpp")
+    TARGET_INCLUDE_DIRECTORIES(test_decay_likelihood
+        PRIVATE "${PROJECT_SOURCE_DIR}/modules/spectroscopy/decay/include"
+                "${PROJECT_SOURCE_DIR}/modules/util/include")
+    ADD_TEST(NAME test_decay_likelihood COMMAND test_decay_likelihood)
+ENDIF()
 
 # Module headers, for the targets declared BELOW this line only.
 #

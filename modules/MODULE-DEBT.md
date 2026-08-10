@@ -50,19 +50,35 @@ artefact nobody exercises.
 **Exit:** make them thin aggregates over the module objects once the modules
 exist, keeping the installed names.
 
-## 3. `legacy` still carries every third-party dependency
+## 3. ~~`legacy` still carries every third-party dependency~~ -- Eigen is gone
 
-The extracted modules declare only what they use -- `localization` asks for
-Eigen and autodiff, `pda` and `superres` for pocketfft, `sim` for HighFive --
-but `legacy` still declares all of them, because it still contains a consumer of
-each.
+Eigen was the case that made this debt visible: a project-wide `REQUIRED` for
+the sake of two files. It is now removed entirely, and the exit was not the one
+planned. The plan was to extract `nn` so that Eigen would be "needed by exactly
+two modules" instead of by everything. What actually happened is that both
+consumers stopped needing it:
 
-Eigen in particular is a project-wide `REQUIRED` for the sake of two files, and
-`localization` is only one of them.
+- `NeuralNet`'s batched GEMMs moved to `Mat.h` (`modules/math`), which has its
+  own SIMD kernel and its own benchmark against Eigen;
+- `ImageLocalization`'s AD gradient carried its derivatives in
+  `Eigen::Array<double, N, 1>`, and now carries them in `GradVec<N>`
+  (`modules/math`), measured against Eigen in `benchmarks/bench_gradvec.cpp`.
 
-**Exit:** extracting `nn`, the other Eigen consumer. At that point Eigen is
-needed by exactly two modules and can stop being mandatory for the whole
-project.
+So `FIND_PACKAGE(Eigen3 REQUIRED)` is gone from the top-level `CMakeLists.txt`,
+`tttrlib::eigen` is gone from `cmake/TTTRLibThirdParty.cmake`, and the four CI
+platforms, the vcpkg port and the two wheel-builder images no longer install it.
+
+Worth keeping in view: `superres` and `clsm` were *declaring*
+`EXTERNAL_DEPS tttrlib::eigen` (and `superres` also `tttrlib::autodiff`) while
+including neither, and `localization` was declaring Eigen while actually using
+autodiff. Nothing caught it, because the top-level `INCLUDE_DIRECTORIES` for
+`thirdparty/` puts the vendored headers on every module's include path anyway.
+A declared dependency is documentation until a module compiles with only what
+it asked for.
+
+**Remaining exit:** give modules their include paths from `EXTERNAL_DEPS` alone,
+so a wrong declaration fails the build instead of being absorbed by the
+directory scope.
 
 ## 4. Module libraries carry no soname
 

@@ -17,13 +17,16 @@
 //    of eps and bg. i_lbfgs minimises in the reduced space of free parameters,
 //    so N is what matters for gradient cost.
 //
-// Build (from benchmarks/):
-//   clang++ -std=c++17 -O3 -I../include -I../thirdparty -I<autodiff> -I<eigen> \
-//     bench_ad_vectorized.cpp ../src/DecayConvolution.cpp -o bench_ad_vec
-
-#include <Eigen/Core>
+// Build (from the repository root):
+//   c++ -std=c++17 -O3 -I modules/math/include -I modules/util/include \
+//       -I modules/spectroscopy/decay/include -I thirdparty \
+//       benchmarks/bench_ad_vectorized.cpp \
+//       modules/spectroscopy/decay/src/DecayConvolution.cpp \
+//       modules/util/src/*.cpp -o /tmp/bench_ad_vec
 
 #include <autodiff/forward/dual.hpp>
+
+#include "GradVec.h"
 
 #include <chrono>
 #include <cmath>
@@ -35,7 +38,7 @@
 namespace autodiff {
 namespace detail {
 template <int N>
-struct NumberTraits<Eigen::Array<double, N, 1>> {
+struct NumberTraits<tttrlib::GradVec<N>> {
     using NumericType = double;
     static constexpr auto Order = 0;
 };
@@ -196,13 +199,12 @@ void grad_central(Obj&& f, std::vector<double>& x, int n, double eps, std::vecto
 
 template <int N, typename ObjT>
 void grad_ad(ObjT&& f, const std::vector<double>& x, std::vector<double>& g) {
-    using Arr = Eigen::Array<double, N, 1>;
+    using Arr = tttrlib::GradVec<N>;
     using DualN = autodiff::detail::Dual<double, Arr>;
     std::vector<DualN> xd(N);
     for (int j = 0; j < N; ++j) {
         xd[j].val = x[j];
-        xd[j].grad = Arr::Zero();
-        xd[j].grad[j] = 1.0;
+        xd[j].grad = Arr::Unit(j);
     }
     const DualN r = f(xd.data(), N);
     for (int j = 0; j < N; ++j) g[j] = r.grad[j];
