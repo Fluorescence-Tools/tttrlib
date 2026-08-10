@@ -1650,18 +1650,14 @@ public:
       *
       * @param enable If true, files will be automatically compressed after reading (default behavior).
       */
-     static void set_auto_compress_on_read(bool enable) {
-         auto_compress_on_read = enable;
-     }
+     static void set_auto_compress_on_read(bool enable);
 
      /*!
       * \brief Checks if automatic compression on read is enabled.
       *
       * @return True if files will be automatically compressed after reading.
       */
-     static bool get_auto_compress_on_read() {
-         return auto_compress_on_read;
-     }
+     static bool get_auto_compress_on_read();
 
      /*!
       * \brief Returns the container type used to open the TTTR file.

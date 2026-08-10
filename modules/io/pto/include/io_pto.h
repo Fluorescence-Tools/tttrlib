@@ -118,7 +118,7 @@ struct PtoAnnotation {
  * "derived from", which PTO deliberately leaves undefined -- and it is the one
  * relation the container names itself.
  */
-extern const char* const kPtoSidecarTag;
+inline constexpr const char* kPtoSidecarTag = "pto.sidecar_of";
 
 /// A run of free space inside the file. \see PtoFile::free_extents.
 struct PtoExtent {

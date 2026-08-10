@@ -10,7 +10,6 @@
 
 namespace photonscore {
 
-const char* const D7_MAGIC = "D7 Photons Data";
 
 namespace {
 

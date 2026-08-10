@@ -138,8 +138,10 @@ namespace tttrlib {
 namespace io {
 
 /// The magic at the head of a store file, and the customary extension.
-extern const char* const kStoreMagic;       ///< "TTTRSTOR"
-extern const char* const kStoreExtension;   ///< ".dstore"
+// Inline constexpr, not extern data: MSVC cannot import data symbols
+// across module DLLs, and SWIG wrappers reference these directly.
+inline constexpr const char* kStoreMagic = "TTTRSTOR";
+inline constexpr const char* kStoreExtension = ".dstore";
 
 /*!
  * \brief Write a store, and everything under it, to `filename`.

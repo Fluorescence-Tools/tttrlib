@@ -32,7 +32,7 @@
 namespace photonscore {
 
 /// Signature at the very start of a ".photons" file.
-extern const char* const D7_MAGIC; // "D7 Photons Data"
+inline constexpr const char* D7_MAGIC = "D7 Photons Data";
 
 /// Default page (block) size in bytes.
 constexpr uint32_t D7_DEFAULT_PAGE = 16384;

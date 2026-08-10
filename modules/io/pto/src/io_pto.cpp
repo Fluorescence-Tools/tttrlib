@@ -35,7 +35,6 @@
 namespace tttrlib {
 namespace io {
 
-const char* const kPtoSidecarTag = "pto.sidecar_of";
 
 namespace {
 

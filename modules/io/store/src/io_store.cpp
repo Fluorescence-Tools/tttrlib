@@ -9,8 +9,6 @@
 namespace tttrlib {
 namespace io {
 
-const char* const kStoreMagic = "TTTRSTOR";
-const char* const kStoreExtension = ".dstore";
 
 namespace {
 

@@ -70,6 +70,11 @@ bool TTTR::auto_compress_on_read = []() {
     return enabled;
 }();
 
+// Out of line so the SWIG wrapper calls exported functions instead of
+// importing the static member -- MSVC cannot import data across DLLs.
+void TTTR::set_auto_compress_on_read(bool enable) { auto_compress_on_read = enable; }
+bool TTTR::get_auto_compress_on_read() { return auto_compress_on_read; }
+
 
 TTTR::TTTR() :
         // private
