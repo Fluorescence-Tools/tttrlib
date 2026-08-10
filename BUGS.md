@@ -3,6 +3,40 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## SIGSEGV: `TTTR(path).header` on a temporary — the header outlives its owner
+
+**2026-08-11.** Reading the header off a TTTR that is not bound to a name is a
+hard crash, on every format:
+
+```python
+import tttrlib
+h = tttrlib.TTTR("any.ptu").header
+h.macro_time_resolution          # Fatal Python error: Segmentation fault
+```
+
+Exit code 139. Binding the TTTR first is fine and is the workaround:
+
+```python
+t = tttrlib.TTTR("any.ptu")      # keep it alive
+h = t.header                     # 2.5e-08
+```
+
+`get_header()` hands back a raw `TTTRHeader*` and the SWIG proxy does not keep
+the owning `TTTR` alive, so the temporary is collected at the end of the
+expression and the proxy is left pointing into freed memory. Nothing about the
+call site looks dangerous, which is what makes it worth fixing rather than
+documenting: `obj.attr.subattr` is ordinary Python, and the same shape works for
+every other tttrlib property.
+
+Found while writing `test/python/test_pto_photons_native.py` (the test now binds
+the object and says why). **Not specific to `.pto`** — reproduced above on a
+PicoQuant PTU, and the same lifetime question applies to any accessor returning
+a pointer to a member.
+
+Fix is a SWIG `%feature` keeping a reference to the parent on the returned
+proxy — the same treatment other container-to-member accessors need; worth
+auditing them together rather than patching this one.
+
 ## FIXED — TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
 
 > **Fixed 2026-08-10, entry moved to the changelog** (removal = fix landed,

@@ -2574,6 +2574,46 @@ std::string sidecar_text(const PtoFile& file, std::uint64_t uid) {
     return std::string();
 }
 
+/*!
+ * \brief Apply a native photons object's header tags to the TTTR it produced.
+ *
+ * Without this the reader hands back a column of integers with no unit: the
+ * events load, and every derived quantity -- a lifetime, a correlation lag, a
+ * CLSM reconstruction -- is silently in the wrong units or impossible. The
+ * tags are the header, and they are required by the format for exactly that
+ * reason (see doc/formats/pto.rst, "Photon streams, natively").
+ *
+ * Naming follows the specification rather than convenience: the two clock tags
+ * are MMFDB dictionary terms and are spelled as the dictionary spells them,
+ * because a term that already exists must not be re-coined. The bin count has
+ * no MMFDB term and deliberately does *not* borrow the near-misses --
+ * `_mmfdb_setup.n_bins` is FCS correlator bins and `micro_time_binning` is a
+ * factor, not a count -- so it lives in PTO's own namespace until MMFDB
+ * defines one.
+ *
+ * \return true when every required tag was present and applied.
+ */
+bool apply_photon_header(const PtoFile& file, std::uint64_t uid, TTTR* out) {
+    TTTRHeader* h = out->get_header();
+    if (h == nullptr) return false;
+
+    bool have_macro = false, have_micro = false, have_bins = false;
+    for (const PtoTag& t : file.tags_for(uid)) {
+        if (t.name == "_mmfdb_setup.macro_time_resolution") {
+            h->set_macro_time_resolution(t.d);
+            have_macro = true;
+        } else if (t.name == "_mmfdb_setup.micro_time_resolution") {
+            h->set_micro_time_resolution(t.d);
+            have_micro = true;
+        } else if (t.name == "_pto_photons.number_of_micro_time_channels") {
+            // Int tags arrive in `i`; tolerate an unsigned writer using `u`.
+            const long long n = t.i != 0 ? t.i : static_cast<long long>(t.u);
+            if (n > 0) { h->set_number_of_micro_time_channels(static_cast<int>(n)); have_bins = true; }
+        }
+    }
+    return have_macro && have_micro && have_bins;
+}
+
 /// One object into `out`, read where it lies.
 bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
               TTTR* out) {
@@ -2595,6 +2635,10 @@ bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
         out->append_events(macro.data(), static_cast<int>(n), micro.data(),
                            static_cast<int>(n), chan.data(), static_cast<int>(n),
                            type.data(), static_cast<int>(n), false, 0);
+        // The events are only half of it. Without the header tags this returns
+        // dimensionless integers, which is what a native photons object looked
+        // like before -- see apply_photon_header.
+        apply_photon_header(file, o.uid, out);
         return true;
     }
     const int container = container_for(o.encoding);
