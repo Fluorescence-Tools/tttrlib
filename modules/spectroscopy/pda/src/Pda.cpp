@@ -316,8 +316,10 @@ void Pda::conv_pF(
         double background_ch2
 ) {
     const size_t n = Nmax + 1;
-    static thread_local std::vector<double> tmp;
-    if (tmp.size() < n * n) tmp.resize(n * n);
+    // One SHARED buffer: each cell is written by exactly one omp iteration
+    // before pass 2 reads it. thread_local crashed here -- inside the parallel
+    // regions each worker rebinds to its own, never-sized TLS copy.
+    std::vector<double> tmp(n * n);
     std::vector<double> bg(n, 0.0);
     poisson_0toN(bg, 0, background_ch1, (int) n);
     std::vector<double> br(n, 0.0);
