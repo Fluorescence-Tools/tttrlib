@@ -664,7 +664,15 @@ void Correlator::normalize_ccf_wahl(
     double cr2 = (double) np2 / std::max(1.0, (double) dt2);
     double maximum_macro_time = (double) std::max(dt1, dt2);
     for (unsigned int j = 0; j < x_axis.size(); j++) {
-        double pw = static_cast<double>(static_cast<uint64_t>(pow(2.0, static_cast<int>(static_cast<double>(j - 1) / n_bins))));
+        if (j == 0) {
+            // Zero lag holds the self-correlation, not a physical value (the
+            // laurence normalization zeroes it too). The old power expression
+            // was undefined here: float-to-integer conversion of the infinite
+            // 2^((0-1)/n_bins) differs between compilers and platforms.
+            corr[j] = 0.0;
+            continue;
+        }
+        double pw = std::pow(2.0, static_cast<double>((j - 1) / n_bins));
         double delta_t = (double) (maximum_macro_time - x_axis[j]);
         corr[j] /= pw; 
         corr[j] /= (cr1 * cr2 * delta_t);
