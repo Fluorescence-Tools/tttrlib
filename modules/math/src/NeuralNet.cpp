@@ -76,7 +76,9 @@ void adam_step(Mat& p, const Mat& g, Mat& m, Mat& v,
     const double* gp = g.memptr();
     double* mp = m.memptr();
     double* vp = v.memptr();
+#ifndef _MSC_VER  /* MSVC: C7660 without -openmp:experimental */
     #pragma omp simd
+#endif
     for (size_t i = 0; i < n; ++i) {
         mp[i] = beta1 * mp[i] + (1.0 - beta1) * gp[i];
         vp[i] = beta2 * vp[i] + (1.0 - beta2) * gp[i] * gp[i];

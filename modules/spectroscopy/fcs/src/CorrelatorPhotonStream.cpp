@@ -13,7 +13,9 @@ if (is_verbose()) {
 }
     // t[i] = t[i] * n_tac + tac[i] — a FMA over 64-bit integers.  The compiler
     // auto-vectorizes this when the types are plain (no verbose branch inside).
+#ifndef _MSC_VER  /* MSVC: C7660 without -openmp:experimental */
     #pragma omp simd
+#endif
     for (size_t i = 0; i < n_times; i++) {
         t[i] = t[i] * n_tac + tac[i];
     }
