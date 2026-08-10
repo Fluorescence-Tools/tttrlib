@@ -3,6 +3,29 @@
 ## [Unreleased]
 
 ### Added
+- **`Cluster.h` — a k-d tree, and the two kernels HDBSCAN spends its time in**
+  (`modules/math`). `KDTree` answers k-nearest-neighbour queries over a
+  row-major `(n x d)` table; `core_distances(X, k)` returns the distance to
+  every point's k-th neighbour, and `mutual_reachability_mst(X, k, alpha)` the
+  minimum spanning tree of the graph whose weight is
+  `max(core_i, core_j, d(i,j))`. Boruvka over the tree while the tree prunes,
+  Prim above the dimension where it stops (`tree_is_worthwhile`, measured at
+  about ten features). The module is in `math` because none of it knows what a
+  photon is and a k-d tree over a table of doubles is wanted in several places
+  at once.
+
+  **The edge order is a compatibility surface.** Mutual-reachability weights tie
+  constantly — a core distance is the weight of every edge it dominates — so the
+  minimum spanning tree is not unique and Boruvka and Prim would return
+  different, equally valid trees. `edge_less` therefore orders by weight *and
+  then by the sorted endpoint pair*, which makes the tree unique, and
+  `Cluster.cpp` is compiled with `-ffp-contract=off` so that a fused
+  multiply-add cannot break a tie the other way. A downstream caller keeps its
+  own implementation of the same algorithm for environments without this
+  library and the two are bit-identical; relaxing either rule breaks that
+  silently.
+
+### Added
 - **A `DataStore` tree is reached with `/`, the way `pathlib` reaches a
   filesystem.** A store has been a tree since the data-groups work, and getting
   at a column was a four-link chain — `store.group("results")["Tau"].numpy()`.

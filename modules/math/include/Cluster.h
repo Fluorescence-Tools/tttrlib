@@ -1,0 +1,184 @@
+// SPDX-License-Identifier: BSD-3-Clause
+#ifndef TTTRLIB_CLUSTER_H
+#define TTTRLIB_CLUSTER_H
+
+// Cluster.h -- k-d tree nearest neighbours, and the two kernels that HDBSCAN
+// spends all of its time in.
+//
+// Why this lives in `math` and not in an analysis module: none of it knows what
+// a photon is. A k-d tree over an (n x d) table of doubles is wanted in several
+// places at once -- burst feature spaces, localisation tables, and the
+// density-based clustering the analysis GUIs offer -- and writing it once here
+// is what keeps a fourth copy from appearing.
+//
+// The two kernels are:
+//
+//   core_distances(X, k)        distance from every point to its k-th nearest
+//                               neighbour, the local density estimate HDBSCAN
+//                               is built on. O(n log n) through the tree.
+//
+//   mutual_reachability_mst()   minimum spanning tree of the graph whose edge
+//                               weight is max(core_i, core_j, d(i,j)). Boruvka
+//                               with tree pruning, O(n log n) in practice
+//                               against the O(n^2) of the textbook Prim.
+//
+// ---------------------------------------------------------------------------
+// The tie-break is part of the contract
+// ---------------------------------------------------------------------------
+// Mutual-reachability weights tie constantly: whenever the max is a *core*
+// distance, every edge that core distance dominates carries the same weight, so
+// hundreds of edges can share one value. An MST is then not unique, and Boruvka
+// and Prim pick different ones -- which changes the dendrogram, and with it the
+// cluster count. Callers that can fall back to their own Prim (chisurf does)
+// would silently get a different answer depending on whether this library was
+// importable.
+//
+// So the edge order here is TOTAL: by weight, then by the sorted endpoint pair
+// (min(u,v), max(u,v)). Under a total edge order the MST is unique and every
+// correct algorithm returns the same one. `edge_less` below is that order and
+// must stay identical to the caller's.
+
+#include <cstddef>
+#include <vector>
+
+namespace tttrlib {
+
+/// Total order on weighted edges: weight first, then the sorted endpoint pair.
+/// Read the header comment before changing it -- it is a compatibility surface.
+inline bool edge_less(double w1, int u1, int v1, double w2, int u2, int v2) {
+    if (w1 != w2) return w1 < w2;
+    const int a1 = u1 < v1 ? u1 : v1, b1 = u1 < v1 ? v1 : u1;
+    const int a2 = u2 < v2 ? u2 : v2, b2 = u2 < v2 ? v2 : u2;
+    if (a1 != a2) return a1 < a2;
+    return b1 < b2;
+}
+
+/// A static k-d tree over a row-major (n_samples x n_features) table.
+///
+/// Built once and queried many times. The data is not copied; the caller must
+/// keep it alive for the lifetime of the tree.
+class KDTree {
+public:
+    /// Build the tree over a copy of `data`. `leaf_size` is the point count
+    /// below which a node stops splitting; 32 keeps the traversal shallow
+    /// without letting the linear scan inside a leaf dominate.
+    ///
+    /// The copy is deliberate: the tree outlives the call that built it, and
+    /// the array it is built from is routinely a temporary owned by a language
+    /// binding.
+    KDTree(const double* data, int n_samples, int n_features, int leaf_size = 32);
+
+    int n_samples() const { return n_samples_; }
+    int n_features() const { return n_features_; }
+
+    /// Squared distances and indices of the `k` nearest neighbours of `point`,
+    /// including the point itself when it is part of the data. Both output
+    /// buffers must hold `k` entries; results come back sorted ascending.
+    void query(const double* point, int k, int* out_index, double* out_sq_dist) const;
+
+    /// Distance to the `k`-th nearest neighbour of every point in the tree.
+    /// `k` counts the point itself, so `k == 1` gives zeros.
+    ///
+    /// The `k` neighbours themselves are kept, because
+    /// `mutual_reachability_mst` needs a cheap upper bound on each point's
+    /// shortest outgoing edge and its own nearest neighbours are the best one
+    /// available. Calling this before the MST is therefore not just the natural
+    /// order, it is the fast path.
+    std::vector<double> core_distances(int k) const;
+
+    /// Minimum spanning tree of the mutual-reachability graph, as `3 * (n-1)`
+    /// doubles laid out row-major as `[source, target, weight]`.
+    ///
+    /// `core` must hold one core distance per point (typically from
+    /// `core_distances`); `alpha` divides the plain distance before the
+    /// inflation, so values above one make the hierarchy more conservative.
+    ///
+    /// Borůvka over the tree, which is `O(n log n)` while the tree prunes. Past
+    /// roughly a dozen dimensions it stops pruning and `mst_prim` is faster;
+    /// `mutual_reachability_mst_auto` picks between them. All three return the
+    /// same tree — see the note on the total edge order at the top of the file.
+    std::vector<double> mutual_reachability_mst(const std::vector<double>& core,
+                                                double alpha = 1.0) const;
+
+    /// The same tree by Prim's algorithm: `O(n^2 d)`, no tree, no pruning, and
+    /// no dependence on the dimension. In high dimensions a k-d tree visits
+    /// most of itself on every query, and this plain scan — which vectorises
+    /// and parallelises perfectly — wins outright.
+    std::vector<double> mst_prim(const std::vector<double>& core,
+                                 double alpha = 1.0) const;
+
+    /// Borůvka or Prim, whichever suits the shape of the data.
+    std::vector<double> mutual_reachability_mst_auto(const std::vector<double>& core,
+                                                     double alpha = 1.0) const;
+
+    /// Whether a k-d tree is worth using on data of this shape.
+    ///
+    /// The crossover is a property of the geometry, not of this machine: a
+    /// bounding box in `d` dimensions overlaps a query ball in nearly every
+    /// direction once `d` is large, so the pruning that makes a tree `O(log n)`
+    /// stops firing. Measured on the mixed blob/uniform fixtures the tests use,
+    /// Borůvka wins comfortably up to eight dimensions and has lost by sixteen.
+    static bool tree_is_worthwhile(int n_features) { return n_features <= 10; }
+
+    /// Leaf size to build with when the caller has no opinion.
+    ///
+    /// Small leaves pay off only while the bounding boxes are tight enough to
+    /// prune: in two or three dimensions a 16-point leaf beats a 128-point one
+    /// by a third, and by sixteen dimensions the ranking has reversed, because
+    /// every box is visited anyway and only the per-node overhead is left.
+    static int default_leaf_size(int n_features) {
+        if (n_features <= 4) return 16;
+        if (n_features <= 10) return 32;
+        return 128;
+    }
+
+private:
+    struct Node {
+        int start = 0;  ///< first index into index_ owned by this node
+        int stop = 0;   ///< one past the last
+        int left = -1;  ///< child node, or -1 for a leaf
+        int right = -1;
+    };
+
+    /// Squared distance from `point` to the bounding box of node `node`.
+    double node_lower_bound(int node, const double* point) const;
+    /// Recursive k-NN descent; `heap` holds the k best so far as a max-heap.
+    void query_node(int node, const double* point, int k, int* out_index,
+                    double* out_sq_dist, int& filled) const;
+
+    int build(int start, int stop, int depth);
+
+    std::vector<double> owned_;   ///< the copy the tree is built over
+    const double* data_ = nullptr;
+    int n_samples_ = 0;
+    int n_features_ = 0;
+    int leaf_size_ = 32;
+    std::vector<int> index_;      ///< permutation of 0..n-1, leaves are ranges
+    std::vector<Node> nodes_;
+    std::vector<double> bounds_;  ///< per node: n_features lows then highs
+
+    // Neighbour cache filled by core_distances() and read by the MST.
+    mutable std::vector<int> knn_index_;
+    mutable std::vector<double> knn_sq_dist_;
+    mutable int knn_k_ = 0;         ///< neighbours stored per point
+    mutable int knn_core_rank_ = 0; ///< which of them is the core distance
+};
+
+// ---------------------------------------------------------------------------
+// Flat entry points (these are what the language bindings expose)
+// ---------------------------------------------------------------------------
+
+/// Distance from every row of `input` to its `k`-th nearest neighbour.
+void core_distances(double* input, int n_input1, int n_input2, int k,
+                    double** output, int* n_output);
+
+/// Minimum spanning tree of the mutual-reachability graph of `input`.
+/// The result is `(n_samples - 1) x 3`, each row `[source, target, weight]`,
+/// in the total order documented at the top of this file.
+void mutual_reachability_mst(double* input, int n_input1, int n_input2,
+                             int min_samples, double alpha, double** output,
+                             int* n_output1, int* n_output2);
+
+}  // namespace tttrlib
+
+#endif  // TTTRLIB_CLUSTER_H

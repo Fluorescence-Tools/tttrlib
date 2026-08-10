@@ -139,6 +139,8 @@ def experimental(cls):
 %include "HMMConstraints.i"
 %include "HMM.i"
 %include "NeuralNet.i"
+/* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
+%include "Cluster.i"
 %include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
 
