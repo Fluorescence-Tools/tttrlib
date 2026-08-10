@@ -382,8 +382,15 @@ imposing no bound at all (`HalfNormalPrior` is documented as "a soft positivity 
 `Wcm` and `wcm_p2s` skipped any model bin at or below `1e-12`. That is not a guard — it is a
 discontinuous 828.9-unit *reward* for driving a bin under the floor, with a perfectly flat objective
 below it. Fixed (see CHANGELOG): `log` continued by its tangent at the floor, C1 across it, finite
-and monotone below. Verified inert two ways — bitwise identical above the floor, and a 143,360-bin
-sweep of the clamped `DecayFit23` box that never goes below 1.86e-07.
+and monotone below. **Not inert, and the first write-up of this said it was.** Bitwise identical
+above the floor holds; the 143,360-bin sweep that appeared to prove the floor unreachable used a flat
+*non-zero* background and so never tested the reference data, which has none. Measured effect:
+`fit23` 23.802337 -> 23.791124 (tau 0.74219 -> 0.721353), `fit25` 4.738831 -> 3.887975; `fit24` and
+`fit26` unchanged because their background is 0.2. `fit25` is the clean attribution -- its only other
+change removed an always-zero addend -- so the whole 0.85 is the likelihood correction, most of it
+from `wcm_p2s` discarding the *pair* when either channel underflowed. Re-pinned across all four
+conformance runners and both Python reference tests. The lesson: an inertness sweep proves nothing
+outside the inputs it sweeps.
 
 A correction to this PRD's own earlier text: an intermediate probe here reported that `gamma < 0`
 makes the objective NaN. That was a transcription error in the probe, which guarded on `C > 0` where

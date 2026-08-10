@@ -338,14 +338,33 @@
   finite for every finite model value including negative ones, and strictly
   worse the further below it goes.
 
-  **No existing fit changes.** Two independent checks, because "provably inert"
-  is the whole claim: the new code is *bitwise* identical to the old above the
-  floor (`test/cpp/test_decay_likelihood.cpp`, ten magnitudes), and a sweep of
-  143,360 model bins across the entire clamped `DecayFit23` parameter box never
-  produces a bin below `1.86e-07` — five orders of magnitude clear of the floor.
-  The corner is unreachable today precisely *because* the callers clamp; it
-  becomes reachable the moment a clamp is replaced by a soft bound or a prior,
-  which is why this landed first and on its own.
+  **This moves two reference fits, and an earlier revision of this entry claimed
+  it moved none.** That claim was wrong and the way it was wrong is worth
+  keeping. Two checks were run: the new code is *bitwise* identical to the old
+  above the floor (`test/cpp/test_decay_likelihood.cpp`, ten magnitudes — this
+  part holds), and a sweep of 143,360 model bins across the clamped `DecayFit23`
+  parameter box never produced a bin below `1.86e-07`. **The sweep used a flat
+  non-zero background**, so it never explored the case the reference data
+  actually is. It proved the floor unreachable for the inputs it chose, and that
+  was read as unreachable in general.
+
+  The reference fits that do reach it:
+
+  | fit | before | after | why |
+  |---|--:|--:|---|
+  | `fit23` 2I\* | 23.802337 | 23.791124 | zero background, 58 photons — the tail underflows |
+  | `fit23` tau | 0.74219 | 0.721353 | |
+  | `fit25` 2I\* | 4.738831 | 3.887975 | the p2s path, where `wcm_p2s` discarded the **pair** whenever *either* channel underflowed |
+  | `fit24`, `fit26` | unchanged | unchanged | background 0.2; the model never reaches the floor |
+
+  `fit25`'s 0.85 shift is the largest and is unambiguous in origin: the only
+  other change to that path was removing an addend that was always zero, so it
+  is a bitwise no-op and every bit of the movement is the likelihood correction.
+
+  **The old numbers are not the more correct ones.** They are the answer to a
+  likelihood that silently discarded occupied bins. Re-pinned in
+  `test/conformance/cases/decayfit.json` (all four languages),
+  `test/python/decayfit/test_fit2x_compat.py` and `test_decay_fit_interface.py`.
 
   One detail worth not undoing: the multiply stays in `Wcm`'s loop body rather
   than moving inside the helper. With it inside, the compiler stops contracting

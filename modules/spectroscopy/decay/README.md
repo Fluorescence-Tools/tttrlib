@@ -38,11 +38,29 @@ and strictly worse the further below it goes. `wcm_p2s` gets the same treatment
 at C0 — its series' true slope at the floor is not `1/m₀`, and matching it would
 mean differentiating the sum for a region no converged fit should visit.
 
-**Nothing about an existing fit changes.** Above the floor the arithmetic is
-bit-for-bit what it was, and a sweep of 143,360 model bins across the whole
-clamped `DecayFit23` parameter box never produces a bin below `1.86e-07`. The
-corner is unreachable *because* the callers clamp; it becomes reachable the
-moment a clamp is replaced by a soft bound or a prior, which is the point.
+**This moves two reference fits — and the first version of this note said it
+moved none.** Above the floor the arithmetic is bit-for-bit what it was, and
+that part is solid. The claim that went further rested on a sweep of 143,360
+model bins across the clamped `DecayFit23` box that never produced a bin below
+`1.86e-07` — but **that sweep used a flat non-zero background**, which is not
+what the reference data is. It proved the floor unreachable for the inputs it
+happened to choose.
+
+Where the model does reach the floor:
+
+| fit | before | after | why |
+|---|--:|--:|---|
+| `fit23` 2I* | 23.802337 | 23.791124 | zero background, 58 photons |
+| `fit23` tau | 0.74219 | 0.721353 | |
+| `fit25` 2I* | 4.738831 | 3.887975 | p2s path — `wcm_p2s` dropped the **pair** if *either* channel underflowed |
+| `fit24`, `fit26` | unchanged | unchanged | background 0.2 |
+
+`fit25` is the clean attribution: the only other change on that path removed an
+always-zero addend, so all 0.85 of the movement is the likelihood correction.
+The old values answered a likelihood that discarded occupied bins; they are not
+the more correct ones. Generalisable lesson: **an inertness sweep proves nothing
+outside the inputs it sweeps**, and a background of zero is exactly the corner a
+"representative" parameter box omits.
 
 Two things not to undo:
 

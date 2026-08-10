@@ -1,5 +1,38 @@
 # Bundle update log
 
+## 2026-08-10 (19th entry)
+
+* **Correction to the 16th entry: the likelihood fix was not inert, and the
+  check that said it was could not have caught it.** Running the Python suite —
+  the step that had been deferred all session — moved four reference values:
+  `fit23` 2I* 23.802337 -> 23.791124 (tau 0.74219 -> 0.721353) and `fit25`
+  4.738831 -> 3.887975. `fit24` and `fit26` are untouched.
+
+  **The evidence was real and the conclusion was still wrong.** Two checks were
+  run and both did what they said: the new code is bitwise identical above the
+  floor, and a 143,360-bin sweep of the clamped `DecayFit23` box never produced
+  a bin below 1.86e-07. The sweep used a **flat non-zero background**. The
+  reference decays do not have one — `fit23` runs on zero background with 58
+  photons, so the tail underflows. A sweep proves nothing outside the inputs it
+  sweeps, and "a representative parameter box" quietly meant "the inputs I
+  thought of".
+
+  `fit25` is the clean attribution and the largest move: its only other change
+  removed an addend that was always zero, a bitwise no-op, so the entire 0.85
+  comes from the likelihood. Most of that is `wcm_p2s`, which discarded the
+  **pair** whenever *either* channel underflowed — a far more aggressive discard
+  than `Wcm`'s per-bin skip, and the reason a fit with a 0.2 background still
+  moved.
+
+  The old numbers are not the more correct ones; they are the answer to a
+  likelihood that silently dropped occupied bins. Re-pinned in all four
+  conformance runners and both Python reference tests.
+
+  Also: the 7 `test_maxent_tcspc` failures in the same run are **not** from this
+  work — `ext/python/MaxEntTcspc.i` and that test file are uncommitted
+  in-progress edits by a concurrent session, one of which currently raises
+  `NameError: name 'importlib' is not defined`.
+
 ## 2026-08-10 (18th entry)
 
 * **PRD-010 Phase 5e: the AD advantage peaks and then decays, and `FitNExp` was
@@ -90,10 +123,11 @@
   the minimised objective is `-C*log(m)`, large and *positive*, so dropping it
   is a discontinuous improvement: measured, the objective falls **828.9** across
   the threshold and is identical for every negative model value. Now continued
-  by the tangent to `log` — C1 across the floor, finite below, monotone. Proven
-  inert two ways, because that was the whole claim: bitwise identical above the
-  floor, and a 143,360-bin sweep of the clamped DecayFit23 box that never gets
-  below 1.86e-07.
+  by the tangent to `log` — C1 across the floor, finite below, monotone.
+  **Claimed inert; it is not** (corrected in the 19th entry). Bitwise identity
+  above the floor holds; the 143,360-bin sweep that seemed to settle it used a
+  flat *non-zero* background and so never tested the reference data, which has
+  none.
 
   **`DecayFit23`'s hand-rolled tau penalty had its sign inverted.**
   `penalty = (x[0] < kMinTau) ? -x[0] : 0` is negative over the whole band

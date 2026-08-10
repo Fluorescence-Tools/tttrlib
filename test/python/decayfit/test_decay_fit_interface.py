@@ -221,8 +221,8 @@ class TestCrossLanguageReference(unittest.TestCase):
             [1.0, 0.01, 0.38, 1.2],
             tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, -1, -1])),
             self._problem(0.0))
-        self.assertAlmostEqual(out.objective, 23.802337, places=3)
-        self.assertAlmostEqual(out.parameters[0], 0.74219, places=3)
+        self.assertAlmostEqual(out.objective, 23.791124, places=3)
+        self.assertAlmostEqual(out.parameters[0], 0.721353, places=3)
         named = tttrlib.results_as_dict("fit23", list(out.results))
         self.assertAlmostEqual(named["r_experimental"], 0.25974, places=3)
 
@@ -268,7 +268,7 @@ class TestCrossLanguageReference(unittest.TestCase):
         period = self.corrections["period"]
         self.assertGreater(out.parameters[0], 100.0 * period)
         # and it looks *better* than the physical answer by the objective alone
-        self.assertLess(out.objective, 23.802337)
+        self.assertLess(out.objective, 23.791124)
 
     def test_fit24_matches_the_reference(self):
         out = self._fit("fit24").fit(
@@ -282,7 +282,7 @@ class TestCrossLanguageReference(unittest.TestCase):
             [0.5, 1.0, 2.0, 4.0, 0.02, 0.38],
             tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, 0, 0, -1, -1])),
             self._problem(0.2))
-        self.assertAlmostEqual(out.objective, 4.738831, places=3)
+        self.assertAlmostEqual(out.objective, 3.887975, places=3)
         self.assertAlmostEqual(out.parameters[0], 0.5, places=3)
         # The winning candidate is now reported directly rather than having to be
         # recovered by matching the returned lifetime against the four inputs.

@@ -54,7 +54,32 @@ class TestDeprecationIsAnnounced(unittest.TestCase):
 
 
 class TestOldAnswersUnchanged(unittest.TestCase):
-    """The shim reproduces the published values, not merely something plausible."""
+    """The shim reproduces the published values, not merely something plausible.
+
+    Two of these values were re-pinned once, deliberately, and the reason is the
+    point of the class rather than an exception to it.
+
+    ``Wcm``/``wcm_p2s`` used to *skip* a model bin at or below 1e-12 — a line
+    commented "only for stability reasons". The term a near-zero bin contributes
+    to the minimised objective is ``-C*log(m)``, large and positive, so skipping
+    it was a discontinuous reward for driving the bin down, and below the floor
+    the objective was flat. ``wcm_p2s`` was worse: it discarded the **pair** when
+    *either* channel underflowed. Both are now continued smoothly, so bins that
+    used to be thrown away are counted.
+
+    That moves any fit whose model actually reaches the floor, and only those:
+
+    * ``fit23`` — 23.802337 -> 23.791124, tau 0.74219 -> 0.721353. Zero
+      background and 58 photons, so the tail underflows.
+    * ``fit25`` — 4.738831 -> 3.887975, on the p2s path where a whole pair was
+      being dropped. The largest move here by far.
+    * ``fit24`` and ``fit26`` are **unchanged**, because their background is
+      0.2 rather than zero and the model never reaches the floor.
+
+    The old numbers were not more correct; they were the answer to a likelihood
+    that quietly discarded data. Conformance (``test/conformance/cases/decayfit.json``)
+    carries the same values for the other three languages.
+    """
 
     def setUp(self):
         warnings.simplefilter("ignore", DeprecationWarning)
@@ -70,8 +95,8 @@ class TestOldAnswersUnchanged(unittest.TestCase):
         # means starting inside the basin and saying so, rather than relying on
         # the descent path from 2.1 happening to fall into it.
         r = fit(DATA, initial_values=[1.0, 0.01, 0.38, 1.2], fixed=[0, 0, 1, 1])
-        self.assertAlmostEqual(r["twoIstar"], 23.802337, places=3)
-        self.assertAlmostEqual(r["x"][0], 0.74219, places=3)
+        self.assertAlmostEqual(r["twoIstar"], 23.791124, places=3)
+        self.assertAlmostEqual(r["x"][0], 0.721353, places=3)
         # The old wide vector kept the outputs at slots 6 and 7.
         self.assertEqual(len(r["x"]), 8)
         self.assertAlmostEqual(r["x"][7], 0.25974, places=3)
@@ -86,7 +111,7 @@ class TestOldAnswersUnchanged(unittest.TestCase):
         fit = tttrlib.Fit25(background=np.zeros(2 * FN) + 0.2, **_kwargs())
         r = fit(DATA, initial_values=[0.5, 1.0, 2.0, 4.0, 0.02, 0.38],
                 fixed=[0, 0, 0, 0, 1, 1])
-        self.assertAlmostEqual(r["twoIstar"], 4.738831, places=3)
+        self.assertAlmostEqual(r["twoIstar"], 3.887975, places=3)
         self.assertAlmostEqual(r["x"][0], 0.5, places=3)
 
     def test_fit26(self):
