@@ -645,22 +645,7 @@ int main(int argc, char** argv) {
 
     int status = 0;
     if (strcmp(cmd, "ui") == 0 || strcmp(cmd, "tui") == 0 || strcmp(cmd, "--tui") == 0) {
-#if defined(PTO_HAS_TUI)
         status = ptoview_main(argc, argv, infop);
-#else
-        const char* reader = getenv("PTO_READER");
-        if (reader && reader[0]) {
-            char* exec_args[5];
-            exec_args[0] = (char*)reader;
-            exec_args[1] = (char*)"ui";
-            exec_args[2] = (char*)container_file;
-            exec_args[3] = NULL;
-            execvp(reader, exec_args);
-        }
-        printf("Interactive TUI is not built into this reader binary.\n");
-        printf("Get a reader with TUI support: https://github.com/Fluorescence-Tools/tttrlib/releases\n\n");
-        status = cmd_ls(infop);
-#endif
     } else if (strcmp(cmd, "ls") == 0 || strcmp(cmd, "objects") == 0) {
         status = cmd_ls(infop);
     } else if (strcmp(cmd, "tree") == 0) {

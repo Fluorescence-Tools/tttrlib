@@ -25,8 +25,8 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Jitter.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
-    EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft tttrlib::eigen
-    SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i Sampling.i
+    EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
+    SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i
     TEST_DIR test/python/misc
 )
 

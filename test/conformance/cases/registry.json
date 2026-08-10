@@ -4,203 +4,48 @@
   "cases": [
     {
       "id": "registry.categories",
-      "doc": "The seven literal-backed categories every binding must serve, as presence checks. Not an exact list: the Python package augments the C++ registry with curated data-file categories (operation, fcs, hmm, pda) the other bindings do not serve yet, so an exact pin cannot pass all four runners until live registration lands in C++ (PRD-027).",
-      "steps": [
-        {
-          "op": "registry.json",
-          "as": "j"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"burst_search\""
-          ],
-          "as": "has_burst_search"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"file_container\""
-          ],
-          "as": "has_file_container"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"table_format\""
-          ],
-          "as": "has_table_format"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"plugin\""
-          ],
-          "as": "has_plugin"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"fit\""
-          ],
-          "as": "has_fit"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"fit_setup\""
-          ],
-          "as": "has_fit_setup"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "\"objective\""
-          ],
-          "as": "has_objective"
-        }
-      ],
-      "expect": {
-        "has_burst_search": true,
-        "has_file_container": true,
-        "has_table_format": true,
-        "has_plugin": true,
-        "has_fit": true,
-        "has_fit_setup": true,
-        "has_objective": true
-      }
+      "doc": "The categories, in the order the registry lists them.",
+      "steps": [{"op": "registry.categories", "as": "cats"}, {"op": "len", "on": "cats", "as": "n"}],
+      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective", "operation", "fcs", "hmm", "pda"], "n": 11}
     },
     {
       "id": "registry.whole_blob_names_its_categories",
       "doc": "The whole registry, checked for the keys it must contain. The blob's length is deliberately not pinned -- see the area note.",
       "steps": [
-        {
-          "op": "registry.json",
-          "as": "j"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "burst_search"
-          ],
-          "as": "has_burst_search"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "file_container"
-          ],
-          "as": "has_file_container"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "fit"
-          ],
-          "as": "has_fit"
-        }
+        {"op": "registry.json", "as": "j"},
+        {"op": "contains", "on": "j", "args": ["burst_search"], "as": "has_burst_search"},
+        {"op": "contains", "on": "j", "args": ["file_container"], "as": "has_file_container"},
+        {"op": "contains", "on": "j", "args": ["fit"], "as": "has_fit"}
       ],
-      "expect": {
-        "has_burst_search": true,
-        "has_file_container": true,
-        "has_fit": true
-      }
+      "expect": {"has_burst_search": true, "has_file_container": true, "has_fit": true}
     },
     {
       "id": "registry.file_container_category",
       "doc": "One category on its own, which is the call a binding actually makes.",
       "steps": [
-        {
-          "op": "registry.category_json",
-          "args": [
-            "file_container"
-          ],
-          "as": "j"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "SPC-130"
-          ],
-          "as": "has_spc130"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "PTU"
-          ],
-          "as": "has_ptu"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "HT3"
-          ],
-          "as": "has_ht3"
-        }
+        {"op": "registry.category_json", "args": ["file_container"], "as": "j"},
+        {"op": "contains", "on": "j", "args": ["SPC-130"], "as": "has_spc130"},
+        {"op": "contains", "on": "j", "args": ["PTU"], "as": "has_ptu"},
+        {"op": "contains", "on": "j", "args": ["HT3"], "as": "has_ht3"}
       ],
-      "expect": {
-        "has_spc130": true,
-        "has_ptu": true,
-        "has_ht3": true
-      }
+      "expect": {"has_spc130": true, "has_ptu": true, "has_ht3": true}
     },
     {
       "id": "registry.burst_search_category",
       "steps": [
-        {
-          "op": "registry.category_json",
-          "args": [
-            "burst_search"
-          ],
-          "as": "j"
-        },
-        {
-          "op": "contains",
-          "on": "j",
-          "args": [
-            "sliding_window"
-          ],
-          "as": "has_sliding_window"
-        }
+        {"op": "registry.category_json", "args": ["burst_search"], "as": "j"},
+        {"op": "contains", "on": "j", "args": ["sliding_window"], "as": "has_sliding_window"}
       ],
-      "expect": {
-        "has_sliding_window": true
-      }
+      "expect": {"has_sliding_window": true}
     },
     {
       "id": "registry.unknown_category_is_empty_not_an_error",
       "doc": "Asking for a category that does not exist answers rather than throws -- a caller enumerating categories should not have to guard every call.",
       "steps": [
-        {
-          "op": "registry.category_json",
-          "args": [
-            "no_such_category"
-          ],
-          "as": "j"
-        },
-        {
-          "op": "len",
-          "on": "j",
-          "as": "length"
-        }
+        {"op": "registry.category_json", "args": ["no_such_category"], "as": "j"},
+        {"op": "len", "on": "j", "as": "length"}
       ],
-      "expect": {
-        "length": 2
-      }
+      "expect": {"length": 2}
     }
   ]
 }

@@ -32,7 +32,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/CLSMSuperRes.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/ImageLocalization.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util core math
+    DEPENDS  util core
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft tttrlib::eigen tttrlib::autodiff
     SWIG_INTERFACES CLSM.i Correlator.i DecayPhasor.i CLSMSuperRes.i Localization.i
     TEST_DIR test/python/clsm

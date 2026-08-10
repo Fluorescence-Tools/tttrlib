@@ -33,7 +33,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitSetup.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayStatistics.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util registry plugin math
+    DEPENDS  util registry plugin
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES DecayFit.i DecayConvolution.i
     TEST_DIR test/python/decayfit

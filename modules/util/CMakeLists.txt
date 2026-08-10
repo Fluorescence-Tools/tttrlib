@@ -24,6 +24,9 @@ tttrlib_add_module(
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Verbose.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/ProgressMonitor.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/ProgressTicker.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/NeuralNet.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    EXTERNAL_DEPS tttrlib::json
+    EXTERNAL_DEPS tttrlib::json tttrlib::eigen
+    SWIG_INTERFACES NeuralNet.i
+    TEST_DIR test/python/misc
 )

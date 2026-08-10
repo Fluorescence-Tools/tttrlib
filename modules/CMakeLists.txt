@@ -29,7 +29,6 @@
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
 add_subdirectory(util)
-add_subdirectory(math)   # numerical kernels -- Random.h and friends moved out of util
 add_subdirectory(io)   # declares `io` and, beneath it, one module per format
 add_subdirectory(plugin)  # the drop-in binary plugin ABI, host and loader; sits on `io`
 add_subdirectory(sim)

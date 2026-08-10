@@ -3,140 +3,320 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-## TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
+## FIXED — TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
 
-**2026-08-10, found from ChiSurf.** `solve_tcspc_mem_lifetime` covers the
-**lifetime-axis** MEM inversion and covers it well — priors, the `_esm` error
-estimates, `chisq`/`Q`/`S`/`niter`/`success` on `MemTcspcResult`. So ChiSurf's
-`solve_lifetime_mem` now delegates to it.
+> **Fixed 2026-08-10, entry moved to the changelog** (removal = fix landed,
+> not a concurrent-write loss). `solve_tcspc_mem_fret` +
+> `tcspc_build_fi_distances` now live beside the lifetime solver, sharing one
+> `run_mem_from_design` engine — the two differ only in the design matrix,
+> which was the entry's point. Parity with ChiSurf's `solve_fret_mem`:
+> `max |dp| < 1e-8` on identical input
+> (`test_maxent_tcspc.py::TestTcspcMemFret`), plus a no-reference
+> ground-truth recovery test. ChiSurf's `solve_fret_mem` can now delegate the
+> way `solve_lifetime_mem` does.
+>
+> **Still open from this entry:** FCS MaxEnt
+> (`chisurf/core/models/fcs/maxent.py`) remains a third MEM implementation
+> with no home here; closing it means exposing the engine with a pluggable
+> design matrix, at which point all three are one solver and two matrix
+> builders. This stub can be deleted once both sessions have seen it.
 
-Its sibling has nowhere to go. The **distance-axis** inversion — the one that
-returns *p(R<sub>DA</sub>)* instead of a lifetime distribution, which is the
-reason a FRET experiment runs MEM at all — has no counterpart here:
+## Enhancement: automated performance measurement via GitHub Actions with docs auto-update
 
-```python
->>> import tttrlib
->>> [n for n in dir(tttrlib) if "mem" in n.lower() or "maxent" in n.lower()]
-['MemTcspcResult', 'maxent_invert', 'solve_tcspc_mem_lifetime', 'tcspc_run_mem']
->>> [n for n in dir(tttrlib) if "fret" in n.lower() and "mem" in n.lower()]
-[]
-```
+**2026-08-08.** tttrlib needs a **continuous performance measurement** pipeline:
 
-So `chisurf/plugins/fluorescence_decay/maxent_decay/core/solver.py` still holds
-`solve_fret_mem` and everything under it, and that "everything" is the part
-worth having here rather than in a plugin:
+1. **Benchmark suite.** A set of benchmarks covering the hot paths — file I/O
+   (PTO/PTU/HDF5 read), burst search, FCS correlation, decay fitting, CLSM
+   assembly, DataStore read/write. These run as a dedicated benchmark target,
+   not part of the unit test suite.
 
-* `_build_Fi_distances` — the design matrix over a distance grid. Each column is
-  a donor decay quenched at the FRET rate for one R, built from `tau0`, `R0`,
-  a donor-only reference and its fraction. This is the piece that makes the
-  inversion a *distance* distribution rather than a lifetime one, and it is
-  where the physics lives.
-* `_build_Fi_lifetimes` — the lifetime-axis equivalent, presumably duplicating
-  what `solve_tcspc_mem_lifetime` already does internally.
-* `_run_mem` — the generic MEM engine both axes share.
-* `_quadpr_bound` — the bounded quadratic-programming step.
+2. **GitHub Actions runner.** A workflow (triggered on push to `dev`/`main`
+   and on PRs) runs the benchmark suite on a fixed runner environment and
+   captures timing metrics. The runner must be consistent (same OS, same
+   hardware class) so numbers are comparable across runs.
 
-**Why this is a bug and not a wish.** A library that ships half of a pair
-invites exactly what happened: the half that exists gets delegated, the half
-that does not stays behind, and the two drift — the shared `_run_mem` in the
-plugin is now a *second* MEM engine maintained against this one, with no test
-holding them together. The lifetime axis is also the less interesting half.
+3. **Auto-update docs.** The performance metrics are written into the
+   documentation automatically — a performance table or page (e.g.
+   `doc/performance.rst` or `okf/specs/performance-baseline.md`) is
+   regenerated with the latest numbers on every push. The update happens
+   through a **push hook**: the workflow commits the updated metrics back to
+   the branch (or opens a PR with the updated numbers), so the docs never
+   drift from measured reality.
 
-**What would close it:** a `solve_tcspc_mem_fret` (or a distance-grid option on
-the existing entry point) taking the R grid, `tau0`, `R0` and the donor-only
-reference with its fraction, returning the same `MemTcspcResult`. Sharing the
-engine with `solve_tcspc_mem_lifetime` is the point — the two differ only in
-how the design matrix is built.
+4. **Regression detection.** A benchmark that regresses beyond a threshold
+   (e.g. >10% slower than the baseline) fails the CI check and blocks the
+   PR. The baseline is versioned alongside the benchmarks.
 
-Related, and the same shape of problem: **FCS MaxEnt** (`chisurf/core/models/fcs/maxent.py`)
-is a third MEM implementation, over a diffusion-time axis, also with no home
-here. If the engine were exposed with a pluggable design matrix, all three
-would be one solver and two matrix builders.
+5. **Relates to the GIL/non-blocking rule.** The benchmark suite should also
+   verify the "logging does not degrade performance" constraint (from the ndx
+   verbosity issue) and the GIL-release requirement — a test that runs a
+   long tttrlib call from a thread and asserts the main thread's heartbeat
+   did not stall.
 
-## `GopichSzabo::set_scheme` rejects any disconnected kinetic scheme
+### Concrete deliverables
 
-**2026-08-10, found from ChiSurf.** `set_scheme` returns `false` whenever the
-rate matrix has a repeated zero eigenvalue — an all-zero matrix, or any scheme
-with a state that does not exchange with the rest — and `log_likelihood` then
-reports `-inf`. The all-zero case is the **no-exchange limit** — the static mixture a dynamic photon-by-photon fit is
-compared against — so an optimiser exploring towards slow exchange hits a wall
-where the likelihood is in fact perfectly well defined, and a likelihood-ratio
-test against the static model cannot be computed at all.
+- `.github/workflows/benchmark.yml` — runs on push/PR, executes benchmarks,
+  writes metrics, detects regressions.
+- `test/benchmarks/` — the benchmark scripts (Python, using `pytest-benchmark`
+  or a standalone timing harness).
+- `doc/performance.rst` — auto-generated performance table, updated by the
+  workflow.
+- A baseline file (`test/benchmarks/baseline.json`) with the reference
+  numbers; updated only when a benchmark change is intentional.
 
-**It is not only the all-zero case.** Any scheme whose exchange graph is
-*disconnected* is rejected — including an ordinary three-state model in which
-one state simply does not exchange with the other two, which is a scheme a user
-would reasonably fit:
+## Enhancement: stabilise the ABI so development gets faster (modular compile, incremental rebuild)
 
-| scheme | `set_scheme` |
-| --- | --- |
-| 2 states, all zeros | **False** |
-| 3 states, all zeros | **False** |
-| 3 states, two exchanging + one isolated | **False** |
-| 2 states, one-way only (0 → 1, rate 1e3) | True |
-| 2 states, off-diagonals 1e-12 | True |
-| 2 states, off-diagonals 1e-6 / 1e-3 / 1e3 | True |
+**2026-08-08.** Related to PRD-027 (modular algorithm registry) and PRD-018
+(ABI stability). The goal is a development loop where editing one algorithm
+does not recompile the world.
 
-So the trigger is a repeated eigenvalue at zero — one per disconnected
-component — not the literal zero matrix. Note the last rows: a *one-way*
-scheme is accepted, and a perturbation as small as 1e-12 is enough to make the
-all-zero case pass, so the boundary is exact degeneracy rather than
-ill-conditioning.
+Today every C++ source file compiles into one aggregate library. Touching one
+function in `decay` recompiles `burst`, `fcs`, `hmm`, `pda`, `clsm`, and the
+SWIG wrapper that links them all — even though nothing they depend on changed.
+ccache helps but does not solve it: a header change in `core` still invalidates
+every translation unit that includes it.
 
-The zero generator is the *best*-conditioned input there is — its eigenvector
-basis is the identity. NumPy returns eigenvalues `[0, 0]` with `cond(V) = 1.0`.
+What to do:
 
-### Reproduction
+1. **Stable ABI boundaries (PRD-018 completion).** Finish the work PRD-018
+   started: `TTTRLIB_API` visibility markers on the aggregate library, frozen
+   public headers, `SOVERSION` on the shared lib. Once the ABI is stable,
+   modules can link against a prebuilt `libtttrlib_core` instead of recompiling
+   it every time. The plugin C ABI (`tttrlib_plugin_init_v1`) is already
+   designed for this — the gap is the intra-library C++ boundary.
 
-```python
-import numpy as np, tttrlib
+2. **Modular compilation (PRD-027 Part 4).** When
+   `TTTRLIB_MODULAR_ALGORITHMS=ON`, each algorithm family compiles into its own
+   shared library (`libtttrlib_fcs`, `libtttrlib_decay`, etc.) that links
+   against `libtttrlib_core`. Editing a decay fit recompiles only
+   `libtttrlib_decay`; the core, FCS, HMM, and PDA binaries are untouched.
 
-emission = np.array([[0.8, 0.2], [0.2, 0.8]])      # two states, two colours
-rates = np.zeros((2, 2))
+3. **Unity / precompiled headers.** The heaviest headers (`TTTR.h`,
+   `DataStore.h`, `DecayFitModel.h`) are included by dozens of TUs. A PCH or
+   unity build for the aggregate target would cut compile time significantly
+   for full rebuilds (the ones ccache can't help with).
 
-g = tttrlib.GopichSzabo()
-print(g.set_scheme(rates.flatten().tolist(),
-                   emission.flatten().tolist(), 2, 2))   # -> False, expected True
-```
+4. **Dependency isolation.** Audit the module dependency graph
+   (`modules/CMakeLists.txt`). If `fcs` transitively pulls in `decay` headers
+   through a chain it doesn't actually need, sever it. Fewer header deps = less
+   recompilation on any change.
 
-The correct answer for four photons `d, a, d, a` at 0, 1e-5, 2e-5, 3e-5 s is
-`log(0.5*(0.8*0.2*0.8*0.2) + 0.5*(0.2*0.8*0.2*0.8))` = `-3.66516292749662`,
-which ChiSurf's own implementation reproduces to 16 digits.
+5. **Verify with a benchmark.** Measure: time to rebuild after touching (a)
+   one `.cpp` in `decay`, (b) one header in `core`, (c) clean build. Record
+   before and after. Target: (a) drops from "relink everything" to "recompile
+   one TU + one module lib"; (b) does not recompile modules that don't include
+   the changed header.
 
-### Where it goes wrong
+This is the build-system half of the modular algorithm story. Without it,
+PRD-027's `TTTRLIB_MODULAR_ALGORITHMS=ON` compiles correctly but the
+development loop is no faster than today.
 
-`set_scheme` has exactly one `return false`, from `eigendecompose`
-(`modules/spectroscopy/kinetics/src/GopichSzabo.cpp:44`). Two of the three
-stages under it already guard the zero case, so neither is the cause:
+## DONE — tttrlib naming must align with mmfdb / flrCIF
 
-* `qreigen_detail::balance` skips a row/column whose off-diagonal sum is zero,
-  so `scale` stays `1.0` and the later `/= s` cannot divide by zero;
-* `qreigen_detail::compute_eigenvectors` maps a zero `anorm` to `1.0`, so
-  `pivot_floor` stays finite.
+> **Closed 2026-08-10.** The rule and the reasoning are now normative in
+> [`okf/specs/mmfdb-is-the-vocabulary.md`](okf/specs/mmfdb-is-the-vocabulary.md);
+> what follows is the original entry with the outcome against each point.
 
-That leaves `francis_qr` or, more likely, `zinv`. Inverse iteration for a
-repeated eigenvalue solves the *same* exactly-singular system `(H - 0*I)x = b`
-for every eigenvector, so all `n` of them come back parallel; the eigenvector
-matrix is then rank deficient and `zinv` fails — even though the true
-eigenspace is the whole space and the identity would serve. Worth checking
-whether `cond` comes out `NaN` there too, since `NaN <= MAX_COND` is `false`
-and would swallow the failure the same way.
+**2026-08-08.** The names used throughout tttrlib — class names, methods,
+parameters, object kinds, tag keys, file format identifiers — must be
+consistent with the vocabulary used in **mmfdb** (`/Users/tpeulen/dev/mmfdb`)
+and the **flrCIF** dictionary standard that mmfdb defines and exports.
 
-The three-state "two exchanging + one isolated" row above is the confirmation:
-that generator has a *simple* zero eigenvalue for the connected pair and
-another for the isolated state, giving the repeated zero. So a fix that
-special-cases the all-zero matrix would not be enough — it has to handle a
-repeated eigenvalue with a full eigenspace generally, which is what LAPACK's
-`dtrevc`/`dhsein` do by orthogonalising successive inverse-iteration vectors
-against the ones already found.
+What was found and done:
 
-### Note for whoever fixes it
+* **Audit the public API surface against mmfdb** — done for everything that
+  reaches a *file*. tttrlib was emitting **eighteen terms mmfdb does not
+  declare**: `bva`, `kde_cde`, `mle_green`, `mle_red`, `burst_fcs`,
+  `hmm_photon_by_photon`, `tcspc_calibration`, `pda_histogram`,
+  `companion_of`, `histogram_bin`, and seven `…4` data formats. All reconciled.
+* **Align object kinds and tag keys** — done. Every `operation_type`,
+  `row_grain`, `data_format` and `relationship_type` the writer or the registry
+  publishes is now an mmfdb term, checked in CI from both sides.
+* **Rename, don't alias** — done, and the distinction that made it tractable is
+  worth keeping: a registry entry's **`name`** is tttrlib's own identifier and
+  was *not* renamed; its **`operation_type`** is the controlled term and was.
+  A conformance test that compares the key against the vocabulary forces the
+  two to be equal, which is how the local names got into the dictionary.
+* **Document the canonical vocabulary in one place** — done, and the one place
+  is **mmfdb**, not here. `okf/nomenclature/mmfdb.dic` is deleted; its 113
+  genuinely-new items were migrated into `mmfdb_workflow_ext.dic`. A test
+  asserts this repository contains no `.dic` at all.
 
-ChiSurf no longer turns a rejected scheme into `-inf` — a *setup* failure is
-not an impossible model, and conflating the two is what made this silent for so
-long. It falls through to its own implementation instead, so the symptom is now
-"quietly slower at the static limit" rather than "wall in the likelihood".
-Fixing this here removes the need for that fall-through to ever fire.
+Not covered by this entry and still open: the *Python/C++ identifier* surface
+(class and method names) was not audited against flrCIF — only the names that
+cross into a file. That is a larger and much lower-risk piece of work, since an
+identifier is not a term.
+
+## Enhancement: all tttrlib functions must be non-blocking and release the GIL
+
+**2026-08-08.** Any long-running tttrlib function — file I/O, photon
+decoding, burst search, CLSM assembly, convolution, fitting — should be
+**non-blocking** and **release the GIL** in the Python bindings so
+concurrency isn't killed. Same principle applies to other language bindings
+(Julia, R, JS) wherever they have an equivalent global lock or event loop.
+
+What to do:
+
+* **Python (SWIG bindings).** Ensure every C++ function that may take more
+  than a trivial amount of time is wrapped with `Py_BEGIN_ALLOW_THREADS` /
+  `Py_END_ALLOW_THREADS` — either via `%inline`/`%template` directors or by
+  annotating the SWIG interface files (`%feature("allowthread")` /
+  `PYTHON_THREAD_BEGIN` / `PYTHON_THREAD_END`). Audit every binding entry
+  point, not just the obvious ones.
+* **Other bindings.** Julia (`ccall` is fine, but long calls should yield),
+  R (release the R eval lock for lengthy C++), JavaScript (Web Workers /
+  async for wasm). Same goal: the host runtime stays responsive while the
+  C++ runs.
+* **Verification.** Write a test that runs a long tttrlib call from a thread
+  while the main thread keeps a heartbeat alive, and asserts the heartbeat
+  did not stall. This guards against regressions.
+
+## [chisurf] The built-in games appear to have disappeared
+
+**2026-08-08.** **Repo:** `../chisurf`. The Games hub
+(`chisurf/plugins/misc/games/`) still ships Pong, Tetris, Breakout,
+Minesweeper, and Number Quest — but they are **hidden from the default
+menus** by the `plugins.show_demo` flag (`demo: true` in the manifest). To a
+user who does not know the flag exists, the games have simply vanished.
+
+The games are not deleted; they are gated. But the gate is invisible and the
+default is "hidden," which reads as "gone."
+
+Fix: surface the games in a **ribbon** inside the Games hub tool — a row of
+game cards shown regardless of `plugins.show_demo`, since a user who opens
+the Games hub has explicitly chosen to play. The flag should keep the games
+out of the production/analysis menus but not out of the dedicated gamespace.
+The Doc Review Quest (PRD-91) should be a first-class entry in that ribbon.
+
+**2026-08-10, verified resolved in substance — not by this session, so the
+entry stays for its author to close.** The hub's manifest is `demo: false`,
+`menu_hidden: false` (discovery confirms it lands in
+`Tools:Miscellaneous:Games` with `show_demo_plugins` OFF); the hub lists all
+six games unconditionally in a navigation panel — a side list of icon+name
+cards rather than the literal ribbon, which reads as a design preference,
+not a gap; the five arcade games are `demo: true` and hub-only, exactly the
+menu split asked for; and Doc Review Quest became **Lumis Quest** (PRD-91
+renamed it) and is a first-class hub entry. Pinned so it cannot silently
+regress: `games/test/test_manifest.py::test_the_gamespace_survives_the_demo_flag`
+fails if the hub is ever demo-gated or menu-hidden, a game leaks into the
+production menus, or a game leaves the hub list.
+
+## FIXED — [chisurf] License tracker: enumerate dependencies and compare to most permissive possible
+
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> `build_tools/license_tracker.py` generates `doc/licenses.md` (matrix on
+> top) + `doc/licenses.json` (machine-readable) from `pyproject.toml`
+> resolved against installed metadata, with overrides for packages shipping
+> none, plus tttrlib's bundled compiled components; **no JS/wasm asset is
+> bundled anywhere in the tree** (the entry's assumption, checked). The
+> answer: most permissive possible is **GPL**, binding constraint
+> **PyQt5/sip** — and those are GPL **v3**, so the stated `GPL-2.0` needs a
+> deliberate call (2.0-or-later or 3.0 resolves it; 2.0-only cannot combine
+> with v3-only deps). `--check` mode + `test/test_license_tracker.py` fail
+> when a new dependency arrives unclassifiable, which is the CI regression
+> guard the entry asked for. This stub can be deleted once both sessions
+> have seen it.
+
+## FIXED — ndx UI/UX: show filename, not full path, in title/header
+
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> ndX never titled its window from the opened file at all — the path on
+> screen was the header's working-path field. `open_files` now titles the
+> window `ndX - <filename>` (` (+N)` for multi-selection, unchanged on
+> append), matching the convention the four external launchers already used,
+> and the full path(s) land in the header Path field's tooltip.
+> `ndxplorer/tests/test_window_title.py`, 5 cases.
+
+## FIXED — ndx UI/UX: buttons are hard to recognize
+
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> Every icon kept its glyph and gained a one-word label: the seven emoji-only
+> buttons of the main window (`📁 Browse`, `📊 Data`, `🎨 Contrast`,
+> `🔄 Update`, `🧹 Clear`, `📷 Screenshot`, `💾 Save`) and the six
+> single-LETTER buttons of the axis rows — `u`/`r` are now `Set`/`Auto`, and
+> the three `Auto` buttons, which had no tooltip at all, say what they
+> auto-range. Buttons that already paired an icon with a word were left
+> alone. Sizes are unchanged (expanding rows absorb the short labels); the
+> full UI test set passes with the new texts.
+
+## FIXED — ndx UI/UX: clean up slider position display
+
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> (1) was already true of the AutoForm playback panel — the Step slider's
+> value box renders to the right of the slider. (2) the persistent
+> `slice X/Y · N points` info row is removed from `playback.view.json`; the
+> same live readout now answers on hover of the Step row (the row, the
+> slider and the value box all carry it, refreshed on every step and after
+> panel rebuilds). (3) the panel loses its one always-on secondary label,
+> which was the noise. Test:
+> `test_playback_panel.py::test_the_readout_is_a_hover_not_a_row`. This stub
+> can be deleted once both sessions have seen it.
+
+## ndx (ndxplorer) must be a fully autoform application
+
+**2026-08-08.** **Repo:** `chisurf/modules/ndxplorer` (handled here because
+ndx lives in the ChiSurf tree). Motivation: ndx should be portable to a webapp
+later. For that to be possible it must not depend on imperative GUI wiring —
+every form, table, and control should be **driven by a schema/declarative
+description** (an "autoform") rather than hand-built widget code.
+
+What blocks the port today:
+
+* Widget construction is likely hand-coded against the desktop framework
+  (Qt/enaml). A webapp cannot reuse that; it needs a schema it can render.
+* Data binding is probably imperative (signals/slots). A webapp needs the form
+  state to be a serialisable object the frontend can read and write.
+* Layout and field definitions are embedded in Python GUI code rather than in
+  a description layer.
+
+To unblock: extract a declarative form definition (field names, types,
+constraints, layout) that a desktop **and** a web renderer can consume, and
+have ndx render its UI from that definition. No business logic in widget
+code.
+
+## ChiSurf issues
+
+**2026-08-08.** Issues reported against `../chisurf` are also tracked here
+until the project has its own tracker. Tag the report with `[chisurf]` and
+note the affected path under `chisurf/`.
+
+## FIXED — ndx is too chatty via logging; reduce verbosity
+
+> **Fixed 2026-08-10 in two passes** (removal = fix landed, not a
+> concurrent-write loss).
+>
+> **The level, everywhere it was set:** ndX standalone defaults to `WARNING`
+> (`-v` for INFO, `--debug` unchanged) — but embedded ndX was re-raised to
+> INFO by chisurf itself, from three places, all now `WARNING`:
+> `chisurf/__init__.py`'s import-time default, its settings-fallback, and
+> the shipped `settings_chisurf.yaml` (`log_level: 20` → `30`; the comment
+> says how to get INFO back). The stale `log_level: 20` in
+> `~/.chisurf/settings_chisurf.yaml` on this machine was updated too — it
+> was a copy of the old default, not a choice. A settings file that states
+> a level is still honoured.
+>
+> **The performance constraint, measured:** the plot-update hot path makes
+> 13 log calls; the f-string sites among them now use lazy `%` args.
+> Interleaved-median benchmark on a 50k-point `update_plots`: **2 µs (0.8%)
+> logging overhead** with logging enabled vs removed — the hot path is
+> unchanged, which is what the constraint demanded. This stub can be
+> deleted once both sessions have seen it.
+
+## FIXED — ndx DataFrame Editor is slow to open `tes_chisurf_mfd.pto`
+
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> The profile said the entry's suspects were innocent: container enumeration
+> and table decode take 0.12 s cold. The seconds were the EDITOR — chitable
+> had retired `DataFrameSource`, ndX's import of it raised, the ImportError
+> was swallowed by the standalone-fallback machinery, and every ChiSurf user
+> silently got the per-cell `QTableWidget` editor (~5 s at burst-table size,
+> scalar `df.iloc[i, j]` per cell). The chitable branch now adapts the frame
+> through `ArraySource` with edit write-back (~0.16 s for 4.6k x 20); the
+> fallback hoists the per-cell frame access and bounds the resize scan for
+> standalone installs; and a guard test fails loudly if the chitable branch
+> ever rots into the fallback again
+> (`test_dataframe_editor.py::test_chisurf_branch_is_alive_when_chisurf_is_importable`).
+> This stub can be deleted once both sessions have seen it.
 
 ## `disassemble` does not create the directories an object's name implies
 
@@ -194,26 +374,180 @@ Related and smaller: `Measurement.metadata()` returns `""` for a container
 written by `Measurement.create()`, so nothing at the file level says what the
 measurement *is* while every object below it is richly tagged.
 
-## Tags are appended, never replaced, and nothing dedupes an edge
+## FIXED — Tags are appended, never replaced, and nothing dedupes an edge
 
-Same session. Re-running an analysis updates its table in place (good — the
-container does not grow an object per re-run) but every tag written during that
-update is *added* to the object's tag list. The parent edge is written each
-time, so a container analysed three times claimed the same source four times:
+> **Fixed 2026-08-10, entry moved to the changelog** (removal = fix landed,
+> not a concurrent-write loss). As the entry proposed, with the semantics the
+> two call sites agreed on: `add_tag` now skips a tag identical in every field
+> (two *different* parents both still land); new `PtoFile::set_tag(tag)`
+> replaces by `(target, name, index)`; new `clear_tags(target, name)` removes
+> one name from one object. `cmd_sm.cpp`'s local implementation now delegates
+> to the API; ChiSurf's read-and-skip workaround can be deleted once it pins a
+> tttrlib with this. Tests:
+> `test_pto.py::test_adding_the_same_fact_twice_records_it_once`,
+> `::test_set_tag_replaces_what_was_stated_before`,
+> `::test_clear_tags_for_one_name_leaves_the_rest`. This stub can be deleted
+> once both sessions have seen it.
 
-```python
-m.parents(uid)   # [6005969235780289] * 4 — one source, recorded four times
+## Concurrent agents silently lose each other's documentation
+
+**2026-08-10.** Two instances working the same checkout produced three
+observable kinds of damage in the shared prose files, none of which any test
+catches because none of it is code:
+
+1. **`okf/log.md` had six byte-identical duplicated sections** and five colliding
+   headings (three `## 2026-08-10 (9th entry)`, two `(8th entry)`, …). A
+   read-modify-write of a whole file by two writers appends both copies; the
+   ordinal in the heading is chosen by counting existing entries, so two writers
+   counting concurrently pick the same number. Cleaned by dropping only the
+   *exact* duplicates and renumbering the day; both are safe because neither
+   changes a byte of anyone's content.
+2. **A `BUGS.md` entry was lost entirely** — the `pto_update_store` /
+   `PtoRowCount` finding, written earlier the same day, was absent a few hours
+   later. Restored from the session that wrote it. Nothing would have noticed:
+   a missing bug report has no failing test.
+3. **A source-of-truth decision was reverted and re-applied**, recorded in the
+   log by the instance that did it: a `data_format` enumeration reduced to one
+   row by one instance was "restored" by the other before it found the upstream
+   mmfdb package and reverted itself.
+
+Worth stating because the mitigation is not "be careful": (2) is invisible, and
+(1) is only visible if somebody reads the whole file. What would actually help:
+
+* **`okf/log.md` entries keyed by something not counted** — a timestamp or a
+  session id rather than an ordinal, so two writers cannot collide by
+  construction.
+* **Append-only writes for the log**, never read-modify-write of the whole file.
+* A guardrail test that fails on a duplicated `##` heading or a duplicated
+  section body in `okf/log.md` — trivial, and it turns (1) from invisible to
+  loud.
+
+The code side is already handled: the registry/dictionary conformance tests
+reported the half-applied vocabulary rename precisely, in both directions, which
+is exactly what they are for.
+
+## FIXED — `pto_update_store` leaves `PtoRowCount` at the old value
+
+> **Fixed 2026-08-10, entry moved to the changelog.** Not lost to a concurrent
+> write this time: the removal *was* the fix landing. Implemented as the entry
+> proposed — `uint_elem_fixed` at 8 octets, the offset recorded in the slot on
+> write **and on parse** (the `tttr sm` re-run is two processes, so the patch
+> has to work on a reopened file), patched in `pto_update_store`. Two adjacent
+> holes closed with it: a relocating `update` and `compact` both rewrote object
+> headers without `PtoRowCount` at all. Tests:
+> `test_pto.py::test_an_update_corrects_the_row_count_the_header_claims`,
+> `::test_compact_keeps_the_row_count`. This stub can be deleted once both
+> sessions have seen it.
+
+## FIXED — Local macOS builds compile against conda's HDF5 headers and link Homebrew's library
+
+> **Fixed 2026-08-10, entry moved to the changelog** (removal = fix landed, not
+> a concurrent-write loss). As the entry proposed: with a conda env active and
+> no explicit `HDF5_ROOT`, the configure now pins `HDF5_ROOT` to
+> `$CONDA_PREFIX` whenever that prefix ships `H5public.h` and disables the
+> config-package path, so headers and library come from the same prefix. An
+> explicit `HDF5_ROOT` still wins. Verified: fresh configure resolves both
+> halves to the conda prefix at 1.12.2, `build_new` relinks without the
+> Homebrew dylib warning, and the two named tests pass without
+> `HDF5_DISABLE_VERSION_CHECK`.
+>
+> **Same day, the mirror image bit chisurf:** an install into `envs/arm64`
+> built with `HDF5_ROOT` hardcoded to *base* mambaforge linked base's
+> `libhdf5.200` — an install name the env cannot resolve, so `import tttrlib`
+> died at chisurf startup. A cross-prefix HDF5 inside a conda env is now a
+> configure `FATAL_ERROR` (override: `TTTRLIB_ALLOW_HDF5_PREFIX_MISMATCH=ON`;
+> conda-build exempt). This stub can be deleted once both sessions have seen
+> it.
+
+## `pch_mixture` indexes `avg_numbers` by the length of `brightnesses`, and reads past the end
+
+**2026-08-10.** `PhotonCountingHistogram.cpp:101` loops over `brightnesses`
+and subscripts `avg_numbers` with the same index:
+
+```cpp
+for (size_t s = 0; s < brightnesses.size(); ++s) {
+    if (brightnesses[s] <= 0.0 || avg_numbers[s] <= 0.0) continue;   // <-- avg_numbers[s]
 ```
 
-Fixed on the ChiSurf side by reading `parents()` first and skipping what is
-already there, which is a workaround for something the writer should not allow:
-`add_tag` on a `PtoType_UID` item that already holds that exact value should
-replace, or the API should expose `set_tag`/`clear_tags(uid, item)` so a caller
-can express "these are the parents" rather than "add a parent".
+Nothing checks that the two vectors are the same length, so a caller that
+passes more brightnesses than occupancies reads off the end of a
+`std::vector`. It is undefined behaviour, not a bounds-checked failure:
 
-Worth checking whether the same doubling affects the scalar tags — an object
-re-described three times may hold three `_mmfdb_artifact.row_grain` values with
-readers silently taking the first.
+```python
+>>> tttrlib.pch_mixture(20, [1.0, 2.0, 3.0, 4.0], [0.5])
+# returns a normalised, finite, plausible-looking histogram
+```
+
+**The reason this is worth fixing rather than documenting** is that it does
+not crash and, on every run measured here, does not even vary — the heap past
+the vector happens to be zero, so the `avg_numbers[s] <= 0.0` guard on the
+next line skips exactly the species whose occupancy was never supplied. The
+observable result is a **three-species argument list silently fitted as one
+species**, with a histogram that sums to 1.0 and passes every finiteness check
+a caller might apply. A `p[1]` of `0.0531…` is stable across processes, so
+even a byte-for-byte reproducibility test would call it correct.
+
+That guard is what makes it quiet, and it is also why the UB is easy to miss
+in review: the bounds error and the value filter sit on the same line.
+
+Two vectors of different lengths cannot describe a mixture, so the fix is to
+reject it — `std::invalid_argument`, surfacing as `ValueError` through the
+`%exception` block, the way `sample_from_cdf` already rejects a CDF whose
+length does not match its axis. `fida_pch` takes the same pair as one
+interleaved `species_flat` array plus `n_species` and so cannot express the
+mismatch at all; that is the shape `pch_mixture` should have had.
+
+Downstream, ChiSurf's `pch_mixture` zips with `strict=True` and raises, and
+has a test pinning it (`plugins/pch/tests/test_services.py`). That check has
+to stay in front of the delegation until this is fixed — which is the
+inversion worth naming: the caller is validating on the library's behalf.
+
+## A `background` with no `background_decay` puts every background photon in micro-time channel 0
+
+**2026-08-10.** Not an engine defect — the mechanism exists and this is its
+*default*, which is the part worth arguing about.
+
+`SimEngine` draws a background photon's micro time from the optional
+`background_decay` pattern, and writes **channel 0** when the config does not
+declare one (`SimEngine.cpp`, `uint16_t micro = 0`). So a config with
+`"background": [0.02, ...]` and no `background_decay` produces:
+
+```
+$ tttr sim <config without background_decay> --channels 4 -o s.spc
+>>> np.bincount(micro[rout == 0], minlength=4096)[:4]
+array([19557,   330,   319,   302])      # 13.6% of the channel, all in bin 0
+```
+
+Uncorrelated background in TCSPC is **flat** in micro time; a spike at zero is
+what *scatter* looks like. So the default silently models the wrong thing, and a
+lifetime fit on such a file fits a large fake scatter component — the channel's
+mean micro time comes out 2.91 ns where the emission is 3.37 ns.
+
+Declaring the distribution fixes it, and is what
+`examples/simulation/configs/mfd_2col_2pol.json` now does:
+
+```json
+"background_decay": {"pattern": [1.0, 1.0, ...], "dt": 0.008}
+```
+```
+>>> np.bincount(micro[rout == 0], minlength=4096)[:4]
+array([328, 338, 322, 306])              # flat, as uncorrelated background is
+```
+
+**The open question is the default**, and it is a decision rather than an
+investigation: an unconfigured background is more honestly *flat over the laser
+period* than a delta at zero, because flat is what the physics is and zero is a
+different physical claim. Changing it would move every existing result that used
+a background without a decay, so it needs a deliberate call — but until then,
+every config that sets `background` should set `background_decay` too, and
+nothing warns when one is given without the other.
+
+**2026-08-10, the warning half is done** (the default is untouched — that
+decision stays open). `SimEngine::from_json` now prints a `WARNING:` to
+`std::clog` when `background` has any nonzero rate and `background_decay` is
+absent, naming the consequence (a lifetime fit reads the spike as scatter) and
+the flat-pattern cure. Verified through `tttr sim` in both directions;
+`test_config_trajectory.py::test_background_without_decay_warns` pins it.
 
 ## Not a bug, recorded so it is not re-derived: `.pto` round-trips CLSM markers exactly
 
