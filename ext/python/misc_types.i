@@ -89,7 +89,11 @@ $result = swig::from($1);
 }
 #endif
 
-// Pair templates
+// Pair templates. A vector of pairs needs its element type instantiated
+// first: without it SWIG leaves value_type opaque and the generated Java
+// and JavaScript code does not compile.
+%template(PairInt) std::pair<int,int>;
+%template(PairInt64) std::pair<long long, long long>;
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
 %template(VectorPairInt64) std::vector<std::pair<long long, long long>>;
 
@@ -100,6 +104,7 @@ $result = swig::from($1);
 // just like they do on Windows/macOS, where int64_t is 'long long'.
 #ifdef SWIGWORDSIZE64
 %template(VectorInt64T) std::vector<int64_t>;
+%template(PairInt64T) std::pair<int64_t, int64_t>;
 %template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
 #endif
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
