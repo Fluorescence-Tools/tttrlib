@@ -29,25 +29,48 @@ PRDs for detail.
 ---
 
 ## Active
-- **[both] Photon-native algorithms: the API rule, the jitter bridge, single-photon deconvolution**
-  - Timestamp: 2026-08-10 18:20
-  - Status: 🔄 in-progress — engine + tests green, docs and commits remaining
-  - Scope: New tttrlib rule in `okf/specs/photon-native-algorithms.md` — every
-    algorithm ships a standard form *and* a `*_events` photon form; where no
-    event-wise formulation exists the fallback is jitter, never binning. New
-    shared `Jitter.h`/`Jitter.cpp`. Deconvolution is the worked first case:
-    `richardson_lucy_events` + `scan_blur_kernel`, and a `psf_oversampling`
-    parameter that removes a `t(1-t)` broadening the interpolation was adding.
-  - Touching: `[tttrlib]` `modules/math/{include,src}/{Jitter,Deconvolution}.*`,
-    `modules/math/CMakeLists.txt`, `ext/python/{Jitter.i,tttrlib.i}`,
-    `test/python/misc/test_{jitter,deconvolution}.py`, `okf/{index,log}.md`,
-    `okf/specs/photon-native-algorithms.md`;
-    `[chisurf]` `chisurf/core/fluorescence/imaging/restoration.py`,
-    `test/core/test_restoration.py`, `docs/concepts/deconvolution.md`.
-  - Note: `modules/math/include/Mat.h` carries an uncommitted one-line fix from
-    an earlier session (the `TTTRLIB_VEC_REDUCTION` `_Pragma` macro never
-    substituted its parameter, so the pragma was inert). Untracked and not
-    mine to commit — whoever owns that file, please take it.
+- **[chisurf] PRD-92 stage 3: rename sm_image_mle, and stop it segmenting**
+  - Timestamp: 2026-08-10 12:40
+  - Status: ✅ done
+  - Scope: `fit_molecules` calls `segment_molecules` itself, so the preview a
+    user tunes is not what gets fitted. Stage 3 renames the plugin to
+    `region_mle` and makes it fit the regions it is *handed*, read from the
+    container the spot finder writes. Baseline captured first (image + labels +
+    fitted table), because the equivalence claim cannot be checked after the old
+    path is gone.
+  - Touching: `chisurf/plugins/microscopy/sm_image_mle/` → `region_mle/`,
+    `chisurf/plugins/microscopy/imaging_tools/`, `okf/prds/prd-92.md`,
+    `okf/plugins/imaging.md`, `okf/subsystems/mle-lifetime-fitting.md`,
+    `okf/log.md`
+  - Verified: 221 tests (both plugins + container + manifest guard + pyqtgraph
+    seam). Equivalence proven against a baseline captured before the change.
+  - **Fixed a defect anyone touching the AutoForm image section will hit**:
+    `builtin.py` built a chiplot canvas with `_PgImageView.__new__` and set
+    `_iv` by hand, skipping `__init__` and the item list added to it later, so
+    every `add_roi` raised and no overlay drew. Now `_PgImageView.wrap(...)`.
+  - Not touching: `chisurf/core/fluorescence/mle/` — the estimator is unchanged
+    by design; a stage that edits it has gone wrong.
+
+- **[both] `.pto` provenance vocabulary is now defined in `mmfdb.dic` + enforced**
+  - Timestamp: 2026-08-10
+  - Status: ✅ done
+  - Scope: the dictionary had **no operation category at all**, so every
+    `_mmfdb_operation.*`, `_mmfdb_artifact.*` and `_mmfdb_edge.*` tag the .pto
+    writer emits was undefined — including the eight pipeline operations that
+    predate the registry work. A reader could not validate an `operation_type`,
+    resolve its settings schema, or know what a row of an artifact is.
+    Added the three categories, `operation_type` with an enumeration that is the
+    controlled vocabulary (12 operations), vocabularies for `row_grain` and
+    `data_format`, the remaining tag definitions, and a save block per operation.
+  - **chisurf/ndx side**: if you write `_mmfdb_*` tags or read them, the names
+    are now defined in one place and a test fails if the two drift.
+    `test/python/test_registry_matches_mmfdb.py` checks **both** directions.
+  - Touching: `okf/nomenclature/mmfdb.dic`,
+    `test/python/test_registry_matches_mmfdb.py` (new), PRD-027, CHANGELOG, log
+  - Verified: 12 tests; both failure directions confirmed by perturbing the
+    dictionary; `okf/testing/test_nomenclature.py` still parses it (5 passed).
+  - Not yet: settings keys and output column names are not checked against the
+    dictionary — the remainder of PRD-027 criterion 10.
 
 - **[both] PRD-93: the four-repository split — scope boundaries, then cgdye into imp.bff**
   - Timestamp: 2026-08-10 15:40
