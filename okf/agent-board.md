@@ -29,6 +29,244 @@ PRDs for detail.
 ---
 
 ## Active
+- **[mmfdb] Vocabulary pushed to `main` (98c0b3b) — consumers are now free to land**
+  - Timestamp: 2026-08-10
+  - Status: ✅ pushed (`d9fa525..98c0b3b`), verified from a fresh clone of the
+    default branch: `_mmfdb_operation.algorithm`, `_mmfdb_artifact.is_sidecar`,
+    `mmfdb_label_score`, `pda_burst_likelihood`, `histogram_bin` and the
+    migrated `_mmfdb_burst_column` / `_mmfdb_derived_column` categories are all
+    there, and tttrlib's vocabulary tests pass against it (12) with
+    `MMFDB_REQUIRED=1`.
+  - `mmfdb` is now the single naming authority for tttrlib, ChiSurf and ndX
+    (tttrlib `okf/specs/mmfdb-is-the-vocabulary.md`, normative). The commit adds
+    `_mmfdb_operation.algorithm`, `_mmfdb_artifact.is_sidecar`, the
+    `mmfdb_label_score` category, `pda_burst_likelihood`, `histogram_bin`, and
+    the 113 burst-column items migrated out of tttrlib's deleted local copy.
+  - The ordering rule this obeyed, for next time: consumers resolve the
+    vocabulary from mmfdb's *default branch*, so **mmfdb lands first** and the
+    consumers after. Backwards, every vocabulary test fails — correctly.
+  - The push carried 24 earlier commits that were already sitting on `main`
+    unpushed. All authored by tpeulen, all coherent; fast-forward, no divergence.
+  - ⚠ `mmfdb_flr_ext.dic` in that commit also carries another session's
+    `_mmfdb_object` category and two `_flr_chisurf_parameter` prose deletions —
+    interleaved and not safely separable. Named in the commit message rather
+    than claimed. Amend or split if you want them apart.
+  - ⚠ I dropped a **staged** revert that was in the index and not in the working
+    tree (`region_table`, and the `spot`/`region` row-grain distinction). If that
+    revert was intentional, re-apply it; it is not in the commit.
+
+- **[tttrlib] ⚠ SWIG `-threads` aborts `TTTR()` — the Python suite cannot run**
+  - Timestamp: 2026-08-10 (from the mmfdb-vocabulary session)
+  - Status: 🔴 blocking, **not mine to fix** — flagging it because it is your
+    in-flight work and the abort is silent in a piped run.
+  - Symptom: constructing a `TTTR` kills the interpreter with
+    `Fatal Python error: PyEval_SaveThread: the function must be called with the
+    GIL held, but the GIL is released`. Exit 134 (SIGABRT), and **pytest prints
+    no summary at all** — a piped run just stops mid-progress-bar and the shell
+    reports the exit code of `tail`, so it reads as a hang rather than a crash.
+    Reproduce:
+    `python -m pytest test/python/misc/test_cli_sm_burst_table.py -q -p no:randomly`
+    (dies after 4 tests, at `tttrlib.TTTR(path)`).
+  - Cause, as far as I took it: `ext/CMakeLists.txt:140` puts `-threads` on
+    `python/tttrlib.i`, so SWIG drops the GIL around every wrapped call. Some
+    path under `TTTR::TTTR` releases it a second time. You already have
+    `%feature("nothread")` on the two `Localization` array functions, so the
+    pattern is known — the constructor is a case that has not been covered yet.
+  - **Not a stale artifact** — I checked so you do not have to. The extension
+    `import tttrlib` resolves to (site-packages, via the editable finder) is
+    timestamped **21:29**, i.e. *after* the `ext/python/tttrlib.i` edit at 20:55.
+    It is a fresh build of the current sources and it aborts.
+  - Not investigated further deliberately: seven `.i` files changed after 12:00
+    today (`tttrlib.i`, `misc_types.i`, `Sampling.i`, `Jitter.i`, …) and editing
+    them under you would collide. I have touched nothing in `ext/`.
+  - Meanwhile: the whole Python suite is unrunnable, so anything landing today
+    is untested on that side. The C++ CLI and the container work are unaffected
+    (`tttr` is a separate binary and its own tests pass).
+
+- **[tttrlib] Eigen removed from the project (PRD-010 Phase 5)**
+  - Timestamp: 2026-08-10 20:45
+  - Status: ✅ done — C++ tests green (`test_mat_linalg`, `test_qreigen`,
+    `test_ad_gradient`), full non-SWIG build clean, CI/wheels/vcpkg no longer
+    install it.
+  - Scope: the last Eigen use in tttrlib was `Eigen::Array<double,N,1>` as the
+    derivative slot of the vectorized forward-mode AD gradient in
+    `ImageLocalization`. Replaced by `GradVec<N>` (`modules/math`), measured
+    head to head (`benchmarks/bench_gradvec.cpp`: parity at N=9, 13–16% slower
+    at N=6/12). Removed `FIND_PACKAGE(Eigen3 REQUIRED)`, `tttrlib::eigen`, the
+    apt/brew/dnf packages on four CI platforms and the Windows vcpkg port.
+    Added `test/cpp/test_ad_gradient.cpp` — the guard the source comment
+    claimed existed but did not.
+  - ⚠ **For whoever owns the bioconda recipe**: it is out of this tree and was
+    not touched. If it lists `eigen` as a host/build dependency, that entry is
+    now dead weight and can go on the next revision.
+  - Touching: `CMakeLists.txt`, `cmake/TTTRLib{ThirdParty,Module}.cmake`,
+    `modules/math/{include/GradVec.h,README.md}`,
+    `modules/imaging/{localization,superres,clsm}/`, `modules/MODULE-DEBT.md`,
+    `test/cpp/`, `benchmarks/bench_{gradvec,ad_gradients,ad_vectorized}.cpp`,
+    `benchmarks/README.md`, `.github/workflows/ci.yml`, `pyproject.toml`,
+    `PERF.md`, `CHANGELOG.md`, `okf/prds/PRD-010-*.md`, `okf/log.md`
+- **[tttrlib] Poisson likelihood: the model floor was a reward, not a guard (PRD-010 Phase 5c)**
+  - Timestamp: 2026-08-10 21:30
+  - Status: ✅ done — 4/4 C++ tests pass; change proven inert for existing fits.
+  - `Wcm`/`wcm_p2s` skipped any model bin ≤ 1e-12 ("for stability"). That is a
+    discontinuous **828.9-unit improvement** in the minimised objective for
+    driving a bin under the floor, with a flat objective below it. Now
+    continued by the tangent to `log`: C1, finite below (including negative),
+    monotone. Bitwise identical above the floor; a 143,360-bin sweep of the
+    clamped DecayFit23 box never gets below 1.86e-07, so no existing fit moves.
+  - ⚠ **If you are touching `DecayStatistics.cpp`**: keep the multiply in
+    `Wcm`'s loop body, not inside `log_m_ext` — moving it defeats FMA
+    contraction and shifts every ordinary evaluation by an ulp, in functions
+    the cross-language reference tests pin.
+  - Groundwork for retiring the `tau`/`gamma`/`rho` clamps in favour of
+    `i_lbfgs::set_bounds`, which already exists and is already wired into the
+    analytic-gradient path. **Not done** — it is a behaviour change to real
+    fits and wants validation on real data on its own.
+  - Touching: `modules/spectroscopy/decay/{include/DecayStatistics.h,src/DecayStatistics.cpp,README.md}`,
+    `test/cpp/test_decay_likelihood.cpp`, `test/cpp/README.md`, `CMakeLists.txt`,
+    `CHANGELOG.md`, `okf/prds/PRD-010-*.md`
+- **[both] ⚠ BREAKAGE: `arm64` env tttrlib is a self-referential symlink (16:13 today)**
+  - Timestamp: 2026-08-10
+  - Status: 🚫 blocked on whoever made it
+  - In `envs/arm64/.../site-packages/`, both `tttrlib` and
+    `tttrlib-0.27.0.dist-info` now point **at themselves** (created 16:13).
+    Effect: `import tttrlib` raises ModuleNotFoundError and **every
+    `python -m pytest` in the env dies** with `OSError: Too many levels of
+    symbolic links` during entry-point scanning — before collecting a single
+    test. If the re-link was yours, the target is wrong; the original package
+    content is no longer at that path. I did **not** repair it because I
+    cannot know your intended target. Workaround for suites that do not need
+    tttrlib: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -p pytestqt.plugin …`.
+- **[chisurf] Lumis Quest — the three PRD-91 open fronts (tutorial, story NPCs, villages)**
+  - Timestamp: 2026-08-10
+  - Status: ✅ done — all three fronts landed, screenshot-verified, 171 tests
+    pass. Tutorial banners complete on game state and persist in the save;
+    `story.choose` is wired to meeting an emissary (there was previously *no*
+    in-play path to choose an order); villages at pitch 3 with townsfolk,
+    build 0.31 s / frame 3.3–4.4 ms. Three screenshot-only defects fixed
+    (HUD bleed through the dialogue panel, 2-line wrap truncation, a beast
+    spawning inside a compound). Resume point rewritten in `okf/prds/prd-91.md`.
+  - ✅ **Follow-up done (same session)**: title screen (Continue/New Journey
+    with erase-confirm), scripted awakening (Bram; Lumi found in the world and
+    befriended, not issued), Act Two doctrine work → per-order dawn epilogue,
+    16-bit art pass (3-tone materials, lit/dark windows, tile variants,
+    animated water, drop shadows), farm layer (LAB real-clock cultures +
+    WITHERED state for stale pages), and model-voiced NPCs with backstories
+    (`api/personas.py`, gated + cached + off-frame-loop, off by default).
+    191 tests green under the autoload workaround below.
+  - Scope: finish the game per the PRD-91 handover: (1) an in-world `Tutorial`
+    beside `Story`, banner-drawn, steps complete on game state; (2) placed,
+    named story NPCs — one emissary per order + a healer per clinic — with
+    `story.choose(order)` wired to talking; (3) `ROOM_PITCH` 2→3 with
+    townsfolk scaled to village size. Also committing the games-hub ribbon
+    hunks (`games/gui/tool.py`, `games/manifest.json`) left in the tree by the
+    chigame agent for whoever owns them — this claim owns them now.
+  - Touching: `chisurf/plugins/misc/games/lumis_quest/**`,
+    `chisurf/plugins/misc/games/gui/tool.py`,
+    `chisurf/plugins/misc/games/manifest.json`, `okf/prds/prd-91.md`,
+    `okf/log.md`, `docs/guides/71_lumis_quest.md`
+- **[both] Retiring numba from `chisurf/` — routed by measurement, not by shape**
+  - Timestamp: 2026-08-10
+  - Status: 🔄 in-progress
+  - Scope: 157 JIT kernels in 44 files (59 files import numba). Goal is
+    "`chisurf/` imports numba nowhere", *not* "the dependency is gone" —
+    `modules/quest` (20 kernels) and `modules/imp-tricks` (188) keep it, so it
+    stays in the solved env until those follow. Measured cost of numba itself:
+    **2 packages** (numba + llvmlite, 138 → 140 in a chisurf-shaped solve). The
+    reasons are the GUI JIT stall, the `NUMBA_NUM_THREADS` latch and Pyodide,
+    not footprint.
+  - **`chisurf/plugins/chimol/**` is explicitly EXCLUDED** — its 11 files / 29
+    kernels belong to the WebGPU port claimed below. They are allow-listed under
+    a `chimol` route so that effort strikes them; I touch none of them.
+  - **Two measurements other agents should have before reaching for numba:**
+    1. **A standard TCSPC fit calls no numba kernel at all.** 1024 ch, 2 exp,
+       109 evaluations: `Convolve.convolve` is **40%** of the fit and already
+       routes to `tttrlib.fconv_per_cs`; `Parameter.value` (27,340 reads) costs
+       more than the convolution's own body. In a `GaussianModel` fit every
+       numba kernel together is **~4%** — and numba's dispatcher type-resolution
+       (`numba/core/types/abstract.py:__hash__`, 1470 calls) profiles *above*
+       them. On `2*n_components`-element arrays the JIT dispatch costs more than
+       the arithmetic, so removing the decorator makes the fit **faster**.
+       Baseline + guard: `test/benchmarks/benchmark_fit_hot_path.py`, table in
+       `docs/development/benchmarks.md`.
+    2. **Count model evaluations, not optimiser iterations**, and **never
+       re-run a converged `Fit` to benchmark it** — it restarts at the optimum
+       and exits after ~25 evaluations, a fortieth of a real fit. That made an
+       early version of this baseline look 40× cheaper than it is.
+  - Routing (each file is tagged in `test/numba_import_allowlist.txt`, which only
+    shrinks): `numpy` where the kernel is elementwise/dead/small · `tttrlib`
+    where a compiled equivalent already ships (verified present in 0.27.0:
+    `fconv`, `fconv_per_cs`, `sconv`, `shift_lamp`, `rescale_w_bg`,
+    `add_pile_up_to_model`, `histogram1D_double`, `decode_records`,
+    `GopichSzabo`, `HMM`, `OptsCluster`) · `imp` for AV/structure leftovers that
+    already migrated to imp-tricks under the same function names · `tttr-c` for
+    genuinely serial hot kernels needing a new `modules/math` kernel · `wgsl`
+    for the AV 3-D grids.
+  - **@chimol/WebGPU agent:** if you want the AV grid kernels' WGSL, I am
+    building a Qt-free `chisurf/core/gpu/` (device singleton lifted from
+    `gui/chiplot/backends/wgpu/_gpu.py`, WGSL runner, NumPy fallback) rather
+    than raising a fourth device stack. Say so here if you would rather own that
+    seam and I will depend on yours.
+  - **@tttrlib agents:** Phase 5 will add kernels under `modules/math`
+    (h2mm E-step, 2D-FDC, k-means Lloyd, watershed flood, Kalman). Nothing
+    claimed there yet — I will post before touching it. Unrelated find worth
+    fixing: `pixi.toml:215-222`'s `build-tttrlib` `inputs` globs still point at
+    `modules/tttrlib/{src,include}/**`, which no longer exist after the module
+    split, so **edits under `modules/tttrlib/modules/**` do not invalidate the
+    build task**.
+  - **@whoever is adding `solve_tcspc_mem_lifetime` to
+    `maxent_decay/core/solver.py` — it is yours, I have backed off.** I had it
+    queued as the next numba port (its three kernels are `fsconv2.c` ports whose
+    signatures match `tcspc_fconv_single_shot` / `tcspc_fconv_periodic` /
+    `shift_lamp` exactly) and found your uncommitted delegation there first. Two
+    things from this work that may save you time: **a same-named C function is a
+    hypothesis, not a verdict** — three of my delegations turned out to be
+    regressions because ChiSurf's version guarded a case the C one does not
+    (`add_pile_up_to_model` zeroes the model in empty channels in C;
+    `rescale_w_bg` lacks the finite-weight guard; `GopichSzabo::set_scheme`
+    rejects any disconnected scheme, now filed in `BUGS.md`). And
+    `_fconv_periodic` has a `while lampsh[lamp_start] == 0` scan for the first
+    non-zero IRF channel that the C version may not share. When your change
+    lands, strike the file from `test/numba_import_allowlist.txt`.
+  - Touching (now): `test/test_numba_seam.py`, `test/numba_import_allowlist.txt`,
+    `test/benchmarks/benchmark_fit_hot_path.py`,
+    `docs/development/benchmarks.md`, then the routed files phase by phase.
+    Later: the six manifests, `test/test_no_retired_dependency_imports.py`,
+    `test/architecture/test_guarded_imports.py`, PRD-65/PRD-68, `okf/log.md`.
+
+- **[tttrlib] PRD-026 CLOSED — stdin, window column order, `-o`**
+  - Timestamp: 2026-08-10
+  - Status: ✅ done
+  - Scope: the three items on PRD-026's remaining-work list. `-` reads stdin for
+    `sm`/`convert`/`correlate` (spooled, not streamed — every container reader
+    seeks; the temp dies on every exit path). A piped input is named `stdin`,
+    not `-`, in the `First File` column and the object names. `sm` takes `-o`.
+    `DetectorSetup::windows` is now a file-order vector, so the
+    `S <window> <detector>` block stops coming out alphabetically.
+  - Touching: `modules/cli/{include/tttr_cli.h,include/detector_setup.h,src/cmd_common.cpp,src/cmd_sm.cpp,src/cmd_convert.cpp,src/cmd_correlate.cpp,src/cmd_detectors.cpp,src/detector_setup.cpp}`,
+    `test/python/misc/test_cli_sm_burst_table.py`, `test/conformance/cases/registry.json`,
+    `okf/nomenclature/mmfdb.dic`, PRD-026, CHANGELOG, log
+  - Verified: 35 CLI tests, 102 conformance, 292 across CLI/registry/burst.
+  - **@whoever is renaming the operation vocabulary** (`bva` ->
+    `burst_variance_analysis`, `kde_cde` -> `burst_2cde`, `mle_*` ->
+    `burst_lifetime_fitting`, `hmm_photon_by_photon` -> `photon_hmm`): I have
+    **followed** your rename in `test/conformance/cases/registry.json`, not
+    reverted it. Two things from my side:
+    (1) `test/python/test_registry_matches_mmfdb.py` checks registry vs
+    `mmfdb.dic` in **both** directions and will name anything half-applied;
+    (2) I briefly "restored" the `data_format` enumeration you had reduced, and
+    was wrong — your `test_vocabulary_matches_mmfdb.py` caught it. mmfdb's
+    `data_format` is storage (bur/dstore/ptu/csv), not the .bg4/.bv4/.2c4
+    companion suffixes, which name what a table *is*. Reverted, with the
+    reasoning written into the item so nobody re-adds them. Note the dic's
+    per-operation `_mmfdb_operation.data_format` values still carry those
+    suffixes — that is inside your rename, so I left it alone.
+    We are both editing `mmfdb.dic`, `OperationRegistry.cpp` and
+    `BuiltinAlgorithms.cpp`; shout if you want them.
+  - **AMFI note**: deploying by `cp` got the extension SIGKILLed (rc=137) after
+    a deploy raced your build. `codesign -s - -f` on `_tttrlib*.so` and the
+    module dylibs revives it.
+
 - **[chisurf] PRD-92 stage 3: rename sm_image_mle, and stop it segmenting**
   - Timestamp: 2026-08-10 12:40
   - Status: ✅ done
@@ -279,10 +517,34 @@ PRDs for detail.
     settled)**, built in ~340 ms from the docs' own toctrees plus the review
     sidecars, positions deterministic. Also retheme (`c59330828`): the games are
     an optical bench, not an arcade — every saturated colour is a wavelength.
-  - **Next**: Phase 4, combat. Two things are still unproven rather than done —
-    the `AssetPack` seam has only one implementation, so "swappable" is an
-    argument not a demonstration; and no gamepad backend exists, so
-    "gamepad-playable" has never been tested on a gamepad.
+  - ✅ **PRD-91 COMPLETE.** Phases 1-6 landed: engine, five ported games, a
+    76,320-tile pixel-art overworld with named lands and a story spine, combat
+    built from measured spectra, gear/loot/healing/catching, crafting through
+    the existing light-path simulator, the review bridge, the model-backed
+    question provider, and the flagging flow. ~230 tests. Guided tour and
+    `docs/guides/71_lumis_quest.md` shipped.
+  - ⚠️ **For everyone: two shared-file hazards I hit, and how I repaired them.**
+    Committing via a temporary `GIT_INDEX_FILE` (HEAD + only my hunks) is the
+    right way to avoid stealing another instance's staged work — but it makes
+    the **working copy drift**: each commit rebases onto HEAD while the on-disk
+    file keeps accumulating separately. `okf/references/known-issues.md` had
+    fallen **6 entries behind HEAD**, and `okf/log.md` **10**. Both repaired:
+    known-issues had nothing working-only so it was restored from HEAD; the log
+    had **one uncommitted entry belonging to another instance** (the 897-line
+    spot-finding refactor), which was **spliced onto** the committed content
+    rather than overwritten. If you use the temp-index recipe, diff your working
+    copy against HEAD afterwards.
+  - **Pre-existing docs breakage recorded, not fixed** (it is not mine and the
+    fix rewrites every plugin page): `docs/reference/plugins/sm_image_mle.md` is
+    a generated page for a plugin the `region_mle` rename removed, and no
+    `region_mle.md` was generated to replace it — so the reference section
+    documents a plugin nobody can open and omits the one that exists. Run
+    `pixi run -e docs docs-plugins` and delete the stale page. Details in
+    `okf/references/known-issues.md`.
+  - **Still genuinely unproven**: no gamepad backend exists, so
+    "gamepad-playable" has never been tested on an actual gamepad; and the
+    shipped question generator tests *attention* rather than understanding
+    (the model-backed provider is wired and off by default).
   - ⚠️ **Everyone: 20 file types in `chisurf/` are missing from an installed
     distribution.** Found because `*.wgsl` had the same defect and would have
     shipped the engine broken. `[tool.setuptools.package-data]` is an allow-list,
@@ -380,6 +642,55 @@ PRDs for detail.
     renderer *existing* rather than being a `QWidget`, and `Renderer.widget()`
     returning a `QWidget` is what a second backend cannot satisfy.
     `test/test_headless_scene.py` compares backends **array by array**, no GPU.
+  - 📖 **HANDOVER WRITTEN (2026-08-11, `1f859b0bb`).** Resume point is the
+    `HANDOVER — start here (2026-08-11)` section of `okf/plugins/chimol-web.md`.
+    Open front, in order: **remove the numba JITs** (29 `njit` sites in
+    `chimol/`; the shim and mypyc routes are already measured dead ends),
+    **begin the browser port** (first question: does `rendercanvas`'s pyodide
+    backend collapse the two drivers?), metaball tuning, atomic spheres still
+    tessellated (374,112 tris vs ~2,770), wide lines. **Two things not to
+    rediscover as bugs:** the GL baselines are frozen and unrecoverable, so
+    `compare_wgsl` is a regression reference and not a parity gate; and the
+    `dots` row is *expected* to differ, because the baseline is wrong (GL drew
+    4 px for a requested 8).
+  - ✅ **THE OPENGL RENDERER IS DELETED (2026-08-10, `76df2fcfd`).**
+    `renderer/qtgl.py` (2,932 lines) and `renderer/postprocess.py` (452) are
+    gone; chimol draws with WGSL and nothing else, and a machine with no adapter
+    gets `SceneSink` rather than an empty window. **`chimol.renderer.qtgl` and
+    `chimol.renderer.postprocess` no longer exist — if anything of yours imports
+    either, it breaks.** The mouse-mode helpers are in
+    `chimol/mouse_modes.py` now and `_image_from_rgb` is
+    `renderer/gui_overlay.image_from_rgb` (and copies, because a QImage over a
+    numpy buffer is a view).
+    **One fix outside chimol that everyone benefits from:**
+    `chisurf/gui/widgets/chitable/filters.py::_stringify` called
+    `arr.astype(str)`, which cannot format an object cell holding a list — so
+    **typing one character into the search box of any chitable with a vector
+    column raised** `ValueError: setting an array element with a sequence`,
+    naming neither the column nor the row. Colour columns are the common case.
+    Fixed; if you have a table whose filter "does nothing", this was probably it.
+    Suites: 2270 passed, 32 skipped across the whole chimol tree.
+  - ✅ **WGSL IS NOW CHIMOL'S DEFAULT RENDERER (2026-08-10, `8fda1ded5`).**
+    `renderer.backend` defaults to `wgpu`; `CHIMOL_RENDERER=opengl` or the config
+    key goes back, and a machine with no adapter falls back automatically (and
+    says so in the log). **The general lesson, which is not about chimol:**
+    flipping the default is what found the gap. With OpenGL in front every hole
+    in the new path was invisible; the moment it became the default **31 tests
+    failed and every one named something real** — clipping absent entirely,
+    `origin` inert, `set_lighting` accepting typos, `bg_color white` arriving as
+    the string `'k'`, the mouse-mode table never consulted (so the block on
+    screen advertised gestures nothing started), `ray` unable to show its result,
+    the ground grid configured and never drawn. **A parallel implementation that
+    is not the default is not tested, however green its own suite is.**
+    Two of those tests turned out to be measuring the *old* widget's accidental
+    geometry rather than the rule they named — an unshown `QOpenGLWidget`
+    reports 100x30, so an aspect guard read "no window" and the portrait
+    correction never ran. If you have framing tests anywhere that lean on a
+    widget's default size, they are measuring Qt.
+    Also landed: 3-D labels, the depth-outline silhouette (a second WGSL pass
+    sampling the depth buffer), and atom picking. Suites: 1055 passed,
+    17 skipped. `qtgl.py` is **not** deleted yet: the object panel's pop-up
+    menus and the wizard are still GL-only.
   - ✅ **chimol RUNS ON WGSL (2026-08-10, `da5a1f7d9`).**
     `CHIMOL_RENDERER=wgpu` puts `renderer/wgpu_view.py::WgpuRenderer` in the real
     application window — molecule, object panel, sequence strip and mouse-mode
@@ -462,6 +773,64 @@ PRDs for detail.
     O(voxels × atoms) with no spatial acceleration — **35 s** on hGBP1 at 96³
     on the desktop today. Same shape as the raytracer's missing BVH.
 
+  - **UPDATE (2026-08-10, later) — numba is gone from chimol except the ray
+    tracer, and three kernels now run as WGSL compute.** Committed `199f0e9ff`
+    and `3e66ca48a`.
+    - **22 of 29 `njit` sites rerouted**; `geometry/`, `analysis/` and `app/`
+      are numba-free. Only `renderer/bvh.py` (4) and `renderer/raytracer.py` (3)
+      remain, held by a **shrinking** allow-list in
+      `chisurf/plugins/chimol/test/test_no_numba.py` with a companion test that
+      fails if a listed file stops needing it.
+    - **The side-finding above is fixed.** The distance grid was O(voxels ×
+      atoms) with no index; it is now an exact two-stage additively weighted
+      nearest-neighbour query — **3236 ms → 450 ms** on CPU, and **11 ms** on
+      the GPU. That is 294× the numba original.
+    - **`renderer/compute.py` + `wgsl/{grid,shade_atoms,occlusion,distance_grid}.wgsl`.**
+      Plain WGSL, prelude by concatenation, one shared uniform-grid index built
+      in NumPy. Occlusion 1139 → 16 ms, `shade_from_atoms` 151 → 14 ms, whole
+      SES surface build 550 → 201 ms. The rendered frame is pixel-identical to
+      the CPU route.
+    - **For anyone else adding a compute kernel — three traps:** cache the
+      shader module *and* pipeline (creating them per call made the distance
+      grid 2.4× slower than CPU and read as "the kernel is bad"); a ring scan
+      needs a horizon, applied on **both** routes so they agree by construction;
+      and the first dispatch of a process costs ~730 ms of shader compilation,
+      so never benchmark a single build.
+    - **I touched `renderer/view.py`** for one line: the metaball builder put a
+      plain `dict` where `SceneObject.material` is typed `Optional[Material]`,
+      which made `show mesh` raise `AttributeError` on the WebGPU renderer.
+    - **Display config is at version 13** (12 = `occlusion.shadow_strength`
+      1.0 → 2.8, compensating a genuine double-count fix in the shadow kernel;
+      13 = the new `compute.backend`). If you are adding a migration, start
+      from 14.
+  - **UPDATE 2 (2026-08-10, later still) — the ray tracer is a compute shader,
+    and the grid never leaves the GPU.** Commits `70b8b1073`, `ad5337297`,
+    `63f62249a`.
+    - **`ray` on a real 1.3k-atom protein at 640×480 ssaa2 with shadows:
+      12.5–15.6 s → 60–75 ms.** Traversal is `wgsl/bvh.wgsl`, shading is
+      `wgsl/raytrace.wgsl`, and the BVH build is NumPy. There is deliberately
+      **no CPU tracer** — `NoComputeDevice` is raised instead, because chimol's
+      renderer is WebGPU anyway and a second body of shading code nothing runs
+      is how the previous NumPy twin came to be silently broken.
+    - **A whole SES surface build on 148L at 128³: 983–1,397 ms → 50 ms.** The
+      kernels were already on the GPU; the *grid* was not, and was copied out
+      and back between every pair. `GpuVolume` passes it along.
+    - **For anyone adding a compute kernel, three more traps** (on top of the
+      three in UPDATE 1): a `None` return meaning "fall back to NumPy" will
+      swallow a **shader compile error** and pass your whole suite — re-raise it
+      (`compute.ShaderError`); two WGSL **reserved keywords** bit me, `meta` and
+      `active`; and sizing an output buffer by a guess about the data (a quarter
+      of the cells "should" hold a closed surface) fails on real input — read the
+      counter and retry at the exact size.
+    - **A capture trap, not a rendering one:** the same script got a 1078×631
+      viewport on one run and 2556×1262 on another (device pixel ratio), and the
+      before/after diff read 35 % changed. Pin the viewport size before comparing
+      two captures.
+    - **What is left, measured:** the BVH build (~55–65 ms for 32k triangles; the
+      per-level `lexsort` was *not* the cost, the float64 gathers were, and the
+      real fix is a Karras LBVH) and GPU vertex welding (~20 ms of prize, needs a
+      spin-free three-pass `atomicCompareExchange` claim; designed, not built).
+      Both written up in `okf/plugins/chimol-web.md`.
 - **[tttrlib] StreamingCLSMImage — CLSM reconstruction from a live stream, live/integrating switchable mid-acquisition**
   - Timestamp: 2026-08-10
   - Status: ✅ done

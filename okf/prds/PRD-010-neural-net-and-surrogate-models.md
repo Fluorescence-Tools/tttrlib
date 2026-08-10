@@ -1,6 +1,6 @@
 # PRD-010 — Reusable neural network + surrogate models, AD gradients, optimiser benchmarks
 
-> **PRD #:** 010 · **Status:** In progress · **Created:** 2026-07-20 · **Owner:** tpeulen
+> **PRD #:** 010 · **Status:** In progress · **Created:** 2026-07-20 · **Updated:** 2026-08-10 · **Owner:** tpeulen
 > **Related:** PRD-005 (photon simulator, reuses `SimPcgRandom`), ChiSurf OKF `prd-60`
 > (amortised neural estimator for H2MM)
 
@@ -70,10 +70,14 @@ central differences' strict 2N, and matches scalar `dual` to 1.29e-14.
   transposed GEMM; there is nothing to differentiate that is not already known in closed form.
 - **Reverse-mode AD is rejected for both jobs.** For fitting it is slower than the finite differences
   it would replace.
-- **Eigen is an acceptable dependency**: header-only with no link step. This is the distinction that
-  ruled out mlpack (BLAS/LAPACK via Armadillo) while admitting Eigen.
+- ~~**Eigen is an acceptable dependency**: header-only with no link step. This is the distinction that
+  ruled out mlpack (BLAS/LAPACK via Armadillo) while admitting Eigen.~~ — **reversed; see Phase 5.**
+  "Header-only" understated the cost: a `REQUIRED` package is a package on every CI platform, in the
+  wheel builder image and in the vcpkg manifest whether or not it links anything.
 - **Public headers stay Eigen-free.** `NeuralNet.h` exposes `std::vector<double>` and raw pointers,
-  matching this library's existing SWIG conventions; Eigen is confined to the `.cpp`.
+  matching this library's existing SWIG conventions; Eigen is confined to the `.cpp`. (This is what
+  made the Phase 5 removal a two-file change rather than an API break — the constraint outlived the
+  dependency it was written for.)
 - **JSON model files** via the already-vendored `nlohmann_json`.
 
 ## Scope
@@ -264,6 +268,43 @@ better, reparameterize (`x0 = xlen·sigmoid(u)`) so the constraint is smooth and
 conditioned — then convert. Fixing the bounds is a behaviour change to existing fits and should be
 validated on real localization data on its own, separately from the AD work.
 
+### Phase 5 — the conversion, and Eigen leaves the project (done)
+
+`ImageLocalization` was converted, which is the outcome Phase 3b's blocker section recommended and in
+the order it recommended: bounds first, then AD. The teleporting `varinbounds` is gone from the fit
+path; positions go through a logistic and positive quantities through an exponential, so the search
+space is interior everywhere and the objective is a pure function of its input. Measured before →
+after on the same noise-free image: **2.6× / 4.3× / 9.3×** for one / two / three Gaussians (whole
+fit, not just the gradient), agreeing with central differences to 2.5e-08 relative.
+
+Then the dependency itself went. `Eigen::Array<double, N, 1>` was the derivative carrier and, once
+`NeuralNet` moved to `Mat.h`, the only thing in tttrlib that needed Eigen. It is now `GradVec<N>`
+(`modules/math/include/GradVec.h`) and `FIND_PACKAGE(Eigen3 REQUIRED)`, `tttrlib::eigen`, the apt /
+brew / dnf packages on four CI platforms and the Windows vcpkg port are all gone.
+
+Three results worth keeping:
+
+1. **The measured cost of dropping Eigen is 0–16%.** Parity at N=9, 13–16% slower at N=6 and N=12
+   (`benchmarks/bench_gradvec.cpp`). Against the 3.95–5.44× AD wins over tuned central differences,
+   that changes no decision — but it is a real number and is recorded as one, not rounded to
+   "equivalent".
+2. **The gap closed by removing temporaries, not by alignment or padding.** `alignas(32)` measured
+   *slower* (it inflates every `Dual`, and 169 of them are live in the inner loop); padding N to a
+   multiple of the SIMD width did nothing at N=12, which is already a multiple of 4. Returning a
+   proxy from `scalar * grad` — so the multiply fuses with the accumulate that always follows it in
+   the product and quotient rules — is the one that worked. It also made the vectorized gradient
+   *bitwise* identical to autodiff's scalar `dual`, because the fused form contracts to the same FMA.
+3. **The guard test claimed in Phase 3's prerequisites had never been written.** The comment in
+   `ImageLocalization.cpp` asserted it existed. `test/cpp/test_ad_gradient.cpp` now does what the
+   comment promised. This is the prerequisite that mattered most: the enabling `NumberTraits`
+   specialization is undocumented upstream, so a bump would compile and be wrong.
+
+A methodological note that cost real time: the first benchmark used `steady_clock` and reported
+speedups from 0.22× to 4.77× for the same binary on consecutive runs. The machine was at load average
+43 and wall clock keeps counting while the thread is descheduled. `CLOCK_THREAD_CPUTIME_ID`,
+interleaved carriers and min-of-nine made it repeatable to a few percent. A kernel comparison that
+cannot separate a 15% difference from the scheduler is not measuring the kernel.
+
 ## Definition of done
 
 - [x] `NeuralNet` trains, infers, round-trips JSON, and rejects malformed models.
@@ -278,11 +319,153 @@ validated on real localization data on its own, separately from the AD work.
       8 cross-engine agreement tests proving a scikit-learn-trained surrogate gives identical
       estimates through either path.
 - [x] Worked example: `examples/single_molecule/plot_h2mm_surrogate.py`.
+- [x] `ImageLocalization` converted to an exact AD gradient, with the bound handling fixed first.
+- [x] The vectorized derivative carrier is tttrlib's own (`GradVec<N>`), measured against Eigen, and
+      Eigen is gone from the project — CMake, CI, wheels and vcpkg.
+- [x] `test/cpp/test_ad_gradient.cpp` guards the undocumented `NumberTraits` contract, which the
+      Phase 3 prerequisites asked for and which had never actually been written.
+
+### Correction 3 — the finite-difference baseline in Phase 4 is not the step the optimiser uses
+
+Phase 4 concluded that retuning the step from `eps·|x|` to `eps^(1/3)·|x|` is "a free ~6× accuracy
+win". **`bfgs` does not use `eps·|x|`.** Its central difference is `h = sqrt_eps·|x|`
+(`i_lbfgs.h:328`), and with the default `seteps(2.2e-16)` that is 1.49e-08·|x|. The `eps·|x|` form
+belongs to the standalone `fgrad1/2/4` helpers at the top of the header, which the optimiser never
+calls.
+
+So the retune is still worth doing — `sqrt(eps)` is the optimal step for a *forward* difference, not
+a central one, where the optimum is `eps^(1/3)` — but the available win is
+1.5e-08 → 6.1e-06 in step size, not the 2.2e-16 → 6.1e-06 the table implies, and the accuracy
+improvement will be correspondingly smaller than "6×". The measured error column in
+`bench_ad_gradients.cpp` is for a step no production fit has ever run.
+
+None of this touches the **cost** argument, which is what the conversion decision rests on: central
+differences pay 2N objective evaluations at any step size, so the 3.70×/5.16×/5.80× AD advantage
+measured against the real NEON dispatcher in Phase 3b stands unchanged.
+
+### Phase 5b — the decay conversion is mechanically feasible (probed, not landed)
+
+Transcribed the production chain (`fconv_per_cs_scalar` → `model23` → `normM` → `Wcm`), templated on
+the scalar type with nothing else changed, and instantiated it under `Dual<double, GradVec<4>>`:
+
+- it compiles;
+- the value matches the plain-`double` objective to 2.8e-14 absolute on a value of −240.9 (one ulp,
+  FMA contraction);
+- the gradient matches central differences to 8.3e-08 relative — the finite-difference error floor.
+
+**The NEON kernel is not at stake, which was the fear.** `fconv_per_cs()` already dispatches to
+`fconv_per_cs_scalar()`, and that scalar fallback is what templates; the intrinsic path stays exactly
+as it is and continues to serve the plain-`double` objective. The concern recorded in Phase 3 — that
+converting a `DecayFit` path costs it the SIMD kernel — applies to the *AD column only*, which is
+what Phase 3b already measured.
+
+### Phase 5c — bounds *are* priors, and the likelihood had to be fixed first (done)
+
+Minimising `-log L + p(x)` is MAP estimation with `p = -log prior`, so a bound and a prior are the
+same object seen from two sides. Both codebases already say so: `DecayFitContext.h:65` — "A bound
+*is* a uniform prior in this interface" — and ChiSurf's `prior` setter folds a `UniformPrior` back
+onto the port's bounds. It follows that `i_lbfgs`'s soft bound, `k(x-hi)^2` outside the box, is
+already a proper prior (flat-topped, Gaussian-shouldered); nobody had named it one. So the four
+mechanisms in the decay fits — clamps in `sanitise_parameters`, the `fit_settings.penalty` hack, the
+optimiser's `set_bounds`, and `DecayFitContext`'s bounds — are one mechanism wearing four hats.
+
+**ChiSurf's transforms are not the thing to copy.** `leastsqbound.py` uses the MINUIT scheme: `sin`
+two-sided, `sqrt(v^2+1)` one-sided. Measured, both reintroduce exactly the pathology the
+reparameterisation exists to avoid — the `sin` derivative is 3e-17 at the bound (`v = pi/2`) and the
+transform is periodic and non-monotonic; the `sqrt` form is *even* in `v` and its derivative is
+exactly 0 at `v = 0`, which maps to `x = lower`. The logistic/exponential pair used in Phase 5 is
+monotonic, bijective, and attains its bounds only asymptotically, so the derivative is never zero
+anywhere reachable. What *is* worth taking from ChiSurf is `priors.py`: priors as extra residuals,
+imposing no bound at all (`HalfNormalPrior` is documented as "a soft positivity prior").
+
+**But a penalty can only replace a clamp if the objective is defined off-support, and it was not.**
+`Wcm` and `wcm_p2s` skipped any model bin at or below `1e-12`. That is not a guard — it is a
+discontinuous 828.9-unit *reward* for driving a bin under the floor, with a perfectly flat objective
+below it. Fixed (see CHANGELOG): `log` continued by its tangent at the floor, C1 across it, finite
+and monotone below. Verified inert two ways — bitwise identical above the floor, and a 143,360-bin
+sweep of the clamped `DecayFit23` box that never goes below 1.86e-07.
+
+A correction to this PRD's own earlier text: an intermediate probe here reported that `gamma < 0`
+makes the objective NaN. That was a transcription error in the probe, which guarded on `C > 0` where
+`Wcm` guards on `M > 1e-12`. `Wcm` never returns NaN; it silently drops the bin, which is the worse
+failure because it is invisible. `twoIstar` *does* guard on `C` and *can* return NaN — but it is
+computed after the fit for reporting and is never minimised, so it is left alone.
+
+### Phase 5d — `DecayFit23`'s bounds unified onto `set_bounds` (done)
+
+Doing this turned up two things measurement contradicted, both worth recording because the wrong
+version is the intuitive one.
+
+**"Clamps make L-BFGS stall" was not true of this fit, and the real defect was different.** Measured
+on the real objective: below `kMinTau` the gradient was `-1` exactly, not zero — the hand-rolled
+`fit_settings.penalty` was supplying it. But that term is
+`(x[0] < kMinTau) ? -x[0] : 0`, which is **negative over the whole band `0 < tau < kMinTau`**, so
+crossing below the bound *improved* the objective by up to 1e-3, and it was discontinuous at the
+crossing (`d/dtau = 4999.5` there, against `-0.0004` just above). The flat-region stall was real for
+*gamma* (`d/dgamma` exactly 0 at 1.0, 1.2, 2.0), rescued by a `set_bounds` call that was only made
+inside the branch that frees gamma.
+
+**The clamps cannot be deleted.** Without the `tau` floor `exp(-dt/tau)` overflows for `tau` in
+roughly `(-dt/709, 0)`: measured at `tau = -1e-6`, every model bin is `inf` and the objective is
+`NaN`. No penalty rescues a NaN — the line search has to be able to score the point it proposes. So
+the two roles the clamp was playing are now separated: the guards stay, and every bound that shapes
+the fit goes through `set_bounds`, set once and unconditionally.
+
+**They can, however, be made smooth, and are.** `tau` and `rho` go through `soft_floor`
+(`DecayFit.h`): exactly the identity at and above the floor — bit-for-bit, so no ordinary fit
+moves — and `m0*exp((v-m0)/m0)` below it, C1 at the join, strictly positive, nonzero derivative. The
+failure direction flips from overflow to underflow. This removes the corner in the parameter map,
+which is what an AD pass would otherwise inherit as a structural zero.
+
+**But it does not make the objective non-flat below `kMinTau`, and no choice of floor could.** That
+flatness is physical: at `dt = 0.032` the factor `exp(-dt/tau)` is already 1.3e-14 at `tau = 1e-3`
+and underflows below, so the model is saturated. The proof the clamp was never the cause is that
+`d/dtau` is already exactly 0 at `tau = 1.1e-3`, *above* the floor. `tau_eff` keeps moving; the model
+stops caring. Recorded because the tempting next move — tuning `kMinTau` — cannot work: no parameter
+map manufactures information the likelihood does not contain. The restoring force there is
+`set_bounds`, and only `set_bounds`.
+
+That separation is also the AD prerequisite. `i_lbfgs` adds the bound penalty **and its gradient** to
+whatever a registered analytic callback returns (`i_lbfgs.h:313-320`); a term added to the objective
+by hand is invisible to that callback, so the old `tau` penalty would have made an AD gradient wrong
+by exactly `-1` below the bound.
+
+Verified against the pre-change code end to end: four ordinary starts give identical `tau`, `gamma`
+and 2I* to every printed digit; starts below the bound and at negative `tau` still reach the same
+minimum. `DecayFit26`'s equivalent penalty is correctly signed and left alone; `DecayFit25`'s is dead.
 
 ## Still open
 
-- Convert (or decline to convert) each `i_lbfgs.h` consumer on its measured AVX-versus-scalar
-  numbers. Retune the central-difference step first — it is free and is the baseline AD must beat.
-- Reparameterize the clamped `tau`/`gamma` before any AD conversion: under AD a clamped parameter
-  propagates an exactly zero derivative and L-BFGS can stall at the bound, where central differences
-  currently give a nonzero one-sided estimate.
+The decision is **no longer gated on an x86 measurement**. Phase 3b measured against the real NEON
+dispatcher, not a scalar stand-in: AD is 3.70×/5.16×/5.80× ahead at N=4/8/16 *with* central
+differences keeping their SIMD kernel. AVX packs 4 doubles to NEON's 2 and would narrow that, but not
+by the ~4× it would take to flip the decision. Phase 5b then showed the conversion is mechanically
+feasible. What is left is engineering and one behaviour change:
+
+1. **Retire the clamps in favour of the soft bounds that already exist.** `sanitise_parameters`
+   (`DecayFit23.cpp:36`) floors `tau` and `rho` and clamps `gamma`. Under AD a clamped parameter
+   propagates an exactly zero derivative and L-BFGS stalls at the bound. Phase 5c removed the
+   prerequisite that made this hard — the objective is now defined and gradient-bearing off-support —
+   and no new mechanism is needed: `i_lbfgs::set_bounds` is a soft exterior penalty *already wired
+   into the analytic-gradient path* (`i_lbfgs.h:313-320`), and `DecayFit23.cpp:408` already uses it
+   for `gamma`. So gamma currently carries **both** a soft bound and a clamp, and the clamp is the
+   harmful half. Work: delete the clamps, add `set_bounds` for `tau` and `rho`, and retire the
+   `fit_settings.penalty` hand-rolled penalty at `DecayFit23.cpp:142`.
+
+   Still a behaviour change to existing fits, so validate on real data **on its own**, before and
+   separately from AD. Do not land it inside the AD change; the two would be indistinguishable in
+   the diff.
+
+   Note the penalty stiffness `k = 1e6` is a guard-rail, not a prior width (as a prior it is
+   `sigma ~ 7e-4`), and `DecayFit23` minimises `W/Nchannels`, so a penalty added there is `N x` too
+   strong in log-posterior units. Harmless while these are numerical bounds; wrong the moment
+   anyone reports the result as a credible interval.
+2. **Templated kernels in the library.** `fconv_per_cs`, `fconv_per` and friends need `template<T>`
+   scalar bodies (the probe transcribed one; the production header needs the real thing), with the
+   intrinsic dispatch untouched for `double`.
+3. **A gradient callback per fit, and `set_gradient` wired.** Currently `set_gradient` has exactly
+   one caller in the whole library (`ImageLocalization.cpp:364`).
+4. **Retune the central-difference step** — still worth doing, but see Correction 3: it is
+   `sqrt_eps·|x|` today, not `eps·|x|`, so the win is smaller than Phase 4 claimed.
+5. **`DecayFit26` should be declined, not converted.** N=1, measured at 1.57×; the templating and the
+   reparameterisation cost more than the gradient saves.

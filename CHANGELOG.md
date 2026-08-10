@@ -3,6 +3,139 @@
 ## [Unreleased]
 
 ### Added
+- **The Python binding releases the GIL around every wrapped call** (SWIG
+  `-threads`). A long correlation, burst search, file read or fit no longer
+  freezes every other Python thread — a GUI heartbeat, a progress bar, a
+  second reader all keep running, which is what the "non-blocking" rule in
+  BUGS.md asks of the Python half. Typemap code still runs with the GIL
+  held; the two `%extend` methods whose C++ bodies call the Python C-API
+  are pinned `nothread`; and the pre-existing per-method `TTTRLIB_NOGIL`
+  macro no longer takes its own guard — SWIG inserts its release inside
+  `$action` even in a custom `%exception`, so a second release there is a
+  fatal Python error (found as an abort in the `TTTR` constructor; the
+  RAII guard is now `PyGILState_Check()`-tolerant as well). Verified by the
+  heartbeat test (`test/python/test_gil_release.py`), inspection of the
+  generated wrapper's exception path, and the full fast suite (2501
+  passed).
+
+- **`npm install tttrlib` — the JavaScript binding is packageable** (PRD-016
+  M5, the last open milestone). Prebuilt binaries for linux-x64, linux-arm64,
+  darwin-x64, darwin-arm64 and win32-x64, resolved by `node-gyp-build` from
+  `prebuilds/<platform>-<arch>/`; no compiler, no `node-gyp` and no per-Node
+  matrix, because Node-API's ABI is stable across majors.
+
+  The work was not the packaging metadata, it was making the binary
+  *relocatable*. The addon linked ~35 sibling module libraries plus HDF5 and
+  libomp through absolute build-tree RPATHs, and the CMake comment claiming the
+  modules "sit next to the addon" described a staging step that did not exist —
+  it worked only on the machine that built it. Prebuilds are therefore built
+  with `-DTTTRLIB_MODULE_TYPE=STATIC` (one 14 MB `.node` instead of 35 sibling
+  libraries) and produced by `cmake --install --component js`, which is what
+  rewrites RPATHs to `@loader_path` / `$ORIGIN`; a new `js` install component
+  collects the remaining third-party libraries with
+  `install(RUNTIME_DEPENDENCY_SET)`.
+
+  `ext/js/pkg/scripts/prebuild.mjs` then **rejects** a prebuild whose dynamic
+  dependencies reach outside its own directory, and `scripts/pack.mjs` refuses
+  to assemble a package missing any of the five platforms — a partial package is
+  indistinguishable from a complete one until someone on the missing platform
+  installs it. New CI jobs `prebuild_js` (5 runners), `pack_js` (assemble, then
+  install the tarball into a clean project and load it) and `publish_npm`
+  (release-triggered, needs `NPM_TOKEN`).
+
+  Verified on darwin-arm64: the packed tarball installs into an empty project
+  and opens `bh_spc132.spc` (183657 events, macro-time sum
+  `443406877425185n`), 44/44 JavaScript suites and 19/19 conformance areas pass
+  against a STATIC build. The other four triples have never been built — the
+  first CI run is part of the work, not a regression check.
+- **AddressSanitizer over the JavaScript binding** (`asan_js_lnx`), which
+  PRD-016 asked for and which the lifetime cases (a TypedArray outliving the
+  object that owns its memory) need: those are use-after-free, not exceptions,
+  so an ordinary run is green either way. It is a Linux job deliberately —
+  preloading the ASAN runtime into Node on macOS arm64 hangs before any
+  JavaScript executes, with no addon loaded, which is a platform problem.
+- **`solve_tcspc_mem_fret` — the distance-axis MaxEnt inversion, p(R_DA).**
+  The lifetime half (`solve_tcspc_mem_lifetime`) landed alone, and the half a
+  FRET experiment actually runs MEM for stayed in ChiSurf's plugin as a second
+  engine drifting against this one. The sibling now shares the engine by
+  construction: one `run_mem_from_design` both solvers call, and the only
+  difference is the design matrix — `tcspc_build_fi_distances` builds each
+  column as the donor decay quenched at `k_FRET = (1/tau0)(R0/R)^6` (pairwise
+  `e1te2` combination with the multi-exponential donor-only reference),
+  mixed with the unquenched donor by the donor-only fraction. Verified
+  against ChiSurf's `solve_fret_mem` to `max |Δp| < 1e-8` on the same input,
+  and a decay simulated at one distance comes back as a distribution
+  concentrated there (mean R 45.05 for truth 45, χ² 1.2). ChiSurf's
+  `solve_fret_mem` can now delegate the way `solve_lifetime_mem` already
+  does. Still open from the same entry: FCS MaxEnt as a third engine —
+  closing that means exposing the engine with a pluggable design matrix.
+- **`tttr sim` warns when `background` is set without `background_decay`.**
+  An undeclared background decay writes every background photon into
+  micro-time channel 0 — the signature of scatter, where uncorrelated
+  background is flat over the laser period — and a lifetime fit on such a
+  file fits a large fake scatter component. The default is unchanged (that
+  is a deliberate-call decision recorded in BUGS.md); the config is now told
+  what it is claiming and how to say the flat thing instead.
+- **A burst search declares itself once** (PRD-032). The seven built-ins were
+  described in a hand-authored JSON literal (`kBurstSearchRegistry`) and
+  dispatched from a separate table in another file — two lists of the same
+  algorithms with nothing keeping them in step. They had already drifted:
+  `bocpd` and `coincident` were advertised with a `method` the dispatcher had
+  never heard of, so calling them ran the sliding window and returned a
+  plausible answer from the wrong algorithm.
+
+  Each search now passes its description and its dispatch function to one
+  `register_burst_search(descriptor, fn)` call, through the same
+  `register_algorithm` path a plugin uses. The descriptor is registered first,
+  so a search that is described but not runnable cannot exist. The literal is
+  deleted, and `BurstSearchDispatch.cpp` is the mechanism only — it names no
+  burst search and includes none of their headers.
+
+  **Nothing a consumer reads changed**: verified against a capture of the whole
+  registry taken beforehand — 0 entries removed, 0 changed, 63 added, being the
+  9 descriptor fields × 7 searches. `params_schema` still carries the schema
+  under the name ChiSurf, ndX and the web UI read, now alongside the
+  descriptor's own `settings_schema`, and they are one object rather than two
+  to keep in parallel.
+
+- **The JavaScript binding's no-copy claim is now asserted, not described**
+  (PRD-016 acceptance). `test/js/arrays.test.mjs` had one test about
+  marshalling mode, and it asserted that `arraysAreZeroCopy()` returns a
+  boolean — true of a build that copies everything, so it tested nothing. Two
+  real cases replace it: an `ARGOUTVIEW` output (`Pda.get_amplitudes`, a view
+  onto the object's live `std::vector`) is written through and read back, and
+  an `INPLACE_ARRAY1` argument (`add_pile_up_to_model`) is checked for C++
+  having written into the caller's buffer.
+
+  The first asserts *against the mode* rather than for zero-copy, so it means
+  something different in each build and is the first test here that does. The
+  whole suite has now been run against a `-DTTTRLIB_JS_COPY_ARRAYS` binary —
+  the Electron/V8-sandbox fallback path, which until now had never executed —
+  and is green in both, with the two builds verified to disagree exactly where
+  they should.
+
+- **A `.pto` bundles files** — `pto_bundle_files` (`tttrlib.pto_bundle` in
+  Python), `PtoFile::attach`, and `tttr pto pack` / `tttr pto add`. A folder of
+  files goes into one container and comes back out of it as the same folder. The
+  container already carried payloads; what was missing was a way to hand it the
+  measurement as it actually arrives — an instrument file, a settings sidecar, a
+  table, a note — without the caller declaring what each of them is.
+
+  **The name proposes and the bytes dispose.** Only a file some photon format
+  claims by extension is offered to the content sniffers, and the encoding
+  recorded is that format's own name: an SPC-QC file bundles as `spc-qc`, not as
+  the `spc-130` an extension table would have made it. Files no photon format
+  claims are never sniffed — several formats recognise a container by little
+  more than its record size dividing evenly, and a 40-byte PNG was cheerfully
+  identified as photons until the name gated the sniff.
+
+  A directory is bundled recursively with each object named by its path relative
+  to it, so `disassemble` puts the layout back; and a `.set` is tied to the
+  `.spc` beside it with `pto.sidecar_of`, because a Becker & Hickl reader handed
+  the `.spc` alone silently reads half a header. `examples/tttr/plot_pto_bundle_files.py`
+  bundles a measurement, reads the photon stream back **out of the container**
+  without unpacking it, and takes the folder apart again.
+
 - **`Deconvolution.h` — Richardson-Lucy and Wiener** (`modules/math`), over the
   vendored FFT. `richardson_lucy` is the Poisson maximum-likelihood restoration
   that fluorescence data actually calls for: the estimate stays non-negative and
@@ -54,6 +187,641 @@
   own implementation of the same algorithm for environments without this
   library and the two are bit-identical; relaxing either rule breaks that
   silently.
+
+### Removed
+- **Eigen is no longer a dependency of tttrlib — at all.** It was a
+  project-wide `FIND_PACKAGE(Eigen3 REQUIRED)`, and therefore an apt package on
+  Linux CI, a Homebrew keg on macOS, a vcpkg port on Windows, and a `dnf`
+  package inside the manylinux wheel builder, for the sake of two things: the
+  batched GEMMs in `NeuralNet` and one struct member in `ImageLocalization`.
+
+  Both are now tttrlib's own. `NeuralNet` uses `Mat.h`. The vectorized
+  forward-mode AD gradient carried its N partial derivatives in
+  `Eigen::Array<double, N, 1>` and now carries them in
+  `GradVec<N>` (`modules/math/include/GradVec.h`) — a fixed-size double vector
+  implementing exactly the operator set `autodiff::detail::Dual` calls on its
+  `grad` member, and nothing else.
+
+  Measured against Eigen on the real objective at its real free-parameter
+  counts (`benchmarks/bench_gradvec.cpp`, new): parity at N=9, 13–16% slower at
+  N=6 and N=12. Recorded rather than rounded away, and small against the
+  3.95–5.44× the AD path wins over central differences to begin with. Two
+  optimisations were tried and rejected on measurement (32-byte alignment,
+  padding N to the SIMD width); returning a proxy from `scalar * grad`, so the
+  multiply fuses with the accumulate that always follows it, is what closed most
+  of the gap — and made the vectorized gradient bitwise identical to autodiff's
+  own scalar `dual`.
+
+  `QREigen.h` is unaffected and always was: it is tttrlib's own non-symmetric
+  eigensolver, not Eigen.
+
+### Fixed
+- **`pch_mixture` rejects a species count mismatch instead of reading past
+  the end.** It indexed `avg_numbers` by `brightnesses`' length; the
+  out-of-bounds read happened to hit zeroed heap, so a three-species
+  argument list was silently fitted as ONE species with a stable,
+  normalised, finite histogram — undefined behaviour indistinguishable from
+  a correct answer. Mismatched lengths now throw `std::invalid_argument`
+  naming both sizes (a `ValueError` in Python), the same refusal
+  `sample_from_cdf` makes. ChiSurf's defensive `strict=True` zip in front
+  of the delegation can be dropped.
+
+- **`DecayFit23`'s hand-rolled `tau` penalty had its sign inverted over most of
+  its range, and is gone.** The line read
+  `fit_settings.penalty = (x[0] < kMinTau) ? -x[0] : 0.` — a term meant to push
+  `tau` back above `kMinTau = 1e-3`. It only does that for `tau < 0`. Over the
+  whole band `0 < tau < kMinTau` the term is *negative*, so crossing below the
+  bound **improved** the objective. Measured on the real objective: stepping
+  from `tau = 1.1e-3` to `9e-4` improved it by 9e-4, and the discontinuity put a
+  spurious spike in the numerical gradient at the crossing (`d/dtau = 4999.5`,
+  against `-0.0004` just above it).
+
+  The bound now goes through `i_lbfgs::set_bounds`, the same soft exterior
+  penalty every other bound in the fit uses. That also fixes a third problem the
+  sign error was hiding: the hand-rolled term was added to the objective
+  *outside* the model, so an analytic gradient over the model chain would miss
+  it and be wrong by exactly `-1` in the `tau` component below the bound.
+  `i_lbfgs` adds its bound penalty **and that penalty's gradient** to whatever a
+  registered gradient callback returns, so routing bounds through it is what
+  makes the AD conversion of these paths possible at all.
+
+  Also: gamma's soft bound was applied only inside the branch that frees gamma,
+  so the pre-fit ran under different rules than the main fit. Both bounds are
+  now set once, unconditionally, before any minimisation.
+
+  Verified end to end against the pre-change code: four ordinary starting points
+  give **identical** `tau`, `gamma` and 2I* to every printed digit; starts below
+  the bound and at negative `tau` still recover to the same minimum
+  (2I* −924.527677 in both).
+
+  The floors on `tau` and `rho` stay, and their role is now documented as what
+  it actually is — a *numerical guard*, not the constraint. They cannot be
+  removed: without the `tau` floor, `exp(-dt/tau)` overflows for `tau` in
+  roughly `(-dt/709, 0)` and the model comes back non-finite. Measured at
+  `tau = -1e-6`: every model bin `inf`, objective `NaN`.
+
+  They are now **smooth** floors rather than hard clamps (`soft_floor` in
+  `DecayFit.h`): exactly the identity at and above the floor, so no ordinary fit
+  moves by even an ulp, and `m₀·exp((v−m₀)/m₀)` below it — C1 at the join,
+  strictly positive for every finite input, and with a nonzero derivative, so
+  the parameter map contributes no structural zero for an AD pass to inherit.
+  Under it the failure direction flips from overflow to underflow: a wildly
+  negative `tau` now gives a decay factor of `0` rather than `inf`.
+
+  **What the smooth floor does not do, because it was worth measuring rather
+  than assuming:** it does not restore a usable gradient below `kMinTau`. The
+  objective is flat there because the data cannot resolve a lifetime that
+  short — at `dt = 0.032` the factor `exp(-dt/tau)` is already `1.3e-14` at
+  `tau = 1e-3` and underflows below — and the proof that the clamp was never the
+  cause is that `d/dtau` is already exactly 0 at `tau = 1.1e-3`, *above* the
+  floor. `tau_eff` keeps moving; the model stops caring. The restoring force in
+  that region comes from `set_bounds`, not from the parameter map.
+
+  A clamp is separately the wrong *constraint* mechanism because the objective
+  goes flat outside a clamped box (measured: `d/dgamma` exactly 0 at gamma =
+  1.0, 1.2 and 2.0) — the gap a soft bound fills. `gamma` keeps its hard clamp:
+  unlike `tau` it has no arithmetic failure outside its range (the model is
+  finite at gamma = −0.2 and 1.5, measured), so its clamp is purely a modelling
+  constraint, and removing it is a behaviour change worth making on its own
+  rather than bundled here.
+
+  `DecayFit26`'s equivalent penalty is **correctly** signed and is left alone;
+  `DecayFit25`'s is dead (always 0). Unifying those two onto `set_bounds` is
+  worth doing but is not this change.
+- **The Poisson likelihood paid the optimiser to drive a model bin to zero.**
+  `Wcm` and `wcm_p2s` handled a model bin at or below `1e-12` by *skipping* it,
+  a line commented "this is only for stability reasons". It was not stability.
+  The term a near-zero bin contributes to the minimised objective is
+  `-C·log(m)`, which is large and **positive** — at `C = 30` and `m = 1e-12`,
+  about `+829`. Dropping it is a discontinuous *improvement* of exactly that
+  size, handed out for pushing the bin one step further down, and below the
+  floor the objective is perfectly flat, so nothing pulls it back. Measured: the
+  objective falls **828.9** across the threshold and is identical for every
+  negative model value.
+
+  Both are now continued smoothly instead — `log` replaced by its tangent at the
+  floor, which agrees in value *and* slope, so the objective is C1 across it,
+  finite for every finite model value including negative ones, and strictly
+  worse the further below it goes.
+
+  **No existing fit changes.** Two independent checks, because "provably inert"
+  is the whole claim: the new code is *bitwise* identical to the old above the
+  floor (`test/cpp/test_decay_likelihood.cpp`, ten magnitudes), and a sweep of
+  143,360 model bins across the entire clamped `DecayFit23` parameter box never
+  produces a bin below `1.86e-07` — five orders of magnitude clear of the floor.
+  The corner is unreachable today precisely *because* the callers clamp; it
+  becomes reachable the moment a clamp is replaced by a soft bound or a prior,
+  which is why this landed first and on its own.
+
+  One detail worth not undoing: the multiply stays in `Wcm`'s loop body rather
+  than moving inside the helper. With it inside, the compiler stops contracting
+  it into the accumulate and every ordinary evaluation shifts by an ulp — a
+  one-ulp drift in a change that is supposed to alter nothing above the floor,
+  in functions pinned by cross-language reference tests.
+
+  `twoIstar`/`twoIstar_p2s` are deliberately untouched: they are computed after
+  the fit for reporting, never minimised.
+- **Three modules declared third-party dependencies they do not use, and one
+  used a dependency it did not declare.** `clsm` and `superres` asked for
+  `tttrlib::eigen` (and `superres` also for `tttrlib::autodiff`) while including
+  neither; `localization` asked for Eigen while actually including autodiff.
+  Nothing caught it because the top-level `INCLUDE_DIRECTORIES` for
+  `thirdparty/` puts the vendored headers on every module's include path
+  regardless of what it declared, so `EXTERNAL_DEPS` is documentation until a
+  module compiles with only what it asked for. Recorded as the remaining exit in
+  `modules/MODULE-DEBT.md`.
+- **The comment in `ImageLocalization.cpp` claimed a guard test that did not
+  exist.** It said the vectorized gradient was "guarded by a unit test that
+  compares [it] against scalar `dual`". There was no such test. There is now:
+  `test/cpp/test_ad_gradient.cpp` differentiates the objective three ways —
+  vectorized dual, autodiff's scalar `dual`, central differences — and requires
+  agreement. This matters more than an ordinary missing test, because the
+  `NumberTraits` specialization the vectorized path depends on is undocumented
+  upstream: an autodiff bump that changed the contract would compile cleanly and
+  silently produce wrong derivatives.
+- **The burst-search registry re-ordered its parameters, and the JavaScript
+  binding then passed them in the wrong positions** (PRD-032 fallout, found by
+  PRD-016 M5). `TTTR::burst_search_algorithms_json` assembled the category by
+  parsing `algorithms_json("burst_search")` into an `nlohmann::json` and dumping
+  it again. That type is a `std::map`, so the round-trip sorted every object key
+  alphabetically — including `params_schema.properties`, whose declaration order
+  *is* the C++ argument order. `bayesian_blocks` went from
+  `[L, m, p0, trigger_contrast, …]` to `[L, m, max_false_alarm_rate, …]`, and
+  `burstSearchByName` — which must build a positional call, because JavaScript
+  has no `**kwargs` — raised *"Illegal arguments for function
+  burst_search_bayesian_blocks"*. Both parses now use `nlohmann::ordered_json`,
+  as the rest of the registry already did.
+
+  Python was unaffected (it calls with `**kwargs`), and the PRD-032 verification
+  that reported "0 entries changed" could not have seen this: it compared parsed
+  JSON, and parsing is exactly the step that discards key order. The invariant
+  is now pinned by a test — `required` keeps declaration order, so it must be a
+  subsequence of the property keys, which sorting breaks immediately.
+- **`get_routing_channel`, `get_event_type` and `get_used_routing_channels`
+  leaked their buffer on every call, in all four language bindings.** These are
+  the three accessors declared `(signed char** output, int* n_output)`, and
+  `signed char` was the one type in that block applied as `ARGOUTVIEW` — "C++
+  owns this, do not free" — while every sibling type on the identical signature
+  used `ARGOUTVIEWM`. All of them allocate through `get_array<T>`, which
+  `malloc`s, so the promised owner did not exist and nothing ever freed the
+  allocation: one byte per event per call. Measured at 39 MB leaked over 200
+  calls on a 183,657-event file, against 0.4 MB after the fix.
+
+  The values were always correct, which is why it survived four bindings and a
+  conformance suite. `test/python/tttr/test_argoutview_ownership.py` measures
+  the footprint instead, and was confirmed to fail on a rebuilt-with-the-bug
+  binary (36.8 MB against a predicted 36.7) before being kept. The JavaScript
+  leak check read only `get_macro_times` and `get_micro_times` — both always
+  `ARGOUTVIEWM` — so it now reads the two affected accessors as well.
+
+- **Stating the same fact twice no longer records it twice, and a fact can be
+  restated.** The container's tag list was append-only, so every re-run of an
+  analysis re-added its parent edge (`parents(uid)` returned the same source
+  four times after three re-runs) and re-added every scalar tag, with readers
+  silently taking the first. Both ChiSurf and `tttr sm` had grown the same
+  read-filter-rewrite workaround — the sign the writer was missing an API.
+  Three changes, matching the semantics those two call sites already agreed
+  on: `add_tag` skips a tag identical in every field (two *different* parents
+  are two facts and both still land); new `PtoFile::set_tag(tag)` replaces
+  every tag with the same `(target, name, index)` and then appends — "the
+  value IS x" as against `add_tag`'s "x is also true"; new
+  `clear_tags(target, name)` removes one name from one object. `tttr sm` now
+  uses `set_tag` directly; ChiSurf's read-and-skip dance can be deleted once
+  it pins a tttrlib with this change.
+
+- **A local macOS build no longer mixes conda's HDF5 headers with Homebrew's
+  library.** With a conda env active and no explicit `HDF5_ROOT`,
+  `FIND_PACKAGE(HDF5)` picked Homebrew's CMake config package (the library)
+  while the env's include directory — already on the compile line through the
+  Python, libtiff and OpenMP hints — supplied the headers of a different ABI.
+  Nothing failed at build time beyond a link warning; the first Photon-HDF5
+  *write* aborted the interpreter with `Headers are 1.12.2, library is 2.1.1`,
+  taking the whole pytest run with it. The configure now pins `HDF5_ROOT` to
+  the active conda prefix whenever that prefix ships `H5public.h`, the same
+  policy the OpenMP fallback uses; an explicit `HDF5_ROOT` still wins.
+
+  The same class of mismatch in the other direction — an explicit `HDF5_ROOT`
+  naming a *different* prefix than the active env, which builds an extension
+  whose `@rpath/libhdf5.*.dylib` the env cannot resolve (ImportError at first
+  use) or resolves beside h5py's copy (abort at first write) — is now a
+  configure-time `FATAL_ERROR` instead of a runtime surprise, with
+  `TTTRLIB_ALLOW_HDF5_PREFIX_MISMATCH=ON` as the deliberate override.
+  conda-build is exempt: its host prefix is the intended cross-prefix.
+
+- **An updated store corrects the row count its object header claims.**
+  `pto_add_store` wrote `PtoRowCount` once and `pto_update_store` never touched
+  it, so re-running a burst search into an existing container left `tttr pto
+  ls`, `pto info` and the TUI reporting the *previous* run's count (the store's
+  own header was right, so readers of the payload were never misled). The count
+  is now written as a fixed 8-octet element — the packed width could not hold a
+  count that grew, the same trap `FileUID` hit — its offset is recorded on
+  write *and* on parse, and an update patches it in place or writes it into the
+  relocated header. Two adjacent holes closed by the same change: a relocating
+  update and `compact` both dropped `PtoRowCount` (and the former also
+  `FileMediaType`) from the headers they rewrote, so the count silently read 0
+  after reopening. A container written before this change stays as it was
+  until compacted: a packed count is left alone rather than corrupted.
+- **A disconnected kinetic scheme is no longer rejected by `GopichSzabo::set_scheme`.**
+  A repeated zero eigenvalue — the all-zero matrix that is the no-exchange
+  limit a dynamic fit is compared against, or any scheme with a state that
+  does not exchange — made `set_scheme` return `false` and the likelihood
+  `-inf`, so an optimiser exploring towards slow exchange hit a wall exactly
+  where the likelihood is best defined. The cause was in the shared QR
+  eigensolver (`QREigen.h`): inverse iteration solved the same singular system
+  from the same start vector for every copy of a repeated eigenvalue, so all
+  copies came back parallel and the eigenvector matrix was rank deficient even
+  when the true eigenspace is the whole space. Copies of an eigenvalue are now
+  grouped and each iterate is orthogonalised against the vectors the group has
+  already found, the way LAPACK's `dhsein` does; a residual check keeps a
+  *defective* eigenvalue (a Jordan block, which genuinely has too few
+  eigenvectors) failing the condition gate as before rather than being handed
+  a fabricated basis. The no-exchange two-state likelihood now matches the
+  closed-form mixture sum to 12 digits, and with no repeated eigenvalue the
+  computation — every case that already worked, including BurstML's
+  ~100-state matrices — is exactly the old one.
+  `pto_add_store` wrote `PtoRowCount` once and `pto_update_store` never touched
+  it, so re-running a burst search into an existing container left `tttr pto
+  ls`, `pto info` and the TUI reporting the *previous* run's count (the store's
+  own header was right, so readers of the payload were never misled). The count
+  is now written as a fixed 8-octet element — the packed width could not hold a
+  count that grew, the same trap `FileUID` hit — its offset is recorded on
+  write *and* on parse, and an update patches it in place or writes it into the
+  relocated header. Two adjacent holes closed by the same change: a relocating
+  update and `compact` both dropped `PtoRowCount` (and the former also
+  `FileMediaType`) from the headers they rewrote, so the count silently read 0
+  after reopening. A container written before this change stays as it was
+  until compacted: a packed count is left alone rather than corrupted.
+- **`FileMediaType` is written, not only read.** It has been in the PTO
+  specification and parsed on open since the format existed, and nothing but an
+  embedded store ever wrote one — so every attachment came back with an empty
+  media type. Objects now carry it, and `compact` carries it across.
+- **OpenMP was off for the entire library on macOS.** `FIND_PACKAGE(OpenMP)`
+  fails under AppleClang, which ships neither `-fopenmp` nor a runtime, and the
+  top-level `CMakeLists.txt` then set `WITH_OPENMP OFF` — every `#pragma omp` in
+  tttrlib became a comment and every parallel kernel ran serial, announced by a
+  single `WARNING`. The configure now points `FindOpenMP` at the `libomp` that
+  conda ships as a compiler dependency (and Homebrew as a keg), so an AppleClang
+  build is parallel again. Measured on the clustering kernels: 8x.
+- **`TTTRLIB_VEC_REDUCTION(var)` did not compile under OpenMP.** `_Pragma` takes
+  a string literal and a macro parameter is not substituted inside one, so the
+  emitted pragma named a variable literally called `var` and every reduction
+  site failed with "use of undeclared identifier 'var'". Stringified through a
+  helper macro (`modules/math/include/Mat.h`).
+- **The `cli` module included `io_csv_writer.h` without declaring `io_csv`.**
+  The module system grants a module only its own and its declared dependencies'
+  include directories, so the undeclared edge surfaced as a "file not found" in
+  `cmd_sm.cpp` rather than as a link error later.
+
+### Added
+- **`tttr sm --mle` fits one lifetime per burst per detector** (PRD-026's
+  remaining half), through `fit23` over the detector's parallel and
+  perpendicular arms jointly. Columns are ChiSurf's `.bg4`/`.br4` set in its
+  historical order, including the two spaces in `2I*  (green)`. Verified against
+  the simulation's ground truth: the 3.8 ns species comes back at **3.87 ns**
+  and the 1.6 ns species at **1.71 ns**, from a bimodal distribution that
+  resolves the two.
+
+  Three decisions worth stating, because each replaced something that looked
+  fine and was not:
+  - **`--irf` is required; there is no default.** A prompt is a claim about the
+    instrument, and a lifetime fitted against the wrong one is wrong by roughly
+    its width with nothing in the output saying so. `--irf delta` is available
+    and has to be typed. The synthetic prompts are `gauss:FWHM[,T0]` and
+    `sgauss:FWHM[,T0[,SKEW]]` — a skew-normal,
+    `exp(-z²/2)·(1 + erf(αz/√2))`, default skew 1.5, positive tailing to later
+    times as a real prompt does; `T0` is the skew-normal's *location*
+    parameter rather than its peak, which is how it is parameterised
+    everywhere and what a fit to a measured IRF hands back. `gaussian:` and
+    `skewed:` are accepted as aliases. A path is read as a measured response,
+    one number per line.
+
+    Checked by the physics rather than by parsing: the simulation convolves
+    with nothing, so `delta` recovers the truth best (3.87 ns against 3.8),
+    and a wider prompt takes more out of the decay, so the recovered lifetime
+    falls monotonically with its width — 3.87 → 3.67 → 3.03 ns for delta,
+    0.5 ns and 2.0 ns FWHM. A spec that parsed and was then ignored passes
+    none of that.
+  - **Only `tau` is fitted.** A burst of a hundred photons does not determine an
+    anisotropy; the four-parameter fit moved the recovered lifetime by a factor
+    of two on a change of start value while its 2I\* still looked reasonable.
+    r0 = 0 with rho held is also the precondition for the kernel's own
+    well-conditioned path.
+  - **`gamma` is measured, not guessed.** It is the background fraction of the
+    burst — a rate measured from the photons no burst contains, times the
+    burst's duration. Left at 0 it subtracts nothing, which biased every
+    lifetime up by ~50% on a 13% background.
+  - The fit runs on a rebinned micro-time axis (`--mle-bins`, default 128): a
+    burst is ~100 photons over 4096 raw channels, so the raw axis is almost all
+    zeros and the convolution is 4096 long for no gain. 14 s → 0.26 s.
+- **The detector setup's `g_factor`, `l1` and `l2` are read** instead of parsed
+  and discarded. They are instrument constants and belong to the file; a
+  g-factor left at 1 when the file says otherwise is a wrong number, not a
+  missing one.
+
+### Changed
+- **Every burst-table column carries its unit** (chiSurf PRD-84). The
+  `_mmfdb_column.units` attribute travels with the column, so a column-subset
+  read gets it too, and a `Duration (ms)` stops being a millisecond only by
+  virtue of its name. The rule is a port of ChiSurf's — two writers disagreeing
+  about the unit of the same column is the failure the vocabulary exists to end
+  — and a cross-writer test pins the two to the same answer column for column
+  (40/40 on a four-detector burst table, 30/30 with PIE windows). Absent means
+  *unknown*, not dimensionless: a photon index claims nothing.
+- **The controlled vocabulary now comes from mmfdb, and is validated against
+  mmfdb.** `okf/nomenclature/mmfdb.dic` is a *copy*, and it had drifted: it
+  declared `bva`, `kde_cde`, `mle_green`, `mle_red`, `burst_fcs`,
+  `hmm_photon_by_photon`, `tcspc_calibration`, `pda_histogram`, `companion_of`,
+  `histogram_bin` and seven `…4` data formats — **eighteen terms mmfdb does not
+  have**. The registry agreed with the local copy, the local copy agreed with
+  the writer, and all three were wrong together, which is a closed loop of
+  agreement that says nothing about the vocabulary the rest of the world reads
+  these files in.
+
+  New `test/python/test_vocabulary_matches_mmfdb.py` validates against
+  **mmfdb's own dictionaries** — the installed package, `$MMFDB_DIC_DIR`, or a
+  sibling checkout — and is the only check that can catch a term this repository
+  invented, because it is the only one that reads a file this repository does
+  not own. It skips loudly, naming where it looked, when mmfdb is absent.
+
+  Reconciled: every `operation_type` is an mmfdb term. `registry_json()`'s entry
+  **`name` is unchanged** — that is tttrlib's own identifier and what a caller
+  dispatches on; only `operation_type`, the provenance term, moved. The existing
+  `test_registry_matches_mmfdb.py` had been comparing the registry *key* against
+  the vocabulary, which forces the two to be equal and is exactly how the local
+  names got into the dictionary; it now compares the term.
+  `data_format` is `dstore` on every entry — that is what a `.pto` artifact
+  carries, where `bg4`/`bv4`/`2c4` were both non-conformant and a statement
+  about what a table *is*, which is `operation_type`'s job.
+  Two terms tttrlib genuinely needed and mmfdb lacked — `pda_burst_likelihood`
+  and the `histogram_bin` row grain — were **added to mmfdb**, which is where a
+  new term belongs.
+- **Every term the container writer emits is now an MMFDB dictionary term**
+  (chiSurf PRD-88). The profile defines no vocabulary of its own, so a word this
+  invents is a word nothing can query — and it was inventing **four**: `bva`,
+  `kde_cde` and `mle_<detector>` for operations the dictionary calls
+  `burst_variance_analysis`, `burst_2cde` and `burst_lifetime_fitting`, plus
+  `companion_of` for a relation `_mmfdb_edge.relationship_type` does not define
+  at all (a companion is `derived_from` its burst table; that the two share a
+  grain is what `row_grain` says). ChiSurf's writer checks every term before
+  writing and so could never emit one; this one cannot make that check — it is
+  C++, does not link mmfdb, and has no mmCIF parser — so the check now lives on
+  the ChiSurf side, in `test_every_term_the_cli_writes_is_in_the_dictionary`.
+- **Extending a container no longer gives its provenance graph two roots**
+  (chiSurf PRD-88). `tttr sm` looked the photon stream up by **file name**, so
+  writing into a container another tool had created added a *second*
+  `tttr_photon_stream` whenever the name did not match, and hung the burst table
+  off the root nothing else references. It reads as intact until somebody walks
+  the lineage of an artifact the other tool wrote. The lookup is now on
+  `_mmfdb_artifact.checksum`, so a byte-identical file under any name resolves
+  to the primary already there; the name remains as a fallback for a container
+  written before the checksum tag.
+- **Documented the two container names.** `<name>.pto` is *the container* — an
+  EBML document with `DocType "pto"` that claims nothing about its contents.
+  `<name>.mmfdb.pto` is a `.pto` that **also** carries the PTO.MFDB profile.
+  The profile tag goes on the stem and never on the suffix: a `.pto.mmfdb`
+  would stop being recognised as a container by everything that dispatches on
+  the extension, so it is read the way `.tar.gz` is. The name is a courtesy for
+  people and directory listings; a reader decides conformance from
+  `_mmfdb_container.profile` inside the file, and must accept a plain `.pto`.
+  Normative in the profile spec, restated in `doc/formats/pto.rst`,
+  `modules/io/pto/README.md`, `modules/cli/README.md` and `tttr sm --help`.
+  (`modules/io/pto/README.md` had it backwards as `.pto.mfdb`.)
+- **`tttr sm` writes a detector-named burst table, and it is ChiSurf's table**
+  (PRD-026). The column set is generated from the `--setup`
+  `detector_setups.json`, so a setup whose detectors are `green`/`red` produces
+  `Duration (green) (ms)` and one whose detectors are `green_par`, `green_perp`,
+  `red_par`, `red_perp` produces four sets — nothing in the binary knows what
+  "green" means any more. Verified cell-for-cell against ChiSurf's
+  `generate_burst_dataframe` on simulated MFD data: 23/23 columns identical for
+  the two-detector setup, 37/37 for the four-detector one, 27/27 with PIE
+  windows and micro-time gates. The columns that were missing entirely —
+  `Confidence (sigma)`, `First File`, `Last File`, the per-detector
+  `First/Last Photon (<d>)`, and the `S <window> <detector> (kHz) | lo-hi`
+  window rates — are written; `--csv` now writes the whole table rather than
+  five columns.
+- **`.pto` burst artifacts follow the PTO.MFDB profile as ChiSurf writes it.**
+  `_mmfdb_artifact.data_format` is `dstore` (it was `bur`/`bg4`/`bv4`/`2c4`,
+  which name a *file* layout, not an encoding), `_mmfdb_operation.settings_hash`
+  is written — SHA-256 of the canonical settings JSON, the same rule as
+  ChiSurf's `_settings_hash` — and re-running with identical settings now
+  replaces the artifact in place instead of adding a second one, while a
+  changed search correctly writes a new one beside it.
+- **The BVA and 2CDE companion tables are computed.** They were written with
+  constants (`2I* = 10`, `Tau (green) = 3.8`, `Proximity Ratio Std = 0.05`,
+  `FRET 2CDE = 10`) for every burst, which is indistinguishable downstream from
+  a measurement. They now come from the `BVA` and `TwoCDE` classes over
+  `--donor`/`--acceptor` detector streams, and are **not written at all** when
+  those streams cannot be named. The two placeholder MLE tables (`mle_green`,
+  `mle_red`) are gone until they are real fits.
+
+### Fixed
+- **The container held a lossy re-encoding of the measurement.** `tttr sm`
+  embedded the *channel-filtered* stream, re-encoded as a `.sm` — the other
+  channels gone, the vendor header gone, and nothing in the file saying so — in
+  the one place the PTO.MFDB profile promises is not a re-encoding ("the
+  instrument file is the truth; it goes in verbatim and comes back
+  byte-for-byte"). The original file now goes in unchanged, with its real
+  encoding term and a SHA-256 in `_mmfdb_artifact.checksum`, verified to round
+  trip byte for byte. It is also smaller: 1.9 MiB of `.spc` where the
+  re-encoded `.sm` was 4.6 MiB.
+- **The MFD example setup had `green`'s polarization arms the wrong way round.**
+  `chs[::2]` is parallel, and the file said `[8, 0]` while the simulation emits
+  green-parallel on routing 0. Every photon count was right and every anisotropy
+  derived from the file would have been inverted — the kind of error that
+  changes no total and every conclusion.
+- **`tttr sm` counted one photon too few in every burst.** A burst search
+  returns *inclusive* start/stop indices, so a burst holds `stop - start + 1`
+  photons; the burst table wrote `stop - start`, and derived its duration from
+  `macro[stop - 1]` rather than `macro[stop]`, so every count, duration and
+  count rate in a `.pto` burst table was slightly wrong.
+- **`tttr sim` encoded the photon stream on the wrong micro-time axis.** It
+  hard-coded `microtime_resolution = 0.004069` ns and `laser_period = 13.596`
+  ns regardless of what the config simulated, so a 3.8 ns decay simulated on an
+  0.008 ns axis read back as a 1.9 ns decay with nothing in the file to say so.
+  It now takes the axis from the engine's own settings, which is the fix the
+  Python `SimEngine.to_tttr` already had. `--routing-channels 0,8,1,9` maps
+  simulation channels onto instrument routing channels, so the MFD mapping
+  stays out of the binary.
+- **The `tttr` binary in a build tree loaded whatever `libtttrlib` it found
+  first, and could start on a stale one.** `BUILD_WITH_INSTALL_RPATH` was ON, so
+  the build-tree binary carried only the *install* rpath — and
+  `@loader_path/../lib` does not resolve in a build tree, where the library
+  lands at `<build>/libtttrlib.dylib` rather than `<build>/lib/`. While that was
+  the single entry it merely failed loudly and a `DYLD_LIBRARY_PATH` fixed it
+  (which macOS SIP strips from anything but a shell). It became dangerous once
+  a second entry was needed for `libomp` — conda's and Homebrew's both carry an
+  `@rpath/libomp.dylib` install name and neither ships beside `libtttrlib` — as
+  a conda prefix commonly holds a `libtttrlib.dylib` symlink into *another*
+  build tree. The tool then started successfully on a months-old library, with
+  the wrong subcommands and no error anywhere: `tttr sm --output x.pto`
+  overwrote an existing container with the old JSON burst list. The build tree
+  now gets the rpath CMake computes from what it actually linked, ordered ahead
+  of any prefix, and the install rpath keeps `@loader_path/../lib` plus the
+  OpenMP directory.
+- **The macOS build lost OpenMP on any re-configure.** The AppleClang fallback
+  set `OpenMP_CXX_FLAGS` as an ordinary variable after `FIND_PACKAGE(OpenMP)`
+  had already cached it as `NOTFOUND`, so it worked exactly once, on a fresh
+  cache. Touching any `CMakeLists.txt` in an existing build tree turned OpenMP
+  back off — and not quietly: the compile flags survive in `CMAKE_CXX_FLAGS`,
+  so the sources still emit `omp` calls and the link fails on
+  `_omp_set_num_threads`. The fallback now writes the cache entries `FindOpenMP`
+  documents, with `FORCE`.
+- **New `test/python/misc/test_cli_sm_burst_table.py`** — the whole pipeline
+  from `tttr sim` to the container, with the ChiSurf column arithmetic
+  reimplemented in NumPy from its documented rules so the conformance is
+  checked without ChiSurf being a dependency: column naming for three setups,
+  every cell of every column, half-open micro-time gates, window columns,
+  the profile tags, re-run identity, and that the companions vary rather than
+  being constants. Its input is simulated, so it needs no data download.
+- **New `test/tools/compare_burst_table_to_chisurf.py`** — the same diff against
+  ChiSurf's *actual* `generate_burst_dataframe`, for the gap the
+  reimplementation cannot cover (a rule read wrongly is read the same wrong way
+  twice). Opt-in and outside the suite, like `pto_ebml_check.cpp` and for the
+  same reason.
+- **New `examples/simulation/configs/mfd_2col_2pol.json` and
+  `mfd_detector_setups.json`** — a polarization-resolved two-colour MFD run on
+  four channels with two species differing in FRET efficiency and in rotational
+  freedom, and the chiSurf-compatible detector setup that reads it back as
+  green/red or as four named arms. The reproducible chain PRD-026 asks for.
+- **`StreamingCorrelator` was wrong from cascade 2 up, and is now exact against
+  the batch correlator** (PRD-033, which declared it unusable). The cause was
+  not the normalization it was attributed to: `get_correlation` read every
+  cascade level at coarse lags `n_bins/2 .. n_bins/2 + n_bins - 1`, a constant,
+  while the multi-tau axis it publishes requires level *b* to start at
+  `x[b*n_bins] / 2^b` — 0, 8, 12, 14, 15, 15, ... converging to `n_bins - 1`.
+  Only level 1 happens to equal `n_bins/2`, which is exactly why cascades 0 and
+  1 agreed and nothing above did. Returning the value from a shorter lag than
+  the label claims reads, for a decaying G(tau), as an inflated G, and the
+  inflation grows with the cascade: the measured 1.19 / 1.25 / 1.12 / 2.39. Mean
+  stream/batch ratio is now 1.0000 on every cascade out to lag 65520. Two
+  smaller defects went with it: the coarse-bin width in the normalization used
+  `2^(j/n_bins)` where the batch uses `2^((j-1)/n_bins)`, so every block-boundary
+  lag was off by a factor of two; and `push_photon(mt1, w1, mt2, w2)`
+  accumulated `w1` only, computing an autocorrelation and calling it a
+  cross-correlation.
+- **`StreamingBurstDetector` did not agree with the batch sliding-window burst
+  search it mirrors** — the same PRD-033 that called the correlator broken
+  called this one "✅ works". Four defects: every burst ended **one photon late**
+  (the window that fails ends the burst at the preceding window's last photon,
+  `i + m - 2` in the batch loop, not at the photon just pushed), so every burst
+  carried an extra background photon; a burst of **coincident photons was
+  reported as no burst at all**, because the rate was computed as `m / span`
+  with a zero span guarded by `rate := 0` — m photons in one macro-time tick is
+  the highest rate the detector can see, and it fell below the threshold; the
+  detector **kept every photon's macro time**, unbounded, in a consumer meant
+  for a live acquisition (now a ring buffer of the last `m`, O(m)); and a
+  non-positive `macro_time_resolution` **silently returned the whole stream as
+  one burst**, which is reachable by accident because a `TTTR` whose header has
+  not been read reports `-1.0` (now rejected). `push_photon`'s return value,
+  documented as "true if a burst just completed", was
+  `... && &bursts_.back() != nullptr` — the address of a reference, always
+  true — and now means what it says. Boundaries are compared index for index
+  against the batch search over nine seed/parameter combinations.
+- **`StreamingDecayHistogram` and `StreamingPhasor` checked, not assumed.** Both
+  were claimed correct on the same evidence as the burst detector; both hold up
+  — the histogram is exact against `np.bincount` and the batch microtime
+  histogram, the phasor matches `DecayPhasor.compute_phasor_bincounts` to 1e-12
+  and lands on the universal semicircle with the simulated lifetime.
+- **New `test/python/streaming/test_streaming_correlator.py`** — axis equality
+  with the batch correlator, Poisson flatness, per-cascade agreement (not
+  aggregate: an aggregate tolerance is what hid this), cross-correlation,
+  flush idempotence, and chunked-vs-whole equality.
+- **The macOS build linked no OpenMP runtime.** Once `FIND_PACKAGE(OpenMP)` was
+  taught to find Homebrew/conda `libomp` on AppleClang, every library target
+  failed to link: the flags reach the compiler but nothing links the runtime,
+  and `OpenMP_EXE_LINKER_FLAGS` is empty on that path and would not reach a
+  library target anyway. `LINK_LIBRARIES(OpenMP::OpenMP_CXX)` after detection
+  covers the modules, both whole-library targets, the SWIG modules and the
+  tests.
+- **The non-symmetric eigensolver returned wrong eigenvectors** (`QREigen.h`,
+  used by `BurstML`; the same code was duplicated in `GopichSzabo`). Three
+  independent defects, each enough on its own: the null vector was
+  "un-permuted" by the elimination's row pivots, but row pivots permute
+  equations, not unknowns, so the components came back scrambled; the null
+  direction was read off a pivot that is rounding-level noise when the shift is
+  an eigenvalue, so its value was noise; and the balancing back-transform
+  scaled columns where it had to scale rows, and was applied to vectors that
+  had never been balanced in the first place. Measured on the defining
+  property: `||A v - lambda v|| / ||A||` was ~1 (that is, no information) for a
+  symmetric 8×8, a general 10×10, a kinetic generator and a badly scaled
+  matrix. It is now 1e-15 on all of them. Eigen*values* were always correct.
+  Eigenvectors are now produced by inverse iteration on the Hessenberg form,
+  and taken from the balanced matrix so the basis is well conditioned.
+- **The QR iteration could stall silently.** With no exceptional shift, a
+  matrix whose eigenvalues sit symmetrically about the trailing 2×2 — a cyclic
+  permutation is the standard example — is a fixed point of the Wilkinson
+  shift, so nothing ever deflated; the iteration then hit its budget, broke out
+  and reported success with the remaining eigenvalues left at zero. It now
+  applies LAPACK's exceptional shift every tenth iteration, and returns failure
+  rather than zeros if a block still will not deflate.
+- **`mat_solve` and `mat_inverse_inplace` called singular matrices regular.**
+  The test was an absolute `1e-300` floor, which is not a rank test: a rank-1
+  outer product with entries ~1e8 leaves pivots at rounding level, not at zero,
+  and the solver returned components of size 1e24. The threshold is now
+  `eps * max|A|`, as tight as an exact-zero test but scale invariant.
+- **`mat_lstsq_minnorm`'s `rcond` was absolute, not relative.** Every singular
+  value of a uniformly small system falls under a fixed `1e-14` cutoff, so the
+  whole solution was zeroed — a system scaled by 1e-15 returned `x = 0` instead
+  of `||x|| = 7.6e14`. The cutoff is now `rcond * sigma_max`, matching numpy's
+  `lstsq` and LAPACK's `gelsd`.
+- **The MaxEnt TCSPC active set fed its least-squares fallback a destroyed
+  matrix.** `mat_solve` eliminates in place, so the copy taken *after* it
+  failed held a half-triangularised matrix and a partly updated right-hand
+  side. The copy is now taken before the solve.
+- New `test/cpp/test_mat_linalg.cpp` and `test/cpp/test_qreigen.cpp` cover all
+  of the above as properties (residual, orthogonality, minimum norm, rank
+  detection, reconstruction) rather than stored numbers.
+
+### Performance
+- **`StreamingCorrelator` no longer pays for empty bins.** Its cost was one
+  cascade step per macro-time bin (~19 ns), and a real acquisition has hundreds
+  to thousands of empty bins per photon — a 100 s run at 10 ns resolution is
+  10^10 of them. A run of empty bins is now skipped in closed form: level *b*
+  emits `n0 / 2^b` times, so a run covers a difference of two divisions, and
+  only the first emission can be non-zero. 80k photons over a 4.0 M-bin span:
+  0.136 s → 0.063 s; over a 200 M-bin span: 0.069 s, where the old code would
+  have spent about 4 s. The cost no longer grows with the length of the
+  acquisition.
+- **The non-symmetric eigendecomposition is 5.5× faster single-threaded and
+  10× on eight threads** (n=100: 45.3 ms → 8.3 ms → 4.5 ms; n=150: 208 ms →
+  13.0 ms threaded). Eigenvectors were 94% of the time and scaled as n⁴,
+  because a dense LU of `A - lambda*I` ran for every eigenvalue. Inverse
+  iteration on the **Hessenberg** form costs O(n²) per eigenvalue — a
+  Hessenberg column has one entry to eliminate — so the basis is O(n³), the
+  same order as the QR iteration itself. The Schur-vector accumulation was then
+  switched off (nothing consumes it) and the per-eigenvector loop parallelised.
+  `GopichSzabo` now shares this solver instead of its own O(n⁴)
+  Faddeev-LeVerrier + Durand-Kerner path.
+- **`mat_lstsq_minnorm` is 2.5–7.3× faster** (512×128: 201 ms → 27.7 ms). The
+  one-sided Jacobi sweep works on a column-major copy so every rotation and
+  inner product is contiguous, and column norms are carried through each
+  rotation in closed form instead of recomputed.
+- **`mat_inverse_inplace` gained an allocation-free overload** (1.4–2.1× in the
+  Kalman burst search's per-bin loop), and `mat_power` reuses one scratch
+  buffer instead of allocating per multiply.
+- New tracked benchmark `benchmarks/bench_linalg.cpp` with a recorded baseline
+  (`benchmarks/results/linalg_baseline.tsv`) and a `--check` mode that exits
+  non-zero on a regression beyond 1.30×. Table and method in `PERF.md`.
+- **Per-pixel reconvolution MLE (`fit_map`) is 2.8× faster** (456 ms → 161 ms
+  on a 256×256 FLIM image). Two changes:
+  1. **Allocation-free inner optimization loop** (`DecayFitNExp.cpp`): a
+     `FitWorkspace` struct pre-allocates all scratch buffers (component arrays,
+     EM probability/weight vectors) once per fit. The grid scan, Brent
+     minimization, and EM iterations previously allocated ~6 vectors per
+     `evaluate_profile` call — thousands of heap allocations per single fit.
+     A new `compute_nll_only` / `evaluate_nll_ws` path skips the
+     `ProfileResult` copy entirely when only the NLL is needed (the inner
+     optimization loop).
+  2. **Buffer-based `fit_batch_flat_buffers` SWIG binding**: NumPy arrays now
+     cross the Python-C++ boundary as raw pointers via `IN_ARRAY2` typemaps,
+     eliminating the element-by-element `std::vector` conversion that
+     dominated the 46k-pixel image path.
+  The CPU fitter now beats FLIMKit's MLX GPU by **5.3×** (was 1.25×).
+- **`FitNExp` Python wrapper** (`ext/python/FitNExpWrapper.py`): instance-based
+  convenience class holding IRF/timing/bounds state, with `__call__` (single
+  curve), `fit_many` (batch), and `fit_map` (per-pixel image). Delegates to the
+  optimized C++ `DecayFitNExp` API. The benchmarks reference `tttrlib.FitNExp`;
+  this implements it.
 
 ### Added
 - **A `DataStore` tree is reached with `/`, the way `pathlib` reaches a

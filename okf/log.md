@@ -1,5 +1,73 @@
 # Bundle update log
 
+## 2026-08-10 (16th entry)
+
+* **PRD-010 Phase 5c/5d: bounds are priors, and acting on that found two bugs.**
+  Minimising `-log L + p(x)` is MAP estimation with `p = -log prior`, so a bound
+  and a prior are one object. Both codebases already said so —
+  `DecayFitContext.h:65`, *"A bound is a uniform prior in this interface"*, and
+  ChiSurf folding a `UniformPrior` back onto its port bounds. It follows that
+  `i_lbfgs`'s soft bound, `k(x-hi)^2` outside the box, is already a proper prior
+  that nobody had named. Unifying the decay fits onto it turned up two defects
+  that had been sitting behind the clamps.
+
+  **The Poisson likelihood paid the optimiser to zero out a model bin.** `Wcm`
+  and `wcm_p2s` skipped any bin at or below `1e-12`, under a comment reading
+  "this is only for stability reasons". The term a near-zero bin contributes to
+  the minimised objective is `-C*log(m)`, large and *positive*, so dropping it
+  is a discontinuous improvement: measured, the objective falls **828.9** across
+  the threshold and is identical for every negative model value. Now continued
+  by the tangent to `log` — C1 across the floor, finite below, monotone. Proven
+  inert two ways, because that was the whole claim: bitwise identical above the
+  floor, and a 143,360-bin sweep of the clamped DecayFit23 box that never gets
+  below 1.86e-07.
+
+  **`DecayFit23`'s hand-rolled tau penalty had its sign inverted.**
+  `penalty = (x[0] < kMinTau) ? -x[0] : 0` is negative over the whole band
+  `0 < tau < kMinTau`, so crossing *below* the bound improved the objective —
+  measured 9e-4 better stepping from 1.1e-3 to 9e-4 — and it was discontinuous
+  there. Replaced by `set_bounds`. Gamma's soft bound, meanwhile, was applied
+  only inside the branch that frees gamma, so the pre-fit ran under different
+  rules than the main fit; both are now set once, unconditionally.
+
+  Three corrections to my own reasoning, each caught only by measuring:
+
+  1. I claimed `gamma < 0` made the objective NaN. That was a transcription
+     error in my probe, which guarded on `C > 0` where `Wcm` guards on
+     `M > 1e-12`. `Wcm` never NaNs — it silently drops the bin, which is worse
+     because it is invisible.
+  2. I claimed clamps make L-BFGS stall here. Below `kMinTau` the gradient was
+     `-1`, not zero — the hand-rolled penalty was supplying it. The flat region
+     was real for *gamma*, not tau.
+  3. "Delete the clamps" is not possible. Without the tau floor
+     `exp(-dt/tau)` overflows for `tau` in `(-dt/709, 0)`: at `tau = -1e-6`
+     every model bin is `inf` and the objective NaN, and no penalty rescues a
+     NaN because the line search must be able to score what it proposes. The
+     guards stay; only the constraint role moved.
+  4. Making the floor *smooth* — `soft_floor`, identity above it bit-for-bit,
+     `m0*exp((v-m0)/m0)` below — is right and is now in, but it does **not**
+     buy back a gradient below `kMinTau`, which is what one hopes for. That
+     flatness is physical: at `dt = 0.032`, `exp(-dt/tau)` is 1.3e-14 at
+     `tau = 1e-3` and underflows below, and `d/dtau` is already exactly 0 at
+     `tau = 1.1e-3`, *above* the floor. `tau_eff` keeps moving; the model stops
+     caring. Tuning `kMinTau` cannot fix it — no parameter map manufactures
+     information the likelihood does not contain.
+
+  **ChiSurf's bound transforms are not the thing to copy.** `leastsqbound.py`
+  uses MINUIT's `sin` (two-sided) and `sqrt(v^2+1)` (one-sided). Measured, both
+  reintroduce the pathology they exist to avoid: the `sin` derivative is 3e-17
+  at the bound and the map is periodic and non-monotonic; the `sqrt` form is
+  *even* in `v`, with derivative exactly 0 at `v = 0`, which maps to the bound.
+  The logistic/exponential pair used for the localization fit is monotonic and
+  attains its bounds only asymptotically. What *is* worth taking from ChiSurf is
+  `priors.py` — priors as extra residuals, imposing no bound at all.
+
+  The AD payoff is the reason to care: `i_lbfgs` adds the bound penalty **and
+  its gradient** to whatever a registered analytic callback returns
+  (`i_lbfgs.h:313-320`), whereas a term added to the objective by hand is
+  invisible to that callback. The old tau penalty would have made an AD gradient
+  wrong by exactly `-1` below the bound.
+
 ## 2026-08-10 (15th entry)
 
 * **PRD-034 registered: .pto as its own TTTR sink.** Scoping found the design
