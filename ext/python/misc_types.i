@@ -110,6 +110,16 @@ $result = swig::from($1);
 %template(PairInt64T) std::pair<int64_t, int64_t>;
 %template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
 #endif
+
+#if !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT) && defined(SWIGWORDSIZE64)
+%typemap(out) std::vector< int64_t,std::allocator< int64_t > > * {
+$result = swig::from(static_cast<std::vector< int64_t,std::allocator< int64_t > > >(*($1)));
+}
+
+%typemap(out) std::vector< int64_t > {
+$result = swig::from($1);
+}
+#endif
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
 
@@ -182,7 +192,11 @@ $result = swig::from($1);
 %apply(unsigned short** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned short** output, int* n_output)}
 %apply(char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(char** output, int* n_output)}
 %apply(unsigned char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(unsigned char** output, int* n_output)}
-%apply(signed char** ARGOUTVIEW_ARRAY1, int* DIM1) {(signed char** output, int* n_output)}
+// ARGOUTVIEWM, not ARGOUTVIEW: get_routing_channel, get_event_type and
+// get_used_routing_channels all malloc through get_array<T>, so the binding has
+// to own the buffer. As ARGOUTVIEW nobody freed it -- 1 byte per event per call,
+// in all four languages.
+%apply(signed char** ARGOUTVIEWM_ARRAY1, int* DIM1) {(signed char** output, int* n_output)}
 %apply (unsigned int** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(unsigned int** output, int* dim1, int* dim2)}
 %apply (unsigned char** ARGOUTVIEWM_ARRAY4, int* DIM1, int* DIM2, int* DIM3, int* DIM4) {(unsigned char** output, int* dim1, int* dim2, int* dim3, int* dim4)}
 %apply (unsigned short** ARGOUTVIEWM_ARRAY3, int* DIM1, int* DIM2, int* DIM3) {(unsigned short** output, int* dim1, int* dim2, int* dim3)}

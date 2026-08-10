@@ -73,6 +73,50 @@ describe('TypedArray marshalling', { skip: !available && 'test data not download
     assert.equal(typeof tttrlib.arraysAreZeroCopy(), 'boolean');
   });
 
+  // The no-copy claim, asserted rather than described. `arraysAreZeroCopy()`
+  // returning a boolean says nothing about whether the boolean is true of the
+  // binary -- a build that copied everything would pass that test unchanged.
+  //
+  // Pda::get_amplitudes is a true ARGOUTVIEW: it hands out `_amplitudes.data()`,
+  // a pointer into the object's live std::vector. So writing through the
+  // returned Float64Array must be visible to C++, and a second call must read
+  // the written value back. Under -DTTTRLIB_JS_COPY_ARRAYS it must NOT be --
+  // which is why this asserts against the mode rather than for zero copy, and
+  // is the one test in this file that means something different in each build.
+  test('an ARGOUTVIEW output aliases C++ memory, or copies if built that way', () => {
+    const pda = new tttrlib.Pda();
+    pda.set_amplitudes([1, 2, 3]);
+
+    const view = pda.get_amplitudes();
+    assert.deepEqual(Array.from(view), [1, 2, 3]);
+    view[0] = 42;
+
+    const reread = pda.get_amplitudes();
+    if (tttrlib.arraysAreZeroCopy()) {
+      assert.equal(reread[0], 42, 'zero-copy build: C++ must see the write');
+    } else {
+      assert.equal(reread[0], 1, 'copy build: C++ must not see the write');
+    }
+    // Either way the untouched elements survive, so a failure above is about
+    // aliasing and not about the vector having been clobbered.
+    assert.deepEqual(Array.from(reread.subarray(1)), [2, 3]);
+  });
+
+  // The input half of the same contract, and unconditional: INPLACE_ARRAY1
+  // borrows the caller's buffer in both builds -- TTTRLIB_JS_COPY_ARRAYS only
+  // governs outputs. add_pile_up_to_model writes through `model`, so if the
+  // typemap copied the argument the caller's array would come back untouched.
+  test('an INPLACE argument is written through, not copied', () => {
+    const model = Float64Array.from({ length: 16 }, (_, i) => 100 + i);
+    const decay = Float64Array.from({ length: 16 }, (_, i) => 100 + i);
+    const before = Array.from(model);
+
+    tttrlib.add_pile_up_to_model(model, decay, 80.0, 120.0, 1.0);
+
+    assert.ok(before.some((v, i) => v !== model[i]),
+              'C++ wrote nothing back: the INPLACE argument was copied');
+  });
+
   test('an empty selection yields an empty array, not a crash', () => {
     const empty = spc().get_tttr_by_channel(Int8Array.of(127)); // no such channel
     assert.equal(empty.size(), 0);

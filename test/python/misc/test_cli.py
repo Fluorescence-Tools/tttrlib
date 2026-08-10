@@ -1,42 +1,71 @@
 """
-Tests for the tttrlib command-line interface (bin/tttrlib).
+Tests for the ``tttr`` command-line tool.
 
-Uses subprocess to mirror exactly what bioconda does:
-  ``chmod 0755 $SRC_DIR/bin/*``
-  ``cp -f $SRC_DIR/bin/* $PREFIX/bin``
-  test command: ``tttrlib --help``
+The CLI was migrated from a Python/click script (``bin/tttrlib``) to a native
+C++ binary (``tttr``). These tests exercise the binary the same way the
+bioconda recipe does: ``tttr --help`` must exit 0.
+
+In a development tree the binary lives in ``build/bin/tttr``; in an installed
+environment (conda, pip wheel with the cli recipe) it is on ``PATH``.
 """
 
+import os
+import shutil
 import subprocess
 import sys
-import os
 
 import pytest
 
-# Skip the entire module if CLI deps are not installed.
-# The CI wheel-test jobs install click/click-didyoumean explicitly;
-# this guard protects minimal pip environments that omit them.
-pytest.importorskip("click", reason="click not installed — CLI tests skipped")
-pytest.importorskip("click_didyoumean", reason="click-didyoumean not installed — CLI tests skipped")
-
 
 # ---------------------------------------------------------------------------
-# Path to the CLI script
+# Locate the tttr binary
 # ---------------------------------------------------------------------------
 
-BIN_SCRIPT = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-    "bin", "tttrlib"
+_REPO_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
+
+_BUILD_BIN = os.path.join(_REPO_ROOT, "build", "bin", "tttr")
+
+
+def _find_tttr():
+    """Return the path to the ``tttr`` binary, or None if not found.
+
+    Prefer the build tree binary so a developer's local changes are tested
+    rather than a possibly-stale installed copy.
+    """
+    if os.path.isfile(_BUILD_BIN) and os.access(_BUILD_BIN, os.X_OK):
+        return _BUILD_BIN
+    return shutil.which("tttr")
+
+
+TTTR_BIN = _find_tttr()
 
 
 def _run(*args):
-    """Run ``python bin/tttrlib <args>`` and return CompletedProcess."""
+    """Run ``tttr <args>`` and return CompletedProcess."""
+    env = dict(os.environ)
+    # In a dev build the shared lib sits next to the binary in build/modules.
+    if TTTR_BIN and TTTR_BIN == _BUILD_BIN:
+        lib_dir = os.path.join(_REPO_ROOT, "build")
+        env["DYLD_LIBRARY_PATH"] = (
+            lib_dir + os.pathsep + env.get("DYLD_LIBRARY_PATH", "")
+        )
+        env["LD_LIBRARY_PATH"] = (
+            lib_dir + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+        )
     return subprocess.run(
-        [sys.executable, BIN_SCRIPT] + list(args),
+        [TTTR_BIN] + list(args),
         capture_output=True,
         text=True,
+        env=env,
     )
+
+
+pytestmark = pytest.mark.skipif(
+    TTTR_BIN is None,
+    reason="tttr binary not found (not on PATH and not in build/bin)",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -47,70 +76,67 @@ class TestCLI:
     """
     Subprocess-based tests that mirror the bioconda recipe test section.
 
-    bioconda master recipe tests:
-        imports: tttrlib
-        commands: tttrlib --help
+    bioconda recipe tests:
+        commands: tttr --help
     """
 
     def test_help_exits_zero(self):
-        """``tttrlib --help`` must exit 0 — this is the bioconda CI test."""
+        """``tttr --help`` must exit 0 — this is the bioconda CI test."""
         result = _run("--help")
         assert result.returncode == 0, (
-            f"tttrlib --help exited {result.returncode}\n"
+            f"tttr --help exited {result.returncode}\n"
             f"stdout: {result.stdout}\nstderr: {result.stderr}"
         )
 
     def test_help_shows_subcommands(self):
-        """``tttrlib --help`` output must list trace and image subcommands."""
+        """``tttr --help`` output must list correlate and image subcommands."""
         result = _run("--help")
         assert result.returncode == 0
         combined = result.stdout + result.stderr
-        assert "trace" in combined
+        assert "correlate" in combined
         assert "image" in combined
 
-    def test_trace_help(self):
-        """``tttrlib trace --help`` must exit 0 and list correlate."""
-        result = _run("trace", "--help")
-        assert result.returncode == 0, f"stderr: {result.stderr}"
-        assert "correlate" in result.stdout + result.stderr
-
-    def test_image_help(self):
-        """``tttrlib image --help`` must exit 0 and list export."""
-        result = _run("image", "--help")
-        assert result.returncode == 0, f"stderr: {result.stderr}"
-        assert "export" in result.stdout + result.stderr
-
-    def test_trace_correlate_help(self):
-        """``tttrlib trace correlate --help`` must exit 0."""
-        result = _run("trace", "correlate", "--help")
+    def test_correlate_help(self):
+        """``tttr correlate --help`` must exit 0 and mention channel options."""
+        result = _run("correlate", "--help")
         assert result.returncode == 0, f"stderr: {result.stderr}"
         combined = result.stdout + result.stderr
         assert "ch1" in combined or "channel" in combined.lower()
 
+    def test_image_help(self):
+        """``tttr image --help`` must exit 0 and list export."""
+        result = _run("image", "--help")
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        assert "export" in result.stdout + result.stderr
+
     def test_image_export_help(self):
-        """``tttrlib image export --help`` must exit 0."""
+        """``tttr image export --help`` must exit 0."""
         result = _run("image", "export", "--help")
         assert result.returncode == 0, f"stderr: {result.stderr}"
 
     def test_no_args_shows_usage(self):
-        """No arguments prints usage to stderr (Click groups exit 2)."""
+        """No arguments prints usage and exits non-zero."""
         result = _run()
-        # Click group with no subcommand prints help to stderr and exits 2
+        assert result.returncode != 0
         combined = result.stdout + result.stderr
-        assert "Usage:" in combined or "Commands:" in combined
+        assert "usage" in combined.lower() or "subcommand" in combined.lower()
 
-    def test_trace_correlate_missing_required_option(self):
-        """``trace correlate`` without required -ch1 must fail non-zero."""
-        result = _run("trace", "correlate")
+    def test_correlate_missing_required_option(self):
+        """``correlate`` without required --ch1 must fail non-zero."""
+        result = _run("correlate")
         assert result.returncode != 0
 
-    def test_bin_script_exists(self):
-        """bin/tttrlib must exist as a file (required for bioconda build.sh cp)."""
-        assert os.path.isfile(BIN_SCRIPT), f"Missing: {BIN_SCRIPT}"
+    def test_unknown_subcommand(self):
+        """An unknown subcommand must fail non-zero."""
+        result = _run("nonexistent_subcommand")
+        assert result.returncode != 0
 
-    def test_bin_script_has_shebang(self):
-        """bin/tttrlib must start with a Python shebang (for bioconda chmod/cp)."""
-        with open(BIN_SCRIPT, "r") as f:
-            first_line = f.readline()
-        assert first_line.startswith("#!"), "Missing shebang line"
-        assert "python" in first_line.lower(), "Shebang must reference python"
+    def test_pto_help(self):
+        """``tttr pto --help`` must exit 0."""
+        result = _run("pto", "--help")
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+
+    def test_formats_exits_zero(self):
+        """``tttr formats`` must exit 0 and list supported containers."""
+        result = _run("formats")
+        assert result.returncode == 0, f"stderr: {result.stderr}"

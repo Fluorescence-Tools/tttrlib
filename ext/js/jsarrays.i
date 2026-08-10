@@ -131,6 +131,20 @@ inline bool js_get(const Napi::Value &v, unsigned long long *o) {
   *o = static_cast<unsigned long long>(d);
   return true;
 }
+// LP64 Linux: long/unsigned long are 64-bit and distinct from long long.
+// Add overloads so js_get resolves for types that SWIG maps to long on LP64.
+inline bool js_get(const Napi::Value &v, long *o) {
+  long long tmp;
+  if (!js_get(v, &tmp)) return false;
+  *o = static_cast<long>(tmp);
+  return true;
+}
+inline bool js_get(const Napi::Value &v, unsigned long *o) {
+  unsigned long long tmp;
+  if (!js_get(v, &tmp)) return false;
+  *o = static_cast<unsigned long>(tmp);
+  return true;
+}
 
 // std::vector<bool> is the bit-packed specialisation: no .data(), and no
 // contiguous bytes to hand C++ a `bool*` to. Accumulate booleans in a
@@ -875,6 +889,9 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %js_numpy_typemaps(unsigned int,       napi_uint32_array,    "Uint32Array")
 %js_numpy_typemaps(long long,          napi_bigint64_array,  "BigInt64Array")
 %js_numpy_typemaps(unsigned long long, napi_biguint64_array, "BigUint64Array")
+// LP64 Linux: long/unsigned long are 64-bit and distinct from long long.
+%js_numpy_typemaps(long,               napi_bigint64_array,  "BigInt64Array")
+%js_numpy_typemaps(unsigned long,      napi_biguint64_array, "BigUint64Array")
 // bool travels as Uint8Array: JavaScript has no boolean TypedArray, and
 // sizeof(bool) == 1 on every platform tttrlib builds for. Values are 0 / 1.
 %js_numpy_typemaps(bool,               napi_uint8_array,     "Uint8Array")
@@ -892,6 +909,9 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %js_vector_typemaps(unsigned int,       napi_uint32_array,    "Uint32Array")
 %js_vector_typemaps(long long,          napi_bigint64_array,  "BigInt64Array")
 %js_vector_typemaps(unsigned long long, napi_biguint64_array, "BigUint64Array")
+// LP64 Linux: long/unsigned long are 64-bit and distinct from long long.
+%js_vector_typemaps(long,               napi_bigint64_array,  "BigInt64Array")
+%js_vector_typemaps(unsigned long,      napi_biguint64_array, "BigUint64Array")
 
 // ===========================================================================
 // std::map<K, V> -> a plain JavaScript object

@@ -28,10 +28,21 @@ MAGIC = b"EXMPL001"
 
 
 def _plugin_binary():
-    """The example plugin, as built by -DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON."""
+    """The example plugin, as built by -DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON.
+
+    Searched for in any build directory, not only the scikit-build `build/<tag>/`
+    layout: a developer configuring into `build_new/` or `cmake-build-debug/`
+    otherwise sees this whole file skip with a message telling them to enable an
+    option they already enabled.
+    """
+    override = os.environ.get("TTTRLIB_EXAMPLE_PLUGIN")
+    if override:
+        p = Path(override)
+        return p if p.exists() else None
     root = Path(__file__).resolve().parents[3]
     suffix = {"darwin": ".dylib", "win32": ".dll"}.get(sys.platform, ".so")
-    hits = sorted(root.glob(f"build/*/examples/plugin/tttrlib_example{suffix}"))
+    hits = sorted(root.glob(f"build*/examples/plugin/tttrlib_example{suffix}"))
+    hits += sorted(root.glob(f"build*/*/examples/plugin/tttrlib_example{suffix}"))
     return hits[-1] if hits else None
 
 
@@ -85,6 +96,14 @@ def run_in_subprocess(code, plugin_path=None, env_extra=None, tmp_path=None):
     """
     env = dict(os.environ)
     env.pop("TTTRLIB_PLUGINS", None)
+    # Ensure the development build's SWIG extension is found by the subprocess,
+    # not a stale namespace package in site-packages.
+    _build_ext = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        "build", "ext"
+    )
+    if os.path.isdir(_build_ext):
+        env["PYTHONPATH"] = _build_ext + os.pathsep + env.get("PYTHONPATH", "")
     if plugin_path is not None:
         env["TTTRLIB_PLUGIN_PATH"] = str(plugin_path)
     else:
@@ -463,6 +482,49 @@ def test_a_plugin_burst_search_runs_by_name(plugin_dir):
     assert list(entry["params_schema"]["properties"]) == ["max_gap", "min_photons"]
     assert out["bursts"] == [[0, 20], [20, 40]]
     assert out["builtin_still_works"] == 2
+
+
+def test_a_plugin_burst_search_is_reachable_through_burst_search(plugin_dir):
+    """PRD-032 criterion 4: a search a plugin contributed is callable through
+    ``TTTR.burst_search(name, ...)``, the same door every built-in uses.
+
+    Before the dispatch table this was not merely unsupported — it was silently
+    wrong. ``burst_search`` resolved its mode through a chain of string
+    comparisons and fell through to the sliding window for anything it did not
+    recognise, so calling it with a plugin's name returned sliding-window
+    bursts. The registry listed the search, and the obvious call ran a different
+    algorithm.
+    """
+    out = run_in_subprocess("""
+        import json, numpy as np, tttrlib
+
+        # Two runs of 20 photons 100 ticks apart, separated by a long gap.
+        mt = np.concatenate([np.arange(0, 2000, 100),
+                             np.arange(60000, 62000, 100)]).astype(np.uint64)
+        t = tttrlib.TTTR()
+        t.append_events(mt, np.zeros(len(mt), np.uint16),
+                        np.zeros(len(mt), np.int8), np.zeros(len(mt), np.int8))
+
+        # The narrow entry point: L, m, T reach the plugin as its parameters.
+        as_ints = lambda v: [int(x) for x in v]
+        plugin = as_ints(t.burst_search(5, 3, 500.0, "interphoton_plugin"))
+        sliding = as_ints(t.burst_search(5, 3, 500.0, "sliding_window"))
+        unknown = as_ints(t.burst_search(5, 3, 500.0, "no_such_search"))
+        print(json.dumps({
+            "plugin": plugin,
+            "sliding": sliding,
+            "unknown": unknown,
+        }))
+    """, plugin_path=plugin_dir)
+
+    # It ran the plugin, not the fallback: the two runs of photons come back as
+    # two bursts, and that is not what the sliding window returns here.
+    assert out["plugin"] == [0, 20, 20, 40]
+    assert out["plugin"] != out["sliding"], (
+        "the plugin name produced the sliding window's answer — the fallback, "
+        "not the plugin")
+    # An unrecognised name still falls back rather than raising.
+    assert out["unknown"] == out["sliding"]
 
 
 def test_a_plugin_burst_search_honours_its_parameters(plugin_dir):

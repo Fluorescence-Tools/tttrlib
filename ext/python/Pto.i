@@ -76,6 +76,7 @@
 // the conformance cases, which compare them as numbers.
 #ifdef SWIGR
 %typemap(out) std::uint64_t pto_add_store, std::uint64_t PtoFile::add_file,
+              std::uint64_t PtoFile::attach,
               std::uint64_t PtoObject::uid, std::uint64_t PtoAnnotation::target,
               std::uint64_t PtoExtent::target %{
   {
@@ -149,6 +150,34 @@ def pto_store(file, uid, columns=None, first_row=0, n_rows=0):
     else:
         pto_read_store(file, uid, store)
     return store
+
+
+def pto_bundle(file, paths, link_sidecars=True):
+    """Bundle files and directories into an open container, one object each.
+
+    :func:`pto_bundle_files` taking whatever names a path in Python -- a
+    :class:`pathlib.Path`, a string, one of either, or a list::
+
+        f = tttrlib.PtoFile()
+        f.create("run.pto", "DNA ruler, run 4")
+        tttrlib.pto_bundle(f, "measurement/")   # everything under it
+        f.commit()
+
+    A directory is bundled recursively and each object is named by its path
+    relative to it, so :meth:`PtoFile.disassemble` puts the directory back as
+    it was. A ``.set`` beside a ``.spc`` is tied to it, which is what makes the
+    pair readable afterwards.
+
+    Nothing is committed: the container becomes visible when you say so.
+
+    :param link_sidecars: False to bundle a ``.set`` as a plain object.
+    :returns: the objects made, in the order they were written.
+    """
+    from os import fspath
+    if isinstance(paths, (str, bytes)) or hasattr(paths, "__fspath__"):
+        paths = [paths]
+    return pto_bundle_files(file, VectorString([fspath(p) for p in paths]),
+                            link_sidecars)
 
 
 def pto_events(spec, first_event=0, n_events=0):

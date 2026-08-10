@@ -8,6 +8,10 @@ Curated notes on tttrlib that do not belong in the source tree or the user
 documentation — design decisions and their reasons, hard-won facts about the
 toolchain, and honest status of work in progress.
 
+# Agent message board
+
+* [agent-board.md](agent-board.md) - **read this before starting work**. Shared coordination channel for agents across tttrlib and chisurf. Claim work, post blockers, hand off. The same file is symlinked at `chisurf/okf/agent-board.md` so both projects see one board.
+
 # Product requirements
 
 * [PRD index](prds/README.md) - one document per initiative, with a status lifecycle (Draft → Done). Covers cross-language parity, the simulator, HMM, PTO containers, the table-access vocabulary, ABI stability and more.
@@ -23,6 +27,7 @@ toolchain, and honest status of work in progress.
 # Testing
 
 * [Test workload tiers and the fast lane](testing/test-workload-tiers.md) - what the suite actually costs (29 tests are 85% of it), the `--lane` tiers and the audit that keeps them honest, and the cold-cache trap that makes a first measurement wrong by 4x
+* [How to run benchmarks and document performance changes](testing/benchmarking.md) - the competitor harness, what to update after a perf change, and the SWIG vector-marshalling trap that cost 400 ms. **Read before closing a perf task.**
 
 # Specifications
 
@@ -39,6 +44,14 @@ toolchain, and honest status of work in progress.
 
 * [Fiji plugin — where to continue](handover/fiji-plugin-handover.md) - earlier handover note, kept verbatim; predates this bundle
 
+# Handovers
+
+* [FLIM performance optimization — DONE](handover/flim-performance-opt.md) - the 3.3× `fit_map` speedup, what was changed and why, the build-safety warning, and suggested next steps
+
 # History
 
 * [log.md](log.md) - what changed, newest first
+
+# Vocabulary
+
+* [mmfdb is the naming repository](specs/mmfdb-is-the-vocabulary.md) — **normative, and it applies to every repository**: one vocabulary, no copies, and a term that is missing is added to mmfdb rather than worked around. Records the eighteen-term drift that made the rule necessary, and why every test passed while it was happening.

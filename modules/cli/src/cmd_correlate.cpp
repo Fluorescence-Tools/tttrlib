@@ -186,9 +186,21 @@ int tttrlib::cli::cmd_correlate(int argc, char** argv) {
         std::cout << std::endl;
 
         std::vector<std::pair<std::string, std::shared_ptr<TTTR>>> datas;
+
+        // Keeps a spooled stdin alive for as long as the TTTR reads it.
+        std::vector<std::shared_ptr<InputPath>> held;
         for (auto& fn : inputs) {
             std::cout << "Loading: " << fn << std::endl;
-            datas.emplace_back(fn, std::make_shared<TTTR>(fn.c_str()));
+            // One of the inputs may be `-`; a second would consume an
+            // already-exhausted stdin, so the first claims it.
+            auto slot = std::make_shared<InputPath>();
+            std::string err;
+            if (!slot->resolve(fn, &err)) {
+                std::cerr << "error: " << err << std::endl;
+                return 1;
+            }
+            held.push_back(slot);
+            datas.emplace_back(fn, std::make_shared<TTTR>(slot->path().c_str()));
         }
         if (datas.empty()) {
             std::cerr << "error: no input files" << std::endl;

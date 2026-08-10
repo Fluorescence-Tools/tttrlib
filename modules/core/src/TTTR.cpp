@@ -191,6 +191,7 @@ if (is_verbose()) {
 
 void TTTR::copy_from(const TTTR &p2, bool include_big_data) {
     filename = p2.filename;
+    delete header;
     header = new TTTRHeader(*p2.header);
     tttr_container_type = p2.tttr_container_type;
     tttr_container_type_str = p2.tttr_container_type_str;
@@ -3440,6 +3441,12 @@ if (is_verbose()) {
             this->event_types[i_rec + n_valid_events] = event_types[i_rec];
         }
         n_valid_events += n_macrotimes;
+        // Appending events changes which routing channels are in use, and the
+        // list is a cache. Leaving it stale is not a small inconsistency: a
+        // CLSMImage built on a TTTR assembled this way fills its pixels from
+        // the used-channel list, finds it empty, and returns an image of the
+        // right shape containing no photons at all -- with no error anywhere.
+        find_used_routing_channels();
     } else{
         std::cerr << "ERROR: Cannot append events the length of input arrays differ." << std::endl;
     }

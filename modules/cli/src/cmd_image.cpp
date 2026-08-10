@@ -45,6 +45,16 @@ int tttrlib::cli::cmd_image(int argc, char** argv) {
         return 1;
     }
     std::string sub = argv[1];
+    if (sub == "-h" || sub == "--help") {
+        std::cout <<
+            "tttr image - image processing\n"
+            "\n"
+            "subcommands:\n"
+            "  export    export intensity images as TIFF\n"
+            "\n"
+            "run 'tttr image export --help' for options\n";
+        return 0;
+    }
     if (sub != "export") {
         std::cerr << "error: unknown image subcommand '" << sub
                   << "' (only 'export' exists)" << std::endl;

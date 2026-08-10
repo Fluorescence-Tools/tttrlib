@@ -89,9 +89,14 @@ describe('lifetime', { skip: !hasData(SPC) && 'no data' }, () => {
     // A crude leak check: the ARGOUTVIEWM finalizers must actually free. If they
     // did not, 200 reads of a 183k-photon file would show a monotone climb far
     // beyond the noise of ordinary allocation.
+    // get_routing_channel and get_event_type are in this list deliberately: they
+    // were declared ARGOUTVIEW while allocating like ARGOUTVIEWM, so nothing
+    // freed them. A version of this test that read only macro and micro times
+    // stayed green throughout, because those two were always ARGOUTVIEWM.
     const read = () => {
       const t = new tttrlib.TTTR(dataPath(SPC), 'SPC-130');
-      return t.get_macro_times().length + t.get_micro_times().length;
+      return t.get_macro_times().length + t.get_micro_times().length
+           + t.get_routing_channel().length + t.get_event_type().length;
     };
     for (let i = 0; i < 20; i++) read();      // warm up
     gc(); gc();

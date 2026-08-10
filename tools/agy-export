@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+"""Export an Antigravity CLI (agy) conversation by ID.
+
+Reads the SQLite trajectory database that agy stores under
+``~/.gemini/antigravity-cli/conversations/<id>.db`` and writes a human-readable
+transcript to stdout or a file.
+
+Usage::
+
+    agy-export <conversation-id>                 # print to stdout
+    agy-export <conversation-id> -o out.txt      # write to file
+    agy-export <conversation-id> -o out.json     # JSON (full payloads)
+    agy-export <conversation-id> -o out.md       # Markdown transcript
+    agy-export --list                            # list available sessions
+    agy-export --last                            # export most recent session
+
+The step_payload blobs are protobuf-ish (not documented), so this script
+extracts readable content via JSON metadata fields (toolAction / toolSummary)
+and ASCII string fragments for everything else.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import sqlite3
+import sys
+import pathlib
+import argparse
+from datetime import datetime
+
+AGY_DIR = pathlib.Path.home() / ".gemini" / "antigravity-cli"
+CONV_DIR = AGY_DIR / "conversations"
+
+
+def list_sessions() -> list[dict]:
+    """Return a list of available conversation sessions sorted by mtime."""
+    sessions = []
+    if not CONV_DIR.exists():
+        return sessions
+    for f in CONV_DIR.iterdir():
+        if f.suffix == ".db":
+            st = f.stat()
+            sessions.append({
+                "id": f.stem,
+                "path": str(f),
+                "size_bytes": st.st_size,
+                "mtime": datetime.fromtimestamp(st.st_mtime).isoformat(),
+            })
+    sessions.sort(key=lambda s: s["mtime"], reverse=True)
+    return sessions
+
+
+def _extract_text(payload: bytes) -> list[str]:
+    """Pull readable content from a protobuf-ish step payload."""
+    if not payload:
+        return []
+    text = payload.decode("utf-8", errors="ignore")
+    # Tool actions and summaries are embedded as JSON
+    results = []
+    for key in ("toolAction", "toolSummary"):
+        m = re.search(rf'"{key}":"([^"]+)"', text)
+        if m:
+            results.append(m.group(1))
+    # Command lines
+    m = re.search(r'"CommandLine":"((?:[^"\\]|\\.)*)"', text)
+    if m:
+        cmd = m.group(1).replace("\\n", "\n").replace('\\"', '"')
+        results.append(f"$ {cmd}")
+    # File paths being viewed
+    m = re.search(r'"AbsolutePath":"([^"]+)"', text)
+    if m:
+        results.append(f"Viewing: {m.group(1)}")
+    # Search queries
+    m = re.search(r'"Query":"([^"]+)"', text)
+    if m:
+        results.append(f"Search: {m.group(1)}")
+    # Error messages
+    if "RESOURCE_EXHAUSTED" in text or "quota" in text.lower():
+        m = re.search(r"(Individual quota reached[^|]+)", text)
+        if m:
+            results.append(f"ERROR: {m.group(1).strip()}")
+    # Fallback: extract long ASCII runs
+    if not results:
+        chunks = re.findall(r"[\x20-\x7e]{30,}", text)
+        if chunks:
+            results.append(chunks[0][:200])
+    return results
+
+
+def export_session(db_path: str | pathlib.Path, fmt: str = "text") -> str:
+    """Export a conversation database to the requested format."""
+    db = sqlite3.connect(str(db_path))
+    rows = db.execute(
+        "SELECT idx, step_type, status, step_payload FROM steps ORDER BY idx"
+    ).fetchall()
+    db.close()
+
+    if fmt == "json":
+        out = []
+        for idx, st, status, payload in rows:
+            entry = {"idx": idx, "step_type": st, "status": status}
+            texts = _extract_text(payload) if payload else []
+            if texts:
+                entry["content"] = texts
+            out.append(entry)
+        return json.dumps(out, indent=2, ensure_ascii=False)
+
+    lines = []
+    conv_id = pathlib.Path(db_path).stem
+
+    if fmt == "md":
+        lines.append(f"# agy session {conv_id}\n")
+        lines.append(f"Exported: {datetime.now().isoformat()}\n")
+        lines.append(f"Steps: {len(rows)}\n\n---\n")
+
+    # Step type names (from observed distribution)
+    TYPE_NAMES = {
+        5: "edit", 7: "search", 8: "view", 9: "result", 14: "trace",
+        15: "step", 17: "error", 21: "exec", 23: "ack", 98: "checkpoint",
+        101: "retry", 132: "task_check",
+    }
+
+    for idx, st, status, payload in rows:
+        texts = _extract_text(payload) if payload else []
+        if not texts:
+            continue
+        type_name = TYPE_NAMES.get(st, f"type{st}")
+        for t in texts:
+            if fmt == "md":
+                if type_name == "exec":
+                    lines.append(f"```\n{t}\n```")
+                elif type_name == "edit":
+                    lines.append(f"- **{t}**")
+                elif type_name == "error":
+                    lines.append(f"> ⚠️ {t}")
+                else:
+                    lines.append(f"- {t}")
+                lines.append("")
+            else:
+                lines.append(f"[{idx:4d}] ({type_name:10s}) {t}")
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Export an agy conversation session by ID."
+    )
+    parser.add_argument(
+        "conversation_id", nargs="?", default=None,
+        help="Conversation UUID (use --list to see available IDs)",
+    )
+    parser.add_argument(
+        "-o", "--output", default=None,
+        help="Output file (format detected by extension: .json, .md, else text)",
+    )
+    parser.add_argument(
+        "--list", action="store_true",
+        help="List available conversation sessions",
+    )
+    parser.add_argument(
+        "--last", action="store_true",
+        help="Export the most recent session",
+    )
+    args = parser.parse_args()
+
+    if args.list:
+        sessions = list_sessions()
+        if not sessions:
+            print(f"No conversations found in {CONV_DIR}")
+            return 1
+        print(f"{'ID':40s}  {'Size':>10s}  Modified")
+        for s in sessions:
+            print(f"{s['id']:40s}  {s['size_bytes']:10d}  {s['mtime']}")
+        return 0
+
+    if args.last:
+        sessions = list_sessions()
+        if not sessions:
+            print(f"No conversations found in {CONV_DIR}")
+            return 1
+        conv_id = sessions[0]["id"]
+    else:
+        conv_id = args.conversation_id
+
+    if not conv_id:
+        parser.error("Provide a conversation ID, or use --list / --last")
+
+    db_path = CONV_DIR / f"{conv_id}.db"
+    if not db_path.exists():
+        print(f"Session not found: {db_path}")
+        return 1
+
+    fmt = "text"
+    if args.output:
+        if args.output.endswith(".json"):
+            fmt = "json"
+        elif args.output.endswith(".md"):
+            fmt = "md"
+
+    result = export_session(db_path, fmt)
+
+    if args.output:
+        pathlib.Path(args.output).write_text(result, encoding="utf-8")
+        print(f"Exported {conv_id} → {args.output} ({len(result)} bytes)")
+    else:
+        print(result)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

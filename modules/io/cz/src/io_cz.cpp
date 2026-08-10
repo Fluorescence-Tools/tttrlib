@@ -26,6 +26,7 @@ size_t read_cz_confocor3_header(
     fread(&rec, sizeof(rec),1, fpin);
 
     float frequency_float = rec.bits.frequency;
+    if (frequency_float == 0.0f) frequency_float = 1.0f;
     double mt_clk = 1. / frequency_float;
 
     // Convert each element to hexadecimal and concatenate them
@@ -62,6 +63,7 @@ if (is_verbose()) {
     std::clog << "-- repetition_number: " << repetition_number << std::endl;
     std::clog << "-- header bytes: " << sizeof(rec) << std::endl;
 }
+    delete[] hex_measure_id;
     return static_cast<size_t>(ftell64(fpin));
 }
 

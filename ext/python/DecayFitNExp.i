@@ -14,6 +14,7 @@ TTTRLIB_NOGIL(DecayFitNExp::fit_fixed_lifetimes)
 TTTRLIB_NOGIL(DecayFitNExp::fit_buffers)
 TTTRLIB_NOGIL(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NOGIL(DecayFitNExp::fit_batch_flat)
+TTTRLIB_NOGIL(DecayFitNExp::fit_batch_flat_buffers)
 #elif defined(SWIGJAVA)
 %define TTTRLIB_NEXP_JAVA_EXCEPTION(Method)
 %exception Method {
@@ -33,6 +34,7 @@ TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes)
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_buffers)
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_batch_flat)
+TTTRLIB_NEXP_JAVA_EXCEPTION(DecayFitNExp::fit_batch_flat_buffers)
 #elif defined(SWIGR)
 %define TTTRLIB_NEXP_R_EXCEPTION(Method)
 %exception Method {
@@ -50,6 +52,7 @@ TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes)
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_buffers)
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_fixed_lifetimes_buffers)
 TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_batch_flat)
+TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_batch_flat_buffers)
 #endif
 
 // VectorDouble and VectorInt32 are declared by misc_types.i before this file is
@@ -76,7 +79,17 @@ TTTRLIB_NEXP_R_EXCEPTION(DecayFitNExp::fit_batch_flat)
     (double* firf, int n_firf),
     (double* fbackground, int n_fbackground),
     (double* flifetimes, int n_flifetimes),
-    (double* famplitudes, int n_famplitudes)
+    (double* famplitudes, int n_famplitudes),
+    (const double* bfirf, int n_bfirf),
+    (const double* bfbackground, int n_bfbackground),
+    (const double* bflifetimes, int n_bflifetimes),
+    (const double* bfamplitudes, int n_bfamplitudes)
 };
-%apply (int* IN_ARRAY1, int DIM1) {(int* blifetime_fixed, int n_bfixed)};
+%apply (double* IN_ARRAY2, int DIM1, int DIM2) {
+    (const double* bfdata, int n_bfrows, int n_bfcols)
+};
+%apply (int* IN_ARRAY1, int DIM1) {
+    (int* blifetime_fixed, int n_bfixed),
+    (const int* bffixed, int n_bffixed)
+};
 %include "DecayFitNExp.h"

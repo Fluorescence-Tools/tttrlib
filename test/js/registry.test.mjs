@@ -115,4 +115,36 @@ describe('registry-driven burst search', { skip: !hasData(SPC) && 'no data' }, (
     const data = new tttrlib.TTTR(dataPath(SPC), 'SPC-130');
     assert.throws(() => data.burstSearchByName('no_such_search'), /unknown burst search/);
   });
+
+  // burstSearchByName builds a POSITIONAL argument list from the key order of
+  // params_schema.properties, because JavaScript has no **kwargs. That order is
+  // the C++ signature order, and nothing in the wrapper can check it: SWIG's
+  // Node-API functions report length 0 whatever their real arity.
+  //
+  // `required` lists the same parameters in the same declaration order, so it
+  // must be a subsequence of the property keys. Sorting the properties -- which
+  // is what a nlohmann::json (std::map) round-trip in the registry did once --
+  // breaks that relation immediately, whereas the search itself may keep running
+  // and simply return the wrong bursts.
+  //
+  // This is a JavaScript test only because JavaScript is the only binding that
+  // depends on the order; Python calls the same registry with **kwargs.
+  test('property order is the declaration order, which is the argument order', () => {
+    const entries = tttrlib.registry('burst_search');
+    for (const [name, entry] of Object.entries(entries)) {
+      const schema = entry.params_schema || {};
+      const props = Object.keys(schema.properties || {});
+      const required = schema.required || [];
+      let at = -1;
+      for (const r of required) {
+        const i = props.indexOf(r, at + 1);
+        assert.notEqual(i, -1,
+          `${name}: '${r}' is required but does not follow the earlier required ` +
+          `parameters in properties order — params_schema.properties has been ` +
+          `re-ordered (sorted?), and the positional dispatch now transposes arguments.\n` +
+          `  properties: [${props.join(', ')}]\n  required:   [${required.join(', ')}]`);
+        at = i;
+      }
+    }
+  });
 });

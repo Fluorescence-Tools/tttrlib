@@ -246,6 +246,7 @@ std::vector<double> dfa_convolved_decay(
 
 #ifdef SWIGPYTHON
 %pythoncode "./ext/python/DecayFitPython.py"
+%pythoncode "./ext/python/FitNExpWrapper.py"
 // Deprecated pre-interface API, kept working until 0.29 so callers can migrate
 // on their own schedule. Python only; the other bindings took the clean break.
 %pythoncode "./ext/python/Fit2xCompat.py"

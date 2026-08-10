@@ -44,7 +44,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm, colors
 import tttrlib
-from sklearn.mixture import GaussianMixture
+try:
+    from sklearn.mixture import GaussianMixture
+except ImportError:
+    GaussianMixture = None
 from scipy.optimize import least_squares
 from scipy.stats import norm
 

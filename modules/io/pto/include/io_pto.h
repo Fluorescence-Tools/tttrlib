@@ -145,6 +145,37 @@ struct PtoObject {
 
 class PtoFile;
 
+/*!
+ * \brief What a file on disk would become inside a container.
+ *
+ * The three things an object needs before its bytes: what it is for, how to
+ * decode it, and what to call it when it leaves again. \see pto_classify_path.
+ */
+struct PtoFileType {
+    std::string kind;        ///< photons, table, spectrum, image, attachment
+    std::string encoding;    ///< ptu, spc-130, csv, png, raw, ...
+    std::string media_type;  ///< RFC 6838 type, empty when none is standard
+};
+
+/*!
+ * \brief What a path holds: its bytes where they say, its name where they do not.
+ *
+ * The name proposes and the bytes dispose. A file some photon format claims by
+ * extension is offered to the sniffers, and which one it is comes back as that
+ * format's own name -- `spc-130` rather than `spc`, which four of them claim.
+ * A file no photon format claims is never sniffed at all: several of them
+ * recognise a container by little more than its record size dividing evenly,
+ * and would take a small `.png` for a photon stream.
+ *
+ * Everything else falls back to a table of extensions, and anything that table
+ * does not know -- including a photon file whose contents were not recognised
+ * -- is an `attachment` encoded `raw`: carried, named, and left alone.
+ *
+ * Costs one open of the first few kilobytes, and nothing at all for a path that
+ * is not there.
+ */
+PtoFileType pto_classify_path(const std::string& path);
+
 // -- tables -----------------------------------------------------------------
 //
 // Declared before PtoFile so their default arguments are stated once: the
@@ -359,6 +390,36 @@ public:
                            const std::string& name, const std::string& path,
                            std::uint64_t reserve = 0);
 
+    /*!
+     * \brief Bundle a file on disk, letting the file say what it is.
+     *
+     * \ref add_file with \ref pto_classify_path in front of it: the caller
+     * hands over a path and gets an object whose kind, encoding and media type
+     * come from the file itself, named after it. The difference is who decides
+     * -- `add_file` is for a caller that knows what it embedded, this is for
+     * one that has a directory of files and wants them carried.
+     *
+     * Every argument after the path overrides what was inferred, so a caller
+     * that knows better about one field does not lose the other two.
+     *
+     * \param name what the object is called, and what \ref disassemble writes
+     *        it back out as. Defaults to the filename without its directory.
+     * \return 0 if the path is missing or unreadable; see \ref error.
+     */
+    std::uint64_t attach(const std::string& path, const std::string& name = "",
+                         const std::string& kind = "",
+                         const std::string& encoding = "",
+                         const std::string& media_type = "");
+
+    /*!
+     * \brief Add an object that references an external sidecar file via link / relative path.
+     *
+     * Creates an object entry without copying raw binary data into the container,
+     * attaching tags for "_mmfdb_artifact.file_path" and "_mmfdb_artifact.is_sidecar".
+     */
+    std::uint64_t add_sidecar_file(const std::string& kind, const std::string& encoding,
+                                   const std::string& name, const std::string& file_path);
+
     /// The payload. \throws std::runtime_error if there is no such object.
     std::vector<unsigned char> read(std::uint64_t uid) const;
 
@@ -440,9 +501,26 @@ public:
     std::vector<PtoTag> tags() const;
     /// Tags whose target is `uid`. Pass 0 for the tags describing the file.
     std::vector<PtoTag> tags_for(std::uint64_t uid) const;
+    /// Append a tag. A tag identical in every field to one already present is
+    /// not appended again: re-describing an object must not make the container
+    /// claim the same fact twice (a parent edge re-written on every re-run
+    /// once accumulated one copy per analysis).
     void add_tag(const PtoTag& tag);
+    /*!
+     * \brief State a fact, replacing what was stated before.
+     *
+     * Removes every tag with the same `(target, name, index)`, then appends
+     * `tag`. This is "the row grain IS x" as against \ref add_tag's "x is
+     * also true" — the difference between the two is exactly the difference
+     * between a scalar tag and an edge, and callers re-running an analysis
+     * want this one for everything scalar. Tags describing other objects and
+     * other names are untouched.
+     */
+    void set_tag(const PtoTag& tag);
     void set_tags(const std::vector<PtoTag>& tags);
     void clear_tags();
+    /// Remove every tag with this `target` and `name`, any index.
+    void clear_tags(std::uint64_t target, const std::string& name);
 
     std::vector<PtoAnnotation> annotations() const;
     void add_annotation(const PtoAnnotation& note);
@@ -542,6 +620,41 @@ private:
     // pto_store_region and filename(), which is the whole point of it existing.
     friend PtoObject pto_store_region(const PtoFile&, std::uint64_t);
 };
+
+/*!
+ * \brief Bundle files and directories into an open container, one object each.
+ *
+ * The way a measurement scattered over a directory becomes one file: the
+ * instrument file, its settings sidecar, the analysis that produced the burst
+ * table, the protocol PDF and the note somebody left. Each keeps its name, so
+ * \ref PtoFile::disassemble puts the directory back as it was.
+ *
+ * \par What it does that a loop over \ref PtoFile::attach does not
+ * - **A directory means everything under it**, recursively, with each object
+ *   named by its path relative to that directory -- `raw/m001.ptu`, not
+ *   `m001.ptu` -- so two files of the same name in different folders stay two
+ *   files. Entries are visited in sorted order, so the same directory bundles
+ *   to the same object order twice running.
+ * - **A `.set` is tied to the `.spc` it belongs to** with \ref
+ *   kPtoSidecarTag, which is what makes the pair readable afterwards: a
+ *   Becker & Hickl reader handed the `.spc` alone silently reads half a header.
+ *
+ * Nothing is committed. The caller decides when the container becomes visible,
+ * because bundling is usually one step of building it -- see \ref
+ * PtoFile::commit.
+ *
+ * \param link_sidecars false to bundle a `.set` as a plain object, for a caller
+ *        that wants to say what accompanies what itself.
+ * \return the objects made, in the order they were written. Short of `paths`
+ *         if something could not be read; \ref PtoFile::error says what.
+ * \throws std::runtime_error if a directory cannot be walked to the end. A walk
+ *         that stopped early would bundle some of a directory and report that
+ *         it bundled the directory, which is the one outcome nobody could
+ *         detect afterwards.
+ */
+std::vector<PtoObject> pto_bundle_files(PtoFile& file,
+                                        const std::vector<std::string>& paths,
+                                        bool link_sidecars = true);
 
 /*!
  * \brief Read a range of events out of a photon object, into a TTTR.

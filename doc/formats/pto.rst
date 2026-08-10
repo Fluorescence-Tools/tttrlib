@@ -6,7 +6,7 @@ PTO — the PhoTon cOntainer
 :Name: **Pho**\ ton c\ **O**\ ntainer — PTO
 :Version: 1.0
 :Status: Specification. Normative.
-:Extension: ``.pto``
+:Extension: ``.pto`` (a profile tags the stem: ``.mmfdb.pto``, see below)
 :Media type: ``application/x-pto``
 :Built on: EBML (:rfc:`8794`), DocType ``pto``
 
@@ -47,6 +47,34 @@ PTO puts them in one file, each with a stable UID, so an application can record
 how they relate. **PTO does not record the relationship itself** — it provides
 UIDs and typed tags that can reference them, and stops. See
 :ref:`pto_provenance`.
+
+.. _pto_naming:
+
+Naming: ``.pto`` and ``.mmfdb.pto``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ``.pto`` is **a container and no more** — an EBML document with
+``DocType "pto"``, holding payloads whose meaning is the application's business.
+The extension makes exactly that claim, which is why it is safe to put on a file
+holding anything.
+
+A **profile** constrains what goes inside one, and says so by tagging the *stem*:
+:ref:`PTO.MFDB <pto_mfdb_format>`, the profile that carries a
+single-molecule measurement and its analyses, uses
+
+.. code-block:: text
+
+   measurement.mmfdb.pto
+
+``.mmfdb.pto``, not ``.pto.mmfdb``: the final suffix stays ``.pto`` so every
+reader, file dialog and MIME table that dispatches on it still recognises the
+file, and everything in this specification continues to apply. Read it the way
+``.tar.gz`` is read — one format, an inner tag on the name.
+
+The suffix is a convenience for people and directory listings. A reader decides
+what a file conforms to by reading the container-level tags inside it, never by
+its name; a conforming file that was renamed is still conforming, and a
+``.mmfdb.pto`` written without those tags is not.
 
 Non-goals
 ~~~~~~~~~
@@ -507,6 +535,51 @@ unrecognised encoding is an object the reader skips, not a file it rejects.
 
 Nothing stops an object's payload being another ``.pto``. It is a blob like any
 other.
+
+.. _pto_bundling:
+
+Bundling files
+~~~~~~~~~~~~~~
+
+A measurement is rarely one file. The instrument file, the settings sidecar it
+cannot be read without, a table computed from it and the protocol somebody wrote
+travel as a folder — and arrive with the sidecar missing. Putting that folder in
+one container is what the format is for, and tttrlib's writer decides each
+object's ``PtoKind``, ``PtoEncoding`` and ``FileMediaType`` from the file rather
+than asking the caller to:
+
+.. code-block:: bash
+
+    tttr pto pack -o run.pto measurement/     # a folder becomes one file
+    tttr pto add run.pto late-note.md         # bundle more into an existing one
+    tttr pto extract-all run.pto out/         # the folder back again
+
+.. code-block:: python
+
+    f = tttrlib.PtoFile()
+    f.create("run.pto", "DNA ruler, run 4")
+    tttrlib.pto_bundle(f, "measurement/")
+    f.commit()
+
+Three rules make the folder survive the trip, none of them normative — a
+conforming writer may do otherwise, and a reader is told everything it needs by
+the elements themselves:
+
+- **The name proposes and the bytes dispose.** A file some photon format claims
+  by extension is offered to the content sniffers, and the ``PtoEncoding`` it
+  gets is that format's own name — ``spc-130`` rather than ``spc``, which four
+  formats claim. A file no photon format claims is never sniffed: several
+  formats recognise a container by little more than its record size dividing
+  evenly, and would take a small ``.png`` for a photon stream. Everything else
+  is named by extension, and anything unrecognised is an ``attachment`` encoded
+  ``raw`` — carried, named, and left alone.
+- **A directory means everything under it**, each object named by its path
+  relative to that directory (``raw/m001.ptu``), so two files of the same name
+  in different folders stay two files and the directory comes back as it was.
+- **A ``.set`` is tied to the ``.spc`` beside it** with ``pto.sidecar_of``
+  (see :ref:`pto_provenance`), which is what makes the pair readable
+  afterwards: a Becker & Hickl reader handed the ``.spc`` alone silently reads
+  half a header.
 
 .. _pto_tags:
 

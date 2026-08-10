@@ -1,17 +1,23 @@
 # PRD-012 — FLIM LABS and BrightEyes-TTM native readers
 
-> **PRD #:** 012 · **Status:** In Progress · **Created:** 2026-08-04 · **Updated:** 2026-08-06 · **Owner:** tpeulen
+> **PRD #:** 012 · **Status:** 🟢 Done · **Created:** 2026-08-04 · **Updated:** 2026-08-06 · **Closed:** 2026-08-10 · **Owner:** tpeulen
 > **Related:** PRD-006 (round-trip I/O — same read/write dispatch surface), PRD-004 (CLSM marker handling), the module/registry rework in progress on `development`
-> **Remains open:** acceptance criterion 4 only — no real FLIM LABS file exists to verify the reader against. Everything else is implemented and tested; see *Implementation status* below.
+> **Closed 2026-08-10 with criterion 4 waived, not met.** No FLIM LABS sample
+> file is published anywhere and none is expected, so the `STT1` reader ships
+> verified against the specification and synthetic fixtures only. Everything
+> else is implemented and tested. If a real instrument file ever arrives, run
+> `test/python/tttr/test_flimlabs.py` against it before trusting the reader —
+> the three measured facts in *Implementation status* below are the parts a
+> specification could not tell us, and `STT1` has no equivalent.
 
-## Implementation status (2026-08-06)
+## Implementation status (2026-08-06, closed 2026-08-10)
 
 | # | Acceptance criterion | State |
 |---|---|---|
 | 1 | BrightEyes photon count and TCSPC histogram match the vendor | ✅ 3,898,599 photons, photon-for-photon against `libttp` |
 | 2 | Micro times flagged uncalibrated; calibrated decay is smooth | ✅ header tags + code-density calibration; 13 % vs 100 % comb |
 | 3 | BrightEyes CLSM reconstruction is 512×512, one frame | ✅ |
-| 4 | Real FLIM LABS `STT1` read correctly | ⛔ **blocked on data.** Synthetic fixtures only — the reader is spec-conformant, not verified |
+| 4 | Real FLIM LABS `STT1` read correctly | ⚪ **waived 2026-08-10 — no data exists.** Synthetic fixtures only; the reader is spec-conformant, not verified against an instrument |
 | 5 | `ITT1` reads correctly | ✅ (synthetic) |
 | 6 | Container parameters from Python, R and Java without special cases | ✅ one JSON string on `TTTR`, declared as JSON Schema in the registry |
 | 7 | `.ttr` never matches content detection | ✅ `detectable = false` |

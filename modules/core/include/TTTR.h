@@ -1304,6 +1304,38 @@ public:
     );
 
     /**
+     * Bayesian Online Changepoint Detection burst search.
+     *
+     * Bins the photon stream and maintains a run-length posterior with a
+     * Gamma-Poisson conjugate model. A burst is a segment between two
+     * detected changepoints that contains at least L photons.
+     *
+     * See include/BurstSearchBOCPD.h.
+     *
+     * Arguments:
+     *     L (int): minimum number of photons in a burst.
+     *     dt (double): bin width in seconds.
+     *     prior_count (double): Gamma shape prior (pseudo-count).
+     *     prior_duration (double): Gamma rate prior (prior duration in bins).
+     *     changepoint_prob (double): hazard rate — probability of a changepoint
+     *         in any bin.
+     *     max_run (int): maximum run length to track.
+     *     per_channel (bool): track one Gamma pair per routing channel.
+     *
+     * Returns:
+     *     vector<long long>: interleaved, non-overlapping start and stop indices.
+     */
+    std::vector<long long> burst_search_bocpd(
+        int L = 20,
+        double dt = 1e-3,
+        double prior_count = 1.0,
+        double prior_duration = 1.0,
+        double changepoint_prob = 0.1,
+        int max_run = 256,
+        bool per_channel = true
+    );
+
+    /**
      * How strongly the data supports each burst, in sigma.
      *
      * Computed after the fact from the burst boundaries and the photon stream,

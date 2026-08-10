@@ -30,20 +30,32 @@ from __future__ import annotations
 // destruction — including during C++ exception unwinding, so the catch handlers
 // in TTTRLIB_NOGIL (which call the Python C-API via SWIG_exception) run with the
 // GIL held.
+//
+// The module is ALSO generated with -threads, which releases the GIL around
+// every wrapped call before this guard runs. Releasing an already-released
+// GIL is a fatal Python error, so the guard only acts when this thread still
+// holds it — that makes the two mechanisms compose, and keeps TTTRLIB_NOGIL
+// correct on its own if -threads is ever dropped.
 struct tttrlib_gil_release {
     PyThreadState *_save;
-    tttrlib_gil_release()  { _save = PyEval_SaveThread(); }
-    ~tttrlib_gil_release() { PyEval_RestoreThread(_save); }
+    tttrlib_gil_release()  { _save = PyGILState_Check() ? PyEval_SaveThread() : nullptr; }
+    ~tttrlib_gil_release() { if (_save) PyEval_RestoreThread(_save); }
 };
 %}
 
 // Release the GIL around a heavy, Python-object-free method while preserving the
 // project's standard std::exception -> Python exception translation (see the
 // global %exception in MicrotimeLinearization.i). Apply before the header %include.
+//
+// The release itself now comes from the module-wide -threads flag: SWIG wraps
+// $action -- INCLUDING inside this custom %exception -- in its own
+// BEGIN/END_ALLOW pair, so a guard here would release an already-released GIL,
+// which is a fatal Python error, not a no-op. What this macro still adds over
+// -threads alone is the exception translation. If -threads is ever dropped,
+// put `tttrlib_gil_release _gil_guard;` back above $action.
 %define TTTRLIB_NOGIL(Method)
 %exception Method {
     try {
-        tttrlib_gil_release _gil_guard;
         $action
     } catch (const std::invalid_argument& e) {
         SWIG_exception(SWIG_ValueError, e.what());
@@ -135,6 +147,7 @@ def experimental(cls):
 %include "BurstFeature.i"
 %include "BVA.i"
 %include "TwoCDE.i"
+%include "BurstML.i"
 %include "HMMRestraints.i"
 %include "HMMConstraints.i"
 %include "HMM.i"
@@ -144,8 +157,18 @@ def experimental(cls):
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
 %include "Jitter.i"
+%include "Sampling.i"
 %include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
+%include "GopichSzabo.i"
+%include "PhotonCountingHistogram.i"
+%include "RecurrenceAnalysis.i"
+%include "SpectralCrosstalk.i"
+%include "BackgroundEstimation.i"
+%include "MaxEnt.i"
+%include "BlindIRF.i"
+%include "MaxEntTcspc.i"
+%include "Pda3cCore.i"
 
 %include "Histogram.i"
 %include "HistogramNd.i"
@@ -192,3 +215,6 @@ def experimental(cls):
 
 /* Photon simulator */
 %include "Sim.i"
+
+/* Streaming / online analysis */
+%include "Streaming.i"

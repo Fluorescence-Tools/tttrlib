@@ -27,10 +27,42 @@ const fs = require('fs');
 // ---------------------------------------------------------------------------
 // Load the addon
 // ---------------------------------------------------------------------------
-// Search order: next to this file (the npm package layout and the CMake
-// js-pkg/ staging directory), then a couple of build-tree locations so a
-// developer can `require()` straight out of a build without installing.
+// Two layouts have to work, and they are not the same shape.
+//
+// The published package has no compiler: it ships one prebuilt binary per
+// platform under prebuilds/<platform>-<arch>/, and `node-gyp-build` is the
+// convention for picking the right one (it also honours npm_config_arch, the
+// electron/musl tags and TTTRLIB_PREBUILD). That is tried FIRST when a
+// prebuilds/ directory exists, so an installed package never depends on
+// anything but itself.
+//
+// The source tree has no prebuilds/ and several build directories instead.
+// There the loader falls back to the CMake staging directory next to this file
+// and to any build*/js-pkg/ at the repository root, newest first, so
+// `node --test test/js/` works straight after `cmake --build`.
+//
+// TTTRLIB_ADDON overrides both, and is the only safe way to run against a
+// specific build tree when more than one exists.
 function loadAddon() {
+  // Which layout this is, decided by the repository rather than by what happens
+  // to be lying around. `node scripts/prebuild.mjs` leaves a prebuilds/
+  // directory in the SOURCE tree too, and a developer who then rebuilt and saw
+  // no change would be looking at a stale prebuilt binary with nothing to
+  // suggest it -- so in a source tree the build directories win, and prebuilds/
+  // is only the fallback. In an installed package there is no source tree and
+  // the first branch is the only one that can succeed.
+  const inSourceTree = fs.existsSync(path.join(__dirname, '..', '..', '..', 'CMakeLists.txt'));
+  const hasPrebuilds = fs.existsSync(path.join(__dirname, 'prebuilds'));
+
+  if (!process.env.TTTRLIB_ADDON && hasPrebuilds && !inSourceTree) {
+    // Not wrapped in try/catch: if a prebuilds/ directory is present and holds
+    // nothing for this platform, node-gyp-build's error names the exact target
+    // triple that is missing, which is far more useful than the source-tree
+    // fallback failing later with a list of paths that were never going to
+    // exist in an installed package.
+    return require('node-gyp-build')(__dirname);
+  }
+
   const candidates = [
     path.join(__dirname, 'tttrlib.node'),
     path.join(__dirname, 'build', 'Release', 'tttrlib.node'),
@@ -57,6 +89,10 @@ function loadAddon() {
     if (fs.existsSync(c)) return require(c);
     tried.push(c);
   }
+  // In a source tree with no build directory, a prebuild made earlier is still
+  // a working binary and better than an error -- it just must not outrank a
+  // build the developer just made.
+  if (hasPrebuilds) return require('node-gyp-build')(__dirname);
   throw new Error(
     'tttrlib: native addon not found. Looked in:\n  ' + tried.join('\n  ') +
     '\nBuild it with `cmake -DBUILD_JAVASCRIPT_INTERFACE=ON` or set TTTRLIB_ADDON.');
@@ -265,8 +301,30 @@ if (native.TTTR) {
     }
     // Positional call in schema order, defaults filled from the schema -- the
     // C++ methods take positional arguments and JavaScript has no **kwargs.
+    //
+    // THE KEY ORDER OF `properties` IS THE C++ ARGUMENT ORDER. That is a
+    // contract with the registry, not an incidental property of this loop, and
+    // it is invisible at the call site: if the registry ever sorts the keys, the
+    // arguments silently transpose and the failure surfaces as SWIG's "Illegal
+    // arguments" hundreds of lines away -- or, when the transposed types happen
+    // to match, as a wrong answer. Python is immune because it calls with
+    // **kwargs, so nothing else in the project notices.
+    //
+    // It has broken once already (a `nlohmann::json` round-trip in
+    // TTTR::burst_search_algorithms_json, whose std::map sorts every key).
+    // test/js/registry.test.mjs pins the invariant that catches it: `required`
+    // keeps declaration order, so it must be a SUBSEQUENCE of the property keys.
     const args = Object.keys(props).map((k) =>
       (k in parameters) ? parameters[k] : props[k].default);
+    // A built-in search is a method on TTTR; one from a plugin has none,
+    // because the bindings were generated before the plugin existed. The
+    // registry entry says which -- a plugin entry carries no "method" -- so the
+    // dispatch reads it rather than guessing, exactly as Python's does.
+    if (!entry.method) {
+      const kwargs = {};
+      for (const [i, k] of Object.keys(props).entries()) kwargs[k] = args[i];
+      return this.burst_search_plugin(algorithm, JSON.stringify(kwargs));
+    }
     // An entry's `method` may be implemented in C++ or, for a composition like
     // the coincident search, in this scripting layer -- which is also where
     // Python implements it. Accept the C++ spelling and the camelCase alias.

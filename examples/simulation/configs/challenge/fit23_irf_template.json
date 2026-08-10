@@ -1,0 +1,25 @@
+{
+  "_comment": "fit23 ground truth with IRF convolution. 2-channel: ch0=green(donor), ch1=red(acceptor). Species 0: D-only, tau=3.8ns, q=[240,60] (80% green). Species 1: FRET, tau=1.6ns, q=[60,240] (80% red). Both have Gaussian IRF (FWHM=0.2ns) convolved into decay.",
+  "settings": {
+    "dt": 0.01, "n_ph_max": 600000, "n_channels": 2,
+    "n_microtime_channels": 4096, "microtime_resolution": 0.008,
+    "laser_period": 32.0,
+    "active_margin": 1.0, "fast_grid_bbox": true,
+    "seed_diffusion": 42, "seed_emission": 99
+  },
+  "box": {"xy": 2.0, "z": 4.0},
+  "species": [
+    {"D": 0.05, "q": [240.0, 60.0], "r0": 0.38,
+     "decay": {"lifetimes": [3.8], "amplitudes": [1.0], "dt": 0.008,
+               "irf": "IRF_PLACEHOLDER"}},
+    {"D": 0.05, "q": [60.0, 240.0], "r0": 0.38,
+     "decay": {"lifetimes": [1.6], "amplitudes": [1.0], "dt": 0.008,
+               "irf": "IRF_PLACEHOLDER"}}
+  ],
+  "k_rad": [0.0, 0.0],
+  "k_nrad": [0.0, 0.0],
+  "background": [0.02, 0.02],
+  "population": [0.15, 0.15],
+  "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 2.0,
+                 "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1, "amplitude": 1.0}
+}

@@ -6,6 +6,12 @@ struct LocalizationAccess : localization {
 };
 %}
 
+// The module is generated with -threads, which drops the GIL around every
+// wrapped call. These two run the Python C-API inside their C++ bodies
+// (PyList_GetItem and friends), so for them the GIL has to stay held.
+%feature("nothread") localization::fit2DGaussian_array;
+%feature("nothread") localization::model2DGaussian_array;
+
 %extend localization{
 #ifdef SWIGPYTHON
     // Python-friendly wrapper for fit2DGaussian that accepts nested lists

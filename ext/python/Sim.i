@@ -323,22 +323,29 @@ namespace tttrlib {
                         id=_np.asarray(s.id), species=_np.asarray(s.species),
                         x=_np.asarray(s.x), y=_np.asarray(s.y), z=_np.asarray(s.z))
 
-        def to_tttr(self, dt, n_channels, ch_conversion=None, n_microtime_channels=4096,
-                    microtime_resolution=0.004069, laser_period=13.596, pulsed=False,
+        def to_tttr(self, dt, n_channels, ch_conversion=None, n_microtime_channels=None,
+                    microtime_resolution=None, laser_period=None, pulsed=None,
                     seed=1, container="SPC-130", reverse_tac=True):
             """Encode the photon stream and return it as a ``tttrlib.TTTR``.
 
             One-call export: builds a Becker&Hickl SPC-132 record stream with a
-            ``SimMicrotimeEncoder`` and reads it back as a ``TTTR``. ``dt``/``n_channels``
-            must match the simulation. ``ch_conversion`` maps a routing channel to a hardware
-            channel (default: the 6-detector B&H map). ``pulsed=True`` uses the pulsed TAC path.
+            ``SimMicrotimeEncoder`` and reads it back as a ``TTTR``.
 
-            ``reverse_tac=True`` (default) writes the TAC in B&H *reverse start-stop* order
-            (raw ADC = ``n_microtime_channels - 1 - micro_time``); the SPC reader un-reverses
-            it, so the read-back ``micro_time`` matches the simulation. Set ``reverse_tac=False``
-            only to emit the physical micro-time directly (e.g. for external tools that do not
-            reverse) — a ``to_tttr`` round-trip is then inverted on read-back.
+            Parameters that are ``None`` default to the engine's own settings
+            (``self.settings()``), so a round-trip preserves the simulation's
+            microtime resolution and laser period exactly. Pass explicit values
+            only to override (e.g. to transcode to a different format).
             """
+            import tempfile, os
+            s = self.settings()
+            if n_microtime_channels is None:
+                n_microtime_channels = s.n_microtime_channels
+            if microtime_resolution is None:
+                microtime_resolution = s.microtime_resolution
+            if laser_period is None:
+                laser_period = s.laser_period
+            if pulsed is None:
+                pulsed = laser_period > 0.0
             import tempfile, os
             enc = SimMicrotimeEncoder()
             enc.n_channels = int(n_channels)

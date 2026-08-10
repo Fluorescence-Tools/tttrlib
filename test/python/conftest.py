@@ -16,6 +16,17 @@ import sys
 from pathlib import Path
 from test_settings import DATA_ROOT, DATA_AVAILABLE  # type: ignore
 
+# A stale or broken tttrlib install in site-packages (e.g. a namespace package
+# left over from a partial pip install) can shadow the SWIG-built module in
+# build/ext. Put the build output first so every test — including those that
+# spawn subprocesses inheriting sys.path — sees the development build.
+_REPO = Path(__file__).resolve().parent.parent.parent
+_BUILD_EXT = _REPO / "build" / "ext"
+if _BUILD_EXT.is_dir():
+    _IDX = 0 if str(_BUILD_EXT) not in sys.path else None
+    if _IDX is not None:
+        sys.path.insert(_IDX, str(_BUILD_EXT))
+
 
 def pytest_configure(config):
     """Pytest hook to display unified test data status."""

@@ -10,17 +10,19 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "tttrlib.node",
-    "*.dylib",
-    "*.so",
-    "*.so.*",
-    "*.dll",
-    "README.md"
+    "prebuilds/",
+    "README.md",
+    "LICENSE.txt"
   ],
   "scripts": {
-    "test": "node --test ../../../test/js/"
+    "test": "node --test ../../../test/js/",
+    "prebuild": "node scripts/prebuild.mjs",
+    "pack:npm": "node scripts/pack.mjs"
   },
   "dependencies": {
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
     "node-addon-api": "^7.0.0",
     "node-api-headers": "^1.1.0"
   },
@@ -39,5 +41,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/fluorescence-tools/tttrlib.git"
+  },
+  "homepage": "https://docs.peulen.xyz/tttrlib",
+  "bugs": {
+    "url": "https://github.com/fluorescence-tools/tttrlib/issues"
   }
 }

@@ -2,6 +2,7 @@
 #include "io_pto.h"
 
 #include "io_store.h"
+#include "FileCheck.h"
 #include "TTTR.h"
 #include "TTTRFormat.h"
 
@@ -613,6 +614,7 @@ struct PtoFile::Impl {
         std::uint64_t seg_size_at = 0;  ///< Attachments' size VINT
         std::uint64_t att_size_at = 0;  ///< AttachedFile's size VINT
         std::uint64_t data_size_at = 0; ///< FileData's size VINT
+        std::uint64_t rows_at = 0;      ///< the row count's 8-octet payload, or 0
         std::uint64_t slack_at = 0;     ///< a Void right after, or 0
         std::uint64_t slack_bytes = 0;
     };
@@ -929,7 +931,9 @@ struct PtoFile::Impl {
     std::uint64_t emit_object(const std::string& kind, const std::string& encoding,
                               const std::string& name, std::uint64_t n,
                               std::uint64_t reserve,
-                              const std::function<bool(File&)>& emit) {
+                              const std::function<bool(File&)>& emit,
+                              const std::string& media_type = std::string(),
+                              std::uint64_t rows = 0) {
         err.clear();
         if (!writable) { fail("opened read-only"); return 0; }
 
@@ -938,13 +942,19 @@ struct PtoFile::Impl {
         s.meta.kind = kind;
         s.meta.encoding = encoding;
         s.meta.name = name;
+        s.meta.media_type = media_type;
         s.meta.size = n;
+        s.meta.rows = rows;
 
         Buf head;
         head.uint_elem_fixed(kFileUID, s.meta.uid, kUidOctets);
         head.text_elem(kPtoKind, kind);
         head.text_elem(kPtoEncoding, encoding);
         if (!name.empty()) head.text_elem(kFileName, name);
+        if (!media_type.empty()) head.text_elem(kFileMedia, media_type);
+        // Fixed width and last in the header, so the payload position is
+        // head-relative and the count can be rewritten in place later.
+        if (rows != 0) head.uint_elem_fixed(kPtoRowCount, rows, 8);
 
         const std::uint64_t att_payload =
                 head.b.size() + id_octets(kFileData) + kWideSize + n;
@@ -980,6 +990,7 @@ struct PtoFile::Impl {
         s.att_size_at = s.seg_size_at + kWideSize + id_octets(kAttachedFile);
         s.data_size_at = at + prefix.b.size() - kWideSize;
         s.meta.offset = at + prefix.b.size();
+        if (rows != 0) s.rows_at = s.att_size_at + kWideSize + head.b.size() - 8;
 
         if (!f.at(at, prefix.b.data(), prefix.b.size()) || !emit(f)) {
             fail(err.empty() ? "write failed" : err);
@@ -993,6 +1004,41 @@ struct PtoFile::Impl {
         slots.push_back(s);
         dirty = true;
         return s.meta.uid;
+    }
+
+    /*!
+     * \brief \ref emit_object with the payload coming from a file on disk.
+     *
+     * Behind both \ref PtoFile::add_file and \ref PtoFile::attach, which differ
+     * only in who decided what the object is.
+     */
+    std::uint64_t add_path(const std::string& kind, const std::string& encoding,
+                           const std::string& name, const std::string& media_type,
+                           const std::string& path, std::uint64_t reserve) {
+        err.clear();
+
+        std::error_code ec;
+        const std::uintmax_t n =
+                std::filesystem::file_size(std::filesystem::u8path(path), ec);
+        if (ec) { fail("cannot size " + path + ": " + ec.message()); return 0; }
+
+        File in;
+        if (!in.open(path, "rb")) { fail("cannot open " + path); return 0; }
+
+        // The only difference from add: where the bytes come from. In blocks, so
+        // embedding a four-gigabyte instrument file costs a megabyte of memory.
+        return emit_object(kind, encoding, name, n, reserve, [&](File& out) {
+            std::vector<unsigned char> chunk(1u << 20);
+            std::uint64_t left = n;
+            while (left > 0) {
+                const std::size_t take =
+                        static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
+                if (!in.read(chunk.data(), take)) return fail("could not read " + path);
+                if (!out.write(chunk.data(), take)) return fail("write failed");
+                left -= take;
+            }
+            return true;
+        }, media_type);
     }
 
     /// Rewrite one of the three metadata elements, in place if it still fits.
@@ -1497,7 +1543,12 @@ bool PtoFile::open(const std::string& filename, bool writable) {
                     case kFileName: s.meta.name = get_text(fd, fn); break;
                     case kFileMedia: s.meta.media_type = get_text(fd, fn); break;
                     case kFileDescr: s.meta.description = get_text(fd, fn); break;
-                    case kPtoRowCount: s.meta.rows = get_uint(fd, fn); break;
+                    case kPtoRowCount:
+                        s.meta.rows = get_uint(fd, fn);
+                        // Patchable in place only at the full width this writer
+                        // uses; a packed count from an older file stays as-is.
+                        if (fn == 8) s.rows_at = att_payload_at + (fd - ad);
+                        break;
                     case kFileData:
                         s.meta.offset = att_payload_at + (fd - ad);
                         s.meta.size = fn;
@@ -1777,31 +1828,59 @@ bool PtoFile::add_inspection_data(const std::vector<std::uint32_t>& trace_counts
 std::uint64_t PtoFile::add_file(const std::string& kind, const std::string& encoding,
                                 const std::string& name, const std::string& path,
                                 std::uint64_t reserve) {
+    return p_->add_path(kind, encoding, name, std::string(), path, reserve);
+}
+
+std::uint64_t PtoFile::attach(const std::string& path, const std::string& name,
+                              const std::string& kind, const std::string& encoding,
+                              const std::string& media_type) {
+    const PtoFileType t = pto_classify_path(path);
+    std::string label = name;
+    if (label.empty()) {
+        // The filename, not the path it was found at: a container is not a copy
+        // of somebody's directory layout. pto_bundle_files overrides this when
+        // it walks a directory, where the layout is the point.
+        label = std::filesystem::u8path(path).filename().string();
+    }
+    return p_->add_path(kind.empty() ? t.kind : kind,
+                        encoding.empty() ? t.encoding : encoding, label,
+                        media_type.empty() ? t.media_type : media_type, path, 0);
+}
+
+std::uint64_t PtoFile::add_sidecar_file(const std::string& kind, const std::string& encoding,
+                                       const std::string& name, const std::string& file_path) {
     Impl& m = *p_;
-    m.err.clear();
-
-    std::error_code ec;
-    const std::uintmax_t n =
-            std::filesystem::file_size(std::filesystem::u8path(path), ec);
-    if (ec) { m.fail("cannot size " + path + ": " + ec.message()); return 0; }
-
-    File in;
-    if (!in.open(path, "rb")) { m.fail("cannot open " + path); return 0; }
-
-    // The only difference from add: where the bytes come from. In blocks, so
-    // embedding a four-gigabyte instrument file costs a megabyte of memory.
-    return m.emit_object(kind, encoding, name, n, reserve, [&](File& out) {
-        std::vector<unsigned char> chunk(1u << 20);
-        std::uint64_t left = n;
-        while (left > 0) {
-            const std::size_t take =
-                    static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
-            if (!in.read(chunk.data(), take)) return m.fail("could not read " + path);
-            if (!out.write(chunk.data(), take)) return m.fail("write failed");
-            left -= take;
+    std::string store_path = file_path;
+    try {
+        std::filesystem::path fp = std::filesystem::u8path(file_path);
+        std::filesystem::path base = std::filesystem::u8path(filename()).parent_path();
+        if (!base.empty()) {
+            std::error_code ec;
+            std::filesystem::path rel = std::filesystem::relative(fp, base, ec);
+            if (!ec && !rel.empty()) {
+                store_path = rel.string();
+            }
         }
-        return true;
-    });
+    } catch (...) {}
+
+    std::uint64_t uid = add(kind, encoding, name, nullptr, 0, 0);
+    if (!uid) return 0;
+
+    PtoTag tag_path;
+    tag_path.target = uid;
+    tag_path.name = "_mmfdb_artifact.file_path";
+    tag_path.type = PtoType::Text;
+    tag_path.text = store_path;
+    add_tag(tag_path);
+
+    PtoTag tag_sidecar;
+    tag_sidecar.target = uid;
+    tag_sidecar.name = "_mmfdb_artifact.is_sidecar";
+    tag_sidecar.type = PtoType::Text;
+    tag_sidecar.text = "true";
+    add_tag(tag_sidecar);
+
+    return uid;
 }
 
 bool PtoFile::update(std::uint64_t uid, const unsigned char* data, std::size_t n) {
@@ -1861,14 +1940,14 @@ bool PtoFile::update(std::uint64_t uid, const unsigned char* data, std::size_t n
         if (m.slots[i].meta.uid == uid) { m.slots.erase(m.slots.begin() + i); break; }
     m.release(old_at, old_bytes);
 
-    const std::uint64_t made = add(old.kind, old.encoding, old.name, data, n,
-                                   n / 8 + 64);
+    const std::uint64_t made = m.emit_object(
+            old.kind, old.encoding, old.name, n, n / 8 + 64,
+            [data, n](File& f) { return f.write(data, n); },
+            old.media_type, old.rows);
     if (made == 0) return false;
     Impl::Slot* fresh = m.find(made);
     fresh->meta.uid = keep_uid;
-    fresh->meta.media_type = old.media_type;
     fresh->meta.description = old.description;
-    fresh->meta.rows = old.rows;
     // The uid is inside the element, so it has to be rewritten there too.
     Buf u;
     u.uint_elem_fixed(kFileUID, keep_uid, kUidOctets);
@@ -1919,12 +1998,42 @@ std::size_t PtoFile::read_at(std::uint64_t uid, std::uint64_t at,
     return take;
 }
 
+static std::string find_sidecar_path(const PtoFile& file, std::uint64_t uid) {
+    for (const auto& tag : file.tags_for(uid)) {
+        if (tag.name == "_mmfdb_artifact.file_path" && tag.type == PtoType::Text) {
+            std::filesystem::path p(tag.text);
+            if (p.is_absolute()) return p.string();
+            std::filesystem::path base = std::filesystem::u8path(file.filename()).parent_path();
+            return (base / p).string();
+        }
+    }
+    return "";
+}
+
 bool PtoFile::stream(std::uint64_t uid,
                      const std::function<bool(const void*, std::size_t)>& sink) const {
     Impl& m = *p_;
     m.err.clear();
     const Impl::Slot* s = m.find(uid);
     if (s == nullptr) return m.fail("no object with that uid");
+
+    if (s->meta.size == 0) {
+        std::string sc = find_sidecar_path(*this, uid);
+        if (!sc.empty() && std::filesystem::exists(sc)) {
+            File in;
+            if (!in.open(sc, "rb")) return m.fail("cannot open sidecar " + sc);
+            std::vector<unsigned char> chunk(1u << 20);
+            std::uintmax_t left = std::filesystem::file_size(sc);
+            while (left > 0) {
+                const std::size_t take = static_cast<std::size_t>(left < chunk.size() ? left : chunk.size());
+                if (!in.read(chunk.data(), take)) return m.fail("could not read sidecar " + sc);
+                if (!sink(chunk.data(), take)) return false;
+                left -= take;
+            }
+            return true;
+        }
+    }
+
     m.f.flush();
     if (!m.f.seek(s->meta.offset)) return m.fail("cannot reach the payload");
 
@@ -1956,6 +2065,20 @@ bool PtoFile::extract(std::uint64_t uid, const std::string& filename) const {
     m.err.clear();
     if (m.find(uid) == nullptr) return m.fail("no object with that uid");
 
+    const Impl::Slot* s = m.find(uid);
+    if (s != nullptr && s->meta.size == 0) {
+        std::string sc = find_sidecar_path(*this, uid);
+        if (!sc.empty() && std::filesystem::exists(sc)) {
+            std::error_code ec;
+            std::filesystem::path src(sc);
+            std::filesystem::path dst(filename);
+            if (std::filesystem::equivalent(src, dst, ec)) return true;
+            std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
+            if (ec) return m.fail("cannot copy sidecar " + sc + " to " + filename + ": " + ec.message());
+            return true;
+        }
+    }
+
     File out;
     if (!out.open(filename, "wb")) return m.fail("cannot create " + filename);
     return stream(uid, [&](const void* block, std::size_t n) {
@@ -1977,6 +2100,14 @@ std::vector<std::string> PtoFile::disassemble(const std::string& directory) cons
             name = std::to_string(o.uid) + "-" + name;
         used.push_back(name);
         const std::string path = directory + sep + name;
+
+        std::error_code ec;
+        std::filesystem::path p(path);
+        auto parent = p.parent_path();
+        if (!parent.empty()) {
+            std::filesystem::create_directories(parent, ec);
+        }
+
         if (!extract(o.uid, path)) return std::vector<std::string>();
         written.push_back(path);
     }
@@ -2003,11 +2134,45 @@ std::vector<PtoTag> PtoFile::tags_for(std::uint64_t uid) const {
     return out;
 }
 
-void PtoFile::add_tag(const PtoTag& tag) { p_->tags.push_back(tag); p_->dirty = true; }
+namespace {
+bool tag_equal(const PtoTag& a, const PtoTag& b) {
+    return a.name == b.name && a.type == b.type && a.target == b.target &&
+           a.index == b.index && a.source_type == b.source_type &&
+           a.u == b.u && a.i == b.i && a.d == b.d && a.text == b.text &&
+           a.bytes == b.bytes && a.floats == b.floats && a.ints == b.ints &&
+           a.uids == b.uids;
+}
+} // anonymous namespace
+
+void PtoFile::add_tag(const PtoTag& tag) {
+    for (const PtoTag& t : p_->tags)
+        if (tag_equal(t, tag)) return;
+    p_->tags.push_back(tag);
+    p_->dirty = true;
+}
+void PtoFile::set_tag(const PtoTag& tag) {
+    std::vector<PtoTag>& ts = p_->tags;
+    ts.erase(std::remove_if(ts.begin(), ts.end(), [&](const PtoTag& t) {
+                 return t.target == tag.target && t.name == tag.name &&
+                        t.index == tag.index;
+             }),
+             ts.end());
+    ts.push_back(tag);
+    p_->dirty = true;
+}
 void PtoFile::set_tags(const std::vector<PtoTag>& tags) {
     p_->tags = tags; p_->dirty = true;
 }
 void PtoFile::clear_tags() { p_->tags.clear(); p_->dirty = true; }
+void PtoFile::clear_tags(std::uint64_t target, const std::string& name) {
+    std::vector<PtoTag>& ts = p_->tags;
+    const std::size_t before = ts.size();
+    ts.erase(std::remove_if(ts.begin(), ts.end(), [&](const PtoTag& t) {
+                 return t.target == target && t.name == name;
+             }),
+             ts.end());
+    if (ts.size() != before) p_->dirty = true;
+}
 
 std::vector<PtoAnnotation> PtoFile::annotations() const { return p_->notes; }
 void PtoFile::add_annotation(const PtoAnnotation& note) {
@@ -2095,7 +2260,8 @@ bool PtoFile::compact(const std::string& to, bool tight, double reserve) {
                         return dst.write(block, n);
                     });
                     return copied;
-                });
+                },
+                o.media_type, o.rows);
         // A failed copy already left its reason in this file's error, since
         // `stream` reads from here; a failed write left it in the new one's.
         if (made == 0) return copied ? m.fail(out.error()) : false;
@@ -2103,7 +2269,6 @@ bool PtoFile::compact(const std::string& to, bool tight, double reserve) {
         // by uid, and compaction is not supposed to be observable.
         Impl::Slot* s = out.p_->find(made);
         s->meta.uid = o.uid;
-        s->meta.rows = o.rows;
         Buf u;
         u.uint_elem_fixed(kFileUID, o.uid, kUidOctets);
         if (!out.p_->f.at(s->att_size_at + kWideSize, u.b.data(), u.b.size()))
@@ -2141,7 +2306,10 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     head.text_elem(kPtoEncoding, "dstore");
     if (!name.empty()) head.text_elem(kFileName, name);
     head.text_elem(kFileMedia, "application/x-dstore");
-    if (s.meta.rows != 0) head.uint_elem(kPtoRowCount, s.meta.rows);
+    // Always present and always 8 octets, even for an empty table: an update
+    // that finds a different number of rows patches this in place, and a
+    // packed width would not have the byte a grown count needs.
+    head.uint_elem_fixed(kPtoRowCount, s.meta.rows, 8);
 
     // The size is not known until the store has been written, so this always
     // appends -- there is no hole to look for one that fits. The three sizes
@@ -2189,6 +2357,7 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     s.seg_size_at = at + id_octets(kAttachments);
     s.att_size_at = s.seg_size_at + kWideSize + id_octets(kAttachedFile);
     s.data_size_at = at + prefix.b.size() - kWideSize;
+    s.rows_at = s.att_size_at + kWideSize + head.b.size() - 8;
     s.meta.offset = at + prefix.b.size();
     s.meta.size = n;
 
@@ -2229,7 +2398,24 @@ bool pto_update_store(PtoFile& file, std::uint64_t uid, const data::DataStore& s
               (bytes.empty() || std::fread(bytes.data(), 1, bytes.size(), tmp) == bytes.size());
     std::fclose(tmp);
     if (!ok) return file.p_->fail("could not serialise the store");
-    return file.update(uid, bytes.data(), bytes.size());
+
+    // The row count lives in the object header, which update() does not touch.
+    // Set it before the call so a relocating update writes it into the fresh
+    // header, and patch it after so an in-place update corrects the old one.
+    PtoFile::Impl& m = *file.p_;
+    const std::uint64_t rows = store.n_rows();
+    if (PtoFile::Impl::Slot* s = m.find(uid)) s->meta.rows = rows;
+    if (!file.update(uid, bytes.data(), bytes.size())) return false;
+    if (PtoFile::Impl::Slot* s = m.find(uid)) {
+        s->meta.rows = rows;
+        if (s->rows_at != 0) {
+            Buf r;
+            r.be(rows, 8);
+            if (!m.f.at(s->rows_at, r.b.data(), r.b.size()))
+                return m.fail("write failed");
+        }
+    }
+    return true;
 }
 
 void pto_mark_sidecar(PtoFile& file, std::uint64_t uid, std::uint64_t primary) {
@@ -2554,6 +2740,174 @@ void keep_range(TTTR* t, std::uint64_t skip, std::uint64_t want) {
 }
 
 }  // namespace
+
+// --- bundling files ------------------------------------------------------------
+
+namespace {
+
+/// The extension, lowercased and without the dot. Empty when there is none.
+std::string extension_of(const std::string& path) {
+    std::string e = std::filesystem::u8path(path).extension().string();
+    if (!e.empty() && e[0] == '.') e.erase(0, 1);
+    return lowered(e);
+}
+
+/*!
+ * \brief What a name alone says an object is.
+ *
+ * No photon format is in here. Those are recognised by their contents, which is
+ * the only thing that tells four ".spc" flavours apart -- and which is why a
+ * file that merely *ends* in ".raw" does not become a ConfoCor3 stream.
+ */
+struct ByExtension {
+    const char* ext;
+    const char* kind;
+    const char* encoding;
+    const char* media_type;
+};
+const ByExtension kByExtension[] = {
+    {"csv",    "table",      "csv",    "text/csv"},
+    {"tsv",    "table",      "tsv",    "text/tab-separated-values"},
+    {"dstore", "table",      "dstore", "application/x-dstore"},
+    {"npy",    "table",      "npy",    ""},
+    {"png",    "image",      "png",    "image/png"},
+    {"jpg",    "image",      "jpeg",   "image/jpeg"},
+    {"jpeg",   "image",      "jpeg",   "image/jpeg"},
+    {"tif",    "image",      "tiff",   "image/tiff"},
+    {"tiff",   "image",      "tiff",   "image/tiff"},
+    {"svg",    "image",      "svg",    "image/svg+xml"},
+    {"pdf",    "attachment", "pdf",    "application/pdf"},
+    {"txt",    "attachment", "text",   "text/plain"},
+    {"log",    "attachment", "text",   "text/plain"},
+    {"rst",    "attachment", "text",   "text/plain"},
+    {"md",     "attachment", "text",   "text/markdown"},
+    // Half a Becker & Hickl header, and the reason kPtoSidecarTag exists.
+    {"set",    "attachment", "set",    "text/plain"},
+    {"json",   "attachment", "json",   "application/json"},
+    {"yaml",   "attachment", "yaml",   "application/yaml"},
+    {"yml",    "attachment", "yaml",   "application/yaml"},
+    {"xml",    "attachment", "xml",    "application/xml"},
+    {"html",   "attachment", "html",   "text/html"},
+    {"py",     "attachment", "python", "text/x-python"},
+    {"ipynb",  "attachment", "json",   "application/json"},
+    {"h5",     "attachment", "hdf5",   "application/x-hdf5"},
+    {"hdf5",   "attachment", "hdf5",   "application/x-hdf5"},
+    {"zip",    "attachment", "zip",    "application/zip"},
+    {"gz",     "attachment", "gz",     "application/gzip"},
+    {"pto",    "attachment", "pto",    "application/x-pto"},
+};
+
+}  // namespace
+
+PtoFileType pto_classify_path(const std::string& path) {
+    PtoFileType t;
+    const std::string ext = extension_of(path);
+
+    // The name proposes and the bytes dispose. Only a file some photon format
+    // claims by extension is offered to the sniffers at all -- several of them
+    // recognise a container by little more than its record size dividing evenly,
+    // and asked about forty arbitrary bytes one of them says yes.
+    //
+    // Among the formats that do claim it, the bytes decide: four of them claim
+    // ".spc", and the encoding written down is the format's own name, which
+    // container_for reads back. "spc-130" says which one this is; "spc" does not.
+    std::error_code ec;
+    if (!ext.empty() && !IORegistry::by_extension(ext).empty() &&
+        std::filesystem::is_regular_file(std::filesystem::u8path(path), ec)) {
+        const int container = inferTTTRFileType(path.c_str());
+        const FileFormat* f =
+                container >= 0 ? IORegistry::by_container_type(container) : nullptr;
+        if (f != nullptr) {
+            t.kind = "photons";
+            t.encoding = lowered(f->name);
+            if (t.encoding == "photon-hdf5") t.media_type = "application/x-hdf5";
+            return t;
+        }
+    }
+
+    for (std::size_t i = 0; i < sizeof(kByExtension) / sizeof(kByExtension[0]); i++) {
+        if (ext != kByExtension[i].ext) continue;
+        t.kind = kByExtension[i].kind;
+        t.encoding = kByExtension[i].encoding;
+        t.media_type = kByExtension[i].media_type;
+        return t;
+    }
+
+    // Carried, named, and left alone. An unrecognised encoding is an object a
+    // reader skips, never a file it rejects.
+    t.kind = "attachment";
+    t.encoding = "raw";
+    return t;
+}
+
+std::vector<PtoObject> pto_bundle_files(PtoFile& file,
+                                        const std::vector<std::string>& paths,
+                                        bool link_sidecars) {
+    std::vector<PtoObject> made;
+
+    // Path on disk, and what the object will be called. The two differ under a
+    // directory, where the name carries the layout so disassemble can put it back.
+    std::vector<std::pair<std::string, std::string>> work;
+    for (std::size_t i = 0; i < paths.size(); i++) {
+        std::error_code ec;
+        const std::filesystem::path here = std::filesystem::u8path(paths[i]);
+        if (!std::filesystem::is_directory(here, ec)) {
+            work.push_back(std::make_pair(paths[i], here.filename().string()));
+            continue;
+        }
+        std::vector<std::filesystem::path> found;
+        for (std::filesystem::recursive_directory_iterator it(here, ec), end;
+             !ec && it != end; it.increment(ec)) {
+            std::error_code kind_ec;
+            if (it->is_regular_file(kind_ec)) found.push_back(it->path());
+        }
+        // A walk that stops early would bundle some of the directory and say it
+        // bundled the directory, which is the one outcome nobody could detect.
+        if (ec) {
+            throw std::runtime_error("cannot walk " + here.string() + ": " + ec.message());
+        }
+        // Sorted, so the same directory bundles to the same object order twice
+        // running -- a container nobody can reproduce is a container nobody can
+        // compare.
+        std::sort(found.begin(), found.end());
+        for (std::size_t k = 0; k < found.size(); k++) {
+            std::error_code rel_ec;
+            std::string rel =
+                    std::filesystem::relative(found[k], here, rel_ec).generic_string();
+            if (rel_ec || rel.empty()) rel = found[k].filename().string();
+            work.push_back(std::make_pair(found[k].string(), rel));
+        }
+    }
+
+    for (std::size_t i = 0; i < work.size(); i++) {
+        // A directory holding the container being written holds it while it is
+        // being written, and a file cannot carry itself.
+        std::error_code ec;
+        if (std::filesystem::equivalent(std::filesystem::u8path(work[i].first),
+                                        std::filesystem::u8path(file.filename()), ec)) {
+            continue;
+        }
+        const std::uint64_t uid = file.attach(work[i].first, work[i].second);
+        if (uid == 0) return made;
+        made.push_back(file.object(uid));
+    }
+
+    if (link_sidecars) {
+        for (std::size_t i = 0; i < made.size(); i++) {
+            const std::filesystem::path sn = std::filesystem::u8path(made[i].name);
+            if (lowered(sn.extension().string()) != ".set") continue;
+            for (std::size_t k = 0; k < made.size(); k++) {
+                if (made[k].uid == made[i].uid) continue;
+                const std::filesystem::path pn = std::filesystem::u8path(made[k].name);
+                if (lowered(pn.extension().string()) != ".spc") continue;
+                if (pn.parent_path() != sn.parent_path() || pn.stem() != sn.stem()) continue;
+                pto_mark_sidecar(file, made[i].uid, made[k].uid);
+                break;
+            }
+        }
+    }
+    return made;
+}
 
 int pto_read_events(const std::string& spec, std::uint64_t first_event,
                     std::uint64_t n_events, ::TTTR* out) {

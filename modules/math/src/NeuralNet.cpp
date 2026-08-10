@@ -9,8 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <Eigen/Core>
-
+#include "Mat.h"
 #include "SimPcgRandom.h"
 #include "nlohmann/json.hpp"
 
@@ -20,25 +19,24 @@ namespace {
 
 using json = nlohmann::json;
 
-// Row-major maps: tttrlib stores everything row-major, Eigen defaults to column
-// major, so the storage order is spelled out rather than left to the default.
-using RowMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-using RowMatrixMap = Eigen::Map<RowMatrix>;
-using ConstRowMatrixMap = Eigen::Map<const RowMatrix>;
+// The dense linear algebra runs through Mat.h (this directory) rather than
+// Eigen.  Mat.h is header-only, std-only C++17, and its GEMM is cache-friendly
+// ikj nesting with OpenMP — the matrix product is the only O(n^3) kernel in
+// training, and everything else is element-wise or a reduction.
 
 /// Apply an activation elementwise, in place.
-void apply_activation(RowMatrix& Z, Activation a) {
+void apply_activation(Mat& Z, Activation a) {
     switch (a) {
         case Activation::Identity:
             break;
         case Activation::ReLU:
-            Z = Z.cwiseMax(0.0);
+            relu_inplace(Z);
             break;
         case Activation::Tanh:
-            Z = Z.array().tanh().matrix();
+            tanh_inplace(Z);
             break;
         case Activation::Sigmoid:
-            Z = (1.0 / (1.0 + (-Z.array()).exp())).matrix();
+            sigmoid_inplace(Z);
             break;
     }
 }
@@ -50,19 +48,39 @@ void apply_activation(RowMatrix& Z, Activation a) {
  * Every supported activation has a derivative expressible in its own output,
  * which is why the forward pass caches activations rather than pre-activations.
  */
-void apply_activation_grad(RowMatrix& dA, const RowMatrix& A, Activation a) {
+void apply_activation_grad(Mat& dA, const Mat& A, Activation a) {
     switch (a) {
         case Activation::Identity:
             break;
         case Activation::ReLU:
-            dA = (A.array() > 0.0).select(dA, 0.0);
+            dA %= (A > 0.0);
             break;
         case Activation::Tanh:
-            dA.array() *= (1.0 - A.array().square());
+            dA %= (1.0 - square(A));
             break;
         case Activation::Sigmoid:
-            dA.array() *= A.array() * (1.0 - A.array());
+            dA %= (A % (1.0 - A));
             break;
+    }
+}
+
+/// Fused Adam update: one pass over the parameter array, zero temporaries.
+/// The expression-template chain ``m = b1*m + (1-b1)*g; v = b2*v + (1-b2)*g^2;
+/// p -= lr*(m/bc1)/(sqrt(v/bc2)+eps)`` would allocate five intermediate matrices
+/// per layer per batch; this lambda does the whole thing in a single pass.
+void adam_step(Mat& p, const Mat& g, Mat& m, Mat& v,
+               double lr, double beta1, double beta2,
+               double bc1, double bc2, double eps) {
+    const size_t n = static_cast<size_t>(p.n_elem());
+    double* pp = p.memptr();
+    const double* gp = g.memptr();
+    double* mp = m.memptr();
+    double* vp = v.memptr();
+    #pragma omp simd
+    for (size_t i = 0; i < n; ++i) {
+        mp[i] = beta1 * mp[i] + (1.0 - beta1) * gp[i];
+        vp[i] = beta2 * vp[i] + (1.0 - beta2) * gp[i] * gp[i];
+        pp[i] -= lr * (mp[i] / bc1) / (std::sqrt(vp[i] / bc2) + eps);
     }
 }
 
@@ -99,6 +117,21 @@ json scaler_to_json(const StandardScaler& s) {
     return json{{"mean", s.mean}, {"scale", s.scale}};
 }
 
+/// Copy ``count`` rows from ``src`` selected by ``order[from .. from+count)``
+/// into a new row-major matrix.
+Mat gather_rows(const Mat& src, const std::vector<int>& order,
+                int from, int count) {
+    Mat out(count, src.n_cols());
+    const int nc = src.n_cols();
+    for (int i = 0; i < count; ++i) {
+        const double* srow = src.memptr() +
+            static_cast<size_t>(order[from + i]) * nc;
+        std::copy(srow, srow + nc,
+                  out.memptr() + static_cast<size_t>(i) * nc);
+    }
+    return out;
+}
+
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -110,14 +143,23 @@ void StandardScaler::fit(const double* X, int n_rows, int n_cols) {
     scale.assign(static_cast<size_t>(n_cols), 1.0);
     if (n_rows <= 0 || n_cols <= 0) return;
 
-    ConstRowMatrixMap M(X, n_rows, n_cols);
-    Eigen::VectorXd mu = M.colwise().mean();
+    // two-pass column statistics: avoids naming the Mat.h free function
+    // ``mean()`` here, which collides with this struct's ``mean`` member.
+    for (int i = 0; i < n_rows; ++i)
+        for (int j = 0; j < n_cols; ++j)
+            mean[static_cast<size_t>(j)] += X[static_cast<size_t>(i) * n_cols + j];
+    for (int j = 0; j < n_cols; ++j)
+        mean[static_cast<size_t>(j)] /= n_rows;
+
     // Population standard deviation (ddof=0), matching sklearn's StandardScaler.
-    Eigen::VectorXd var = (M.rowwise() - mu.transpose()).array().square().colwise().sum() / n_rows;
-    for (int c = 0; c < n_cols; ++c) {
-        mean[c] = mu[c];
-        double sd = std::sqrt(var[c]);
-        scale[c] = (sd == 0.0) ? 1.0 : sd;
+    for (int j = 0; j < n_cols; ++j) {
+        double var = 0.0;
+        for (int i = 0; i < n_rows; ++i) {
+            double d = X[static_cast<size_t>(i) * n_cols + j] - mean[static_cast<size_t>(j)];
+            var += d * d;
+        }
+        double sd = std::sqrt(var / static_cast<double>(n_rows));
+        scale[static_cast<size_t>(j)] = (sd == 0.0) ? 1.0 : sd;
     }
 }
 
@@ -225,31 +267,33 @@ std::vector<double> NeuralNet::predict_batch(const double* X, int n_rows, int n_
                                  " features, expected " + std::to_string(n_inputs()));
     if (n_rows <= 0) return {};
 
-    RowMatrix A = ConstRowMatrixMap(X, n_rows, n_cols);
+    Mat A(n_rows, n_cols, X);
 
     if (x_scaler_.active()) {
-        Eigen::Map<const Eigen::VectorXd> mu(x_scaler_.mean.data(), n_cols);
-        Eigen::Map<const Eigen::VectorXd> sd(x_scaler_.scale.data(), n_cols);
-        A = (A.rowwise() - mu.transpose()).array().rowwise() / sd.transpose().array();
+        Mat mu(1, n_cols, x_scaler_.mean.data());
+        Mat sd(1, n_cols, x_scaler_.scale.data());
+        A.each_row() -= mu;
+        A.each_row() /= sd;
     }
 
     for (const DenseLayer& l : layers_) {
-        ConstRowMatrixMap W(l.weight.data(), l.n_out, l.n_in);
-        Eigen::Map<const Eigen::VectorXd> b(l.bias.data(), l.n_out);
-        RowMatrix Z = (A * W.transpose()).rowwise() + b.transpose();
+        // weight is row-major n_out x n_in; A * W.t() is the forward GEMM.
+        Mat W(l.n_out, l.n_in, l.weight.data());
+        Mat b(1, l.n_out, l.bias.data());
+        Mat Z = A * W.t();
+        Z.each_row() += b;
         apply_activation(Z, l.activation);
         A = std::move(Z);
     }
 
     if (y_scaler_.active()) {
-        Eigen::Map<const Eigen::VectorXd> mu(y_scaler_.mean.data(), n_outputs());
-        Eigen::Map<const Eigen::VectorXd> sd(y_scaler_.scale.data(), n_outputs());
-        A = (A.array().rowwise() * sd.transpose().array()).matrix().rowwise() + mu.transpose();
+        Mat mu(1, n_outputs(), y_scaler_.mean.data());
+        Mat sd(1, n_outputs(), y_scaler_.scale.data());
+        A.each_row() %= sd;
+        A.each_row() += mu;
     }
 
-    std::vector<double> out(static_cast<size_t>(n_rows) * static_cast<size_t>(n_outputs()));
-    RowMatrixMap(out.data(), n_rows, n_outputs()) = A;
-    return out;
+    return std::vector<double>(A.memptr(), A.memptr() + A.n_elem());
 }
 
 std::vector<double> NeuralNet::predict(const std::vector<double>& x) const {
@@ -281,15 +325,17 @@ NeuralNet NeuralNet::train(
     net.x_scaler_.fit(X, n_samples, n_features);
     net.y_scaler_.fit(Y, n_samples, n_targets);
 
-    RowMatrix Xs = ConstRowMatrixMap(X, n_samples, n_features);
-    RowMatrix Ys = ConstRowMatrixMap(Y, n_samples, n_targets);
+    Mat Xs(n_samples, n_features, X);
+    Mat Ys(n_samples, n_targets, Y);
     {
-        Eigen::Map<const Eigen::VectorXd> xm(net.x_scaler_.mean.data(), n_features);
-        Eigen::Map<const Eigen::VectorXd> xs(net.x_scaler_.scale.data(), n_features);
-        Xs = (Xs.rowwise() - xm.transpose()).array().rowwise() / xs.transpose().array();
-        Eigen::Map<const Eigen::VectorXd> ym(net.y_scaler_.mean.data(), n_targets);
-        Eigen::Map<const Eigen::VectorXd> ys(net.y_scaler_.scale.data(), n_targets);
-        Ys = (Ys.rowwise() - ym.transpose()).array().rowwise() / ys.transpose().array();
+        Mat xm(1, n_features, net.x_scaler_.mean.data());
+        Mat xs(1, n_features, net.x_scaler_.scale.data());
+        Xs.each_row() -= xm;
+        Xs.each_row() /= xs;
+        Mat ym(1, n_targets, net.y_scaler_.mean.data());
+        Mat ys(1, n_targets, net.y_scaler_.scale.data());
+        Ys.each_row() -= ym;
+        Ys.each_row() /= ys;
     }
 
     // --- layer geometry
@@ -304,30 +350,31 @@ NeuralNet NeuralNet::train(
     rng.reset(static_cast<uint32_t>(opt.seed), 0, 0);
 
     // Glorot-uniform init, as used by scikit-learn's MLP.
-    std::vector<RowMatrix> W(n_layers);
-    std::vector<Eigen::VectorXd> b(n_layers);
+    std::vector<Mat> W(n_layers);
+    std::vector<Mat> b(n_layers);      // bias: n_out x 1 column vector
     std::vector<Activation> acts(n_layers);
     for (size_t l = 0; l < n_layers; ++l) {
         const int n_in = dims[l], n_out = dims[l + 1];
         const double limit = std::sqrt(6.0 / (n_in + n_out));
-        W[l].resize(n_out, n_in);
+        W[l].set_size(n_out, n_in);
         for (int i = 0; i < n_out; ++i)
             for (int j = 0; j < n_in; ++j)
                 W[l](i, j) = (2.0 * rng.random0i1e() - 1.0) * limit;
-        b[l] = Eigen::VectorXd::Zero(n_out);
+        b[l].set_size(n_out, 1);
+        b[l].zeros();
         // Hidden layers use the chosen nonlinearity; the output layer is linear
         // because this is a regressor.
         acts[l] = (l + 1 == n_layers) ? Activation::Identity : opt.activation;
     }
 
     // --- Adam state
-    std::vector<RowMatrix> mW(n_layers), vW(n_layers);
-    std::vector<Eigen::VectorXd> mb(n_layers), vb(n_layers);
+    std::vector<Mat> mW(n_layers), vW(n_layers);
+    std::vector<Mat> mb(n_layers), vb(n_layers);
     for (size_t l = 0; l < n_layers; ++l) {
-        mW[l] = RowMatrix::Zero(W[l].rows(), W[l].cols());
-        vW[l] = RowMatrix::Zero(W[l].rows(), W[l].cols());
-        mb[l] = Eigen::VectorXd::Zero(b[l].size());
-        vb[l] = Eigen::VectorXd::Zero(b[l].size());
+        mW[l].set_size(W[l].n_rows(), W[l].n_cols()); mW[l].zeros();
+        vW[l].set_size(W[l].n_rows(), W[l].n_cols()); vW[l].zeros();
+        mb[l].set_size(b[l].n_rows(), 1); mb[l].zeros();
+        vb[l].set_size(b[l].n_rows(), 1); vb[l].zeros();
     }
 
     // --- train/validation split for early stopping
@@ -343,29 +390,27 @@ NeuralNet NeuralNet::train(
     if (n_train <= 0)
         throw std::runtime_error("NeuralNet::train: validation_fraction leaves no training rows");
 
-    auto gather = [&](int from, int count, const RowMatrix& src) {
-        RowMatrix out(count, src.cols());
-        for (int i = 0; i < count; ++i) out.row(i) = src.row(order[from + i]);
-        return out;
-    };
-    RowMatrix Xtr = gather(0, n_train, Xs), Ytr = gather(0, n_train, Ys);
-    RowMatrix Xva = gather(n_train, n_val, Xs), Yva = gather(n_train, n_val, Ys);
+    Mat Xtr = gather_rows(Xs, order, 0, n_train);
+    Mat Ytr = gather_rows(Ys, order, 0, n_train);
+    Mat Xva = gather_rows(Xs, order, n_train, n_val);
+    Mat Yva = gather_rows(Ys, order, n_train, n_val);
 
     // Forward pass keeping post-activation values for the backward pass.
-    auto forward = [&](const RowMatrix& input, std::vector<RowMatrix>& A) {
+    auto forward = [&](const Mat& input, std::vector<Mat>& A) {
         A.resize(n_layers + 1);
         A[0] = input;
         for (size_t l = 0; l < n_layers; ++l) {
-            RowMatrix Z = (A[l] * W[l].transpose()).rowwise() + b[l].transpose();
+            Mat Z = A[l] * W[l].t();
+            Z.each_row() += b[l].t();
             apply_activation(Z, acts[l]);
             A[l + 1] = std::move(Z);
         }
     };
-    auto mse = [&](const RowMatrix& in, const RowMatrix& target) {
-        if (in.rows() == 0) return 0.0;
-        std::vector<RowMatrix> A;
+    auto mse = [&](const Mat& in, const Mat& target) {
+        if (in.n_rows() == 0) return 0.0;
+        std::vector<Mat> A;
         forward(in, A);
-        return (A[n_layers] - target).array().square().sum() / (2.0 * in.rows());
+        return accu(square(A[n_layers] - target)) / (2.0 * in.n_rows());
     };
 
     std::vector<int> batch_order(n_train);
@@ -374,8 +419,8 @@ NeuralNet NeuralNet::train(
     double best_val = std::numeric_limits<double>::infinity();
     int n_bad = 0;
     long long adam_t = 0;
-    std::vector<RowMatrix> best_W = W;
-    std::vector<Eigen::VectorXd> best_b = b;
+    std::vector<Mat> best_W = W;
+    std::vector<Mat> best_b = b;
 
     for (int epoch = 0; epoch < opt.max_iter; ++epoch) {
         for (int i = n_train - 1; i > 0; --i)
@@ -386,18 +431,15 @@ NeuralNet NeuralNet::train(
 
         for (int start = 0; start < n_train; start += opt.batch_size) {
             const int bs = std::min(opt.batch_size, n_train - start);
-            RowMatrix xb(bs, n_features), yb(bs, n_targets);
-            for (int i = 0; i < bs; ++i) {
-                xb.row(i) = Xtr.row(batch_order[start + i]);
-                yb.row(i) = Ytr.row(batch_order[start + i]);
-            }
+            Mat xb = gather_rows(Xtr, batch_order, start, bs);
+            Mat yb = gather_rows(Ytr, batch_order, start, bs);
 
-            std::vector<RowMatrix> A;
+            std::vector<Mat> A;
             forward(xb, A);
 
             // dL/dA for L = ||A - y||^2 / (2*bs)
-            RowMatrix dA = (A[n_layers] - yb) / static_cast<double>(bs);
-            epoch_loss += (A[n_layers] - yb).array().square().sum() / (2.0 * bs);
+            Mat dA = (A[n_layers] - yb) / static_cast<double>(bs);
+            epoch_loss += accu(square(A[n_layers] - yb)) / (2.0 * bs);
             ++n_batches;
 
             ++adam_t;
@@ -407,21 +449,18 @@ NeuralNet NeuralNet::train(
             for (size_t li = n_layers; li-- > 0;) {
                 apply_activation_grad(dA, A[li + 1], acts[li]);
                 // Backprop for a dense layer is exactly two GEMMs.
-                RowMatrix gW = dA.transpose() * A[li];
-                Eigen::VectorXd gb = dA.colwise().sum().transpose();
+                Mat gW = dA.t() * A[li];
+                Mat gb = sum(dA, 0).t();
                 if (li > 0) dA = dA * W[li];
 
                 if (opt.alpha > 0.0) gW += opt.alpha * W[li];  // L2 on weights only
 
-                mW[li] = opt.beta1 * mW[li] + (1.0 - opt.beta1) * gW;
-                vW[li] = opt.beta2 * vW[li].array() + (1.0 - opt.beta2) * gW.array().square();
-                W[li].array() -= opt.learning_rate * (mW[li].array() / bc1) /
-                                 ((vW[li].array() / bc2).sqrt() + opt.epsilon);
-
-                mb[li] = opt.beta1 * mb[li] + (1.0 - opt.beta1) * gb;
-                vb[li] = opt.beta2 * vb[li].array() + (1.0 - opt.beta2) * gb.array().square();
-                b[li].array() -= opt.learning_rate * (mb[li].array() / bc1) /
-                                 ((vb[li].array() / bc2).sqrt() + opt.epsilon);
+                adam_step(W[li], gW, mW[li], vW[li],
+                          opt.learning_rate, opt.beta1, opt.beta2,
+                          bc1, bc2, opt.epsilon);
+                adam_step(b[li], gb, mb[li], vb[li],
+                          opt.learning_rate, opt.beta1, opt.beta2,
+                          bc1, bc2, opt.epsilon);
             }
         }
 
@@ -452,9 +491,8 @@ NeuralNet NeuralNet::train(
         dl.n_in = dims[l];
         dl.n_out = dims[l + 1];
         dl.activation = acts[l];
-        dl.weight.resize(static_cast<size_t>(dl.n_in) * static_cast<size_t>(dl.n_out));
-        RowMatrixMap(dl.weight.data(), dl.n_out, dl.n_in) = W[l];
-        dl.bias.assign(b[l].data(), b[l].data() + b[l].size());
+        dl.weight.assign(W[l].memptr(), W[l].memptr() + W[l].n_elem());
+        dl.bias.assign(b[l].memptr(), b[l].memptr() + b[l].n_elem());
     }
     net.validate();
     return net;

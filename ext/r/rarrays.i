@@ -325,6 +325,9 @@ SWIGINTERN SEXP SWIG_R_AppendOutput(SEXP result, SEXP obj) {
 %r_numpy_typemaps(long long,          REALSXP, REAL)
 %r_numpy_typemaps(unsigned long long, REALSXP, REAL)
 %r_numpy_typemaps(unsigned int,       REALSXP, REAL)
+// LP64 Linux: long/unsigned long are 64-bit and distinct from long long.
+%r_numpy_typemaps(long,               REALSXP, REAL)
+%r_numpy_typemaps(unsigned long,      REALSXP, REAL)
 
 %r_numpy_typemaps(int,                INTSXP,  INTEGER)
 %r_numpy_typemaps(short,              INTSXP,  INTEGER)

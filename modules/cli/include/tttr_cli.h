@@ -13,6 +13,7 @@
 // so a subcommand's help is its own page and the dispatch table in cli_main.cpp
 // stays a switch with no shared state.
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -64,8 +65,50 @@ int cmd_sm(int argc, char** argv);
 /// tttr detectors FILE [--add [--name NAME]]
 int cmd_detectors(int argc, char** argv);
 
+/// tttr sim CONFIG.json [-o OUT.ptu]
+int cmd_sim(int argc, char** argv);
+
 /// First-argument subcommand dispatch. Returns the process exit code.
 int run(int argc, char** argv);
+
+/// A path to open, holding a temporary file alive when the input was stdin.
+///
+/// `-` means stdin for every subcommand that takes an input TTTR file, so one
+/// command's output feeds the next without the user managing an intermediate
+/// file. It is **spooled to a temporary file**, not streamed: every container
+/// reader in this library seeks -- a PTU reads its header, then jumps to the
+/// record block; a PTO reads a directory at the end -- and a pipe cannot seek.
+/// Pretending otherwise would mean either a second decoder per format or a
+/// silent failure on the formats that jump.
+///
+/// The temporary is removed when this goes out of scope, including on the error
+/// paths, which is the whole reason it is a type rather than two calls.
+class InputPath {
+public:
+    InputPath() = default;
+    ~InputPath();
+    InputPath(const InputPath&) = delete;
+    InputPath& operator=(const InputPath&) = delete;
+
+    /// Resolve `spec`. `-` spools stdin; anything else is returned unchanged
+    /// and nothing is created. False on failure, with *err filled.
+    bool resolve(const std::string& spec, std::string* err);
+
+    const std::string& path() const { return path_; }
+
+    /// What to call this input in output that names its source: the path as
+    /// given, or `stdin` when it came down a pipe. Not the literal `-`, which
+    /// would land in a burst table's "First File" column and in the container's
+    /// object names as a filename nobody can resolve later.
+    const std::string& display_name() const { return display_; }
+    /// True when the input came from stdin and is being held in a temporary.
+    bool is_spooled() const { return !spooled_.empty(); }
+
+private:
+    std::string path_;
+    std::string spooled_;
+    std::string display_;
+};
 
 }  // namespace cli
 }  // namespace tttrlib

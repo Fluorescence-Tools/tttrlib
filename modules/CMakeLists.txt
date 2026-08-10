@@ -9,9 +9,10 @@
 # Declaration order is dependency order, because a module's DEPENDS must already
 # exist. The layering, bottom up:
 #
-#   util                    verbosity, SIMD dispatch, RNGs, bit ops, L-BFGS,
-#                           and the feed-forward network -- everything that does
-#                           not know what a photon is
+#   util                    verbosity, SIMD dispatch, bit ops, byte order --
+#                           plumbing, not math
+#   math                    dense linear algebra (Mat.h), optimisers (i_lbfgs),
+#                           RNGs, and the feed-forward network -- depends on util
 #   core                    the photon-stream data model -- TTTR and friends,
 #                           plus histograms: binning a photon property is as basic
 #                           as the properties themselves, and everything above
@@ -28,19 +29,18 @@
 #
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned; see modules/MODULE-DEBT.md for why core had to come first.
+add_subdirectory(algorithm)  # the algorithm descriptor + register_algorithm; depends on nothing
 add_subdirectory(util)
-add_subdirectory(math)   # numerical kernels -- Random.h and friends moved out of util
+add_subdirectory(math)   # Mat.h, NeuralNet, i_lbfgs, RNGs — depends on util
+add_subdirectory(streaming)  # online/streaming consumers — header-only
 add_subdirectory(io)   # declares `io` and, beneath it, one module per format
 add_subdirectory(plugin)  # the drop-in binary plugin ABI, host and loader; sits on `io`
-add_subdirectory(sim)
+add_subdirectory(simulation)
 add_subdirectory(core)
-add_subdirectory(imaging)
-add_subdirectory(decay)
 
-add_subdirectory(burst)
-add_subdirectory(registry)   # calls into burst
-add_subdirectory(hmm)
-add_subdirectory(pda)
+add_subdirectory(spectroscopy) # declares fcs, burst, decay, hmm, pda
+add_subdirectory(imaging)      # declares clsm, superres, localization
+add_subdirectory(registry)     # calls into burst
 
 # The tttr CLI. Last: it reads the module include-dir property, which is only
 # complete once every other module has declared itself.

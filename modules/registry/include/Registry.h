@@ -92,6 +92,20 @@ std::string fit_setup_json();
 std::string fit_objectives_json();
 
 /*!
+ * \brief The pipeline operation catalog (`operation` category), as JSON.
+ *
+ * Describes each analysis step that can appear in a burst pipeline .pto:
+ * its operation_type, inputs, outputs (column names matching mmfdb.dic),
+ * data_format, row_grain, and settings schema. This is the machine-readable
+ * contract for .pto-mfdb provenance — a consumer reads the processing list
+ * from the .pto tags, looks up each operation_type here, and can replay,
+ * validate, or render the pipeline.
+ *
+ * See OperationRegistry.cpp.
+ */
+std::string operation_registry_json();
+
+/*!
  * \brief One category of the registry, as a JSON string.
  * \return `{}` when the category does not exist.
  */
@@ -101,6 +115,16 @@ std::string registry_category_json(const std::string& category);
  * \brief Names of the available registry categories.
  */
 std::vector<std::string> registry_categories();
+
+/*!
+ * \brief One capability's algorithms, as a JSON object keyed by name.
+ *
+ * The same entries `registry_json()` puts under that capability, reachable
+ * without parsing the whole registry. Declared here as well as in
+ * AlgorithmRegistry.h so a consumer of the registry does not need the
+ * registration header.
+ */
+std::string algorithms_json(const std::string& capability);
 
 } // namespace tttrlib
 

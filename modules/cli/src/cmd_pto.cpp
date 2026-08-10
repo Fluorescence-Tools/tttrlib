@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
@@ -62,22 +63,119 @@ int usage(const std::string& msg, const std::string& help) {
     return 1;
 }
 
+const char* const kHelp =
+        "tttr pto - explore a PTO container\n\n"
+        "  tttr pto ls FILE          list objects\n"
+        "  tttr pto info FILE        file metadata, tags, annotations\n"
+        "  tttr pto tree FILE        objects with their tags and notes\n"
+        "  tttr pto tags FILE        every tag, one per line\n"
+        "  tttr pto cat FILE NAME    print an object's payload\n"
+        "  tttr pto extract FILE [OBJECT] DIR   extract one or all objects\n"
+        "  tttr pto pack -o OUT.pto PATH...     bundle files into a new container\n"
+        "  tttr pto add FILE PATH...            bundle files into an existing one\n";
+
+/*!
+ * \brief `pack` and `add`: the write side, a directory of files in one call.
+ *
+ * Its own parse, because everything else here takes at most three positionals
+ * and this takes a list of them.
+ */
+int bundle(int argc, char** argv, bool create) {
+    const std::string verb = create ? "pack" : "add";
+    cxxopts::Options opts("tttr pto " + verb,
+                          create ? "bundle files into a new PTO container"
+                                 : "bundle files into an existing PTO container");
+    opts.add_options()
+        ("o,output", "container to write (pack only)", cxxopts::value<std::string>())
+        ("title", "the container's title (pack only)", cxxopts::value<std::string>())
+        ("no-sidecars", "bundle a .set as a plain object, unlinked from its .spc")
+        ("inputs", "files and directories to bundle",
+         cxxopts::value<std::vector<std::string>>())
+        ("h,help", "print usage");
+    opts.parse_positional({"inputs"});
+
+    cxxopts::ParseResult r;
+    try {
+        r = opts.parse(argc, argv);
+    } catch (const cxxopts::exceptions::exception& e) {
+        return usage(e.what(), opts.help());
+    }
+    if (r.count("help")) {
+        std::cout << opts.help() << std::endl;
+        return 0;
+    }
+
+    std::vector<std::string> inputs =
+            r.count("inputs") ? r["inputs"].as<std::vector<std::string>>()
+                              : std::vector<std::string>();
+    // `add` takes the container first and the files after it; `pack` names the
+    // container with -o, because every positional is an input.
+    std::string container;
+    if (create) {
+        if (!r.count("output")) return usage("pack needs -o OUT.pto", opts.help());
+        container = r["output"].as<std::string>();
+    } else {
+        if (inputs.empty()) return usage("add needs a container file", opts.help());
+        container = inputs.front();
+        inputs.erase(inputs.begin());
+    }
+    if (inputs.empty()) return usage("nothing to bundle", opts.help());
+
+    PtoFile file;
+    const bool opened = create ? file.create(container, r.count("title")
+                                                               ? r["title"].as<std::string>()
+                                                               : std::string())
+                               : file.open(container, true);
+    if (!opened) {
+        std::cerr << "error: cannot open " << container << ": " << file.error() << std::endl;
+        return 1;
+    }
+    // MuxingApp is already "tttrlib", the library that laid the bytes down.
+    // WritingApp is who asked for them, which for a container built here is
+    // this command -- and is the only record of that afterwards.
+    if (create) file.set_writing_app("tttr pto pack");
+
+    const std::vector<PtoObject> made =
+            tttr::io::pto_bundle_files(file, inputs, r.count("no-sidecars") == 0);
+    // Bundling stops at the first path it cannot read, and says so there. What
+    // was written before that is still in the file, and still uncommitted.
+    if (!file.error().empty()) {
+        std::cerr << "error: " << file.error() << std::endl;
+        return 1;
+    }
+    if (!file.commit()) {
+        std::cerr << "error: cannot commit " << container << ": " << file.error() << std::endl;
+        return 1;
+    }
+    for (const auto& o : made) print_object(o);
+    std::cout << made.size() << " object" << (made.size() == 1 ? "" : "s") << " in "
+              << container << std::endl;
+    return 0;
+}
+
 }  // namespace
 
 int tttrlib::cli::cmd_pto(int argc, char** argv) {
     if (argc < 2) {
-        std::cout << "tttr pto - explore a PTO container\n\n"
-                     "  tttr pto ls FILE          list objects\n"
-                     "  tttr pto info FILE        file metadata, tags, annotations\n"
-                     "  tttr pto tree FILE        objects with their tags and notes\n"
-                     "  tttr pto tags FILE        every tag, one per line\n"
-                     "  tttr pto cat FILE NAME    print an object's payload\n"
-                     "  tttr pto extract FILE [OBJECT] DIR   extract one or all objects\n";
+        std::cout << kHelp;
         return argc == 2 ? 0 : 1;
     }
     std::string sub = argv[1];
+    if (sub == "-h" || sub == "--help") {
+        std::cout << kHelp;
+        return 0;
+    }
     argc -= 1;  // drop the subcommand: argv[0] becomes program name for cxxopts
     argv += 1;
+
+    if (sub == "pack" || sub == "add") {
+        try {
+            return bundle(argc, argv, sub == "pack");
+        } catch (const std::exception& e) {
+            std::cerr << "error: " << e.what() << std::endl;
+            return 1;
+        }
+    }
 
     cxxopts::Options opts("tttr pto " + sub, "PTO container explorer");
     opts.add_options()
@@ -96,7 +194,11 @@ int tttrlib::cli::cmd_pto(int argc, char** argv) {
     } catch (const cxxopts::exceptions::exception& e) {
         return usage(e.what(), opts.help());
     }
-    if (r.count("help") || !r.count("file")) {
+    if (r.count("help")) {
+        std::cout << opts.help() << std::endl;
+        return 0;
+    }
+    if (!r.count("file")) {
         return usage("a container file is required", opts.help());
     }
 
@@ -301,6 +403,11 @@ int tttrlib::cli::cmd_pto(int argc, char** argv) {
                     progress.set_total(1);
                     progress.begin();
                     std::string out = dir.empty() ? obj : dir;
+                    std::error_code ec;
+                    auto parent = std::filesystem::u8path(out).parent_path();
+                    if (!parent.empty()) {
+                        std::filesystem::create_directories(parent, ec);
+                    }
                     if (file.extract(uid, out)) {
                         progress.tick();
                         progress.finish();
@@ -324,6 +431,11 @@ int tttrlib::cli::cmd_pto(int argc, char** argv) {
                             name = std::to_string(o.uid) + "-" + name;
                         used.push_back(name);
                         std::string path = dir + sep + name;
+                        std::error_code ec;
+                        auto parent = std::filesystem::u8path(path).parent_path();
+                        if (!parent.empty()) {
+                            std::filesystem::create_directories(parent, ec);
+                        }
                         if (!file.extract(o.uid, path)) {
                             std::cerr << "error: extraction failed for uid " << o.uid
                                       << ": " << file.error() << std::endl;

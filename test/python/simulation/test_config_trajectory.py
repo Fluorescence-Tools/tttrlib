@@ -20,6 +20,26 @@ def test_default_json_parses_and_builds():
     assert eng.n_photons() == 0
 
 
+def test_background_without_decay_warns(capfd):
+    """A background with no background_decay writes every background photon
+    into micro-time channel 0 -- what scatter looks like, not what
+    uncorrelated background is. Until the default changes, the config must
+    at least be told (BUGS.md 2026-08-10)."""
+    cfg = json.loads(tttrlib.SimEngine.default_json())
+    cfg["background"] = [0.02, 0.02]
+    cfg.pop("background_decay", None)
+    tttrlib.SimEngine.from_json(json.dumps(cfg))
+    assert "background_decay" in capfd.readouterr().err
+
+    # Declaring the decay, or an all-zero background, is silent.
+    cfg["background_decay"] = {"pattern": [1.0, 1.0], "dt": 0.008}
+    tttrlib.SimEngine.from_json(json.dumps(cfg))
+    del cfg["background_decay"]
+    cfg["background"] = [0.0, 0.0]
+    tttrlib.SimEngine.from_json(json.dumps(cfg))
+    assert "background_decay" not in capfd.readouterr().err
+
+
 @pytest.mark.slow
 def test_json_configured_run_and_seed_changes_output():
     cfg = {

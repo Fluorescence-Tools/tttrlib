@@ -349,6 +349,62 @@ def test_outgrowing_the_room_keeps_the_uid_and_moves_the_object(made):
     assert g.read(uid_raw) == original, "a neighbour was damaged"
 
 
+def test_an_update_corrects_the_row_count_the_header_claims(made):
+    """`pto ls`, `pto info` and the TUI trust the object header's row count,
+    not the store's own, so an update that finds a different number of rows
+    must correct the header too -- in place, relocated, and on a file that was
+    closed and reopened between the write and the update."""
+    path, _, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+    assert f.object(uid_bursts).rows == 40
+
+    # In place: the smaller payload stays where it lies, the count follows.
+    assert tttrlib.pto_update_store(f, uid_bursts, store(10, name="Tau")), f.error()
+    assert f.object(uid_bursts).rows == 10
+    assert f.commit(), f.error()
+    f.close()
+
+    # The file says it too, which is what `pto ls` reads.
+    g = tttrlib.PtoFile()
+    assert g.open(path, writable=True), g.error()
+    assert g.object(uid_bursts).rows == 10
+
+    # Relocated: the fresh header carries the count with it.
+    assert tttrlib.pto_update_store(g, uid_bursts, store(20000, name="Tau")), g.error()
+    assert g.object(uid_bursts).rows == 20000
+    assert g.commit(), g.error()
+    g.close()
+
+    # An update on a reopened file patches the header where the parser found
+    # it -- the `tttr sm` re-run scenario, two processes apart.
+    h = tttrlib.PtoFile()
+    assert h.open(path, writable=True), h.error()
+    assert h.object(uid_bursts).rows == 20000
+    assert tttrlib.pto_update_store(h, uid_bursts, store(70, name="Tau")), h.error()
+    assert h.commit(), h.error()
+    h.close()
+
+    k = tttrlib.PtoFile()
+    assert k.open(path), k.error()
+    assert k.object(uid_bursts).rows == 70
+
+
+def test_compact_keeps_the_row_count(made):
+    """Compaction copies every object into a fresh file; the row count is part
+    of the object and has to arrive with it."""
+    path, _, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path), f.error()
+    to = path + ".compact.pto"
+    assert f.compact(to, True), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(to), g.error()
+    assert g.object(uid_bursts).rows == 40
+
+
 def test_nothing_but_the_rewritten_object_ever_moves(made):
     """The claim the whole format rests on, stated as the shape it is used in:
     a photon stream that is written once beside a table that keeps changing
@@ -552,6 +608,71 @@ def test_a_tag_with_no_target_is_about_the_file(tmp_path):
     g = tttrlib.PtoFile()
     g.open(path)
     assert [x.name for x in g.tags_for(0)] == ["operator"]
+
+
+def _tag(target, name, *, text=None, uid=None):
+    t = tttrlib.PtoTag()
+    t.target = target
+    t.name = name
+    if uid is not None:
+        t.type = tttrlib.PtoType_UID
+        t.u = uid
+    else:
+        t.type = tttrlib.PtoType_Text
+        t.text = text
+    return t
+
+
+def test_adding_the_same_fact_twice_records_it_once(made):
+    """Re-running an analysis re-writes its parent edge, and a container
+    analysed three times used to claim the same source four times. An exact
+    duplicate is the same fact; two different parents are two facts."""
+    path, uid_photons, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+
+    for _ in range(3):
+        f.add_tag(_tag(uid_bursts, "pto.parent", uid=uid_photons))
+    parents = [t.u for t in f.tags_for(uid_bursts) if t.name == "pto.parent"]
+    assert parents == [uid_photons], "one source, recorded %d times" % len(parents)
+
+    # A second, different parent is not a duplicate and both survive.
+    f.add_tag(_tag(uid_bursts, "pto.parent", uid=12345))
+    parents = [t.u for t in f.tags_for(uid_bursts) if t.name == "pto.parent"]
+    assert parents == [uid_photons, 12345]
+
+
+def test_set_tag_replaces_what_was_stated_before(made):
+    """set_tag is "the value IS x": re-describing an object leaves one value,
+    the latest, and does not touch other objects or other names."""
+    path, uid_photons, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+
+    f.set_tag(_tag(uid_bursts, "_mmfdb_artifact.row_grain", text="burst"))
+    f.set_tag(_tag(uid_bursts, "_mmfdb_artifact.row_grain", text="photon"))
+    f.set_tag(_tag(uid_photons, "_mmfdb_artifact.row_grain", text="event"))
+    f.commit()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    g.open(path)
+    grains = [t.text for t in g.tags_for(uid_bursts)
+              if t.name == "_mmfdb_artifact.row_grain"]
+    assert grains == ["photon"], "re-describing left %r" % grains
+    assert [t.text for t in g.tags_for(uid_photons)
+            if t.name == "_mmfdb_artifact.row_grain"] == ["event"]
+
+
+def test_clear_tags_for_one_name_leaves_the_rest(made):
+    path, _, uid_bursts, _, _ = made
+    f = tttrlib.PtoFile()
+    assert f.open(path, writable=True), f.error()
+    f.add_tag(_tag(uid_bursts, "a", text="1"))
+    f.add_tag(_tag(uid_bursts, "b", text="2"))
+    f.clear_tags(uid_bursts, "a")
+    names = sorted(t.name for t in f.tags_for(uid_bursts))
+    assert "a" not in names and "b" in names
 
 
 def test_a_tag_may_point_at_an_object_that_is_gone(made):
@@ -1531,8 +1652,15 @@ def _in_another_process(body, *args):
     import subprocess
     import sys
     src = "import tttrlib, os, sys\n" + textwrap.dedent(body)
+    env = dict(os.environ)
+    build_ext = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "build", "ext"
+    )
+    if os.path.isdir(build_ext):
+        env["PYTHONPATH"] = build_ext + os.pathsep + env.get("PYTHONPATH", "")
     r = subprocess.run([sys.executable, "-c", src, *map(str, args)],
-                       capture_output=True, text=True, timeout=60)
+                       capture_output=True, text=True, timeout=60, env=env)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
@@ -1656,3 +1784,226 @@ def test_a_writer_that_dies_does_not_lock_the_file_forever(made):
     after = tttrlib.PtoFile()
     assert after.open(path, True), after.error()
     after.close()
+
+
+def test_disassemble_creates_directories(tmp_path):
+    """disassemble and extract must create parent directories if an object's
+    name implies a directory structure."""
+    pto_path = str(tmp_path / "nested.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(pto_path)
+    f.add("burst_table", "csv", "countrate_All 0.2000#30/bursts", b"col1,col2\n1,2\n")
+    assert f.commit(), f.error()
+    f.close()
+
+    unpack_dir = str(tmp_path / "unpack")
+    g = tttrlib.PtoFile()
+    assert g.open(pto_path)
+    written = g.disassemble(unpack_dir)
+    assert len(written) == 1
+    assert os.path.exists(os.path.join(unpack_dir, "countrate_All 0.2000#30", "bursts"))
+    assert open(written[0], "rb").read() == b"col1,col2\n1,2\n"
+    g.close()
+
+
+
+# -- bundling files ---------------------------------------------------------------
+#
+# A measurement is rarely one file, and the folder it arrives as is what has to
+# go in. The claims below are the ones that make that folder survive the trip:
+# what each file IS is worked out rather than declared, a `.set` stays tied to
+# its `.spc`, and the layout comes back out the way it went in.
+
+SPC_QC = DATA_ROOT / "bh" / "bh_spcqc004.spc"
+SPC_QC_SET = DATA_ROOT / "bh" / "bh_spcqc004.set"
+
+
+def _folder(root):
+    """A measurement as it arrives: an instrument file, its sidecar, a note."""
+    (root / "raw").mkdir(parents=True, exist_ok=True)
+    (root / "notes").mkdir(parents=True, exist_ok=True)
+    for path in (SPC_QC, SPC_QC_SET):
+        (root / "raw" / path.name).write_bytes(path.read_bytes())
+    (root / "notes" / "protocol.txt").write_text("sample: DNA ruler\n")
+    (root / "notes" / "bursts.csv").write_text("burst,ms\n1,2.5\n")
+    (root / "meta.json").write_text('{"operator": "tp"}')
+    return root
+
+
+@needs_data
+def test_a_photon_stream_is_classified_by_its_contents(tmp_path):
+    """Four formats claim ".spc" and only the bytes say which one this is. An
+    extension table would have made every one of them an SPC-130."""
+    if not SPC_QC.exists():
+        pytest.skip("no B&H SPC-QC fixture")
+    guess = tttrlib.pto_classify_path(str(SPC_QC))
+    assert guess.kind == "photons"
+    assert guess.encoding == "spc-qc"
+
+    # The same name, without the bytes behind it, is not a photon stream.
+    absent = tttrlib.pto_classify_path(str(tmp_path / "bh_spcqc004.spc"))
+    assert absent.kind != "photons"
+
+
+def test_what_a_name_alone_says(tmp_path):
+    known = {
+        "notes.md": ("attachment", "text", "text/markdown"),
+        "bursts.csv": ("table", "csv", "text/csv"),
+        "figure.png": ("image", "png", "image/png"),
+        "protocol.pdf": ("attachment", "pdf", "application/pdf"),
+        "setup.json": ("attachment", "json", "application/json"),
+    }
+    for name, expected in known.items():
+        guess = tttrlib.pto_classify_path(name)
+        assert (guess.kind, guess.encoding, guess.media_type) == expected, name
+
+    # Anything unrecognised is carried, named, and left alone -- never refused.
+    unknown = tttrlib.pto_classify_path("instrument.qqq")
+    assert (unknown.kind, unknown.encoding, unknown.media_type) == ("attachment", "raw", "")
+
+
+def test_attach_names_the_object_after_the_file(tmp_path):
+    (tmp_path / "sub").mkdir()
+    note = tmp_path / "sub" / "note.md"
+    note.write_text("hello")
+
+    f = tttrlib.PtoFile()
+    assert f.create(str(tmp_path / "one.pto")), f.error()
+    uid = f.attach(str(note))
+    assert uid
+    o = f.object(uid)
+    # The filename, not the path it was found at: a container is not a copy of
+    # somebody's directory layout.
+    assert o.name == "note.md"
+    assert (o.kind, o.encoding, o.media_type) == ("attachment", "text", "text/markdown")
+    assert bytes(f.read(uid)) == b"hello"
+
+    # Every override is honoured, and overriding one does not lose the others.
+    other = f.attach(str(note), "renamed", "table")
+    assert f.object(other).name == "renamed"
+    assert f.object(other).kind == "table"
+    assert f.object(other).encoding == "text"
+    f.close()
+
+
+def test_attach_refuses_a_path_that_is_not_there(tmp_path):
+    f = tttrlib.PtoFile()
+    assert f.create(str(tmp_path / "t.pto"))
+    assert f.attach(str(tmp_path / "absent.ptu")) == 0
+    assert f.error()
+    f.close()
+
+
+@needs_data
+def test_a_folder_becomes_one_file_and_a_folder_again(tmp_path):
+    """The round trip that is the whole point: what went in comes back out,
+    byte for byte, with its directories."""
+    if not SPC_QC.exists():
+        pytest.skip("no B&H SPC-QC fixture")
+    folder = _folder(tmp_path / "measurement")
+
+    path = str(tmp_path / "run.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path, "DNA ruler"), f.error()
+    made = tttrlib.pto_bundle(f, folder)
+    assert f.commit(), f.error()
+    f.close()
+
+    # A directory means everything under it, named relative to it -- and in
+    # sorted order, so the same folder bundles the same way twice running.
+    names = [o.name for o in made]
+    assert names == ["meta.json", "notes/bursts.csv", "notes/protocol.txt",
+                     "raw/bh_spcqc004.set", "raw/bh_spcqc004.spc"]
+
+    g = tttrlib.PtoFile()
+    assert g.open(path), g.error()
+    back = tmp_path / "back"
+    assert len(g.disassemble(str(back))) == len(names)
+    g.close()
+
+    for name in names:
+        assert (back / name).read_bytes() == (folder / name).read_bytes(), name
+
+
+@needs_data
+def test_a_set_stays_tied_to_its_spc(tmp_path):
+    """Half a Becker & Hickl header lives in the `.set`, so the pair has to be
+    handed to the reader together -- and after bundling, only the container
+    remembers they belong to each other."""
+    if not SPC_QC.exists():
+        pytest.skip("no B&H SPC-QC fixture")
+    folder = _folder(tmp_path / "measurement")
+
+    path = str(tmp_path / "run.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path), f.error()
+    made = {o.name: o.uid for o in tttrlib.pto_bundle(f, folder)}
+    assert f.commit(), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(path), g.error()
+    links = [(t.target, t.u) for t in g.tags() if t.name == tttrlib.kPtoSidecarTag]
+    assert links == [(made["raw/bh_spcqc004.set"], made["raw/bh_spcqc004.spc"])]
+    g.close()
+
+    # And the stream reads out of the container exactly as it reads on its own.
+    inside = tttrlib.pto_events(path + "|raw/bh_spcqc004.spc")
+    outside = tttrlib.TTTR(str(folder / "raw" / "bh_spcqc004.spc"))
+    assert len(inside) == len(outside)
+    assert np.array_equal(inside.macro_times, outside.macro_times)
+
+
+@needs_data
+def test_bundling_can_be_told_not_to_link_the_sidecar(tmp_path):
+    if not SPC_QC.exists():
+        pytest.skip("no B&H SPC-QC fixture")
+    folder = _folder(tmp_path / "measurement")
+    path = str(tmp_path / "run.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path), f.error()
+    tttrlib.pto_bundle(f, folder, link_sidecars=False)
+    assert f.commit(), f.error()
+    assert not [t for t in f.tags() if t.name == tttrlib.kPtoSidecarTag]
+    f.close()
+
+
+def test_a_container_does_not_bundle_itself(tmp_path):
+    """The container being written lives in the folder being bundled, and a
+    file cannot carry itself."""
+    folder = tmp_path / "here"
+    folder.mkdir()
+    (folder / "note.txt").write_text("hello")
+
+    path = str(folder / "run.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path), f.error()
+    made = tttrlib.pto_bundle(f, folder)
+    assert f.commit(), f.error()
+    assert [o.name for o in made] == ["note.txt"]
+    f.close()
+
+
+def test_the_media_type_is_written_down_and_survives_compaction(tmp_path):
+    """FileMediaType was in the format and readable from the day PTO existed,
+    and nothing but an embedded store ever wrote one."""
+    (tmp_path / "figure.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0" * 32)
+
+    path = str(tmp_path / "a.pto")
+    f = tttrlib.PtoFile()
+    assert f.create(path), f.error()
+    uid = f.attach(str(tmp_path / "figure.png"))
+    assert f.commit(), f.error()
+    f.close()
+
+    g = tttrlib.PtoFile()
+    assert g.open(path), g.error()
+    assert g.object(uid).media_type == "image/png"
+    small = str(tmp_path / "b.pto")
+    assert g.compact(small), g.error()
+    g.close()
+
+    h = tttrlib.PtoFile()
+    assert h.open(small), h.error()
+    assert h.object(uid).media_type == "image/png"
+    h.close()

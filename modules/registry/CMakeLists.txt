@@ -16,15 +16,10 @@
 tttrlib_add_module(
     NAME     registry
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Registry.cpp"
-             # The fit description tables live here, not in `decay`: Registry.cpp's
-             # build() calls fit_models_json() / fit_setup_json() /
-             # fit_objectives_json() directly, so putting them in decay makes
-             # registry and decay each depend on the other. They are descriptions
-             # of a capability rather than an implementation of one, which is the
-             # same reason they belong on this side of the line.
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FitRegistry.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/OperationRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  io plugin util core burst   # burst_search_algorithms_json lives in burst now
+    DEPENDS  io plugin util core burst algorithm   # burst_search_algorithms_json lives in burst now
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES Registry.i
     TEST_DIR test/python

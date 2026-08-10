@@ -171,7 +171,7 @@ def test_reassign_photons_conserves_photons_and_concentrates_them():
     my, mx = mag * clsm.n_lines, mag * clsm.n_pixel
 
     def spread(tttr):
-        flat = np.asarray(tttr.macro_times) % (my * mx)
+        flat = (np.asarray(tttr.macro_times) % (my * mx)).astype(np.intp)
         counts = np.bincount(flat, minlength=my * mx).astype(float)
         p = counts / counts.sum()
         nz = p[p > 0]

@@ -1,7 +1,31 @@
 # PRD-016 — JavaScript bindings via SWIG Node-API
 
-> **PRD #:** 016 · **Status:** Implemented (M1–M4, M6 partial) · **Created:** 2026-08-05 · **Owner:** tpeulen
+> **PRD #:** 016 · **Status:** 🟢 Complete (M1–M6 done; the npm release itself is a release action, not a milestone) · **Created:** 2026-08-05 · **Updated:** 2026-08-10 · **Owner:** tpeulen
 > **Related:** PRD-002 (Java ND marshalling — the same problem, one language over), PRD-015 (conformance suite — the acceptance test), PRD-017 (web UI — the first consumer), the module rework on `development`
+>
+> **Where it stands (2026-08-10).** All five acceptance criteria are met and
+> verified, the last two from an **actually installed npm tarball** rather than a
+> build directory: `npm install ./tttrlib-0.27.0.tgz` into an empty project, then
+> `require('tttrlib')` opens `bh/bh_spc132.spc` and prints `183657`, and
+> `macroTimes.reduce((a,b)=>a+b, 0n)` is `443406877425185n`.
+> `check_swig_multilang.sh` generates all four wrappers with Python's
+> byte-identical, and **PRD-015's case list passes in JavaScript — 96/96 cases
+> across 19 areas, with no `unsupported` declarations**.
+>
+> The no-copy criterion was *claimed* rather than tested until 2026-08-10 — the
+> test asserting it only checked that `arraysAreZeroCopy()` returns a boolean,
+> which a fully-copying build also satisfies. It is now asserted by writing
+> through an `ARGOUTVIEW` output and an `INPLACE` argument, and the suite has
+> been run against a `-DTTTRLIB_JS_COPY_ARRAYS` build (green, and disagreeing
+> with the zero-copy build exactly where it must), closing the risk this PRD
+> raised about hosts that refuse external `ArrayBuffer`s.
+>
+> **What is genuinely still untested:** four of the five platform triples have
+> never been built at all — only darwin-arm64 has, locally. The `prebuild_js`,
+> `pack_js` and `asan_js_lnx` CI jobs are written and have never run. Treat
+> their first run as part of the work. Nothing has been published to npm;
+> `publish_npm` fires on a release and needs an `NPM_TOKEN` repository secret
+> that does not exist yet. See [open items](../bindings/open-items.md).
 
 ## Summary
 
@@ -166,6 +190,12 @@ linux-x64/arm64, darwin-x64/arm64, win32-x64, loaded by `node-gyp-build`. Node-A
 ABI stability means one binary per platform covers every supported Node — the
 single strongest argument for `-napi` over `-node`.
 
+> **What was built instead of `prebuildify`.** `prebuildify` drives `node-gyp`,
+> and this project's addon is a CMake target linking 35 module libraries — there
+> is no `binding.gyp` to drive. Only the *output layout* matters to
+> `node-gyp-build`, so `scripts/prebuild.mjs` produces that layout from
+> `cmake --install` directly. See *What was built*, item 4.
+
 ### Verification
 
 - `tools/check_swig_multilang.sh` grows a fourth generation pass, and asserts
@@ -237,11 +267,68 @@ files again:
   out, **inside comments** in a macro body. Either silently truncates the macro,
   and the error points hundreds of lines away at the macro's opening.
 
+**4. Packaging was a relocatability problem, not a metadata problem — and
+`prebuildify` could not be used.** *Packaging* above assumed the shape of the
+work was "run `prebuildify`, upload". Neither half held.
+
+`prebuildify` shells out to `node-gyp`, which needs a `binding.gyp` describing
+the whole build. This addon is a CMake target linking 35 module libraries,
+HDF5, OpenMP and a vendored libtiff; a second, hand-maintained description of
+that in `binding.gyp` is precisely the drift this project avoids everywhere
+else. Only the *output* is a contract — `prebuilds/<platform>-<arch>/` with
+`node.napi[.<libc>].node` inside — so `scripts/prebuild.mjs` produces that
+layout from CMake and `node-gyp-build` resolves it unchanged. The published
+tarball ships binaries only; there is deliberately no source fallback, because
+a fallback that cannot work is worse than an error message that names the
+missing triple.
+
+The real work was that **the built addon was never relocatable**. It linked
+~35 sibling `libtttrlib_*` libraries plus HDF5 and libomp through absolute
+build-tree RPATHs, and `ext/CMakeLists.txt` carried a comment asserting the
+module libraries "sit next to the addon in js-pkg/, the same layout the npm
+package ships" — describing a staging step that did not exist. Everything
+worked because every test ran on the machine that built it. Three changes
+follow:
+
+- prebuilds are built `-DTTTRLIB_MODULE_TYPE=STATIC`: one 14 MB `.node` with
+  two external dependencies instead of 35 sibling libraries with dozens. The
+  risk this raises is real and specific — a static archive can drop the
+  translation units whose only purpose is a registration side effect — so the
+  smoke test counts registry entries rather than merely loading the binary
+  (52 entries across 11 areas, 7 burst searches, 14 containers);
+- the artefact comes from `cmake --install --component js`, never a copy out of
+  the build tree. Only *install* rewrites RPATHs to `@loader_path` / `$ORIGIN`;
+  a copied binary is indistinguishable from a correct one until it reaches a
+  machine without the build directory. `install(RUNTIME_DEPENDENCY_SET)`
+  collects the third-party libraries and fixes their install names too;
+- `prebuild.mjs` **verifies** rather than trusts: every dynamic dependency must
+  resolve inside the prebuild directory or to an OS library, no RPATH may be
+  absolute, and it refuses to emit a prebuild that fails either check. This is
+  the check the missing staging step needed and never had.
+
+**5. A concurrent change had already broken the registry-driven surface.**
+PRD-032 replaced the burst-search JSON literal with registrations, and its
+verification reported "0 entries changed" — a comparison of *parsed* JSON,
+which is exactly the step that discards key order.
+`TTTR::burst_search_algorithms_json` round-tripped through `nlohmann::json`
+(a `std::map`), sorting `params_schema.properties` alphabetically. That order
+is the C++ argument order, and JavaScript has no `**kwargs`, so
+`burstSearchByName` began passing `max_false_alarm_rate` where `p0` belongs.
+Python never noticed. Fixed to `nlohmann::ordered_json`, and the invariant is
+now pinned: `required` preserves declaration order, so it must be a subsequence
+of the property keys — which sorting breaks immediately.
+
+The general lesson is worth more than the fix: **the JavaScript binding is the
+project's only consumer that depends on registry key order**, so a registry
+change that Python, R and Java all survive can still break it silently.
+
 ## Milestones
 
-Status: **M1–M4 done**, M5 partial (npm package and `index.d.ts` written;
-prebuilds and the CI job not yet), M6 partial (the canonical reference case list
-passes; the full PRD-015 list is open).
+Status (2026-08-10): **M1–M6 done.** M5 closed last: `scripts/prebuild.mjs`,
+`scripts/pack.mjs`, the `js` CMake install component, `node-gyp-build` loading,
+and the `prebuild_js` / `pack_js` / `publish_npm` / `asan_js_lnx` CI jobs.
+Verified end to end on darwin-arm64 from an installed tarball; the other four
+triples and every new CI job await their first run.
 
 - **M1 — spike.** Generate and build a JS module over `TTTR` alone, no arrays:
   open a `.spc`, assert `size` and a header field from Node. Proves the toolchain
@@ -256,6 +343,16 @@ passes; the full PRD-015 list is open).
 - **M5 — package & CI.** npm package, prebuilds, `build_test_js_lnx`,
   `check_swig_multilang.sh` extension, hand-written `index.d.ts`.
 - **M6 — conformance.** PRD-015 JS runner green on the shared case list.
+
+## Acceptance, as measured
+
+| Criterion | Result |
+|---|---|
+| `npm i tttrlib && node -e "…"` opens `bh/bh_spc132.spc` and prints `183657` | ✅ from the packed tarball installed into an empty project |
+| `macro_times` sums to `443406877425185n` | ✅ (`BigUint64Array`; this PRD wrote `BigInt64Array` — the container is unsigned, the value is the one stated) |
+| No copy on `ARGOUTVIEW` paths | ✅ asserted by aliasing, and cross-checked against a `-DTTTRLIB_JS_COPY_ARRAYS` build that disagrees where it must |
+| `check_swig_multilang.sh` generates four wrappers, Python's byte-identical | ✅ |
+| PRD-015's case list passes in JavaScript | ✅ 96/96 across 19 areas, no `unsupported` |
 
 ## Risks
 

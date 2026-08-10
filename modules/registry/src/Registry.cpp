@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Registry.h"
+#include "AlgorithmRegistry.h"
 
 #include <nlohmann/json.hpp>
 
@@ -203,6 +204,50 @@ json build() {
     root["fit"] = json::parse(fit_models_json());
     root["fit_setup"] = json::parse(fit_setup_json());
     root["objective"] = json::parse(fit_objectives_json());
+    root["operation"] = json::parse(operation_registry_json());
+
+    // PRD-027 Part 3: categories built from live `register_algorithm` calls
+    // rather than from a hand-authored literal. These three families worked and
+    // were invisible -- no entry meant no UI listing, no schema for the
+    // provenance system to validate or replay against, and no name for a plugin
+    // to offer a competing implementation under.
+    for (const std::string& capability : tttrlib::algorithm_capabilities()) {
+        json entries = json::parse(tttrlib::algorithms_json(capability));
+        if (entries.empty()) continue;
+        if (root.contains(capability)) {
+            // A live registration is additive to a category that still has a
+            // literal behind it, and never silently replaces an entry there:
+            // during the migration both sources are real, and a name collision
+            // is a mistake to surface, not to resolve by ordering.
+            json merged = root[capability];
+            for (auto it = entries.begin(); it != entries.end(); ++it)
+                if (!merged.contains(it.key())) merged[it.key()] = it.value();
+            root[capability] = merged;
+        } else {
+            root[capability] = entries;
+        }
+    }
+
+    // The `operation` category is the union of the hand-authored entries and
+    // every `can_replay` registration, so a consumer reads one category
+    // whichever side an operation was declared on.
+    {
+        json ops = root["operation"];
+        json live = json::parse(tttrlib::algorithm_operations_json());
+        for (auto it = live.begin(); it != live.end(); ++it)
+            if (!ops.contains(it.key())) ops[it.key()] = it.value();
+        root["operation"] = ops;
+    }
+
+    // Splice plugin-provided operations into the operation category
+    std::string plugin_ops = tttrlib::PluginHost::operations_json();
+    if (!plugin_ops.empty()) {
+        json ops = root["operation"];
+        json extra = json::parse("{" + plugin_ops + "}");
+        for (auto it = extra.begin(); it != extra.end(); ++it)
+            ops[it.key()] = it.value();
+        root["operation"] = ops;
+    }
     return root;
 }
 

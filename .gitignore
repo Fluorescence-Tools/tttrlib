@@ -148,3 +148,9 @@ ext/js/pkg/*.so
 ext/js/pkg/*.so.*
 ext/js/pkg/*.dll
 ext/js/pkg/package-lock.json
+# scripts/prebuild.mjs output (one directory per platform triple) and the
+# directory scripts/pack.mjs assembles for publication. Both are release
+# artefacts built by CI from source; nothing in them belongs in the repository.
+ext/js/pkg/prebuilds/
+build-js-prebuild/
+npm-package/

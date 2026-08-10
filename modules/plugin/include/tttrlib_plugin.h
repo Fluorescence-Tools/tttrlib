@@ -355,6 +355,53 @@ typedef struct tttrlib_burst_search_v1 {
 } tttrlib_burst_search_v1;
 
 /*!
+ * \brief A generic pipeline operation contributed by a plugin.
+ *
+ * The fourth capability type (after container, decay_fit, burst_search).
+ * Unlike those, an operation is not a single C function call — it is a
+ * self-describing analysis step with a category, settings schema, and
+ * declared inputs/outputs. This is what the .pto provenance system reads
+ * and what the burst pipeline dispatches through.
+ *
+ * A plugin that registers an operation provides an ``execute`` function
+ * that receives a JSON settings string and opaque input/output buffer
+ * pointers. The host wraps it into the registry and the pipeline calls
+ * it by name — no recompilation of tttrlib required.
+ *
+ * Appended after \ref tttrlib_burst_search_v1, following the same
+ * \ref struct_size forward-compatibility rule.
+ */
+typedef struct tttrlib_operation_v1 {
+    uint32_t struct_size;         /*!< sizeof(tttrlib_operation_v1). */
+
+    const char* name;             /*!< Operation name (mmfdb operation_type). */
+    const char* label;            /*!< Human-readable label. */
+    const char* summary;          /*!< One-line description. */
+    const char* category;         /*!< Capability category string, e.g.
+                                   *   "burst_search", "companion_analysis",
+                                   *   "irf_extraction", "fcs", "hmm", "pda". */
+
+    const char* settings_schema;  /*!< JSON Schema of parameters. */
+    const char* inputs_json;      /*!< JSON describing required/optional inputs. */
+    const char* outputs_json;     /*!< JSON: output column names (mmfdb items). */
+    const char* row_grain;        /*!< "burst", "curve_point", "photon", ... */
+    int can_replay;               /*!< 1 if re-executable from settings+inputs. */
+
+    /*!
+     * Execute the operation.
+     * \param ctx           Plugin state.
+     * \param settings_json Parameters as a JSON string.
+     * \param input_spec    JSON describing the input artifacts.
+     * \param output_spec   JSON describing where to write results.
+     * \return \ref TTTRLIB_OK or an error status.
+     */
+    int (*execute)(void* ctx, const char* settings_json,
+                   const char* input_spec, const char* output_spec);
+
+    void* ctx;                    /*!< The plugin's own state. */
+} tttrlib_operation_v1;
+
+/*!
  * \brief What the host offers the plugin. Valid for the process lifetime.
  *
  * Handed to \ref tttrlib_plugin_init_v1. A plugin may keep the pointer.
@@ -398,6 +445,13 @@ typedef struct tttrlib_host_v1 {
     /*! Contribute a burst search. Only valid during init. Appended after
      *  \ref register_decay_fit; the same \ref struct_size rule applies. */
     int (*register_burst_search)(const tttrlib_burst_search_v1* search);
+
+    /*! Contribute a generic pipeline operation. Only valid during init.
+     *  Appended after \ref register_burst_search; the same \ref struct_size
+     *  rule applies. This is the seam that lets a plugin register a new
+     *  algorithm type (BVA, 2CDE, IRF extraction, FCS, ...) without
+     *  editing tttrlib source. */
+    int (*register_operation)(const tttrlib_operation_v1* op);
 } tttrlib_host_v1;
 
 /*!

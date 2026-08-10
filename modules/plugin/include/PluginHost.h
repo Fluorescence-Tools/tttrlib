@@ -178,6 +178,23 @@ public:
      * dispatch by name rather than by attribute.
      */
     static std::string burst_searches_json();
+
+    // ── generic operations (PRD-027) ───────────────────────────────
+
+    /// The operation registered under \p name, or nullptr.
+    static const tttrlib_operation_v1* operation(const std::string& name);
+
+    /// Every operation a plugin registered, in registration order.
+    static const std::vector<const tttrlib_operation_v1*>& operations();
+
+    /*!
+     * \brief Plugin operations as registry entries, ready to splice into the
+     *        ``operation`` category.
+     *
+     * Same shape as \ref burst_searches_json: everything needed is in the C
+     * table. Entries carry ``"provider": "plugin"``.
+     */
+    static std::string operations_json();
 };
 
 }  // namespace tttrlib

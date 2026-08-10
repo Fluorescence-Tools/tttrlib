@@ -3,6 +3,7 @@
 #include "HMM.h"
 #include "HMMEmission.h"
 #include "HMMBayes.h"
+#include "HMMVB.h"
 #include "Channel.h"
 #include "BurstFilter.h"
 %}
@@ -82,6 +83,10 @@ TTTRLIB_NOGIL(tttrlib::HMM::sample_paths)
 
 // Same ordering reason as above: HMM.h's `sample` returns an HmmPosterior.
 %include "HMMBayes.h"
+
+// VB needs HMM.h (for HmmModel) included first.
+TTTRLIB_NOGIL(tttrlib::fit_vb)
+%include "HMMVB.h"
 
 // Return the HMM decoded photon/state offsets only where 64-bit containers
 // are representable (Python via numpy, Java via long[]); R/JS cannot proxy

@@ -94,8 +94,9 @@ struct TrainOptions {
  * :func:`predict` runs a forward pass.  Models round-trip through JSON, so a net
  * trained by scikit-learn can be executed here and vice versa.
  *
- * Internally the dense products run through Eigen; that is an implementation
- * detail of the ``.cpp`` and does not leak into this header or the bindings.
+ * Internally the dense products run through the self-contained ``Mat.h``
+ * (header-only, std-only C++17); that is an implementation detail of the
+ * ``.cpp`` and does not leak into this header or the bindings.
  */
 class NeuralNet {
 public:

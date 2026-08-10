@@ -1,0 +1,28 @@
+{
+  "_comment": "chiSurf-compatible detector_setups.json for the polarization-resolved two-colour MFD instrument that examples/simulation/configs/mfd_2col_2pol.json simulates. Byte-compatible with ~/.chisurf/detector_setups.json: the CLI reads `setups.<name>.detectors.<name>.chs` and ignores everything else chiSurf keeps here. Channel convention follows chiSurf's tttr_channel_definition_tttr_io.py: within a detector chs[::2] is parallel and chs[1::2] is perpendicular, so `green` = [0, 8] is green-parallel on 0 and green-perpendicular on 8 -- which is what the simulation emits (its channel order is green-par, green-perp, red-par, red-perp, mapped onto routing 0, 8, 1, 9), and getting it backwards inverts every anisotropy computed from the file without changing a single photon count. The four-detector setup below names each arm separately, which is what makes the burst table carry per-polarization columns.",
+  "last_used": "MFD 2-colour 2-polarization",
+  "setups": {
+    "MFD 2-colour 2-polarization": {
+      "detectors": {
+        "green": {"chs": [0, 8]},
+        "red": {"chs": [1, 9]}
+      },
+      "polarization_resolved": true,
+      "g_factor": 1.0,
+      "l1": 0.0,
+      "l2": 0.0
+    },
+    "MFD 4-detector": {
+      "detectors": {
+        "green_par": {"chs": [0]},
+        "green_perp": {"chs": [8]},
+        "red_par": {"chs": [1]},
+        "red_perp": {"chs": [9]}
+      },
+      "polarization_resolved": true,
+      "g_factor": 1.0,
+      "l1": 0.0,
+      "l2": 0.0
+    }
+  }
+}

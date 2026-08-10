@@ -138,9 +138,9 @@ int tttrlib::cli::cmd_detectors(int argc, char** argv) {
                         std::cout << "  gate " << g.first << "-" << g.second;
                     std::cout << "\n";
                 }
-                for (auto& [wn, p] : s.windows)
-                    std::cout << "    window " << wn << " "
-                              << p.first << "-" << p.second << "\n";
+                for (const auto& win : s.windows)
+                    std::cout << "    window " << win.name << " "
+                              << win.lo << "-" << win.hi << "\n";
             }
             if (setups.setups.empty())
                 std::cout << "(no setups here)" << std::endl;
@@ -196,7 +196,7 @@ int tttrlib::cli::cmd_detectors(int argc, char** argv) {
                     std::cerr << "  skip: bad range" << std::endl;
                     continue;
                 }
-                s.windows[wn] = g.front();
+                s.set_window(wn, g.front().first, g.front().second);
             } catch (const std::exception&) {
                 std::cerr << "  skip: bad range" << std::endl;
                 continue;

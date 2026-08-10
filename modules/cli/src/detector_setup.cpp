@@ -18,6 +18,11 @@ namespace cli {
 
 using nlohmann::json;
 
+// Detectors are read through the order-preserving parser: their order in the
+// file is the column order of the burst table written from them, and the
+// default `json` (a std::map underneath) would silently alphabetise it.
+using ordered_json = nlohmann::ordered_json;
+
 std::vector<int> DetectorSetup::all_channels() const {
     std::vector<int> out;
     for (auto& d : detectors)
@@ -35,9 +40,9 @@ bool load_detector_setups(const std::string& path,
         if (err) *err = "cannot read detector setups file " + path;
         return false;
     }
-    json root;
+    ordered_json root;
     try {
-        root = json::parse(ifs);
+        root = ordered_json::parse(ifs);
     } catch (const json::parse_error& e) {
         if (err) *err = std::string("detector setups parse error: ") + e.what();
         return false;
@@ -59,10 +64,22 @@ bool load_detector_setups(const std::string& path,
     for (auto& [name, s] : root["setups"].items()) {
         DetectorSetup setup;
         setup.name = name;
+        // Instrument constants chiSurf already keeps here. They were parsed and
+        // discarded, which is fine for a channel filter and not fine for an
+        // anisotropy: a g-factor left at 1 when the file says otherwise is a
+        // wrong number, not a missing one.
+        if (s.contains("g_factor") && s["g_factor"].is_number())
+            setup.g_factor = s["g_factor"].get<double>();
+        if (s.contains("l1") && s["l1"].is_number())
+            setup.l1 = s["l1"].get<double>();
+        if (s.contains("l2") && s["l2"].is_number())
+            setup.l2 = s["l2"].get<double>();
+        if (s.contains("polarization_resolved") && s["polarization_resolved"].is_boolean())
+            setup.polarization_resolved = s["polarization_resolved"].get<bool>();
         if (s.contains("windows") && s["windows"].is_object()) {
             for (auto& [wn, w] : s["windows"].items()) {
                 if (!w.is_array() || w.size() < 2) continue;
-                setup.windows[wn] = {w[0].get<int>(), w[1].get<int>()};
+                setup.set_window(wn, w[0].get<int>(), w[1].get<int>());
             }
         }
         if (s.contains("detectors") && s["detectors"].is_object()) {
@@ -116,6 +133,46 @@ std::vector<int> resolve_setup_channels(const std::string& setup_path,
     return setup->all_channels();
 }
 
+bool resolve_setup(const std::string& setup_path,
+                   const std::string& setup_name,
+                   const std::string& detector_name,
+                   DetectorSetup* out,
+                   std::string* err) {
+    if (out == nullptr) {
+        if (err) *err = "resolve_setup: null output";
+        return false;
+    }
+    DetectorSetups setups;
+    if (!load_detector_setups(setup_path, &setups, err)) return false;
+
+    const DetectorSetup* setup = nullptr;
+    if (!setup_name.empty()) {
+        setup = setups.find(setup_name);
+        if (!setup) {
+            if (err) *err = "no detector setup '" + setup_name + "' in " + setup_path;
+            return false;
+        }
+    } else {
+        setup = setups.default_setup();
+        if (!setup) {
+            if (err) *err = "no detector setup in " + setup_path;
+            return false;
+        }
+    }
+
+    *out = *setup;
+    if (!detector_name.empty()) {
+        const DetectorDef* d = setup->find_detector(detector_name);
+        if (!d) {
+            if (err) *err = "no detector '" + detector_name + "' in setup '" +
+                            setup->name + "'";
+            return false;
+        }
+        out->detectors.assign(1, *d);
+    }
+    return true;
+}
+
 bool save_detector_setups(const std::string& path,
                           const DetectorSetups& setups,
                           std::string* err) {
@@ -139,7 +196,7 @@ bool save_detector_setups(const std::string& path,
         js["detectors"] = std::move(dets);
         if (!s.windows.empty()) {
             json w = json::object();
-            for (auto& [wn, p] : s.windows) w[wn] = {p.first, p.second};
+            for (const auto& win : s.windows) w[win.name] = {win.lo, win.hi};
             js["windows"] = std::move(w);
         }
         ss[s.name] = std::move(js);

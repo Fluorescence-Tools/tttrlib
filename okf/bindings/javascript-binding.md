@@ -56,6 +56,7 @@ ext/js/
   jsarrays.i         TypedArray marshalling (the numpy.i analogue)
   js_shared_ptr.i    shared_ptr support the Node-API backend does not ship
   pkg/               npm package: index.js, index.d.ts, package.json, README.md
+  pkg/scripts/       prebuild.mjs (one platform's binary), pack.mjs (merge & publish)
 test/js/             node:test suite
 examples/js/ptu-webapp/   reference application
 ```
@@ -86,15 +87,32 @@ Requires SWIG ≥ 4.2 (the Node-API backend landed there) and Node ≥ 12.17.
 Node-API's stable ABI means one binary per platform serves every later Node
 without a rebuild — the reason this targets `-napi` rather than the V8 backend.
 
+That build is for *this* machine. A binary that has to run elsewhere is a
+different artefact and must be built as one:
+
+```bash
+node ext/js/pkg/scripts/prebuild.mjs      # -> prebuilds/<platform>-<arch>/
+```
+
+The distinction is not pedantry. The ordinary build links its 35 sibling module
+libraries through absolute build-tree RPATHs, so it works only where it was
+built; `prebuild.mjs` builds STATIC modules, produces the artefact with
+`cmake --install --component js` (the step that rewrites RPATHs to
+`@loader_path` / `$ORIGIN` — a copy out of the build tree does not), and then
+refuses any result whose dependencies reach outside its own directory.
+`scripts/pack.mjs` merges five platforms' output into the publishable package.
+
 # Verification
 
 | Check | State |
 |---|---|
-| `test/js/` suite | 16 suites / ~60 tests passing under `node --expose-gc --test test/js/`, 2026-08-06T07:34Z |
+| `test/js/` suite | 44 suites passing under `node --expose-gc --test test/js/`, 2026-08-10 — in both a SHARED and a STATIC-module build |
 | Canonical cross-language values | Same constants as the Python, R and Java suites[^xlang] |
+| PRD-015 conformance | 96/96 cases across 19 areas, no `unsupported` |
 | `tools/check_swig_multilang.sh` | All four wrappers generate; Python byte-identical |
 | `examples/js/ptu-webapp/` | Reads PTU, SPC and HT3 end to end |
-| Platforms | **macOS arm64 only.** Linux and Windows untried. |
+| npm package | A packed tarball installs into an empty project and answers the PRD-016 acceptance queries — **darwin-arm64 only** |
+| Platforms | **macOS arm64 only.** Linux and Windows untried, in every build shape. |
 
 # Related
 

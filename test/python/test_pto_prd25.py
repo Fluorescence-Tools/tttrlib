@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import tttrlib
 
-PTO_BIN = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../build/tools/pto"))
+PTO_BIN = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../build/modules/io/pto/pto"))
 
 class TestPtoPRD25(unittest.TestCase):
     def setUp(self):

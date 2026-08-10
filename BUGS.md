@@ -171,6 +171,22 @@ What to do:
   while the main thread keeps a heartbeat alive, and asserts the heartbeat
   did not stall. This guards against regressions.
 
+**2026-08-10, the Python half is DONE.** The wrapper is generated with SWIG
+`-threads`: all ~4,600 wrapped calls release the GIL around the C++ action
+(typemap code keeps it; the RAII guard reacquires during exception unwinding
+before the `%exception` handlers touch the Python C-API — verified in the
+generated code). The two `%extend` methods whose C++ bodies call the Python
+C-API (`localization.fit2DGaussian_array` / `model2DGaussian_array`) are
+`%feature("nothread")`. **Composition warning for whoever maintains
+`TTTRLIB_NOGIL`:** SWIG inserts its BEGIN/END_ALLOW inside `$action` even in
+a custom `%exception`, so a guard of one's own there releases an
+already-released GIL — a FATAL Python error, not a no-op; the macro now
+carries only the exception translation and says so, and `tttrlib_gil_release`
+is `PyGILState_Check()`-tolerant. Verified: the entry's heartbeat test
+(`test/python/test_gil_release.py`) passes, and the full fast suite is green
+under `-threads` (2501 passed). **Still open:** the R / Java / JS bindings,
+and the non-blocking (async) surface beyond GIL release.
+
 ## [chisurf] The built-in games appear to have disappeared
 
 **2026-08-08.** **Repo:** `../chisurf`. The Games hub
@@ -411,8 +427,28 @@ catches because none of it is code:
    row by one instance was "restored" by the other before it found the upstream
    mmfdb package and reverted itself.
 
-Worth stating because the mitigation is not "be careful": (2) is invisible, and
-(1) is only visible if somebody reads the whole file. What would actually help:
+**2026-08-10, later: the same hazard in the index.** Committing the mmfdb
+vocabulary work found two more shapes of it, both of which `git commit -a` would
+have swallowed:
+
+4. **The index carried a staged change from another session** — a revert of
+   `region_table` and the `spot`/`region` row-grain distinction, which that
+   session had already undone in the working tree. Staged but stale, and
+   invisible unless you run `git diff --cached` before committing.
+5. **One file held two sessions' work, interleaved and unsplittable.**
+   `mmfdb_flr_ext.dic` carried this session's five additions and another's
+   396-line `_mmfdb_object` category. Hand-splicing a dictionary somebody is
+   actively editing risks corrupting it, so the commit names both rather than
+   quietly claiming one.
+
+   Also: **do not branch off the default branch under a live collaborator.**
+   The usual advice is to branch before committing; moving the branch pointer
+   while another session works in the same checkout is worse than a local commit
+   that is easy to reset.
+
+Worth stating because the mitigation is not "be careful": (2) is invisible, (1)
+is only visible if somebody reads the whole file, and (4) is only visible if you
+look at the index rather than the diff you expect. What would actually help:
 
 * **`okf/log.md` entries keyed by something not counted** — a timestamp or a
   session id rather than an ordinal, so two writers cannot collide by
@@ -421,6 +457,9 @@ Worth stating because the mitigation is not "be careful": (2) is invisible, and
 * A guardrail test that fails on a duplicated `##` heading or a duplicated
   section body in `okf/log.md` — trivial, and it turns (1) from invisible to
   loud.
+* **`git reset` then stage explicit paths, always, in a shared checkout.**
+  Never `git commit -a`, and read `git diff --cached` before every commit
+  rather than trusting that the index holds what you put there.
 
 The code side is already handled: the registry/dictionary conformance tests
 reported the half-applied vocabulary rename precisely, in both directions, which
@@ -459,48 +498,17 @@ is exactly what they are for.
 > conda-build exempt). This stub can be deleted once both sessions have seen
 > it.
 
-## `pch_mixture` indexes `avg_numbers` by the length of `brightnesses`, and reads past the end
+## FIXED — `pch_mixture` indexes `avg_numbers` by the length of `brightnesses`, and reads past the end
 
-**2026-08-10.** `PhotonCountingHistogram.cpp:101` loops over `brightnesses`
-and subscripts `avg_numbers` with the same index:
-
-```cpp
-for (size_t s = 0; s < brightnesses.size(); ++s) {
-    if (brightnesses[s] <= 0.0 || avg_numbers[s] <= 0.0) continue;   // <-- avg_numbers[s]
-```
-
-Nothing checks that the two vectors are the same length, so a caller that
-passes more brightnesses than occupancies reads off the end of a
-`std::vector`. It is undefined behaviour, not a bounds-checked failure:
-
-```python
->>> tttrlib.pch_mixture(20, [1.0, 2.0, 3.0, 4.0], [0.5])
-# returns a normalised, finite, plausible-looking histogram
-```
-
-**The reason this is worth fixing rather than documenting** is that it does
-not crash and, on every run measured here, does not even vary — the heap past
-the vector happens to be zero, so the `avg_numbers[s] <= 0.0` guard on the
-next line skips exactly the species whose occupancy was never supplied. The
-observable result is a **three-species argument list silently fitted as one
-species**, with a histogram that sums to 1.0 and passes every finiteness check
-a caller might apply. A `p[1]` of `0.0531…` is stable across processes, so
-even a byte-for-byte reproducibility test would call it correct.
-
-That guard is what makes it quiet, and it is also why the UB is easy to miss
-in review: the bounds error and the value filter sit on the same line.
-
-Two vectors of different lengths cannot describe a mixture, so the fix is to
-reject it — `std::invalid_argument`, surfacing as `ValueError` through the
-`%exception` block, the way `sample_from_cdf` already rejects a CDF whose
-length does not match its axis. `fida_pch` takes the same pair as one
-interleaved `species_flat` array plus `n_species` and so cannot express the
-mismatch at all; that is the shape `pch_mixture` should have had.
-
-Downstream, ChiSurf's `pch_mixture` zips with `strict=True` and raises, and
-has a test pinning it (`plugins/pch/tests/test_services.py`). That check has
-to stay in front of the delegation until this is fixed — which is the
-inversion worth naming: the caller is validating on the library's behalf.
+> **Fixed 2026-08-10** (removal = fix landed, not a concurrent-write loss).
+> As the entry prescribed: mismatched lengths now throw
+> `std::invalid_argument` naming both sizes, surfacing as `ValueError` — the
+> same shape `sample_from_cdf` uses. The entry's repro raises instead of
+> returning the stable-but-wrong one-species histogram.
+> `test_pch_fida.py::test_mixture_rejects_mismatched_species` pins both
+> directions of the mismatch and that equal lengths are untouched. ChiSurf's
+> `strict=True` zip in front of the delegation can now be dropped. This stub
+> can be deleted once both sessions have seen it.
 
 ## A `background` with no `background_decay` puts every background photon in micro-time channel 0
 

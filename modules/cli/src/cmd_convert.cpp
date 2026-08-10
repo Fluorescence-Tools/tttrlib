@@ -21,7 +21,7 @@ namespace tttr = tttrlib;
 int tttrlib::cli::cmd_convert(int argc, char** argv) {
     cxxopts::Options opt("tttr convert", "Convert between TTTR file formats");
     opt.add_options()
-        ("input", "input TTTR file", cxxopts::value<std::string>())
+        ("input", "input TTTR file, or - for stdin", cxxopts::value<std::string>())
         ("output", "output TTTR file", cxxopts::value<std::string>())
         ("c,container", "output container by name (default: from extension)",
          cxxopts::value<std::string>())
@@ -58,7 +58,15 @@ int tttrlib::cli::cmd_convert(int argc, char** argv) {
         progress.set_phase("read");
         progress.tick();
 
-        TTTR data(input.c_str());
+        InputPath in_path;                       // `-` is stdin; see InputPath
+        {
+            std::string err;
+            if (!in_path.resolve(input, &err)) {
+                std::cerr << "error: " << err << std::endl;
+                return 1;
+            }
+        }
+        TTTR data(in_path.path().c_str());
         if (record >= 0) {
             data.get_header()->set_tttr_record_type(record);
         }

@@ -34,6 +34,50 @@ Its responsibility ends at the file. It does not define analysis. Where the
 container and the profile disagree, the container wins — PTO.MFDB constrains
 PTO, it never contradicts it.
 
+What to call the file
+---------------------
+
+Two names, because there are two things:
+
+.. list-table::
+   :header-rows: 1
+
+   * - ..
+     - name
+     - what it claims
+   * - the container
+     - ``<name>.pto``
+     - an EBML document with ``DocType "pto"``. Says nothing about what is inside.
+   * - this profile
+     - ``<name>.mmfdb.pto``
+     - a ``.pto`` that **also** conforms to PTO.MFDB: the container-level profile tags are present and every kind, encoding, grain and relation in it is a term from the MMFDB dictionaries.
+
+``.mmfdb.pto``, not ``.pto.mmfdb``. The last suffix has to stay ``.pto`` or the file
+stops being recognised as a container by everything that dispatches on one —
+readers, file dialogs, ``file(1)`` magic tables, MIME databases. A profile that
+made its files unopenable by generic PTO tooling would have contradicted the
+point of being a profile. ``.mmfdb`` is therefore a *tag on the stem*, in the way
+``.tar.gz`` and ``.d.ts`` are, and everything about ``.pto`` continues to apply to a
+``.mmfdb.pto``.
+
+The suffix is a **courtesy, not the authority**. Conformance is stated *inside*
+the file, by the container-level tags:
+
+::
+
+   _mmfdb_container.profile               PTO.MFDB
+   _mmfdb_container.profile_version       1.1
+   _mmfdb_container.profile_read_version  1
+
+A reader decides by reading those, never by the name — a renamed file is still
+conformant and a ``.mmfdb.pto`` that lacks them is not. What the suffix is for is
+the human and the file listing: a directory holding an instrument container, a
+generic payload container and an analysis container should not need three
+``ls -l`` guesses.
+
+Writers SHOULD use ``.mmfdb.pto`` for a container they write the profile tags
+into, and MUST accept plain ``.pto`` on read.
+
 Design principles
 -----------------
 

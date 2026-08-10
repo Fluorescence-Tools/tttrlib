@@ -26,6 +26,17 @@ From npm
 
    npm install tttrlib
 
+Prebuilt binaries are published for **linux-x64, linux-arm64 (glibc),
+darwin-x64, darwin-arm64 and win32-x64**, resolved by ``node-gyp-build`` from
+``prebuilds/<platform>-<arch>/``. There is no compile step, no ``node-gyp`` and
+no per-Node matrix: Node-API's ABI is stable across Node majors, so one binary
+per platform serves every Node ≥ 12.17.
+
+The tarball ships binaries only — no C++ sources and no ``binding.gyp`` — so
+``npm install`` never silently falls back to compiling. On a platform without a
+prebuild, ``require('tttrlib')`` fails with the target triple it could not find,
+and the fix is a source build.
+
 From source
 ~~~~~~~~~~~
 
@@ -41,6 +52,40 @@ from npm rather than from the system:
 The addon lands in ``build/js-pkg/tttrlib.node``. ``ext/js/pkg/index.js`` finds
 it there without installing anything, so the tests and the example application
 run straight out of the build tree.
+
+.. warning::
+
+   The loader takes the **most recently modified** ``build*/js-pkg/`` at the
+   repository root. A second build tree therefore captures every test run
+   silently — an ASAN tree turned every suite red with no hint that the addon
+   under test was not the intended one, and a ``-DTTTRLIB_JS_COPY_ARRAYS`` tree
+   is worse, because it passes. Delete extra build trees, or set
+   ``TTTRLIB_ADDON`` explicitly on every run.
+
+Building a distributable binary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A binary that has to run on a machine other than the one that built it is a
+different artefact, and building it by hand is the reliable way to ship
+something that only works locally:
+
+.. code-block:: bash
+
+   node ext/js/pkg/scripts/prebuild.mjs
+
+This configures with ``-DTTTRLIB_MODULE_TYPE=STATIC`` (one ``.node`` instead of
+~35 sibling module libraries), installs rather than copies — only
+``cmake --install`` rewrites the build-tree RPATHs to ``@loader_path`` /
+``$ORIGIN`` — collects the remaining third-party libraries beside the addon, and
+then **verifies** that nothing it produced depends on anything outside its own
+directory or the operating system. It writes
+``ext/js/pkg/prebuilds/<platform>-<arch>/node.napi[.<libc>].node``, which is the
+layout ``node-gyp-build`` reads.
+
+``scripts/pack.mjs`` merges per-platform prebuilds into a publishable package,
+taking the version from ``pyproject.toml``. It refuses to assemble a package
+missing any of the five platforms: a partial one is indistinguishable from a
+complete one until somebody on the missing platform installs it.
 
 Quick start
 -----------
@@ -235,30 +280,24 @@ Ordered by what would bite first.
        means either porting the Python suite or generating both from one shared
        case list.
    * - **Only macOS arm64 has been built**
-     - Linux and Windows are untried. The ``build_test_js_lnx`` CI job is written
-       but has never run, so treat its first run as part of the work rather than
-       as a regression check.
-   * - **No prebuilt binaries, nothing published**
-     - The plan is ``prebuildify`` binaries for linux-x64/arm64,
-       darwin-x64/arm64 and win32-x64, loaded by ``node-gyp-build``, and an npm
-       release. The package metadata is in place; the pipeline is not.
-   * - **The copy fallback has never executed**
-     - When a host refuses an external ``ArrayBuffer`` the binding copies
-       instead. That path is exercised by no test, because no available runtime
-       refuses. Building with ``-DTTTRLIB_JS_COPY_ARRAYS`` and running the suite
-       would cover it.
+     - Linux and Windows are untried, in both the ordinary and the prebuild
+       builds. ``build_test_js_lnx``, ``prebuild_js``, ``pack_js``,
+       ``publish_npm`` and ``asan_js_lnx`` are all written and none has run, so
+       treat their first run as part of the work rather than as a regression
+       check.
+   * - **Nothing has been published**
+     - The pipeline exists and a packed tarball installs and works on
+       darwin-arm64, but ``publish_npm`` needs an ``NPM_TOKEN`` repository
+       secret that does not exist, and the name has not been claimed on the
+       registry.
    * - **No sanitiser run**
-     - The "drop the owner, then read the view" case wants a run under ASAN.
-       ``test/js/lifetime.test.mjs`` covers the shared_ptr and GC side in ordinary
-       builds, but nothing has been run under a sanitiser.
-   * - **Columnar HDF5 is not wrapped**
-     - ``ext/js/tttrlib.i`` deliberately omits ``Hdf5Table.i`` so it matches the
-       committed Python module. Add the ``%include`` when the reader lands;
-       ``readHdf5()`` / ``writeHdf5()`` are already in ``index.js`` behind a
-       feature check, so nothing else changes.
-   * - **The full conformance list**
-     - The shared case list should be green here too. The canonical reference
-       values pass; that list does not exist yet.
+     - ``asan_js_lnx`` is written — Linux, ``LD_PRELOAD`` of ``libasan.so``,
+       ``detect_leaks=0``, and an explicit ``TTTRLIB_ADDON`` so it cannot
+       silently test an uninstrumented addon — and has not run.
+       ``test/js/lifetime.test.mjs`` covers the shared_ptr and GC side in
+       ordinary builds. macOS arm64 cannot host this: preloading the ASAN
+       runtime into Node hangs before any JavaScript executes, with no addon
+       loaded at all.
 
 Testing status
 --------------

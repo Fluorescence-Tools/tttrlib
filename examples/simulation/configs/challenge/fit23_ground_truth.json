@@ -1,0 +1,24 @@
+{
+  "_comment": "CHALLENGE: fit23 ground truth. Two FRET species plus a scatter species (tau=0.001) for proper IRF. Species 0: D-only tau=3.8ns. Species 1: high-FRET tau=1.6ns. Species 2: scatter tau=0.001ns, low pop, emits on all 4 channels equally.",
+  "settings": {
+    "dt": 0.01, "n_ph_max": 600000, "n_channels": 4,
+    "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0,
+    "active_margin": 1.0, "fast_grid_bbox": true,
+    "seed_diffusion": 42, "seed_emission": 99
+  },
+  "box": {"xy": 2.0, "z": 4.0},
+  "species": [
+    {"D": 0.05, "q": [200.0, 100.0, 0.0, 0.0], "r0": 0.38,
+     "decay": {"lifetimes": [3.8], "amplitudes": [1.0], "dt": 0.008}},
+    {"D": 0.05, "q": [40.0, 20.0, 160.0, 80.0], "r0": 0.38,
+     "decay": {"lifetimes": [1.6], "amplitudes": [1.0], "dt": 0.008}},
+    {"D": 0.1, "q": [10.0, 10.0, 10.0, 10.0], "r0": 0.0,
+     "decay": {"lifetimes": [0.001], "amplitudes": [1.0], "dt": 0.008}}
+  ],
+  "k_rad": [0.0, 0.0, 0.0, 0.0],
+  "k_nrad": [0.0, 0.0, 0.0, 0.0],
+  "background": [0.02, 0.02, 0.02, 0.02],
+  "population": [0.12, 0.12, 0.01],
+  "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 2.0,
+                 "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.1, "amplitude": 1.0}
+}

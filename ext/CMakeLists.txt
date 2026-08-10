@@ -131,6 +131,13 @@ IF(BUILD_PYTHON_INTERFACE)
     # the C++ headers pulled in by %include. Requires CMake >= 3.20 (this project
     # declares 3.13), hence the explicit list above as a fallback.
     set_property(SOURCE python/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
+    # Release the GIL around every wrapped C++ call (-threads): a long
+    # correlation, burst search or file read must not freeze every other
+    # Python thread -- a GUI heartbeat, a progress bar, a second reader.
+    # Typemap code still runs with the GIL held; the two %extend methods
+    # whose C++ BODIES call the Python C-API are marked nothread in
+    # Localization.i.
+    set_property(SOURCE python/tttrlib.i APPEND PROPERTY COMPILE_OPTIONS -threads)
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
@@ -488,6 +495,71 @@ IF(BUILD_JAVASCRIPT_INTERFACE)
     # works straight out of the build directory.
     FILE(COPY ${JS_PKG_DIR}/index.js ${JS_PKG_DIR}/index.d.ts ${JS_PKG_DIR}/package.json
          DESTINATION ${CMAKE_BINARY_DIR}/js-pkg)
+
+    # ── The "js" install component: one relocatable directory ────────────────
+    #
+    # This is what an npm prebuild is made of, and it is deliberately an INSTALL
+    # rather than a copy out of the build tree. A binary in the build tree
+    # carries absolute build RPATHs; CMake rewrites those to the target's
+    # INSTALL_RPATH (@loader_path / $ORIGIN, set above) only on install. Copying
+    # build-tree files into prebuilds/ produces a package that works on the
+    # machine that built it and nowhere else -- and it fails at require() time on
+    # the user's machine, not at publish time.
+    #
+    # `cmake --install <build> --component js --prefix <dir>` therefore yields a
+    # directory whose contents resolve each other by relative path only.
+    # ext/js/pkg/scripts/prebuild.mjs verifies exactly that before it accepts the
+    # result, because the RPATH is easy to get right and impossible to eyeball.
+    IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+        # RUNTIME_DEPENDENCY_SET pulls in the third-party shared libraries the
+        # addon needs (HDF5, libomp, ...) and fixes their install names too, so
+        # the package does not silently inherit the build machine's conda prefix.
+        INSTALL(TARGETS ${JS_MODULE_NAME}
+                COMPONENT js
+                RUNTIME_DEPENDENCY_SET tttrlib_js_runtime_deps
+                LIBRARY DESTINATION "."
+                RUNTIME DESTINATION ".")
+        INSTALL(RUNTIME_DEPENDENCY_SET tttrlib_js_runtime_deps
+                COMPONENT js
+                # The C runtime and the OS libraries are the host's, never ours.
+                PRE_EXCLUDE_REGEXES
+                    "^api-ms-" "^ext-ms-" "^hvsifiletrust" "^pdmutilities"
+                    "^(ld|lib(c|dl|m|pthread|rt|gcc_s|stdc\\+\\+))\\.so"
+                POST_EXCLUDE_REGEXES
+                    "^/usr/lib/" "^/usr/lib64/" "^/lib/" "^/lib64/"
+                    "^/System/Library/" "^/Library/Apple/"
+                    "[Ss]ystem32"
+                    # tttrlib's own module libraries are installed by
+                    # tttrlib_install_modules below (SHARED builds only, and a
+                    # STATIC build has none). Letting the dependency set copy
+                    # them too would install the same file twice, from the build
+                    # tree rather than through the target's INSTALL_RPATH.
+                    "libtttrlib_"
+                LIBRARY DESTINATION "."
+                RUNTIME DESTINATION ".")
+    ELSE()
+        INSTALL(TARGETS ${JS_MODULE_NAME}
+                COMPONENT js
+                LIBRARY DESTINATION "."
+                RUNTIME DESTINATION ".")
+        MESSAGE(WARNING
+                "CMake ${CMAKE_VERSION} < 3.21: the js install component cannot collect "
+                "third-party runtime dependencies. Prebuilds made from this tree are not "
+                "self-contained; prebuild.mjs will reject them.")
+    ENDIF()
+    # A SHARED-module build needs every libtttrlib_*.<so|dylib|dll> beside the
+    # addon as well. A STATIC-module build (what prebuild.mjs configures) has
+    # none, and this installs nothing.
+    IF(TTTRLIB_MODULE_TYPE STREQUAL "SHARED")
+        tttrlib_install_modules(DESTINATION "." COMPONENT js)
+    ENDIF()
+    INSTALL(FILES
+                ${JS_PKG_DIR}/index.js
+                ${JS_PKG_DIR}/index.d.ts
+                ${JS_PKG_DIR}/package.json
+                ${JS_PKG_DIR}/README.md
+            COMPONENT js-package
+            DESTINATION ".")
 
     UNSET(CMAKE_SWIG_FLAGS)
 ENDIF()

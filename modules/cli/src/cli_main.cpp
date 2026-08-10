@@ -25,8 +25,9 @@ void print_usage() {
         "  image       image processing (export)\n"
         "  formats     list supported TTTR containers\n"
         "  sm          single-molecule / burst processing (alias: burst)\n"
+        "  sim         photon-event simulator (alias: simulate)\n"
         "  detectors   inspect or author detector_setups.json (chiSurf)\n"
-        "  pto         the PTO container: ls, info, tree, tags, cat, extract\n"
+        "  pto         the PTO container: pack, add, ls, info, tree, tags, cat, extract\n"
         "  tui         terminal UI over a PTO container (or a TTTR file)\n"
         "\n"
         "run 'tttr <subcommand> --help' for a subcommand's options\n";
@@ -54,6 +55,7 @@ int tttrlib::cli::run(int argc, char** argv) {
     if (sub == "pto") return cmd_pto(argc, argv);
     if (sub == "tui") return cmd_tui(argc, argv);
     if (sub == "sm" || sub == "burst") return cmd_sm(argc, argv);
+    if (sub == "sim" || sub == "simulate") return cmd_sim(argc, argv);
     if (sub == "detectors") return cmd_detectors(argc, argv);
 
     std::cerr << "error: unknown subcommand '" << sub << "'\n" << std::endl;
