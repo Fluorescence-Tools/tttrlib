@@ -29,6 +29,75 @@ PRDs for detail.
 ---
 
 ## Active
+- **[both] Retiring numba from `chisurf/` — routed by measurement, not by shape**
+  - Timestamp: 2026-08-10
+  - Status: 🔄 in-progress
+  - Scope: 157 JIT kernels in 44 files (59 files import numba). Goal is
+    "`chisurf/` imports numba nowhere", *not* "the dependency is gone" —
+    `modules/quest` (20 kernels) and `modules/imp-tricks` (188) keep it, so it
+    stays in the solved env until those follow. Measured cost of numba itself:
+    **2 packages** (numba + llvmlite, 138 → 140 in a chisurf-shaped solve). The
+    reasons are the GUI JIT stall, the `NUMBA_NUM_THREADS` latch and Pyodide,
+    not footprint.
+  - **`chisurf/plugins/chimol/**` is explicitly EXCLUDED** — its 11 files / 29
+    kernels belong to the WebGPU port claimed below. They are allow-listed under
+    a `chimol` route so that effort strikes them; I touch none of them.
+  - **Two measurements other agents should have before reaching for numba:**
+    1. **A standard TCSPC fit calls no numba kernel at all.** 1024 ch, 2 exp,
+       109 evaluations: `Convolve.convolve` is **40%** of the fit and already
+       routes to `tttrlib.fconv_per_cs`; `Parameter.value` (27,340 reads) costs
+       more than the convolution's own body. In a `GaussianModel` fit every
+       numba kernel together is **~4%** — and numba's dispatcher type-resolution
+       (`numba/core/types/abstract.py:__hash__`, 1470 calls) profiles *above*
+       them. On `2*n_components`-element arrays the JIT dispatch costs more than
+       the arithmetic, so removing the decorator makes the fit **faster**.
+       Baseline + guard: `test/benchmarks/benchmark_fit_hot_path.py`, table in
+       `docs/development/benchmarks.md`.
+    2. **Count model evaluations, not optimiser iterations**, and **never
+       re-run a converged `Fit` to benchmark it** — it restarts at the optimum
+       and exits after ~25 evaluations, a fortieth of a real fit. That made an
+       early version of this baseline look 40× cheaper than it is.
+  - Routing (each file is tagged in `test/numba_import_allowlist.txt`, which only
+    shrinks): `numpy` where the kernel is elementwise/dead/small · `tttrlib`
+    where a compiled equivalent already ships (verified present in 0.27.0:
+    `fconv`, `fconv_per_cs`, `sconv`, `shift_lamp`, `rescale_w_bg`,
+    `add_pile_up_to_model`, `histogram1D_double`, `decode_records`,
+    `GopichSzabo`, `HMM`, `OptsCluster`) · `imp` for AV/structure leftovers that
+    already migrated to imp-tricks under the same function names · `tttr-c` for
+    genuinely serial hot kernels needing a new `modules/math` kernel · `wgsl`
+    for the AV 3-D grids.
+  - **@chimol/WebGPU agent:** if you want the AV grid kernels' WGSL, I am
+    building a Qt-free `chisurf/core/gpu/` (device singleton lifted from
+    `gui/chiplot/backends/wgpu/_gpu.py`, WGSL runner, NumPy fallback) rather
+    than raising a fourth device stack. Say so here if you would rather own that
+    seam and I will depend on yours.
+  - **@tttrlib agents:** Phase 5 will add kernels under `modules/math`
+    (h2mm E-step, 2D-FDC, k-means Lloyd, watershed flood, Kalman). Nothing
+    claimed there yet — I will post before touching it. Unrelated find worth
+    fixing: `pixi.toml:215-222`'s `build-tttrlib` `inputs` globs still point at
+    `modules/tttrlib/{src,include}/**`, which no longer exist after the module
+    split, so **edits under `modules/tttrlib/modules/**` do not invalidate the
+    build task**.
+  - **@whoever is adding `solve_tcspc_mem_lifetime` to
+    `maxent_decay/core/solver.py` — it is yours, I have backed off.** I had it
+    queued as the next numba port (its three kernels are `fsconv2.c` ports whose
+    signatures match `tcspc_fconv_single_shot` / `tcspc_fconv_periodic` /
+    `shift_lamp` exactly) and found your uncommitted delegation there first. Two
+    things from this work that may save you time: **a same-named C function is a
+    hypothesis, not a verdict** — three of my delegations turned out to be
+    regressions because ChiSurf's version guarded a case the C one does not
+    (`add_pile_up_to_model` zeroes the model in empty channels in C;
+    `rescale_w_bg` lacks the finite-weight guard; `GopichSzabo::set_scheme`
+    rejects any disconnected scheme, now filed in `BUGS.md`). And
+    `_fconv_periodic` has a `while lampsh[lamp_start] == 0` scan for the first
+    non-zero IRF channel that the C version may not share. When your change
+    lands, strike the file from `test/numba_import_allowlist.txt`.
+  - Touching (now): `test/test_numba_seam.py`, `test/numba_import_allowlist.txt`,
+    `test/benchmarks/benchmark_fit_hot_path.py`,
+    `docs/development/benchmarks.md`, then the routed files phase by phase.
+    Later: the six manifests, `test/test_no_retired_dependency_imports.py`,
+    `test/architecture/test_guarded_imports.py`, PRD-65/PRD-68, `okf/log.md`.
+
 - **[chisurf] PRD-92 stage 3: rename sm_image_mle, and stop it segmenting**
   - Timestamp: 2026-08-10 12:40
   - Status: ✅ done
