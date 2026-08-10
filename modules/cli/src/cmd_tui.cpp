@@ -16,6 +16,13 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#    include <io.h>
+#    define isatty _isatty
+#else
+#    include <unistd.h>
+#endif
+
 #include "cxxopts.hpp"
 #include "pto_tui.hpp"
 
