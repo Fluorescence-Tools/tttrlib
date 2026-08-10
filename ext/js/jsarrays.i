@@ -449,6 +449,22 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %typemap(out) unsigned long long, const unsigned long long&
   %{ $result = Napi::BigInt::New(env, (uint64_t) $1); %}
 
+// On LP64 Linux std::uint64_t resolves to unsigned long, which the
+// typemaps above do not match -- an API spelled uint64_t then silently
+// returns a Number there and a BigInt on macOS. Matching the fixed-width
+// spelling keeps the API BigInt on every platform while leaving size_t
+// and plain long as the Numbers they are meant to be.
+%typemap(out) int64_t, const int64_t&
+  %{ $result = Napi::BigInt::New(env, (int64_t) $1); %}
+%typemap(out) uint64_t, const uint64_t&
+  %{ $result = Napi::BigInt::New(env, (uint64_t) $1); %}
+%typemap(in) int64_t = long long;
+%typemap(in) const int64_t& = long long;
+%typemap(in) uint64_t = unsigned long long;
+%typemap(in) const uint64_t& = unsigned long long;
+%typemap(typecheck, precedence=SWIG_TYPECHECK_INT64) int64_t, uint64_t, const int64_t&, const uint64_t&
+  %{ $1 = $input.IsBigInt() || $input.IsNumber(); %}
+
 // Input accepts a BigInt or a Number. A Number is allowed because most values
 // in this API are small and a caller should not have to write 0n everywhere;
 // it is rejected when it is not an exact integer, so nothing is lost quietly.
