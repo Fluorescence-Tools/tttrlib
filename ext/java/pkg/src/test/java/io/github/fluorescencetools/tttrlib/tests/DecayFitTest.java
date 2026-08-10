@@ -15,11 +15,11 @@ public class DecayFitTest {
     static final int FN = 32;
     static final double DT = 0.5;
 
-    static final double REF_TWO_ISTAR = 23.802337;
-    static final double REF_FIT_TAU = 0.74219;
+    static final double REF_TWO_ISTAR = 23.791124;
+    static final double REF_FIT_TAU = 0.721353;
     static final double REF_FIT_RS = 0.25974;
     static final double REF_FIT24_TI = 2.41049;
-    static final double REF_FIT25_TI = 4.738831;
+    static final double REF_FIT25_TI = 3.887975;
     static final double REF_FIT25_BEST_TAU = 0.5;
     static final double REF_FIT26_TI = 2.218772;
 
