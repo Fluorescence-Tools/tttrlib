@@ -141,6 +141,8 @@ def experimental(cls):
 %include "NeuralNet.i"
 /* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
 %include "Cluster.i"
+/* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
+%include "Deconvolution.i"
 %include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
 

@@ -3,6 +3,26 @@
 ## [Unreleased]
 
 ### Added
+- **`Deconvolution.h` — Richardson-Lucy and Wiener** (`modules/math`), over the
+  vendored FFT. `richardson_lucy` is the Poisson maximum-likelihood restoration
+  that fluorescence data actually calls for: the estimate stays non-negative and
+  flux-conserving by construction, neither of which a linear filter promises.
+  2-D and 3-D, with the PSF transformed once so the cost is independent of the
+  kernel size. Numerically identical to the reference implementation to 1e-12
+  over three PSF shapes, three iteration counts and both ranks; 1.3-2.6x faster
+  per iteration.
+
+  Biggs-Andrews acceleration is included and **off by default**, because
+  measurement says what it is: a step-size change, not a better estimator.
+  Thirty accelerated iterations land where four hundred plain ones do, which
+  reaches the optimum in about five instead of twenty and sails past it just as
+  fast -- and in Richardson-Lucy the iteration count is the regularisation.
+
+  The "same"-mode crop offset, `(m - 1) / 2` per axis, is the compatibility
+  surface: off by one and the output is the right image shifted by a pixel.
+  `test_deconvolution.py` asserts it directly for symmetric and asymmetric
+  kernels, because no other assertion would catch it.
+
 - **`Cluster.h` — a k-d tree, and the two kernels HDBSCAN spends its time in**
   (`modules/math`). `KDTree` answers k-nearest-neighbour queries over a
   row-major `(n x d)` table; `core_distances(X, k)` returns the distance to
