@@ -30,11 +30,11 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [009](PRD-009-sim-driven-feature-docs.md) | Documenting every tttrlib feature by simulated example | 🔵 Proposed |
 | [010](PRD-010-neural-net-and-surrogate-models.md) | Reusable neural network + surrogate models, AD gradients | 🟡 In Progress |
 | [011](PRD-011-photon-hmm.md) | Photon-by-photon HMM: one class, three inference paths | 🟢 Done |
-| [012](PRD-012-flimlabs-brighteyes-readers.md) | FLIM LABS and BrightEyes-TTM native readers | 🟡 In Progress |
+| [012](PRD-012-flimlabs-brighteyes-readers.md) | FLIM LABS and BrightEyes-TTM native readers | 🟢 Done |
 | [013](PRD-013-gaussian-emission-hmm.md) | Gaussian emissions: the binned-trace HMM on the photon HMM's core | ⚪ Draft |
 | [014](PRD-014-example-gallery-taxonomy.md) | Example gallery: one taxonomy, nothing invisible | 🔵 Proposed |
 | [015](PRD-015-conformance-suite-language-parity.md) | A conformance suite: one case list, four languages | 🟢 Done |
-| [016](PRD-016-javascript-node-api-bindings.md) | JavaScript bindings via SWIG Node-API | 🟡 In Progress |
+| [016](PRD-016-javascript-node-api-bindings.md) | JavaScript bindings via SWIG Node-API | 🟢 Complete |
 | [017](PRD-017-burst-web-ui.md) | Node.js burst-analysis web UI, driven by the registry | 🔵 Proposed |
 | [018](PRD-018-abi-stability.md) | A stable ABI within a minor series | ⚪ Draft |
 | [019](PRD-019-data-groups.md) | Data groups: a store is a tree, in memory and in the file | 🟡 In Progress |
@@ -44,7 +44,15 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [023](PRD-023-one-table-access-vocabulary.md) | One vocabulary for a table in a file, whatever the file is | 🟢 Done |
 | [024](PRD-024-one-way-to-open-a-file.md) | What is this file, and open it as that | 🔵 Proposed |
 | [025](PRD-025-executable-pto-containers.md) | A container you can read | 🔵 Proposed |
-| [026](PRD-026-mfd-sim-to-ndx-pto-pipeline.md) | Simulated MFD burst pipeline to an ndx-conformant `.pto` | 🔵 Proposed |
+| [026](PRD-026-mfd-sim-to-ndx-pto-pipeline.md) | Simulated MFD burst pipeline to an ndx-conformant `.pto` | 🟢 Done |
+| [027](PRD-027-modular-algorithm-registry.md) | Modular algorithm registry: compile, register, provenance | 🔵 Proposed |
+| [028](PRD-028-spectroscopy-data-standard.md) | A data standard for decay curves, FCS, PDA, and PCH in `.dstore` / `.pto`-mmfdb | ⚪ Draft |
+| [029](PRD-029-drop-in-algorithm-verification.md) | Drop-in algorithms: auto-register, verify against nomenclature, provenance-ready | ⚪ Draft |
+| [030](PRD-030-burst-plugin-migration.md) | Migrate chiSurf burst plugins to `tttr` CLI calls | ⚪ Draft |
+| [031](PRD-031-plugin-sdk-ease-of-use.md) | Plugin SDK: easy install, clear interfaces, templates, and docs | ⚪ Draft |
+| [032](PRD-032-migrate-algos-to-registry.md) | Migrate existing algorithms onto register_algorithm | 🟡 In Progress |
+| [033](PRD-033-streaming-correlator.md) | Streaming correlator agrees with the batch correlator | 🟢 Done |
+| [034](PRD-034-pto-native-tttr-sink.md) | .pto as its own TTTR sink — native photon tables + header definitions | 🔵 Proposed |
 
 **019** is yellow rather than green for one reason: criterion 21 asks for the
 same assertions from Python, R, Java and JavaScript in the PRD-015 conformance
@@ -53,7 +61,8 @@ at all. Everything else is done, and there is a third piece the PRD did not ask
 for: a native `.dstore` file, because the PRD's premise that HDF5 is the only
 way to serialise a store is what made it slow. See `doc/saving-tables.rst`.
 
-**012** is yellow rather than green for one reason: no FLIM LABS sample file is
-published anywhere, so its `STT1` reader is spec-conformant but has never seen a
-file the instrument wrote. Everything else in it is implemented and tested. It
-turns green when a real file arrives — see the PRD's *Implementation status*.
+**012** is green with one criterion **waived, not met** (2026-08-10): no FLIM
+LABS sample file is published anywhere and none is expected, so its `STT1`
+reader is spec-conformant but has never seen a file the instrument wrote.
+Everything else in it is implemented and tested. If a real file ever turns up,
+verify before trusting — see the PRD's *Implementation status*.
