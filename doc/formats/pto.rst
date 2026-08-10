@@ -536,6 +536,138 @@ unrecognised encoding is an object the reader skips, not a file it rejects.
 Nothing stops an object's payload being another ``.pto``. It is a blob like any
 other.
 
+.. _pto_photons:
+
+Photon streams, natively
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Status: Normative. Specified here; see :ref:`pto_photons_status` for what is
+         built.
+
+``PtoKind "photons"`` with ``PtoEncoding "dstore"`` is a **native photon
+stream**: the decoded events as columns, with no vendor container inside. It is
+what makes a ``.pto`` a *sink* rather than a wrapper. The alternative — a vendor
+file embedded whole and reached as ``run.pto|m001.ptu`` — remains legal and
+remains the fidelity anchor; the two are complementary, not competing. A file
+may carry both, and should when the original exists.
+
+Columns
+^^^^^^^
+
+Exactly four columns, and these names are **normative**. They are pinned to
+tttrlib's in-memory event arrays, so a read is a copy and not a conversion:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 12 66
+
+   * - Column
+     - dtype
+     - Meaning
+   * - ``macro_time``
+     - ``u64``
+     - Absolute event time in macro-time clock periods. **Absolute, never a
+       delta**, and never interrupted by overflow markers — see below.
+   * - ``micro_time``
+     - ``u16``
+     - TCSPC bin index within the excitation period.
+   * - ``routing_channel``
+     - ``i8``
+     - Detector/routing channel as the instrument reported it.
+   * - ``event_type``
+     - ``i8``
+     - 0 for a photon, non-zero for a marker.
+
+Signedness is part of the contract. ``routing_channel`` and ``event_type`` are
+*signed* because tttrlib stores them as ``signed char``; a reader that treats
+them as unsigned will disagree with every other reader about a negative channel.
+
+**No overflow events, and no bit-packing.** Every vendor record stream encodes
+macro time as a rollover counter plus periodic overflow records, so decoding is
+mandatory before an event can be located. A native table has already paid that
+cost: ``macro_time`` is absolute, one row is one event, and row *i* is event
+*i*. That is the whole advantage, and it is why :ref:`ranges <pto_ranges>` over
+a native table need no cue index — the row number **is** the seek position.
+Re-introducing a packed record layout here would forfeit it.
+
+Required header tags
+^^^^^^^^^^^^^^^^^^^^
+
+A photon stream without its clocks is not data — it is a column of integers with
+no unit. The following tags **must** be attached to the photons object's
+``FileUID``, and a reader **must** reject a photons object that lacks them
+rather than inventing a default:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 12 48
+
+   * - Tag
+     - Type
+     - Meaning
+   * - ``_mmfdb_setup.macro_time_resolution``
+     - ``Float``
+     - Macro-time clock period, **in seconds**.
+   * - ``_mmfdb_setup.micro_time_resolution``
+     - ``Float``
+     - TCSPC bin width, **in seconds**.
+   * - ``_pto_photons.number_of_micro_time_channels``
+     - ``Int``
+     - Number of distinct ``micro_time`` values the instrument can produce.
+
+Everything else is **open fidelity**: every row the source header carried is
+preserved verbatim as a tag on the same UID, in the closest ``PtoType``,
+including binary blobs as ``Bytes``. Imaging tags (``ImgHdr_PixX``,
+``ImgHdr_LineStart``, …) are ordinary tags under this rule and reach the CLSM
+auto-configuration unchanged — losing them turns an imaging measurement into an
+unreconstructable list of photons, which is why "preserve everything" is the
+default rather than a curated subset.
+
+.. _pto_photons_vocabulary:
+
+Why two namespaces
+^^^^^^^^^^^^^^^^^^
+
+The two clock tags are **not** invented here. They are MMFDB dictionary terms
+(``_mmfdb_setup.macro_time_resolution``, ``_mmfdb_setup.micro_time_resolution``)
+and are spelled exactly as the dictionary spells them, because MMFDB is the
+vocabulary authority and a term that exists must not be re-coined.
+
+The third has no MMFDB term, and the near-miss is a trap worth naming.
+``_mmfdb_setup.n_bins`` exists, and it means *correlator bins for an FCS channel
+setup* — nothing to do with TCSPC. ``_mmfdb_setup.micro_time_binning`` exists
+too and is a binning **factor** (1, 2, 4, 8), not a count. Reusing either would
+be a silent semantic collision: files would validate, and every consumer would
+read the wrong quantity. So the bin count is specified in PTO's own
+``_pto_photons.`` namespace until MMFDB defines a term, at which point this
+specification adopts it and the PTO-namespaced name becomes a deprecated alias.
+
+The rule generalises: **a tag whose meaning MMFDB already defines uses MMFDB's
+name; a tag it does not define is namespaced to whoever does define it.** A bare,
+unnamespaced tag name in a photons object is a defect — it claims an authority
+nobody holds.
+
+Selecting a stream
+^^^^^^^^^^^^^^^^^^
+
+A container with exactly one photons object opens without a selector. A
+container with more than one **must** be opened with the ``|`` selector, and the
+error for a bare open must list the candidates — a reader that silently picks
+the first has made a measurement-level choice on the user's behalf.
+
+.. _pto_photons_status:
+
+Conformance and status
+^^^^^^^^^^^^^^^^^^^^^^
+
+This section is normative for the *format*. Implementation in tttrlib is
+tracked by PRD-034 and is partial at the time of writing: the reader accepts the
+four columns but does not yet apply the required tags, and there is no writer.
+Until both exist, a ``.pto`` produced by tttrlib carries photons as an embedded
+vendor object, not a native table. A file written by some other implementation
+that follows this section is nonetheless conforming, and reading it is a bug
+that must be fixed here rather than a licence to change the format.
+
 .. _pto_bundling:
 
 Bundling files
