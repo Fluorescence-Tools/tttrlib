@@ -11,6 +11,7 @@ Environment Variables:
 """
 from __future__ import annotations
 
+import importlib.machinery
 import os
 import sys
 from pathlib import Path
@@ -20,12 +21,20 @@ from test_settings import DATA_ROOT, DATA_AVAILABLE  # type: ignore
 # left over from a partial pip install) can shadow the SWIG-built module in
 # build/ext. Put the build output first so every test — including those that
 # spawn subprocesses inheriting sys.path — sees the development build.
+#
+# Only when that build is for *this* interpreter. `build/ext` outlives the
+# Python it was built against: a wrapper beside a `_tttrlib.cpython-310-*.so`
+# shadows a perfectly good install under 3.12 and every test then errors at
+# collection with `No module named '_tttrlib'`, which reads as a broken install
+# rather than a stale build directory.
 _REPO = Path(__file__).resolve().parent.parent.parent
 _BUILD_EXT = _REPO / "build" / "ext"
-if _BUILD_EXT.is_dir():
-    _IDX = 0 if str(_BUILD_EXT) not in sys.path else None
-    if _IDX is not None:
-        sys.path.insert(_IDX, str(_BUILD_EXT))
+_BUILT_HERE = any(
+    (_BUILD_EXT / f"_tttrlib{suffix}").exists()
+    for suffix in importlib.machinery.EXTENSION_SUFFIXES
+)
+if _BUILD_EXT.is_dir() and _BUILT_HERE and str(_BUILD_EXT) not in sys.path:
+    sys.path.insert(0, str(_BUILD_EXT))
 
 
 def pytest_configure(config):

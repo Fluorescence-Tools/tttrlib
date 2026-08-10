@@ -29,6 +29,25 @@ PRDs for detail.
 ---
 
 ## Active
+- **[both] MaxEnt TCSPC moves fully into tttrlib; ChiSurf's numba copy goes**
+  - Timestamp: 2026-08-10
+  - Status: 🔄 in-progress
+  - Scope: `tcspc_build_fi_lifetimes` / `tcspc_build_fi_distances` were exposed
+    with their four output vectors as *arguments*, so no Python caller could
+    reach them. Added NumPy bindings in `ext/python/MaxEntTcspc.i`; ChiSurf's
+    `maxent_decay` plugin now delegates and its three numba kernels are deleted.
+  - Touching: **[tttrlib]** `ext/python/MaxEntTcspc.i`,
+    `test/python/decayfit/test_maxent_tcspc.py` (dropped its
+    `sys.path.insert('/Users/tpeulen/dev/chisurf')` reference — that comparison
+    was about to become a skip that reads like a pass);
+    **[chisurf]** `chisurf/plugins/fluorescence_decay/maxent_decay/core/solver.py`,
+    `test/numba_import_allowlist.txt`, `test/data/numba_parity/maxent_tcspc.npz`,
+    `okf/subsystems/numba-retirement.md`, `okf/log.md`
+  - Measured, so it is not re-derived: delegating **per column** is 10.6× slower
+    than numba (1.57 → 16.6 ms for a 301-lifetime grid) — marshalling a
+    512-element `std::vector` costs ~30 µs against a ~3 µs kernel. The whole
+    design matrix has to cross the boundary in one call.
+
 - **[mmfdb] Vocabulary pushed to `main` (98c0b3b) — consumers are now free to land**
   - Timestamp: 2026-08-10
   - Status: ✅ pushed (`d9fa525..98c0b3b`), verified from a fresh clone of the
