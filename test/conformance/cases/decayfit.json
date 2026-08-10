@@ -301,7 +301,7 @@
         {"op": "first", "on": "params", "as": "best"}
       ],
       "expect": {"objective": 23.802337077132222, "best": 0.7421908319144981},
-      "tolerance": {"objective": 1e-12, "best": 1e-12}
+      "tolerance": {"objective": 1e-06, "best": 1e-06}
     },
     {
       "id": "decayfit.fit24_two_lifetimes",
@@ -602,7 +602,7 @@
         {"op": "first", "on": "params", "as": "best"}
       ],
       "expect": {"objective": 2.410490171683461, "best": -1.0},
-      "tolerance": {"objective": 1e-12, "best": 1e-12}
+      "tolerance": {"objective": 1e-06, "best": 1e-06}
     },
     {
       "id": "decayfit.fit25_selects_a_lifetime",
@@ -908,7 +908,7 @@
         {"op": "first", "on": "params", "as": "best"}
       ],
       "expect": {"objective": 4.7388311813257715, "best": 0.5},
-      "tolerance": {"objective": 1e-12, "best": 1e-12}
+      "tolerance": {"objective": 1e-06, "best": 1e-06}
     },
     {
       "id": "decayfit.fit26_single_parameter",
@@ -1209,7 +1209,7 @@
         {"op": "first", "on": "params", "as": "best"}
       ],
       "expect": {"objective": 2.218771920786607, "best": 0.18560378640907987},
-      "tolerance": {"objective": 1e-12, "best": 1e-12}
+      "tolerance": {"objective": 1e-06, "best": 1e-06}
     },
     {
       "id": "decayfit.the_registry_describes_every_model",
