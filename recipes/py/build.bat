@@ -74,6 +74,9 @@ if exist "%SP_DIR%\tttrlib.py" (
     move "%SP_DIR%\tttrlib.py" "%SP_DIR%\tttrlib\__init__.py"
 )
 
+echo Package directory after assembly:
+dir /b "%SP_DIR%\tttrlib"
+
 exit /b 0
 
 :: ============================================================
