@@ -246,6 +246,10 @@ IF (MSVC)
     # Issue with MSVC exceptions (https://stackoverflow.com/questions/6832666/lnk2019-when-including-asio-headers-solution-generated-with-cmake)
     # https://github.com/microsoft/vcpkg/discussions/25414
     ADD_DEFINITIONS(/DWIN32 /D_WINDOWS)
+    # windows.h min/max macros break std::min/std::max and
+    # std::numeric_limits<>::max() in any TU that pulls it in transitively
+    # (HDF5 does); NOMINMAX ends that class of break for good.
+    ADD_DEFINITIONS(-DNOMINMAX)
     # /GR /EHsc are cl-only flags: keep them out of ADD_DEFINITIONS, or the
     # Ninja generator (cmcldeps) forwards them to rc.exe, which then fails
     # with RC1203 on the bundled libtiff version resource.
