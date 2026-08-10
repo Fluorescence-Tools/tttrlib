@@ -335,6 +335,411 @@ std::vector<double> wiener_deconvolve(const double* image, const std::vector<int
 }
 
 // ---------------------------------------------------------------------------
+// List mode: reconstructing from the photons themselves
+// ---------------------------------------------------------------------------
+
+namespace {
+
+/// Multilinear interpolation of the PSF at a fractional offset.
+///
+/// The PSF is sampled, but a photon sits between samples. Rounding its position
+/// to the nearest sample is what binning does, and avoiding that is the entire
+/// point of working event-wise -- so the kernel is interpolated instead.
+///
+/// Interpolating is not free, and the cost is specific enough to state: linear
+/// interpolation between two taps `1-t` and `t` is a convolution with a
+/// two-point kernel of variance `t(1-t)`, so it *broadens* the PSF by up to
+/// 0.25 px^2 at a half-sample offset and by nothing at all at a whole one. That
+/// is a blur which oscillates with sub-pixel position -- exactly the quantity
+/// event mode exists to preserve. Sampling the PSF `K` times finer shrinks it
+/// to `t(1-t)/K^2`, which is why `oversampling` exists and why the callers
+/// above this one do not leave it at 1.
+///
+/// @param oversampling  Samples per grid pixel in `psf`. `offset` is always in
+///                      grid pixels regardless.
+double psf_at(const double* psf, const std::vector<int>& psf_shape,
+              const std::vector<double>& offset, int oversampling) {
+    const std::size_t rank = psf_shape.size();
+    std::vector<int> base(rank);
+    std::vector<double> fraction(rank);
+    for (std::size_t axis = 0; axis < rank; ++axis) {
+        const double centre = (psf_shape[axis] - 1) / 2.0;
+        const double position = offset[axis] * oversampling + centre;
+        const double floored = std::floor(position);
+        base[axis] = static_cast<int>(floored);
+        fraction[axis] = position - floored;
+        if (base[axis] < -1 || base[axis] >= psf_shape[axis]) return 0.0;
+    }
+    // Sum over the 2^rank corners of the cell the point falls in.
+    double total = 0.0;
+    const std::size_t corners = std::size_t(1) << rank;
+    for (std::size_t corner = 0; corner < corners; ++corner) {
+        double weight = 1.0;
+        std::size_t flat = 0;
+        bool inside = true;
+        for (std::size_t axis = 0; axis < rank; ++axis) {
+            const int step = (corner >> axis) & 1;
+            const int index = base[axis] + step;
+            if (index < 0 || index >= psf_shape[axis]) { inside = false; break; }
+            weight *= step ? fraction[axis] : (1.0 - fraction[axis]);
+            flat = flat * static_cast<std::size_t>(psf_shape[axis])
+                   + static_cast<std::size_t>(index);
+        }
+        if (inside && weight > 0.0) total += weight * psf[flat];
+    }
+    return total;
+}
+
+}  // namespace
+
+std::vector<double> richardson_lucy_events(const double* coordinates, int n_events,
+                                           int rank, const double* weights,
+                                           const std::vector<int>& shape,
+                                           const double* psf,
+                                           const std::vector<int>& psf_shape,
+                                           int n_iter, int psf_oversampling) {
+    if (rank <= 0 || static_cast<std::size_t>(rank) != shape.size()
+        || shape.size() != psf_shape.size())
+        throw std::invalid_argument(
+            "richardson_lucy_events: coordinates, grid and PSF must share a rank");
+    if (n_events < 0) throw std::invalid_argument("richardson_lucy_events: negative event count");
+    if (n_iter < 0) throw std::invalid_argument("richardson_lucy_events: negative n_iter");
+    if (psf_oversampling < 1)
+        throw std::invalid_argument("richardson_lucy_events: psf_oversampling must be at least 1");
+
+    std::size_t n_grid = 1;
+    for (int size : shape) {
+        if (size <= 0) throw std::invalid_argument("richardson_lucy_events: empty grid");
+        n_grid *= static_cast<std::size_t>(size);
+    }
+    std::size_t n_psf = 1;
+    for (int size : psf_shape) n_psf *= static_cast<std::size_t>(size);
+
+    // Normalise so that the kernel sampled at *grid* spacing sums to one. That
+    // is the condition flux conservation rests on -- `sum_x h(u - x) = 1` for a
+    // photon at `u` -- and with an oversampled PSF it is not the same as the
+    // array summing to one.
+    //
+    // Specifically it is not the Riemann sum `array_total / K^rank` either. That
+    // differs from the comb sum by the PSF's truncation and by aliasing, which
+    // is small but not zero: normalising by it left flux off by 1e-4 and pulled
+    // reconstructed centroids 8e-4 px away from the photon that produced them.
+    // So the comb is summed directly, taking every K-th sample outward from the
+    // centre -- which for K = 1 is just the whole array, so the simple path is
+    // unchanged.
+    std::vector<double> kernel(psf, psf + n_psf);
+    double kernel_total = 0.0;
+    {
+        // Offsets from the centre in whole grid pixels, on every axis at once.
+        std::vector<int> lower(rank), upper(rank);
+        bool on_grid = true;
+        for (int axis = 0; axis < rank; ++axis) {
+            if ((psf_shape[axis] - 1) % 2 != 0 && psf_oversampling > 1) on_grid = false;
+            const int centre = (psf_shape[axis] - 1) / 2;
+            lower[axis] = -(centre / psf_oversampling);
+            upper[axis] = (psf_shape[axis] - 1 - centre) / psf_oversampling;
+        }
+        if (on_grid) {
+            std::vector<int> step = lower;
+            for (;;) {
+                std::size_t flat = 0;
+                for (int axis = 0; axis < rank; ++axis)
+                    flat = flat * static_cast<std::size_t>(psf_shape[axis])
+                           + static_cast<std::size_t>((psf_shape[axis] - 1) / 2
+                                                      + step[axis] * psf_oversampling);
+                kernel_total += kernel[flat];
+                int axis = rank - 1;
+                for (; axis >= 0; --axis) {
+                    if (++step[axis] <= upper[axis]) break;
+                    step[axis] = lower[axis];
+                }
+                if (axis < 0) break;
+            }
+        } else {
+            // An even-sided PSF has no sample at its centre, so there is no comb
+            // to sum; the Riemann sum is the best available and the caller gave
+            // up a little accuracy by choosing that shape.
+            kernel_total = std::accumulate(kernel.begin(), kernel.end(), 0.0);
+            for (int axis = 0; axis < rank; ++axis) kernel_total /= psf_oversampling;
+        }
+    }
+    if (!(kernel_total > 0.0))
+        throw std::invalid_argument("richardson_lucy_events: the PSF sums to zero");
+    for (double& value : kernel) value /= kernel_total;
+
+    // Half-widths of the PSF support in *grid pixels*, which bound the loop
+    // around each photon. An oversampled PSF spans fewer pixels than samples.
+    std::vector<int> reach(rank);
+    for (int axis = 0; axis < rank; ++axis)
+        reach[axis] = (psf_shape[axis] / 2 + psf_oversampling - 1) / psf_oversampling + 1;
+
+    std::vector<std::size_t> grid_strides(rank, 1);
+    for (int axis = rank - 2; axis >= 0; --axis)
+        grid_strides[axis] = grid_strides[axis + 1] * static_cast<std::size_t>(shape[axis + 1]);
+
+    std::size_t n_support = 1;
+    for (int axis = 0; axis < rank; ++axis)
+        n_support *= static_cast<std::size_t>(2 * reach[axis] + 1);
+
+    // Sensitivity: how much of the PSF centred on each grid point lands inside
+    // the frame at all. Without dividing by it, the border is driven up to
+    // account for photons that could never have been detected there. It is the
+    // adjoint of the forward operator applied to a frame of ones, so it is
+    // computed through the same `psf_at` rather than by summing the array --
+    // that way it cannot drift out of step with the projection when the
+    // sampling or the interpolation changes.
+    std::vector<double> sensitivity(n_grid, 1.0);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+    for (long long flat = 0; flat < static_cast<long long>(n_grid); ++flat) {
+        std::vector<int> index(rank);
+        std::size_t remainder = static_cast<std::size_t>(flat);
+        for (int axis = 0; axis < rank; ++axis) {
+            index[axis] = static_cast<int>(remainder / grid_strides[axis]);
+            remainder %= grid_strides[axis];
+        }
+        double total = 0.0;
+        std::vector<int> step(rank, 0);
+        std::vector<double> offset(rank);
+        for (std::size_t k = 0; k < n_support; ++k) {
+            bool inside = true;
+            for (int axis = 0; axis < rank; ++axis) {
+                const int neighbour = index[axis] + step[axis] - reach[axis];
+                if (neighbour < 0 || neighbour >= shape[axis]) { inside = false; break; }
+                offset[axis] = static_cast<double>(neighbour - index[axis]);
+            }
+            if (inside) total += psf_at(kernel.data(), psf_shape, offset, psf_oversampling);
+            for (int axis = rank - 1; axis >= 0; --axis) {
+                if (++step[axis] <= 2 * reach[axis]) break;
+                step[axis] = 0;
+            }
+        }
+        sensitivity[static_cast<std::size_t>(flat)] = total > 0.0 ? total : 1.0;
+    }
+
+    std::vector<double> estimate(n_grid, 1.0);
+    std::vector<double> backprojection(n_grid);
+    std::vector<double> forward(static_cast<std::size_t>(n_events), 0.0);
+
+    for (int iteration = 0; iteration < n_iter; ++iteration) {
+        // Forward: what the current estimate predicts at each photon's position.
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
+        for (int event = 0; event < n_events; ++event) {
+            const double* position = coordinates + static_cast<std::size_t>(event) * rank;
+            std::vector<int> centre(rank);
+            for (int axis = 0; axis < rank; ++axis)
+                centre[axis] = static_cast<int>(std::floor(position[axis] + 0.5));
+            double predicted = 0.0;
+            std::vector<int> step(rank, 0);
+            std::vector<double> offset(rank);
+            for (std::size_t k = 0; k < n_support; ++k) {
+                bool inside = true;
+                std::size_t flat = 0;
+                for (int axis = 0; axis < rank; ++axis) {
+                    const int grid = centre[axis] + step[axis] - reach[axis];
+                    if (grid < 0 || grid >= shape[axis]) { inside = false; break; }
+                    flat += static_cast<std::size_t>(grid) * grid_strides[axis];
+                    offset[axis] = position[axis] - grid;
+                }
+                if (inside) predicted += psf_at(kernel.data(), psf_shape, offset, psf_oversampling)
+                                         * estimate[flat];
+                for (int axis = rank - 1; axis >= 0; --axis) {
+                    if (++step[axis] <= 2 * reach[axis]) break;
+                    step[axis] = 0;
+                }
+            }
+            forward[static_cast<std::size_t>(event)] = predicted;
+        }
+
+        // Backward: spread each photon's ratio over the PSF around it.
+        std::fill(backprojection.begin(), backprojection.end(), 0.0);
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            std::vector<double> local(n_grid, 0.0);
+#ifdef _OPENMP
+#pragma omp for schedule(static) nowait
+#endif
+            for (int event = 0; event < n_events; ++event) {
+                const double predicted = forward[static_cast<std::size_t>(event)];
+                if (!(predicted > 0.0)) continue;
+                const double weight =
+                    (weights ? weights[event] : 1.0) / predicted;
+                const double* position = coordinates + static_cast<std::size_t>(event) * rank;
+                std::vector<int> centre(rank);
+                for (int axis = 0; axis < rank; ++axis)
+                    centre[axis] = static_cast<int>(std::floor(position[axis] + 0.5));
+                std::vector<int> step(rank, 0);
+                std::vector<double> offset(rank);
+                for (std::size_t k = 0; k < n_support; ++k) {
+                    bool inside = true;
+                    std::size_t flat = 0;
+                    for (int axis = 0; axis < rank; ++axis) {
+                        const int grid = centre[axis] + step[axis] - reach[axis];
+                        if (grid < 0 || grid >= shape[axis]) { inside = false; break; }
+                        flat += static_cast<std::size_t>(grid) * grid_strides[axis];
+                        offset[axis] = position[axis] - grid;
+                    }
+                    if (inside)
+                        local[flat] += weight * psf_at(kernel.data(), psf_shape, offset, psf_oversampling);
+                    for (int axis = rank - 1; axis >= 0; --axis) {
+                        if (++step[axis] <= 2 * reach[axis]) break;
+                        step[axis] = 0;
+                    }
+                }
+            }
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+            for (std::size_t i = 0; i < n_grid; ++i) backprojection[i] += local[i];
+        }
+
+        for (std::size_t i = 0; i < n_grid; ++i)
+            estimate[i] *= backprojection[i] / sensitivity[i];
+    }
+    return estimate;
+}
+
+std::vector<double> scan_blur_kernel(double dwell_seconds, double jitter_seconds,
+                                     double resolution_seconds, int oversampling,
+                                     bool include_dwell) {
+    if (!(dwell_seconds > 0.0))
+        throw std::invalid_argument("scan_blur_kernel: the dwell time must be positive");
+    if (jitter_seconds < 0.0 || resolution_seconds < 0.0)
+        throw std::invalid_argument("scan_blur_kernel: jitter and resolution must not be negative");
+    if (oversampling < 1)
+        throw std::invalid_argument("scan_blur_kernel: oversampling must be at least 1");
+
+    // Everything in pixels. The dwell rectangle is one pixel wide by definition:
+    // that is what a pixel *is* on a scanning instrument -- the interval the beam
+    // swept while that pixel was counting.
+    const double dwell_width = include_dwell ? 1.0 : 0.0;
+    const double jitter_sigma = jitter_seconds / dwell_seconds;
+    const double quantisation_width = resolution_seconds / dwell_seconds;
+
+    const double sample = 1.0 / oversampling;
+    // The whole thing is built on a grid much finer than the output and
+    // integrated down at the end. That is not fastidiousness: a component
+    // narrower than one output sample has to be able to contribute its width
+    // rather than snapping to a delta or, worse, to one whole sample.
+    const int refine = 64;
+    const double fine = sample / refine;
+
+    const double variance = dwell_width * dwell_width / 12.0
+                            + quantisation_width * quantisation_width / 12.0
+                            + jitter_sigma * jitter_sigma;
+    const double reach = std::max(4.0 * std::sqrt(variance), sample);
+    const int half = static_cast<int>(std::ceil(reach / sample));
+    const int n = 2 * half + 1;
+    const int fine_half = half * refine + refine;
+    const int fine_n = 2 * fine_half + 1;
+
+    // Start from a delta and convolve the three components in.
+    std::vector<double> signal(static_cast<std::size_t>(fine_n), 0.0);
+    signal[static_cast<std::size_t>(fine_half)] = 1.0;
+
+    auto convolve_rect = [&](double width) {
+        if (!(width > 0.0)) return;
+        // A rectangle of this width, sampled on the fine grid. Its taps are
+        // fractional at the ends, so a width that is not a whole number of fine
+        // steps still has exactly that width.
+        const double half_width = width / 2.0;
+        const int taps = static_cast<int>(std::ceil(half_width / fine));
+        std::vector<double> weights(static_cast<std::size_t>(2 * taps + 1), 0.0);
+        double total = 0.0;
+        for (int d = -taps; d <= taps; ++d) {
+            const double lo = std::max((d - 0.5) * fine, -half_width);
+            const double hi = std::min((d + 0.5) * fine, half_width);
+            const double w = std::max(0.0, hi - lo);
+            weights[static_cast<std::size_t>(d + taps)] = w;
+            total += w;
+        }
+        if (!(total > 0.0)) return;
+        for (double& w : weights) w /= total;
+        std::vector<double> out(signal.size(), 0.0);
+        for (std::size_t i = 0; i < signal.size(); ++i) {
+            if (signal[i] == 0.0) continue;
+            for (int d = -taps; d <= taps; ++d) {
+                const long long j = static_cast<long long>(i) + d;
+                if (j < 0 || j >= static_cast<long long>(signal.size())) continue;
+                out[static_cast<std::size_t>(j)] +=
+                    signal[i] * weights[static_cast<std::size_t>(d + taps)];
+            }
+        }
+        signal.swap(out);
+    };
+
+    auto convolve_gaussian = [&](double sigma) {
+        if (!(sigma > 0.0)) return;
+        const int taps = static_cast<int>(std::ceil(4.0 * sigma / fine));
+        if (taps < 1) return;
+        std::vector<double> weights(static_cast<std::size_t>(2 * taps + 1));
+        double total = 0.0;
+        for (int d = -taps; d <= taps; ++d) {
+            const double x = d * fine / sigma;
+            const double w = std::exp(-0.5 * x * x);
+            weights[static_cast<std::size_t>(d + taps)] = w;
+            total += w;
+        }
+        for (double& w : weights) w /= total;
+        std::vector<double> out(signal.size(), 0.0);
+        for (std::size_t i = 0; i < signal.size(); ++i) {
+            if (signal[i] == 0.0) continue;
+            for (int d = -taps; d <= taps; ++d) {
+                const long long j = static_cast<long long>(i) + d;
+                if (j < 0 || j >= static_cast<long long>(signal.size())) continue;
+                out[static_cast<std::size_t>(j)] +=
+                    signal[i] * weights[static_cast<std::size_t>(d + taps)];
+            }
+        }
+        signal.swap(out);
+    };
+
+    convolve_rect(dwell_width);
+    convolve_rect(quantisation_width);
+    convolve_gaussian(jitter_sigma);
+
+    // Integrate the fine grid down onto the output samples, rather than point
+    // sampling it: the kernel multiplies pixel values, so each tap is what falls
+    // within that pixel.
+    //
+    // By *overlap*, not by nearest bin. `refine` is even, so one fine sample per
+    // output sample lands exactly on a bin boundary, and rounding sends every
+    // one of them the same way -- a bias of half a fine step, which showed up as
+    // a kernel whose mean was 1/4096 of a pixel off centre instead of zero. A
+    // symmetric kernel that is not quite symmetric shifts the whole
+    // reconstruction, so it is worth the few lines.
+    std::vector<double> kernel(static_cast<std::size_t>(n), 0.0);
+    for (int i = 0; i < fine_n; ++i) {
+        const double weight = signal[static_cast<std::size_t>(i)];
+        if (weight == 0.0) continue;
+        const double position = (i - fine_half) * fine;
+        const double lo = position - fine / 2.0;
+        const double hi = position + fine / 2.0;
+        const int first = static_cast<int>(std::floor(lo / sample + 0.5));
+        const int last = static_cast<int>(std::floor(hi / sample + 0.5));
+        for (int b = first; b <= last; ++b) {
+            const double edge_lo = (b - 0.5) * sample;
+            const double edge_hi = (b + 0.5) * sample;
+            const double overlap =
+                std::max(0.0, std::min(hi, edge_hi) - std::max(lo, edge_lo));
+            if (overlap <= 0.0) continue;
+            const int bin = b + half;
+            if (bin < 0 || bin >= n) continue;
+            kernel[static_cast<std::size_t>(bin)] += weight * overlap / fine;
+        }
+    }
+    const double total = std::accumulate(kernel.begin(), kernel.end(), 0.0);
+    if (total > 0.0) for (double& value : kernel) value /= total;
+    else kernel[static_cast<std::size_t>(half)] = 1.0;
+    return kernel;
+}
+
+// ---------------------------------------------------------------------------
 // Flat entry points
 // ---------------------------------------------------------------------------
 
@@ -388,6 +793,31 @@ void wiener_deconvolve_2d(double* input, int n_input1, int n_input2, double* psf
     *n_output1 = n_input1;
     *n_output2 = n_input2;
     *output = to_buffer(result);
+}
+
+void richardson_lucy_events_2d(double* input, int n_input1, int n_input2, double* psf,
+                               int n_psf1, int n_psf2, int n_output1, int n_output2,
+                               int n_iter, int psf_oversampling,
+                               double** output, int* n_out1, int* n_out2) {
+    if (n_input2 != 2)
+        throw std::invalid_argument(
+            "richardson_lucy_events_2d: coordinates must be (n_events, 2)");
+    const std::vector<int> shape{n_output1, n_output2};
+    const std::vector<int> psf_shape{n_psf1, n_psf2};
+    const std::vector<double> result = richardson_lucy_events(
+        input, n_input1, 2, nullptr, shape, psf, psf_shape, n_iter, psf_oversampling);
+    *n_out1 = n_output1;
+    *n_out2 = n_output2;
+    *output = to_buffer(result);
+}
+
+void scan_blur_kernel_1d(double dwell_seconds, double jitter_seconds,
+                         double resolution_seconds, int oversampling, bool include_dwell,
+                         double** output, int* n_output) {
+    const std::vector<double> kernel = scan_blur_kernel(
+        dwell_seconds, jitter_seconds, resolution_seconds, oversampling, include_dwell);
+    *n_output = static_cast<int>(kernel.size());
+    *output = to_buffer(kernel);
 }
 
 }  // namespace tttrlib

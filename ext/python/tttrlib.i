@@ -143,6 +143,7 @@ def experimental(cls):
 %include "Cluster.i"
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
+%include "Jitter.i"
 %include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
 

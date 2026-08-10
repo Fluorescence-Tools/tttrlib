@@ -1,5 +1,70 @@
 # Bundle update log
 
+## 2026-08-10 (8th entry)
+
+* **New rule, and it is a rule about API shape**: every algorithm added to this
+  library must be usable on photons. Written up in
+  [specs/photon-native-algorithms.md](specs/photon-native-algorithms.md) and
+  registered in the index. Two entry points, never one -- a standard form on the
+  binned array (numerically identical to whatever reference people will compare
+  it against) and a `*_events` form that takes the detections with fractional
+  coordinates and never builds the grid. Where an algorithm genuinely has no
+  event-wise formulation, the fallback is `Jitter.h`, not binning.
+* **`Jitter.h` / `Jitter.cpp`** (new, in `modules/math`): `jitter_coordinates`,
+  `events_from_counts`, `counts_from_events`, with SWIG bindings and
+  `test/python/misc/test_jitter.py`. The dither is uniform across the bin, drawn
+  from the counter-based path of the central RNG per (photon, axis) so the
+  result does not depend on thread count. The justification in the header is
+  deliberately *not* "binning biases the mean" -- it does not; it is that
+  binning creates ties, and 98.4% of nearest-neighbour distances collapse to
+  exactly zero, which is what makes distance-based methods degenerate rather
+  than merely noisy.
+* **`richardson_lucy_events` gained `psf_oversampling`**, and it is not a tuning
+  knob. Interpolating the kernel at a photon's fractional offset is itself a
+  convolution of variance `t(1-t)` -- up to 0.25 px^2, *varying with sub-pixel
+  position*, which is the exact quantity event mode exists to preserve. Flux,
+  centroid and non-negativity were all exactly right while this was happening.
+  Sampling `K` times finer divides it by `K^2`. It had also been flattering the
+  benchmark, since an over-wide forward model over-sharpens.
+* **Two smaller fixes in the same file.** The kernel is now normalised on the
+  *comb* it is actually sampled at rather than on the fine array's Riemann sum
+  (worth 1e-4 in flux and 8e-4 px in centroid), and `scan_blur_kernel`
+  integrates its fine grid down by overlap rather than to the nearest output
+  sample -- `refine` is even, so one fine sample per output sample sat exactly
+  on a boundary and rounding sent every one of them the same way, leaving a
+  symmetric kernel whose mean was 1/4096 px off centre.
+* **Measured and recorded**: PSF *truncation*, not interpolation, sets how
+  accurately a photon reconstructs to its own position -- 3.7 sigma of support
+  gives 8e-4 px, 5 sigma gives 3e-6, 6.3 sigma gives 2e-9. Five sigma is the
+  number to remember.
+
+## 2026-08-10 (8th entry)
+
+* **The .pto provenance vocabulary is now in mmfdb.dic, and a test keeps it
+  there.** The ask was that the registry literals be documented in mmfdb and
+  compatible with it; the gap turned out to be much wider than the four names I
+  had flagged. `mmfdb.dic` had **no operation category at all** -- so every
+  `_mmfdb_operation.*`, `_mmfdb_artifact.*` and `_mmfdb_edge.*` tag the .pto
+  writer has been emitting all along, including the eight hand-authored pipeline
+  operations, was an undefined name. A reader holding a .pto could not validate
+  its `operation_type`, resolve a settings schema for it, or learn what one row
+  of an artifact is.
+  Added: three categories; `_mmfdb_operation.operation_type` with an enumeration
+  that IS the controlled vocabulary (12 operations); controlled vocabularies for
+  `row_grain` (burst / photon / curve_point / histogram_bin) and `data_format`
+  (bur, bg4, br4, bv4, 2c4, fu4, td4, irf); definitions for `settings_json`,
+  `parent_operation`, `relationship_type`, `source_node_id`; and a save block per
+  operation with its label, grain, format and replayability.
+  `test/python/test_registry_matches_mmfdb.py` enforces it **both ways** -- a
+  registered operation absent from the dictionary fails, and a dictionary entry
+  nobody registers fails too, so the dictionary cannot quietly describe an
+  operation the library dropped. Both directions were verified to actually fire
+  by perturbing the dictionary; a conformance check that cannot fail is
+  decoration, and this file already had one category of names nobody was
+  checking.
+  Remaining for criterion 10: settings keys and output column names are not yet
+  checked against the dictionary.
+
 ## 2026-08-08
 
 * **Replacement**: Replaced the click-based `bin/tttrlib` Python runner with a

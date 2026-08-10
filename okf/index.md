@@ -24,6 +24,12 @@ toolchain, and honest status of work in progress.
 
 * [Test workload tiers and the fast lane](testing/test-workload-tiers.md) - what the suite actually costs (29 tests are 85% of it), the `--lane` tiers and the audit that keeps them honest, and the cold-cache trap that makes a first measurement wrong by 4x
 
+# Specifications
+
+* [Every algorithm must work on photons](specs/photon-native-algorithms.md) - **the API-shape rule for anything added here**: a standard form and a photon form, the jitter bridge for algorithms that have no event-wise formulation, and the three defects the first case shipped with anyway (kernel interpolation broadens by `t(1-t)`, truncation sets positional accuracy, normalise on the comb)
+* [PTU binary decoding](specs/pto-binary-decoding.md)
+* [tttr runner](specs/tttr-runner.md)
+
 # Design
 
 * [Folding chisurf's PDA3c into tttrlib's `pda` module](design/pda-3colour-fold-in.md) - implemented as `PdaBurstLikelihood`; the plan, what was done, and what stays in chisurf

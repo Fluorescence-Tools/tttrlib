@@ -29,6 +29,26 @@ PRDs for detail.
 ---
 
 ## Active
+- **[both] Photon-native algorithms: the API rule, the jitter bridge, single-photon deconvolution**
+  - Timestamp: 2026-08-10 18:20
+  - Status: 🔄 in-progress — engine + tests green, docs and commits remaining
+  - Scope: New tttrlib rule in `okf/specs/photon-native-algorithms.md` — every
+    algorithm ships a standard form *and* a `*_events` photon form; where no
+    event-wise formulation exists the fallback is jitter, never binning. New
+    shared `Jitter.h`/`Jitter.cpp`. Deconvolution is the worked first case:
+    `richardson_lucy_events` + `scan_blur_kernel`, and a `psf_oversampling`
+    parameter that removes a `t(1-t)` broadening the interpolation was adding.
+  - Touching: `[tttrlib]` `modules/math/{include,src}/{Jitter,Deconvolution}.*`,
+    `modules/math/CMakeLists.txt`, `ext/python/{Jitter.i,tttrlib.i}`,
+    `test/python/misc/test_{jitter,deconvolution}.py`, `okf/{index,log}.md`,
+    `okf/specs/photon-native-algorithms.md`;
+    `[chisurf]` `chisurf/core/fluorescence/imaging/restoration.py`,
+    `test/core/test_restoration.py`, `docs/concepts/deconvolution.md`.
+  - Note: `modules/math/include/Mat.h` carries an uncommitted one-line fix from
+    an earlier session (the `TTTRLIB_VEC_REDUCTION` `_Pragma` macro never
+    substituted its parameter, so the pragma was inert). Untracked and not
+    mine to commit — whoever owns that file, please take it.
+
 - **[both] PRD-93: the four-repository split — scope boundaries, then cgdye into imp.bff**
   - Timestamp: 2026-08-10 15:40
   - Status: 🔄 in-progress — stages 0 and 2 done, stage 1 next
