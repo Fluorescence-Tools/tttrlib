@@ -211,7 +211,12 @@ public:
     unsigned int get_effective_number_of_micro_time_channels(){
         double macro_time_resolution = get_macro_time_resolution();
         double micro_time_resolution = get_micro_time_resolution();
-        return (unsigned int) std::floor(macro_time_resolution / micro_time_resolution);
+        // A missing resolution tag reads as -1, so the quotient can be
+        // negative, infinite or NaN -- casting any of those to unsigned is
+        // undefined and lands on different values per platform.
+        if (!(macro_time_resolution > 0.0) || !(micro_time_resolution > 0.0)) return 0;
+        const double ratio = std::floor(macro_time_resolution / micro_time_resolution);
+        return ratio > 0.0 ? (unsigned int) ratio : 0;
     }
 
     /*!
