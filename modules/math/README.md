@@ -119,3 +119,34 @@ The tie-break never sees it, and the kernel returns a different — perfectly
 valid — minimum spanning tree. That is the failure the whole total-order
 apparatus exists to prevent, and it hid for a while because the two kernels
 still agreed on most fixtures.
+## Deconvolution.h — undoing a known blur
+
+`richardson_lucy` is the Poisson maximum-likelihood restoration: the fixed-point
+iteration that divides the measurement by the reblurred estimate and pushes the
+ratio back through the point spread function. It belongs in a photon library
+because its noise model is the one photon counting actually obeys, and because
+the estimate stays non-negative and flux-conserving by construction — neither of
+which a linear filter can promise. `wiener_deconvolve` is the linear
+Gaussian-noise alternative, one transform pair and a single knob.
+
+Three implementation points carry the whole thing:
+
+* **The PSF is transformed once.** Each iteration needs two convolutions with
+  it, so a spatial implementation costs `O(iterations x pixels x psf_pixels)` —
+  minutes on a stack. Transforming the kernel once makes every iteration four
+  transforms of the padded image, `O(iterations x n log n)`, independent of how
+  big the PSF is.
+* **The padding is correctness, not speed.** An FFT convolution is circular, so
+  without padding to at least `n + m - 1` per axis the top of the image bleeds
+  into the bottom. The padded extent is then rounded up to a 5-smooth length,
+  which is free (the extra region is zeros either way) and avoids Bluestein.
+* **The "same" crop offset is `(m - 1) / 2` per axis.** That single expression is
+  the compatibility surface with every other implementation: get it wrong by one
+  and the output is the right image shifted by a pixel, which looks entirely
+  plausible and is caught by exactly one test.
+
+Biggs-Andrews acceleration is available and **off by default**, for a measured
+reason: it walks the same path with larger steps, so thirty accelerated
+iterations land where four hundred plain ones do. That reaches the optimum in
+about five iterations instead of twenty — and sails past it just as fast, which
+matters because in Richardson-Lucy the iteration count *is* the regularisation.
