@@ -102,7 +102,10 @@ $result = swig::from($1);
 // Instantiate the int64_t-based containers there so the APIs spelled with
 // int64_t (BurstFilter, BurstFeatureExtractor) convert to/from native lists
 // just like they do on Windows/macOS, where int64_t is 'long long'.
-#ifdef SWIGWORDSIZE64
+// Java and JavaScript are excluded: stdint.i is deliberately not included
+// at this point (see the note at the top of this file), so int64_t is an
+// unresolved type here and the generated containers do not compile there.
+#if defined(SWIGWORDSIZE64) && !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT)
 %template(VectorInt64T) std::vector<int64_t>;
 %template(PairInt64T) std::pair<int64_t, int64_t>;
 %template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
