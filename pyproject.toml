@@ -162,7 +162,7 @@ before-build = "pip install delvewheel"
 # content hash to avoid collisions, which is right for third-party dependencies
 # and wrong for tttrlib_*.dll -- the module libraries are referenced by name and
 # a mangled name is a name nothing looks for.
-repair-wheel-command = "delvewheel repair --no-mangle \"tttrlib_*.dll\" -w {dest_dir} {wheel}"
+repair-wheel-command = "delvewheel repair --ignore-existing --no-mangle \"tttrlib_*.dll\" -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
 CMAKE_GENERATOR = "Visual Studio 17 2022"
