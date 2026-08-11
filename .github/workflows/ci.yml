@@ -82,7 +82,13 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+          sudo apt-get install -y libhdf5-dev cmake ninja-build
+          # apt has SWIG 4.2, and ext/CMakeLists.txt withholds -DSWIGWORDSIZE64
+          # from the R module below SWIG 4.4. Without it SWIG resolves uint64_t
+          # to 'unsigned long long' while the compiler says 'unsigned long', and
+          # a std::vector<uint64_t> return (PtoFile::find_all) generates a cast
+          # between two unrelated vector types. The PyPI wheel carries 4.4.
+          sudo pip3 install --break-system-packages "swig~=4.4"
       - name: Configure and build R module
         run: |
           cmake -S . -B build-r -G Ninja \

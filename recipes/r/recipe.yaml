@@ -23,7 +23,11 @@ requirements:
     - ninja
     - if: not win
       then: make
-    - swig >=4.1
+    # >=4.4, not >=4.1: below that ext/CMakeLists.txt withholds -DSWIGWORDSIZE64
+    # from the R module, and SWIG then resolves uint64_t to 'unsigned long long'
+    # where the compiler says 'unsigned long' -- a std::vector<uint64_t> return
+    # generates a cast between two unrelated vector types and does not compile.
+    - swig >=4.4
   host:
     # SWIG's R runtime uses pre-4.5 internals (SET_S4_OBJECT, writable
     # CHARACTER_POINTER); pin to R 4.4.x, matching the CI R test.
