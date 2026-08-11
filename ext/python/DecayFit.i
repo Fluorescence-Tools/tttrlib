@@ -17,6 +17,9 @@
 #include "DecayFitNExp.h"
 #include "DecayFitDFA.h"
 #include <nlohmann/json.hpp>
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
 using json = nlohmann::json;
 %}
 
@@ -164,31 +167,107 @@ void decay_fit23_model_curve(
 }
 %}
 
-// The donor(x)FRET(x)anisotropy kernel. Exposed as plain vector functions so the
+// The donor(x)FRET(x)anisotropy kernel. Exposed as plain functions so the
 // physics can be tested on its own — against a direct periodic sum, against the
 // closed-form anisotropy — without constructing a fit around it.
+//
+// ---------------------------------------------------------------------------
+// These cross as NumPy buffers, and they used to cross as VectorDouble
+// ---------------------------------------------------------------------------
+// The default `std::vector<double>` typemaps convert through the Python
+// sequence protocol, one boxed float per element each way, so the wrapper set
+// the runtime of every call. Measured before the change (arm64, best of 200,
+// recursive backend, one rate):
+//
+//   n_bins   list in    ndarray in
+//       64    3.00 us      5.58 us
+//      512   12.17 us     26.42 us
+//     4096   85.50 us    192.92 us
+//    16384  326.00 us    761.96 us
+//
+// Note which column is worse. Passing a NumPy array — the obvious thing to do,
+// and what every caller in this repository does — was *twice* the cost of
+// passing a list, because unboxing a NumPy scalar per element is more work than
+// unboxing a float. The natural call was the slow one.
+//
+// The example this kernel exists to justify makes the point: it timed the two
+// convolution backends with `irf.tolist()` inside the timing loop, so its
+// "recursion vs transform" figure was substantially a measurement of this
+// wrapper. See okf/bindings/marshalling-cost.md and PERF.md.
+//
+// The Python call is unchanged — same names, same order, and a list still works
+// because a NumPy input typemap accepts any sequence. What changes is that an
+// ndarray is now passed by pointer, and the return is an ndarray rather than a
+// VectorDouble proxy.
+// These typemaps are NOT Python-only, which is worth stating because it is easy
+// to assume otherwise. `ext/r/rarrays.i`, `ext/java/jarrays.i` and
+// `ext/js/jsarrays.i` implement the same `IN_ARRAY*` / `INPLACE_ARRAY*` /
+// `ARGOUTVIEW(M)_ARRAY*` names against R vectors, Java arrays and JS
+// TypedArrays, precisely so one %apply line serves all four languages. Verified
+// by generating the R wrapper: `dfa_convolve(rates, weights, irf, n_bins,
+// shift_bins, method)` takes plain R numeric vectors. So this conversion makes
+// the call cheaper everywhere, not just in Python — no per-language surface,
+// and no `#ifdef SWIGPYTHON`.
+
+%clear (double* irf, int n_irf);
+
+%apply (double* IN_ARRAY1, int DIM1) {
+    (double* rates, int n_rates),
+    (double* weights, int n_weights),
+    (double* irf, int n_irf),
+    (double* kd, int n_kd), (double* pd, int n_pd),
+    (double* kf, int n_kf), (double* pf, int n_pf),
+    (double* ka, int n_ka), (double* pa, int n_pa)
+}
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** out, int* n_out)}
+
+%{
+// ARGOUTVIEWM hands ownership to NumPy and frees with free(), so the copy out
+// of the std::vector has to be malloc'd rather than new'd.
+static void dfa_mem_out(const std::vector<double>& v, double** out, int* n_out) {
+    double* p = (double*) std::malloc(std::max<size_t>(v.size(), 1) * sizeof(double));
+    if (p != nullptr && !v.empty())
+        std::memcpy(p, v.data(), v.size() * sizeof(double));
+    *out = p;
+    *n_out = (int) v.size();
+}
+
+// A borrowed NumPy buffer as the vector the dfa:: signatures take. This is a
+// memcpy-rate copy inside C++ (~0.5 ns/element); what it avoids is the
+// Python-side conversion, which boxes one object per element.
+static inline std::vector<double> dfa_mem_in(const double* p, int n) {
+    return (p == nullptr || n <= 0) ? std::vector<double>()
+                                    : std::vector<double>(p, p + n);
+}
+%}
+
 %inline %{
 /*! VV/VH decay of a donor(x)FRET(x)anisotropy rate spectrum; see DecayFitDFA.h. */
-std::vector<double> dfa_vv_vh_decay(
-        const std::vector<double>& kd, const std::vector<double>& pd,
-        const std::vector<double>& kf, const std::vector<double>& pf,
-        const std::vector<double>& ka, const std::vector<double>& pa,
-        double r0, double g, int n_bins) {
+void dfa_vv_vh_decay(
+        double* kd, int n_kd, double* pd, int n_pd,
+        double* kf, int n_kf, double* pf, int n_pf,
+        double* ka, int n_ka, double* pa, int n_pa,
+        double r0, double g, int n_bins,
+        double** out, int* n_out) {
     std::vector<double> vv, vh;
-    dfa::vv_vh_decay(kd, pd, kf, pf, ka, pa, r0, g, (std::size_t) n_bins, vv, vh);
+    dfa::vv_vh_decay(dfa_mem_in(kd, n_kd), dfa_mem_in(pd, n_pd),
+                     dfa_mem_in(kf, n_kf), dfa_mem_in(pf, n_pf),
+                     dfa_mem_in(ka, n_ka), dfa_mem_in(pa, n_pa),
+                     r0, g, (std::size_t) n_bins, vv, vh);
     vv.insert(vv.end(), vh.begin(), vh.end());   // returned in VV|VH layout
-    return vv;
+    dfa_mem_out(vv, out, n_out);
 }
 
 /*! One periodic multiexponential decay, from the closed form. */
-std::vector<double> dfa_periodic_decay(
-        const std::vector<double>& rates, const std::vector<double>& weights,
-        int n_bins) {
+void dfa_periodic_decay(
+        double* rates, int n_rates, double* weights, int n_weights,
+        int n_bins, double** out, int* n_out) {
     std::vector<std::complex<double>> spectrum;
     std::vector<double> decay;
-    dfa::periodic_spectrum(rates, weights, (std::size_t) n_bins, spectrum);
+    dfa::periodic_spectrum(dfa_mem_in(rates, n_rates), dfa_mem_in(weights, n_weights),
+                           (std::size_t) n_bins, spectrum);
     dfa::inverse(spectrum, (std::size_t) n_bins, decay);
-    return decay;
+    dfa_mem_out(decay, out, n_out);
 }
 
 /*!
@@ -198,30 +277,36 @@ std::vector<double> dfa_periodic_decay(
  * kernel the recursion's trapezoid rule applies, so they do not sit half a bin
  * apart. See DecayFitDFA.h.
  */
-std::vector<double> dfa_convolve(
-        const std::vector<double>& rates, const std::vector<double>& weights,
-        const std::vector<double>& irf, int n_bins, double shift_bins, int method) {
-    std::vector<double> out;
+void dfa_convolve(
+        double* rates, int n_rates, double* weights, int n_weights,
+        double* irf, int n_irf, int n_bins, double shift_bins, int method,
+        double** out, int* n_out) {
+    std::vector<double> decay;
     dfa::convolve(method == 1 ? dfa::ConvolutionMethod::Spectral
                               : dfa::ConvolutionMethod::Recursive,
-                  rates, weights, irf, (std::size_t) n_bins, shift_bins, out);
-    return out;
+                  dfa_mem_in(rates, n_rates), dfa_mem_in(weights, n_weights),
+                  dfa_mem_in(irf, n_irf), (std::size_t) n_bins, shift_bins, decay);
+    dfa_mem_out(decay, out, n_out);
 }
 
 /*! VV/VH decay convolved with the IRF, choosing the backend (0 rec, 1 spectral). */
-std::vector<double> dfa_vv_vh_convolved(
-        const std::vector<double>& kd, const std::vector<double>& pd,
-        const std::vector<double>& kf, const std::vector<double>& pf,
-        const std::vector<double>& ka, const std::vector<double>& pa,
-        double r0, double g, const std::vector<double>& irf,
-        int n_bins, double shift_bins, int method) {
+void dfa_vv_vh_convolved(
+        double* kd, int n_kd, double* pd, int n_pd,
+        double* kf, int n_kf, double* pf, int n_pf,
+        double* ka, int n_ka, double* pa, int n_pa,
+        double r0, double g, double* irf, int n_irf,
+        int n_bins, double shift_bins, int method,
+        double** out, int* n_out) {
     std::vector<double> vv, vh;
     dfa::vv_vh_convolved(method == 1 ? dfa::ConvolutionMethod::Spectral
                                      : dfa::ConvolutionMethod::Recursive,
-                         kd, pd, kf, pf, ka, pa, r0, g, irf,
+                         dfa_mem_in(kd, n_kd), dfa_mem_in(pd, n_pd),
+                         dfa_mem_in(kf, n_kf), dfa_mem_in(pf, n_pf),
+                         dfa_mem_in(ka, n_ka), dfa_mem_in(pa, n_pa),
+                         r0, g, dfa_mem_in(irf, n_irf),
                          (std::size_t) n_bins, shift_bins, vv, vh);
     vv.insert(vv.end(), vh.begin(), vh.end());
-    return vv;
+    dfa_mem_out(vv, out, n_out);
 }
 
 /*!
@@ -230,19 +315,33 @@ std::vector<double> dfa_vv_vh_convolved(
  * band-limited interpolation and the decay steps at the period boundary, so
  * shifting it rings and goes negative. See DecayFitDFA.h.
  */
-std::vector<double> dfa_convolved_decay(
-        const std::vector<double>& rates, const std::vector<double>& weights,
-        const std::vector<double>& irf, int n_bins, double shift_bins) {
+void dfa_convolved_decay(
+        double* rates, int n_rates, double* weights, int n_weights,
+        double* irf, int n_irf, int n_bins, double shift_bins,
+        double** out, int* n_out) {
     std::vector<std::complex<double>> si, sd;
-    std::vector<double> out;
-    dfa::normalised_spectrum(irf, (std::size_t) n_bins, si);
+    std::vector<double> decay;
+    dfa::normalised_spectrum(dfa_mem_in(irf, n_irf), (std::size_t) n_bins, si);
     dfa::apply_timeshift(si, (std::size_t) n_bins, shift_bins);
-    dfa::periodic_spectrum(rates, weights, (std::size_t) n_bins, sd);
+    dfa::periodic_spectrum(dfa_mem_in(rates, n_rates), dfa_mem_in(weights, n_weights),
+                           (std::size_t) n_bins, sd);
     for (std::size_t w = 0; w < si.size(); ++w) sd[w] *= si[w];
-    dfa::inverse(sd, (std::size_t) n_bins, out);
-    return out;
+    dfa::inverse(sd, (std::size_t) n_bins, decay);
+    dfa_mem_out(decay, out, n_out);
 }
 %}
+
+%clear (double* rates, int n_rates);
+%clear (double* weights, int n_weights);
+%clear (double* irf, int n_irf);
+%clear (double* kd, int n_kd);
+%clear (double* pd, int n_pd);
+%clear (double* kf, int n_kf);
+%clear (double* pf, int n_pf);
+%clear (double* ka, int n_ka);
+%clear (double* pa, int n_pa);
+%clear (double** out, int* n_out);
+
 
 #ifdef SWIGPYTHON
 %pythoncode "./ext/python/DecayFitPython.py"

@@ -51,9 +51,9 @@ i = np.arange(n_bins)
 irf = np.exp(-0.5 * ((i - 100.0) / 12.0) ** 2)
 
 recursive = np.asarray(
-    tttrlib.dfa_convolve(rates, weights, irf.tolist(), n_bins, 0.0, RECURSIVE))
+    tttrlib.dfa_convolve(rates, weights, irf, n_bins, 0.0, RECURSIVE))
 spectral = np.asarray(
-    tttrlib.dfa_convolve(rates, weights, irf.tolist(), n_bins, 0.0, SPECTRAL))
+    tttrlib.dfa_convolve(rates, weights, irf, n_bins, 0.0, SPECTRAL))
 
 fig, ax = plt.subplots(2, 1, sharex=True, figsize=(7, 6),
                        gridspec_kw={"height_ratios": [3, 1]})
@@ -105,11 +105,11 @@ for k in (0.005, 0.01, 0.05, 0.1, 0.3):
 def timed(method, n_rates, repeat=50):
     """Best-of-`repeat` wall time for one convolution, in microseconds."""
     taus = np.geomspace(10.0, 500.0, n_rates)
-    rs, ws = (1.0 / taus).tolist(), [1.0 / n_rates] * n_rates
+    rs, ws = 1.0 / taus, np.full(n_rates, 1.0 / n_rates)
     best = np.inf
     for _ in range(repeat):
         t0 = time.perf_counter()
-        tttrlib.dfa_convolve(rs, ws, irf.tolist(), n_bins, 0.0, method)
+        tttrlib.dfa_convolve(rs, ws, irf, n_bins, 0.0, method)
         best = min(best, time.perf_counter() - t0)
     return best * 1e6
 
@@ -152,9 +152,9 @@ for n, s in zip(counts, speedup):
 # the spectral path is right.
 
 broad = np.exp(-0.5 * ((i - 100.0) / 300.0) ** 2)
-a = np.asarray(tttrlib.dfa_convolve(rates, weights, broad.tolist(), n_bins, 0.0,
+a = np.asarray(tttrlib.dfa_convolve(rates, weights, broad, n_bins, 0.0,
                                     RECURSIVE))
-b = np.asarray(tttrlib.dfa_convolve(rates, weights, broad.tolist(), n_bins, 0.0,
+b = np.asarray(tttrlib.dfa_convolve(rates, weights, broad, n_bins, 0.0,
                                     SPECTRAL))
 wrapped_gap = np.abs(a - b).max() / a.max()
 print("compact response: %.1e   broad (wrapping) response: %.1e"
@@ -188,11 +188,11 @@ plt.tight_layout()
 # grow with the number of rates.
 
 shifted = np.asarray(
-    tttrlib.dfa_convolve(rates, weights, irf.tolist(), n_bins, 0.5, RECURSIVE))
+    tttrlib.dfa_convolve(rates, weights, irf, n_bins, 0.5, RECURSIVE))
 unshifted = np.asarray(
-    tttrlib.dfa_convolve(rates, weights, irf.tolist(), n_bins, 0.0, RECURSIVE))
+    tttrlib.dfa_convolve(rates, weights, irf, n_bins, 0.0, RECURSIVE))
 one_bin = np.asarray(
-    tttrlib.dfa_convolve(rates, weights, irf.tolist(), n_bins, 1.0, RECURSIVE))
+    tttrlib.dfa_convolve(rates, weights, irf, n_bins, 1.0, RECURSIVE))
 
 plt.figure(figsize=(7, 4))
 plt.plot(unshifted[80:140], "o-", label="shift 0")

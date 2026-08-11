@@ -227,6 +227,43 @@ divide out of a rate spectrum, it reweights it.
 
 Reproduce with `python benchmarks/bench_convolution.py`.
 
+#### The measurement itself was 70–90% wrapper until 2026-08-11
+
+Worth recording because it changed the published figure, not just the runtime.
+The `dfa_*` entry points marshalled every array through the Python sequence
+protocol — one boxed float per element, each way — so a caller paid ~50 ns per
+element on top of the algorithm. Converted to NumPy typemaps
+(`double* IN_ARRAY1` in, `ARGOUTVIEWM_ARRAY1` out), same arithmetic, arm64,
+best of 200, recursive backend:
+
+| n_bins | rates | ndarray in, before | after | speedup |
+|-------:|------:|-------------------:|------:|--------:|
+| 64 | 1 | 5.58 µs | **1.00 µs** | 5.6× |
+| 512 | 1 | 26.42 µs | **3.50 µs** | 7.5× |
+| 4096 | 1 | 192.92 µs | **24.83 µs** | 7.8× |
+| 16384 | 1 | 761.96 µs | **90.75 µs** | 8.4× |
+| 16384 | 16 | 1171.87 µs | **508.46 µs** | 2.3× |
+
+Two things in that table are worth more than the speedup.
+
+**The natural call was the slow one.** Before the change, passing a NumPy array
+cost about *twice* what passing a list cost (761.96 vs 326.00 µs at 16384),
+because unboxing a NumPy scalar per element is more work than unboxing a float.
+Every caller in this repository passes arrays. After the change a list is
+marginally slower than it was (326.00 → 396.87 µs — NumPy now has to build an
+array from it) and an array is 8× faster; lists still work, and nothing about
+the call changed.
+
+**It moved the published comparison above.** With both backends paying the same
+wrapper, the ratio between them was pulled toward 1 at small rate counts, which
+is where the wrapper share is largest. The example's own figure went from
+1.6× → 6.0× across 1–64 rates to **4.1× → 7.2×**. The 1-rate point had been
+close enough to 1.0 that a busy machine could invert it, which is how this was
+found: as a flaky strict inequality in
+`test_convolution_methods_example.py`, filed in `BUGS.md`, split into a
+two-tier assertion — and then made a single strict assertion again once the
+real cause was gone.
+
 ### You do not need a GPU
 
 FLIMKit ships a GPU backend (MLX / CUDA / MPS / ROCm); on this machine its GPU
