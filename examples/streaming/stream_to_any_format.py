@@ -53,7 +53,10 @@ def verdict(control, streamed, n, macro_ok, micro_ok):
     """Judge a streamed file against the whole-file baseline, not against
     perfection -- the two failures look the same and are not the same."""
     if control == 0:
-        return "format cannot round-trip (write is broken too)"
+        # Not a writer defect and not a streaming one: the bytes are right and
+        # detection cannot identify them, so opening by name gives an empty
+        # TTTR. Filed in BUGS.md; TTTR(path, container) reads these back whole.
+        return "not re-detected by name (see BUGS.md)"
     if streamed != control:
         return "STREAMING LOST EVENTS"
     if macro_ok and micro_ok:
@@ -154,9 +157,11 @@ def main():
     print(f"\nfiles in {tmp}")
     print("\n'as whole file' means streaming matched TTTR.write exactly -- any")
     print("loss is the format's record layout (fewer micro-time or channel bits")
-    print("than the source), not the streaming. 'format cannot round-trip' means")
-    print("a whole-file write to that format does not read back either, which is")
-    print("a pre-existing gap in that writer and nothing to do with acquiring.")
+    print("than the source), not the streaming.")
+    print("\n'not re-detected by name' is neither: those files are written")
+    print("correctly and read back whole with TTTR(path, container_type). What")
+    print("fails is identifying them from the path, and TTTR(path) then returns")
+    print("an EMPTY object instead of raising. Filed in BUGS.md.")
 
 
 if __name__ == "__main__":

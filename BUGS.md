@@ -3,6 +3,176 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## A file tttrlib wrote is not recognised by tttrlib, and opening it returns zero events instead of failing
+
+**2026-08-11.** Three formats — **SPC-600/256, SPC-600/4096 and `.sm`** — write
+correctly and cannot be opened again by name. `write()` returns `True`, the
+file has plausible size, and `TTTR(path)` hands back an **empty object with no
+exception**:
+
+```python
+t = tttrlib.TTTR("some.ht3")                 # 11,605,946 events
+t.write("out.spc", None, 3)                  # BH_SPC600_256 -> True, 46.5 MB
+len(tttrlib.TTTR("out.spc"))                 # 0        <- and only a stderr line
+```
+
+**The bytes are correct.** Forcing the container type reads the whole thing
+back:
+
+```python
+len(tttrlib.TTTR("out.spc", 3))              # 11,605,946
+# first 1000 macro times identical to the source
+```
+
+So this is **not** a writer defect. The writer is fine and the payload is
+faithful; what fails is *identification*, and then the failure is swallowed.
+
+| Container | written | `TTTR(path)` | `TTTR(path, container)` |
+|---|---|---|---|
+| SPC-600/256 (3) | 46.5 MB | **0** | 11,605,946 |
+| SPC-600/4096 (4) | 69.6 MB | **0** | 11,605,946 |
+| `.sm` (7) | 139.3 MB | **0** | 11,605,946 |
+
+Real files of these types open by name normally (`sample_c01.spc` → 607,866;
+`data.sm` → 2,060,245), so the sniffers work on instrument files and not on
+ours. For `.spc` the extension is claimed by four formats — SPC-130, both
+SPC-600 flavours and SPC-QC — and they are told apart by content, so a written
+SPC-600 is most likely being tried as SPC-130 and rejected, or matching nothing.
+`.sm` has the extension to itself, which makes it the cleaner case to debug
+first: nothing else can be shadowing it.
+
+**Two defects, and the second is the dangerous one.**
+
+1. **Detection does not recognise what this library writes.** Whatever the
+   sniffer keys on, `write` is not producing it — a header field, a magic
+   value, or a size that has to divide evenly. A round trip through our own
+   writer is the one case detection should never miss.
+2. **`TTTR(path)` returns an empty object rather than raising.** "File not
+   supported" goes to `stderr` and the constructor succeeds. A caller in a
+   script, a notebook or a GUI gets a TTTR with zero photons and no exception,
+   and every downstream number — a count rate, a correlation, a lifetime — is
+   computed from nothing. Anything that captured stderr, or simply was not
+   watching it, sees a measurement that ran and produced no signal. **This
+   half is not specific to these three formats**: it is what happens for any
+   unidentifiable path, so it is the more valuable of the two to fix.
+
+**What to do.** Fix (2) first and independently — an unidentifiable file must
+raise, and the message must name the path and say detection failed. Then (1):
+compare the first kilobyte of a written SPC-600 against `sample_c01.spc`, and a
+written `.sm` against `data.sm`, and make the writer emit whatever the sniffer
+requires. A conformance case per format that writes and reopens **by name**
+would have caught this and would keep it caught; today's round-trip tests pass
+the container type explicitly, which is exactly the path that works.
+
+**Found while** adding streaming writers, where the same three formats stood out
+(`examples/streaming/stream_to_any_format.py` compares every streamed file with
+a whole-file `TTTR.write` and marks these "format cannot round-trip"). Worth
+correcting the record: that example's wording, and my first reading of it, put
+the blame on the writers. The forced-read column above shows the writers are
+innocent.
+
+## Sixteen to eighteen subsystems are Python-only, and every other binding's interface file says it is identical to Python's
+
+**2026-08-11.** The four bindings do not share one `%include` list. Each master
+interface keeps its own, and they have drifted:
+
+```
+python  60 includes
+r       43   (17 missing)
+java    44   (18 missing)
+js      45   (16 missing)
+```
+
+Missing from all three: `Cluster.i` (the k-d tree and the HDBSCAN kernels),
+`Deconvolution.i`, `MaxEnt.i`, `MaxEntTcspc.i`, `Pda3cCore.i`, `GopichSzabo.i`,
+`PhotonCountingHistogram.i`, `Streaming.i`, `BurstML.i`, `Sampling.i`,
+`Jitter.i`, `BlindIRF.i`, `RecurrenceAnalysis.i`, `SpectralCrosstalk.i`,
+`BackgroundEstimation.i`; plus `BurstSignificance.i` (R, Java) and
+`documentation.i` (Java).
+
+Reproduce:
+
+```python
+import re, pathlib
+inc = lambda p: [m.group(1) for m in
+                 re.finditer(r'^%include\s+"([^"]+)"', pathlib.Path(p).read_text(), re.M)]
+py = inc('ext/python/tttrlib.i')
+for b in ('r', 'java', 'js'):
+    missing = [i for i in py if i not in set(inc(f'ext/{b}/tttrlib.i'))]
+    print(b, len(missing), missing)
+```
+
+Two things make this worse than a to-do list.
+
+**Every one of those files asserted the opposite.** All three carried the line
+`// Shared C++ core -- identical %include list to ext/python/tttrlib.i`, and the
+JavaScript one repeated it further down. A reader checking whether R has the
+clustering kernels finds a comment saying it must. Corrected 2026-08-11 to state
+the drift and point at the board ticket; the code is unchanged.
+
+**Nothing detected it — now something does.** `tools/check_swig_multilang.sh`
+ran SWIG four times and passed if four wrappers generate; it never compared what
+they expose, so a subsystem could be complete in Python and absent from the
+other three indefinitely with a green check.
+
+`tools/check_binding_parity.py` (2026-08-11, wired in as a fifth check) closes
+that. It does not demand parity — it demands every gap be **declared**: an
+interface missing from a binding must appear in
+`tools/binding_parity_exceptions.txt` with a reason, and an exception for a gap
+that has since been closed fails too, so the list cannot rot. The 51 current
+gaps are seeded there, almost all reading *"unreviewed drift as of 2026-08-11,
+not a decision"* — which is what they are. **The gaps themselves are still
+open**; what changed is that they are now visible and cannot silently grow.
+
+**Adding these back needs nothing clever, and I first thought it did.** The
+plausible worry is that an interface which `%ignore`s its `std::vector`
+overloads in favour of `IN_ARRAY1`/`ARGOUTVIEWM` shims — `MaxEntTcspc.i` does —
+hands the other three languages a `SWIGTYPE_p_double` no caller can build. It
+does not: `ext/r/rarrays.i`, `ext/java/jarrays.i` and `ext/js/jsarrays.i`
+implement those same typemap names against R vectors, Java arrays and JS
+TypedArrays, exactly so one `%apply` line serves all four languages. Verified by
+generating the R wrapper from an interface with no per-language surface:
+`dfa_convolve(rates, weights, irf, n_bins, shift_bins, method)` takes plain R
+numeric vectors. For most of the missing files, adding the `%include` is the
+whole job.
+
+Tracked as `T-20260811-09` on the agent board.
+
+**2026-08-11, five of the thirteen closed — the ones with no NumPy in them.**
+By a different session than the one that filed this, so the entry stays open
+for its author; 22 declared gaps remain, down from 51.
+
+Closed by adding the `%include` to all three lists, positioned to preserve
+Python's relative order: **`BurstSignificance.i`** (r, java),
+**`BurstML.i`**, **`GopichSzabo.i`**, **`PhotonCountingHistogram.i`** and
+**`Pda3cCore.i`** (r, java, js). These were chosen by the criterion this entry
+supplies: each has **zero `IN_ARRAY`/`ARGOUTVIEW` typemaps and zero
+`%ignore`s**, so none of them is the second mechanism above — there is no
+NumPy shim hiding a `std::vector` overload, and nothing to convert first.
+
+**Verified callable, not merely generated**, because "it generates" is exactly
+the check this entry warns is insufficient. In the generated Java: `BurstML`
+and `GopichSzabo` come out as classes taking `VectorDouble` / `VectorInt32`
+(`set_burst_data`, `fit`, `set_scheme`, `log_likelihood`, `viterbi`), and the
+five `Pda3cCore` free functions, three `BurstSignificance` statistics and five
+`pch_*`/`fida_*` functions all reach the module class returning `VectorDouble`
+or `double`. No `SWIGTYPE_p_double` anywhere in them. All four wrappers
+generate, the Java proxies compile, and the Python wrapper is byte-for-byte
+reproducible — Python's list was not touched.
+
+**No linking gap, checked rather than assumed:** all four bindings call
+`tttrlib_link_all_modules()`, so every module's implementation was already in
+the R/Java/JS targets and only the interface was absent. That is why these
+five could be closed by an `%include` alone.
+
+**The remaining eight are not the same job.** `Cluster.i`,
+`Deconvolution.i`, `Jitter.i`, `MaxEntTcspc.i`, `Sampling.i`, `HmmLattice.i`
+and `Streaming.i` all carry NumPy typemaps and need the
+`#ifdef SWIGPYTHON` NumPy / `#else` `std::vector` conversion **first** — adding
+them as-is would hand three languages exactly the uncallable
+`SWIGTYPE_p_double` this entry describes. `documentation.i` (java) is a
+separate question, being docstrings rather than API.
+
 ## FIXED — A wall-clock assertion in the unit suite fails when the machine is busy
 
 > **Fixed 2026-08-11** (board ticket `T-20260811-01`). Took the **first** of the
@@ -65,12 +235,28 @@ stops meaning anything.
 > `tools/check_swig_multilang.sh` rather than reading:**
 >
 > * **The fix is Python-only, and the entry did not say so.** `%pythonappend`
->   emits nothing for the other backends, so **R, Java and JavaScript still
->   have the use-after-free** — same accessors, same crash, no keep-alive.
->   Each needs its own equivalent (R: an attribute on the returned S4 object;
->   Java: a strong field on the proxy; JS: a Napi reference). Reopening is the
->   author's call; recorded here so the stub does not read as "closed
->   everywhere".
+>   emits nothing for the other backends, so the keep-alive does not exist in
+>   R, Java or JavaScript. Each needs its own equivalent (R: an attribute on
+>   the returned S4 object; Java: a strong field on the proxy; JS: a Napi
+>   reference) and **none of the three has a keep-alive idiom anywhere in its
+>   interface files today** — this would be the first.
+>
+>   **How far that is established, stated precisely, because this entry's own
+>   standard is a reproduction and there is not one for the other three.**
+>   What is certain from the source: `TTTR::get_header` is declared
+>   `TTTRHeader* get_header();` — a **raw, non-owning pointer** — and
+>   `TTTRHeader` is not `%shared_ptr`'d, so no binding gets ownership from the
+>   type system; only Python was given a keep-alive on top. R, Java and
+>   JavaScript are all garbage-collected, so a header taken from a temporary
+>   container is by construction a pointer into an object the collector is
+>   free to reclaim. That is an argument, not a crash: what has **not** been
+>   checked is whether each backend's proxy makes the pattern reachable with
+>   the same ease as `TTTR(path).header` does in Python. Neither R nor the
+>   JavaScript addon is built in this checkout, so settling it means building
+>   them — worth doing before anyone writes three keep-alives, since the cost
+>   of the fix is three mechanisms and the evidence so far is one language's.
+>   Reopening is the author's call; recorded here so the stub does not read as
+>   "closed everywhere".
 > * **It broke wrapper generation for those three bindings for a day.**
 >   `%pythonappend` is an *unknown directive*, not a no-op, in the R/Java/JS
 >   backends: generation stopped at `TTTR.i:116` while `pip install -e .` went
