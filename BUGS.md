@@ -99,6 +99,21 @@ noise, option 1 wins and the other two are wasted effort.
 > lets the library's own off-by-ones run silently for as long as nobody looks.
 > That is the stronger argument for the guard and it is not the one this entry
 > was filed on.
+>
+> **Audited for siblings, and there are none.** The guard only fires on paths a
+> test happens to run, so a static sweep is the complement: every loop in
+> `modules/` bounded `<=` against a *count* rather than an inclusive maximum.
+> The candidates all turn out correct, each for its own reason —
+> `BurstSearchBayesianBlocks` sizes `edges`, `block_length` and `log_n` at
+> `n + 1` deliberately; `BurstSearchMaxTree` sweeps one past on purpose and
+> guards it (`const int lv = (j < n) ? levels[j] : SENTINEL;`) to flush its
+> stack; `Pda`'s rows are `(N + 1)` wide so `0..N` is the row; Nelder-Mead's
+> simplex genuinely has `n + 1` vertices. The `<=` in `burst_search_cusum_sprt`
+> was the only one whose array was not sized for it.
+>
+> So this was an isolated defect, not a pattern — worth knowing, because "we
+> fixed one" and "we fixed the only one" are different claims and only the
+> second closes the question.
 
 <details><summary>Original entry</summary>
 
