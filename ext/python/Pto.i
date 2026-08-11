@@ -162,14 +162,19 @@
 %feature("director") tttrlib::io::PhotonSink;
 %include "PhotonSink.h"
 
-%include "TTTRStreamWriter.h"
-
 // A unique_ptr return cannot be owned by a binding -- SWIG wraps the smart
 // pointer itself and then has no destructor for it. The class is exposed
 // directly instead, which is what a caller wants anyway: it knows the format
 // it is acquiring into.
+//
+// Both factories are declared by TTTRStreamWriter.h, so the %ignore has to
+// come before that %include: SWIG applies it when it parses the declaration,
+// and afterwards is too late -- the wrappers were generated already and MSVC
+// rejects them (C2280, the deleted unique_ptr copy constructor).
 %ignore tttrlib::io::make_stream_writer;
 %ignore tttrlib::io::make_stream_writer_for;
+%include "TTTRStreamWriter.h"
+
 %include "RecordStreamWriter.h"
 
 %include "io_pto.h"
