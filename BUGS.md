@@ -186,11 +186,21 @@ is how a typemap file acquires a second wrong comment.
 > `push_photon(5)` still works, and the repository's JS suite is **44 passed, 0
 > failed** against the rebuilt addon.
 >
-> **Still worth doing, and not done here:** R and Java include `<stdint.i>` from
-> `Sim.i` in the same position. Whether they lose an equivalent contract is
-> unknown — `rarrays.i` gives `std::uint64_t` its own double-backed typemaps and
-> Java has none of this — and `Sim.i`'s comment says the answer is SWIG-version
-> dependent. The three-row table in this entry is the way to check.
+> **Java checked and clean; R still unknown.** Both bindings include
+> `<stdint.i>` from `Sim.i` at the same position, so both could lose an
+> equivalent contract. Running this entry's table against the generated Java:
+> `push_photon` (after `Sim.i`) and `pto_mark_sidecar` (before it) *both* take
+> `java.math.BigInteger`, and a `uint64_t` return comes back as one too — no
+> positional difference. That is expected in hindsight: Java has no
+> name-keyed fixed-width typemap of its own, so SWIG-Java's default
+> `unsigned long long` handling applies however the typedef resolves.
+>
+> **R is the one left**, and it is the one that cannot be checked here — R is
+> not installed on this machine. It is also the binding most likely to differ,
+> because `ext/r/tttrlib.i` *does* give `std::uint64_t` its own name-keyed
+> typemaps (the double-backed ones, since R has no 64-bit integer), which is
+> exactly the shape that stopped matching in JavaScript. Anyone with an R
+> toolchain should run the table.
 
 <details><summary>Original entry</summary>
 
