@@ -160,7 +160,17 @@ def test_the_column_lookup_did_not_get_slower():
     """__getitem__ is the hottest lookup in the class. The path key space adds
     nothing to a hit: no separator scan, and the try costs nothing until it
     raises. Measured as a ratio against the call it wraps, so the number does
-    not depend on the machine."""
+    not depend on the machine.
+
+    Each side is the *best* of several rounds, not a single timing. BUGS.md
+    recorded this assertion failing 2 runs in 3 on an idle machine, reporting
+    4.14x against a 3.0 bound, and diagnosed why: dividing one noisy loop by
+    another compounds the noise instead of cancelling it -- a scheduler slice
+    landing on the denominator moves the quotient as far as one on the
+    numerator. A minimum is the one statistic a stolen slice cannot inflate,
+    so the ratio now means what this docstring always claimed. The 3.0 bound
+    is unchanged: the noise was the defect, not the threshold.
+    """
     import time
     s = tttrlib.DataStore()
     s.set_n_rows(1000)
@@ -169,14 +179,17 @@ def test_the_column_lookup_did_not_get_slower():
     n = 20000
     for _ in range(2000):           # warm up
         s["x"], s.column_by_name("x")
-    t0 = time.perf_counter()
-    for _ in range(n):
-        s.column_by_name("x")
-    bare = time.perf_counter() - t0
-    t0 = time.perf_counter()
-    for _ in range(n):
-        s["x"]
-    sugar = time.perf_counter() - t0
+
+    bare = sugar = float("inf")
+    for _ in range(7):              # interleaved, so drift hits both sides
+        t0 = time.perf_counter()
+        for _ in range(n):
+            s.column_by_name("x")
+        bare = min(bare, time.perf_counter() - t0)
+        t0 = time.perf_counter()
+        for _ in range(n):
+            s["x"]
+        sugar = min(sugar, time.perf_counter() - t0)
 
     assert sugar < bare * 3.0, (
         "store['x'] is %.2fx the bare column_by_name it wraps" % (sugar / bare))

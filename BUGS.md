@@ -375,7 +375,22 @@ these run per row on every filter — the hottest of the guards added today.
 > `range(c.size())` instead of a literal, so the drift cannot recur. 815 tests
 > pass.
 
-## A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
+## FIXED — A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
+
+**Fixed 2026-08-12.** Not by widening the bound, which this entry argued
+against: both sides are now the best of seven interleaved rounds, and the 3.0
+threshold is untouched. A minimum is the one statistic a stolen scheduler slice
+cannot inflate.
+
+What that shows about the original number: the per-round ratios on an idle
+machine are **1.08, 1.18, 1.08, 1.12, 1.16, 1.20, 1.22** and the min-of-seven
+is **1.15**. `store['x']` costs about 15% more than the `column_by_name` it
+wraps, not 4.14x — the whole of the reported excess was noise, and the guard
+now has 2.6x of headroom instead of failing at the edge. Five consecutive runs
+pass.
+
+The entry as filed follows.
+
 
 **2026-08-11.** `test_datastore_paths.py::test_the_column_lookup_did_not_get_slower`
 asserts `sugar < bare * 3.0`, where both sides are 20,000-iteration Python
