@@ -65,7 +65,10 @@ static std::pair<int, int> find_clsm_start_stop(
             }
             else if(duration > 0) // search for stop idx using duration
             {
-                unsigned long stop_time = macro_time_arr[i_event] + duration;
+                // Not `unsigned long`: that is 32 bits on Windows, and a macro
+                // time passes 2^32 after a couple of minutes of acquisition.
+                unsigned long long stop_time =
+                        macro_time_arr[i_event] + (unsigned long long) duration;
                 for(;i_event < n; i_event++){
                     if(macro_time_arr[i_event] >= stop_time){
                         stop = i_event;

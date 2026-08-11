@@ -256,10 +256,13 @@ class TestRangesOverANativeTable:
         part = best(lambda: tttrlib.TTTR(
             out, "PTO", '{"first_event": 400000, "n_events": 5000}'))
         # 5,000 of 870,161 rows is 0.6% of the data, and the slice measures
-        # ~10x cheaper than the full read. Asserting 4x leaves room for a slow
-        # or loaded machine while still failing outright if the whole object is
-        # read and sliced in memory, which scores about 1x.
-        assert part < whole / 4, f"range {part*1e3:.1f} ms vs whole {whole*1e3:.1f} ms"
+        # ~10x cheaper than the full read here. The ratio is not portable: the
+        # slice is dominated by the fixed cost of opening the container and
+        # walking its directory, which a Windows runner pays far more of -- it
+        # scored 3.85x (6.8 ms against 26.0 ms) and failed a 4x bar. 2x is the
+        # threshold that still fails outright when the whole object is read and
+        # sliced in memory, which scores about 1x.
+        assert part < whole / 2, f"range {part*1e3:.1f} ms vs whole {whole*1e3:.1f} ms"
 
     def test_build_cues_on_a_native_table_is_a_no_op_not_an_error(self, ptu, tmp_path):
         """Returning zero cues with no error is the honest report. An error

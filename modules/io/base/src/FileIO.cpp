@@ -23,6 +23,7 @@ std::string native_to_utf8(const std::string& native_str) {
 #ifdef _WIN32
 #  include <windows.h>
 #  include <fcntl.h>
+#  include <share.h>   // _SH_DENYNO
 
 // UTF-8 -> UTF-16 helper
 static std::wstring utf8_to_wide(const std::string& s) {
@@ -39,9 +40,12 @@ FILE* open_file(const std::string& filename, const char* mode) {
     std::wstring wmode     = utf8_to_wide(std::string(mode ? mode : "rb"));
     FILE* file = nullptr;
 #if defined(_MSC_VER)
-    if (_wfopen_s(&file, wfilename.c_str(), wmode.c_str()) != 0) {
-        file = nullptr;
-    }
+    // _wfopen_s, unlike fopen, denies sharing: while it holds the file nobody
+    // else may open it -- not even this process. A .pto is read through a
+    // second handle while PtoFile has the container open (build_cues opens the
+    // embedded object to read its header), and every one of those opens failed
+    // here on Windows alone. _SH_DENYNO is what fopen does everywhere else.
+    file = _wfsopen(wfilename.c_str(), wmode.c_str(), _SH_DENYNO);
 #else
     file = _wfopen(wfilename.c_str(), wmode.c_str());
 #endif

@@ -746,7 +746,8 @@ if (is_verbose()) {
         instrument_dead_time *= 1e-9;
         std::vector<double> cum_sum(n_data);
         std::partial_sum(data, data + n_data, cum_sum.begin(), std::plus<double>());
-        long n_pulse_detected = (long) cum_sum[cum_sum.size() - 1];
+        // long is 32 bits on Windows; a decay can hold more than 2^31 photons.
+        long long n_pulse_detected = (long long) cum_sum[cum_sum.size() - 1];
         double total_dead_time = n_pulse_detected * instrument_dead_time;
         double live_time = measurement_time - total_dead_time;
         double n_excitation_pulses = std::max(live_time * repetition_rate, (double) n_pulse_detected);
