@@ -118,6 +118,11 @@ struct HmmVB {
  * Dirichlet. Use `HMM::optimize` for constrained point estimates, or a sharp
  * prior if a soft version of the constraint is what is actually meant.
  */
+// Exported explicitly: WINDOWS_EXPORT_ALL_SYMBOLS .def generation drops
+// exactly this symbol on MSVC. Guarded so consumers see a plain declaration.
+#if defined(_WIN32) && defined(tttrlib_hmm_EXPORTS)
+__declspec(dllexport)
+#endif
 HmmVB fit_vb(
     const HMM& hmm, const HmmModel& init,
     const HmmRestraints* restraints = nullptr,

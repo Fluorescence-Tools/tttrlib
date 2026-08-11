@@ -11,7 +11,8 @@
 #include <io.h>
 #include <process.h>
 #define isatty _isatty
-#define execvp _execvp
+/* _execvp wants const char *const * (MSVC and MinGW both) */
+#define execvp(file, argv) _execvp((file), (const char *const *)(argv))
 #define STDOUT_FILENO 1
 #else
 #include <unistd.h>

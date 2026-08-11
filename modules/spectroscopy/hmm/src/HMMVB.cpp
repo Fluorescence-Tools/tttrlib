@@ -126,14 +126,6 @@ std::vector<double> HmmVB::std() const {
 
 // -- fit_vb -------------------------------------------------------------------
 
-// Exported explicitly: the WINDOWS_EXPORT_ALL_SYMBOLS .def generation drops
-// exactly this symbol on MSVC (both generators; every other hmm export
-// survives), and the extension then fails to link. dllexport on the
-// definition costs nothing elsewhere -- MinGW accepts it, and in a STATIC
-// module build it is ignored.
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
 HmmVB fit_vb(
     const HMM& hmm, const HmmModel& init,
     const HmmRestraints* restraints,
