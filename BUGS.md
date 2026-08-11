@@ -260,7 +260,7 @@ Java cannot express), the streaming classes, and the MaxEnt entry points.
 
 </details>
 
-## `Histogram::get_axis` is a getter that silently ADDS an axis
+## FIXED — `Histogram::get_axis` is a getter that silently ADDS an axis
 
 **2026-08-11.** `Histogram<T>::axes` is a **`std::map<size_t, HistogramAxis<T>>`**,
 and the getter is:
@@ -287,20 +287,47 @@ unchecked-index defects filed today. It is that `axes.size()` is the axis count
 the whole map. A phantom axis therefore changes the shape of a subsequent
 histogram, and it was introduced by a call that reads.
 
+> **Fixed 2026-08-11.** `get_axis` now does `axes.find()` and returns a
+> default-constructed axis for a key that is absent — and, the part that
+> matters, **it is `const`**. A const `std::map` has no inserting
+> `operator[]`, so the compiler rejects the old line and will reject the next
+> one like it; `find()` alone would fix this instance and nothing else.
+>
+> Verified end to end: an 8-bin histogram over 100 rows gives `bins=8 sum=100`,
+> and the same histogram with a `get_axis(999)` call inserted beforehand gives
+> `bins=8 sum=100` — identical. Pre-fix the phantom axis would have made
+> `n_total_bins = 8 * 0`, i.e. an empty histogram.
+>
+> Safe to change: `get_axis` has **no internal callers**, and it returns by
+> value, so `const` cannot break one. Anything that depended on the insertion
+> depended on the bug. 692 tests pass across the histogram, DataStore, CSV,
+> PTO and conformance groups.
+>
+> The other four `axes[...]` uses were audited and are fine: `update()`
+> iterates `for (const auto& p : axes)` and indexes by `p.first`, so the key
+> always exists, and `set_axis` inserts legitimately. The defect was this one
+> getter, not a habit in the class.
+>
+> **One thing seen and deliberately not changed:** the per-row fill loop does
+> `current_axis = &axes[axis_index]` — a `std::map` lookup per row per axis,
+> where `p.second` is already in hand from the loop it sits in. That is a real
+> inefficiency in a hot path, but it is a performance change in code I have not
+> measured, and mixing it with a correctness fix makes both harder to judge.
+>
+> *(The `SystemError` from `get_histogram()` noted below was my own malformed
+> axis setup — `setNumberOfBins` does not exist; the constructor takes
+> `doubleAxis(name, lo, hi, n_bins, type)`. Not a defect.)*
+
+<details><summary>Original entry</summary>
+
 **What is established and what is not.** The insertion is certain from the C++:
 a non-const `std::map::operator[]` inserts, and this method is non-const so it
 compiles. Observed: `get_axis(999)` returns an empty axis rather than raising,
 consistently, on a histogram that has only axis 0. I did **not** get an
 end-to-end demonstration of a corrupted histogram — configuring one through the
-binding hit unrelated API friction (`get_histogram()` raised a `SystemError` on
-a minimally-configured histogram, which is either my incomplete setup or a
-separate defect and is not chased here).
+binding hit unrelated API friction.
 
-**Fix**, and it is small: `get_axis` should use `find()` and either throw or
-return a default without inserting, and be `const`. `const` is the real
-guard — a const map has no inserting `operator[]`, so the compiler would have
-rejected this line and will reject the next one like it. The neighbouring
-`set_axis` legitimately uses `axes[data_column] = new_axis;` and should keep it.
+</details>
 
 ## A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
 

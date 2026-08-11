@@ -423,8 +423,24 @@ public:
         set_axis(data_column, new_axis);
     }
 
-    HistogramAxis<T> get_axis(size_t axis_index){
-        return axes[axis_index];
+    /*!
+     * \brief The axis on `axis_index`, or a default-constructed one if there is
+     * none there.
+     *
+     * `const` is the load-bearing part, not the `find`. `axes` is a
+     * `std::map`, and this used to be `return axes[axis_index];` on a
+     * non-const map -- where `operator[]` INSERTS a default-constructed axis
+     * for a key that is absent. Reading an axis that did not exist therefore
+     * created one and left it in the map, and `axes.size()` is the axis count
+     * that `getAxisDimensions()` reports and `update()` iterates, so a phantom
+     * axis changed the shape of the next histogram (BUGS 2026-08-11).
+     *
+     * A const map has no inserting `operator[]`, so the compiler now rejects
+     * that line -- and the next one like it, which is the point.
+     */
+    HistogramAxis<T> get_axis(size_t axis_index) const {
+        const auto it = axes.find(axis_index);
+        return it != axes.end() ? it->second : HistogramAxis<T>();
     }
 
     Histogram() = default;
