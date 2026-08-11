@@ -19,6 +19,7 @@
 #include "TiffArrayIO.h"
 #include "Sampling.h"
 #include "Deconvolution.h"
+#include "Jitter.h"
 #include "Correlator.h"
 #include "TTTRMask.h"
 #include "DataStore.h"
@@ -177,6 +178,140 @@ int wiener_deconvolve_2d_into(
 %}
 %clear (double* dc_image, int n_dc_image1, int n_dc_image2);
 %clear (double* dc_psf, int n_dc_psf1, int n_dc_psf2);
+
+// The rest of the deconvolution family, same shape. IN_ARRAY3 marshals a java
+// double[][][], so an axial stack goes in as naturally as an image does; only
+// the result needs preallocating. richardson_lucy_events takes a photon LIST
+// rather than a grid, so its output size is the grid the caller asks for
+// (rows*cols) rather than anything derived from the input.
+%apply(double* IN_ARRAY3, int DIM1, int DIM2, int DIM3) {
+    (double* dc3_image, int n_dc3_image1, int n_dc3_image2, int n_dc3_image3),
+    (double* dc3_psf, int n_dc3_psf1, int n_dc3_psf2, int n_dc3_psf3)
+}
+%apply(double* IN_ARRAY2, int DIM1, int DIM2) {
+    (double* ev_coords, int n_ev_coords1, int n_ev_coords2),
+    (double* ev_psf, int n_ev_psf1, int n_ev_psf2)
+}
+%inline %{
+namespace tttrlib {
+/*! Richardson-Lucy over an axial stack. Returns the element count
+    (n1*n2*n3); the result is filled row-major. */
+int richardson_lucy_3d_into(
+        double* dc3_image, int n_dc3_image1, int n_dc3_image2, int n_dc3_image3,
+        double* dc3_psf, int n_dc3_psf1, int n_dc3_psf2, int n_dc3_psf3,
+        double* INPLACE_ARRAY1, int DIM1,
+        int n_iter = 30, bool clip = false,
+        double filter_epsilon = 0.0, bool acceleration = false) {
+    const std::vector<int> shape{n_dc3_image1, n_dc3_image2, n_dc3_image3};
+    const std::vector<int> psf_shape{n_dc3_psf1, n_dc3_psf2, n_dc3_psf3};
+    const std::vector<double> out = tttrlib::richardson_lucy(
+            dc3_image, shape, dc3_psf, psf_shape,
+            n_iter, clip, filter_epsilon, acceleration);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+
+/*! Richardson-Lucy from a photon list -- `ev_coords` is (n_events, 2) in grid
+    units -- onto a `rows x cols` grid. Returns the element count (rows*cols);
+    the result is filled row-major. Unweighted, as the flat entry point is. */
+int richardson_lucy_events_2d_into(
+        double* ev_coords, int n_ev_coords1, int n_ev_coords2,
+        double* ev_psf, int n_ev_psf1, int n_ev_psf2,
+        int rows, int cols,
+        double* INPLACE_ARRAY1, int DIM1,
+        int n_iter = 30, int psf_oversampling = 1) {
+    const std::vector<int> shape{rows, cols};
+    const std::vector<int> psf_shape{n_ev_psf1, n_ev_psf2};
+    const std::vector<double> out = tttrlib::richardson_lucy_events(
+            ev_coords, n_ev_coords1, n_ev_coords2, /*weights=*/nullptr,
+            shape, ev_psf, psf_shape, n_iter, psf_oversampling);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+
+/*! The blur a scan adds on top of the optics, as a 1-D kernel. Takes no array
+    in, so it is here only because it returns one. */
+int scan_blur_kernel_1d_into(
+        double dwell_seconds, double* INPLACE_ARRAY1, int DIM1,
+        double jitter_seconds = 0.0, double resolution_seconds = 0.0,
+        int oversampling = 1, bool include_dwell = true) {
+    const std::vector<double> out = tttrlib::scan_blur_kernel(
+            dwell_seconds, jitter_seconds, resolution_seconds,
+            oversampling, include_dwell);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+}  // namespace tttrlib
+%}
+%clear (double* dc3_image, int n_dc3_image1, int n_dc3_image2, int n_dc3_image3);
+%clear (double* dc3_psf, int n_dc3_psf1, int n_dc3_psf2, int n_dc3_psf3);
+%clear (double* ev_coords, int n_ev_coords1, int n_ev_coords2);
+%clear (double* ev_psf, int n_ev_psf1, int n_ev_psf2);
+
+// ── Jitter, for Java ───────────────────────────────────────────────────────
+// Three functions, and only two need a helper. `jitter_coordinates` dithers
+// its input *in place*, which is exactly INPLACE_ARRAY2 -- java marshals that
+// with JNI release mode 0, so the writes land back in the caller's double[][].
+// No copy, no count to return; it is the one function in this file that maps
+// straight across.
+//
+// The other two produce a new array, so they take the same preallocate-and-
+// fill shape as everything above. Their sizes ARE knowable in advance, which
+// matters because the return is the true count and a short array silently
+// truncates: events_from_counts yields (sum(counts), 2) and counts_from_events
+// yields the grid you asked for.
+%apply(double* INPLACE_ARRAY2, int DIM1, int DIM2) {
+    (double* jt_coords, int n_jt_coords1, int n_jt_coords2)
+}
+%apply(double* IN_ARRAY1, int DIM1) {(double* jt_widths, int n_jt_widths)}
+%apply(double* IN_ARRAY2, int DIM1, int DIM2) {
+    (double* jt_in, int n_jt_in1, int n_jt_in2)
+}
+%inline %{
+namespace tttrlib {
+/*! Dither `(n_events, rank)` coordinates in place, in bin units. */
+void jitter_coordinates_into(double* jt_coords, int n_jt_coords1, int n_jt_coords2,
+                             double* jt_widths, int n_jt_widths,
+                             unsigned int seed = 0) {
+    if (n_jt_widths != n_jt_coords2)
+        throw std::invalid_argument(
+            "jitter_coordinates_into: one width per coordinate axis is required");
+    tttrlib::jitter_coordinates(jt_coords, (std::size_t) n_jt_coords1,
+                                n_jt_coords2, jt_widths, seed);
+}
+
+/*! Photons from a 2-D histogram, as `(sum(counts), 2)` row-major. Returns the
+    element count, so size the array as 2 * sum(counts). */
+int events_from_counts_into(double* jt_in, int n_jt_in1, int n_jt_in2,
+                            double* INPLACE_ARRAY1, int DIM1,
+                            unsigned int seed = 0) {
+    const std::vector<int> shape{n_jt_in1, n_jt_in2};
+    const std::vector<double> out = tttrlib::events_from_counts(jt_in, shape, seed);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+
+/*! Bin `(n_events, 2)` photons onto a `rows x cols` grid, row-major. Returns
+    the element count (rows * cols). */
+int counts_from_events_into(double* jt_in, int n_jt_in1, int n_jt_in2,
+                            int rows, int cols,
+                            double* INPLACE_ARRAY1, int DIM1) {
+    const std::vector<int> shape{rows, cols};
+    const std::vector<double> out = tttrlib::counts_from_events(
+            jt_in, (std::size_t) n_jt_in1, n_jt_in2, shape);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+}  // namespace tttrlib
+%}
+%clear (double* jt_coords, int n_jt_coords1, int n_jt_coords2);
+%clear (double* jt_widths, int n_jt_widths);
+%clear (double* jt_in, int n_jt_in1, int n_jt_in2);
 
 // ── Sampling, for Java ─────────────────────────────────────────────────────
 // `weighted_choice` and `sample_from_cdf` reach the other bindings through

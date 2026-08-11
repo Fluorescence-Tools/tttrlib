@@ -479,11 +479,34 @@ and here the file's own summary contradicted its own implementation.
   `out.length()` in one helper fails the stage with *"no member named 'length'
   in 'std::vector<double>'"* and the offending line.
 
-  Left for whoever continues: `richardson_lucy_3d`,
-  `richardson_lucy_events_2d`, `Jitter.i`, and MaxEntTcspc's two builders. The
-  builders are the awkward ones — each returns *four* arrays, so a single
-  `_into` cannot carry them and it wants either four calls or a small result
-  class. That is a design decision, not typing.
+  **Jitter followed**, and one of its three functions needed no helper at all:
+  `jitter_coordinates` dithers its input *in place*, which is exactly
+  `INPLACE_ARRAY2` — Java marshals that with JNI release mode 0, so the writes
+  land back in the caller's `double[][]` with no copy and nothing to return.
+  It is the only function in this family that maps straight across, and it is
+  worth noticing why: **Java's array marshalling is fine in both directions
+  when the C++ writes through a caller's buffer; it is only *returning* a new
+  array that it cannot express.** The other two,
+  `events_from_counts_into` and `counts_from_events_into`, take the usual
+  preallocate-and-fill shape — and their sizes are knowable in advance
+  (`2 * sum(counts)` and `rows * cols`), which matters because a short array
+  truncates silently and only the returned count reveals it.
+
+  **The deconvolution family is now complete for Java**: `richardson_lucy_3d_into`
+  (the axial stack goes in as `double[][][]` through `IN_ARRAY3`, which Java
+  marshals as readily as the 2-D case), `richardson_lucy_events_2d_into` and
+  `scan_blur_kernel_1d_into` join the two above. The events variant is the odd
+  one: it takes a photon *list* rather than a grid, so its output size is the
+  grid the caller asks for rather than anything derived from the input, and it
+  is unweighted exactly as the flat entry point is.
+
+  **Left: MaxEntTcspc's two design-matrix builders, and only those.** They are
+  the one case the `_into` shape genuinely cannot absorb — each returns *four*
+  arrays (`Fi`, `y`, `sigma`, `fit_additive`), so one preallocated buffer
+  cannot carry the result. It wants either four calls that each recompute the
+  matrix, or a small result class holding the four. That is a design decision
+  about the Java API, not more typing, which is why it is left rather than
+  guessed at.
 * **`HmmLattice.i`** (r, java, js) — claimed by the session that wrote it
   ("mine … not yet offered to the others"). Its typemaps are rank-1, so it is
   a `%include` away whenever that session offers it.

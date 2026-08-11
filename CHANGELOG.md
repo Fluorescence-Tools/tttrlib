@@ -108,8 +108,22 @@
   its output generated as `SWIGTYPE_p_p_double`, exactly the trap this work
   exists to avoid.) Note this means the declared-gap count understates Java's
   real coverage, which is a limitation of comparing `%include` lists.
-  `richardson_lucy_3d`, `richardson_lucy_events_2d`, `Jitter` and MaxEnt-TCSPC's
-  builders are still to do the same way.
+  **And jitter**: `jitter_coordinates_into(double[][] coords, double[] widths,
+  long seed)` dithers in place through `INPLACE_ARRAY2` — no copy, nothing to
+  return, the one function in this family that maps straight across — plus
+  `events_from_counts_into` and `counts_from_events_into` on the
+  preallocate-and-fill shape. The pattern across all of these: Java's array
+  marshalling works in both directions when C++ writes through a caller's
+  buffer; it is only *returning* a fresh array that it cannot express.
+
+  The deconvolution family is complete for Java with `richardson_lucy_3d_into`
+  (an axial stack goes in as `double[][][]` through `IN_ARRAY3`),
+  `richardson_lucy_events_2d_into` and `scan_blur_kernel_1d_into`.
+
+  What is left is one case the `_into` shape cannot absorb: MaxEnt-TCSPC's two
+  design-matrix builders each return *four* arrays, so a single preallocated
+  buffer cannot carry the result. That needs a decision about the Java API —
+  four calls, or a small result class — rather than more typing.
 
   A caveat on the tooling, since it now reports these as closed: the parity
   checker compares `%include` lists, so a file counts as closed the moment the
