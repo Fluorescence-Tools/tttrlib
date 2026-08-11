@@ -172,4 +172,70 @@ void mutual_reachability_mst(double* input, int n_input1, int n_input2,
 
 }  // namespace tttrlib
 
+// ---------------------------------------------------------------------------
+// The other half of HDBSCAN: everything downstream of the MST
+// ---------------------------------------------------------------------------
+// `core_distances` and `mutual_reachability_mst` above are the first half. The
+// rest of a run -- union-find linkage, dendrogram condensation, and reading a
+// label off per point -- is 43% of the compiled time (measured at n=100,000:
+// MST 117.6 ms against linkage 25.4 and condense+label 65.1), and none of it is
+// expressible in an array language: union-find, a breadth-first tree walk and a
+// dynamic compaction are pointer-chasing.
+//
+// **Two calls, not one, and that is deliberate.** The obvious surface is a
+// single `hdbscan_labels(mst, min_cluster_size)`. It does not fit: *cluster
+// selection* sits between condensation and labelling, and it is policy --
+// excess-of-mass or leaf selection, `allow_single_cluster`,
+// `cluster_selection_epsilon`, and the map from node id to output label. Those
+// are user-facing options that belong with the caller, not compiled in. So the
+// split is at the policy boundary:
+//
+//   hdbscan_condensed_tree()  MST edges -> condensed (parent, child, lambda, size)
+//   << caller selects clusters from the condensed tree's stabilities >>
+//   hdbscan_label_points()    condensed tree + selection -> a root per point
+//
+// Both halves are one call each, so the loops stay whole in C++.
+
+namespace tttrlib {
+
+/*!
+ * \brief Single-linkage dendrogram from an MST, condensed at min_cluster_size.
+ *
+ * \param sources,targets,weights  the MST edge list, **ascending in weight**.
+ *        Rejected otherwise: the linkage is order-dependent and unsorted input
+ *        produces a plausible, wrong dendrogram rather than an error.
+ * \param min_cluster_size  a split counts only when *both* sides hold at least
+ *        this many points; otherwise the small side is recorded as points
+ *        falling out of the surviving cluster, at that merge's lambda.
+ * \param out_parent,out_child,out_value,out_size  the condensed edge list,
+ *        allocated here. Node ids are renumbered so `n_samples` is the root.
+ */
+void hdbscan_condensed_tree(
+        long long* sources, int n_sources,
+        long long* targets, int n_targets,
+        double* weights, int n_weights,
+        int min_cluster_size,
+        long long** out_parent, int* n_out_parent,
+        long long** out_child, int* n_out_child,
+        double** out_value, int* n_out_value,
+        long long** out_size, int* n_out_size);
+
+/*!
+ * \brief Collapse unselected clusters into their parents; return each point's root.
+ *
+ * \param is_selected  one byte per node id; the caller's selection.
+ * \param n_points     the point count, which is also the root cluster's id.
+ * \param out          [n_points] root node per point, allocated here. A point
+ *        whose root is the root cluster was not claimed by any selected
+ *        cluster -- the caller maps that to noise.
+ */
+void hdbscan_label_points(
+        long long* parents, int n_parents,
+        long long* children, int n_children,
+        unsigned char* is_selected, int n_is_selected,
+        int n_points,
+        long long** out, int* n_out);
+
+}  // namespace tttrlib
+
 #endif  // TTTRLIB_CLUSTER_H

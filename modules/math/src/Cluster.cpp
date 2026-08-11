@@ -661,3 +661,236 @@ void mutual_reachability_mst(double* input, int n_input1, int n_input2, int min_
 }
 
 }  // namespace tttrlib
+
+// ===========================================================================
+// The post-MST half of HDBSCAN: linkage, condensation, labelling
+// ===========================================================================
+// Ported from the numba kernels this replaces, structure for structure, so the
+// two can be compared line by line. See Cluster.h for why this is two calls.
+
+namespace tttrlib {
+
+namespace {
+
+// Union-find root with path halving -- the same walk the numba kernels use, and
+// the reason none of this is expressible in an array language.
+inline long long uf_find(std::vector<long long>& parent, long long a) {
+    while (parent[static_cast<size_t>(a)] != a) {
+        parent[static_cast<size_t>(a)] =
+            parent[static_cast<size_t>(parent[static_cast<size_t>(a)])];
+        a = parent[static_cast<size_t>(a)];
+    }
+    return a;
+}
+
+// Nodes under `root` in breadth-first order, written into `out`; returns count.
+long long bfs_nodes(const std::vector<long long>& left,
+                    const std::vector<long long>& right,
+                    long long n_samples, long long root,
+                    std::vector<long long>& out) {
+    out[0] = root;
+    long long head = 0, tail = 1;
+    while (head < tail) {
+        const long long node = out[static_cast<size_t>(head++)];
+        if (node >= n_samples) {
+            const size_t row = static_cast<size_t>(node - n_samples);
+            out[static_cast<size_t>(tail++)] = left[row];
+            out[static_cast<size_t>(tail++)] = right[row];
+        }
+    }
+    return tail;
+}
+
+long long* malloc_i64(size_t n) {
+    return static_cast<long long*>(std::malloc(std::max<size_t>(n, 1) * sizeof(long long)));
+}
+
+}  // namespace
+
+void hdbscan_condensed_tree(
+        long long* sources, int n_sources,
+        long long* targets, int n_targets,
+        double* weights, int n_weights,
+        int min_cluster_size,
+        long long** out_parent, int* n_out_parent,
+        long long** out_child, int* n_out_child,
+        double** out_value, int* n_out_value,
+        long long** out_size, int* n_out_size) {
+    if (n_sources != n_targets || n_sources != n_weights)
+        throw std::invalid_argument(
+            "hdbscan: sources, targets and weights must be the same length");
+    if (n_sources < 1)
+        throw std::invalid_argument("hdbscan: the MST needs at least one edge");
+    if (min_cluster_size < 2)
+        throw std::invalid_argument("hdbscan: min_cluster_size must be at least 2");
+    for (int i = 1; i < n_weights; ++i)
+        if (weights[i] < weights[i - 1])
+            throw std::invalid_argument(
+                "hdbscan: the MST edges must be ascending in weight -- linkage "
+                "is order-dependent, so unsorted input yields a plausible and "
+                "wrong dendrogram rather than an error");
+
+    const long long n_edges = n_sources;
+    const long long n_samples = n_edges + 1;
+
+    // ---- single linkage: union-find over the sorted edges --------------------
+    std::vector<long long> parent(static_cast<size_t>(2 * n_samples - 1));
+    std::vector<long long> size_of(static_cast<size_t>(2 * n_samples - 1), 1);
+    std::vector<long long> component(static_cast<size_t>(2 * n_samples - 1));
+    for (size_t i = 0; i < parent.size(); ++i) {
+        parent[i] = static_cast<long long>(i);
+        component[i] = static_cast<long long>(i);
+    }
+    std::vector<long long> left(static_cast<size_t>(n_edges));
+    std::vector<long long> right(static_cast<size_t>(n_edges));
+    std::vector<double> value(static_cast<size_t>(n_edges));
+    std::vector<long long> csize(static_cast<size_t>(n_edges));
+
+    for (long long i = 0; i < n_edges; ++i) {
+        long long a = uf_find(parent, sources[i]);
+        long long b = uf_find(parent, targets[i]);
+        left[static_cast<size_t>(i)] = component[static_cast<size_t>(a)];
+        right[static_cast<size_t>(i)] = component[static_cast<size_t>(b)];
+        value[static_cast<size_t>(i)] = weights[i];
+        csize[static_cast<size_t>(i)] =
+            size_of[static_cast<size_t>(a)] + size_of[static_cast<size_t>(b)];
+        if (size_of[static_cast<size_t>(a)] < size_of[static_cast<size_t>(b)]) std::swap(a, b);
+        parent[static_cast<size_t>(b)] = a;
+        size_of[static_cast<size_t>(a)] += size_of[static_cast<size_t>(b)];
+        component[static_cast<size_t>(a)] = n_samples + i;
+    }
+
+    // ---- condense ------------------------------------------------------------
+    const long long root = 2 * n_edges;
+    const long long n_nodes = root + 1;
+    // A point leaves exactly one cluster and a split contributes two rows, so
+    // this is a hard ceiling rather than a guess.
+    const size_t cap = static_cast<size_t>(3 * n_samples + 3);
+    std::vector<long long> cp(cap), cc(cap), cs(cap);
+    std::vector<double> cv(cap);
+    size_t n_out = 0;
+
+    std::vector<long long> relabel(static_cast<size_t>(n_nodes), 0);
+    std::vector<unsigned char> ignore(static_cast<size_t>(n_nodes), 0);
+    relabel[static_cast<size_t>(root)] = n_samples;
+    long long next_label = n_samples + 1;
+
+    std::vector<long long> order(static_cast<size_t>(n_nodes));
+    std::vector<long long> sub(static_cast<size_t>(n_nodes));
+    const long long n_order = bfs_nodes(left, right, n_samples, root, order);
+
+    for (long long idx = 0; idx < n_order; ++idx) {
+        const long long node = order[static_cast<size_t>(idx)];
+        if (ignore[static_cast<size_t>(node)] || node < n_samples) continue;
+        const size_t row = static_cast<size_t>(node - n_samples);
+        const long long node_left = left[row], node_right = right[row];
+        const double distance = value[row];
+        const double lambda_value =
+            distance > 0.0 ? 1.0 / distance : std::numeric_limits<double>::infinity();
+
+        const long long left_count =
+            node_left >= n_samples ? csize[static_cast<size_t>(node_left - n_samples)] : 1;
+        const long long right_count =
+            node_right >= n_samples ? csize[static_cast<size_t>(node_right - n_samples)] : 1;
+        const bool big_left = left_count >= min_cluster_size;
+        const bool big_right = right_count >= min_cluster_size;
+
+        if (big_left && big_right) {
+            relabel[static_cast<size_t>(node_left)] = next_label++;
+            cp[n_out] = relabel[static_cast<size_t>(node)];
+            cc[n_out] = relabel[static_cast<size_t>(node_left)];
+            cv[n_out] = lambda_value;
+            cs[n_out] = left_count;
+            ++n_out;
+            relabel[static_cast<size_t>(node_right)] = next_label++;
+            cp[n_out] = relabel[static_cast<size_t>(node)];
+            cc[n_out] = relabel[static_cast<size_t>(node_right)];
+            cv[n_out] = lambda_value;
+            cs[n_out] = right_count;
+            ++n_out;
+            continue;
+        }
+
+        bool shed_left, shed_right;
+        if (!big_left && !big_right) {
+            shed_left = shed_right = true;
+        } else if (!big_left) {
+            relabel[static_cast<size_t>(node_right)] = relabel[static_cast<size_t>(node)];
+            shed_left = true; shed_right = false;
+        } else {
+            relabel[static_cast<size_t>(node_left)] = relabel[static_cast<size_t>(node)];
+            shed_left = false; shed_right = true;
+        }
+
+        for (int side = 0; side < 2; ++side) {
+            const bool shed = side == 0 ? shed_left : shed_right;
+            if (!shed) continue;
+            const long long start = side == 0 ? node_left : node_right;
+            const long long n_sub = bfs_nodes(left, right, n_samples, start, sub);
+            for (long long s = 0; s < n_sub; ++s) {
+                const long long sub_node = sub[static_cast<size_t>(s)];
+                if (sub_node < n_samples) {
+                    cp[n_out] = relabel[static_cast<size_t>(node)];
+                    cc[n_out] = sub_node;
+                    cv[n_out] = lambda_value;
+                    cs[n_out] = 1;
+                    ++n_out;
+                }
+                ignore[static_cast<size_t>(sub_node)] = 1;
+            }
+        }
+    }
+
+    // ARGOUTVIEWM hands ownership to the host language, which frees with free().
+    *out_parent = malloc_i64(n_out);
+    *out_child = malloc_i64(n_out);
+    *out_size = malloc_i64(n_out);
+    *out_value = static_cast<double*>(std::malloc(std::max<size_t>(n_out, 1) * sizeof(double)));
+    for (size_t i = 0; i < n_out; ++i) {
+        (*out_parent)[i] = cp[i];
+        (*out_child)[i] = cc[i];
+        (*out_value)[i] = cv[i];
+        (*out_size)[i] = cs[i];
+    }
+    *n_out_parent = *n_out_child = *n_out_value = *n_out_size = static_cast<int>(n_out);
+}
+
+void hdbscan_label_points(
+        long long* parents, int n_parents,
+        long long* children, int n_children,
+        unsigned char* is_selected, int n_is_selected,
+        int n_points,
+        long long** out, int* n_out) {
+    if (n_parents != n_children)
+        throw std::invalid_argument("hdbscan: parents and children must be the same length");
+    if (n_points <= 0)
+        throw std::invalid_argument("hdbscan: n_points must be positive");
+    if (n_is_selected <= 0)
+        throw std::invalid_argument("hdbscan: is_selected must not be empty");
+
+    std::vector<long long> uf(static_cast<size_t>(n_is_selected));
+    for (size_t i = 0; i < uf.size(); ++i) uf[i] = static_cast<long long>(i);
+
+    for (int i = 0; i < n_parents; ++i) {
+        const long long child = children[i];
+        if (child < 0 || child >= n_is_selected)
+            throw std::invalid_argument(
+                "hdbscan: a child id is outside is_selected -- its length must "
+                "cover every node id in the condensed tree");
+        // A selected cluster is a root of its own: nothing above it may absorb
+        // it, which is what lets the loop below read a label off.
+        if (is_selected[child]) continue;
+        const long long a = uf_find(uf, parents[i]);
+        const long long b = uf_find(uf, child);
+        // The parent's side always survives, so a component is named by its
+        // topmost node -- the selected cluster, or the root.
+        if (a != b) uf[static_cast<size_t>(b)] = a;
+    }
+
+    *out = malloc_i64(static_cast<size_t>(n_points));
+    for (int n = 0; n < n_points; ++n)
+        (*out)[n] = uf_find(uf, n);
+    *n_out = n_points;
+}
+
+}  // namespace tttrlib
