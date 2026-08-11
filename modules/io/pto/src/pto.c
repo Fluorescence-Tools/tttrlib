@@ -7,6 +7,17 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+/* `long` is 32 bits on Windows, so ftell() cannot describe a container past
+ * 2 GiB -- and a .pto holding a long acquisition is exactly that. FileIO.h has
+ * the same pair for the C++ side, but it is not includable from C. */
+#if defined(_WIN32)
+#define pto_ftell64(fp)             _ftelli64(fp)
+#define pto_fseek64(fp, off, whence) _fseeki64((fp), (__int64)(off), (whence))
+#else
+#define pto_ftell64(fp)             ftello(fp)
+#define pto_fseek64(fp, off, whence) fseeko((fp), (off_t)(off), (whence))
+#endif
+
 #if defined(_WIN32)
 #include <io.h>
 #include <process.h>
@@ -320,9 +331,9 @@ static int cmd_bundle(const char* in_pto, const char* out_com) {
     }
     pto_read_close(&check_info);
 
-    fseek(fin, 0, SEEK_END);
-    long file_size = ftell(fin);
-    fseek(fin, 0, SEEK_SET);
+    pto_fseek64(fin, 0, SEEK_END);
+    int64_t file_size = pto_ftell64(fin);
+    pto_fseek64(fin, 0, SEEK_SET);
 
     unsigned char* container_buf = (unsigned char*)malloc(file_size);
     if (!container_buf) {
@@ -360,9 +371,9 @@ static int cmd_bundle(const char* in_pto, const char* out_com) {
 
     if (fbin) {
         /* Embed native Cosmopolitan APE binary prefix directly */
-        fseek(fbin, 0, SEEK_END);
-        long bin_size = ftell(fbin);
-        fseek(fbin, 0, SEEK_SET);
+        pto_fseek64(fbin, 0, SEEK_END);
+        int64_t bin_size = pto_ftell64(fbin);
+        pto_fseek64(fbin, 0, SEEK_SET);
 
         unsigned char* bin_buf = (unsigned char*)malloc(bin_size);
         if (bin_buf && fread(bin_buf, 1, bin_size, fbin) == (size_t)bin_size) {

@@ -60,8 +60,12 @@ TTTRHeader::TTTRHeader(
     // An embedded container starts at `base`, so the readers are positioned
     // there and told not to rewind. They report header_end with ftell, which is
     // absolute, so everything downstream needs no further adjustment.
+    // fseek64, not fseek: `long` is 32 bits on Windows, so casting a uint64
+    // offset to it silently truncates an embedded payload that starts beyond
+    // 2 GiB -- and a .pto is exactly the container that gets that large. Every
+    // other seek in the library already goes through the helper.
     const bool rewind = base == 0;
-    if (!rewind) std::fseek(fpin, static_cast<long>(base), SEEK_SET);
+    if (!rewind) fseek64(fpin, static_cast<std::int64_t>(base), SEEK_SET);
 if (is_verbose()) {
     std::clog << "-- TTTRHeader::TTTRHeader - Opening file" << std::endl;
     std::clog << "reading header" << std::endl;

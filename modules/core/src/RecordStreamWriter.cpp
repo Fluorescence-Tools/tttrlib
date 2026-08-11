@@ -5,6 +5,7 @@
 #include "TTTRHeader.h"
 #include "TTTRHeaderTypes.h"
 #include "TTTRFormat.h"
+#include "FileIO.h"
 #include "TTTRTags.h"
 
 #include <nlohmann/json.hpp>
@@ -239,7 +240,10 @@ bool RecordStreamWriter::write_chunk(const std::uint64_t* macro_times,
                         reinterpret_cast<const signed char*>(event_types)),
                 static_cast<int>(n), false, 0);
 
-        const long before = std::ftell(m.fp);
+        // ftell64: `long` is 32 bits on Windows, so past 2 GiB these positions
+        // truncate or come back -1, and the record count derived from them
+        // goes wrong on exactly the long acquisitions this writer exists for.
+        const std::int64_t before = ftell64(m.fp);
         TTTR w;
         switch (m.record) {
             case BH_RECORD_TYPE_SPC130:
@@ -276,7 +280,7 @@ bool RecordStreamWriter::write_chunk(const std::uint64_t* macro_times,
                 return fail("record type " + std::to_string(m.record) +
                             " has no encoder");
         }
-        const long after = std::ftell(m.fp);
+        const std::int64_t after = ftell64(m.fp);
         if (after < before) return fail("the record encoder did not advance the file");
         // Records, not events: an overflow record is written and is not a photon.
         const int width = m.header.get_bytes_per_record();
@@ -350,13 +354,13 @@ bool RecordStreamWriter::patch_record_count() {
         return true;
     }
 
-    const long here = std::ftell(m.fp);
+    const std::int64_t here = ftell64(m.fp);
     if (std::FILE* patch = std::fopen(m.filename.c_str(), "r+b")) {
         std::fwrite(bytes.data(), 1, bytes.size(), patch);
         std::fflush(patch);
         std::fclose(patch);
     }
-    std::fseek(m.fp, here, SEEK_SET);
+    fseek64(m.fp, here, SEEK_SET);
     return true;
 }
 
