@@ -323,6 +323,24 @@ bool IORegistry::set_reader(const std::string& name,
     return false;
 }
 
+bool IORegistry::set_writer(const std::string& name,
+                            int (*write_from)(void*, const char*, void*, void*),
+                            void* context) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    for (auto& f : table()) {
+        if (f.name == name) {
+            f.write_from = write_from;
+            f.write_context = context;
+            // Set together so the flag and the pointer cannot disagree: a
+            // format advertising a write it cannot do fails at the call site
+            // as a silent no-op rather than as a missing writer.
+            f.can_write = (write_from != nullptr);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IORegistry::set_sniffer(const std::string& name,
                              bool (*sniff)(const std::string&)) {
     std::lock_guard<std::mutex> guard(table_mutex());

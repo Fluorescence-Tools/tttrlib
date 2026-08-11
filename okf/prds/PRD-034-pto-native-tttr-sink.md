@@ -184,3 +184,71 @@ allows.
   living beside it, not a replacement for it.
 - **Compression** — the container does not compress; unchanged.
 - **A new record format** — no bit-packing; the columns are the format.
+
+---
+
+## Progress
+
+### 2026-08-11 — the reader applies the header (design item 4, partial)
+
+`apply_photon_header` reads the three required tags off the object's UID and
+configures the `TTTRHeader`. Closes the gap this PRD opened with: the loader
+read the four columns and applied *no* header at all, so a native photons
+object came back as dimensionless integers and every derived quantity was
+wrong or impossible. `test/python/test_pto_photons_native.py`, 7 cases.
+
+The container-level spec section ("Photon streams, natively") landed with it,
+including the vocabulary ruling: the two clock tags are MMFDB dictionary terms
+and are spelled the dictionary's way; the bin count has no MMFDB term and goes
+in PTO's own namespace rather than borrowing `_mmfdb_setup.n_bins`, which
+means *correlator bins for an FCS setup* and would have been a silent semantic
+collision.
+
+### 2026-08-11 — the writer (design item 3) — **acceptance criterion 1 met**
+
+`tttr.write("run.pto")` produces a self-contained native container.
+`can_write` is true for PTO for the first time.
+
+**Mechanism.** `FileFormat` gained `write_from` / `write_context`, the mirror
+of the existing `read_into` hook, and `IORegistry::set_writer` sets it
+together with `can_write` so the flag cannot outlive the writer. `TTTR::write`
+dispatches through it *before* the record-type validation, deliberately: a
+container that stores decoded columns has no record type, and demanding one
+would refuse a write that is perfectly well defined.
+
+**Verified.** Round trip PTU → `.pto` → `TTTR` on a real 870 161-event imaging
+PTU: all four event arrays bit-identical **and same dtype**, and the three
+header quantities preserved. Also SPC-130 (607 866 events) and HT3
+(11 605 946) — the sink is not PTU-shaped, since it stores decoded events
+rather than any record layout. `test/python/test_pto_write_native.py`, 13
+cases.
+
+**A defect found by writing the tests, not by review.** `write("run.pto|green")`
+inferred the container from the *whole* string, found no extension on
+`.pto|green`, fell back to the **source** container and wrote a PTU into a file
+literally named `run.pto|green` — the wrong format under the right name, no
+error, `write` returning `True`. The extension is now taken from
+`subfile_path()`, and a selector handed to a format with no objects is refused
+by name instead of folded into the filename.
+
+**Still open in this PRD**, in the order they block something:
+
+1. **Checkpointing (design item 7, acceptance criterion 6).** The writer is
+   write-once: it builds the whole store in memory and commits once. An
+   acquisition needs to commit a still-growing object — raise the `FileData`
+   size VINT, re-stamp `PtoRowCount`, raise the `Segment` size, rewrite the
+   `SeekHead` in its reserve, in that order. **This is what chisurf PRD-98
+   requirement 3 actually needs**; the writer alone lets it write a finished
+   measurement, not stream into one.
+2. **Full header fidelity (design item 2, acceptance criteria 1–2).** Only the
+   three *required* tags are written. The PRD asks for every source header tag
+   preserved `(name, idx, type, value)` — imaging `ImgHdr_*` included, which
+   means a CLSM image does **not** yet reconstruct from a `.pto` — and for
+   `tyBinaryBlob` to ride through as a `Bytes` tag instead of being dropped.
+3. **Bare open of a multi-object container (design item 4, criterion 3).**
+   Several native objects currently *stack* in name order, which is the
+   documented behaviour for embedded vendor files. The PRD wants a selector
+   demanded and the candidates named. Changing it is a behaviour decision for
+   the embedded path too, so it was not taken unilaterally.
+4. **Targeted reads over a native table (item 5, criterion 4)**, and
+   **conformance cases in four languages (item 6, criterion 5)**.

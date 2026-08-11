@@ -3,6 +3,34 @@
 ## [Unreleased]
 
 ### Added
+- **`tttr.write("run.pto")` — a `.pto` is now a TTTR *sink*, not a wrapper**
+  (PRD-034). A photon stream goes in as its own four columns — `macro_time`
+  u64, `micro_time` u16, `routing_channel` i8, `event_type` i8 — with no
+  vendor file inside, and comes back with its clocks and bin count. `can_write`
+  is true for PTO for the first time. Verified as a bit-identical round trip
+  (same values *and* same dtype) on a 870 161-event imaging PTU, an SPC-130 and
+  an 11 605 946-event HT3: the sink stores decoded events, so it is not
+  PTU-shaped. `test/python/test_pto_write_native.py`.
+
+  A second write **appends** rather than replaces — `write("run.pto|green")`
+  names the object, so one container holds several measurements, one object
+  each. Discarding what a container already held is a deletion nobody asked
+  for, not a write.
+
+  `FileFormat` gained `write_from`/`write_context`, the mirror of the existing
+  `read_into` hook, plus `IORegistry::set_writer`, which sets `can_write` with
+  it so the flag cannot outlive the writer. `TTTR::write` dispatches through it
+  **before** the record-type validation, deliberately: a container storing
+  decoded columns has no record type, and demanding one would refuse a write
+  that is perfectly well defined.
+
+  Still open in PRD-034, and stated in the spec so a file relying on any of it
+  stays conforming: full header fidelity (only the three required tags are
+  written, so imaging `ImgHdr_*` do not yet ride through and a CLSM image does
+  not reconstruct from a native table), incremental checkpointing for a file
+  still being measured into, and demanding a selector for a multi-object
+  container instead of stacking.
+
 - **The Python binding releases the GIL around every wrapped call** (SWIG
   `-threads`). A long correlation, burst search, file read or fit no longer
   freezes every other Python thread — a GUI heartbeat, a progress bar, a
@@ -358,6 +386,14 @@
   uid-prefixed name two objects sharing one get. Covered by tests that run
   the built binary, because the defect was in the CLI and not in the library
   it links.
+
+- **`write("out.pto|name")` no longer writes the wrong format under the right
+  name.** The container was inferred from the whole string, found no extension
+  on `.pto|name`, and fell back to the **source** container — so a PTU landed
+  in a file literally called `out.pto|name`, with no error and `write`
+  returning `True`. The extension now comes from `subfile_path()`, and a
+  selector handed to a format with no objects to name (a PTU holds one
+  measurement) is refused by name rather than folded into the filename.
 
 - **`PtoFile::find(name)` returns the newest match, not the oldest.** Several
   objects may share a `(kind, name)` on purpose, since re-running an analysis

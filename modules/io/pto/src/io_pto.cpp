@@ -3162,6 +3162,121 @@ int pto_read_events(const std::string& spec, std::uint64_t first_event,
 namespace {
 
 /*!
+ * \brief Write a TTTR into a container as a native photons object.
+ *        \see FileFormat::write_from, PRD-034.
+ *
+ * The counterpart of \ref read_one's dstore branch, and what makes a `.pto` a
+ * *sink* rather than a wrapper: the stream goes in as its own four columns,
+ * with no vendor file inside. `macro_time` is absolute, which is the native
+ * table's advantage over every record stream -- no overflow events, so no
+ * decode state to carry, and event `i` is a row index rather than a position
+ * that has to be reached by decoding.
+ *
+ * The three required header tags go on the object, not the file: the header
+ * belongs to the measurement, and a container may hold several. Writing them
+ * is not optional -- an object without them reads back as dimensionless
+ * integers, which is the defect \ref apply_photon_header was added to fix, and
+ * a writer that produced one would be manufacturing it.
+ *
+ * Writing into an **existing** container appends, per PRD-034: one measurement
+ * per object, `tttr pto add` semantics. So a second write to the same path
+ * does not destroy the first, which is what a caller writing two channels or
+ * two runs into one container needs.
+ */
+int write_tttr_into_pto(void*, const char* path_c, void* tttr, void* header_v) {
+    TTTR* in = static_cast<TTTR*>(tttr);
+    if (in == nullptr) return 0;
+    TTTRHeader* hdr = static_cast<TTTRHeader*>(header_v);
+    if (hdr == nullptr) hdr = in->get_header();
+
+    const std::string spec = path_c == nullptr ? "" : path_c;
+    const std::string path = subfile_path(spec);
+    // The selector names the object, so `run.pto|green` writes a photons
+    // object called "green" -- the same spelling that reads it back.
+    const std::string sel = subfile_selector(spec);
+    const std::string name = sel.empty() ? "photons" : sel;
+
+    const std::size_t n = static_cast<std::size_t>(in->get_n_valid_events());
+
+    data::DataStore store("photons");
+    store.set_n_rows(n);
+    // The four normative columns, in the normative dtypes (doc/formats/pto.rst,
+    // "Photon streams, natively"). Pinned to TTTR's in-memory types so the
+    // round trip is a copy and not a conversion.
+    const int c_macro = store.add_column("macro_time", data::ColumnType::UInt64);
+    const int c_micro = store.add_column("micro_time", data::ColumnType::UInt16);
+    const int c_chan = store.add_column("routing_channel", data::ColumnType::Int8);
+    const int c_type = store.add_column("event_type", data::ColumnType::Int8);
+    store.column(c_macro).resize_uninitialized(n);
+    store.column(c_micro).resize_uninitialized(n);
+    store.column(c_chan).resize_uninitialized(n);
+    store.column(c_type).resize_uninitialized(n);
+    {
+        std::uint64_t* macro = static_cast<std::uint64_t*>(store.column(c_macro).data_ptr());
+        std::uint16_t* micro = static_cast<std::uint16_t*>(store.column(c_micro).data_ptr());
+        std::int8_t* chan = static_cast<std::int8_t*>(store.column(c_chan).data_ptr());
+        std::int8_t* type = static_cast<std::int8_t*>(store.column(c_type).data_ptr());
+        for (std::size_t i = 0; i < n; i++) {
+            macro[i] = static_cast<std::uint64_t>(in->get_macro_time_at(i));
+            micro[i] = static_cast<std::uint16_t>(in->get_micro_time_at(i));
+            chan[i] = static_cast<std::int8_t>(in->get_routing_channel_at(i));
+            type[i] = static_cast<std::int8_t>(in->get_event_type_at(i));
+        }
+    }
+
+    PtoFile file;
+    const bool existed = std::filesystem::exists(std::filesystem::u8path(path));
+    if (existed) {
+        // Append rather than replace: a container holds measurements, and
+        // silently discarding the ones already in it is not a write, it is a
+        // deletion nobody asked for.
+        if (!file.open(path, true)) {
+            std::cerr << "pto: " << file.error() << std::endl;
+            return 0;
+        }
+    } else if (!file.create(path, "photons")) {
+        std::cerr << "pto: " << file.error() << std::endl;
+        return 0;
+    }
+    if (!existed) file.set_writing_app("tttrlib");
+
+    const std::uint64_t uid = pto_add_store(file, "photons", name, store);
+    if (uid == 0) {
+        std::cerr << "pto: " << file.error() << std::endl;
+        return 0;
+    }
+
+    // The header. Spelled exactly as apply_photon_header reads it -- the two
+    // are one contract, and a test that pins only the round trip would not
+    // notice them drifting together into a spelling nothing else accepts.
+    if (hdr != nullptr) {
+        PtoTag t;
+        t.target = uid;
+        t.type = PtoType::Float;
+        t.name = "_mmfdb_setup.macro_time_resolution";
+        t.d = hdr->get_macro_time_resolution();
+        file.add_tag(t);
+        t.name = "_mmfdb_setup.micro_time_resolution";
+        t.d = hdr->get_micro_time_resolution();
+        file.add_tag(t);
+
+        PtoTag b;
+        b.target = uid;
+        b.type = PtoType::Int;
+        b.name = "_pto_photons.number_of_micro_time_channels";
+        b.i = static_cast<long long>(hdr->get_number_of_micro_time_channels());
+        file.add_tag(b);
+    }
+
+    if (!file.commit()) {
+        std::cerr << "pto: " << file.error() << std::endl;
+        return 0;
+    }
+    file.close();
+    return 1;
+}
+
+/*!
  * \brief Read the photon data of a container into a TTTR. \see FileFormat::read_into.
  *
  * With a selector, that one object. Without, the only one -- or, when there are
@@ -3269,9 +3384,10 @@ struct RegisterPto {
   }
 })";
         f.can_read = true;
-        f.can_write = false;
         IORegistry::add(f);
         IORegistry::set_reader("PTO", &read_pto_into_tttr, nullptr);
+        // Sets can_write with it, so the flag cannot outlive the writer.
+        IORegistry::set_writer("PTO", &write_tttr_into_pto, nullptr);
     }
 };
 const RegisterPto register_pto;

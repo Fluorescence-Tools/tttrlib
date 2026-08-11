@@ -661,12 +661,30 @@ Conformance and status
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is normative for the *format*. Implementation in tttrlib is
-tracked by PRD-034 and is partial at the time of writing: the reader accepts the
-four columns but does not yet apply the required tags, and there is no writer.
-Until both exist, a ``.pto`` produced by tttrlib carries photons as an embedded
-vendor object, not a native table. A file written by some other implementation
-that follows this section is nonetheless conforming, and reading it is a bug
-that must be fixed here rather than a licence to change the format.
+tracked by PRD-034 and remains partial; what works today is the write-once
+round trip:
+
+.. code-block:: python
+
+    tttrlib.TTTR("run.ptu").write("run.pto")     # a native photons object
+    tttrlib.TTTR("run.pto")                       # events and clocks back
+
+The reader applies the three required tags, and the writer emits them. A second
+write **appends** — ``write("run.pto|green")`` names the object, so one
+container holds several measurements, one object each.
+
+Not yet implemented, and a file relying on any of it is still *conforming* —
+reading it is a bug to fix here, never a licence to change the format:
+
+- **Full header fidelity.** Only the three required tags are written. Every
+  other source header tag, imaging ``ImgHdr_*`` and ``Bytes`` blobs included,
+  is specified above but not yet carried, so a CLSM image does not currently
+  reconstruct from a native table.
+- **Checkpointing.** The writer is write-once; an object that is still being
+  measured into cannot yet be committed incrementally.
+- **Selection.** A container with several photons objects is required above to
+  demand a selector; tttrlib currently stacks them in name order instead,
+  matching its behaviour for embedded vendor objects.
 
 .. _pto_bundling:
 

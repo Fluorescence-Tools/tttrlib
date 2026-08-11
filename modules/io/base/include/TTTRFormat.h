@@ -139,6 +139,26 @@ struct FileFormat {
     /// Passed back to \ref read_into. \see sniff_context.
     void* read_context = nullptr;
 
+    /*!
+     * \brief Write a TTTR into this container, for a writer that lives above core.
+     *
+     * The mirror of \ref read_into and C-shaped for the same reason: this
+     * crosses between shared libraries, so no `std::string` and no `TTTR&`.
+     * `tttr` is a `tttrlib::TTTR*`; `header` is a `tttrlib::TTTRHeader*` and
+     * may be null, in which case the format uses the TTTR's own.
+     *
+     * A format that sets this also sets \ref can_write, and \ref TTTR::write
+     * dispatches here before the header-plus-records path -- a container that
+     * is not a record stream never reaches the record writer at all.
+     *
+     * \return 1 on success, 0 on failure.
+     */
+    int (*write_from)(void* context, const char* path, void* tttr,
+                      void* header) = nullptr;
+
+    /// Passed back to \ref write_from. \see read_context.
+    void* write_context = nullptr;
+
     /// Passed to \ref sniff_with_context. Owned by whoever set it.
     void* sniff_context = nullptr;
 
@@ -293,6 +313,18 @@ public:
      */
     static bool set_reader(const std::string& name,
                            int (*read_into)(void*, const char*, void*),
+                           void* context = nullptr);
+
+    /*!
+     * \brief Attach a writer, and mark the format writable. \see FileFormat::write_from.
+     *
+     * Sets \ref can_write, so the two cannot disagree: a format that advertises
+     * writing without a writer, or the reverse, is a bug that surfaces as a
+     * silent no-op at the call site. Returns false if there is no format of
+     * that name.
+     */
+    static bool set_writer(const std::string& name,
+                           int (*write_from)(void*, const char*, void*, void*),
                            void* context = nullptr);
 
     /*!

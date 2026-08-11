@@ -3011,7 +3011,13 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
     //     so same-format round trips preserve SPC-600 vs SPC-130 etc.
     //  3. Unknown extensions fall back to the source container type.
     if(container_type < 0){
-        int ext_type = inferTTTRContainerTypeFromExtension(filename);
+        // The extension is the container's, not the selector's. `run.pto|green`
+        // names an object inside a container, and inferring from the whole
+        // string finds no extension at all -- which fell back to the SOURCE
+        // container and wrote a PTU into a file literally called
+        // "run.pto|green". Silent, and the wrong format under the right name.
+        int ext_type = inferTTTRContainerTypeFromExtension(
+                tttrlib::subfile_path(filename));
         if(ext_type < 0){
             container_type = source_type;
         } else if(source_type >= 0 &&
@@ -3022,6 +3028,38 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
             container_type = ext_type;
         }
     }
+    /*
+     * A container whose writer lives above core writes itself -- the mirror of
+     * the read_into dispatch in read(). PTO stores photons as its own columns
+     * rather than as a record stream, so none of the header-plus-records path
+     * below applies to it, and io_pto (which depends on core) hands the writer
+     * down through the format table.
+     *
+     * Before the record-type checks on purpose: such a container has no record
+     * type to validate, and demanding one would refuse a write that is
+     * perfectly well defined.
+     */
+    {
+        const tttrlib::FileFormat* format =
+                tttrlib::IORegistry::by_container_type(container_type);
+        if (format != nullptr && format->write_from != nullptr) {
+            return format->write_from(format->write_context, filename.c_str(),
+                                      this, header) != 0;
+        }
+        // A selector names an object inside a container, so it means nothing to
+        // a format that has no objects. Refused rather than folded into the
+        // filename: the alternative is a file whose name contains a '|' and
+        // whose content is not what the caller asked for.
+        if (!tttrlib::subfile_selector(filename).empty()) {
+            std::cerr << "ERROR in TTTR::write: '" << filename
+                      << "' names an object inside a container, but "
+                      << (format != nullptr ? format->name : std::string("this format"))
+                      << " stores a single measurement and has no objects to name."
+                      << std::endl;
+            return false;
+        }
+    }
+
     // Photonscore ".photons" (D7) has its own file layout (no header + record
     // stream) and no per-record-type writer; reconstruct the position/photon
     // datasets from the marker stream and write a D7 container.
