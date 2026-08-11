@@ -21,9 +21,11 @@ static double* mem_copy_out(const std::vector<double>& v) {
 // entry point ChiSurf's maximum-entropy plugin builds on, so they get flat
 // NumPy bindings: arrays in, `(Fi, y, sigma, fit_additive)` out.
 //
-// Building the whole matrix in one call is the point. Going per column costs
-// more in argument marshalling than the convolution itself (~30 us against a
-// ~3 us kernel), so a per-column binding is slower than not compiling at all.
+// Building the whole matrix in one call is the point. The default
+// `std::vector<double>` typemaps convert element by element through the Python
+// sequence protocol (~50 ns each), so going per column costs 1668 us for 60
+// columns against 58.5 us for this one call -- a per-column binding is slower
+// than not compiling at all. See okf/bindings/marshalling-cost.md.
 %apply(double* IN_ARRAY1, int DIM1) {(double* mem_decay, int n_mem_decay)}
 %apply(double* IN_ARRAY1, int DIM1) {(double* mem_lamp, int n_mem_lamp)}
 %apply(double* IN_ARRAY1, int DIM1) {(double* mem_tau, int n_mem_tau)}

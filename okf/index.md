@@ -16,8 +16,11 @@ toolchain, and honest status of work in progress.
 
 * [PRD index](prds/README.md) - one document per initiative, with a status lifecycle (Draft → Done). Covers cross-language parity, the simulator, HMM, PTO containers, the table-access vocabulary, ABI stability and more.
 
-# JavaScript binding (PRD-016)
+# Language bindings
 
+Cross-cutting first, then the JavaScript binding (PRD-016).
+
+* [The Python seam costs ~50 ns per element](bindings/marshalling-cost.md) - why `std::vector<double>` bindings make the wrapper set the runtime, and the granularity rule that follows: **a loop stays whole in C++**
 * [tttrlib for JavaScript (Node.js)](bindings/javascript-binding.md) - the binding itself: scope, layout, conventions, how to build and what has been verified
 * [What is still open](bindings/open-items.md) - the honest gap list, ordered by what would bite first; **read this before continuing the work**
 * [SWIG Node-API backend traps](bindings/swig-node-api-traps.md) - five behaviours that fail silently or misreport where the error is; check before debugging `ext/js/*.i`

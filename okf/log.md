@@ -1,5 +1,31 @@
 # Bundle update log
 
+## 2026-08-11 (20th entry)
+
+* **Creation**: Added [The Python seam costs ~50 ns per element](/bindings/marshalling-cost.md).
+  `misc_types.i:61` declares `%template(VectorDouble) std::vector<double>` for the
+  whole library, so every such binding marshals through the Python sequence
+  protocol — one `PyFloat` per element, in and out, not a memcpy. Measured on
+  arm64 / 0.27.0 against the NumPy in-place `fconv`: 9.1 vs 1.3 µs at n=64,
+  26.5 vs 2.6 at n=512, 335 vs 10.8 at n=4096, 1360 vs 68 at n=16384. Per
+  element: 50, 50, 66, 98 ns at n=1024/2048/4096/8192. `tcspc_shift_lamp` with a
+  **zero** shift costs 24.4 µs of the 24.8 µs a real shift costs — 98% wrapper.
+* **The rule the numbers imply**: a loop stays whole in C++; the seam is crossed
+  once per *analysis*, never per iteration or per column. Building the MaxEnt
+  design matrix column by column costs 1668 µs for 60 columns against 58.5 µs
+  for the one-call `tcspc_build_fi_lifetimes`; driving the MEM iteration from
+  Python and delegating only the inner QP costs 146 µs/call at `n_tau = 60`, so
+  29 ms of pure seam over 200 iterations.
+* **The cost being paid downstream, named**: `tcspc_run_mem` /
+  `solve_tcspc_mem_lifetime` / `solve_tcspc_mem_fret` have no per-iteration
+  callback, so ChiSurf's maximum-entropy plugin keeps a second NumPy copy of
+  `_run_mem` and `_quadpr_bound` to drive its progress bar. Both entries filed
+  in `BUGS.md` with reproductions.
+* **Second entry filed**: `fconv_simd` measures 1.11× against `fconv` at n=512
+  and 1.01× at n=4096, where call overhead cannot be hiding a gain — either the
+  SIMD path is not selected in this build or the kernel is memory-bound. Not
+  settled here; it needs timing in C++ with no binding in the way.
+
 ## 2026-08-10 (19th entry)
 
 * **Correction to the 16th entry: the likelihood fix was not inert, and the

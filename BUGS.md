@@ -55,6 +55,113 @@ auditing them together rather than patching this one.
 > design matrix, at which point all three are one solver and two matrix
 > builders. This stub can be deleted once both sessions have seen it.
 
+## Every `std::vector<double>` binding converts element by element, so the wrapper costs more than the algorithm
+
+**2026-08-11.** `misc_types.i:61` declares `%template(VectorDouble)
+std::vector<double>` for the whole library, so every exposed function taking or
+returning a `std::vector<double>` marshals through the Python **sequence
+protocol** — one `PyFloat` per element, in and out. It is not a memcpy. The
+result is that the binding, not the C++, sets the runtime of any small or
+medium call, and the compiled implementation is invisible from Python.
+
+Measured on this machine (arm64, tttrlib 0.27.0), same O(n) arithmetic on both
+sides — `tcspc_shift_lamp` (a `std::vector` binding) against `fconv` (a NumPy
+in-place binding):
+
+| n | `std::vector` binding | in-place binding | penalty |
+|---|---|---|---|
+| 64 | 9.1 µs | 1.3 µs | 7.2× |
+| 512 | 26.5 µs | 2.6 µs | 10.2× |
+| 4096 | 335 µs | 10.8 µs | 31× |
+| 16384 | 1360 µs | 68 µs | 20× |
+
+The conversion is **~50 ns per element** and degrades past ~4k (51 µs at
+n=1024, 102 µs at 2048, 269 µs at 4096, 799 µs at 8192 — 50, 50, 66, 98
+ns/element). Calling `tcspc_shift_lamp` with a shift of **zero** channels costs
+24.4 µs at n=512 against 24.8 µs for a real shift: 98% of the call is the
+wrapper. A 512-channel decay is a small TCSPC histogram, so this is the normal
+case, not the tail.
+
+**What it costs in practice.**
+
+- Building the maximum-entropy design matrix one column at a time — the obvious
+  way to reuse the exposed `tcspc_fconv_*` kernels — costs 1668 µs for 60
+  columns against **58.5 µs** for `tcspc_build_fi_lifetimes`, which builds the
+  same matrix in one call. 28.5×, entirely in argument conversion. This is why
+  ChiSurf's plugin delegates the whole matrix and not the kernels.
+- `tcspc_run_mem` takes `H` as a flattened `n_tau × n_tau` matrix. Driving the
+  MEM iteration from Python and delegating only the inner QP costs 146 µs per
+  call at `n_tau = 60`, i.e. **29 ms of pure seam crossing** over 200
+  iterations, before any arithmetic.
+- An optimisation behind such a binding cannot be measured by the caller:
+  `fconv_simd` against `fconv` from Python is 1.11× at n=512 and **1.01× at
+  n=4096** (see the next entry).
+
+**The rule this implies: a loop stays whole in C++.** The seam is crossed once
+per *analysis*, never once per iteration, per column, or per component. A
+binding that exposes a loop *body* is a performance regression by construction
+however fast its C++ is — a caller who uses it as intended is slower than one
+who never linked the library. Where a loop must report progress to a GUI, that
+is an argument for a **callback parameter on the C++ loop**, not for handing the
+loop back to Python.
+
+**The fix**, in order of how much it buys:
+
+1. **NumPy typemaps on the numeric entry points.** `%apply(double* IN_ARRAY1,
+   int DIM1)` in, `ARGOUTVIEWM_ARRAY1/2` out — a borrowed pointer in, an owned
+   buffer out, no per-element boxing. `MaxEntTcspc.i` shows the pattern
+   (including the trap: `ARGOUTVIEWM` frees with `free()`, so the out-buffer
+   must be `malloc`'d, not `new`'d). 68 headers under `modules/` mention
+   `std::vector<double>`; the numeric hot paths are the ones that matter, and
+   the `fconv`/`rescale` family already does it right.
+2. **A progress callback on the long-running solvers.** `tcspc_run_mem`,
+   `solve_tcspc_mem_lifetime` and `solve_tcspc_mem_fret` have no
+   per-iteration hook, so ChiSurf's plugin cannot let the loop run in C++ *and*
+   drive its progress bar and convergence history. It therefore keeps a second,
+   NumPy implementation of `_run_mem` and `_quadpr_bound` — two copies of one
+   algorithm, kept in step by hand, which is the cost of the missing hook.
+   `std::function<bool(int, double, double)>` returning "keep going" would close
+   it and also give the GUI a cancel.
+3. **Do not expose loop bodies at all**, or mark them reference-only in the
+   docstring. `tcspc_shift_lamp`, `tcspc_fconv_single_shot`,
+   `tcspc_fconv_periodic` and `tcspc_quadpr_bound` exist so the port could be
+   verified kernel by kernel; they are not a Python API anyone should build on,
+   and nothing in their documentation says so.
+
+**Reproduction.**
+
+```python
+import timeit, numpy as np, tttrlib
+for n in (512, 4096):
+    lamp, fit, x = np.ones(n), np.zeros(n), np.array([1.0, 2.0])
+    v = timeit.timeit(lambda: tttrlib.tcspc_shift_lamp(lamp, 0.0), number=500) / 500
+    i = timeit.timeit(lambda: tttrlib.fconv(fit, lamp, x, 0, n, 0.064), number=500) / 500
+    print(n, f"{v*1e6:.1f} us vs {i*1e6:.1f} us -> {v/i:.1f}x")
+```
+
+Related: the benchmark-suite enhancement below is what would have caught this
+in CI. A benchmark that calls the library the way a user does — through the
+Python bindings — measures the wrapper; one that times C++ directly does not.
+
+## `fconv_simd` is not measurably faster than `fconv`
+
+**2026-08-11.** Both are exposed, the name promises a vectorised inner loop, and
+from Python the two measure the same: **1.73 µs vs 1.56 µs at n=512 (1.11×) and
+10.63 µs vs 10.57 µs at n=4096 (1.01×)**. At n=512 call overhead could hide a
+real gain, but at n=4096 the calls are 10 µs of mostly arithmetic and there is
+nothing to hide behind — 1% is noise.
+
+Either the SIMD path is not being selected in this build (the conda arm64 build
+does not enable it, or the runtime dispatch falls through to scalar), or the
+kernel is memory-bound and vectorising the multiply-add buys nothing. Both are
+worth knowing and the answer changes what to do: the first is a build bug, the
+second means `fconv_simd` should be deleted rather than maintained as a second
+implementation of `fconv`.
+
+To settle it, time the two in C++ (no binding in the way) and check whether the
+SIMD translation unit is compiled with the arch flags it needs. Same
+reproduction as the entry above, substituting `fconv_simd`.
+
 ## Enhancement: automated performance measurement via GitHub Actions with docs auto-update
 
 **2026-08-08.** tttrlib needs a **continuous performance measurement** pipeline:
