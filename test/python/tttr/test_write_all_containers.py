@@ -15,7 +15,7 @@ import tempfile
 import numpy as np
 import pytest
 import tttrlib
-from test_settings import DATA_ROOT, DATA_AVAILABLE  # type: ignore
+from test_settings import DATA_ROOT, DATA_AVAILABLE, settings  # type: ignore
 
 pytestmark = pytest.mark.skipif(not DATA_AVAILABLE, reason="test data not available")
 
@@ -28,7 +28,30 @@ NARROW_MICRO_TIME = {
 
 
 def _source():
-    for dirpath, _, files in os.walk(DATA_ROOT):
+    """The one file every writer is checked against, named rather than found.
+
+    This used to be "the first .ht3 os.walk reaches", and os.walk does not sort
+    its directories, so the answer depended on the machine: here it was
+    pq/ht3/pq_ht3_sf-compression.ht3 -- 181k events, no markers -- while a
+    linux runner reached imaging/pq/ht3/crn_clv_img.ht3 first, 5.4M events with
+    20,533 line and frame markers, and two containers failed there and nowhere
+    else. A test whose input varies by filesystem order is not testing the
+    writers.
+
+    A plain point measurement is also the right input for the claim being made.
+    Writing an imaging source into .photons does not preserve the event count
+    and is not meant to: that format carries x and y as marker events, so the
+    5,384,948 photons come back with 10,769,896 markers, exactly two per
+    photon. What each container does with position and markers is a real
+    question, but it is not this test's.
+    """
+    named = settings.get("ht3_sf_filename")
+    if named and os.path.exists(named):
+        return tttrlib.TTTR(named)
+    # A data set without that file still tests something, and sorting both the
+    # directories and the files keeps the choice the same everywhere.
+    for dirpath, dirnames, files in os.walk(DATA_ROOT):
+        dirnames.sort()
         for fn in sorted(files):
             if fn.lower().endswith(".ht3"):
                 return tttrlib.TTTR(os.path.join(dirpath, fn))
