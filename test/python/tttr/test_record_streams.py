@@ -26,14 +26,27 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import tttrlib
-from test_settings import DATA_AVAILABLE, get_data_path  # type: ignore
+from test_settings import DATA_AVAILABLE, data_file, get_data_path  # type: ignore
 
-SPC130 = get_data_path("bh/bh_spc132_sm_dna/m000.spc")
+# data_file() rather than get_data_path() for the file every test here reads:
+# the latter warns and hands back a path to nothing, so a runner whose data set
+# lacks it used to run the whole module against a file that is not there. That
+# is how this module segfaulted CI -- TTTRHeader dereferenced open_file()'s
+# nullptr -- and why it then failed on Windows for a second, unrelated-looking
+# reason. Missing data is a skip.
+SPC130 = data_file("bh/bh_spc132_sm_dna/m000.spc", module_level=True)
+
+# The rest are resolved here for readability. SPCQC, SPC600_256 and CZ_RAW are
+# read through the RANGED table below, which already skips a file it does not
+# find; the two .set sidecars gate their own test class.
 SPCQC = get_data_path("bh/QC004files/sample_c01.spc")
 SPC600_256 = get_data_path("bh/bh_spc630_256.spc")
 CZ_RAW = get_data_path("cz/fcs/5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch1.raw")
 SET_IMAGING = get_data_path("imaging/bh/spcm/FocalCheck_A1_20x_8xzoom_750nm_m1.set")
 SET_SPCQC = get_data_path("bh/bh_spcqc004.set")
+
+HAVE_SET_IMAGING = os.path.exists(SET_IMAGING)
+HAVE_SET_SPCQC = os.path.exists(SET_SPCQC)
 
 # (path, container_type) for every container that can be read in pieces and has
 # a file here to read. Container types are named rather than inferred: four
@@ -319,9 +332,15 @@ class TestRangedReads(unittest.TestCase):
         assert_same_events(self, data, reference, "container_chunks")
 
 
-@unittest.skipUnless(DATA_AVAILABLE, "test data not available")
+@unittest.skipUnless(HAVE_SET_IMAGING and HAVE_SET_SPCQC,
+                     "the .set sidecars are not in this data set")
 class TestSetSidecar(unittest.TestCase):
-    """Criterion 5: the whole sidecar, not the five tags a photon reader needs."""
+    """Criterion 5: the whole sidecar, not the five tags a photon reader needs.
+
+    Gated on the two .set files themselves rather than on the data directory:
+    a data set that has the directory but not these files should skip, not
+    fail on a path to nothing.
+    """
 
     def test_parameter_counts(self):
         # The PRD counted #SP + #PR: 115 and 121. Everything else -- the #DI

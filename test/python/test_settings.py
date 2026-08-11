@@ -62,6 +62,27 @@ def get_data_path(rel_path: str) -> str:
     return path_str
 
 
+def data_file(rel_path: str, module_level: bool = False) -> str:
+    """Absolute path to a data file, or skip whatever asked for it.
+
+    get_data_path() only warns when the file is not there and hands back the
+    path anyway, which leaves the caller holding a path to nothing. A runner
+    whose data set is a subset of the published one then *fails* -- and, before
+    the guard in TTTRHeader, crashed the whole session -- where it should
+    simply have skipped. Data you do not have is a skip, on every platform.
+
+    Set ``module_level`` when calling this while a test module is being
+    imported, e.g. for a constant every test in the file needs.
+    """
+    import pytest
+
+    path = get_data_path(rel_path)
+    if not os.path.exists(path):
+        pytest.skip("test data not available: %s" % rel_path,
+                    allow_module_level=module_level)
+    return path
+
+
 def _expand_settings_paths(d: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of settings where known file entries are converted to absolute paths.
 
