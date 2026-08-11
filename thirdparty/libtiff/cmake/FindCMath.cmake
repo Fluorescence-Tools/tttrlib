@@ -31,7 +31,10 @@ include(CheckSymbolExists)
 include(CheckLibraryExists)
 
 check_symbol_exists(pow "math.h" CMath_HAVE_LIBC_POW)
-find_library(CMath_LIBRARY NAMES m)
+# Plain -lm, not find_library: the latter resolves to the build host's
+# glibc linker SCRIPT (/usr/lib/.../libm.so with absolute /lib64 member
+# paths), which a conda cross-sysroot ld cannot follow.
+set(CMath_LIBRARY m)
 
 if(NOT CMath_HAVE_LIBC_POW)
     set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
