@@ -34,7 +34,9 @@ The names that come out of the example, and what they mean:
 ``speedup``
     ``t_spectral / t_recursive`` at 1, 2, 4, ..., 64 rates -- **a ratio of
     times, not a factor of goodness**. It is above 1 when the spectral path is
-    the SLOWER one, which is the case the example is making.
+    the SLOWER one, which is the case the example is making. Only its sign
+    against 1 is asserted; the magnitude belongs to the machine, and the
+    numbers measured on two of them are in that test's docstring.
 ``wrapped_gap``
     The same normalised difference for a *broad* IRF whose tail wraps around the
     excitation period. The recursion starts at bin 0 as though nothing preceded
@@ -100,7 +102,22 @@ class TestConvolutionMethodsExample(unittest.TestCase):
 
         `speedup` is t_spectral / t_recursive at each rate count, so every entry
         must be above 1 for "the recursion wins everywhere" to hold. This is the
-        claim a reader acts on when choosing a backend.
+        claim a reader acts on when choosing a backend, and it is the only
+        timing claim here that survives a change of machine.
+
+        How much faster is not asserted, because it is not a property of this
+        library. Measured curves, one rate to sixty-four:
+
+            this machine     4.03  6.39  6.59  6.86  6.92  7.03  7.12
+            a linux runner   3.14  2.62  2.25  2.05  1.94  1.88  1.84
+
+        The example says the gap *widens*, and on the machine it was written on
+        it does -- but the same code on GitHub's linux runners produces a curve
+        that falls instead, and the value at sixty-four rates came out 3.18 on
+        one run and 1.84 on the next. Neither the shape nor any floor above 1
+        can be asserted against that; a test that tried was only measuring the
+        runner. What every machine agrees on is the direction, so that is what
+        is checked here.
 
         This assertion was split in two on 2026-08-11 because it inverted at one
         and two rates under load (0.83x with a compile running) where the gap was
@@ -114,37 +131,6 @@ class TestConvolutionMethodsExample(unittest.TestCase):
         speedup = np.asarray(self.ns["speedup"])
         self.assertTrue(np.all(speedup > 1.0),
                         "the text says the recursion wins everywhere: %s" % speedup)
-
-    def test_the_spectral_penalty_never_goes_away(self):
-        """The spectral path must stay clearly behind at every rate count.
-
-        The tutorial's deeper argument is about the regime a real model lives
-        in: a donor (x) FRET (x) anisotropy decay has a rate spectrum that is an
-        outer product, so tens of rates is normal, and that is exactly where the
-        frequency domain is at its worst. This asserts the part of that which is
-        true on every machine -- the penalty is large and never shrinks away --
-        rather than the exact shape of the curve.
-
-        The text says the gap *widens* with the rate count, and it does on the
-        machine it was written on: the ratio runs 4.0x at one rate to 7.1x at
-        sixty-four, a head-to-tail factor of 1.74 (unchanged with
-        OMP_NUM_THREADS=1, so it is not threading, and unchanged when the call
-        overhead is amortised over 200 iterations, so it is not the timer).
-
-        On GitHub's linux runners the same code gives 3.6x at one rate and 3.2x
-        at sixty-four -- the head matches, the tail does not, so the spectral
-        path scales *better* there and the factor is 0.88. That is a real
-        difference between machines, not noise: it reproduced on all five
-        pythons, while macOS and Windows agreed with the author.
-
-        So head-to-tail is not a property of this library and is not asserted
-        here. What every machine agrees on is that the penalty is large and
-        never shrinks to nothing, which is what the example is really for: if
-        the spectral path ever became competitive, this fires.
-        """
-        speedup = np.asarray(self.ns["speedup"])
-        self.assertGreater(speedup.min(), 2.0,
-                           "the spectral path should stay well behind: %s" % speedup)
 
     def test_a_wrapping_response_separates_the_backends(self):
         """When the transform is not merely slower but necessary.
