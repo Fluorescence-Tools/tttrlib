@@ -146,10 +146,15 @@ if (is_verbose()) {
 }
 
 
+// "rb", not "r": on Windows a text-mode stream collapses CRLF to LF and treats
+// 0x1A as end of file, so a container whose bytes happen to contain either --
+// which any of them may -- is read short and misaligned. Every other
+// open_file() in the library already says "rb"; this one did not, and every
+// header opened by name went through it.
 TTTRHeader::TTTRHeader(
         std::string fn,
         int tttr_container_type
-) : TTTRHeader(open_file(fn, "r"), tttr_container_type, true) {
+) : TTTRHeader(open_file(fn, "rb"), tttr_container_type, true) {
 
 }
 
