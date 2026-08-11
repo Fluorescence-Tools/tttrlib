@@ -2510,14 +2510,20 @@ void compute_intensity_trace(
 // event type), not on the raw byte stream.
 // ============================================================================
 
-void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
+void TTTR::write_spc132_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     bh_overflow_t overflow;
     overflow.allbits = 0;
     overflow.bits.mtov = 1;
     overflow.bits.invalid = 1;
 
     const uint64_t MT_WRAP = 4096;
-    uint64_t MT_ov = 0; // cumulative macro time overflow counter
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         // overflows needed before this event and remaining in-record time
@@ -2549,7 +2555,10 @@ void TTTR::write_spc132_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel){
+void TTTR::write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel,
+                              uint64_t* MT_ov_state){
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // The QC modules emit one bare overflow word per wrap of the 12 bit macro
     // time field; unlike the classic SPC overflow record there is no count
     // field to compress long idle stretches into a single word.
@@ -2562,7 +2571,6 @@ void TTTR::write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel){
     const unsigned routing_mask = (1u << shift) - 1;
 
     const uint64_t MT_WRAP = BH_SPCQC_MT_WRAP;
-    uint64_t MT_ov = 0; // cumulative macro time overflow counter
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / MT_WRAP;
@@ -2592,7 +2600,14 @@ void TTTR::write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel){
     }
 }
 
-void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr){
+void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     bh_overflow_t overflow;
     overflow.allbits = 0;
     overflow.bits.mtov = 1;
@@ -2600,7 +2615,6 @@ void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr){
 
     // 17-bit macro time field; overflows account for 2**17 units each
     const uint64_t MT_WRAP = 131072;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / MT_WRAP;
@@ -2620,11 +2634,17 @@ void TTTR::write_spc600_256_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_spc600_4096_events(FILE* fp, TTTR* tttr){
+void TTTR::write_spc600_4096_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // 6 bytes per record; each overflow record advances the macro time by 2**24
     const uint64_t MT_WRAP = 16777216;
     const size_t RECORD_SIZE = 6;
-    uint64_t MT_ov = 0;
     unsigned char buffer[RECORD_SIZE];
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
@@ -2652,9 +2672,15 @@ void TTTR::write_spc600_4096_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr){
+void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     const uint64_t T3WRAPAROUND = 1024;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T3WRAPAROUND;
@@ -2680,10 +2706,16 @@ void TTTR::write_hht3v2_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_hht3v1_events(FILE* fp, TTTR* tttr){
+void TTTR::write_hht3v1_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // HHT3v1: every overflow record advances the macro time by exactly 1024
     const uint64_t T3WRAPAROUND = 1024;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T3WRAPAROUND;
@@ -2707,7 +2739,14 @@ void TTTR::write_hht3v1_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_sf_ht3_events(FILE* fp, TTTR* tttr){
+void TTTR::write_sf_ht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // SF-compressed HT3 (Suren Felekyan's HT3 conversion): photon and
     // marker records as HydraHarp T3; a run of macro time overflows is
     // collapsed into a single overflow record whose lowest 24 bits hold
@@ -2715,7 +2754,6 @@ void TTTR::write_sf_ht3_events(FILE* fp, TTTR* tttr){
     // by (1 + count) * 1024).
     const uint64_t T3WRAPAROUND = 1024;
     const uint64_t MAX_PER_RECORD = 0x1000000; // 1 + 24-bit count
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T3WRAPAROUND;
@@ -2738,10 +2776,16 @@ void TTTR::write_sf_ht3_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_hht2v2_events(FILE* fp, TTTR* tttr){
+void TTTR::write_hht2v2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // T2 records carry no micro time; micro times are dropped
     const uint64_t T2WRAPAROUND_V2 = 33554432;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T2WRAPAROUND_V2;
@@ -2766,10 +2810,16 @@ void TTTR::write_hht2v2_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_hht2v1_events(FILE* fp, TTTR* tttr){
+void TTTR::write_hht2v1_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // HHT2v1: every overflow record advances the time tag by exactly 33552000
     const uint64_t T2WRAPAROUND_V1 = 33552000;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T2WRAPAROUND_V1;
@@ -2792,11 +2842,17 @@ void TTTR::write_hht2v1_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_pht3_events(FILE* fp, TTTR* tttr){
+void TTTR::write_pht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // PicoHarp T3. Markers are encoded with dtime = 0 (PicoHarp convention);
     // photons therefore need dtime >= 1: micro time 0 is clipped to 1.
     const uint64_t T3WRAPAROUND = 65536;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T3WRAPAROUND;
@@ -2824,11 +2880,17 @@ void TTTR::write_pht3_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_pht2_events(FILE* fp, TTTR* tttr){
+void TTTR::write_pht2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
+    // Resumable: a streaming writer calls this once per chunk, and an
+    // overflow counter that restarts at zero re-emits every overflow
+    // record from the beginning -- the reader then accumulates them on
+    // top of the previous chunk's and every macro time after the first
+    // chunk is wrong. Null keeps the old whole-file behaviour.
+    uint64_t MT_ov_local = 0;
+    uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
     // PicoHarp T2; no micro time. Markers use channel 0xF with the marker
     // bits in the lowest 4 bits of the time tag (time tag loses 4 bits).
     const uint64_t T2WRAPAROUND = 210698240;
-    uint64_t MT_ov = 0;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         uint64_t MT_target = MT / T2WRAPAROUND;
@@ -2953,7 +3015,9 @@ static int default_record_type_for_container(int container_type){
  * Maps a tttrlib record type to the PicoQuant TTResultFormat_TTTRRecType
  * identifier written into PTU headers.
  */
-static int pq_ptu_record_type_identifier(int record_type){
+// Not static: RecordStreamWriter needs the same mapping, and a second copy
+// of it would be a second thing to keep in step.
+int pq_ptu_record_type_identifier(int record_type){
     switch (record_type) {
         case PQ_RECORD_TYPE_PHT3:       return rtPicoHarpT3;
         case PQ_RECORD_TYPE_PHT2:       return rtPicoHarpT2;

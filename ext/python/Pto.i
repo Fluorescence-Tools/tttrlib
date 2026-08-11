@@ -2,6 +2,7 @@
 %module tttrlib
 %{
 #include "PhotonSink.h"
+#include "RecordStreamWriter.h"
 #include "TTTRStreamWriter.h"
 #include "io_pto.h"
 %}
@@ -134,10 +135,42 @@
 // result out of it, which is add_sink's contract, not this one's.
 %ignore tttrlib::io::PhotonStreamHub::add_owned_sink;
 
+#ifdef SWIGPYTHON
+// A director calls BACK into Python, and without these the four columns arrive
+// as opaque SWIG pointers -- a Python consumer could count events and nothing
+// else, which makes the whole sink interface decorative. The arrays are views
+// onto the C++ buffers, valid for the call only, exactly as the C++ contract
+// says; a consumer that keeps them must copy.
+%typemap(directorin) (const std::uint64_t* macro_times) {
+    npy_intp d[1] = { (npy_intp) n };
+    $input = PyArray_SimpleNewFromData(1, d, NPY_UINT64, (void*) $1_name);
+}
+%typemap(directorin) (const std::uint16_t* micro_times) {
+    npy_intp d[1] = { (npy_intp) n };
+    $input = PyArray_SimpleNewFromData(1, d, NPY_UINT16, (void*) $1_name);
+}
+%typemap(directorin) (const std::int8_t* routing_channels) {
+    npy_intp d[1] = { (npy_intp) n };
+    $input = PyArray_SimpleNewFromData(1, d, NPY_INT8, (void*) $1_name);
+}
+%typemap(directorin) (const std::int8_t* event_types) {
+    npy_intp d[1] = { (npy_intp) n };
+    $input = PyArray_SimpleNewFromData(1, d, NPY_INT8, (void*) $1_name);
+}
+#endif  // SWIGPYTHON
+
 %feature("director") tttrlib::io::PhotonSink;
 %include "PhotonSink.h"
 
 %include "TTTRStreamWriter.h"
+
+// A unique_ptr return cannot be owned by a binding -- SWIG wraps the smart
+// pointer itself and then has no destructor for it. The class is exposed
+// directly instead, which is what a caller wants anyway: it knows the format
+// it is acquiring into.
+%ignore tttrlib::io::make_stream_writer;
+%ignore tttrlib::io::make_stream_writer_for;
+%include "RecordStreamWriter.h"
 
 %include "io_pto.h"
 

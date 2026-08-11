@@ -402,9 +402,23 @@ if (is_verbose()) {
 //                fwrite(WideBuffer, sizeof(wchar_t), tmp_str.size(), fp);
 //                free(WideBuffer);
                 break;
-            case tyBinaryBlob:
-                std::cerr << "ERROR: writing of tyBinaryBlob currently not supported" << std::endl;
+            case tyBinaryBlob: {
+                // The mirror of the reader, which now keeps blobs instead of
+                // seeking past them: the tag header states the byte count and
+                // the bytes follow, one int32 per byte in the JSON -- the
+                // representation add_tag defines for this type. Without this
+                // half, reading a blob and writing the file back drops it,
+                // which is the same loss one step later.
+                std::vector<int32_t> blob;
+                if (tag["value"].is_array()) blob = tag["value"].get<std::vector<int32_t>>();
+                TagHead.TagValue = (uint64_t) blob.size();
+                fwrite(&TagHead, sizeof(TagHead), 1, fp);
+                for (std::size_t bi = 0; bi < blob.size(); bi++) {
+                    const unsigned char byte = (unsigned char) (blob[bi] & 0xFF);
+                    fwrite(&byte, 1, 1, fp);
+                }
                 break;
+            }
             default:
                 throw std::string("Tag type not supported");
         }

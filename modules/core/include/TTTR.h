@@ -2195,7 +2195,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_spc132_events(FILE* fp, TTTR* tttr);
+    void write_spc132_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SPC-QC.
@@ -2214,7 +2214,8 @@ public:
      * @param six_channel Use the QC-x06 layout (SPC-QC-106/006) instead of the
      *                    QC-x04 one (SPC-QC-104/004).
      */
-    void write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel = false);
+    void write_spcqc_events(FILE* fp, TTTR* tttr, bool six_channel = false,
+                            uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as HHT3v2.
@@ -2222,7 +2223,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_hht3v2_events(FILE* fp, TTTR* tttr);
+    void write_hht3v2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as HHT3v1.
@@ -2230,7 +2231,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_hht3v1_events(FILE* fp, TTTR* tttr);
+    void write_hht3v1_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SF-compressed HT3.
@@ -2242,7 +2243,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_sf_ht3_events(FILE* fp, TTTR* tttr);
+    void write_sf_ht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as HHT2v2 (T2 mode).
@@ -2252,7 +2253,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_hht2v2_events(FILE* fp, TTTR* tttr);
+    void write_hht2v2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as HHT2v1 (T2 mode).
@@ -2262,7 +2263,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_hht2v1_events(FILE* fp, TTTR* tttr);
+    void write_hht2v1_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as PicoHarp T3.
@@ -2273,7 +2274,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_pht3_events(FILE* fp, TTTR* tttr);
+    void write_pht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as PicoHarp T2.
@@ -2284,7 +2285,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_pht2_events(FILE* fp, TTTR* tttr);
+    void write_pht2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SPC-600 (256 channel mode).
@@ -2294,7 +2295,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_spc600_256_events(FILE* fp, TTTR* tttr);
+    void write_spc600_256_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SPC-600 (4096 channel mode).
@@ -2304,7 +2305,7 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_spc600_4096_events(FILE* fp, TTTR* tttr);
+    void write_spc600_4096_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as CZ ConfoCor3 raw records.

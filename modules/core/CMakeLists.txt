@@ -28,6 +28,7 @@
 tttrlib_add_module(
     NAME     core
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/DataStore.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/RecordStreamWriter.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Histogram.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/HistogramAxis.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTR.cpp"
