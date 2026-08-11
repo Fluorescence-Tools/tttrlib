@@ -49,6 +49,14 @@ TTTRHeader::TTTRHeader(
         std::uint64_t base
         ) : TTTRHeader(tttr_container_type)
 {
+    // open_file() returns nullptr for a path that is not there, having already
+    // said so on stderr, and TTTRHeader(filename, type) hands that straight to
+    // this constructor. Every reader below seeks and reads without checking, so
+    // going on is a segmentation fault rather than an error. Keep the default
+    // header for the container instead -- the same answer container_records()
+    // gives for the same input.
+    if (fpin == nullptr) return;
+
     // An embedded container starts at `base`, so the readers are positioned
     // there and told not to rewind. They report header_end with ftell, which is
     // absolute, so everything downstream needs no further adjustment.
