@@ -3,39 +3,20 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-## SIGSEGV: `TTTR(path).header` on a temporary — the header outlives its owner
+## FIXED — SIGSEGV: `TTTR(path).header` on a temporary — the header outlives its owner
 
-**2026-08-11.** Reading the header off a TTTR that is not bound to a name is a
-hard crash, on every format:
-
-```python
-import tttrlib
-h = tttrlib.TTTR("any.ptu").header
-h.macro_time_resolution          # Fatal Python error: Segmentation fault
-```
-
-Exit code 139. Binding the TTTR first is fine and is the workaround:
-
-```python
-t = tttrlib.TTTR("any.ptu")      # keep it alive
-h = t.header                     # 2.5e-08
-```
-
-`get_header()` hands back a raw `TTTRHeader*` and the SWIG proxy does not keep
-the owning `TTTR` alive, so the temporary is collected at the end of the
-expression and the proxy is left pointing into freed memory. Nothing about the
-call site looks dangerous, which is what makes it worth fixing rather than
-documenting: `obj.attr.subattr` is ordinary Python, and the same shape works for
-every other tttrlib property.
-
-Found while writing `test/python/test_pto_photons_native.py` (the test now binds
-the object and says why). **Not specific to `.pto`** — reproduced above on a
-PicoQuant PTU, and the same lifetime question applies to any accessor returning
-a pointer to a member.
-
-Fix is a SWIG `%feature` keeping a reference to the parent on the returned
-proxy — the same treatment other container-to-member accessors need; worth
-auditing them together rather than patching this one.
+> **Fixed 2026-08-11** (removal = fix landed, not a concurrent-write loss).
+> As the entry proposed, and audited together rather than patched alone: a
+> `%pythonappend` keep-alive tags the owner onto every proxy returned by an
+> accessor that hands out a pointer into its container — `TTTR::get_header`
+> (the filed crash), `TTTR::get_mt_linearizer`, `CLSMImage::get_frames` /
+> `get_frame_for_channel`, `CLSMFrame::get_lines` (SWIG returns the pointer
+> vectors as tuples, so each ELEMENT carries the owner). The `.header`
+> property routes through `__getattr__` → `get_header`, so it is covered.
+> The entry's repro now survives a `gc.collect()`;
+> `test/python/tttr/test_header_lifetime.py` pins it; tttr (633) and clsm
+> (196) groups green. This stub can be deleted once both sessions have seen
+> it.
 
 ## FIXED — TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
 
@@ -161,6 +142,77 @@ implementation of `fconv`.
 To settle it, time the two in C++ (no binding in the way) and check whether the
 SIMD translation unit is compiled with the arch flags it needs. Same
 reproduction as the entry above, substituting `fconv_simd`.
+
+**2026-08-11, settled — and it is neither of the two answers above.**
+`fconv_simd` **is** `fconv`, one line of it
+(`DecayConvolution.cpp:209`): `void fconv_simd(...) { fconv(...); }`. The
+runtime dispatch lives inside `fconv` itself, which already picks the AVX or
+NEON kernel by CPU feature *and* problem size. So the measurement compares a
+function with itself and 1.00× is the correct result, not a symptom. Confirmed
+out to n=65536 (167.6 µs vs 168.8 µs), where 167 µs of arithmetic leaves call
+overhead nothing to hide behind.
+
+The SIMD path is alive and worth its keep. Timed across two processes through
+the documented opt-out, `numexp=4`, n=4096:
+
+```
+NEON on                  21.21 µs
+TTTRLIB_USE_NEON=0       39.56 µs      -> 1.87x
+```
+
+which sits inside the 1.65–1.85× the kernel's own comment claims. Note
+`kSimdMinNumexp = 2`: at `numexp=1` the dispatcher deliberately stays scalar
+because NEON there measured 0.89× for `fconv_per` — a regression. A benchmark
+using one lifetime therefore measures the scalar kernel by design.
+
+**So the disposition is the entry's second option, for the first option's
+reason inverted:** delete `fconv_simd` and `fconv_per_simd`, not because they
+are a slow second implementation but because they are an *alias* that promises
+a choice the caller does not have. `fconv` already picks the best kernel; a
+separate `_simd` name tells every reader there is a scalar/vector decision to
+make at the call site, and there is not. Whoever removes them should keep a
+deprecating shim for one release — both names are exported and ChiSurf may
+call them.
+
+## An exposed capability constant says NEON is not compiled in, on a build where it is
+
+**2026-08-11.** Found while settling the entry above, and it is the reason that
+entry guessed wrong. `tttrlib.TTTRLIB_COMPILE_NEON` is **`0` on this arm64
+machine**, where NEON is compiled in, selected at runtime, and measurably
+running at 1.87×:
+
+```python
+>>> tttrlib.TTTRLIB_COMPILE_NEON     # 0   <- false
+>>> tttrlib.get_neon_enabled()       # True
+>>> tttrlib.sim_simd_backend()       # 'neon'
+```
+
+`TTTRLIB_COMPILE_AVX` is `0` too — correct here by luck, and wrong the same way
+on x86.
+
+**Mechanism.** `ext/python/tttrlib.i:134` does `%include "info.h"`, and
+`info.h:82` gates the macro on `#if (defined(__aarch64__) || defined(_M_ARM64))`.
+SWIG's *own* preprocessor evaluates that when it generates the wrapper, and
+SWIG defines neither symbol regardless of the host, so it takes the `#else`
+branch and emits the constant as a literal `0`. The value never comes from the
+compiler that built the library. **Both constants are `0` on every platform.**
+
+Why it matters more than a wrong number: the two spellings disagree and the
+wrong one is the one a person reaches for. `get_neon_enabled()` and
+`sim_simd_backend()` are *functions*, compiled into the library, and they tell
+the truth. `TTTRLIB_COMPILE_NEON` is a *constant*, frozen at wrap time, and it
+lies. Anyone checking "was this built with SIMD?" — exactly what the
+`fconv_simd` entry above needed — reads the constant, concludes the kernels
+were never compiled, and goes looking for a build bug that does not exist.
+
+**Fix**, either way round: expose the value through a function evaluated in the
+compiled library (`get_neon_compiled()` beside `get_neon_enabled()`), or
+`%ignore` the two macros so nothing can read a fabricated answer. Do not leave
+a constant whose value is decided by the wrapper generator. Worth an audit for
+the same shape elsewhere: any `#define` guarded by a compiler-supplied
+predefined macro that reaches a binding through `%include` has this defect —
+`TTTRLIB_TARGET_AVX`, and anything gated on `__x86_64__`, `_OPENMP` or
+`__APPLE__`, are the candidates.
 
 ## Enhancement: automated performance measurement via GitHub Actions with docs auto-update
 
