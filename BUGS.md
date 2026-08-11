@@ -329,6 +329,52 @@ binding hit unrelated API friction.
 
 </details>
 
+## FIXED — `BitMask::test` and `::set` index their words unchecked, so a bad row is a segfault or a stray bit
+
+**2026-08-11.** Reachable in two lines from the binding:
+
+```python
+b = tttrlib.BitMask()
+b.size()            # 0
+b.test(100000000)   # exit 139 (SIGSEGV)
+```
+
+`test` did `words_[i >> 6]` with no bound and `set` the same on the write side.
+`set` is the worse half: it ORs a bit into whatever word it lands on, which is
+silent corruption of someone else's memory rather than a crash.
+
+`BitMask` backs the DataStore row mask and every column's validity mask, so
+these run per row on every filter — the hottest of the guards added today.
+
+> **Fixed 2026-08-11.** Both bounded by `n_`, throw out of line.
+>
+> **`n_` is the right bound here and there is no capacity/count trap**, unlike
+> `TTTR`'s event arrays where bounding by the count rejected the library's own
+> append path and cost 109 tests. Checked rather than assumed: every write to
+> `words_` is an `assign` alongside `n_`, always at `(n_ + 63) / 64`, and it is
+> never grown on its own.
+>
+> Cost: `set_row_mask` runs at **0.26 ns/row** and a masked histogram at
+> **14.3 ns/row** (1-D) / 17.8 (2-D) over 2,000,000 rows with the guards in.
+> No before/after delta is quoted because none was measured for this path — the
+> argument is a fortiori: the `TTTR` guard was free on a 0.16 ns/row loop,
+> ninety times tighter than this one.
+>
+> **It immediately found a test asserting on out-of-bounds garbage.**
+> `test_compact_keeps_the_validity_too` read `[c.valid(i) for i in range(3)]`
+> from a **two-row** column. `where("Tau", 2.0, 4.0)` over `Tau = [0,1,2,3,4]`
+> selects rows 2 and 3 — the range is half-open — but the test's comment said
+> "rows 2, 3, 4" and the loop followed the comment. The third read went past
+> the end, returned whatever was there, and it happened to be `False`, which
+> happened to match. It passed by coincidence.
+>
+> Checked which side was wrong before touching it, since "the guard broke a
+> test" and "the guard found a bug" look identical: `compact()` is correct —
+> two rows, validity `[True, False]`, row 2 from `m001.ptu` having `n` and row
+> 3 from `m002.hdf5` not. The test now asserts `c.size() == 2` and iterates
+> `range(c.size())` instead of a literal, so the drift cannot recur. 815 tests
+> pass.
+
 ## A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
 
 **2026-08-11.** `test_datastore_paths.py::test_the_column_lookup_did_not_get_slower`

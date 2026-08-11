@@ -213,9 +213,17 @@ def test_take_keeps_the_validity_and_drops_the_ranges(merged):
 
 
 def test_compact_keeps_the_validity_too(merged):
-    merged.where("Tau", 2.0, 4.0)          # rows 2, 3, 4
+    # Tau is [0, 1, 2, 3, 4] and the range is half-open, so this selects rows
+    # 2 and 3 -- TWO rows, not the three the comment here used to claim. The
+    # assertion read `range(3)`, one past the end of the compacted column, and
+    # passed only because the unchecked accessor returned whatever was there
+    # and it happened to be False. Bounds-checking `Column::valid` surfaced it
+    # (BUGS 2026-08-11).
+    merged.where("Tau", 2.0, 4.0)          # rows 2 and 3
     c = merged.compact()["n"]
-    assert [c.valid(i) for i in range(3)] == [True, False, False]
+    assert c.size() == 2
+    # row 2 came from m001.ptu and has `n`; row 3 came from m002.hdf5 and does not.
+    assert [c.valid(i) for i in range(c.size())] == [True, False]
     assert len(c.na_ranges()) == 0
 
 

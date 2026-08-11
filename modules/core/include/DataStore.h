@@ -206,6 +206,11 @@ struct NaRange {
  * One eighth the size of a byte array, which matters at ten million rows, and
  * read a word at a time when a fill is scanning it.
  */
+// An out-of-range row index on a column accessor read past the allocation --
+// silently at a small overrun, fatally at a large one. Out of line and
+// noreturn so the guard costs a branch and nothing else in the caller.
+[[noreturn]] void datastore_index_out_of_range(std::size_t index, std::size_t size);
+
 class BitMask {
 public:
     BitMask() = default;
@@ -220,10 +225,23 @@ public:
     bool empty() const { return n_ == 0; }
     std::size_t size() const { return n_; }
 
+    // Bounded, unlike the raw word indexing these used to do. `test` past the
+    // end was a SIGSEGV straight from the binding -- tttrlib.BitMask().test(
+    // 100000000) -- and `set` is the worse half, ORing a bit into whatever it
+    // landed on (BUGS 2026-08-11).
+    //
+    // `n_` is the right bound and there is no capacity/count split to get wrong
+    // here, unlike TTTR's event arrays: `words_` is only ever assigned
+    // alongside `n_`, always at (n_ + 63) / 64, and never grown on its own.
+    //
+    // These are per-row on every mask and filter, so the throw stays out of
+    // line and the guard is a predicted compare.
     inline bool test(std::size_t i) const {
+        if (i >= n_) datastore_index_out_of_range(i, n_);
         return (words_[i >> 6] >> (i & 63)) & 1ULL;
     }
     inline void set(std::size_t i, bool v) {
+        if (i >= n_) datastore_index_out_of_range(i, n_);
         const std::uint64_t bit = 1ULL << (i & 63);
         if (v) words_[i >> 6] |= bit; else words_[i >> 6] &= ~bit;
     }
@@ -336,11 +354,6 @@ private:
  * column usable -- the codes ARE a category axis, so "how many rows per label"
  * needs no separate pass. The strings themselves never reach a histogram.
  */
-// An out-of-range row index on a column accessor read past the allocation --
-// silently at a small overrun, fatally at a large one. Out of line and
-// noreturn so the guard costs a branch and nothing else in the caller.
-[[noreturn]] void datastore_index_out_of_range(std::size_t index, std::size_t size);
-
 class Column {
 public:
     Column() = default;
