@@ -51,9 +51,13 @@ def test_this_repository_keeps_no_dictionary_of_its_own():
     every test passed -- which is why the check is for the *file*, not for its
     contents. There is no version of a local dictionary that is safe.
     """
+    # .mmfdb is excluded for the same reason build/ and thirdparty/ are: it is
+    # not this repository's copy of anything. CI clones the naming repository
+    # there and points MMFDB_DIC_DIR at it, so the dictionaries underneath it
+    # are the authority itself -- exactly what this rule tells you to use.
     stray = [p for p in REPO.rglob("*.dic")
              if "build" not in p.parts and ".git" not in p.parts
-             and "thirdparty" not in p.parts]
+             and "thirdparty" not in p.parts and ".mmfdb" not in p.parts]
     assert not stray, (
         f"{[str(p.relative_to(REPO)) for p in stray]} — mmfdb is the naming "
         "repository; a term this library needs is added there, not here."
