@@ -33,7 +33,10 @@
      "pq/ht3/pq_ht3_sf-compression.ht3": "sha256:ec8df535300d9918f186c29ed15da9158728ab7b4eeedc187d4d65aa928a7c27",
      "pq/ptu/pq_ptu_hh_t2.ptu": "sha256:cf27751a0d645cbcb30b803e7ce66c59606aff09796957b1f5aa8bc37235343f",
      "pq/ptu/pq_ptu_hh_t3.ptu": "sha256:e7aa50c99d261f4e54c6ac6856574a8c9cde47b22f2dfa1d5970fde59eec12e6",
-     "sm/data.sm": "sha256:92a3d8831d9678511c129a720f054c0f3bc1bf7134b3787e66a7b95f7b70f187"
+     "sm/data.sm": "sha256:92a3d8831d9678511c129a720f054c0f3bc1bf7134b3787e66a7b95f7b70f187",
+     "bh/bh_spc132_sm_dna/m000.spc": "sha256:8759bcd62b4b215a246e03515c4545d21057a5d1ffed74f23f184b77936e0fe7",
+     "bh/QC004files/sample_c01.spc": "sha256:ffa28b8339f4112e39ea7b0c3061470e95ed832ce57645766f2bf6adb2a8f1b9",
+     "sm/tl_sm.sm": "sha256:92a3d8831d9678511c129a720f054c0f3bc1bf7134b3787e66a7b95f7b70f187"
   },
   "spc132_filename": "bh/bh_spc132.spc",
   "spc630_filename": "bh/bh_spc630_256.spc",
