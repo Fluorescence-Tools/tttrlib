@@ -93,7 +93,7 @@ size_t read_sm_header(FILE* file, nlohmann::json &j) {
         uint32_t size;
         fread(&size, sizeof(size), 1, file);
         SwapEndian(size);
-        fseek(file, size, SEEK_CUR);
+        fseek64(file, (std::int64_t) size, SEEK_CUR);
     }
 
     add_tag(j, TTTRTagGlobRes, (double) header.col2_resolution, tyFloat8);

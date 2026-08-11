@@ -98,7 +98,7 @@ if (is_verbose()) {
     // Where the header ENDS, not how long it is. The two are the same number
     // for a file that is a container and different for one embedded in
     // something bigger, and every other header reader here returns the former.
-    return static_cast<std::size_t>(std::ftell(fpin));
+    return static_cast<std::size_t>(ftell64(fpin));
 }
 
 size_t read_bh_spcqc_header(
@@ -149,7 +149,7 @@ if (is_verbose()) {
     // Where the header ENDS, not how long it is. The two are the same number
     // for a file that is a container and different for one embedded in
     // something bigger, and every other header reader here returns the former.
-    return static_cast<std::size_t>(std::ftell(fpin));
+    return static_cast<std::size_t>(ftell64(fpin));
 }
 
 bool read_bh_set_file(const std::string& filename, nlohmann::json &data) {

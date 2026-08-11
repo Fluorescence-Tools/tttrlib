@@ -473,7 +473,7 @@ static int cmd_bundle(const char* in_pto, const char* out_com) {
         fwrite(void_pad, 1, sizeof(void_pad), fout);
     }
 
-    uint64_t P = (uint64_t)ftell(fout);
+    uint64_t P = (uint64_t)pto_ftell64(fout);
 
     fwrite(container_buf + payload_offset, 1, file_size - payload_offset, fout);
     free(container_buf);

@@ -7,6 +7,18 @@
 #include <inttypes.h>
 #include <math.h>
 
+/* `long` is 32 bits on Windows, so a container past 2 GiB cannot be seeked
+ * with fseek() at all -- every object beyond that point becomes unreachable
+ * and the file reads as broken. FileIO.h has the same pair for the C++ side,
+ * but it is not includable from C. */
+#if defined(_WIN32)
+#define pto_fseek64(fp, off, whence) _fseeki64((fp), (__int64)(off), (whence))
+#define pto_ftell64(fp)              _ftelli64(fp)
+#else
+#define pto_fseek64(fp, off, whence) fseeko((fp), (off_t)(off), (whence))
+#define pto_ftell64(fp)              ftello(fp)
+#endif
+
 static uint64_t read_vint(FILE* fp, uint32_t* octets_read, bool mask_length_bit) {
     int first = fgetc(fp);
     if (first == EOF) return 0;
@@ -29,7 +41,7 @@ static uint64_t read_vint(FILE* fp, uint32_t* octets_read, bool mask_length_bit)
 }
 
 static bool read_elem_header(FILE* fp, uint64_t offset, uint32_t* id, uint64_t* size, uint32_t* header_len) {
-    if (fseek(fp, (long)offset, SEEK_SET) != 0) return false;
+    if (pto_fseek64(fp, offset, SEEK_SET) != 0) return false;
     uint32_t id_len = 0;
     uint64_t elem_id = read_vint(fp, &id_len, false);
     if (id_len == 0 || id_len > 4) return false;
@@ -111,24 +123,24 @@ static void parse_attached_file(FILE* fp, uint64_t data_offset, uint64_t size, P
         uint64_t payload_at = at + hlen;
 
         if (cid == PTO_ID_FILE_UID && csize <= 8) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             uint64_t val = 0;
             for (uint64_t i = 0; i < csize; i++) val = (val << 8) | fgetc(fp);
             obj.uid = val;
         } else if (cid == PTO_ID_FILE_NAME && csize < sizeof(obj.name)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(obj.name, 1, csize, fp);
             obj.name[n] = '\0';
         } else if (cid == PTO_ID_KIND && csize < sizeof(obj.kind)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(obj.kind, 1, csize, fp);
             obj.kind[n] = '\0';
         } else if (cid == PTO_ID_ENCODING && csize < sizeof(obj.encoding)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(obj.encoding, 1, csize, fp);
             obj.encoding[n] = '\0';
         } else if (cid == PTO_ID_ROW_COUNT && csize <= 8) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             uint64_t val = 0;
             for (uint64_t i = 0; i < csize; i++) val = (val << 8) | fgetc(fp);
             obj.rows = val;
@@ -159,29 +171,29 @@ static void parse_simple_tag(FILE* fp, uint64_t data_offset, uint64_t size, PtoR
         uint64_t payload_at = at + hlen;
 
         if (cid == PTO_ID_TAG_NAME && csize < sizeof(tag.name)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(tag.name, 1, csize, fp);
             tag.name[n] = '\0';
         } else if (cid == PTO_ID_TAG_STRING && csize < sizeof(tag.text)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(tag.text, 1, csize, fp);
             tag.text[n] = '\0';
         } else if (cid == PTO_ID_TAG_UINT && csize <= 8) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             uint64_t val = 0;
             for (uint64_t i = 0; i < csize; i++) val = (val << 8) | fgetc(fp);
             tag.val_u = val;
             tag.type_code = 1;
             snprintf(tag.text, sizeof(tag.text), "%" PRIu64, val);
         } else if (cid == PTO_ID_TAG_INT && csize <= 8) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             int64_t val = 0;
             for (uint64_t i = 0; i < csize; i++) val = (val << 8) | fgetc(fp);
             tag.val_i = val;
             tag.type_code = 2;
             snprintf(tag.text, sizeof(tag.text), "%" PRId64, val);
         } else if (cid == PTO_ID_TAG_UID && csize <= 8) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             uint64_t val = 0;
             for (uint64_t i = 0; i < csize; i++) val = (val << 8) | fgetc(fp);
             tag.val_uid = val;
@@ -216,7 +228,7 @@ static void parse_tag(FILE* fp, uint64_t data_offset, uint64_t size, PtoReadFile
                 uint64_t tcsize = 0;
                 if (!read_elem_header(fp, tat, &tcid, &tcsize, &thlen)) break;
                 if (tcid == PTO_ID_TARGET_ATTACH && tcsize <= 8) {
-                    fseek(fp, (long)(tat + thlen), SEEK_SET);
+                    pto_fseek64(fp, (tat + thlen), SEEK_SET);
                     uint64_t val = 0;
                     for (uint64_t i = 0; i < tcsize; i++) val = (val << 8) | fgetc(fp);
                     target_uid = val;
@@ -241,11 +253,11 @@ static void parse_info(FILE* fp, uint64_t data_offset, uint64_t size, PtoReadFil
         uint64_t payload_at = at + hlen;
 
         if (cid == PTO_ID_TITLE && csize < sizeof(info->title)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(info->title, 1, csize, fp);
             info->title[n] = '\0';
         } else if (cid == PTO_ID_SEGMENT_UUID && csize == 16) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             uint8_t u[16];
             if (fread(u, 1, 16, fp) == 16) {
                 snprintf(info->uuid_hex, sizeof(info->uuid_hex),
@@ -254,11 +266,11 @@ static void parse_info(FILE* fp, uint64_t data_offset, uint64_t size, PtoReadFil
                          u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]);
             }
         } else if (cid == PTO_ID_MUXING_APP && csize < sizeof(info->muxing_app)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(info->muxing_app, 1, csize, fp);
             info->muxing_app[n] = '\0';
         } else if (cid == PTO_ID_WRITING_APP && csize < sizeof(info->writing_app)) {
-            fseek(fp, (long)payload_at, SEEK_SET);
+            pto_fseek64(fp, payload_at, SEEK_SET);
             size_t n = fread(info->writing_app, 1, csize, fp);
             info->writing_app[n] = '\0';
         }
@@ -278,7 +290,7 @@ static void walk_elements(FILE* fp, uint64_t from, uint64_t to, int depth, PtoRe
         add_element(info, id, at, data_at, size, total, depth);
 
         if (id == PTO_ID_BANNER && size < sizeof(info->banner)) {
-            fseek(fp, (long)data_at, SEEK_SET);
+            pto_fseek64(fp, data_at, SEEK_SET);
             size_t n = fread(info->banner, 1, size, fp);
             info->banner[n] = '\0';
         } else if (id == PTO_ID_INFO) {
@@ -308,7 +320,7 @@ int pto_read_open(const char* filename, PtoReadFileInfo* info) {
     if (!fp) return 4; /* IO error */
 
     fseek(fp, 0, SEEK_END);
-    info->file_size = (uint64_t)ftell(fp);
+    info->file_size = (uint64_t)pto_ftell64(fp);
     fseek(fp, 0, SEEK_SET);
 
     /* Check offset 0 first, then scan for PTO_ID_EBML in Cosmopolitan APE binary prefix */
@@ -348,17 +360,17 @@ int pto_read_open(const char* filename, PtoReadFileInfo* info) {
         uint64_t csize = 0;
         if (!read_elem_header(fp, head_at, &cid, &csize, &chlen)) break;
         if (cid == PTO_ID_DOCTYPE) {
-            fseek(fp, (long)(head_at + chlen), SEEK_SET);
+            pto_fseek64(fp, (head_at + chlen), SEEK_SET);
             char dt[16] = {0};
             if (csize < sizeof(dt)) fread(dt, 1, csize, fp);
             if (strcmp(dt, "pto") == 0) is_pto = true;
         } else if (cid == PTO_ID_DOCTYPE_VERSION) {
-            fseek(fp, (long)(head_at + chlen), SEEK_SET);
+            pto_fseek64(fp, (head_at + chlen), SEEK_SET);
             uint64_t v = 0;
             for (uint64_t i = 0; i < csize; i++) v = (v << 8) | fgetc(fp);
             info->doctype_version = v;
         } else if (cid == PTO_ID_DOCTYPE_READ_VER) {
-            fseek(fp, (long)(head_at + chlen), SEEK_SET);
+            pto_fseek64(fp, (head_at + chlen), SEEK_SET);
             uint64_t v = 0;
             for (uint64_t i = 0; i < csize; i++) v = (v << 8) | fgetc(fp);
             info->doctype_read_version = v;
@@ -400,7 +412,7 @@ int pto_read_cat(const char* filename, const PtoReadObject* obj, FILE* out_fp) {
     FILE* fp = fopen(filename, "rb");
     if (!fp) return 4;
 
-    if (fseek(fp, (long)obj->offset, SEEK_SET) != 0) {
+    if (pto_fseek64(fp, obj->offset, SEEK_SET) != 0) {
         fclose(fp);
         return 4;
     }
@@ -526,7 +538,7 @@ int pto_read_get_inspection_data(const char* filename, const PtoReadFileInfo* in
                 size_t n_vals = (size_t)(obj->size / sizeof(uint32_t));
                 if (n_vals > PTO_MAX_TRACE_BINS) n_vals = PTO_MAX_TRACE_BINS;
                 if (n_vals > 0) {
-                    fseek(fp, (long)obj->offset, SEEK_SET);
+                    pto_fseek64(fp, obj->offset, SEEK_SET);
                     size_t read_n = fread(out_data->trace.counts, sizeof(uint32_t), n_vals, fp);
                     out_data->trace.n_bins = (uint32_t)read_n;
                     out_data->trace.dt_seconds = 0.01; /* 10ms default */
@@ -577,7 +589,7 @@ int pto_read_get_inspection_data(const char* filename, const PtoReadFileInfo* in
                 size_t n_vals = (size_t)(obj->size / sizeof(uint32_t));
                 if (n_vals > PTO_MAX_DECAY_BINS) n_vals = PTO_MAX_DECAY_BINS;
                 if (n_vals > 0) {
-                    fseek(fp, (long)obj->offset, SEEK_SET);
+                    pto_fseek64(fp, obj->offset, SEEK_SET);
                     size_t read_n = fread(dec->counts, sizeof(uint32_t), n_vals, fp);
                     dec->n_bins = (uint32_t)read_n;
                     uint32_t max_c = 0;
@@ -601,7 +613,7 @@ int pto_read_get_inspection_data(const char* filename, const PtoReadFileInfo* in
             if (strcmp(obj->name, "tttr_metadata") == 0 || strcmp(obj->kind, "metadata") == 0) {
                 size_t sz = (size_t)obj->size;
                 if (sz >= sizeof(out_data->metadata_json)) sz = sizeof(out_data->metadata_json) - 1;
-                fseek(fp, (long)obj->offset, SEEK_SET);
+                pto_fseek64(fp, obj->offset, SEEK_SET);
                 size_t read_n = fread(out_data->metadata_json, 1, sz, fp);
                 out_data->metadata_json[read_n] = '\0';
                 break;

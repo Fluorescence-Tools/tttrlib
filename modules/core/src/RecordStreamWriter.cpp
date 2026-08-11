@@ -207,7 +207,7 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
 
     m.fp = std::fopen(filename.c_str(), "ab");
     if (m.fp == nullptr) return fail("cannot open " + filename + " for writing");
-    m.header_bytes = (std::size_t) std::ftell(m.fp);
+    m.header_bytes = (std::size_t) ftell64(m.fp);
     m.filename = filename;
     m.mt_ov = 0;
     m.records = 0;
@@ -337,7 +337,7 @@ bool RecordStreamWriter::patch_record_count() {
     std::vector<unsigned char> bytes;
     if (std::FILE* h = std::fopen(tmp.c_str(), "rb")) {
         std::fseek(h, 0, SEEK_END);
-        const long len = std::ftell(h);
+        const std::int64_t len = ftell64(h);
         std::fseek(h, 0, SEEK_SET);
         if (len > 0) {
             bytes.resize((std::size_t) len);

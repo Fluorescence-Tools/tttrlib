@@ -670,7 +670,7 @@ int TTTR::read_sm_file(const char *filename){
 
     // Skip the header (165 bytes)
     size_t HEADER_SIZE = header->header_end;
-    if (fseek(fp, static_cast<long>(HEADER_SIZE), SEEK_SET) != 0) {
+    if (fseek64(fp, static_cast<int64_t>(HEADER_SIZE), SEEK_SET) != 0) {
         std::cerr << "Error seeking past the header." << std::endl;
         fclose(fp);
         return 1;
@@ -1816,7 +1816,10 @@ void TTTR::read_records(
         size_t chunk
 ) {
     n_rec = n_rec < n_records_in_file ? n_rec : n_records_in_file;
-    if(rewind) fseek(fp, (long) fp_records_begin, SEEK_SET);
+    // fseek64: fp_records_begin is where the records start, which for an
+    // embedded container or a cue-positioned read is anywhere in the file, and
+    // `long` is 32 bits on Windows.
+    if(rewind) fseek64(fp, (int64_t) fp_records_begin, SEEK_SET);
     
     n_records_read = 0;
     overflow_counter = 0;
@@ -2990,7 +2993,7 @@ void update_ptu_header(FILE* fpin, char Ident[32], uint64_t TagValue){
         fread(&TagHead, 1, sizeof(TagHead), fpin);
         if(TagHead.Ident == Ident){
             TagHead.TagValue = TagValue;
-            fseek(fpin, (ftell(fpin) - sizeof(TagHead)), SEEK_CUR);
+            fseek64(fpin, (ftell64(fpin) - (std::int64_t) sizeof(TagHead)), SEEK_CUR);
         }
     } while ((strncmp(TagHead.Ident, FileTagEnd.c_str(), sizeof(FileTagEnd))) != 0);
 }

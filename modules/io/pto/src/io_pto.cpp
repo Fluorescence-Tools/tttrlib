@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "io_pto.h"
+#include "FileIO.h"
 
 #include "io_store.h"
 #include "FileCheck.h"
@@ -569,10 +570,12 @@ public:
         }
     }
 
+    // 64-bit throughout: `long` is 32 bits on Windows, and every object in a
+    // container past 2 GiB is reached through exactly these two.
     bool seek(std::uint64_t off) {
-        return std::fseek(f_, static_cast<long>(off), SEEK_SET) == 0;
+        return fseek64(f_, static_cast<std::int64_t>(off), SEEK_SET) == 0;
     }
-    std::uint64_t tell() { return static_cast<std::uint64_t>(std::ftell(f_)); }
+    std::uint64_t tell() { return static_cast<std::uint64_t>(ftell64(f_)); }
     std::uint64_t length() {
         const std::uint64_t here = tell();
         std::fseek(f_, 0, SEEK_END);
