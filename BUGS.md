@@ -19,6 +19,62 @@ to the changelog and leaves here.
 > the file silently resurrects it. Restored as a stub by `opus-5/ac9f6757`,
 > who did not do the fix.
 
+## The eight `*_at()` event accessors do no bounds check, so a bad index is a segfault or a silent overwrite
+
+**2026-08-11.** Ordinary-looking Python, no exception, dead interpreter:
+
+```python
+import tttrlib
+t = tttrlib.TTTR()
+len(t)                      # 0
+t.set_macro_time_at(0, 5)   # exit 139 (SIGSEGV)
+```
+
+Every one of the eight per-event accessors on `TTTR` indexes its array raw —
+`get`/`set` × `macro_time`, `micro_time`, `routing_channel`, `event_type`
+(`TTTR.h:593-702`). None compares `index` against `n_valid_events`.
+
+**The setters are the worse half, and it is not the crash.** A `get_` with a
+bad index reads memory it does not own and usually either crashes or returns
+nonsense a caller may notice. A **`set_` writes into memory it does not own**:
+with a modest out-of-range index it lands inside the process's own heap and
+corrupts whatever is there, silently, with no crash at the time and no way to
+trace the damage back. The reproduction above is the lucky case.
+
+Reachable from **every** binding — these are plain wrapped methods in Python,
+R, Java and JavaScript alike. I hit it in JavaScript first, on an empty
+container, while writing something else entirely.
+
+**Why it is not simply "add the check", which is the part worth deciding
+rather than guessing.** These are `inline` and there are **85 internal call
+sites**, sitting in the innermost per-photon loops of the library — burst
+search does `get_macro_time_at(i) - get_macro_time_at(i-1)` once per photon,
+and correlation and CLSM assembly are the same shape. A branch there is paid
+on every photon of every analysis, which is exactly the cost this library
+exists to avoid.
+
+Three ways out, and the measurement below decides between them:
+
+1. **Check in the accessor anyway.** The branch is perfectly predicted in a
+   sequential loop, so the real cost may be nil. *This wants measuring before
+   it is dismissed on principle* — the assumption that it is expensive is as
+   untested as the assumption that it is free.
+2. **Check only at the binding seam**, leaving the C++ accessor raw: a
+   `%rename`d checked wrapper, or the `_at` methods `%ignore`d in favour of
+   bounds-checked `%extend` versions. Costs nothing internally, but is four
+   bindings' worth of work and drifts if a fifth arrives.
+3. **Keep a raw internal accessor and a checked public one** — honest, and the
+   most invasive: 85 call sites to re-point.
+
+What would settle it: build with the check in place and re-run the burst-search
+and correlation benchmarks in `benchmarks/`. If the per-photon cost is inside
+noise, option 1 wins and the other two are wasted effort.
+
+**Not filed as fixed because the fix is a performance decision on the
+library's hottest path**, and I have not measured it. Everything above the
+"three ways out" is established: the crash reproduces, the eight accessors are
+unchecked, and the 85 call sites are per-photon.
+
 ## A `uint64_t` parameter in the JavaScript binding takes a Number but refuses a BigInt
 
 **2026-08-11.** `jsarrays.i` states its contract plainly — *"Input accepts a
