@@ -173,11 +173,12 @@ before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair --ignore-existing --no-mangle \"tttrlib_*.dll\" -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.windows.environment]
-# Ninja, not the VS generator: the vcxproj "Auto build dll exports" path
-# dropped tttrlib::fit_vb from the hmm import library and the extension no
-# longer linked, while the Ninja __create_def path (what the conda build
-# uses) exports it. scikit-build-core activates MSVC for Ninja itself.
-CMAKE_GENERATOR = "Ninja"
+# The Visual Studio generator, deliberately: scikit-build-core only sets up the
+# MSVC environment for "Visual Studio" generators, so CMAKE_GENERATOR=Ninja
+# here left CMake to pick the first compiler on PATH -- MinGW gcc on the
+# runners -- and quietly built the wheel with the wrong toolchain. The reason
+# Ninja was tried (vcxproj "Auto build dll exports" dropping tttrlib::fit_vb)
+# is fixed at the source now: HMMVB.h exports the symbol itself.
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"

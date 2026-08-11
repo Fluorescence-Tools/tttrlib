@@ -484,6 +484,20 @@ IF(BUILD_JAVASCRIPT_INTERFACE)
                 LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
     ENDIF()
 
+    # Windows is the exception: a PE image resolves every symbol at link time,
+    # so the addon needs the import library for node.exe. NODE_LIB is the one
+    # matching the Node that will load it -- scripts/prebuild.mjs downloads it,
+    # and node-gyp leaves one in its cache for anyone building by hand.
+    IF(WIN32)
+        IF(NOT NODE_LIB)
+            MESSAGE(FATAL_ERROR
+                    "The JavaScript addon needs node.lib on Windows. Pass "
+                    "-DNODE_LIB=<path>, or build through "
+                    "ext/js/pkg/scripts/prebuild.mjs, which fetches it.")
+        ENDIF()
+        TARGET_LINK_LIBRARIES(${JS_MODULE_NAME} "${NODE_LIB}")
+    ENDIF()
+
     # The module libraries sit next to the addon in js-pkg/, the same layout the
     # npm package ships, so @loader_path / $ORIGIN finds them.
     tttrlib_set_sibling_rpath(${JS_MODULE_NAME})

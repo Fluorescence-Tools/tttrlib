@@ -105,6 +105,33 @@ function haveNinja() {
   return spawnSync('ninja', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
+// Ninja names no toolchain, so CMake takes the first compiler on PATH. On a
+// Windows runner that is MinGW gcc, which cannot link against the MSVC-built
+// node.lib and drags libstdc++/libwinpthread into a prebuild that is supposed
+// to be self-contained. Use Ninja there only inside a Visual Studio
+// environment, where cl.exe is on PATH and Ninja finds it first.
+function useNinja() {
+  if (!haveNinja()) return false;
+  return process.platform !== 'win32' || Boolean(process.env.VCINSTALLDIR);
+}
+
+// Windows resolves every symbol at link time, so the addon has to link the
+// import library for the node.exe that will load it. Node publishes one per
+// release next to the binaries.
+async function fetchNodeLib(buildDir) {
+  const arch = { x64: 'win-x64', arm64: 'win-arm64', ia32: 'win-x86' }[process.arch];
+  if (!arch) throw new Error(`no node.lib published for ${process.arch}`);
+  const url = `https://nodejs.org/dist/${process.version}/${arch}/node.lib`;
+  const dest = path.join(buildDir, 'node.lib');
+  if (fs.existsSync(dest)) return dest;
+  console.log(`$ fetch ${url}`);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
+  fs.mkdirSync(buildDir, { recursive: true });
+  fs.writeFileSync(dest, Buffer.from(await response.arrayBuffer()));
+  return dest;
+}
+
 // ---------------------------------------------------------------------------
 // verification: nothing may resolve outside the prebuild directory
 // ---------------------------------------------------------------------------
@@ -254,12 +281,14 @@ function smokeTest() {
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-function main() {
+async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const target = targetTriple();
   const outDir = path.join(opts.out, target.dir);
 
   console.log(`tttrlib prebuild: ${target.dir} -> ${path.relative(PKG_DIR, outDir)}/${target.file}`);
+
+  const nodeLib = process.platform === 'win32' ? await fetchNodeLib(opts.build) : null;
 
   if (opts.configure) {
     run('cmake', [
@@ -270,7 +299,7 @@ function main() {
       // is multi-config: CMAKE_BUILD_TYPE is ignored there and `cmake --build`
       // silently produces Debug. (--config Release below covers that case too,
       // so a machine without ninja still gets an optimised binary.)
-      ...(haveNinja() ? ['-G', 'Ninja'] : []),
+      ...(useNinja() ? ['-G', 'Ninja'] : []),
       '-DCMAKE_BUILD_TYPE=Release',
       '-DBUILD_PYTHON_INTERFACE=OFF',
       '-DBUILD_JAVASCRIPT_INTERFACE=ON',
@@ -285,6 +314,7 @@ function main() {
       // would bake in AVX2 and SIGILL on anything older. The runtime dispatch
       // in include/info.h still selects AVX kernels where the CPU has them.
       '-DWITH_AVX=OFF',
+      ...(nodeLib ? [`-DNODE_LIB=${nodeLib}`] : []),
       ...opts.cmakeArgs,
     ]);
   }
@@ -329,4 +359,7 @@ function main() {
   console.log(`\nprebuild ok: ${path.join(outDir, target.file)}`);
 }
 
-main();
+main().catch((error) => {
+  console.error(error.message || error);
+  process.exit(1);
+});
