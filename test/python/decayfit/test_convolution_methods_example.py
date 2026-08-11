@@ -65,21 +65,29 @@ class TestConvolutionMethodsExample(unittest.TestCase):
         self.assertTrue(np.all(speedup > 1.0),
                         "the text says the recursion wins everywhere: %s" % speedup)
 
-    def test_the_gap_widens_with_the_rate_count(self):
-        """The example's actual argument, not just "one is faster".
+    def test_the_spectral_penalty_never_goes_away(self):
+        """The example's argument, in the part of it that is portable.
 
-        Timings are noisy, so compare the ends rather than requiring monotonic
-        growth: a single rate against sixty-four.
+        The text says the gap *widens* with the rate count, and it does on the
+        machine it was written on: the ratio runs 4.0x at one rate to 7.1x at
+        sixty-four, a head-to-tail factor of 1.74 (unchanged with
+        OMP_NUM_THREADS=1, so it is not threading, and unchanged when the call
+        overhead is amortised over 200 iterations, so it is not the timer).
 
-        The factor is 1.25 and used to be 1.5. Not a weakening: removing the
-        marshalling lifted the *small*-n speedup most (1.6x -> 4.1x, against
-        6.0x -> 7.2x at the tail), so the head-to-tail ratio shrank from ~3.7 to
-        ~1.7. The old 1.5 was partly measuring how much wrapper cost the small
-        problem was carrying, which is exactly what this test should not be
-        about.
+        On GitHub's linux runners the same code gives 3.6x at one rate and 3.2x
+        at sixty-four -- the head matches, the tail does not, so the spectral
+        path scales *better* there and the factor is 0.88. That is a real
+        difference between machines, not noise: it reproduced on all five
+        pythons, while macOS and Windows agreed with the author.
+
+        So head-to-tail is not a property of this library and is not asserted
+        here. What every machine agrees on is that the penalty is large and
+        never shrinks to nothing, which is what the example is really for: if
+        the spectral path ever became competitive, this fires.
         """
         speedup = np.asarray(self.ns["speedup"])
-        self.assertGreater(speedup[-1], 1.25 * speedup[0])
+        self.assertGreater(speedup.min(), 2.0,
+                           "the spectral path should stay well behind: %s" % speedup)
 
     def test_a_wrapping_response_separates_the_backends(self):
         """The example's reason to reach for the spectral path."""
