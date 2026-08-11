@@ -61,6 +61,27 @@ else
   echo "   OK (javac not found; skipped proxy compile)"
 fi
 
+# The proxy compile above checks the generated *Java*; it says nothing about the
+# generated C++. That matters because ext/java/helpers.i is the one place the
+# Java binding carries hand-written C++ (the `_into` accessors), and a mistake
+# there generates and javac-compiles happily, then fails only in a full native
+# build. Syntax-only, so it costs a parse rather than a compile.
+JAVA_HOME_DIR="$(/usr/libexec/java_home 2>/dev/null || echo "${JAVA_HOME:-}")"
+if [ -n "$JAVA_HOME_DIR" ] && [ -d "$JAVA_HOME_DIR/include" ] && command -v c++ >/dev/null 2>&1; then
+  JNI_INC=("-I$JAVA_HOME_DIR/include")
+  for d in "$JAVA_HOME_DIR/include"/*/; do [ -d "$d" ] && JNI_INC+=("-I$d"); done
+  if c++ -fsyntax-only -std=c++17 "${INCLUDES[@]}" -Iext/java "${JNI_INC[@]}" \
+         "$OUT/java/w.cxx" 2>"$OUT/java/cxx.log"; then
+    echo "   OK (generated C++ compiles)"
+  else
+    echo "   FAILED: the generated Java wrapper C++ does not compile" >&2
+    head -30 "$OUT/java/cxx.log" >&2
+    exit 1
+  fi
+else
+  echo "   (no JDK headers or c++; skipped generated-C++ compile)"
+fi
+
 echo "== JavaScript (Node-API) wrapper =="
 mkdir -p "$OUT/js"
 swig -c++ -javascript -napi "${INCLUDES[@]}" -Iext/js \
@@ -93,5 +114,18 @@ if [ "$(cksum < "$OUT/py2/w.cxx")" != "$PY_HASH_BEFORE" ]; then
   exit 1
 fi
 echo "   OK"
+
+echo "== Exception handlers =="
+# %exception is global state, not a scope: a bare `%exception;` after the global
+# handler is installed removes it for every interface that follows, and a C++
+# throw with no handler terminates the interpreter instead of raising.
+python3 "$ROOT/tools/check_exception_handlers.py" || exit 1
+
+echo "== Binding parity =="
+# Generating is not the same as exposing. The four %include lists are separate
+# files and have drifted before -- 16-18 interfaces present in Python and absent
+# elsewhere, while every non-Python master claimed the lists were identical.
+# Every gap must be declared with a reason; see tools/binding_parity_exceptions.txt.
+python3 "$ROOT/tools/check_binding_parity.py" || exit 1
 
 echo "All SWIG interfaces generate cleanly."

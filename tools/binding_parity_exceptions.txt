@@ -1,0 +1,20 @@
+# Interfaces reachable in Python and missing from another binding.
+#
+# Format:  <file.i>: <bindings, comma-separated>  # why
+#
+# A gap here is DECLARED, not approved. Most of these say "unreviewed drift":
+# they are what tools/check_binding_parity.py found on 2026-08-11, when the
+# four %include lists had diverged by 16-18 files while every non-Python
+# master interface carried a comment claiming they were identical. Writing
+# them down is what turns an invisible gap into a reviewable one; closing them
+# is T-20260811-09.
+#
+# Deleting a line here without adding the %include makes the check fail, and
+# so does leaving a line for a gap that has been closed. Both are on purpose.
+
+documentation.i: java  # unreviewed drift as of 2026-08-11, not a decision -- see T-20260811-09
+Deconvolution.i: java  # DELIBERATE: the 2-D capability IS in java, via ext/java/helpers.i -- richardson_lucy_2d_into(double[][], double[][], double[], ...) and wiener_deconvolve_2d_into(...), caller preallocating, result row-major, same shape as Pda/CLSMImage/TTTR. The interface stays out because its flat entry points return through ARGOUTVIEWM_ARRAY2/3, which java cannot marshal, and its vector-returning overloads take a bare const double* with no length so no IN_ARRAY typemap matches. Still to do this way: richardson_lucy_3d, richardson_lucy_events_2d. In r and js.
+Jitter.i: java  # REVIEWED: same cause as Deconvolution.i -- returns through ARGOUTVIEWM_ARRAY2, and jarrays.i implements no argout at any rank. In r and js.
+Sampling.i: java  # DELIBERATE: the capability IS in java, via ext/java/helpers.i -- weighted_choice_into(double[], int[]) and sample_from_cdf_into(double[], double[], double[], boolean), the caller preallocating exactly as for Pda/CLSMImage/TTTR. The interface itself stays out because BOTH its functions return through ARGOUTVIEWM_ARRAY1, which java cannot marshal, so %include-ing it would add two uncallable overloads and no usable surface (tried and reverted 2026-08-11). In r and js, which can return an array.
+HmmLattice.i: r,java,js  # mine, added 2026-08-11 (PRD-035) and not yet offered to the others; its IN_ARRAY/INPLACE typemaps work there, so this is a %include away.
+MaxEntTcspc.i: java  # REVIEWED: in r and js as of 2026-08-11. NOT java, checked by generating: the SOLVERS come out callable (solve_tcspc_mem_lifetime(double[], ..., double[]) -> MemTcspcResult) but the design-matrix BUILDERS do not -- tcspc_build_fi_lifetimes returns four arrays through ARGOUTVIEWM_ARRAY2/1, which jarrays.i lacks at rank 2, so every out-parameter is SWIGTYPE_p_p_double/SWIGTYPE_p_int. Same jarrays.i gap as Deconvolution.i/Jitter.i/Sampling.i -- jarrays.i has NO argout typemap at any rank.
