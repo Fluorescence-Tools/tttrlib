@@ -25,6 +25,15 @@ import textwrap
 import numpy as np
 import pytest
 
+try:
+    # The subprocess below measures peak RSS with getrusage, so it needs this
+    # too. Import it rather than asking whether it is findable: on Windows it
+    # is simply absent, and a real import is what the subprocess will do.
+    import resource  # noqa: F401
+    HAS_RESOURCE = True
+except ImportError:
+    HAS_RESOURCE = False
+
 import tttrlib
 
 
@@ -183,6 +192,8 @@ class TestTheAcquisitionProperties:
     """The three the design exists for."""
 
     @pytest.mark.slow
+    @pytest.mark.skipif(not HAS_RESOURCE,
+                        reason="peak RSS needs the POSIX resource module")
     def test_memory_does_not_grow_with_the_length_of_the_run(self, tmp_path):
         """The objective: acquire more data than fits in RAM. What the writer
         holds may grow with the checkpoint interval and must not grow with the
