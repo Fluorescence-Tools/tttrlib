@@ -195,12 +195,32 @@ is how a typemap file acquires a second wrong comment.
 > name-keyed fixed-width typemap of its own, so SWIG-Java's default
 > `unsigned long long` handling applies however the typedef resolves.
 >
-> **R is the one left**, and it is the one that cannot be checked here — R is
-> not installed on this machine. It is also the binding most likely to differ,
-> because `ext/r/tttrlib.i` *does* give `std::uint64_t` its own name-keyed
-> typemaps (the double-backed ones, since R has no 64-bit integer), which is
-> exactly the shape that stopped matching in JavaScript. Anyone with an R
-> toolchain should run the table.
+> **R had it too, worse, and it did not need R to find.** I had written that
+> this could not be checked without an R toolchain. That was wrong — the Java
+> answer came from reading generated code, and so does this one. Generating the
+> R wrapper:
+>
+> | Declared as | Interface | R conversion |
+> |---|---|---|
+> | `std::uint64_t` (`pto_mark_sidecar`) | before `Sim.i` | `Rf_asReal` — double, exact to 2^53 |
+> | `uint64_t` (`push_photon`) | after `Sim.i` | `SWIG_AsVal_long` — **as.integer(), NA above 2^31** |
+>
+> Worse than the JavaScript case, which merely refused a BigInt: R **silently
+> returns NA** above 2^31, and this file's own comment says so. At a 10 ns macro
+> time 2^31 ticks is about **twenty seconds of acquisition**, so a streaming
+> correlator fed real macro times from R would go wrong almost immediately.
+>
+> The cause here is simpler than include order and would have bitten regardless:
+> R's typemaps were keyed to `std::uint64_t` **only**, and the streaming headers
+> spell it `uint64_t`. Fixed by applying them to both spellings via
+> `TTTRLIB_R_UINT64_AS_DOUBLE(TYPE)`, and re-invoking after `Sim.i` for the
+> positional half as well.
+>
+> Verified in the generated wrapper: `push_photon` now converts with
+> `Rf_asReal`, `pto_mark_sidecar` is unchanged, and — the carve-out this file
+> insists on — a PTO **FileUID still crosses as a string**, because Pto.i's
+> name-matched typemaps still win. That was the one way this fix could have
+> done damage.
 
 <details><summary>Original entry</summary>
 

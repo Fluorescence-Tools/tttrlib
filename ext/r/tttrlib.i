@@ -77,12 +77,34 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
 // Applied to std::uint64_t by name rather than to `unsigned long long`, so the
 // existing R behaviour of every other 64-bit parameter in the library is
 // untouched -- this is the container's API, not a global policy change.
-%typemap(in)  std::uint64_t %{ $1 = static_cast<std::uint64_t>(Rf_asReal($input)); %}
-%typemap(out) std::uint64_t %{ $result = Rf_ScalarReal(static_cast<double>($1)); %}
-%typemap(rtype)      std::uint64_t "numeric"
-%typemap(scoercein)  std::uint64_t "$input = as.numeric($input);"
-%typemap(scoerceout) std::uint64_t ""
-%typemap(rtypecheck) std::uint64_t "is.numeric($arg)"
+// Applied to BOTH spellings, and as a macro so they can be applied again.
+//
+// Keyed to `std::uint64_t` alone, these missed every API that spells the type
+// `uint64_t` -- StreamingCorrelator::push_photon(uint64_t) among them, which
+// fell through to SWIG's default and generated SWIG_AsVal_long, i.e. R's
+// as.integer() path: silently NA above 2^31, which at a 10 ns macro time is
+// about twenty seconds of acquisition (BUGS 2026-08-11). The name-matched
+// typemaps in Pto.i still win for a FileUID, which must stay a string.
+//
+// The macro is re-invoked after Sim.i, the only interface that includes
+// <stdint.i>: after that SWIG resolves these names through its typedef and
+// stops matching them, which is the same way the JavaScript binding lost its
+// BigInt contract.
+%define TTTRLIB_R_UINT64_AS_DOUBLE(TYPE)
+%typemap(in)  TYPE %{ $1 = static_cast<TYPE>(Rf_asReal($input)); %}
+%typemap(out) TYPE %{ $result = Rf_ScalarReal(static_cast<double>($1)); %}
+%typemap(rtype)      TYPE "numeric"
+%typemap(scoercein)  TYPE "$input = as.numeric($input);"
+%typemap(scoerceout) TYPE ""
+%typemap(rtypecheck) TYPE "is.numeric($arg)"
+%enddef
+
+%define TTTRLIB_R_UINT64_TYPEMAPS
+TTTRLIB_R_UINT64_AS_DOUBLE(std::uint64_t)
+TTTRLIB_R_UINT64_AS_DOUBLE(uint64_t)
+%enddef
+
+TTTRLIB_R_UINT64_TYPEMAPS
 
 // Shared C++ core. **Not** the same include list as ext/python/tttrlib.i --
 // that claim used to be here and was wrong by 17 files. See board ticket
@@ -215,6 +237,11 @@ TTTRLIB_R_ENUM_AS_INT(SuperResMethod)
    wrappers -- differently across SWIG versions. Keep it at the end, as
    ext/python/tttrlib.i does. */
 %include "Sim.i"
+
+/* Sim.i is the only interface that includes <stdint.i>; after it SWIG resolves
+   the fixed-width names past the ones these typemaps are keyed to, so anything
+   below would fall back to as.integer() and go NA above 2^31. Re-register. */
+TTTRLIB_R_UINT64_TYPEMAPS
 
 /* Live correlation, decay histogram, phasor and intensity trace. After Sim.i,
    as in ext/python/tttrlib.i. Its only array typemap is IN_ARRAY1, which
