@@ -152,5 +152,114 @@ class TestGopichSzabo(unittest.TestCase):
         self.assertAlmostEqual(ll, expected, places=10)
 
 
+class TestViterbiDecodesEachBurstIndependently(unittest.TestCase):
+    """`viterbi(times, colors, offsets)` — the overload without offsets treats
+    its whole input as one burst.
+
+    Handing that a concatenated multi-burst array propagates the decoded state
+    across the dark gap between bursts: burst *b+1* starts wherever burst *b*
+    happened to end, instead of from the equilibrium prior. For burst data that
+    is simply wrong — the gap is exactly where the molecule was not observed.
+
+    `log_likelihood` has always taken `offsets`, so the layout was understood;
+    it just never reached `viterbi`, which is why a consumer kept its own
+    per-burst implementation rather than delegating.
+
+    Note what it takes to *see* the difference: a gap much shorter than the
+    relaxation time, and per-photon evidence weak enough that the transition
+    term can win. With a strong emission contrast or a gap several relaxation
+    times long the two agree, because the propagator has already decayed to
+    equilibrium and there is nothing left to leak. A test built on a
+    comfortable case would pass against the broken code.
+    """
+
+    @staticmethod
+    def two_state(k=0.002, contrast=0.62):
+        gs = tttrlib.GopichSzabo()
+        rates = tttrlib.VectorDouble([-k, k, k, -k])          # column-major
+        em = tttrlib.VectorDouble([contrast, 1 - contrast, 1 - contrast, contrast])
+        assert gs.set_scheme(rates, em, 2, 2)
+        return gs
+
+    @staticmethod
+    def two_bursts(gap, n=30, seed=11):
+        rng = np.random.default_rng(seed)
+        t_a = np.cumsum(rng.exponential(1e-3, n))
+        c_a = np.zeros(n, dtype=np.int32)                     # unambiguously state 0
+        t_b = t_a[-1] + gap + np.cumsum(rng.exponential(1e-3, n))
+        c_b = np.array([0, 1] * (n // 2), dtype=np.int32)     # ambiguous
+        times = tttrlib.VectorDouble(np.concatenate([t_a, t_b]).tolist())
+        colors = tttrlib.VectorInt32(np.concatenate([c_a, c_b]).tolist())
+        return times, colors, tttrlib.VectorInt64([0, n, 2 * n])
+
+    def test_a_short_gap_no_longer_leaks_the_previous_burst_s_state(self):
+        gs = self.two_state()
+        times, colors, offsets = self.two_bursts(gap=0.5)     # << relaxation ~250 s
+
+        per_burst = np.asarray(gs.viterbi(times, colors, offsets))
+        as_one_burst = np.asarray(gs.viterbi(times, colors))
+
+        self.assertFalse(np.array_equal(per_burst, as_one_burst),
+                         "the offsets made no difference, so this test is not "
+                         "exercising the leak it was written for")
+        # Every photon of the second burst is dragged along without offsets.
+        self.assertTrue((as_one_burst[30:] == as_one_burst[29]).all())
+        self.assertFalse((per_burst[30:] == per_burst[29]).all())
+
+    def test_one_burst_spanning_everything_is_the_old_behaviour(self):
+        """`{0, n}` must be the same code path, not a parallel implementation."""
+        gs = self.two_state()
+        times, colors, _ = self.two_bursts(gap=0.5)
+        n = len(times)
+        np.testing.assert_array_equal(
+            np.asarray(gs.viterbi(times, colors, tttrlib.VectorInt64([0, n]))),
+            np.asarray(gs.viterbi(times, colors)))
+
+    def test_the_leak_survives_gaps_of_many_relaxation_times(self):
+        """The "well-separated bursts are fine" defence does not hold — measured.
+
+        The intuition is that once the gap is a few relaxation times the
+        propagator has equilibrated and nothing can carry over. That is true of
+        a *marginal*; Viterbi is a max path, so the previous burst's accumulated
+        log-likelihood difference competes against a transition term that decays
+        only exponentially in `dt/tau`. Thirty photons of evidence take a long
+        time to lose.
+
+        With tau = 250 s, the second burst is still dragged whole at a gap of
+        **500 000 s — two thousand relaxation times** — and only comes free
+        somewhere below 5e6 s:
+
+            gap      0.5   250   5e3   5e4   5e5   5e6   seconds
+            differ    30    30    30    30    30    0    photons
+
+        (Measured on this fixture. A first pass reported the crossover near
+        5e4 s, which was an artefact of advancing the RNG between gaps so each
+        gap saw different photons — the same generator has to produce the same
+        burst for the comparison to mean anything.)
+
+        So a consumer cannot argue its bursts are far enough apart for the
+        missing offsets not to matter.
+        """
+        gs = self.two_state()
+        for gap in (0.5, 250.0, 5000.0, 50_000.0, 500_000.0):
+            with self.subTest(gap=gap):
+                times, colors, offsets = self.two_bursts(gap=gap)
+                self.assertFalse(
+                    np.array_equal(np.asarray(gs.viterbi(times, colors, offsets)),
+                                   np.asarray(gs.viterbi(times, colors))),
+                    "no leak at %g s, so the bound has moved" % gap)
+
+        times, colors, offsets = self.two_bursts(gap=5_000_000.0)
+        np.testing.assert_array_equal(
+            np.asarray(gs.viterbi(times, colors, offsets)),
+            np.asarray(gs.viterbi(times, colors)))
+
+    def test_offsets_past_the_end_are_rejected(self):
+        gs = self.two_state()
+        times, colors, _ = self.two_bursts(gap=0.5)
+        with self.assertRaises((ValueError, RuntimeError)):
+            gs.viterbi(times, colors, tttrlib.VectorInt64([0, 30, 10_000]))
+
+
 if __name__ == '__main__':
     unittest.main()

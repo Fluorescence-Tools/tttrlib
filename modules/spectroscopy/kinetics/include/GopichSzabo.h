@@ -75,6 +75,62 @@ public:
         const std::vector<int32_t>& colors
     ) const;
 
+    /*!
+     * \brief Viterbi decoding of many bursts, each decoded independently.
+     *
+     * The overload without \p offsets treats its whole input as one burst, so
+     * handing it concatenated bursts propagates the state across the dark gap
+     * between them — the decoded path at the start of burst *b+1* inherits
+     * where burst *b* happened to end, which is the one thing burst data
+     * cannot support. `log_likelihood` has always taken offsets; this is the
+     * same layout.
+     *
+     * Each burst restarts from the equilibrium prior, exactly as a separate
+     * call would, so `viterbi(t, c, {0, n})` equals `viterbi(t, c)`.
+     *
+     * \param offsets burst boundaries: burst b is [offsets[b], offsets[b+1]),
+     *                so `offsets.size()` is the burst count plus one.
+     * \return most likely state per photon, in the input's order
+     */
+    std::vector<int32_t> viterbi(
+        const std::vector<double>& times,
+        const std::vector<int32_t>& colors,
+        const std::vector<int64_t>& offsets
+    ) const;
+
+    // ---------------------------------------------------------------------
+    // Flat entry points, for the bindings
+    // ---------------------------------------------------------------------
+    // The std::vector forms above are the C++ surface; these are what the
+    // language bindings wrap, because SWIG's default std::vector typemaps
+    // convert through the host language's sequence protocol -- one boxed
+    // number per element, ~50 ns each, in and out. A burst analysis calls
+    // these per fit iteration over a photon stream, so that conversion, not
+    // the algorithm, sets the runtime. See okf/bindings/marshalling-cost.md.
+    //
+    // `offsets` may be null/empty, meaning one burst spanning everything --
+    // the same convention the vector overloads express by being two functions.
+
+    /*! \brief `log_likelihood` over borrowed buffers. */
+    double log_likelihood_flat(
+        double* times, int n_times,
+        int* colors, int n_colors_in,
+        long long* offsets, int n_offsets
+    ) const;
+
+    /*!
+     * \brief `viterbi` over borrowed buffers, allocating the path with malloc.
+     *
+     * \param out receives a malloc'd `n_times` array; the binding hands it to
+     *            the host language, which frees it.
+     */
+    void viterbi_flat(
+        double* times, int n_times,
+        int* colors, int n_colors_in,
+        long long* offsets, int n_offsets,
+        int** out, int* n_out
+    ) const;
+
     int n_states() const { return n_states_; }
     int n_colors() const { return n_colors_; }
     bool is_valid() const { return valid_; }
@@ -83,6 +139,14 @@ public:
     std::vector<double> relaxation_times() const;
 
 private:
+    /// One burst decoded into `path[first .. last)`; both overloads use it.
+    void viterbi_range(
+        const std::vector<double>& times,
+        const std::vector<int32_t>& colors,
+        std::size_t first, std::size_t last,
+        std::vector<int32_t>& path
+    ) const;
+
     int n_states_ = 0;
     int n_colors_ = 0;
     bool valid_ = false;

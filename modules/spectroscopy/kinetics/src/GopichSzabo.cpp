@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "CtmcKinetics.h"
 #include "GopichSzabo.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
 #include "QREigen.h"
 
 #include <algorithm>
@@ -257,14 +261,18 @@ double GopichSzabo::log_likelihood(
     return total_ll;
 }
 
-std::vector<int32_t> GopichSzabo::viterbi(
+// One burst, decoded into `path[first .. last)`. Both public overloads run this;
+// the multi-burst one runs it once per burst, which is what keeps a burst's
+// decoding independent of the burst before it.
+void GopichSzabo::viterbi_range(
     const std::vector<double>& times,
-    const std::vector<int32_t>& colors
+    const std::vector<int32_t>& colors,
+    std::size_t first, std::size_t last,
+    std::vector<int32_t>& path
 ) const {
-    int n_ph = static_cast<int>(times.size());
+    const int n_ph = static_cast<int>(last - first);
     const int n = n_states_;
-    std::vector<int32_t> path(n_ph, 0);
-    if (!valid_ || n_ph == 0) return path;
+    if (!valid_ || n_ph <= 0) return;
 
     // log emission: log_em[c * n + s] = log(emission[s * n_colors_ + c])
     std::vector<double> log_em(n_colors_ * n);
@@ -274,14 +282,9 @@ std::vector<int32_t> GopichSzabo::viterbi(
             log_em[c * n + s] = (p > 1e-300) ? std::log(p) : -700.0;
         }
 
-    auto p_eq = equilibrium_populations(
-        // We don't have the rate matrix here; use flat p0_ back-transform
-        // Actually we need the prior. Use u_row_ and p0_ to get equilibrium.
-        // p_eq = U * p0. But we stored eigenvectors.
-        std::vector<double>(n_states_ * n_states_, 0.0), n_states_
-    );
-    // That won't work - let's use the stored spectral quantities.
-    // p_eq = U * p0_ (in original basis)
+    // The prior is the equilibrium population in the original basis, p = U * p0.
+    // (A call to equilibrium_populations() stood here, passed a zero matrix and
+    // with its result discarded -- dead, and its own comments said so.)
     std::vector<double> log_prior(n);
     for (int s = 0; s < n; ++s) {
         cdouble pe(0.0);
@@ -295,11 +298,11 @@ std::vector<int32_t> GopichSzabo::viterbi(
     std::vector<int32_t> back(n_ph * n, 0);
 
     for (int j = 0; j < n; ++j)
-        delta[j] = log_prior[j] + log_em[colors[0] * n + j];
+        delta[j] = log_prior[j] + log_em[colors[first] * n + j];
 
     std::vector<cdouble> prop(n * n);
     for (int i = 1; i < n_ph; ++i) {
-        double dt = times[i] - times[i - 1];
+        double dt = times[first + i] - times[first + i - 1];
         // P = U * diag(exp(lam*dt)) * U^-1
         for (int a = 0; a < n; ++a)
             for (int b = 0; b < n; ++b) {
@@ -318,7 +321,7 @@ std::vector<int32_t> GopichSzabo::viterbi(
                 double cand = delta[(i - 1) * n + k] + std::log(val);
                 if (cand > best) { best = cand; best_k = k; }
             }
-            delta[i * n + j] = best + log_em[colors[i] * n + j];
+            delta[i * n + j] = best + log_em[colors[first + i] * n + j];
             back[i * n + j] = best_k;
         }
     }
@@ -328,10 +331,86 @@ std::vector<int32_t> GopichSzabo::viterbi(
         if (delta[(n_ph - 1) * n + j] > best) {
             best = delta[(n_ph - 1) * n + j]; best_j = j;
         }
-    path[n_ph - 1] = best_j;
+    // Trace back within the burst, writing into the caller's slice.
+    path[first + n_ph - 1] = best_j;
     for (int i = n_ph - 1; i > 0; --i)
-        path[i - 1] = back[i * n + path[i]];
+        path[first + i - 1] = back[i * n + path[first + i]];
+}
+
+std::vector<int32_t> GopichSzabo::viterbi(
+    const std::vector<double>& times,
+    const std::vector<int32_t>& colors
+) const {
+    std::vector<int32_t> path(times.size(), 0);
+    viterbi_range(times, colors, 0, times.size(), path);
     return path;
+}
+
+std::vector<int32_t> GopichSzabo::viterbi(
+    const std::vector<double>& times,
+    const std::vector<int32_t>& colors,
+    const std::vector<int64_t>& offsets
+) const {
+    if (colors.size() != times.size())
+        throw std::invalid_argument(
+            "gopich-szabo viterbi: times and colors must be the same length");
+    std::vector<int32_t> path(times.size(), 0);
+    if (offsets.empty()) return path;
+    for (std::size_t b = 0; b + 1 < offsets.size(); ++b) {
+        const long long lo = offsets[b], hi = offsets[b + 1];
+        if (lo < 0 || hi < lo || static_cast<std::size_t>(hi) > times.size())
+            throw std::invalid_argument(
+                "gopich-szabo viterbi: offsets must be ascending and within the "
+                "photon arrays -- burst bounds that run past the end decode a "
+                "burst that is not there");
+        viterbi_range(times, colors, static_cast<std::size_t>(lo),
+                      static_cast<std::size_t>(hi), path);
+    }
+    return path;
+}
+
+
+namespace {
+// A borrowed buffer as the vector the C++ surface takes. A memcpy-rate copy
+// inside C++ (~0.5 ns/element); what it avoids is the host-language conversion.
+template <typename T, typename U>
+std::vector<T> borrow(const U* p, int n) {
+    return (p == nullptr || n <= 0) ? std::vector<T>()
+                                    : std::vector<T>(p, p + n);
+}
+}  // namespace
+
+double GopichSzabo::log_likelihood_flat(
+    double* times, int n_times,
+    int* colors, int n_colors_in,
+    long long* offsets, int n_offsets
+) const {
+    auto t = borrow<double>(times, n_times);
+    auto c = borrow<int32_t>(colors, n_colors_in);
+    auto o = borrow<int64_t>(offsets, n_offsets);
+    if (o.empty()) o = {0, static_cast<int64_t>(t.size())};
+    return log_likelihood(t, c, o);
+}
+
+void GopichSzabo::viterbi_flat(
+    double* times, int n_times,
+    int* colors, int n_colors_in,
+    long long* offsets, int n_offsets,
+    int** out, int* n_out
+) const {
+    auto t = borrow<double>(times, n_times);
+    auto c = borrow<int32_t>(colors, n_colors_in);
+    auto o = borrow<int64_t>(offsets, n_offsets);
+    const std::vector<int32_t> path =
+        o.empty() ? viterbi(t, c) : viterbi(t, c, o);
+
+    // ARGOUTVIEWM hands ownership to the host language, which frees with
+    // free() -- so this is malloc'd, not new'd.
+    const std::size_t n = path.size();
+    int* p = static_cast<int*>(std::malloc(std::max<std::size_t>(n, 1) * sizeof(int)));
+    if (p != nullptr && n > 0) std::memcpy(p, path.data(), n * sizeof(int));
+    *out = p;
+    *n_out = static_cast<int>(n);
 }
 
 std::vector<double> GopichSzabo::relaxation_times() const {
