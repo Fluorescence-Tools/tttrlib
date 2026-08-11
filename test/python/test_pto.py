@@ -1417,6 +1417,7 @@ def test_taking_a_gigabyte_back_out_does_not_hold_it_either(tmp_path):
 
 @pytest.mark.slow
 @needs_data
+@needs_rss
 def test_a_column_subset_of_a_large_store_does_not_materialise_it(tmp_path):
     """Criterion 2, as memory rather than as a stopwatch."""
     path = str(tmp_path / "wide.pto")
