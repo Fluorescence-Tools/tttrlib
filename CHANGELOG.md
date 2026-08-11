@@ -120,10 +120,17 @@
   (an axial stack goes in as `double[][][]` through `IN_ARRAY3`),
   `richardson_lucy_events_2d_into` and `scan_blur_kernel_1d_into`.
 
-  What is left is one case the `_into` shape cannot absorb: MaxEnt-TCSPC's two
-  design-matrix builders each return *four* arrays, so a single preallocated
-  buffer cannot carry the result. That needs a decision about the Java API —
-  four calls, or a small result class — rather than more typing.
+  **And MaxEnt-TCSPC's design-matrix builders**, which looked like they needed
+  a new Java result class and did not: a Java method takes as many
+  `INPLACE_ARRAY1` parameters as are `%apply`-ed to distinct names, so
+  `tcspc_build_fi_lifetimes_into(…, double[] Fi, double[] y, double[] sigma,
+  double[] fit_additive)` fills all four in one native call. The `int` return
+  is `Fi`'s element count, which yields every other length
+  (`n_data = Fi/tau.length`). The solvers needed nothing — they return
+  `MemTcspcResult` by value.
+
+  Java therefore reaches every subsystem here. The remaining declared gaps
+  measure `%include`-list membership, not capability.
 
   A caveat on the tooling, since it now reports these as closed: the parity
   checker compares `%include` lists, so a file counts as closed the moment the

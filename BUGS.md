@@ -500,13 +500,28 @@ and here the file's own summary contradicted its own implementation.
   grid the caller asks for rather than anything derived from the input, and it
   is unweighted exactly as the flat entry point is.
 
-  **Left: MaxEntTcspc's two design-matrix builders, and only those.** They are
-  the one case the `_into` shape genuinely cannot absorb — each returns *four*
-  arrays (`Fi`, `y`, `sigma`, `fit_additive`), so one preallocated buffer
-  cannot carry the result. It wants either four calls that each recompute the
-  matrix, or a small result class holding the four. That is a design decision
-  about the Java API, not more typing, which is why it is left rather than
-  guessed at.
+  **MaxEntTcspc's builders too — and the "design decision" I deferred here was
+  imaginary.** I had written that four returned arrays (`Fi`, `y`, `sigma`,
+  `fit_additive`) could not fit the `_into` shape, so it needed either four
+  recomputing calls or a new Java result class. Neither: **a Java method takes
+  as many `INPLACE_ARRAY1` parameters as you `%apply` to distinct names**, and
+  the native builder already fills all four in one call. So
+  `tcspc_build_fi_lifetimes_into(double[] decay, double[] lamp, double dt,
+  double[] tau, …, double[] Fi, double[] y, double[] sigma,
+  double[] fit_additive)` and its distance-axis sibling, one call, no
+  recomputation, no new type.
+
+  The single `int` return carries every size the caller needs, which is what
+  made the result class unnecessary: it is `Fi`'s element count, `Fi` is
+  `(n_data x n_tau)` flattened, so `n_data = Fi.size()/tau.length` and the
+  other three are each `n_data`. The solvers needed nothing at all — they
+  return `MemTcspcResult` by value, which Java wraps directly.
+
+  **Java now reaches every subsystem in this entry.** What remains declared is
+  bookkeeping, not capability: the interfaces stay off Java's `%include` list
+  because their entry points would generate uncallable argout overloads beside
+  the working helpers, so the gap count measures list membership rather than
+  what a caller can do.
 * **`HmmLattice.i`** (r, java, js) — claimed by the session that wrote it
   ("mine … not yet offered to the others"). Its typemaps are rank-1, so it is
   a `%include` away whenever that session offers it.

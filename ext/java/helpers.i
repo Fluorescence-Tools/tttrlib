@@ -20,6 +20,7 @@
 #include "Sampling.h"
 #include "Deconvolution.h"
 #include "Jitter.h"
+#include "MaxEntTcspc.h"
 #include "Correlator.h"
 #include "TTTRMask.h"
 #include "DataStore.h"
@@ -250,6 +251,121 @@ int scan_blur_kernel_1d_into(
 %clear (double* dc3_psf, int n_dc3_psf1, int n_dc3_psf2, int n_dc3_psf3);
 %clear (double* ev_coords, int n_ev_coords1, int n_ev_coords2);
 %clear (double* ev_psf, int n_ev_psf1, int n_ev_psf2);
+
+// ── MaxEnt TCSPC design matrices, for Java ─────────────────────────────────
+// These were the one case I thought the `_into` shape could not absorb: each
+// builder produces FOUR arrays (Fi, y, sigma, fit_additive), so I had written
+// them up as needing either four recomputing calls or a new result class. Both
+// were unnecessary. A java method takes as many INPLACE_ARRAY1 parameters as
+// you %apply to distinct names, and the native builder fills all four in ONE
+// call -- so the caller preallocates four arrays and gets them all, with no
+// recomputation and no new type.
+//
+// The return is Fi's element count, which is the only length not fixed by the
+// caller's own inputs: Fi is (n_data x n_tau) flattened, so n_data is
+// Fi.size()/n_tau, and y, sigma and fit_additive are each n_data. One int
+// therefore tells the caller every size.
+//
+// The solvers (solve_tcspc_mem_lifetime / _fret) need nothing here -- they
+// return a MemTcspcResult by value, which java wraps directly.
+%apply(double* IN_ARRAY1, int DIM1) {
+    (double* me_decay, int n_me_decay),
+    (double* me_lamp, int n_me_lamp),
+    (double* me_tau, int n_me_tau),
+    (double* me_R, int n_me_R),
+    (double* me_donly, int n_me_donly)
+}
+%apply(double* INPLACE_ARRAY1, int DIM1) {
+    (double* out_Fi, int n_out_Fi),
+    (double* out_y, int n_out_y),
+    (double* out_sigma, int n_out_sigma),
+    (double* out_fit_additive, int n_out_fit_additive)
+}
+%{
+namespace {
+// One copy-with-truncation, four times over. Kept local so the two builders
+// below cannot drift apart in how they clamp.
+inline void me_copy(const std::vector<double>& src, double* dst, int cap) {
+    const size_t m = ((size_t) cap < src.size()) ? (size_t) cap : src.size();
+    for (size_t i = 0; i < m; ++i) dst[i] = src[i];
+}
+}  // namespace
+%}
+%inline %{
+namespace tttrlib {
+/*! Build the lifetime-axis MEM design matrix into four preallocated arrays.
+    Returns Fi's element count; n_data is that divided by tau.length, and y,
+    sigma and fit_additive are each n_data long. */
+int tcspc_build_fi_lifetimes_into(
+        double* me_decay, int n_me_decay,
+        double* me_lamp, int n_me_lamp,
+        double dt,
+        double* me_tau, int n_me_tau,
+        double timeshift, double background, double lamp_scatter,
+        int fitstart, int fitstop, double period,
+        double* out_Fi, int n_out_Fi,
+        double* out_y, int n_out_y,
+        double* out_sigma, int n_out_sigma,
+        double* out_fit_additive, int n_out_fit_additive) {
+    std::vector<double> Fi, y, sigma, fit_additive;
+    tttrlib::tcspc_build_fi_lifetimes(
+            std::vector<double>(me_decay, me_decay + n_me_decay),
+            std::vector<double>(me_lamp, me_lamp + n_me_lamp),
+            dt,
+            std::vector<double>(me_tau, me_tau + n_me_tau),
+            timeshift, background, lamp_scatter,
+            fitstart, fitstop, period,
+            Fi, y, sigma, fit_additive);
+    me_copy(Fi, out_Fi, n_out_Fi);
+    me_copy(y, out_y, n_out_y);
+    me_copy(sigma, out_sigma, n_out_sigma);
+    me_copy(fit_additive, out_fit_additive, n_out_fit_additive);
+    return (int) Fi.size();
+}
+
+/*! The distance-axis sibling. Returns Fi's element count; n_data is that
+    divided by R.length. */
+int tcspc_build_fi_distances_into(
+        double* me_decay, int n_me_decay,
+        double* me_lamp, int n_me_lamp,
+        double dt,
+        double* me_R, int n_me_R,
+        double tau0, double R0,
+        double* me_donly, int n_me_donly, double x_donly,
+        double timeshift, double background, double lamp_scatter,
+        int fitstart, int fitstop, double period, double irf_background,
+        double* out_Fi, int n_out_Fi,
+        double* out_y, int n_out_y,
+        double* out_sigma, int n_out_sigma,
+        double* out_fit_additive, int n_out_fit_additive) {
+    std::vector<double> Fi, y, sigma, fit_additive;
+    tttrlib::tcspc_build_fi_distances(
+            std::vector<double>(me_decay, me_decay + n_me_decay),
+            std::vector<double>(me_lamp, me_lamp + n_me_lamp),
+            dt,
+            std::vector<double>(me_R, me_R + n_me_R),
+            tau0, R0,
+            std::vector<double>(me_donly, me_donly + n_me_donly), x_donly,
+            timeshift, background, lamp_scatter,
+            fitstart, fitstop, period, irf_background,
+            Fi, y, sigma, fit_additive);
+    me_copy(Fi, out_Fi, n_out_Fi);
+    me_copy(y, out_y, n_out_y);
+    me_copy(sigma, out_sigma, n_out_sigma);
+    me_copy(fit_additive, out_fit_additive, n_out_fit_additive);
+    return (int) Fi.size();
+}
+}  // namespace tttrlib
+%}
+%clear (double* me_decay, int n_me_decay);
+%clear (double* me_lamp, int n_me_lamp);
+%clear (double* me_tau, int n_me_tau);
+%clear (double* me_R, int n_me_R);
+%clear (double* me_donly, int n_me_donly);
+%clear (double* out_Fi, int n_out_Fi);
+%clear (double* out_y, int n_out_y);
+%clear (double* out_sigma, int n_out_sigma);
+%clear (double* out_fit_additive, int n_out_fit_additive);
 
 // ── Jitter, for Java ───────────────────────────────────────────────────────
 // Three functions, and only two need a helper. `jitter_coordinates` dithers
