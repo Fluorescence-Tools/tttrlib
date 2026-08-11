@@ -36,10 +36,13 @@
 #endif
 
 #include "DataStore.h"
+#include "TTTRStreamWriter.h"
 
 /// Photon data comes back as one of these. Declared rather than included: the
 /// container knows nothing about photons, and only \ref pto_read_events does.
 class TTTR;
+/// Where a photon stream's clocks come from. \see PtoPhotonStream::create
+class TTTRHeader;
 
 namespace tttrlib {
 namespace io {
@@ -305,6 +308,35 @@ public:
      * open, and so does the process ending, however it ends.
      */
     bool open(const std::string& filename, bool writable = false);
+
+    /*!
+     * \brief How a container is open. \see open, PtoPhotonStream
+     *
+     * The three differ in what they lock and in when what they wrote becomes
+     * readable, which is the distinction that matters during an acquisition.
+     */
+    enum class Mode {
+        /*!
+         * No lock. A viewer may open a container another process is measuring
+         * into and will see the last committed state -- a consistent shorter
+         * file, never a half-written one.
+         */
+        ReadOnly = 0,
+        /*!
+         * Exclusive advisory lock. Edits accumulate in memory and become
+         * visible at \ref commit.
+         */
+        ReadWrite = 1,
+        /*!
+         * Exclusive advisory lock, and photons are appended and committed as
+         * they arrive. Reached through \ref PtoPhotonStream rather than by
+         * opening directly, because a stream owns the object it is filling.
+         */
+        Stream = 2,
+    };
+
+    /// How this container is currently open. \see Mode
+    Mode mode() const;
 
     bool is_open() const;
     void close();
@@ -666,6 +698,86 @@ private:
     // The rest of the store entry points need no friendship: they go through
     // pto_store_region and filename(), which is the whole point of it existing.
     friend PtoObject pto_store_region(const PtoFile&, std::uint64_t);
+};
+
+/*!
+ * \brief Photons into a container as they are measured. \see PtoFile::Mode::Stream
+ *
+ * `TTTR::write` stores a measurement that is already finished. An acquisition
+ * is the other case, and it is not the same problem: the photon count is
+ * unknown when the file is opened, the run may last hours, and the process may
+ * be killed. PRD-034 calls this the case the sink exists for.
+ *
+ * \par How the growth actually happens, and why it is not one object
+ * A `dstore` payload writes its column blobs and *then* a directory describing
+ * them, so appending rows to a column would overwrite the next column and move
+ * the directory. It cannot grow in place, and pretending otherwise would mean
+ * rewriting the whole payload per checkpoint -- O(total) work every second, on
+ * a file that is measured for an hour.
+ *
+ * So a stream writes a **sequence of committed chunk objects** under one name,
+ * `name/000000`, `name/000001`, … Nothing about the format changes, because
+ * the reader already stacks several photons objects into one measurement in
+ * name order, and the zero padding is what makes that order numeric. Each
+ * chunk is complete and committed the moment it is written, which is what
+ * gives the crash behaviour for free rather than by protocol:
+ *
+ * - **a killed writer keeps every checkpointed photon** -- an uncommitted
+ *   chunk lies outside the `Segment` and is invisible, per the format's
+ *   abandoned-write rule, and a later writer reclaims it as `Void`;
+ * - **a reader may open the file mid-acquisition** -- a read-only open takes
+ *   no lock and sees the committed prefix, a consistent shorter measurement
+ *   rather than an error or a torn read.
+ *
+ * \par Fresh files only
+ * \ref create refuses a path that exists. Appending a live stream to a
+ * container somebody else assembled means writing chunk objects between their
+ * objects, and the "several photons objects are one measurement" rule would
+ * then silently absorb theirs into the acquisition.
+ */
+class PtoPhotonStream : public TTTRStreamWriter {
+public:
+    PtoPhotonStream();
+    ~PtoPhotonStream() override;
+
+    /*!
+     * \brief Open a **new** container and begin a photon stream in it.
+     *
+     * \param filename must not exist; see "Fresh files only" above.
+     * \param header   supplies the clocks written onto every chunk. Without it
+     *                 the events have no units -- the same requirement, and
+     *                 the same reason, as the write-once path.
+     * \param name     what the measurement is called. Chunks are named under
+     *                 it, and reading the container back gives one TTTR.
+     * \return false if the file exists, cannot be locked, or `header` is null.
+     */
+    bool create(const std::string& filename, TTTRHeader* header,
+                const std::string& name = std::string()) override;
+
+    bool append(const unsigned long long* macro_times, std::size_t n_macro,
+                const unsigned short* micro_times, std::size_t n_micro,
+                const signed char* routing_channels, std::size_t n_routing,
+                const signed char* event_types, std::size_t n_event) override;
+
+    /*!
+     * \brief Commit what has been appended, as one chunk object.
+     *
+     * Everything appended before this call becomes readable, by this process
+     * and by any other, and survives the writer being killed.
+     */
+    bool checkpoint() override;
+
+    bool close() override;
+    bool is_open() const override;
+    std::uint64_t n_committed() const override;
+    std::uint64_t n_buffered() const override;
+
+    /// How many chunk objects have been committed. \see PtoPhotonStream
+    std::uint64_t n_chunks() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> p_;
 };
 
 /*!

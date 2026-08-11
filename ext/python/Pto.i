@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 %module tttrlib
 %{
+#include "TTTRStreamWriter.h"
 #include "io_pto.h"
 %}
 
@@ -105,6 +106,23 @@
                        std::uint64_t target
   %{ (is.character($arg) || is.numeric($arg)) && length($arg) == 1 %}
 #endif  // SWIGR
+
+// The abstract stream writer, before the PTO implementation that derives from
+// it: without this SWIG sees an unknown base class, silently drops it, and the
+// inherited half of the API (error, set_auto_checkpoint, the counters) is
+// missing from every binding.
+%include "TTTRStreamWriter.h"
+
+// PtoPhotonStream::append takes the four event arrays the way TTTR's
+// constructor does, so it accepts the same NumPy arrays with no copy.
+%apply (unsigned long long* IN_ARRAY1, int DIM1)
+       {(const unsigned long long* macro_times, std::size_t n_macro)}
+%apply (unsigned short* IN_ARRAY1, int DIM1)
+       {(const unsigned short* micro_times, std::size_t n_micro)}
+%apply (signed char* IN_ARRAY1, int DIM1)
+       {(const signed char* routing_channels, std::size_t n_routing)}
+%apply (signed char* IN_ARRAY1, int DIM1)
+       {(const signed char* event_types, std::size_t n_event)}
 
 %include "io_pto.h"
 

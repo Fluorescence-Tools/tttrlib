@@ -111,8 +111,20 @@ if (is_verbose()) {
                     free(WideBuffer);
                 }
             } else if (TagHead.Typ == tyBinaryBlob) {
-                std::cerr << "ERROR: PTU tyBinaryBlob not supported" << std::endl;
-                fseek(fpin, (long) TagHead.TagValue, SEEK_CUR);
+                // Kept, not skipped. A blob is opaque here and this reader can
+                // do nothing with it -- but dropping it silently loses whatever
+                // the instrument wrote, and a container that stores the header
+                // cannot store what the reader threw away. One int32 per byte
+                // is the representation add_tag already defines for this type.
+                const size_t n = (size_t) TagHead.TagValue;
+                std::vector<int32_t> blob(n, 0);
+                if (n > 0) {
+                    std::vector<unsigned char> raw(n, 0);
+                    Result = fread(raw.data(), 1, n, fpin);
+                    if (Result != n) throw std::string("Incomplete File");
+                    for (size_t bi = 0; bi < n; bi++) blob[bi] = (int32_t) raw[bi];
+                }
+                add_tag(json_data, key, blob, TagHead.Typ, TagHead.Idx);
             } else {
                 throw std::string("Illegal Type identifier! Broken file?");
             }

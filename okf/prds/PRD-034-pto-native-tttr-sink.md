@@ -252,3 +252,86 @@ by name instead of folded into the filename.
    the embedded path too, so it was not taken unilaterally.
 4. **Targeted reads over a native table (item 5, criterion 4)**, and
    **conformance cases in four languages (item 6, criterion 5)**.
+
+### 2026-08-11 — full header fidelity — **acceptance criteria 1 and 2 met**
+
+Every row of the source header now rides through, `(name, idx, type, value)`
+restored exactly. Measured on a 111-tag imaging PTU: **111 preserved, zero
+value or type mismatches**, 13 `ImgHdr_*` among them. All twelve PTU types
+round trip, verified per type including `tyBinaryBlob`, `tyFloat8Array`,
+`tyEmpty8` and a non-scalar `idx`.
+
+`PtoTag` needed no new fields: `index` and `source_type` were put in the format
+for exactly this ("so a PicoQuant header can be written back bit-exact") and
+nothing had wired them up. Rows go under `_pto_source_header.`, because writing
+`ImgHdr_PixX` bare would claim an authority nobody holds — the rule the
+vocabulary section already sets.
+
+**`tyBinaryBlob` is no longer dropped.** The PTU reader read the blob's length,
+printed `ERROR: PTU tyBinaryBlob not supported` and seeked past it, so the data
+was gone before any container saw it. `add_tag` had handled the type all along.
+*Unverified against a real file:* no PTU in the test set carries a blob, so the
+pq reader's half is exercised only synthetically.
+
+**A CLSM image reconstructs identically from a `.pto`** — 868 815 counts, pixel
+for pixel, geometry equal. That needed a fourth required tag, which the PRD had
+already specified and the first pass had not implemented: `source_container_type`
+/ `source_record_type`. A marker convention belongs to the source format (PTU
+stores marker *indices* decoding as 2^idx, HT3 stores the channel), and a native
+table records neither in its columns. Without it the geometry was right, all
+1001 markers were present, and the image reconstructed to **zero frames**.
+
+### 2026-08-11 — streaming acquisition (design item 7) — **acceptance criterion 6 met**
+
+`PtoPhotonStream` writes photons as they arrive, for acquisitions larger than
+RAM.
+
+**Why it is not one growing object.** A `dstore` payload writes its column
+blobs and *then* a directory describing them, so appending rows would overwrite
+the next column and move the directory. It cannot grow in place, and rewriting
+the payload per checkpoint is O(total) work every second on a file measured for
+an hour. A stream therefore writes a sequence of committed chunk objects under
+one name (`run/000000`, `run/000001`, …). **No format change**: the reader
+already stacks several photons objects into one measurement in name order, and
+zero padding makes that order numeric.
+
+Measured, in subprocesses because peak RSS is a high-water mark:
+
+| events | file | peak RSS | chunks |
+|---|---|---|---|
+| 30 M | 361 MB | 189 MB | 60 |
+| 60 M | 723 MB | 195 MB | 120 |
+| 120 M | 1450 MB | 197 MB | 240 |
+
+The file grows 4×, the process does not — memory is bounded by the checkpoint
+interval, not the run. A 1.45 GB acquisition in a 197 MB process.
+
+Crash and concurrency behaviour come from the format rather than from a
+protocol: an uncommitted chunk lies outside the `Segment` and is invisible.
+Verified by `SIGKILL` on a live writer — the file opens holding **exactly** the
+last checkpoint, monotonic and without gaps — and by a reader opening the file
+mid-acquisition through a lock-free read-only open and getting a consistent
+shorter measurement.
+
+**A defect this found in the reader.** Stacking shifted each object's macro
+times to continue after the previous one, which is right for embedded vendor
+files (each restarts its clock at zero) and wrong for a native table, whose
+`macro_time` is absolute by specification. Chunked acquisition made it visible:
+the event count matched and every photon after the first chunk was in the wrong
+place. Shifting is now applied only to embedded objects.
+
+**Generalised past PTO, as asked.** The interface is the abstract
+`TTTRStreamWriter` (`modules/io/base`), which owns the error reporting, the
+auto-checkpoint policy and the equal-length check so no backend can forget it,
+and states the contract every implementation owes — bounded memory, a durable
+checkpoint, a no-op checkpoint that succeeds, `close()` checkpointing first.
+`FileFormat::make_stream_writer` + `IORegistry::set_stream_writer` register a
+factory, kept separate from `can_write` because writable and streamable are
+different questions: most vendor formats write a record count in a header
+before any record, so they can be written and cannot be streamed into.
+`make_stream_writer(filename)` resolves by extension.
+
+**Still open:** PTO is the only backend, so the abstraction is stated but not
+yet proven by a second implementation. Targeted reads over a native table
+(item 5, criterion 4), cross-language conformance (item 6, criterion 5), and
+demanding a selector for a multi-object container (criterion 3) remain.

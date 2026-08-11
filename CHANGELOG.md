@@ -2,7 +2,104 @@
 
 ## [Unreleased]
 
+### Changed
+- **The `dfa_*` convolution entry points take NumPy buffers** — 5.6–8.4× on the
+  same arithmetic (`dfa_convolve`, `dfa_periodic_decay`, `dfa_convolved_decay`,
+  `dfa_vv_vh_decay`, `dfa_vv_vh_convolved`). They marshalled through the Python
+  sequence protocol, ~50 ns per element each way, which set the runtime of every
+  call: 26.4 → 3.5 µs at 512 bins, 762 → 91 µs at 16384.
+
+  Passing a NumPy array had been *twice* as expensive as passing a list, because
+  unboxing a NumPy scalar per element is more work than unboxing a float — so
+  the obvious call was the slow one. The Python signature is unchanged: same
+  names, same order, and a list still works (a NumPy input typemap accepts any
+  sequence, and is marginally slower for a list than the old path was, 326 →
+  397 µs at 16384). What changes is that an array is passed by pointer and the
+  return is an `ndarray` rather than a `VectorDouble` proxy — every caller in
+  the tree already wrapped the result in `np.asarray`.
+
+  This moved a published figure: with both convolution backends paying the same
+  wrapper, `examples/fluorescence_decay/plot_convolution_methods.py` reported
+  1.6×–6.0× across 1–64 rates where the truth is **4.1×–7.2×**. The 1-rate point
+  had been close enough to 1.0 that a loaded machine inverted it, which is how
+  this was found — as a flaky test, not as a profile. See `PERF.md`.
+
 ### Added
+- **A generic log-domain HMM lattice** (PRD-035): `hmm_forward_log`,
+  `hmm_backward_log`, `hmm_backward_posteriors_xi`, `hmm_viterbi_log`,
+  `hmm_logsumexp`, and `hmm_estep_log` for concatenated sequences, in
+  `modules/math/include/HmmLattice.h`. The recursions over a **caller-supplied**
+  `log_frameprob` (T×K); emissions stay the caller's, so a Gaussian mixture, a
+  Poisson rate and a lookup table all use the same lattice. This is the
+  binned-trace counterpart to the photon-stream `HMM`, which is a different
+  algorithm — per-burst, Δt-dependent transitions, and a *scaled* rather than
+  log-domain recursion — and is untouched.
+
+  The lattices are caller-allocated in-place buffers and `xi_sum` is
+  accumulated with `+=`, because an EM fit reuses them across iterations and
+  sums the expected transition counts across sequences; an allocate-and-return
+  signature cannot express that. NumPy typemaps throughout, never
+  `VectorDouble`: a 100 000 × 6 frame matrix is ~30 ms of sequence-protocol
+  conversion against a ~27 ms kernel.
+
+  `-inf` is a value here, not an error — a structurally constrained model has
+  whole `-inf` columns — so an impossible sequence yields an `-inf`
+  log-likelihood with **no nan anywhere**, and contributes exactly zero
+  transition counts. `modules/math/CMakeLists.txt` pins fast math **off** on
+  that translation unit: `nnan`/`ninf` license the compiler to fold away the
+  guards the recursion depends on, and the resulting nan spreads through the
+  M-step while destroying the `-inf` that would have reported it.
+
+  Measured (arm64, one call, best of 20), against the numba implementation this
+  replaces: forward 8.50 ms vs 10.81, backward+posteriors+xi 10.29 vs 12.66 and
+  Viterbi 1.21 vs 2.78 at T=100 000/K=3; 21.58 vs 26.77, 23.39 vs 36.76 and
+  2.43 vs 3.70 at K=6. `test/python/misc/test_hmm_lattice.py` checks the
+  recursions against a brute-force enumeration of every state path at small T,
+  and pins parity against ten recorded cases including the degenerate ones.
+- **`TTTRStreamWriter` — photons to a file as they are measured** (PRD-034
+  item 7). `TTTR.write` needs the whole measurement in memory; an acquisition
+  does not have one. The abstract interface (`modules/io/base`) is
+  `create`/`append`/`checkpoint`/`close`, and it owns the error reporting, the
+  auto-checkpoint policy and the equal-length check so no backend can forget
+  it. `FileFormat::make_stream_writer` + `IORegistry::set_stream_writer`
+  register a factory, kept separate from `can_write` because writable and
+  streamable are different questions — most vendor formats put a record count
+  in a header they write first, so they can be written and cannot be streamed
+  into. PTO is the only backend so far, so the abstraction is stated rather
+  than proven.
+
+- **`PtoPhotonStream` — acquiring more data than fits in RAM.** A `dstore`
+  payload writes its column blobs and *then* a directory describing them, so it
+  cannot grow in place; a stream writes a sequence of committed chunk objects
+  under one name (`run/000000`, …) instead. No format change — the reader
+  already stacks several photons objects into one measurement in name order,
+  and zero padding makes that order numeric. Measured: 30 M / 60 M / 120 M
+  events give a 361 / 723 / 1450 MB file at 189 / 195 / **197 MB** peak RSS.
+  The file grows 4×, the process does not: memory is bounded by the checkpoint
+  interval, not by the length of the run.
+
+  Crash and concurrency behaviour fall out of the format rather than a
+  protocol, because an uncommitted chunk lies outside the `Segment` and is
+  invisible. Verified by `SIGKILL` on a live writer — the file opens holding
+  *exactly* the last checkpoint, monotonic and without gaps — and by a reader
+  opening the file mid-acquisition (a read-only open takes no lock) and getting
+  a consistent shorter measurement. `test/python/test_pto_stream.py`.
+
+- **A `.pto` preserves the whole instrument header** (PRD-034, acceptance
+  criteria 1–2). Every source header row rides through as a tag under
+  `_pto_source_header.`, `(name, idx, type, value)` restored exactly: 111 of
+  111 on an imaging PTU with zero value or type mismatches, all twelve PTU
+  types verified per type. `PtoTag::index` and `PtoTag::source_type` were put
+  in the format for this and nothing had wired them up.
+
+  **A CLSM image now reconstructs identically from a `.pto`** — 868 815 counts,
+  pixel for pixel. That needed the fourth required tag the PRD specifies and
+  the first pass omitted, `source_container_type`/`source_record_type`: a
+  marker convention belongs to the source format (PTU stores marker *indices*
+  decoding as 2^idx, HT3 stores the channel) and a native table records neither
+  in its columns. Without it the geometry was right, all 1001 markers were
+  present, and the image reconstructed to **zero frames**.
+
 - **`tttr.write("run.pto")` — a `.pto` is now a TTTR *sink*, not a wrapper**
   (PRD-034). A photon stream goes in as its own four columns — `macro_time`
   u64, `micro_time` u16, `routing_channel` i8, `event_type` i8 — with no
@@ -295,6 +392,21 @@
   constraint and there is no correctness reason to remove it.
 
 ### Fixed
+- **A PTU `tyBinaryBlob` tag is no longer thrown away.** The reader read the
+  blob's length, printed `ERROR: PTU tyBinaryBlob not supported` and seeked
+  past it, so whatever the instrument wrote was gone before any container could
+  store it — and `add_tag` had handled the type all along. *Unverified against
+  a real file:* no PTU in the test set carries a blob, so the reader's half is
+  exercised only synthetically.
+
+- **Stacking several native photons objects no longer moves their macro
+  times.** A container reads several photons objects as one measurement, and
+  shifted each to continue after the previous one — right for embedded vendor
+  files, each of which restarts its clock at zero, and wrong for a native
+  table, whose `macro_time` is absolute by specification. Chunked acquisition
+  made it visible: the event count matched and every photon after the first
+  chunk was in the wrong place. The shift now applies only to embedded objects.
+
 - **The SIMD capability constants told every binding the kernels were not
   compiled in.** `tttrlib.TTTRLIB_COMPILE_NEON` read `0` on an arm64 build
   whose NEON kernels were compiled, selected at runtime and measurably

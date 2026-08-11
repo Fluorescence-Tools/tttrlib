@@ -1235,6 +1235,11 @@ PtoFile::PtoFile() : p_(new Impl) {}
 PtoFile::~PtoFile() { delete p_; }
 
 bool PtoFile::is_open() const { return p_->f.ok(); }
+
+PtoFile::Mode PtoFile::mode() const {
+    if (!p_->f.ok()) return Mode::ReadOnly;
+    return p_->writable ? Mode::ReadWrite : Mode::ReadOnly;
+}
 const std::string& PtoFile::filename() const { return p_->path; }
 const std::string& PtoFile::error() const { return p_->err; }
 /// Releases the writer lock. Clearing `writable` with it keeps a later `update`
@@ -2712,6 +2717,155 @@ std::string sidecar_text(const PtoFile& file, std::uint64_t uid) {
 }
 
 /*!
+ * \brief The namespace every preserved source-header row is written under.
+ *
+ * A PTU calls a tag `ImgHdr_PixX`; writing that name bare into a container
+ * would claim an authority nobody holds (doc/formats/pto.rst, "Why two
+ * namespaces"). The prefix says what the name *is* -- a row of the instrument
+ * header, kept verbatim -- without pretending PTO or MMFDB defines it. The
+ * original type code rides along in \ref PtoTag::source_type and the array
+ * position in \ref PtoTag::index, which is what those two fields were put in
+ * the format for.
+ */
+const char* const kSourceHeaderPrefix = "_pto_source_header.";
+
+/// The `PtoType` that carries a PTU tag of type \p ty without losing anything.
+PtoType pto_type_for_source(std::uint32_t ty) {
+    switch (ty) {
+        case tyEmpty8:      return PtoType::Empty;
+        case tyBool8:
+        case tyInt8:
+        case tyBitSet64:
+        case tyColor8:      return PtoType::Int;
+        case tyFloat8:
+        // A TDateTime is a double in the source and stays one here. PtoType::Date
+        // would be the tidier home but is integer nanoseconds, so routing through
+        // it would round the value -- and source_type already records what it was.
+        case tyTDateTime:   return PtoType::Float;
+        case tyFloat8Array: return PtoType::Floats;
+        case tyAnsiString:
+        case tyWideString:  return PtoType::Text;
+        case tyBinaryBlob:  return PtoType::Bytes;
+        default:            return PtoType::Text;
+    }
+}
+
+/*!
+ * \brief Every row of `header` as a tag on `uid`. \see kSourceHeaderPrefix.
+ *
+ * "Open fidelity" in the specification: the three required tags say what the
+ * photons *are*, and this says everything else the instrument said. Losing it
+ * turns an imaging measurement into an unreconstructable list of photons --
+ * `ImgHdr_*` is what CLSM configures itself from -- so preserving everything is
+ * the default rather than a curated subset. A curated subset is also a
+ * judgement about which instrument settings matter, which is not the
+ * container's to make.
+ */
+void write_source_header_tags(PtoFile& file, std::uint64_t uid, TTTRHeader* header) {
+    if (header == nullptr) return;
+    // get_json() rather than json_data(): the latter is protected, and this
+    // module is above core rather than part of it.
+    const nlohmann::json j = nlohmann::json::parse(header->get_json(), nullptr, false);
+    if (j.is_discarded() || !j.contains("tags") || !j["tags"].is_array()) return;
+
+    for (const nlohmann::json& row : j["tags"]) {
+        if (!row.is_object() || !row.contains("name")) continue;
+        const std::uint32_t ty =
+                row.value("type", static_cast<std::uint32_t>(tyAnsiString));
+
+        PtoTag t;
+        t.target = uid;
+        t.name = kSourceHeaderPrefix + row["name"].get<std::string>();
+        t.index = row.value("idx", -1);
+        t.source_type = ty;
+        t.type = pto_type_for_source(ty);
+
+        const nlohmann::json& v = row.contains("value") ? row["value"] : nlohmann::json();
+        switch (t.type) {
+            case PtoType::Empty: break;
+            case PtoType::Int:
+                if (v.is_boolean()) t.i = v.get<bool>() ? 1 : 0;
+                else if (v.is_number()) t.i = v.get<long long>();
+                break;
+            case PtoType::Float:
+                if (v.is_number()) t.d = v.get<double>();
+                break;
+            case PtoType::Floats:
+                if (v.is_array()) for (const auto& e : v)
+                    if (e.is_number()) t.floats.push_back(e.get<double>());
+                break;
+            case PtoType::Bytes:
+                // One int32 per byte, the representation the header JSON uses.
+                if (v.is_array()) for (const auto& e : v)
+                    if (e.is_number()) t.bytes.push_back(
+                            static_cast<unsigned char>(e.get<long long>() & 0xFF));
+                break;
+            default:
+                t.type = PtoType::Text;
+                t.text = v.is_string() ? v.get<std::string>() : v.dump();
+                break;
+        }
+        file.add_tag(t);
+    }
+}
+
+/*!
+ * \brief Put the preserved source-header rows back into `out`'s header JSON.
+ *
+ * The inverse of \ref write_source_header_tags, and it restores the original
+ * `(name, idx, type, value)` -- not an approximation of it -- because
+ * `source_type` recorded the type code the row actually had. Without this the
+ * tags survive in the file and are invisible to everything that reads a header,
+ * which is the same as not having written them.
+ */
+void apply_source_header_tags(const PtoFile& file, std::uint64_t uid, TTTR* out) {
+    TTTRHeader* h = out->get_header();
+    if (h == nullptr) return;
+    const std::size_t prefix_len = std::strlen(kSourceHeaderPrefix);
+
+    nlohmann::json j = nlohmann::json::parse(h->get_json(), nullptr, false);
+    if (j.is_discarded() || !j.is_object()) j = nlohmann::json::object();
+    if (!j.contains("tags") || !j["tags"].is_array()) j["tags"] = nlohmann::json::array();
+    bool any = false;
+
+    for (const PtoTag& t : file.tags_for(uid)) {
+        if (t.name.compare(0, prefix_len, kSourceHeaderPrefix) != 0) continue;
+        const std::string name = t.name.substr(prefix_len);
+        const std::uint32_t ty = t.source_type != 0 ? t.source_type : tyAnsiString;
+
+        nlohmann::json row;
+        row["name"] = name;
+        row["type"] = ty;
+        row["idx"] = t.index;
+        switch (t.type) {
+            case PtoType::Empty: row["value"] = nullptr; break;
+            case PtoType::Int:
+                // Restored to the JSON type the source reader wrote, so a
+                // round trip through the container is byte-identical rather
+                // than merely equal-valued.
+                if (ty == tyBool8) row["value"] = (t.i != 0);
+                else row["value"] = t.i;
+                break;
+            case PtoType::Float: row["value"] = t.d; break;
+            case PtoType::Floats: row["value"] = t.floats; break;
+            case PtoType::Bytes: {
+                std::vector<long long> blob;
+                blob.reserve(t.bytes.size());
+                for (unsigned char b : t.bytes) blob.push_back(b);
+                row["value"] = blob;
+                break;
+            }
+            default: row["value"] = t.text; break;
+        }
+        j["tags"].emplace_back(row);
+        any = true;
+    }
+    // set_json replaces the whole document, so this must run before whatever
+    // configures the header from the required tags -- see the call site.
+    if (any) h->set_json(j.dump());
+}
+
+/*!
  * \brief Apply a native photons object's header tags to the TTTR it produced.
  *
  * Without this the reader hands back a column of integers with no unit: the
@@ -2746,6 +2900,12 @@ bool apply_photon_header(const PtoFile& file, std::uint64_t uid, TTTR* out) {
             // Int tags arrive in `i`; tolerate an unsigned writer using `u`.
             const long long n = t.i != 0 ? t.i : static_cast<long long>(t.u);
             if (n > 0) { h->set_number_of_micro_time_channels(static_cast<int>(n)); have_bins = true; }
+        } else if (t.name == "_pto_photons.source_container_type") {
+            // Provenance, and the one thing it decides: which marker
+            // convention the source format used. See the writer.
+            h->set_tttr_container_type(static_cast<int>(t.i));
+        } else if (t.name == "_pto_photons.source_record_type") {
+            h->set_tttr_record_type(static_cast<int>(t.i));
         }
     }
     return have_macro && have_micro && have_bins;
@@ -2775,6 +2935,11 @@ bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
         // The events are only half of it. Without the header tags this returns
         // dimensionless integers, which is what a native photons object looked
         // like before -- see apply_photon_header.
+        //
+        // Source rows FIRST: they go in through set_json, which replaces the
+        // whole document, so applying them after the three required tags would
+        // discard exactly what those tags configured.
+        apply_source_header_tags(file, o.uid, out);
         apply_photon_header(file, o.uid, out);
         return true;
     }
@@ -3159,6 +3324,177 @@ int pto_read_events(const std::string& spec, std::uint64_t first_event,
     return 1;
 }
 
+// --- streaming photons into a container -------------------------------------
+
+struct PtoPhotonStream::Impl {
+    PtoFile file;
+    std::string name;
+    std::uint64_t chunk = 0;
+    std::uint64_t committed = 0;
+
+    // Clocks, copied at create() rather than held by pointer: a stream outlives
+    // the call that opened it and the caller's header may not.
+    double macro_res = 0.0, micro_res = 0.0;
+    long long n_micro_channels = 0;
+    long long src_container = -1, src_record = -1;
+    std::string source_header_json;
+
+    // The buffer, in the column layout the chunk is written from. Cleared on
+    // every checkpoint, which is what bounds memory: an acquisition larger than
+    // RAM is the point, so nothing here may grow with the run, only with the
+    // checkpoint interval.
+    std::vector<std::uint64_t> macro;
+    std::vector<std::uint16_t> micro;
+    std::vector<std::int8_t> chan, type;
+};
+
+PtoPhotonStream::PtoPhotonStream() : p_(new Impl) {}
+PtoPhotonStream::~PtoPhotonStream() {
+    // A stream unwound by an exception still keeps what it was holding.
+    if (p_ && p_->file.is_open()) close();
+}
+
+bool PtoPhotonStream::create(const std::string& filename, TTTRHeader* header,
+                             const std::string& name) {
+    Impl& m = *p_;
+    clear_error();
+    if (m.file.is_open()) return fail("this stream is already open");
+    if (header == nullptr)
+        return fail("a photon stream needs a header: without the clocks the "
+                    "events it writes have no units");
+    if (std::filesystem::exists(std::filesystem::u8path(filename)))
+        return fail(filename + " already exists; a photon stream writes a new "
+                    "container, because chunks written between somebody "
+                    "else's objects would be absorbed into their measurement");
+
+    if (!m.file.create(filename, name)) return fail(m.file.error());
+    m.file.set_writing_app("tttrlib");
+    m.name = name.empty() ? std::string("photons") : name;
+    m.chunk = 0;
+    m.committed = 0;
+
+    m.macro_res = header->get_macro_time_resolution();
+    m.micro_res = header->get_micro_time_resolution();
+    m.n_micro_channels = static_cast<long long>(header->get_number_of_micro_time_channels());
+    m.src_container = header->get_tttr_container_type();
+    m.src_record = header->get_tttr_record_type();
+    m.source_header_json = header->get_json();
+
+    if (!m.file.commit()) return fail(m.file.error());
+    return true;
+}
+
+bool PtoPhotonStream::append(const unsigned long long* macro_times, std::size_t n_macro,
+                             const unsigned short* micro_times, std::size_t n_micro,
+                             const signed char* routing_channels, std::size_t n_routing,
+                             const signed char* event_types, std::size_t n_event) {
+    Impl& m = *p_;
+    clear_error();
+    if (!m.file.is_open()) return fail("this stream is not open");
+    // The base class owns this check, so every backend gives the same message
+    // and none of them can forget it.
+    if (!lengths_agree(n_macro, n_micro, n_routing, n_event)) return false;
+    if (n_macro == 0) return true;
+
+    m.macro.insert(m.macro.end(), macro_times, macro_times + n_macro);
+    m.micro.insert(m.micro.end(), micro_times, micro_times + n_micro);
+    m.chan.insert(m.chan.end(), routing_channels, routing_channels + n_routing);
+    m.type.insert(m.type.end(), event_types, event_types + n_event);
+
+    if (auto_at_ != 0 && m.macro.size() >= auto_at_) return checkpoint();
+    return true;
+}
+
+bool PtoPhotonStream::checkpoint() {
+    Impl& m = *p_;
+    clear_error();
+    if (!m.file.is_open()) return fail("this stream is not open");
+    // Nothing buffered is not a failure: a caller checkpointing on a timer
+    // should not have to ask first whether any photons arrived.
+    if (m.macro.empty()) return true;
+
+    const std::size_t n = m.macro.size();
+    data::DataStore store("photons");
+    store.set_n_rows(n);
+    const int cm = store.add_column("macro_time", data::ColumnType::UInt64);
+    const int cu = store.add_column("micro_time", data::ColumnType::UInt16);
+    const int cc = store.add_column("routing_channel", data::ColumnType::Int8);
+    const int ct = store.add_column("event_type", data::ColumnType::Int8);
+    store.column(cm).resize_uninitialized(n);
+    store.column(cu).resize_uninitialized(n);
+    store.column(cc).resize_uninitialized(n);
+    store.column(ct).resize_uninitialized(n);
+    std::memcpy(store.column(cm).data_ptr(), m.macro.data(), n * sizeof(std::uint64_t));
+    std::memcpy(store.column(cu).data_ptr(), m.micro.data(), n * sizeof(std::uint16_t));
+    std::memcpy(store.column(cc).data_ptr(), m.chan.data(), n);
+    std::memcpy(store.column(ct).data_ptr(), m.type.data(), n);
+
+    // Zero-padded, so lexical order -- which is the order the reader stacks
+    // them in -- is numeric order. Six digits is a million chunks; at one a
+    // second that is eleven days of acquisition.
+    char suffix[16];
+    std::snprintf(suffix, sizeof(suffix), "/%06llu",
+                  static_cast<unsigned long long>(m.chunk));
+    const std::string chunk_name = m.name + suffix;
+
+    const std::uint64_t uid = pto_add_store(m.file, "photons", chunk_name, store);
+    if (uid == 0) return fail(m.file.error());
+
+    // Every chunk carries the clocks. Each is a complete photons object and a
+    // reader may be handed any one of them -- including a reader recovering a
+    // container whose writer was killed.
+    PtoTag t;
+    t.target = uid;
+    t.type = PtoType::Float;
+    t.name = "_mmfdb_setup.macro_time_resolution"; t.d = m.macro_res; m.file.add_tag(t);
+    t.name = "_mmfdb_setup.micro_time_resolution"; t.d = m.micro_res; m.file.add_tag(t);
+    PtoTag b;
+    b.target = uid;
+    b.type = PtoType::Int;
+    b.name = "_pto_photons.number_of_micro_time_channels"; b.i = m.n_micro_channels;
+    m.file.add_tag(b);
+    b.name = "_pto_photons.source_container_type"; b.i = m.src_container; m.file.add_tag(b);
+    b.name = "_pto_photons.source_record_type"; b.i = m.src_record; m.file.add_tag(b);
+    // The instrument header, on the first chunk only: it is identical on every
+    // one, and repeating a hundred rows per chunk would make the tag block the
+    // largest thing in a long acquisition.
+    if (m.chunk == 0 && !m.source_header_json.empty()) {
+        const nlohmann::json j =
+                nlohmann::json::parse(m.source_header_json, nullptr, false);
+        if (!j.is_discarded() && j.contains("tags") && j["tags"].is_array()) {
+            TTTRHeader tmp;
+            tmp.set_json(m.source_header_json);
+            write_source_header_tags(m.file, uid, &tmp);
+        }
+    }
+
+    if (!m.file.commit()) return fail(m.file.error());
+
+    m.chunk++;
+    m.committed += n;
+    // Freed, not just emptied: an acquisition bigger than RAM is the whole
+    // point, and a buffer that keeps its capacity keeps the largest burst of
+    // photons the run ever saw, for the rest of the run.
+    std::vector<std::uint64_t>().swap(m.macro);
+    std::vector<std::uint16_t>().swap(m.micro);
+    std::vector<std::int8_t>().swap(m.chan);
+    std::vector<std::int8_t>().swap(m.type);
+    return true;
+}
+
+std::uint64_t PtoPhotonStream::n_committed() const { return p_->committed; }
+std::uint64_t PtoPhotonStream::n_buffered() const { return p_->macro.size(); }
+std::uint64_t PtoPhotonStream::n_chunks() const { return p_->chunk; }
+bool PtoPhotonStream::is_open() const { return p_->file.is_open(); }
+
+bool PtoPhotonStream::close() {
+    Impl& m = *p_;
+    if (!m.file.is_open()) return true;
+    const bool ok = checkpoint();
+    m.file.close();
+    return ok;
+}
+
 namespace {
 
 /*!
@@ -3266,6 +3602,25 @@ int write_tttr_into_pto(void*, const char* path_c, void* tttr, void* header_v) {
         b.name = "_pto_photons.number_of_micro_time_channels";
         b.i = static_cast<long long>(hdr->get_number_of_micro_time_channels());
         file.add_tag(b);
+
+        // Provenance: which container and record type the events were decoded
+        // from. PRD-034 makes this the fourth required tag, and it is not
+        // decoration -- a marker convention is a property of the source
+        // format, not of the events. PTU stores marker *indices* that decode
+        // to routing channels as 2^idx; HT3 stores the channel directly. A
+        // native table records neither in its columns, so without this an
+        // imaging measurement reconstructs to zero frames: the geometry is
+        // right, the markers are all present, and nothing knows how to read
+        // them. These configure nothing at read time except that convention.
+        b.name = "_pto_photons.source_container_type";
+        b.i = static_cast<long long>(hdr->get_tttr_container_type());
+        file.add_tag(b);
+        b.name = "_pto_photons.source_record_type";
+        b.i = static_cast<long long>(hdr->get_tttr_record_type());
+        file.add_tag(b);
+
+        // Open fidelity: everything else the instrument header said, verbatim.
+        write_source_header_tags(file, uid, hdr);
     }
 
     if (!file.commit()) {
@@ -3274,6 +3629,11 @@ int write_tttr_into_pto(void*, const char* path_c, void* tttr, void* header_v) {
     }
     file.close();
     return 1;
+}
+
+/// \see FileFormat::make_stream_writer. The caller takes ownership.
+void* make_pto_stream_writer(void*) {
+    return static_cast<TTTRStreamWriter*>(new PtoPhotonStream());
 }
 
 /*!
@@ -3339,9 +3699,16 @@ int read_pto_into_tttr(void*, const char* spec_c, void* tttr) {
     for (std::size_t i = 1; i < chosen.size(); i++) {
         TTTR next;
         if (!read_one(file, path, chosen[i], &next)) return 0;
-        // shift_macro_time: the next measurement continues after this one
-        // rather than restarting at zero.
-        out->append(&next, true, 0);
+        // An embedded vendor file restarts its macro clock at zero, so the
+        // next one has to continue after this one. A NATIVE table does not:
+        // `macro_time` is absolute by specification, which is the whole
+        // advantage of storing decoded events, and shifting it would move
+        // every photon after the first object. That is not a preference --
+        // an acquisition writes itself as a sequence of native chunks, and
+        // shifting them scatters one continuous measurement across a
+        // timeline it never occupied.
+        const bool native = lowered(chosen[i].encoding) == "dstore";
+        out->append(&next, !native, 0);
     }
     out->find_used_routing_channels();
     return 1;
@@ -3388,6 +3755,9 @@ struct RegisterPto {
         IORegistry::set_reader("PTO", &read_pto_into_tttr, nullptr);
         // Sets can_write with it, so the flag cannot outlive the writer.
         IORegistry::set_writer("PTO", &write_tttr_into_pto, nullptr);
+        // Separate capability: writable and streamable are different questions,
+        // and PTO is currently the only format that answers yes to the second.
+        IORegistry::set_stream_writer("PTO", &make_pto_stream_writer, nullptr);
     }
 };
 const RegisterPto register_pto;

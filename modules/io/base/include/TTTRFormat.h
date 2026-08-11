@@ -159,6 +159,24 @@ struct FileFormat {
     /// Passed back to \ref write_from. \see read_context.
     void* write_context = nullptr;
 
+    /*!
+     * \brief Make a \ref TTTRStreamWriter for this format, or return null.
+     *
+     * Set by the module that owns the format, like \ref read_into and
+     * \ref write_from. The return is a `tttrlib::io::TTTRStreamWriter*` the
+     * caller owns; this is C-shaped rather than returning a `unique_ptr`
+     * because it crosses a shared-library boundary.
+     *
+     * Null (the default) means the format cannot be streamed into, which is
+     * the honest answer for most vendor formats: they write a header
+     * containing the record count before any record, so the count has to be
+     * known first. \see can_stream
+     */
+    void* (*make_stream_writer)(void* context) = nullptr;
+
+    /// Passed back to \ref make_stream_writer.
+    void* stream_context = nullptr;
+
     /// Passed to \ref sniff_with_context. Owned by whoever set it.
     void* sniff_context = nullptr;
 
@@ -326,6 +344,18 @@ public:
     static bool set_writer(const std::string& name,
                            int (*write_from)(void*, const char*, void*, void*),
                            void* context = nullptr);
+
+    /*!
+     * \brief Attach a stream-writer factory. \see FileFormat::make_stream_writer
+     *
+     * Separate from \ref set_writer because the two capabilities are genuinely
+     * separate: a format can be writable and not streamable (most vendor
+     * formats), and answering "can I acquire into this?" with `can_write`
+     * would say yes and then fail at the first checkpoint.
+     */
+    static bool set_stream_writer(const std::string& name,
+                                  void* (*make)(void*),
+                                  void* context = nullptr);
 
     /*!
      * \brief Identify the format of \p filename: extension, then contents.

@@ -18,6 +18,7 @@ tttrlib_add_module(
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/IORegistry.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/FileIO.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRTags.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/TTTRStreamWriter.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
     EXTERNAL_DEPS tttrlib::json

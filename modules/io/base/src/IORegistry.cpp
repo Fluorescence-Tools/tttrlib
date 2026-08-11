@@ -341,6 +341,20 @@ bool IORegistry::set_writer(const std::string& name,
     return false;
 }
 
+bool IORegistry::set_stream_writer(const std::string& name,
+                                   void* (*make)(void*),
+                                   void* context) {
+    std::lock_guard<std::mutex> guard(table_mutex());
+    for (auto& f : table()) {
+        if (f.name == name) {
+            f.make_stream_writer = make;
+            f.stream_context = context;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IORegistry::set_sniffer(const std::string& name,
                              bool (*sniff)(const std::string&)) {
     std::lock_guard<std::mutex> guard(table_mutex());
