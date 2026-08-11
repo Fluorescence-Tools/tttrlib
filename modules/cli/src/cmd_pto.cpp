@@ -417,32 +417,23 @@ int tttrlib::cli::cmd_pto(int argc, char** argv) {
                         return 1;
                     }
                 } else {
-                    // disassemble everything, replicating PtoFile::disassemble's
-                    // naming so the progress count matches the object list.
-                    std::vector<std::string> used;
-                    std::vector<PtoObject> objs = file.objects();
-                    const std::string sep = dir.empty() ? "" : "/";
-                    progress.set_total(objs.size());
+                    // Delegate rather than replicate. This used to be its own
+                    // copy of disassemble's naming and loop, kept only so the
+                    // progress count matched the object list -- and that copy
+                    // silently missed the check that keeps an object named
+                    // "../x" from being written outside DIR. The callback
+                    // exists so there is one implementation, not two.
+                    progress.set_total(file.objects().size());
                     progress.begin();
-                    for (auto& o : objs) {
-                        std::string name = o.name;
-                        if (name.empty()) name = std::to_string(o.uid);
-                        if (std::find(used.begin(), used.end(), name) != used.end())
-                            name = std::to_string(o.uid) + "-" + name;
-                        used.push_back(name);
-                        std::string path = dir + sep + name;
-                        std::error_code ec;
-                        auto parent = std::filesystem::u8path(path).parent_path();
-                        if (!parent.empty()) {
-                            std::filesystem::create_directories(parent, ec);
-                        }
-                        if (!file.extract(o.uid, path)) {
-                            std::cerr << "error: extraction failed for uid " << o.uid
-                                      << ": " << file.error() << std::endl;
-                            return 1;
-                        }
-                        progress.tick();
-                        std::cout << path << "\n";
+                    const std::vector<std::string> paths =
+                            file.disassemble(dir, [&](const std::string& path) {
+                                progress.tick();
+                                std::cout << path << "\n";
+                            });
+                    if (paths.empty() && !file.objects().empty()) {
+                        std::cerr << "error: extraction failed: " << file.error()
+                                  << std::endl;
+                        return 1;
                     }
                     progress.finish();
                     if (dir.empty()) {

@@ -39,6 +39,93 @@ namespace io {
 
 namespace {
 
+// --- object names as paths --------------------------------------------------
+//
+// An object name doubles as a relative path: PtoFile::disassemble puts the
+// container back as a directory tree and the name carries the layout. That
+// makes a name an instruction to write somewhere, so it has to be one that
+// cannot point outside the directory it is given -- a container is an
+// interchange format, and disassemble is what a recipient runs on a file
+// somebody else wrote.
+//
+// Checked on the way in (emit_object) and again on the way out (disassemble).
+// Both, because the two guard different things: the writer keeps this
+// library from producing a container nobody can safely unpack, and the reader
+// is what actually stands between a hostile file and the filesystem. Neither
+// alone is enough.
+//
+// Rejected rather than sanitised. Rewriting "../x" to "x" would put the object
+// somewhere the container did not ask for, silently, and a caller cannot
+// predict where its data landed; refusing names the file and the object.
+
+/*!
+ * \brief Is `raw` usable as a relative path under a target directory?
+ *
+ * \param raw  the object name
+ * \param why  set to the reason when the answer is false
+ *
+ * Both separators are considered whatever the host is: a container written on
+ * one platform is disassembled on another, and `\` is an ordinary filename
+ * character on POSIX but a separator on Windows. A name that traverses only on
+ * Windows must still be refused on Linux, or the check is a no-op exactly where
+ * the file crosses machines.
+ */
+bool name_is_a_safe_relative_path(const std::string& raw, std::string* why) {
+    if (raw.empty()) { *why = "is empty"; return false; }
+
+    std::string s = raw;
+    for (std::size_t i = 0; i < s.size(); i++) if (s[i] == '\\') s[i] = '/';
+
+    if (s[0] == '/') { *why = "is an absolute path"; return false; }
+    // A drive-relative or drive-absolute name ("C:x", "C:\x"), and with the
+    // backslashes already folded, a UNC prefix arrives as a leading "//".
+    if (s.size() >= 2 && s[1] == ':' &&
+        ((s[0] >= 'A' && s[0] <= 'Z') || (s[0] >= 'a' && s[0] <= 'z'))) {
+        *why = "names a drive"; return false;
+    }
+
+    // Walk the components keeping the depth below the target. "a/../b" is fine
+    // -- it normalises to "b" and stays inside. What escapes is a ".." that
+    // takes the depth negative, so that is what is refused.
+    int depth = 0;
+    std::size_t i = 0;
+    while (i <= s.size()) {
+        std::size_t j = s.find('/', i);
+        if (j == std::string::npos) j = s.size();
+        const std::string part = s.substr(i, j - i);
+        if (part == "..") {
+            if (--depth < 0) {
+                *why = "walks out of the directory with '..'";
+                return false;
+            }
+        } else if (!part.empty() && part != ".") {
+            ++depth;
+        }
+        if (j == s.size()) break;
+        i = j + 1;
+    }
+    if (depth == 0) { *why = "names no file once it is normalised"; return false; }
+    return true;
+}
+
+/*!
+ * \brief The writers' shared refusal: empty when `name` may be written.
+ *
+ * There is more than one place that lays down an object header -- `emit_object`
+ * and `pto_add_store`, which does not go through it -- so the check and its
+ * wording live here rather than at each, where they would drift.
+ *
+ * An empty name is allowed: `disassemble` falls back to the uid for one.
+ */
+std::string why_name_cannot_be_written(const std::string& name) {
+    if (name.empty()) return std::string();
+    std::string why;
+    if (name_is_a_safe_relative_path(name, &why)) return std::string();
+    return "the object name \"" + name + "\" " + why +
+           "; a name is used as a relative path when the container is "
+           "disassembled, so it has to stay under the target directory";
+}
+
 // --- element ids ------------------------------------------------------------
 //
 // Borrowed from Matroska wherever Matroska already means what PTO needs, with
@@ -936,6 +1023,13 @@ struct PtoFile::Impl {
                               std::uint64_t rows = 0) {
         err.clear();
         if (!writable) { fail("opened read-only"); return 0; }
+        // A name is a relative path to disassemble, so refuse one that could
+        // not be unpacked safely rather than writing a container whose only
+        // honest reader is one that rejects it.
+        {
+            const std::string bad = why_name_cannot_be_written(name);
+            if (!bad.empty()) { fail(bad); return 0; }
+        }
 
         Slot s;
         s.meta.uid = unused_uid(slots);
@@ -1739,9 +1833,19 @@ PtoObject PtoFile::object(std::uint64_t uid) const {
 }
 
 std::uint64_t PtoFile::find(const std::string& name) const {
-    for (std::size_t i = 0; i < p_->slots.size(); i++)
+    // Backwards: slots are in write order, and the newest match is the answer.
+    // Reading forwards -- which this did -- returns the stalest object with the
+    // name, and does it to whoever reached for the most obvious call.
+    for (std::size_t i = p_->slots.size(); i-- > 0; )
         if (p_->slots[i].meta.name == name) return p_->slots[i].meta.uid;
     return 0;
+}
+
+std::vector<std::uint64_t> PtoFile::find_all(const std::string& name) const {
+    std::vector<std::uint64_t> out;
+    for (std::size_t i = 0; i < p_->slots.size(); i++)
+        if (p_->slots[i].meta.name == name) out.push_back(p_->slots[i].meta.uid);
+    return out;
 }
 
 std::uint64_t PtoFile::add(const std::string& kind, const std::string& encoding,
@@ -2087,14 +2191,40 @@ bool PtoFile::extract(std::uint64_t uid, const std::string& filename) const {
     });
 }
 
-std::vector<std::string> PtoFile::disassemble(const std::string& directory) const {
+std::vector<std::string> PtoFile::disassemble(
+        const std::string& directory,
+        const std::function<void(const std::string&)>& on_written) const {
     std::vector<std::string> written;
     std::vector<std::string> used;
+    p_->err.clear();
     const std::string sep = directory.empty() ? "" : "/";
+
+    // Every name is checked BEFORE anything is written. The writer refuses
+    // such a name, so reaching one here means the container came from
+    // somewhere else -- which is the case that matters, since a .pto is passed
+    // between people and this is what a recipient runs on one.
+    //
+    // The pre-pass is the point rather than an optimisation: checking inside
+    // the loop would refuse the hostile object correctly and still leave the
+    // objects before it on disk, so a caller who saw the failure would find a
+    // directory that is neither empty nor complete.
+    for (std::size_t i = 0; i < p_->slots.size(); i++) {
+        const PtoObject& o = p_->slots[i].meta;
+        if (o.name.empty()) continue;   // disassemble falls back to the uid
+        std::string why;
+        if (!name_is_a_safe_relative_path(o.name, &why)) {
+            p_->fail("object " + std::to_string(o.uid) + " is named \"" + o.name +
+                     "\", which " + why + "; it would be written outside " +
+                     directory + ", so nothing was disassembled");
+            return std::vector<std::string>();
+        }
+    }
+
     for (std::size_t i = 0; i < p_->slots.size(); i++) {
         const PtoObject& o = p_->slots[i].meta;
         std::string name = o.name;
         if (name.empty()) name = std::to_string(o.uid);
+
         // A name is a label, and two objects may share one. The first keeps it.
         if (std::find(used.begin(), used.end(), name) != used.end())
             name = std::to_string(o.uid) + "-" + name;
@@ -2110,6 +2240,7 @@ std::vector<std::string> PtoFile::disassemble(const std::string& directory) cons
 
         if (!extract(o.uid, path)) return std::vector<std::string>();
         written.push_back(path);
+        if (on_written) on_written(path);
     }
     return written;
 }
@@ -2292,6 +2423,12 @@ std::uint64_t pto_add_store(PtoFile& file, const std::string& kind,
     PtoFile::Impl& m = *file.p_;
     m.err.clear();
     if (!m.writable) { m.fail("opened read-only"); return 0; }
+    // This lays down its own header rather than going through emit_object, so
+    // it needs the name gate of its own. See why_name_cannot_be_written.
+    {
+        const std::string bad = why_name_cannot_be_written(name);
+        if (!bad.empty()) { m.fail(bad); return 0; }
+    }
 
     PtoFile::Impl::Slot s;
     s.meta.uid = unused_uid(m.slots);

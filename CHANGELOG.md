@@ -267,6 +267,119 @@
   constraint and there is no correctness reason to remove it.
 
 ### Fixed
+- **The SIMD capability constants told every binding the kernels were not
+  compiled in.** `tttrlib.TTTRLIB_COMPILE_NEON` read `0` on an arm64 build
+  whose NEON kernels were compiled, selected at runtime and measurably
+  running at 1.87×. The value never came from the compiler that built the
+  library: SWIG's own preprocessor evaluates `info.h` when it generates the
+  wrapper, defines neither `__aarch64__` nor `__x86_64__`, and so froze both
+  `TTTRLIB_COMPILE_NEON` and `TTTRLIB_COMPILE_AVX` at `0` **on every
+  platform**. The two spellings disagreed and the wrong one was the one a
+  person reaches for — `get_neon_enabled()` is a function and told the truth,
+  the constant beside it did not, so anyone asking "was this built with
+  SIMD?" concluded no and went looking for a build bug that did not exist.
+
+  The macros are now inside `#ifndef SWIG`, so no wrapper generator can see
+  them and no binding can read a fabricated answer; `get_neon_compiled()` and
+  `get_avx_compiled()` are new functions beside the existing `_enabled()`
+  pair, evaluated by the compiler that built the library. One guard covers
+  all four bindings — Python, R, Java and JavaScript each `%include
+  "info.h"`. `get_avx_enabled()` / `get_neon_enabled()` now route through the
+  new predicates instead of repeating the macro test, so compiled and enabled
+  cannot drift apart. Audited for the same shape elsewhere and there is none.
+  `test/python/misc/test_capability_report.py`.
+
+- **Python-only SWIG directives in the shared interface broke the R, Java and
+  JavaScript wrappers.** `%pythonappend` is an *unknown directive* to those
+  three backends, not a no-op, so wrapper generation stopped dead at the
+  first one — while `pip install -e .` kept succeeding, which is why it went
+  unnoticed. Introduced by the `TTTR.header` keep-alive fix, which put the
+  directive in `ext/python/TTTR.i` and `ext/python/CLSM.i`, both parsed by all
+  four backends. Now guarded with `#ifdef SWIGPYTHON`, the convention those
+  files already used elsewhere. `tools/check_swig_multilang.sh` is green on
+  all four again and is the check to run after touching any `ext/python/*.i`.
+  Note the underlying lifetime hole is still open in the other three
+  bindings; each needs its own equivalent.
+
+- **`fconv_simd` / `fconv_per_simd` are deprecated aliases, and now say so.**
+  They are one line each — a call to `fconv` / `fconv_per` — because the
+  runtime scalar/SIMD dispatch lives inside those functions, which already
+  pick the AVX or NEON kernel by CPU feature and problem size. So the `_simd`
+  name promised a choice the caller does not have, and measuring one against
+  the other (1.00× out to n=65536) was comparing a function with itself. The
+  header marks both `@deprecated`, the docstrings no longer repeat the
+  "AVX optimized, four lifetimes at once" claim that described `fconv`'s
+  internals rather than theirs, and the Python bindings raise a
+  `DeprecationWarning` naming the replacement. The two internal callers and
+  the two SWIG wrapper bodies now call `fconv` / `fconv_per` directly, so the
+  shims have no callers left in the library; they stay one release because
+  both names are exported and ChiSurf may call them.
+  `test/python/misc/test_capability_report.py::TestSimdAliasDeprecation`.
+
+- **`PtoFile::disassemble` no longer writes outside the directory it is
+  given.** An object name doubles as a relative path — that is the feature
+  that lets ChiSurf address a container like a folder — and it was never
+  checked, so a name containing `..` escaped the target. An object named
+  `../victim/keep.txt` overwrote a file outside the directory and the call
+  returned success with an empty `error()`. A `.pto` is an interchange
+  format, so `disassemble` is exactly what a recipient runs on a file
+  somebody else wrote.
+
+  Gated at both ends, because the two guard different things: the writer
+  (`emit_object` **and** `pto_add_store`, which lays down its own header and
+  would otherwise have been a hole) refuses to store such a name, and
+  `disassemble` re-checks **every name before writing anything**. The
+  pre-pass is the point — checking inside the loop refused the hostile
+  object correctly and still left the objects before it on disk, so a caller
+  who saw the failure found a directory neither empty nor complete. Names
+  are rejected, never sanitised: rewriting `../x` to `x` puts data somewhere
+  the container did not ask for and the caller cannot predict. `\` counts as
+  a separator on every platform, since a container written on Linux is
+  unpacked on Windows and `\` is an ordinary filename character on POSIX.
+  Legitimate nested names (`countrate_All 0.2000#30/bursts`, `a/b/c/d/deep`)
+  are unaffected. Now normative in `doc/formats/pto.rst`
+  (`_pto_object_names`); `test/python/test_pto_names.py`, which tests the
+  reader against a container byte-patched after writing, because the writer
+  will no longer produce one.
+
+  This was the direct consequence of the previous fix for "`disassemble`
+  does not create the directories an object's name implies": creating the
+  parents is what made a traversing name *succeed* where it used to fail.
+  That entry offered two options and the first was taken; the second —
+  reject a separator — would have closed both.
+
+- **`tttr pto extract FILE DIR` unpacks through that gate too.** It had its
+  own copy of `disassemble`'s naming and loop — kept, per its comment, "so
+  the progress count matches the object list" — so the library was fixed and
+  the command a recipient actually unpacks a container with still wrote
+  outside `DIR`. `disassemble` gained an optional per-path callback, the CLI
+  passes its progress tick through it, and the duplicate is gone: one
+  implementation, one gate. Extraction output is unchanged, including the
+  uid-prefixed name two objects sharing one get. Covered by tests that run
+  the built binary, because the defect was in the CLI and not in the library
+  it links.
+
+- **`PtoFile::find(name)` returns the newest match, not the oldest.** Several
+  objects may share a `(kind, name)` on purpose, since re-running an analysis
+  keeps the earlier result reachable — so the most obvious call in the API
+  was handing back the *stalest* analysis in the container, with nothing to
+  say anything newer existed. New `find_all(name)` returns every match in
+  write order for a reader that wants the history or wants to notice there is
+  more than one. `objects()` returning write order is now documented as
+  contract rather than left as an accident readers were quietly leaning on.
+  Both rules are normative in `doc/formats/pto.rst`
+  (`_pto_object_identity`), so two readers cannot disagree about which
+  result a container is showing.
+
+- **`TTTR(path).header` no longer segfaults — member proxies keep their
+  owner alive.** `get_header` returns a pointer into the TTTR; on a
+  temporary, the TTTR was collected at the end of the expression and the
+  header proxy read freed memory — ordinary-looking Python, a hard crash.
+  Every accessor of that shape now tags the owner onto the returned proxy:
+  the header, the microtime linearizer, and the CLSM frame/line accessors
+  (returned as tuples, so each element carries its owner).
+  `test_header_lifetime.py` pins the temporary-expression case.
+
 - **`pch_mixture` rejects a species count mismatch instead of reading past
   the end.** It indexed `avg_numbers` by `brightnesses`' length; the
   out-of-bounds read happened to hit zeroed heap, so a three-species

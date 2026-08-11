@@ -327,12 +327,43 @@ public:
     // -- objects ---------------------------------------------------------------
 
     int n_objects() const;
+    /*!
+     * \brief Every object, **in the order they were written**.
+     *
+     * The order is part of the contract, not an accident of the container
+     * layout: a name is a label rather than an identity, so re-running an
+     * analysis with a changed setting writes a second object with the same
+     * `(kind, name)` and the older one deliberately stays reachable. Write
+     * order is then the only thing that says which is which, and every reader
+     * needs it to mean the same thing -- see \ref find and \ref find_all.
+     */
     std::vector<PtoObject> objects() const;
     bool has(std::uint64_t uid) const;
     /// \throws std::invalid_argument if there is no such object.
     PtoObject object(std::uint64_t uid) const;
-    /// The first object with this name, or 0. Names are labels, not identities.
+    /*!
+     * \brief The **most recently written** object with this name, or 0.
+     *
+     * Names are labels, not identities: a container may hold several objects
+     * with one name, and this resolves the tie the way a caller asking for
+     * "the" object almost always means -- the newest, which is the result of
+     * the latest run.
+     *
+     * \note This returned the *oldest* match before 2026-08-11, which silently
+     *       handed back the stalest analysis in the container to whoever used
+     *       the most obvious call. Use \ref find_all to see every one, and
+     *       \ref objects for the full write order.
+     */
     std::uint64_t find(const std::string& name) const;
+    /*!
+     * \brief Every object with this name, oldest first, empty if none.
+     *
+     * What \ref find hides. A reader that wants to compare runs, or to notice
+     * that there is more than one, asks here rather than re-deriving
+     * "newest wins" from \ref objects -- which is how two readers come to
+     * disagree about which result a container is showing.
+     */
+    std::vector<std::uint64_t> find_all(const std::string& name) const;
 
     /*!
      * \brief Add an object, and return its UID.
@@ -492,9 +523,25 @@ public:
      * -- and when two share a name, the later ones get the UID as well, because
      * a name is a label and nothing stops two objects having the same one.
      *
-     * \return the paths written, in object order. Empty if nothing could be.
+     * A name is a relative path and is checked against \ref pto_object_names
+     * before **anything** is written: one object that would land outside
+     * `directory` fails the whole call, so a caller who sees the failure does
+     * not also have half a directory. This is the check that stands between a
+     * container somebody else wrote and the filesystem.
+     *
+     * \param on_written called with each path as it is written, for a caller
+     *        that wants to report progress. Optional -- and the reason this
+     *        exists: the CLI used to replicate the naming and the loop to get
+     *        its progress ticks, which is how it came to be missing the check
+     *        above. A second implementation is a second place to fix.
+     *
+     * \return the paths written, in object order. Empty if nothing could be;
+     *         see \ref error for why.
      */
-    std::vector<std::string> disassemble(const std::string& directory) const;
+    std::vector<std::string> disassemble(
+            const std::string& directory,
+            const std::function<void(const std::string&)>& on_written =
+                    std::function<void(const std::string&)>()) const;
 
     // -- metadata ---------------------------------------------------------------
 

@@ -708,6 +708,62 @@ the elements themselves:
 - **A directory means everything under it**, each object named by its path
   relative to that directory (``raw/m001.ptu``), so two files of the same name
   in different folders stay two files and the directory comes back as it was.
+
+.. _pto_object_names:
+
+An object name is a relative path, and only that
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Because a name carries the layout, unpacking a container writes to the path the
+name spells. That makes a name an instruction to write somewhere, so the
+following is **normative** for both a writer and a reader:
+
+An object name **MUST** be a relative path that stays under the directory it is
+unpacked into. A name **MUST NOT**
+
+- begin with ``/``,
+- contain a ``..`` component that takes it above the target directory, or
+- carry a drive letter (``C:``) or UNC prefix.
+
+Both ``/`` and ``\`` **MUST** be treated as separators when this is checked,
+whatever the host platform. A container written on one system is unpacked on
+another, and ``\`` is an ordinary filename character on POSIX — a reader that
+checks only its own platform's separator has no check at all on the files that
+actually travel.
+
+A writer **MUST** refuse to store an object under such a name. A reader
+unpacking a container **MUST** verify every name **before writing anything**
+and refuse the whole operation if any one fails; it **MUST NOT** unpack the
+acceptable objects and skip the rest, which leaves a directory that looks
+complete and is not. A reader **MUST NOT** silently rewrite an offending name
+to a safe one: that puts the object somewhere the container did not ask for
+and the caller cannot predict.
+
+Both halves are required, and neither substitutes for the other. The writer's
+rule keeps this specification from describing containers nobody can safely
+unpack; the reader's rule is what stands between a hostile file and the
+filesystem, and a ``.pto`` is an interchange format — being passed between
+people is the point of it.
+
+.. _pto_object_identity:
+
+A name is a label, not an identity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Several objects **MAY** share one ``(kind, name)``, and this is ordinary rather
+than exceptional: re-running an analysis with a changed setting writes a second
+object under the same name, and the earlier result deliberately stays
+reachable.
+
+A reader therefore needs an order, and the container gives one: **objects are
+enumerated in the order they were written**, and this ordering is normative. A
+writer appends; it **MUST NOT** reorder existing objects when adding one.
+
+Where a reader must resolve a name to a single object, **the most recently
+written one wins**. That is what a caller asking for "the" object means, and
+fixing it here is the point of stating it at all — without a rule in the
+specification each reader invents its own, they disagree, and a reader that
+guesses differently shows old numbers with nothing on screen to say so.
 - **A ``.set`` is tied to the ``.spc`` beside it** with ``pto.sidecar_of``
   (see :ref:`pto_provenance`), which is what makes the pair readable
   afterwards: a Becker & Hickl reader handed the ``.spc`` alone silently reads
