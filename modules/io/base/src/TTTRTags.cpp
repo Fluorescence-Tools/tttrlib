@@ -70,13 +70,23 @@ nlohmann::json get_tag(
         const std::string &name,
         int idx
 ){
-    for (const auto& it : json_data["tags"].items()) {
-        if(it.value()["name"] == name){
-            if((idx < 0) || (idx == it.value()["idx"])){
+    // find(), not json_data["tags"]: the CONST operator[] does not insert, and
+    // reading a key that is not there is undefined -- it only asserts when
+    // NDEBUG is off, so a release build walks off into whatever the value
+    // union happens to hold and segfaults. A header with no tags at all is
+    // ordinary: a container streamed to disk, or an .spc with no sidecar.
+    const auto tags = json_data.find("tags");
+    if (tags != json_data.end() && tags->is_array()) {
+        for (const auto& it : tags->items()) {
+            const nlohmann::json& row = it.value();
+            // value() for the same reason, one level down: a row that is
+            // missing a field is a malformed tag, not a crash.
+            if (!row.is_object() || row.value("name", std::string()) != name) continue;
+            if((idx < 0) || (idx == row.value("idx", -1))){
 if (is_verbose()) {
-                std::clog << "-- GET_TAG:" << name << ":" << it.value() << std::endl;
+                std::clog << "-- GET_TAG:" << name << ":" << row << std::endl;
 }
-                return it.value();
+                return row;
             }
         }
     }
