@@ -46,20 +46,32 @@ exact while scalars rounded, and these typemaps were the fix), and for these
 methods it is not there. A caller who follows the file's own documentation
 gets an exception.
 
-**What is NOT established**, and would decide the fix:
+**2026-08-11, cause found — it is include ORDER, and the file that causes it
+warns about exactly this for two other languages.** Three calls settle it:
 
-* whether this affects *every* `uint64_t` parameter or only those on
-  **overloaded** methods. Both functions above are overloaded — each has a
-  defaulted `weight`, so SWIG emits several forms — and I could not find a
-  genuinely single-form `uint64_t` scalar entry point to separate the two.
-  SWIG-JS dispatches overloads by calling each candidate and catching
-  `Napi::TypeError`, so a typecheck that is correct in isolation can still
-  lose there.
-* whether the `%typemap(typecheck)` is being applied at all for these
-  declarations. `uint64_t` is spelled unqualified in the streaming headers,
-  and `<stdint.i>` is included by `Sim.i`, which comes **before** `Streaming.i`
-  in the JavaScript list — the same include-order sensitivity `Sim.i`'s own
-  comment warns about for R and Java.
+| Declared as | Interface included | BigInt |
+|---|---|---|
+| `long long` (`PairInt64` ctor) | early | **accepted** |
+| `std::uint64_t` (`pto_mark_sidecar`) | early, before `Sim.i` | **accepted** |
+| `uint64_t` (`push_photon`) | after `Sim.i` | **rejected** |
+
+So it is neither the spelling on its own — `std::uint64_t` works — nor
+overloading, since `PairInt64`'s accepting form is itself an overload. What
+separates the rows is position: **`Sim.i` is the only interface that includes
+`<stdint.i>`, and every interface parsed after it loses the `uint64_t` BigInt
+input typemap.** `jsarrays.i` registers `%typemap(in) uint64_t = unsigned long
+long;` by that name; once `<stdint.i>` has redefined `uint64_t` as its own
+typedef, SWIG resolves the parameter past the name the typemap is keyed to.
+
+`Sim.i`'s own comment says it must stay last because *"including it earlier
+changes how SWIG resolves int64_t in the R and Java wrappers -- differently
+across SWIG versions"*. That constraint is real, so the repair is not simply
+moving it: either re-register the fixed-width typemaps after `Sim.i` in
+`ext/js/tttrlib.i`, or move `Streaming.i` above `Sim.i` (Python's order has it
+below, and the parity checker compares membership rather than order, so that
+is allowed but should be commented). Whoever fixes it should check the same
+three-row table for R and Java, which have the identical `<stdint.i>` position
+and, per that comment, a version-dependent answer.
 
 **Not caused by exposing Streaming to JavaScript**, only surfaced by it: the
 behaviour is a property of `jsarrays.i` and SWIG's dispatcher, and any
