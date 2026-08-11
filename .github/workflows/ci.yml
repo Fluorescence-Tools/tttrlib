@@ -1031,18 +1031,25 @@ jobs:
           cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
           for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
-          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
+          python -m pip install pytest pytest-reportlog scipy click click-didyoumean tqdm matplotlib scikit-image
         shell: cmd
       - name: Test
         run: |
           cd D:\a\tttrlib\tttrlib
-          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          python run_pytest_windows.py -v --tb=short --report-log=pytest-report.jsonl --exitcode-file=pytest_exitcode.txt
           set /p PYTEST_EXIT=<pytest_exitcode.txt
           echo Pytest exited with: %PYTEST_EXIT%
           exit %PYTEST_EXIT%
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+      # The run reaches 100%, returns 1, and prints no FAILURES section at all
+      # on this platform, so the tracebacks come from the report log instead --
+      # it is written one line per test as the test finishes.
+      - name: Show the failures the terminal did not
+        if: always()
+        run: python tools/print_report_log.py pytest-report.jsonl
+        shell: cmd
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 
@@ -1328,20 +1335,27 @@ jobs:
       - name: Create test environment and install
         run: |
           call conda create -n test python=%PYTHON_VERSION% -y -c conda-forge
-          call conda install -n test -y -c D:\a\tttrlib\tttrlib\conda-bld -c conda-forge python=%PYTHON_VERSION% tttrlib pytest scipy
+          call conda install -n test -y -c D:\a\tttrlib\tttrlib\conda-bld -c conda-forge python=%PYTHON_VERSION% tttrlib pytest pytest-reportlog scipy
         shell: cmd
         env:
           PYTHON_VERSION: ${{ matrix.python }}
       - name: Run tests
         run: |
           call conda activate test
-          python run_pytest_windows.py -v --tb=short --exitcode-file=pytest_exitcode.txt
+          python run_pytest_windows.py -v --tb=short --report-log=pytest-report.jsonl --exitcode-file=pytest_exitcode.txt
           set /p PYTEST_EXIT=<pytest_exitcode.txt
           echo Pytest exited with: %PYTEST_EXIT%
           exit %PYTEST_EXIT%
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+      # The run reaches 100%, returns 1, and prints no FAILURES section at all
+      # on this platform, so the tracebacks come from the report log instead --
+      # it is written one line per test as the test finishes.
+      - name: Show the failures the terminal did not
+        if: always()
+        run: python tools/print_report_log.py pytest-report.jsonl
+        shell: cmd
 
   # ── Bioconda build test (linux only, dev branch) ─────────────────────────
   # Clones the OFFICIAL bioconda-recipes, then patches only the version, source
