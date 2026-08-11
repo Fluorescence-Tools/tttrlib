@@ -61,20 +61,25 @@ bool record_stream_supported(int container_type, int record_type) {
         case FL_ITT1_CONTAINER:
             return false;
         case SM_CONTAINER:
-            // "Header plus records" is not one shape, and this is where that
-            // bites. A PTU header is a tag list a reader walks to a terminator,
-            // so an extra field is harmless; an SM header is a FIXED sequence
-            // of fields, and the header this writer produces came out 280 bytes
-            // where the reader parses 176 -- the payload was then offset by 104
-            // and the file read as zero events.
+            // Still open. An SM header is a positional struct, and the file
+            // this writer produces carries 280 bytes before the records where
+            // a whole-file TTTR.write of the same events and the same header
+            // carries 176 -- so the payload is offset by 104, does not divide
+            // by the 12-byte record, and the file reads as zero events.
+            //
+            // Narrowed, and NOT where it first looked: passing the caller's
+            // header verbatim instead of a copy, and skipping
+            // ensure_minimal_tags entirely, both leave it at 280. The extra
+            // bytes are therefore written by the streaming path itself rather
+            // than being header content, which is where the next attempt
+            // should start.
             //
             // Declined rather than left to write a file its own reader cannot
-            // parse: a named refusal is recoverable and a silently unreadable
-            // acquisition is not. Whole-file TTTR.write to .sm is unaffected.
-            // See BUGS.md; closing it means building the header exactly as
-            // TTTR::write does for this container rather than running
-            // ensure_minimal_tags over a copy.
+            // parse: a named refusal is recoverable, a silently unreadable
+            // acquisition is not. Whole-file TTTR.write to .sm is unaffected
+            // and exact. See BUGS.md.
             return false;
+
         default:
             break;
     }
@@ -104,6 +109,11 @@ struct RecordStreamWriter::Impl {
     /// How long the header came out, so a regenerated one can be checked
     /// against it before being written over the records.
     std::size_t header_bytes = 0;
+
+    /// True when the header is a positional struct rather than a tag list, so
+    /// it must be written exactly as the caller supplied it and carries no
+    /// record count to patch. \see open_target
+    bool fixed_layout = false;
 };
 
 RecordStreamWriter::RecordStreamWriter(int container_type, int record_type)
@@ -152,9 +162,18 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
     m.header = TTTRHeader(*header);
     m.header.set_tttr_container_type(m.container);
     m.header.set_tttr_record_type(m.record);
-    // The count is unknown at open. Zero is the honest placeholder and is
-    // patched at every checkpoint; see the class documentation.
-    TTTRHeader::ensure_minimal_tags(&m.header, m.container, 0);
+    // A FIXED-LAYOUT header is a sequence of fields the reader parses
+    // positionally, so nothing may be added to it -- and nothing needs to be,
+    // since there is no record-count tag to fill in. Only a tag-list header
+    // (PTU and friends) gets the minimal tags, and only it can carry the
+    // placeholder count that patch_record_count later corrects.
+    m.fixed_layout = (m.container == SM_CONTAINER ||
+                      m.container == CZ_CONFOCOR3_CONTAINER);
+    if (!m.fixed_layout) {
+        // The count is unknown at open. Zero is the honest placeholder and is
+        // patched at every checkpoint; see the class documentation.
+        TTTRHeader::ensure_minimal_tags(&m.header, m.container, 0);
+    }
     if (m.container == PQ_PTU_CONTAINER) {
         // json_data() is protected, so this goes through the public JSON.
         nlohmann::json j = nlohmann::json::parse(m.header.get_json(), nullptr, false);
@@ -168,9 +187,15 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
 
     // TTTR::write_header is what every whole-file write uses, so a streamed
     // file and a written one have byte-identical headers.
+    //
+    // For a fixed-layout container the CALLER'S header goes out verbatim: a
+    // copy of a TTTRHeader does not reproduce it field for field, and for a
+    // positional header that is not cosmetic -- the reader parses by offset,
+    // so a header a few fields longer moves the payload and the file reads as
+    // zero events.
     TTTR probe;
     std::string fn = filename;
-    probe.write_header(fn, &m.header);
+    probe.write_header(fn, m.fixed_layout ? header : &m.header);
 
     m.fp = std::fopen(filename.c_str(), "ab");
     if (m.fp == nullptr) return fail("cannot open " + filename + " for writing");
@@ -276,6 +301,10 @@ bool RecordStreamWriter::write_chunk(const std::uint64_t* macro_times,
 bool RecordStreamWriter::patch_record_count() {
     Impl& m = *p_;
     if (m.header_bytes == 0) return true;
+    // A fixed-layout header states no record count: the reader derives it from
+    // what is left of the file, so there is nothing to correct and rewriting
+    // the header would only risk the offset the reader depends on.
+    if (m.fixed_layout) return true;
 
     TTTRHeader updated(m.header);
     {
