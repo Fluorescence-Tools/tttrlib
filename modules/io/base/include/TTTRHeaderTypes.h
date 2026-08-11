@@ -221,7 +221,13 @@ typedef union bh_spc132_header{
     struct{
         unsigned macro_time_clock :24;   // the resolution of the macro time
         unsigned unused           :7;    // unclear usage
-        bool invalid              :1;    // true if dataset is marked as invalid
+        // `unsigned`, not `bool`: MSVC starts a NEW storage unit when a
+        // bitfield's declared type changes, so a trailing bool bitfield makes
+        // this union 8 bytes there while gcc and clang keep it at 4. The
+        // readers fread() sizeof(header) bytes, so on Windows the header read
+        // swallowed the first record and every bit here came from the wrong
+        // place. Same 32 bits, one storage unit, on every compiler.
+        unsigned invalid          :1;    // true if dataset is marked as invalid
     } bits;
 } bh_spc132_header_t;
 
@@ -257,7 +263,13 @@ typedef union bh_spcqc_header{
         unsigned markers          :1;    // written in imaging mode
         unsigned raw              :1;    // always 1 for QC .spc files
         unsigned n_routing_bits   :4;
-        bool invalid              :1;    // true if dataset is marked as invalid
+        // `unsigned`, not `bool`: MSVC starts a NEW storage unit when a
+        // bitfield's declared type changes, so a trailing bool bitfield makes
+        // this union 8 bytes there while gcc and clang keep it at 4. The
+        // readers fread() sizeof(header) bytes, so on Windows the header read
+        // swallowed the first record and every bit here came from the wrong
+        // place. Same 32 bits, one storage unit, on every compiler.
+        unsigned invalid          :1;    // true if dataset is marked as invalid
     } bits;
 } bh_spcqc_header_t;
 
