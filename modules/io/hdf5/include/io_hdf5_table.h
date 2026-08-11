@@ -156,8 +156,12 @@ enum class Hdf5WriteMode {
  * current.
  *
  * Under \ref Hdf5WriteMode::Update every OTHER group in the file is left alone,
- * so a file is built one group at a time. Writing the root replaces the file's
- * whole content, because the root is a group like any other.
+ * so a file is built one group at a time. Writing the root would replace the
+ * file's whole content, because the root is a group like any other -- and the
+ * root is also the default, so that is the one case where the rule destroys a
+ * file nobody asked to destroy. `Update` therefore REFUSES a root write when
+ * the file already holds groups, and names them; write beside them by naming a
+ * group, or say \ref Hdf5WriteMode::Truncate to mean "replace the file".
  *
  * A write never half-happens: it goes to a temporary and is moved into place, so
  * a failure leaves what was there before readable and unchanged.

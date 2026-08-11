@@ -1321,9 +1321,33 @@ bool write_hdf5_table(const std::string& filename, const data::DataStore& store,
         return false;
     }
 
-    // The root is replaced wholesale either way -- writing a group replaces
-    // everything under it, and everything is under the root.
-    if (path.empty()) return replace_whole_file(filename, store, compression);
+    // Writing a group replaces everything under it, and everything is under
+    // the root -- so a root write replaces the file. That rule is right, but
+    // the root is also the DEFAULT, so `write_hdf5(path, table)` against a
+    // file built one group at a time destroyed all of them and said nothing.
+    // Update refuses instead, the same way it already refuses a file it did
+    // not write; Truncate still means "replace the file".
+    if (path.empty()) {
+        if (mode == Hdf5WriteMode::Update && present) {
+            // Only the groups that are NOT the root: a file whose tables all
+            // sit at the root has nothing to lose, and hdf5_table_groups()
+            // lists the root itself among them.
+            std::vector<std::string> groups;
+            for (const std::string& g : hdf5_table_groups(filename))
+                if (!normalise_group(g).empty()) groups.push_back(g);
+            if (!groups.empty()) {
+                std::cerr << "hdf5 table: writing the root of " << filename
+                          << " would remove the " << groups.size()
+                          << " group(s) already in it (" << groups.front()
+                          << (groups.size() > 1 ? ", ..." : "")
+                          << "); name a group to write beside them, or pass "
+                          << "Hdf5WriteMode::Truncate to replace the file"
+                          << std::endl;
+                return false;
+            }
+        }
+        return replace_whole_file(filename, store, compression);
+    }
 
     const bool keep = mode == Hdf5WriteMode::Update && present;
     const hid_t file = keep

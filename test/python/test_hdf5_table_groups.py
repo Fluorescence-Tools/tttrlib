@@ -109,15 +109,35 @@ def test_truncate_leaves_only_what_was_just_written(tmp_path):
         tttrlib.read_hdf5(path, "/meta")
 
 
-def test_writing_the_root_replaces_the_whole_file(tmp_path):
-    """The root is a group like any other, and writing a group replaces
-    everything under it."""
+def test_writing_the_root_refuses_to_drop_the_groups_that_are_there(tmp_path):
+    """The root is a group like any other, so writing it replaces the file --
+    and the root is the default, so that rule used to destroy a file built one
+    group at a time without a word. Update refuses and says what it would have
+    removed; the file is untouched."""
     path = str(tmp_path / "root.h5")
     tttrlib.write_hdf5(path, table(4), group="/meta")
-    assert tttrlib.write_hdf5(path, table(8))
+
+    assert tttrlib.write_hdf5(path, table(8)) is False
+    assert tttrlib.read_hdf5(path, "/meta").n_rows() == 4
+
+
+def test_truncate_is_how_you_mean_to_replace_the_whole_file(tmp_path):
+    """The escape hatch from the refusal above, and it still replaces."""
+    path = str(tmp_path / "root.h5")
+    tttrlib.write_hdf5(path, table(4), group="/meta")
+
+    assert tttrlib.write_hdf5(path, table(8), mode=tttrlib.Hdf5WriteMode_Truncate)
     assert tttrlib.read_hdf5(path).n_rows() == 8
     with pytest.raises(Exception):
         tttrlib.read_hdf5(path, "/meta")
+
+
+def test_the_root_of_a_file_with_no_groups_is_written_as_before(tmp_path):
+    """Nothing to lose, nothing to refuse."""
+    path = str(tmp_path / "flat.h5")
+    assert tttrlib.write_hdf5(path, table(4))
+    assert tttrlib.write_hdf5(path, table(8))
+    assert tttrlib.read_hdf5(path).n_rows() == 8
 
 
 def test_update_refuses_a_file_that_is_not_hdf5_and_leaves_it_alone(tmp_path):
