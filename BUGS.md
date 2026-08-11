@@ -3,6 +3,48 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## Streaming into `.sm` writes a header the `.sm` reader does not parse back
+
+**2026-08-11.** `RecordStreamWriter` produces an SM file whose header is
+**280 bytes on disk where the reader parses 176**, so the payload is offset by
+104 bytes, does not divide by the 12-byte record, and the file reads as **zero
+events** — `Error: Data size is not a multiple of record size.`
+
+A whole-file `TTTR.write` of the same events to `.sm` is correct (176-byte
+header, 50,000 events back by name), so this is specific to the streaming path.
+
+```python
+w = tttrlib.RecordStreamWriter(7)          # SM_CONTAINER
+w.create("streamed.sm", src.header, "run")
+...                                        # 50,000 events in 5 chunks
+w.close()
+len(tttrlib.TTTR("streamed.sm"))           # 0     (whole-file write gives 50,000)
+```
+
+**Why**, and it is a design mismatch rather than an off-by-one: an SM header is
+a **fixed sequence of fields**, not a tag list. `RecordStreamWriter::open_target`
+copies the caller's header and runs `TTTRHeader::ensure_minimal_tags` before
+`write_header`, and for SM that produces fields the writer emits and the reader
+does not expect — `channel_labels` is variable-length, which is the most likely
+source of the 104 bytes.
+
+Compounding it, the record count cannot be patched: `patch_record_count`
+regenerates the header and writes it back **only if it came out the same
+length**, which is the right guard, and here it presumably declines — so the
+count stays at its placeholder even if the offset were fixed.
+
+**What to do.** Either build the streamed header exactly as `TTTR::write` builds
+it for this container (same tags, same order, no `ensure_minimal_tags` for
+fixed-layout formats), or give a fixed-layout format its own `open_target` that
+writes the header the reader defines. The general lesson for
+`RecordStreamWriter` is that "header plus records" is not one shape: PTU is a
+tag list a reader walks to a terminator, SM is a struct, and only the first
+tolerates extra fields.
+
+**Affects only `.sm`.** PTU, HT3 and PTO stream exactly; SPC-130, SPC-QC and
+CZ-RAW stream to the same result as a whole-file write. SPC-600/256 and /4096
+have the separate detection defect recorded above.
+
 ## PARTLY FIXED — A file tttrlib wrote is not recognised by tttrlib, and opening it returns zero events instead of failing
 
 > **`.sm` fixed 2026-08-11**, by the session that filed this. Three separate
