@@ -55,6 +55,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [034](PRD-034-pto-native-tttr-sink.md) | .pto as its own TTTR sink — native photon tables + header definitions | 🔵 Proposed |
 | [035](PRD-035-generic-log-domain-hmm-lattice.md) | Generic log-domain HMM lattice (forward / backward+xi / Viterbi) over a caller-supplied frame-probability matrix | 🔵 Proposed |
 | [036](PRD-036-2d-flc-photon-kernels.md) | 2D-FLC photon kernels — the fluorescence-decay correlation (2D-FDC) pass | 🔵 Proposed |
+| [037](PRD-037-kernels-to-finish-chisurfs-numba-retirement.md) | Everything tttrlib needs so ChiSurf can drop numba entirely — one list, not per-file round trips | 🔵 Proposed |
 
 **019** is yellow rather than green for one reason: criterion 21 asks for the
 same assertions from Python, R, Java and JavaScript in the PRD-015 conformance
