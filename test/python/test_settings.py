@@ -91,6 +91,35 @@ def _expand_settings_paths(d: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
+def build_ext_for_this_interpreter() -> str | None:
+    """Return ``build/ext`` when it holds an extension *this* Python can import.
+
+    Tests that spawn a subprocess prepend the development build to its
+    ``PYTHONPATH`` so a stale install in site-packages cannot shadow it. But
+    ``build/ext`` outlives the interpreter it was built against: a wrapper left
+    beside a `_tttrlib.cpython-310-*.so` makes every such subprocess die with
+    ``No module named '_tttrlib'`` under 3.12 — which reads as a broken install
+    rather than as a stale build directory, and took 28 tests red with it.
+    `conftest.py` already guards its own ``sys.path`` insert this way; this is
+    the same check, in one place, for the subprocess helpers.
+
+    Returns
+    -------
+    str or None
+        The directory to prepend, or ``None`` when there is nothing usable.
+    """
+    import importlib.machinery
+
+    build_ext = _REPO_ROOT / "build" / "ext"
+    if not build_ext.is_dir():
+        return None
+    usable = any(
+        (build_ext / f"_tttrlib{suffix}").exists()
+        for suffix in importlib.machinery.EXTENSION_SUFFIXES
+    )
+    return str(build_ext) if usable else None
+
+
 # Public: settings dict with expanded absolute paths for convenience
 settings: Dict[str, Any] = _expand_settings_paths(_RAW_SETTINGS)
 

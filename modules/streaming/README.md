@@ -9,10 +9,17 @@ Online analysis consumers that accept photons one at a time (or in small batches
 - **`StreamingBurstDetector`**: Sliding-window burst search. Tracks the last m photons in a ring buffer (memory is O(m), not O(N)) and detects burst boundaries as photons arrive. It implements the *same* criterion as `TTTR::burst_search_sliding_window` — a window of m photons spanning no more than T — and returns the same boundaries on the same photons, asserted index for index in `test/python/streaming/test_streaming_burst_detector.py`. The comparison is on the window's span, not on a count rate: `m / span` needs a special case at span zero, and the obvious guard reports m coincident photons (the highest rate there is) as no burst.
 - **`StreamingDecayHistogram`**: Incremental per-channel fluorescence decay histogram. Accumulates microtimes into bins, supporting multiple routing channels (parallel/perpendicular). Query the histogram at any time for online model fitting.
 - **`StreamingPhasor`**: Incremental phasor (g, s) computation for FLIM. Accumulates cos/sin of the modulated microtime signal per photon. Enables real-time phasor plots.
+- **`StreamingIntensityTrace`**: Incremental MCS / intensity trace — the streaming twin of the batch free function `compute_intensity_trace`, on the same macro-time-0-aligned grid, so the two agree bin for bin. `set_max_bins(m)` keeps only the newest `m` bins (memory O(1) in run length) while `first_bin_index()` keeps the retained window's absolute place on the time axis. This is what a live acquisition displays; re-running the batch function each refresh bins *every photon of the run* to show its tail, which is O(N) per refresh and O(N²) over a measurement.
 
 ## Design Principles
 
-1. **One photon at a time**: Every class has a `push_photon(...)` method. No need to buffer the full acquisition.
+1. **One photon at a time — but one *chunk* per language boundary crossing.**
+   Every class has a `push_photon(...)` method and a `push_photons(ptr, n)`
+   that loops in C++. From Python use `push_np(array)`, which is one call into
+   C++ for the whole chunk. Looping in Python over `push_photon` measures
+   **1.13 µs/photon** — 30× a numpy histogram of the same photons, enough to
+   eat half a core on a 100 kHz acquisition — and until 2026-08-11 that is what
+   `push_np` did, because no numpy typemap reached the array overloads.
 2. **Query at any time**: All results are available incrementally — call `get_correlation()`, `get_bursts()`, etc. whenever you want.
 3. **Header-only, std-only C++17**: No external dependencies, no compilation step.
 4. **Stateful but resettable**: Each consumer maintains internal state. Call `clear()` to reset between acquisitions.
@@ -22,10 +29,10 @@ Online analysis consumers that accept photons one at a time (or in small batches
 ```python
 import tttrlib
 
-# Live FCS correlation
+# Live FCS correlation — one call per chunk, not one per photon
 corr = tttrlib.StreamingCorrelator(16, 25, 1.0)   # n_bins, n_casc, resolution
-for t in photon_times:
-    corr.push_photon(int(t))
+for chunk in photon_chunks:
+    corr.push_np(chunk)                           # cross-correlate: push_np(mt, w, ch)
 corr.flush()                                      # emit the last partial bin
 x = corr.get_x_axis()                             # n_casc * n_bins + 1 lags
 g = corr.get_correlation_normalized()             # same length
@@ -44,9 +51,15 @@ decay = hist.histogram  # (n_channels, n_bins) NumPy array
 
 # Live FLIM phasor
 phasor = tttrlib.StreamingPhasor(frequency_MHz=80, n_microtime_bins=4096, microtime_resolution=1e-9)
-for mt in microtimes:
-    phasor.push_photon(mt)
+phasor.push_np(microtimes)
 g, s, n = phasor.phasor
+
+# Live MCS trace showing the last second at 1 ms resolution
+mcs = tttrlib.StreamingIntensityTrace(1e-3, 50e-9)   # bin width, macro-time clock
+mcs.set_max_bins(1000)
+for chunk in photon_chunks:
+    mcs.push_np(chunk)
+x, y = mcs.x, mcs.y                                  # bin starts [s], counts
 ```
 
 ## Batch APIs

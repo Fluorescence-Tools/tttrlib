@@ -3,85 +3,19 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-## Two `Streaming.i` files: the module's is shadowed, so edits to it do nothing
+## FIXED — A wall-clock assertion in the unit suite fails when the machine is busy
 
-**2026-08-11.** `Streaming.i` exists twice —
-`modules/streaming/include/Streaming.i` (215 lines, six classes) and
-`ext/python/Streaming.i` (125 lines, four classes, last touched by
-`ac3cadda2 refactor(modules): relocate the decay, imaging and test trees`).
-It is the **only** duplicated interface basename in the tree; every other
-module's `.i` is unique:
-
-```
-for f in ext/python/*.i; do b=$(basename $f); find modules -name "$b"; done
-# -> modules/streaming/include/Streaming.i, and nothing else
-```
-
-`ext/python/tttrlib.i:220` says `%include "Streaming.i"`, and SWIG resolves a
-quoted include from **the including file's own directory first** — so
-`ext/python/Streaming.i` wins and the module's copy is dead code. The module
-declares `SWIG_INTERFACES Streaming.i` in its `CMakeLists.txt` and
-`tttrlib_add_module` dutifully stores it in
-`TTTRLIB_MODULE_streaming_SWIG`, but grepping the tree finds **no reader of
-that property** — nothing ever puts the module's interface on SWIG's path.
-
-This is not a stale build. The generated wrapper was produced at **04:43:03**,
-*after* `modules/streaming/include/Streaming.i` (04:40) and
-`StreamingIntensityTrace.h` (04:39), and the class is simply absent from it
-while its four siblings are present:
-
-```
-W=build/cp310-cp310-macosx_26_0_arm64/ext/CMakeFiles/tttrlib.dir/tttrlibPYTHON_wrap.cxx
-grep -c StreamingCorrelator      $W   # 170
-grep -c StreamingIntensityTrace  $W   # 0
-```
-
-Three things are consequently untrue of the built library, each of which the
-tree already documents as true:
-
-1. **`StreamingIntensityTrace` does not exist.** `modules/streaming/README.md`
-   documents it, `modules/streaming/CMakeLists.txt` lists it among the
-   module's six consumers, and `test/python/streaming/test_streaming_
-   intensity_trace.py` tests it — but
-   `hasattr(tttrlib, "StreamingIntensityTrace")` is `False`, so that test
-   file cannot pass.
-2. **The `push_np` numpy-typemap fix is not in effect.** The shadowed file
-   carries the `%apply` typemaps and explains why they matter: looping in
-   Python over `push_photon` measures 1.13 µs/photon, "30× a numpy histogram
-   of the same photons, and enough to eat half a core on a 100 kHz live
-   acquisition". The live file still has the Python `for` loop. The README's
-   "until 2026-08-11 that is what `push_np` did" describes a fix the built
-   module never received.
-3. **`push_np(macro_times, weights)` raises.** The live file's loop does
-   `self.push_photon(int(t), float(weights))` — passing the whole array
-   instead of `weights[i]`:
-
-```python
-import numpy as np, tttrlib
-c = tttrlib.StreamingCorrelator(16, 4, 1.0)
-c.push_np(np.arange(1, 6, dtype=np.uint64), np.ones(5))
-# TypeError: only length-1 arrays can be converted to Python scalars
-```
-
-   The unweighted `push_np(mt)` works, which is why this has survived: every
-   test and example takes the default path.
-
-The fix is to delete `ext/python/Streaming.i` and make the module's copy
-reachable — either by putting module include dirs on `CMAKE_SWIG_FLAGS`
-(which is what `TTTRLIB_MODULE_streaming_SWIG` looks like it was meant for)
-or by including it by path. Worth doing as one change rather than three: a
-duplicated basename on an include path fails silently and by
-directory-search order, so the next module to relocate its `.i` inherits
-exactly this. Not fixed here because
-`modules/streaming/include/StreamingIntensityTrace.h` is untracked
-work-in-progress from a concurrent session and this file is not mine to
-land — but that session's class cannot appear in any binding until the
-shadowing goes.
-
-Filed while scoping chisurf PRD-98, whose live MCS display is the intended
-first consumer of the missing class.
-
-## A wall-clock assertion in the unit suite fails when the machine is busy
+> **Fixed 2026-08-11** (board ticket `T-20260811-01`). Took the **first** of the
+> two options the entry named: the strict inequality now runs only where a
+> clock can see the gap. `RATES_WITH_A_MEASURABLE_GAP = 4` splits the claim in
+> two — `test_the_recursion_is_faster_wherever_the_gap_is_measurable` asserts
+> `speedup > 1.0` from four rates up, where the lead is 2.6x and climbing, and
+> `test_the_recursion_is_not_beaten_at_one_or_two_rates` asserts only
+> `speedup > 0.5` at one and two rates, which is the claim those sizes can
+> support: a few percent either way is the clock, twice the recursion is a
+> regression. The example is unchanged, as the entry argued it should be.
+> 7 passed. Tightening that 0.5 re-files this bug — that is said in the
+> docstring, not just here.
 
 **2026-08-11.** `test_convolution_methods_example.py::test_the_recursion_is_
 faster_at_every_rate_count` asserts `np.all(speedup > 1.0)` on timings measured

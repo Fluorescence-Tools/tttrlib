@@ -1653,11 +1653,10 @@ def _in_another_process(body, *args):
     import sys
     src = "import tttrlib, os, sys\n" + textwrap.dedent(body)
     env = dict(os.environ)
-    build_ext = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "build", "ext"
-    )
-    if os.path.isdir(build_ext):
+    from test_settings import build_ext_for_this_interpreter
+
+    build_ext = build_ext_for_this_interpreter()
+    if build_ext:
         env["PYTHONPATH"] = build_ext + os.pathsep + env.get("PYTHONPATH", "")
     r = subprocess.run([sys.executable, "-c", src, *map(str, args)],
                        capture_output=True, text=True, timeout=60, env=env)

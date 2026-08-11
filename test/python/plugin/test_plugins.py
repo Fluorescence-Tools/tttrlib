@@ -97,12 +97,12 @@ def run_in_subprocess(code, plugin_path=None, env_extra=None, tmp_path=None):
     env = dict(os.environ)
     env.pop("TTTRLIB_PLUGINS", None)
     # Ensure the development build's SWIG extension is found by the subprocess,
-    # not a stale namespace package in site-packages.
-    _build_ext = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
-        "build", "ext"
-    )
-    if os.path.isdir(_build_ext):
+    # not a stale namespace package in site-packages -- but only when that build
+    # is for *this* interpreter, or the guard shadows a working install.
+    from test_settings import build_ext_for_this_interpreter
+
+    _build_ext = build_ext_for_this_interpreter()
+    if _build_ext:
         env["PYTHONPATH"] = _build_ext + os.pathsep + env.get("PYTHONPATH", "")
     if plugin_path is not None:
         env["TTTRLIB_PLUGIN_PATH"] = str(plugin_path)

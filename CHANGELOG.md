@@ -2,6 +2,46 @@
 
 ## [Unreleased]
 
+### Added
+- **`StreamingIntensityTrace`** — the streaming twin of the batch
+  `compute_intensity_trace`, on the same macro-time-0-aligned grid, so the two
+  agree bin for bin (asserted whole-stream and chunked, with chunk boundaries
+  deliberately inside bins). `set_max_bins(m)` keeps only the newest `m` bins
+  while `first_bin_index()` keeps the retained window's absolute place on the
+  time axis — a live MCS showing the last second at 1 ms resolution costs 1000
+  numbers however long the acquisition runs, where re-running the batch function
+  each refresh bins *every photon of the run* to display its tail.
+
+### Fixed
+- **A chunk now crosses into C++ once.** The streaming consumers' `push_np`
+  looped in *Python* over `push_photon` — measured **1.13 µs/photon**, 30× a
+  numpy histogram of the same photons, and enough to eat half a core on a
+  100 kHz live acquisition. The array overloads existed and were simply
+  unreachable: no numpy typemap mapped an ndarray onto their pointer arguments,
+  so `push_photons(array, None, n)` raised. With `%apply` typemaps and a
+  `push_arrays` extend on each class, the decay histogram and the intensity
+  trace push at 0.007 µs/photon and the correlator at 0.27 (its own cascade
+  work). `StreamingCorrelator.push_np` also gained the `channels` argument, so a
+  cross-correlation is one call per chunk rather than one per photon; and its
+  weighted form no longer raises (it passed the whole weights array to a scalar
+  parameter, which survived because every test took the unweighted default).
+- **`Streaming.i` existed twice and the module's copy was dead.**
+  `ext/python/Streaming.i` shadowed `modules/streaming/include/Streaming.i`,
+  because SWIG resolves a quoted `%include` from the including file's own
+  directory first — so edits to the module's own interface changed nothing,
+  silently, and the class and typemaps above could not appear in any binding.
+  It was the only duplicated interface basename in the tree. The two are merged
+  into the module's copy, which every other module's layout already assumes, and
+  the shadow is deleted.
+- **A stale `build/ext` no longer takes 28 tests with it.** `test_pto.py` and
+  `plugin/test_plugins.py` prepend the development build to a subprocess's
+  `PYTHONPATH` so a stale install cannot shadow it — unconditionally, while
+  `build/ext` outlives the interpreter it was built against, so a wrapper beside
+  a `_tttrlib.cpython-310-*.so` made every such subprocess die with
+  `No module named '_tttrlib'` under 3.12. Both now use one guard,
+  `test_settings.build_ext_for_this_interpreter()`, matching what `conftest.py`
+  already did for its own `sys.path` insert.
+
 ### Changed
 - **The `dfa_*` convolution entry points take NumPy buffers** — 5.6–8.4× on the
   same arithmetic (`dfa_convolve`, `dfa_periodic_decay`, `dfa_convolved_decay`,

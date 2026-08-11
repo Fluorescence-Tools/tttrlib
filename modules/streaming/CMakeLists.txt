@@ -10,6 +10,7 @@
 #   StreamingBurstDetector  ↔  BurstFilter (FRETBursts-style burst search)
 #   StreamingDecayHistogram ↔  DecayHistogram (TCSPC microtime histogram)
 #   StreamingPhasor         ↔  DecayPhasor (FLIM phasor g, s)
+#   StreamingIntensityTrace ↔  compute_intensity_trace (MCS / intensity trace)
 #
 # The consumers are header-only. Most are std-only; StreamingCLSMImage is the
 # exception and deliberately so -- it delegates each completed frame to the
