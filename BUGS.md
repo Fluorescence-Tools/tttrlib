@@ -19,7 +19,7 @@ to the changelog and leaves here.
 > the file silently resurrects it. Restored as a stub by `opus-5/ac9f6757`,
 > who did not do the fix.
 
-## The eight `*_at()` event accessors do no bounds check, so a bad index is a segfault or a silent overwrite
+## FIXED — The eight `*_at()` event accessors do no bounds check, so a bad index is a segfault or a silent overwrite
 
 **2026-08-11.** Ordinary-looking Python, no exception, dead interpreter:
 
@@ -70,10 +70,44 @@ What would settle it: build with the check in place and re-run the burst-search
 and correlation benchmarks in `benchmarks/`. If the per-photon cost is inside
 noise, option 1 wins and the other two are wasted effort.
 
+> **Fixed 2026-08-11 — option 1, and the measurement says it is free.**
+> All eight accessors now guard, with the throw out of line and `[[noreturn]]`
+> so the loop stays vectorisable. Min of three runs on 183,657 photons:
+> `shift_macro_time` (a get AND a set per photon) **28.5 -> 28.2 us**,
+> `get_micro_times` **6.6 -> 6.5 us**. `get_macro_times` reads 30.1 -> 33.3 us
+> but varies 30.1-34.9 us *with the code unchanged*, so this machine cannot
+> resolve it; the two loops it can resolve show no cost. Options 2 and 3 are
+> therefore unnecessary — no per-binding wrappers, no re-pointing 85 call sites.
+>
+> **The bound is `capacity`, not `n_valid_events`, and getting that wrong cost
+> 109 tests.** `append_events()` grows the allocation, fills the new slots
+> *through these setters*, and only then raises `n_valid_events` — so bounding
+> by the count rejects the library's own append path. The distinction between
+> capacity and count is load-bearing and is now stated in the header.
+>
+> **The entry above undersold the value, so correct the record: the check's
+> best catch was not a caller's bad index but the library's own.**
+> `burst_search_cusum_sprt` looped `for (size_t i = 1; i <= N; ++i)` over a
+> body that reads `get_macro_time_at(i)` — one past the last event, on every
+> call, since it was written. It had no symptom because nothing checked: the
+> read returned whatever sat in the allocation's spare capacity, and that value
+> fed `I0` and hence the estimated signal-to-background ratio. So the
+> auto-ratio mode has been deriving its threshold partly from garbage. The
+> sibling estimator twenty lines above already used `i < N`. Fixed with it.
+>
+> An unchecked accessor does not only risk a crash from untrusted input; it
+> lets the library's own off-by-ones run silently for as long as nobody looks.
+> That is the stronger argument for the guard and it is not the one this entry
+> was filed on.
+
+<details><summary>Original entry</summary>
+
 **Not filed as fixed because the fix is a performance decision on the
 library's hottest path**, and I have not measured it. Everything above the
 "three ways out" is established: the crash reproduces, the eight accessors are
 unchecked, and the 85 call sites are per-photon.
+
+</details>
 
 ## A `uint64_t` parameter in the JavaScript binding takes a Number but refuses a BigInt
 

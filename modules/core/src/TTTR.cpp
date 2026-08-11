@@ -240,6 +240,15 @@ TTTR::TTTR(const TTTR &p2){
 // (BUGS 2026-08-11). Detection failure is now an exception, and the message
 // names the path and says which step failed -- the two things stderr said and
 // the empty object did not.
+// Out of line and noreturn: the accessors are per-photon, so the cost that
+// matters is what stays in the caller. Nothing here is inlined into the loop.
+[[noreturn]] void tttr_index_out_of_range(size_t index, size_t size) {
+    throw std::out_of_range(
+            "TTTR: event index " + std::to_string(index) +
+            " is out of range for a container with " + std::to_string(size) +
+            " events.");
+}
+
 static void tttr_throw_unidentified(const char* fn, const char* what) {
     std::string msg = std::string("TTTR: ") + what + " for '" + (fn ? fn : "") +
             "'. The file's format could not be determined, so nothing was "

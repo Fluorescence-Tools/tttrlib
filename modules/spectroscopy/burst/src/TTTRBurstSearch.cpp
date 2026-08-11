@@ -146,7 +146,13 @@ std::vector<long long> TTTR::burst_search_cusum_sprt(
         I0 = 0.0;
         double bin_t = 0.0;
         
-        for (size_t i = 1; i <= N; ++i) {
+        // `i < N`, not `i <= N`: the body reads get_macro_time_at(i), so the
+        // old bound read one past the last event. It gave no symptom because
+        // the accessor did not check -- the value was whatever sat in the
+        // allocation's spare capacity, and it fed I0 and hence the estimated
+        // signal-to-background ratio (BUGS 2026-08-11, found by adding the
+        // bounds check). The sibling estimator above already uses `i < N`.
+        for (size_t i = 1; i < N; ++i) {
             if (i > 1) {
                 double dt = (get_macro_time_at(i) - get_macro_time_at(i-1)) * macro_res_ms;
                 bin_t += dt;
