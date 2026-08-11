@@ -14,6 +14,7 @@
 #endif
 %include "std_map.i";
 %include "std_vector.i";
+
 #if !defined(SWIGR) && !defined(SWIGJAVASCRIPT)
 %include "std_set.i";      // SWIG's R and JavaScript libraries ship no std_set.i
 #endif
@@ -106,6 +107,16 @@ $result = swig::from($1);
 // at this point (see the note at the top of this file), so int64_t is an
 // unresolved type here and the generated containers do not compile there.
 #if defined(SWIGWORDSIZE64) && !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT)
+// SWIG never reads <cstdint>, so without this int64_t is an opaque NAME rather
+// than a number: the containers below still instantiate, but their element
+// conversion comes out as SWIG_ConvertPtr, and every std::vector<int64_t>
+// argument rejects a list of Python ints --
+//   TypeError: in method 'BurstML_set_burst_data', argument 4 of type
+//   'std::vector< int64_t,std::allocator< int64_t > > const &'
+// stdint.i cannot be included here (see the note at the top of this file), so
+// state the one typedef this platform needs. 'long' is what SWIGWORDSIZE64
+// means, and it keeps int64_t distinct from the 'long long' containers above.
+typedef long int64_t;
 %template(VectorInt64T) std::vector<int64_t>;
 %template(PairInt64T) std::pair<int64_t, int64_t>;
 %template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
