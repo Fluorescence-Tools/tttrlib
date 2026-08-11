@@ -88,9 +88,21 @@ def test_provenance_based_reconstruction_from_pto():
         pto.close()
 
         # 4. Perform provenance-based reconstruction
+        #
+        # The reader being checked lives in chisurf, not here, so this runs
+        # only where chisurf is importable -- a development checkout, or an
+        # environment that installed it. Everywhere else it is a skip: a CI
+        # runner has no chisurf and used to report this as a failure.
+        # CHISURF_PATH overrides the developer default.
         import sys
-        sys.path.insert(0, "/Users/tpeulen/dev/chisurf")
-        from chisurf.core.fio.pto_reconstruct import reconstruct_analysis_from_pto
+
+        chisurf_src = os.environ.get("CHISURF_PATH", "/Users/tpeulen/dev/chisurf")
+        if os.path.isdir(chisurf_src) and chisurf_src not in sys.path:
+            sys.path.insert(0, chisurf_src)
+        try:
+            from chisurf.core.fio.pto_reconstruct import reconstruct_analysis_from_pto
+        except ImportError:
+            pytest.skip("chisurf is not importable; it owns the reconstruction")
 
         recon_result = reconstruct_analysis_from_pto(pto_path)
 

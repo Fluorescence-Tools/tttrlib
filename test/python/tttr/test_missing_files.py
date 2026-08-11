@@ -59,10 +59,18 @@ def test_reading_records_from_a_missing_file_refuses(absent):
         tttrlib.container_read_records(absent, 0, 10, 2)
 
 
-def test_opening_a_missing_file_yields_no_events(absent):
-    # TTTR reports on stderr and hands back an empty object rather than
-    # raising. Pinned as it is: the claim here is that it does not crash.
-    assert tttrlib.TTTR(absent).size() == 0
+def test_opening_a_missing_file_errors_rather_than_crashing(absent):
+    # This pinned `size() == 0` when it was written, because that was what the
+    # constructor did. It now raises instead: a path whose format cannot be
+    # determined stopped returning an empty object on 2026-08-11, since a
+    # caller who got one computed a count rate or a lifetime from nothing and
+    # saw no error at all. Either answer satisfies this file's own rule --
+    # "an error OR an empty object, never a crash" -- so the test accepts both
+    # and keeps asserting the thing it is really for.
+    try:
+        assert tttrlib.TTTR(absent).size() == 0
+    except RuntimeError as e:
+        assert absent in str(e)
 
 
 def test_the_whole_chunked_read_survives_a_missing_file(absent):
