@@ -22,8 +22,27 @@ for d in modules/*/include modules/*/*/include; do
   [ -d "$d" ] && MODULE_INCLUDES+=("-I$ROOT/$d")
 done
 
-INCLUDES=(-DTTTRLIB_WITH_AVX=0 -I. -Iinclude -Isrc -Iext -Iext/python
+BASE_INCLUDES=(-DTTTRLIB_WITH_AVX=0 -I. -Iinclude -Isrc -Iext -Iext/python
           -Ithirdparty/nlohmann_json/include "${MODULE_INCLUDES[@]}")
+
+# ext/CMakeLists.txt passes -DSWIGWORDSIZE64 on 64-bit Linux, so generate what is
+# actually built rather than a variant of it. Without the flag SWIG resolves
+# int64_t to 'long long' where the compiler says 'long', and a
+# std::map<std::string, std::vector<int64_t>> return -- Photonscore's
+# read_photons -- produces a Java wrapper that does not compile:
+#   no match for 'operator=' (SwigValueWrapper<map<string, vector<long long>>>
+#   ... map<string, vector<long>>)
+INCLUDES=("${BASE_INCLUDES[@]}")
+R_INCLUDES=("${BASE_INCLUDES[@]}")
+if [ "$(uname -s)" = "Linux" ] && [ "$(getconf LONG_BIT)" = "64" ]; then
+  INCLUDES+=(-DSWIGWORDSIZE64)
+  # R is the same exception ext/CMakeLists.txt makes: SWIG's R backend
+  # mishandles 'long long' returns under the flag before 4.4.
+  SWIG_VERSION="$(swig -version | sed -n 's/^SWIG Version \([0-9.]*\).*/\1/p')"
+  if [ "$(printf '4.4\n%s\n' "$SWIG_VERSION" | sort -V | head -1)" = "4.4" ]; then
+    R_INCLUDES+=(-DSWIGWORDSIZE64)
+  fi
+fi
 
 echo "== Python wrapper =="
 mkdir -p "$OUT/py"
@@ -37,7 +56,7 @@ PY_HASH_BEFORE="$(cksum < "$OUT/py/w.cxx")"
 
 echo "== R wrapper =="
 mkdir -p "$OUT/r"
-swig -c++ -r "${INCLUDES[@]}" -Iext/r -outdir "$OUT/r" -o "$OUT/r/w.cxx" ext/r/tttrlib.i
+swig -c++ -r "${R_INCLUDES[@]}" -Iext/r -outdir "$OUT/r" -o "$OUT/r/w.cxx" ext/r/tttrlib.i
 # No real Python C-API must leak into the R wrapper. PyErr_Format / PyExc_ValueError
 # are excluded: DecayConvolution.i provides a portable self-contained shim of those
 # names for non-Python targets.
