@@ -260,6 +260,46 @@ Java cannot express), the streaming classes, and the MaxEnt entry points.
 
 </details>
 
+## A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
+
+**2026-08-11.** `test_datastore_paths.py::test_the_column_lookup_did_not_get_slower`
+asserts `sugar < bare * 3.0`, where both sides are 20,000-iteration Python
+loops into SWIG. Observed failing **2 of 3 runs with nothing else on the
+machine**, reporting `store['x'] is 4.14x the bare column_by_name it wraps`.
+
+This is the second instance of the shape already recorded for
+`test_the_recursion_is_faster_at_every_rate_count`, but it fails far more
+often — that one needed a saturated machine, this one does not.
+
+**The interesting part is the docstring**, which states the design intent:
+
+> *"Measured as a ratio against the call it wraps, so the number does not
+> depend on the machine."*
+
+The ratio was chosen precisely to be machine-independent, and it is not.
+Dividing one noisy microbenchmark by another **compounds** the noise rather
+than cancelling it: each side is a few milliseconds of interpreter loop, and a
+scheduler slice landing on the denominator moves the quotient as far as one on
+the numerator. A ratio only stabilises a measurement when the two sides share
+their noise, which two separately-timed loops do not.
+
+**Not fixed here, deliberately.** The threshold is somebody's considered
+choice, and widening 3.0 to 5.0 because a passer-by tripped on it is how a
+guard stops guarding. What the author needs in order to decide is the evidence
+rather than a patch: the failure rate is ~2/3 unloaded, the observed ratio is
+4.14 against a 3.0 bound, and the machine-independence the docstring claims is
+not a property of the construction used.
+
+If the intent is to catch a real regression in `__getitem__`, the durable form
+is the one the sibling entry landed on: assert the claim only where the gap is
+large enough for a clock to see, or move it to the benchmark harness where a
+slow run is a number rather than a failure.
+
+**Checked before filing, because a bounds check had just landed in the same
+header:** this is not caused by the `Column::value_at` guard. `__getitem__`
+and `column_by_name` return a `Column`; neither calls `value_at`, and the
+whole DataStore/CSV/PTO/conformance set is 336 passed with the guard active.
+
 ## Streaming into `.sm` writes a header the `.sm` reader does not parse back
 
 **2026-08-11.** `RecordStreamWriter` produces an SM file whose header is

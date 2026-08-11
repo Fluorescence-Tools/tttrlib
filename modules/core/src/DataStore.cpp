@@ -8,6 +8,13 @@
 namespace tttrlib {
 namespace data {
 
+[[noreturn]] void datastore_index_out_of_range(std::size_t index, std::size_t size) {
+    throw std::out_of_range(
+            "DataStore: row index " + std::to_string(index) +
+            " is out of range for a column with " + std::to_string(size) +
+            " rows.");
+}
+
 
 // --- column description ---------------------------------------------------------
 //

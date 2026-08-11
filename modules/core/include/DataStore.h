@@ -336,6 +336,11 @@ private:
  * column usable -- the codes ARE a category axis, so "how many rows per label"
  * needs no separate pass. The strings themselves never reach a histogram.
  */
+// An out-of-range row index on a column accessor read past the allocation --
+// silently at a small overrun, fatally at a large one. Out of line and
+// noreturn so the guard costs a branch and nothing else in the caller.
+[[noreturn]] void datastore_index_out_of_range(std::size_t index, std::size_t size);
+
 class Column {
 public:
     Column() = default;
@@ -809,6 +814,14 @@ public:
      * the only numeric thing a string has, and is what a category axis wants.
      */
     inline double value_at(std::size_t i) const {
+        // Bounded, unlike the raw indexing this used to do. An out-of-range row
+        // read past the allocation: at a small overrun it returned 0.0 -- a
+        // perfectly plausible measurement -- and far out it was a SIGSEGV
+        // (BUGS 2026-08-11). `string_at` a dozen lines above has always
+        // checked; this is the same class, the same shape, and did not. The
+        // throw is out of line so the per-row callers (masking, comparisons,
+        // the histogram fill callbacks) keep only a predicted branch.
+        if (i >= n_) datastore_index_out_of_range(i, n_);
         switch (type_) {
             case ColumnType::Float64: return f64_[i];
             case ColumnType::Float32: return static_cast<double>(f32_[i]);
