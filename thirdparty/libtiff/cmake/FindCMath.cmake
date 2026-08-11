@@ -31,12 +31,12 @@ include(CheckSymbolExists)
 include(CheckLibraryExists)
 
 check_symbol_exists(pow "math.h" CMath_HAVE_LIBC_POW)
-# Plain -lm, not find_library: the latter resolves to the build host's
-# glibc linker SCRIPT (/usr/lib/.../libm.so with absolute /lib64 member
-# paths), which a conda cross-sysroot ld cannot follow.
-set(CMath_LIBRARY m)
 
 if(NOT CMath_HAVE_LIBC_POW)
+    # Plain -lm, not find_library: the latter resolves to the build host's
+    # glibc linker SCRIPT (/usr/lib/.../libm.so with absolute /lib64 member
+    # paths), which a conda cross-sysroot ld cannot follow.
+    set(CMath_LIBRARY m)
     set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
     set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${CMath_LIBRARY})
     check_symbol_exists(pow "math.h" CMath_HAVE_LIBM_POW)
@@ -64,12 +64,13 @@ if(CMath_FOUND)
     endif()
 
     if(NOT TARGET CMath::CMath)
+        # INTERFACE, not UNKNOWN IMPORTED: "m" is a link flag (-lm), not a
+        # file path, so it must never become an IMPORTED_LOCATION (Ninja
+        # would treat it as a missing file-level dependency).
+        add_library(CMath::CMath INTERFACE IMPORTED)
         if(CMath_LIBRARIES)
-            add_library(CMath::CMath UNKNOWN IMPORTED)
             set_target_properties(CMath::CMath PROPERTIES
-                  IMPORTED_LOCATION "${CMath_LIBRARY}")
-        else()
-            add_library(CMath::CMath INTERFACE IMPORTED)
+                  INTERFACE_LINK_LIBRARIES "${CMath_LIBRARIES}")
         endif()
     endif()
 endif()
