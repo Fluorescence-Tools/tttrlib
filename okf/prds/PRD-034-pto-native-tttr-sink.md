@@ -2,6 +2,9 @@
 
 **Status:** 🔵 Proposed
 **Depends on:** PRD-020 (targeted reads), PRD-021 (record streams), PRD-015 (conformance suite)
+**Consumer waiting on this:** chisurf PRD-98 (acquisition writes its photons
+straight into a `.pto` as they arrive) — see *Writing a file that is still
+being measured* below.
 **Spec to amend:** `doc/formats/pto.rst`
 
 ## The claim
@@ -106,6 +109,47 @@ from the reader (`io_pq.cpp`):
    PRD-020 applies to any macro time read as a scalar Number. Conformance
    cases (PRD-015) cover all four languages.
 
+## Writing a file that is still being measured
+
+An acquisition is the case the sink exists for, and it is *not* the
+write-once case above: the photon count is unknown at open, the run may last
+hours, and the process may be killed. The format already anticipates all
+three (`doc/formats/pto.rst`) —
+
+- `FileData` is written last behind an **eight-octet over-wide size VINT**,
+  a placeholder rewritten when the length is known (spec line 484);
+- a `Segment`'s size is likewise **eight octets, rewritten as the file
+  grows**, "what lets the number be raised without moving anything after
+  it";
+- each `SeekHead` is **padded to an 8 KiB reserve** precisely "because the
+  commit protocol depends on being able to rewrite one where it lies";
+- and the truncation rule is explicit: **bytes after the end of the
+  `Segment` are not part of the file** — an abandoned write from a session
+  that died before the commit that would have claimed them.
+
+Read together, those give the guarantee an acquisition needs, but only if
+the writer *takes* it: a run that streams for an hour and never commits
+loses the hour, because everything it wrote lies outside the `Segment`.
+So this PRD adds **checkpointing** as a first-class writer operation, not
+an implementation detail:
+
+7. **`PtoFile` can commit a still-growing object.** A checkpoint raises the
+   `FileData` size VINT, re-stamps `PtoRowCount` to the events written so
+   far, raises the `Segment` size, and rewrites the `SeekHead` in its
+   reserve — in that order, so that no intermediate state is a file a
+   reader misreads. Cost is a few hundred bytes of seek-and-write,
+   independent of how much data preceded it, which is what makes a
+   per-second checkpoint reasonable. The photon table's own row-slice
+   reads (design item 5) then work on the committed prefix while the
+   writer is still appending, since a row slice needs only `PtoRowCount`
+   and the column layout.
+
+The writer lock already in `PtoFile::open` (exclusive advisory, released
+when the process ends *however* it ends) is what keeps a second writer out
+of a file being measured into; a read-only open deliberately takes no lock,
+so a live viewer during acquisition is the case the lock design already
+allows.
+
 ## Acceptance criteria
 
 1. **Round trip**: PTU → `TTTR` → `write(".pto")` → `TTTR`: all four event
@@ -122,9 +166,16 @@ from the reader (`io_pq.cpp`):
    with cues.
 5. **Cross-language**: conformance-suite cases pass in Python, R, Java and
    JS, including a macro time above 2^53 handled per the 53-bit rule.
-6. **Docs**: `pto.rst` gains the normative photons-object section — column
-   names, dtypes, required tags — and `tttr convert` accepts `.pto` as a
-   target.
+6. **A killed writer keeps its committed photons**: stream events into an
+   open photons object, checkpoint, write more, then `SIGKILL` the process.
+   The file opens, `PtoRowCount` and the readable events equal the last
+   checkpoint exactly, the uncommitted tail is invisible, and a subsequent
+   writer reclaims it as `Void` per the spec's abandoned-write rule. A
+   reader opening the file *between* checkpoints, while the writer holds
+   the lock, sees a consistent shorter file rather than an error.
+7. **Docs**: `pto.rst` gains the normative photons-object section — column
+   names, dtypes, required tags, and the checkpoint order — and
+   `tttr convert` accepts `.pto` as a target.
 
 ## Non-goals
 

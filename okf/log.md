@@ -1,5 +1,35 @@
 # Bundle update log
 
+## 2026-08-11 (21st entry)
+
+* **Amendment**: [PRD-034](/prds/PRD-034-pto-native-tttr-sink.md) gains
+  *Writing a file that is still being measured* — a **checkpoint** operation
+  on the writer, plus acceptance criterion 6 (`SIGKILL` a writer, keep the
+  committed photons). Found while scoping chisurf PRD-98, which wants
+  acquisition to write photons into a `.pto` as they arrive: 034 as first
+  written described a **write-once** sink, and under `pto.rst`'s own rule
+  that *bytes after the end of the `Segment` are not part of the file*, an
+  hour of streamed-but-uncommitted `FileData` is not a short file — it is
+  **no file**. The format already carries every mechanism the fix needs and
+  says why each is shaped that way: the eight-octet `Segment` size
+  "rewritten as the file grows", the 8 KiB `SeekHead` reserve that exists
+  "because the commit protocol depends on being able to rewrite one where
+  it lies", the over-wide `FileData` size VINT, and `PtoRowCount`. What was
+  missing was the *obligation* to use them periodically and an API to do
+  it. Checkpoint order is normative (FileData size → PtoRowCount → Segment
+  size → SeekHead) so no intermediate state is a file a reader misreads,
+  and cost is independent of data already written.
+* **Gap found, no home yet**: there is **no streaming intensity trace**.
+  `compute_intensity_trace` is a batch free function (`TTTR.h:131`) and
+  `modules/streaming/include/` holds four headers (correlator, decay
+  histogram, burst detector, CLSM image — `StreamingPhasor` lives inside
+  the decay-histogram header). The MCS trace is the live count-rate display
+  a single-molecule operator actually watches, so chisurf PRD-98's
+  "append per-chunk bins" has nothing to delegate to. Recorded as a named
+  requirement inside PRD-98 rather than a PRD of its own: one class,
+  `push_photons` + fixed bin width + append-only counts, with the batch
+  function as its oracle.
+
 ## 2026-08-11 (20th entry)
 
 * **Creation**: Added [The Python seam costs ~50 ns per element](/bindings/marshalling-cost.md).
