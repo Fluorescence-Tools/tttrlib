@@ -67,7 +67,7 @@ inline constexpr fill_ones_t fill_ones{};
 // ---------------------------------------------------------------------------
 // Mat -- owning row-major dense matrix
 // ---------------------------------------------------------------------------
-class MatTrans;
+struct MatTrans;
 
 class Mat {
 public:
