@@ -533,6 +533,29 @@ and here the file's own summary contradicted its own implementation.
   `ext/java/tttrlib.i`. Giving Java these docs means re-expressing them as
   `%javadoc`, which is a separate piece of work and not an `%include`.
 
+**2026-08-11, the helpers are now RUN, not just generated.** Everything above
+was verified by generating the wrapper, reading the signature, and compiling
+the generated C++ — none of which can see whether a value reaches the caller's
+array. A marshalling that copied in without copying out would pass all three
+and silently do nothing. So the Java binding was built (a scratch
+`BUILD_JAVA_INTERFACE=ON` tree, leaving the shared one alone) and every helper
+executed against the real JNI native: **10 tests, 0 failures**, kept as
+`ext/java/pkg/src/test/java/.../HelpersTest.java`.
+
+The one that most needed it is `jitter_coordinates_into`: its whole claim is
+that `INPLACE_ARRAY2` writes back into the caller's `double[][]`, which I had
+asserted from reading `jarrays.i`'s comments rather than from evidence. It
+does. Also confirmed: a delta PSF on a flat image comes back as the identity
+to 1e-6, and one `tcspc_build_fi_lifetimes_into` call fills all four outputs.
+
+**One expectation of mine was wrong and the library was right**, which is the
+useful kind of failure: `counts_from_events_into` binned 3 photons to a sum of
+2. Running the same input through the Python binding gave the identical
+answer, so the helper was faithful — coordinates round to the *nearest* bin
+index, so 1.5 on a two-bin axis rounds to 2 and is dropped as out of range.
+Cross-checking against another binding is what separated "my helper is broken"
+from "my test assumed the wrong semantics" in one step.
+
 **So every declared gap is now either a recorded deliberate choice with the
 capability present via helpers, or `HmmLattice.i`, which its author has
 claimed.** The number in `check_binding_parity.py` is bookkeeping about
