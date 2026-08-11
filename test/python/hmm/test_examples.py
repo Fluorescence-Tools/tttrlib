@@ -20,6 +20,14 @@ except ImportError:
     HAS_MATPLOTLIB = False
 import pytest
 
+# Every example here is a gallery script that plots, and _run() drives plt to
+# stop it blocking, so the module cannot be exercised at all without
+# matplotlib. Only TestHmmExample guarded itself; the rest reached _run() and
+# raised "NameError: name 'plt' is not defined" -- 13 failures in every conda
+# test job, which installs pytest and scipy and nothing else.
+if not HAS_MATPLOTLIB:
+    pytest.skip("the gallery examples need matplotlib", allow_module_level=True)
+
 _EXAMPLES = Path(__file__).resolve().parents[3] / "examples" / "single_molecule"
 EXAMPLE = _EXAMPLES / "plot_hmm_analysis.py"
 LIFETIME_EXAMPLE = _EXAMPLES / "plot_hmm_lifetime_posterior.py"
