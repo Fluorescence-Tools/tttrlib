@@ -76,12 +76,19 @@ SWIGINTERN SEXP SWIG_R_AppendOutput(SEXP result, SEXP obj) {
 %define %r_numpy_typemaps(DATA_TYPE, R_SXP, R_ACCESS)
 
 /* ---------------------- 1D input: (T* IN_ARRAY1, int DIM1) ---------------- */
-%typemap(in) (DATA_TYPE* IN_ARRAY1, int DIM1) {
-  SEXP rv = PROTECT(Rf_coerceVector($input, R_SXP));
-  int n = Rf_length(rv), i;
-  $1 = (DATA_TYPE*) malloc(sizeof(DATA_TYPE) * (n > 0 ? n : 1));
-  for (i = 0; i < n; ++i) $1[i] = (DATA_TYPE) R_ACCESS(rv)[i];
-  $2 = n;
+// The length is a typemap-local (n_$argnum), not a block-scoped `int n`, so
+// that an INPLACE argout attached to the same argument can still see it. That
+// pairing is not hypothetical: an %apply of IN_ARRAY1 over a parameter that a
+// previous %apply gave INPLACE_ARRAY1 replaces the `in` typemap and keeps the
+// `argout`, and the wrapper then failed to compile with "'n_1' was not declared
+// in this scope".
+%typemap(in) (DATA_TYPE* IN_ARRAY1, int DIM1) (SEXP rv_, int n_) {
+  rv_ = PROTECT(Rf_coerceVector($input, R_SXP));
+  n_ = Rf_length(rv_);
+  int i;
+  $1 = (DATA_TYPE*) malloc(sizeof(DATA_TYPE) * (n_ > 0 ? n_ : 1));
+  for (i = 0; i < n_; ++i) $1[i] = (DATA_TYPE) R_ACCESS(rv_)[i];
+  $2 = n_;
   UNPROTECT(1);
 }
 %typemap(freearg) (DATA_TYPE* IN_ARRAY1, int DIM1) {
