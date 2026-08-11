@@ -11,6 +11,18 @@ on:
     types: [published]
   workflow_dispatch:
 
+# One run per branch. Without this every push queues a fresh copy of ~58 jobs
+# behind the last: four runs of this workflow sat queued simultaneously on
+# 2026-08-11, and the newest -- the only one whose answer anyone wanted --
+# started last, so a fix waited half an hour on results nobody would read.
+# Superseding a branch's run now cancels it instead of racing it.
+#
+# main and tags are exempt: a release build has to finish even if another push
+# lands while it runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
+
 env:
   DEFAULT_PYTHON: "3.10"
   CIBW_VERSION: "2.23.3"
