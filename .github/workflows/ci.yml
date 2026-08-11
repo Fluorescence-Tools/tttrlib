@@ -987,6 +987,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      # The vocabulary is the mmfdb repository, never a copy kept here, so the
+      # tests that check this library against it read the dictionaries pulled
+      # from that repo at run time. Without this they skipped on osx and win.
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           pattern: pip-wheels-macos-*
@@ -1003,6 +1011,8 @@ jobs:
         shell: bash
         env:
           TTTRLIB_DATA: ./tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
         run: |
           python -m pip install --upgrade pip
           PY_VER="${{ matrix.python }}"
@@ -1027,6 +1037,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      # The vocabulary is the mmfdb repository, never a copy kept here, so the
+      # tests that check this library against it read the dictionaries pulled
+      # from that repo at run time. Without this they skipped on osx and win.
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           name: pip-wheels-windows-latest
@@ -1055,6 +1073,8 @@ jobs:
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}\.mmfdb\src\mmfdb\data
+          MMFDB_REQUIRED: "1"
       # The run reaches 100%, returns 1, and prints no FAILURES section at all
       # on this platform, so the tracebacks come from the report log instead --
       # it is written one line per test as the test finishes.
@@ -1295,6 +1315,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      # The vocabulary is the mmfdb repository, never a copy kept here, so the
+      # tests that check this library against it read the dictionaries pulled
+      # from that repo at run time. Without this they skipped on osx and win.
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           name: conda-packages-macos-latest
@@ -1315,6 +1343,8 @@ jobs:
         shell: bash -l {0}
         env:
           TTTRLIB_DATA: ./tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
         run: |
           conda install -y -c ./conda-bld/ -c conda-forge "python=${{ matrix.python }}" tttrlib pytest scipy
           # See the pip jobs: one group's crash must not hide the others.
@@ -1330,6 +1360,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
+      # The vocabulary is the mmfdb repository, never a copy kept here, so the
+      # tests that check this library against it read the dictionaries pulled
+      # from that repo at run time. Without this they skipped on osx and win.
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
           name: conda-packages-windows-latest
@@ -1361,6 +1399,8 @@ jobs:
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}\.mmfdb\src\mmfdb\data
+          MMFDB_REQUIRED: "1"
       # The run reaches 100%, returns 1, and prints no FAILURES section at all
       # on this platform, so the tracebacks come from the report log instead --
       # it is written one line per test as the test finishes.

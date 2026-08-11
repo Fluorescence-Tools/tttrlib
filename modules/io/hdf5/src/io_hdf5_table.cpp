@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include "FileIO.h"
 #include "io_hdf5_table.h"
 
 #include <algorithm>
@@ -1104,7 +1105,7 @@ bool replace_whole_file(const std::string& filename, const data::DataStore& stor
     bool ok = write_tree_into(file, store, compression);
     if (H5Fclose(file) < 0) ok = false;
 
-    if (ok && std::rename(temp.c_str(), filename.c_str()) != 0)
+    if (ok && !replace_file(temp, filename))
         ok = write_failed("rename the new file over", filename);
     if (!ok) std::remove(temp.c_str());
     return ok;

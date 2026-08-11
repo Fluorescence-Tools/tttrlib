@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include "FileIO.h"
 #include "io_csv_writer.h"
 
 #include <nlohmann/json.hpp>
@@ -738,7 +739,7 @@ bool write_csv(const std::string& filename, const DataStore& store,
     if (!ok) std::cerr << "write_csv: could not write " << temp << std::endl;
     if (std::fclose(f) != 0) ok = false;
 
-    if (ok && std::rename(temp.c_str(), filename.c_str()) != 0) {
+    if (ok && !replace_file(temp, filename)) {
         std::cerr << "write_csv: could not rename " << temp << " over " << filename << std::endl;
         ok = false;
     }

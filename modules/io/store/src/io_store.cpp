@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include "FileIO.h"
 #include "io_store.h"
 
 #include <cstdio>
@@ -682,7 +683,7 @@ bool write_store(const std::string& filename, const data::DataStore& store) {
     bool ok = emit_store(out, store);
     if (!owned.close()) ok = false;
 
-    if (ok && std::rename(temp.c_str(), filename.c_str()) != 0) {
+    if (ok && !replace_file(temp, filename)) {
         std::cerr << "store file: could not rename " << temp << " over "
                   << filename << std::endl;
         ok = false;

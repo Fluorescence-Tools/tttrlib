@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "FileIO.h"
 
+#include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -57,5 +58,20 @@ FILE* open_file(const std::string& filename, const char* mode) {
         std::cerr << "Error opening file: " << filename << std::endl;
     }
     return file;
+}
+#endif
+
+#ifdef _WIN32
+bool replace_file(const std::string& from, const std::string& to) {
+    // MOVEFILE_REPLACE_EXISTING is what makes this the atomic replace that
+    // rename() already is everywhere else.
+    const std::wstring wfrom = utf8_to_wide(from);
+    const std::wstring wto = utf8_to_wide(to);
+    return MoveFileExW(wfrom.c_str(), wto.c_str(),
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0;
+}
+#else
+bool replace_file(const std::string& from, const std::string& to) {
+    return std::rename(from.c_str(), to.c_str()) == 0;
 }
 #endif

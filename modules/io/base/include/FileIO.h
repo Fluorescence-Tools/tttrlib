@@ -46,6 +46,19 @@
 std::string utf8_to_native(const std::string& utf8_str);
 
 /**
+ * @brief Move `from` onto `to`, replacing `to` if it is already there.
+ *
+ * POSIX rename() replaces the destination atomically. Windows' rename() does
+ * not: it fails outright when the target exists, so every writer that composes
+ * a temporary beside its target and renames it into place -- csv, the hdf5
+ * table, the store -- could only ever create a file there, never replace one.
+ *
+ * @return true if the file now lives at `to`.
+ */
+bool replace_file(const std::string& from, const std::string& to);
+
+
+/**
  * @brief Converts a string from the system's native encoding to UTF-8.
  * 
  * This utility function converts a string from the system's native encoding
