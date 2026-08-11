@@ -60,6 +60,13 @@ bool record_stream_supported(int container_type, int record_type) {
         case FL_STT1_CONTAINER:
         case FL_ITT1_CONTAINER:
             return false;
+        case CZ_CONFOCOR3_CONTAINER:
+            // Same class as SM below, and found the same way: a whole-file
+            // TTTR.write gives 200,000 events back and the streamed file gives
+            // 0. It read back before the TTTR constructor started raising on
+            // unidentified files, so it was a false pass all along -- the
+            // streaming example's whole-file control column is what showed it.
+            return false;
         case SM_CONTAINER:
             // Still open. An SM header is a positional struct, and the file
             // this writer produces carries 280 bytes before the records where

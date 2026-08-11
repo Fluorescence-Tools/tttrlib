@@ -95,6 +95,20 @@ def stream(writer, path, header, events):
     return writer, None
 
 
+def read_back(path):
+    """Events in `path`, or 0 if it cannot be identified.
+
+    Opening by name RAISES for an unidentifiable file -- which is the right
+    behaviour and the point of several rows below. Caught here so the table
+    reports every format instead of stopping at the first one that cannot be
+    re-detected.
+    """
+    try:
+        return tttrlib.TTTR(path)
+    except Exception:
+        return None
+
+
 def whole_file_control(src, events, container, path):
     """What a normal TTTR.write to this format gives back. The baseline a
     streamed file is judged against."""
@@ -103,9 +117,10 @@ def whole_file_control(src, events, container, path):
     try:
         if not ref.write(path, src.header, container):
             return 0
-        return len(tttrlib.TTTR(path))
     except Exception:
         return 0
+    back = read_back(path)
+    return 0 if back is None else len(back)
 
 
 def main():
@@ -132,10 +147,10 @@ def main():
         if err:
             print(f"{label:14} {ctrl:>11,} {'-':>10} {'-':>6} {'-':>6} {err[:24]}")
             continue
-        back = tttrlib.TTTR(path)
-        got = len(back)
-        m_ok = got == n and np.array_equal(np.asarray(back.macro_times), macro)
-        u_ok = got == n and np.array_equal(np.asarray(back.micro_times), micro)
+        back = read_back(path)
+        got = 0 if back is None else len(back)
+        m_ok = back is not None and got == n and np.array_equal(np.asarray(back.macro_times), macro)
+        u_ok = back is not None and got == n and np.array_equal(np.asarray(back.micro_times), micro)
         print(f"{label:14} {ctrl:>11,} {got:>10,} {str(m_ok):>6} {str(u_ok):>6} "
               f"{verdict(ctrl, got, n, m_ok, u_ok)}")
 
@@ -147,10 +162,10 @@ def main():
     if err:
         print(f"{'PTO':14} {ctrl:>11,} {'-':>10} {'-':>6} {'-':>6} {err[:24]}")
     else:
-        back = tttrlib.TTTR(path)
-        got = len(back)
-        m_ok = got == n and np.array_equal(np.asarray(back.macro_times), macro)
-        u_ok = got == n and np.array_equal(np.asarray(back.micro_times), micro)
+        back = read_back(path)
+        got = 0 if back is None else len(back)
+        m_ok = back is not None and got == n and np.array_equal(np.asarray(back.macro_times), macro)
+        u_ok = back is not None and got == n and np.array_equal(np.asarray(back.micro_times), micro)
         print(f"{'PTO':14} {ctrl:>11,} {got:>10,} {str(m_ok):>6} {str(u_ok):>6} "
               f"exact, {w.n_chunks()} chunks")
 
