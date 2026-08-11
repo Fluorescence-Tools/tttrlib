@@ -1,5 +1,38 @@
 # Bundle update log
 
+## 2026-08-11 (22nd entry)
+
+* **Update**: the regression filed in the 20th entry is fixed for the MaxEnt
+  family, and [The Python seam costs ~50 ns per element](/bindings/marshalling-cost.md)
+  now carries the after-numbers. All nine entry points in
+  `ext/python/MaxEntTcspc.i` take `double* IN_ARRAY1, int DIM1` and return
+  through `ARGOUTVIEWM_ARRAY1/2`. Same machine, before → after: 9.1 → 0.50 µs
+  at n=64, 26.5 → 0.81 at 512, 335 → 5.55 at 4096, 1360 → 19.6 at 16384 —
+  18–69×, with per-element cost down ~40× to 1.2–1.6 ns. The converted binding
+  is now *faster* than the in-place `fconv` above n=64.
+* **Behaviour is unchanged and was checked rather than assumed**: signatures,
+  keyword names and defaults are identical, lists still work as input,
+  `test/python/decayfit` + `test_gil_release` are 111 passed / 1 skipped exactly
+  as before, and ChiSurf's design-matrix parity guard still matches its numba
+  fixture bit for bit.
+* **Three new traps recorded**, all found by hitting them: the wrapper's
+  argument names *are* the public keyword names (renaming them to avoid
+  `%apply` collisions breaks `nu=` / `prior=` callers); `%include` must precede
+  the `%inline` block when a wrapper returns a struct by value, or the caller
+  gets an opaque pointer with no `.p`; and an optional array argument needs a
+  C++ default on the typemap pair (`double* prior = nullptr, int n_prior = 0`).
+* **What the conversion did not fix, now the top item**: the MEM solvers still
+  have no progress/cancel callback, so ChiSurf still keeps a second NumPy copy
+  of `_run_mem` / `_quadpr_bound`. The speed argument for the hook is largely
+  gone (29 ms of seam → 7.3 ms); the duplicate-implementation argument is not.
+* **Correction, from another session's work on the same day**: the concept
+  cited `fconv_simd` measuring 1.01× against `fconv` as an optimisation the
+  binding was hiding. It was not — `fconv_simd` *is* `fconv`, a one-line
+  forwarding alias, and NEON inside `fconv` is alive at 1.87×. The claim is now
+  recorded as a **refuted** inference rather than deleted: marshalling cost
+  explains a lot and "the wrapper must be hiding it" is still a hypothesis to
+  test, not a conclusion to reach.
+
 ## 2026-08-11 (21st entry)
 
 * **Amendment**: [PRD-034](/prds/PRD-034-pto-native-tttr-sink.md) gains

@@ -230,6 +230,23 @@
   eigensolver, not Eigen.
 
 ### Changed
+- **The maximum-entropy TCSPC bindings take NumPy buffers, not `VectorDouble`
+  — 18–69× faster calls, no behaviour change.** `%template(VectorDouble)
+  std::vector<double>` is declared library-wide, so every binding taking or
+  returning one converted through the Python sequence protocol: one boxed float
+  per element, **~50 ns each**, in and out. It made the wrapper, not the C++,
+  set the runtime — `tcspc_shift_lamp` asked for a shift of *zero* channels
+  cost 24.4 µs of the 24.8 µs a real shift cost, 98% conversion, on a
+  512-channel decay. All nine MaxEnt entry points now use
+  `double* IN_ARRAY1, int DIM1` in and `ARGOUTVIEWM_ARRAY1/2` out: 9.1 → 0.50 µs
+  at n=64, 26.5 → 0.81 at 512, 335 → 5.55 at 4096, 1360 → 19.6 at 16384, with
+  per-element cost down ~40× to 1.2–1.6 ns. Knock-on: `tcspc_quadpr_bound` at
+  `n_tau = 60` goes 146 → 36.3 µs (a Python-driven 200-iteration MEM loop drops
+  from 29 ms of seam to 7.3 ms) and a per-column design-matrix build goes
+  1668 → 129 µs. Signatures, keyword names and defaults are unchanged, lists
+  still work as input, and `test/python/decayfit` + `test_gil_release` stay at
+  111 passed / 1 skipped. The rule this does **not** repeal is in BUGS.md: a
+  loop stays whole in C++, and the seam is crossed once per analysis.
 - **`DecayFit25` and `DecayFit26` moved onto the same bound mechanism as
   `DecayFit23`.** Both carried a thread-local `penalty` added to the objective
   in `targetf`. `DecayFit25`'s was dead — set to zero and never anything else.

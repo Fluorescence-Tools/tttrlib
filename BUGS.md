@@ -36,80 +36,77 @@ to the changelog and leaves here.
 > design matrix, at which point all three are one solver and two matrix
 > builders. This stub can be deleted once both sessions have seen it.
 
-## Every `std::vector<double>` binding converts element by element, so the wrapper costs more than the algorithm
+## Every `std::vector<double>` binding converts element by element, so the wrapper costs more than the algorithm — MaxEnt converted, the rest of the library open
 
-**2026-08-11.** `misc_types.i:61` declares `%template(VectorDouble)
+**2026-08-11.** `misc_types.i` declares `%template(VectorDouble)
 std::vector<double>` for the whole library, so every exposed function taking or
 returning a `std::vector<double>` marshals through the Python **sequence
 protocol** — one `PyFloat` per element, in and out. It is not a memcpy. The
 result is that the binding, not the C++, sets the runtime of any small or
 medium call, and the compiled implementation is invisible from Python.
 
-Measured on this machine (arm64, tttrlib 0.27.0), same O(n) arithmetic on both
-sides — `tcspc_shift_lamp` (a `std::vector` binding) against `fconv` (a NumPy
-in-place binding):
+The conversion measures **~50 ns per element** and degrades past ~4k (50, 50,
+66, 98 ns/element at n=1024/2048/4096/8192). Calling `tcspc_shift_lamp` with a
+shift of **zero** channels cost 24.4 µs at n=512 against 24.8 µs for a real
+shift: 98% of the call was the wrapper. A 512-channel decay is a small TCSPC
+histogram, so this is the normal case, not the tail.
 
-| n | `std::vector` binding | in-place binding | penalty |
-|---|---|---|---|
-| 64 | 9.1 µs | 1.3 µs | 7.2× |
-| 512 | 26.5 µs | 2.6 µs | 10.2× |
-| 4096 | 335 µs | 10.8 µs | 31× |
-| 16384 | 1360 µs | 68 µs | 20× |
+**The MaxEnt family is converted** (`ext/python/MaxEntTcspc.i`, 2026-08-11).
+All nine entry points now take `double* IN_ARRAY1, int DIM1` and return through
+`ARGOUTVIEWM_ARRAY1/2`. Same machine, same arithmetic, before → after:
 
-The conversion is **~50 ns per element** and degrades past ~4k (51 µs at
-n=1024, 102 µs at 2048, 269 µs at 4096, 799 µs at 8192 — 50, 50, 66, 98
-ns/element). Calling `tcspc_shift_lamp` with a shift of **zero** channels costs
-24.4 µs at n=512 against 24.8 µs for a real shift: 98% of the call is the
-wrapper. A 512-channel decay is a small TCSPC histogram, so this is the normal
-case, not the tail.
+| n | before | after | speedup | after, per element |
+|---|---|---|---|---|
+| 64 | 9.1 µs | 0.50 µs | 18× | 7.9 ns |
+| 512 | 26.5 µs | 0.81 µs | 33× | 1.6 ns |
+| 4096 | 335 µs | 5.55 µs | 60× | 1.4 ns |
+| 16384 | 1360 µs | 19.6 µs | 69× | 1.2 ns |
 
-**What it costs in practice.**
+Per-element cost falls ~40×, from 50 ns to 1.2–1.6 ns, and the converted
+binding is now *faster* than the in-place `fconv` at every size above 64. The
+knock-on numbers: `tcspc_quadpr_bound` at `n_tau = 60` goes 146 → 36.3 µs, so a
+Python-driven 200-iteration MEM loop drops from 29 ms of seam to 7.3 ms;
+building the design matrix per column goes 1668 → 129 µs, cutting the penalty
+over the single whole-matrix call from 28.5× to 2.3×. Behaviour is unchanged —
+`test/python/decayfit` + `test_gil_release` are 111 passed / 1 skipped exactly
+as before, and ChiSurf's design-matrix parity guard still matches its numba
+fixture bit for bit.
 
-- Building the maximum-entropy design matrix one column at a time — the obvious
-  way to reuse the exposed `tcspc_fconv_*` kernels — costs 1668 µs for 60
-  columns against **58.5 µs** for `tcspc_build_fi_lifetimes`, which builds the
-  same matrix in one call. 28.5×, entirely in argument conversion. This is why
-  ChiSurf's plugin delegates the whole matrix and not the kernels.
-- `tcspc_run_mem` takes `H` as a flattened `n_tau × n_tau` matrix. Driving the
-  MEM iteration from Python and delegating only the inner QP costs 146 µs per
-  call at `n_tau = 60`, i.e. **29 ms of pure seam crossing** over 200
-  iterations, before any arithmetic.
-- An optimisation behind such a binding cannot be measured by the caller:
-  `fconv_simd` against `fconv` from Python is 1.11× at n=512 and **1.01× at
-  n=4096** (see the next entry).
+**Still open: the rest of the library.** 68 headers under `modules/` mention
+`std::vector<double>`; that is the search space, not the worklist. Rank by how
+often each is called from Python, not by count — the `fconv`/`rescale` family
+already uses in-place typemaps and is the shape to copy. The pattern and its
+two traps are in `MaxEntTcspc.i`:
 
-**The rule this implies: a loop stays whole in C++.** The seam is crossed once
-per *analysis*, never once per iteration, per column, or per component. A
-binding that exposes a loop *body* is a performance regression by construction
-however fast its C++ is — a caller who uses it as intended is slower than one
-who never linked the library. Where a loop must report progress to a GUI, that
-is an argument for a **callback parameter on the C++ loop**, not for handing the
-loop back to Python.
+- `ARGOUTVIEWM` hands ownership to NumPy and frees with `free()`, so the buffer
+  copied out of a `std::vector` must be `malloc`'d, never `new`'d.
+- A function returning results through `std::vector&` **out-parameters**
+  becomes, under the default typemaps, a Python function with those as
+  *required inputs* that no caller can supply — compiled, exported, documented
+  and uncallable. That is how `tcspc_build_fi_lifetimes` / `_distances`
+  shipped. `%ignore` the original and `%rename` an `%inline` wrapper over it.
+- Keep the wrapper's argument **names**: they are the public keyword names, and
+  callers pass `nu=`, `prior=`, `max_iter=`.
 
-**The fix**, in order of how much it buys:
+**Also still open: a progress callback on the long-running solvers.**
+`tcspc_run_mem`, `solve_tcspc_mem_lifetime` and `solve_tcspc_mem_fret` have no
+per-iteration hook, so a caller cannot let the loop run in C++ *and* drive a
+progress bar. ChiSurf's plugin therefore keeps a second, NumPy implementation
+of `_run_mem` and `_quadpr_bound` — two copies of one algorithm, kept in step
+by hand, which is the cost of the missing hook.
+`std::function<bool(int, double, double)>` returning "keep going" would close
+it and also give the GUI a cancel. Converting the typemaps did not remove this:
+7.3 ms of seam over a fit is cheap, but the duplicate implementation is not.
 
-1. **NumPy typemaps on the numeric entry points.** `%apply(double* IN_ARRAY1,
-   int DIM1)` in, `ARGOUTVIEWM_ARRAY1/2` out — a borrowed pointer in, an owned
-   buffer out, no per-element boxing. `MaxEntTcspc.i` shows the pattern
-   (including the trap: `ARGOUTVIEWM` frees with `free()`, so the out-buffer
-   must be `malloc`'d, not `new`'d). 68 headers under `modules/` mention
-   `std::vector<double>`; the numeric hot paths are the ones that matter, and
-   the `fconv`/`rescale` family already does it right.
-2. **A progress callback on the long-running solvers.** `tcspc_run_mem`,
-   `solve_tcspc_mem_lifetime` and `solve_tcspc_mem_fret` have no
-   per-iteration hook, so ChiSurf's plugin cannot let the loop run in C++ *and*
-   drive its progress bar and convergence history. It therefore keeps a second,
-   NumPy implementation of `_run_mem` and `_quadpr_bound` — two copies of one
-   algorithm, kept in step by hand, which is the cost of the missing hook.
-   `std::function<bool(int, double, double)>` returning "keep going" would close
-   it and also give the GUI a cancel.
-3. **Do not expose loop bodies at all**, or mark them reference-only in the
-   docstring. `tcspc_shift_lamp`, `tcspc_fconv_single_shot`,
-   `tcspc_fconv_periodic` and `tcspc_quadpr_bound` exist so the port could be
-   verified kernel by kernel; they are not a Python API anyone should build on,
-   and nothing in their documentation says so.
+**The rule, which the conversion does not repeal: a loop stays whole in C++.**
+The seam is crossed once per *analysis*, never once per iteration, per column,
+or per component. A binding that exposes a loop *body* is a performance
+regression by construction however fast its C++ and its typemaps are.
+`tcspc_shift_lamp`, `tcspc_fconv_single_shot`, `tcspc_fconv_periodic` and
+`tcspc_quadpr_bound` are exposed so the port can be verified piece by piece;
+`MaxEntTcspc.i` now says so, their docstrings still do not.
 
-**Reproduction.**
+**Reproduction** (the ratio is ~1 after conversion, ~10 before):
 
 ```python
 import timeit, numpy as np, tttrlib
