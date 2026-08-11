@@ -260,6 +260,48 @@ Java cannot express), the streaming classes, and the MaxEnt entry points.
 
 </details>
 
+## `Histogram::get_axis` is a getter that silently ADDS an axis
+
+**2026-08-11.** `Histogram<T>::axes` is a **`std::map<size_t, HistogramAxis<T>>`**,
+and the getter is:
+
+```cpp
+HistogramAxis<T> get_axis(size_t axis_index){
+    return axes[axis_index];      // std::map::operator[] INSERTS on a missing key
+}
+```
+
+`operator[]` on a non-const map default-constructs and inserts when the key is
+absent. So reading an axis that does not exist does not fail and does not
+return a sentinel — it **creates** one and leaves it in the map.
+
+```python
+h = tttrlib.doubleHistogram()
+h.set_axis(0, tttrlib.doubleAxis('x', 0.0, 1.0, 8, 'lin'))
+h.get_axis(999)          # looks read-only; the histogram now has an axis at 999
+```
+
+The consequence is not a crash — this is memory-safe, unlike the other
+unchecked-index defects filed today. It is that `axes.size()` is the axis count
+(`getAxisDimensions()`), and `update()` and the bin-count product both iterate
+the whole map. A phantom axis therefore changes the shape of a subsequent
+histogram, and it was introduced by a call that reads.
+
+**What is established and what is not.** The insertion is certain from the C++:
+a non-const `std::map::operator[]` inserts, and this method is non-const so it
+compiles. Observed: `get_axis(999)` returns an empty axis rather than raising,
+consistently, on a histogram that has only axis 0. I did **not** get an
+end-to-end demonstration of a corrupted histogram — configuring one through the
+binding hit unrelated API friction (`get_histogram()` raised a `SystemError` on
+a minimally-configured histogram, which is either my incomplete setup or a
+separate defect and is not chased here).
+
+**Fix**, and it is small: `get_axis` should use `find()` and either throw or
+return a default without inserting, and be `const`. `const` is the real
+guard — a const map has no inserting `operator[]`, so the compiler would have
+rejected this line and will reject the next one like it. The neighbouring
+`set_axis` legitimately uses `axes[data_column] = new_axis;` and should keep it.
+
 ## A ratio-based timing assertion fails 2 runs in 3, and its own docstring says why it should not
 
 **2026-08-11.** `test_datastore_paths.py::test_the_column_lookup_did_not_get_slower`
