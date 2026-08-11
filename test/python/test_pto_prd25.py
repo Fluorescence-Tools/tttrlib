@@ -1,12 +1,32 @@
 # SPDX-License-Identifier: BSD-3-Clause
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
 import tttrlib
 
-PTO_BIN = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../build/modules/io/pto/pto"))
+_BUILD_BIN = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../build/modules/io/pto/pto")
+)
+
+
+def _find_pto():
+    """The standalone pto tool: build tree first, then PATH.
+
+    Same rule as misc/test_cli.py. An install-only test job -- a wheel or a
+    conda package under test -- has no build tree, so the tests that drive the
+    tool skip instead of failing on a path that was never going to be there.
+    """
+    if os.path.isfile(_BUILD_BIN) and os.access(_BUILD_BIN, os.X_OK):
+        return _BUILD_BIN
+    return shutil.which("pto")
+
+
+PTO_BIN = _find_pto()
+needs_pto = unittest.skipUnless(PTO_BIN, "the pto tool is neither built nor installed")
+
 
 class TestPtoPRD25(unittest.TestCase):
     def setUp(self):
@@ -66,6 +86,7 @@ class TestPtoPRD25(unittest.TestCase):
             compact_head_bytes = fp.read(512)
             self.assertIn(b"This is a .pto photon container", compact_head_bytes)
 
+    @needs_pto
     def test_cli_ls_and_json(self):
         """PRD-025 Criterion 2 & 4: CLI ls command and --json output"""
         res = subprocess.run([PTO_BIN, "ls", self.pto_path], capture_output=True, text=True)
@@ -82,6 +103,7 @@ class TestPtoPRD25(unittest.TestCase):
         self.assertEqual(len(data["objects"]), 2)
         self.assertEqual(data["objects"][0]["name"], "stream1")
 
+    @needs_pto
     def test_cli_tree_and_alignment(self):
         """PRD-025 Criterion 3: tree command and 8-byte payload alignment"""
         res = subprocess.run([PTO_BIN, "tree", self.pto_path], capture_output=True, text=True)
@@ -91,6 +113,7 @@ class TestPtoPRD25(unittest.TestCase):
         self.assertIn("FileData", res.stdout)
         self.assertIn("8-byte aligned", res.stdout)
 
+    @needs_pto
     def test_cli_cat_and_extract(self):
         """PRD-025 Criterion 2 & 9: cat and extract commands"""
         # cat by name
@@ -110,6 +133,7 @@ class TestPtoPRD25(unittest.TestCase):
         with open(extracted_file, "rb") as fp:
             self.assertEqual(fp.read(), self.payload2)
 
+    @needs_pto
     def test_cli_exit_codes(self):
         """PRD-025 Criterion 4: Exit codes 0, 1, 2, 3, 4"""
         # Non-existent file -> exit 4
@@ -124,6 +148,7 @@ class TestPtoPRD25(unittest.TestCase):
         res2 = subprocess.run([PTO_BIN, "invalid_command", self.pto_path], capture_output=True)
         self.assertEqual(res2.returncode, 2)
 
+    @needs_pto
     def test_bundle_creation_and_execution(self):
         """PRD-025 Criterion 6, 9, 10, 11, 13: Executable bundling, P % 8 == 0, execution & reader open"""
         bundle_path = os.path.join(self.temp_dir.name, "run.pto.com")
