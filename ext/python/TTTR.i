@@ -108,6 +108,27 @@ TTTRLIB_NOGIL(TTTR::burst_search_bayesian_blocks)
     }
 }
 
+// A header (and the microtime linearizer) is a pointer INTO the TTTR that
+// made it, and the proxy must keep that owner alive: `TTTR(path).header`
+// otherwise frees the TTTR at the end of the expression and every read
+// through the proxy after that is use-after-free -- a segfault, not an
+// exception (BUGS 2026-08-11).
+//
+// Python-only: %pythonappend is an unknown directive to the R, Java and
+// JavaScript backends, which parse this same file and stop at it. The other
+// three bindings still have the underlying lifetime hole; it needs each
+// backend's own equivalent.
+#ifdef SWIGPYTHON
+%pythonappend TTTR::get_header() %{
+        if val is not None:
+            val._keepalive_owner = self
+%}
+%pythonappend TTTR::get_mt_linearizer() %{
+        if val is not None:
+            val._keepalive_owner = self
+%}
+#endif
+
 %include "TTTR.h"
 
 #ifdef SWIGPYTHON
