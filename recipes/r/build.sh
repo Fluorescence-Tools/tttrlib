@@ -5,10 +5,30 @@ if [[ "${target_platform}" == osx-* ]]; then
   export CXXFLAGS="${CXXFLAGS} -D_LIBCPP_DISABLE_AVAILABILITY"
 fi
 
+# r-base ships a compiler of its own, so that R can build source packages, and
+# it lands in the HOST environment. For this recipe -- and only this one --
+# ${CXX} then points into $PREFIX while ${CC} still points into $BUILD_PREFIX.
+# The two drivers do not agree about the sysroot, and the one module with C and
+# C++ sources (io/pto) fails to link: ld resolves libm through the sysroot's
+# linker script and then looks for the build host's /lib64/libm.so.6, which a
+# cross sysroot does not have.
+#
+# Pin both to the build environment, where conda's toolchain belongs. On osx
+# both already resolve there, so this changes nothing.
+for c in "${BUILD_PREFIX}/bin/${HOST}-cc" "${BUILD_PREFIX}/bin/${HOST}-clang" \
+         "${BUILD_PREFIX}/bin/${HOST}-gcc"; do
+  if [[ -x "${c}" ]]; then export CC="${c}"; break; fi
+done
+for c in "${BUILD_PREFIX}/bin/${HOST}-c++" "${BUILD_PREFIX}/bin/${HOST}-clang++" \
+         "${BUILD_PREFIX}/bin/${HOST}-g++"; do
+  if [[ -x "${c}" ]]; then export CXX="${c}"; break; fi
+done
+
 # 1. Generate the SWIG R wrapper + interface and build the static C++ core to
 #    link the R package against.
 mkdir -p b2 && cd b2
 cmake -S .. -B . \
+  -DCMAKE_C_COMPILER="${CC}" \
   -DCMAKE_CXX_COMPILER="${CXX}" \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DBUILD_PYTHON_INTERFACE=OFF \
