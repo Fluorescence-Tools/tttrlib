@@ -9,7 +9,9 @@
 
 #if defined(_WIN32)
 #include <io.h>
+#include <process.h>
 #define isatty _isatty
+#define execvp _execvp
 #define STDOUT_FILENO 1
 #else
 #include <unistd.h>
