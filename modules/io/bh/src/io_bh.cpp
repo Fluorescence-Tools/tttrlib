@@ -316,7 +316,7 @@ void write_spc132_header(
     nlohmann::json tag = get_tag(data, TTTRTagGlobRes);
     head.bits.macro_time_clock = (unsigned) ((double) tag["value"] * 10.e9);
 
-    FILE* fp = fopen(fn.c_str(), mode.c_str());
+    FILE* fp = open_file(fn, mode.c_str());
     fwrite(&head, 4, 1, fp);
     fclose(fp);
 }
@@ -363,7 +363,7 @@ void write_spcqc_header(
     head.bits.six_channel =
             ((int) data[TTTRRecordType] == BH_RECORD_TYPE_SPCQC_X06) ? 1 : 0;
 
-    FILE* fp = fopen(fn.c_str(), mode.c_str());
+    FILE* fp = open_file(fn, mode.c_str());
     fwrite(&head, 4, 1, fp);
     fclose(fp);
 }

@@ -123,7 +123,7 @@ if (is_verbose()) {
         return v.is_string() ? v.get<std::string>() : d;
     };
 
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    FILE* fp = open_file(fn, modes.c_str());
     if (fp == nullptr) {
         std::cerr << "ERROR: Cannot write SM header to file: " << fn << std::endl;
         return;

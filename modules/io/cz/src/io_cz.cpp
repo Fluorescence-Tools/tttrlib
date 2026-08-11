@@ -110,7 +110,7 @@ if (is_verbose()) {
     double mt_clk = tag_double(TTTRTagGlobRes, 1.0);
     settings.bits.frequency = (uint32_t) std::llround(1.0 / mt_clk);
 
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    FILE* fp = open_file(fn, modes.c_str());
     if (fp == nullptr) {
         std::cerr << "ERROR: Cannot write CZ header to file: " << fn << std::endl;
         return;

@@ -3020,7 +3020,7 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
             (container_type == BH_SPC600_256_CONTAINER) ||
             (container_type == BH_SPC600_4096_CONTAINER)){
         // SPC-600 files have no on-disk header; create/truncate the file
-        FILE* f = fopen(fn.c_str(), "wb");
+        FILE* f = open_file(fn, "wb");
         if (f != nullptr) fclose(f);
     } else{
         std::cerr << "Error in TTTR::write, writing of headers not implemented" << std::endl;

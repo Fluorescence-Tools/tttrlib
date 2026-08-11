@@ -300,7 +300,7 @@ void write_ptu_header(std::string fn, nlohmann::json &data, std::string modes){
     }
 
     // write header information that is not in header tags
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    FILE* fp = open_file(fn, modes.c_str());
     // Write identifier for PTU files
     char version[8]; std::string version_str;
     char Magic[8] = "PQTTTR";
@@ -554,7 +554,7 @@ if (is_verbose()) {
     }
     tt_mode_hdr.ImgHdrSize = (int32_t) img_hdr.size();
 
-    FILE* fp = fopen(fn.c_str(), modes.c_str());
+    FILE* fp = open_file(fn, modes.c_str());
     if (fp == nullptr) {
         std::cerr << "ERROR: Cannot write HT3 header to file: " << fn << std::endl;
         return;
