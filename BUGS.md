@@ -3,6 +3,22 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## FIXED — Two `Streaming.i` files: the module's is shadowed, so edits to it do nothing
+
+> **Fixed 2026-08-11.** `ext/python/Streaming.i` (125 lines, four classes) is
+> deleted; `modules/streaming/include/Streaming.i` (six classes) is the only one
+> left, and `%include "Streaming.i"` now resolves to it. Verified from Python
+> rather than from the diff: all **six** classes are reachable —
+> `StreamingBurstDetector`, `StreamingCLSMImage`, `StreamingCorrelator`,
+> `StreamingDecayHistogram`, `StreamingIntensityTrace`, `StreamingPhasor` —
+> where the shadowing copy exposed four.
+>
+> The entry itself had been *deleted* rather than stubbed, which is the thing
+> this file's convention exists to prevent: a reader cannot tell a fixed bug
+> from a bug nobody filed, and a concurrent session restoring its own copy of
+> the file silently resurrects it. Restored as a stub by `opus-5/ac9f6757`,
+> who did not do the fix.
+
 ## Streaming into `.sm` writes a header the `.sm` reader does not parse back
 
 **2026-08-11.** `RecordStreamWriter` produces an SM file whose header is
@@ -44,6 +60,76 @@ tolerates extra fields.
 **Affects only `.sm`.** PTU, HT3 and PTO stream exactly; SPC-130, SPC-QC and
 CZ-RAW stream to the same result as a whole-file write. SPC-600/256 and /4096
 have the separate detection defect recorded above.
+
+## FIXED — A bare `%exception;` disarms every interface included after it, so a C++ throw kills the interpreter
+
+**2026-08-11.** Found when the full test suite stopped being a suite: it died
+at 8% with `Fatal Python error: Aborted`, which is not a failing test — nothing
+after it ran at all, so the run reported no results rather than one bad one.
+
+```python
+tttrlib.CLSMSuperRes.temporal_combine(np.zeros((1,4,4)), mode="TAC2")
+# libc++abi: terminating due to uncaught exception of type
+#     std::invalid_argument: TAC2 needs at least two frames
+```
+
+The call is *supposed* to reject that input, and
+`test_clsm_superres.py::test_temporal_combine_rejects_bad_input` asserts it
+does. It throws correctly in C++; what is missing is the handler that turns the
+throw into a Python exception.
+
+**Mechanism, and it is positional.** `%exception` applies to everything
+declared after it until replaced — and a bare `%exception;` clears it to
+*nothing*, not to whatever was in force before. `MicrotimeLinearization.i`
+installs the global handler at include position 165 of
+`ext/python/tttrlib.i`. `Fdc2D.i` sits at 197 and ended with a bare
+`%exception;` to close its own scoped handler, which also erased the global
+one. Everything after 197 was therefore unprotected: `CLSM.i`,
+`CLSMSuperRes.i`, `Localization.i`, `Tiff.i`, `DecayPhasor.i`, `Pda.i`,
+`DecayConvolution.i`, `DecayFit.i`, `Sim.i`, `Streaming.i`.
+
+**Fixed** by ending Fdc2D's scoped handler with a re-installation of the global
+body rather than a clear. `test/python/test_cpp_errors_raise_not_abort.py`
+pins it, and is worth its weight precisely because this failure mode cannot be
+caught by an ordinary assertion: if the handler goes missing again those tests
+do not fail, they take the runner with them.
+
+**The general shape is still open, and it is luck that it is not worse.** Six
+interfaces end with a bare `%exception;` — `Cluster.i`, `Fdc2D.i`,
+`Deconvolution.i`, `HmmLattice.i`, `Jitter.i`, `Sampling.i`. The other five are
+harmless *only* because they happen to sit before position 165, so the global
+handler is installed after them. That is an ordering coincidence, not a
+design: move any one of them later, or add a seventh after the global install,
+and the abort comes back somewhere new. `ext/js/tttrlib.i` already carries a
+comment describing this exact symptom for `BVA.i` and `TwoCDE.i`, so it has
+bitten twice.
+
+**2026-08-11, closed — and the fix is the option this entry called second-best,
+because the one it called "the real fix" does not work.** I wrote that
+installing the global handler before any interface include would make a clear
+"restore rather than erase". It would not: `%exception;` resets to *nothing*
+regardless of what came before, because SWIG keeps no stack. Installing early
+only moves which files are stranded — a clear at position 156 still disarms
+157 onward, wherever the global was installed. There is no ordering that
+survives a bare clear, so the only fix is to stop clearing.
+
+All five remaining bare clears — `Cluster.i`, `Deconvolution.i`,
+`HmmLattice.i`, `Jitter.i`, `Sampling.i` — now end their scoped handler by
+re-installing the global body instead, as `Fdc2D.i` already does. Zero bare
+`%exception;` remain in the tree.
+
+**The comment above each one had it exactly backwards**, which is why this
+survived review: they read *"Reset the catch-all so the modules included after
+this one keep theirs."* The modules after do not keep theirs — they keep
+nothing. The code asserted the property it destroyed.
+
+Now machine-checked rather than reasoned: `tools/check_swig_multilang.sh`
+grew an **Exception handlers** stage that fails if any interface after
+`MicrotimeLinearization.i` clears the global handler — currently *"32
+interfaces after MicrotimeLinearization.i, none clear the global handler"*.
+That guard matters more than the five edits, because the property this needs
+is "no file anywhere clears", which no reviewer can hold in their head while
+adding a sixth interface.
 
 ## PARTLY FIXED — A file tttrlib wrote is not recognised by tttrlib, and opening it returns zero events instead of failing
 
@@ -305,6 +391,176 @@ several**: implement `ARGOUTVIEWM_ARRAY2` / `ARGOUTVIEW_ARRAY2` (and rank 3)
 in `ext/java/jarrays.i`, and `Deconvolution.i`, `Jitter.i` and MaxEntTcspc's
 builders all become addable at once. `documentation.i` (java) is separate,
 being docstrings rather than API.
+
+**2026-08-11, `MaxEntTcspc.i` added to r and js — 7 declared gaps remain,
+from 51.** All nine entry points reach R with no opaque parameter: both
+solvers (`solve_tcspc_mem_lifetime`, `solve_tcspc_mem_fret`), both
+design-matrix builders (`tcspc_build_fi_lifetimes`,
+`tcspc_build_fi_distances`) and the five kernels. Java stays declared for the
+reason measured earlier — `jarrays.i` has no rank-2 argout, so the builders
+would come back as `SWIGTYPE_p_p_double` while only the solvers worked.
+
+**2026-08-11, a correction to my own analysis above, and it cost a bad
+change.** I wrote that `jarrays.i` "implements the argout views at rank 1
+only". **It implements none, at any rank.** The grep behind that claim matched
+`jarrays.i`'s header comment and a NOTE that says the *opposite* — the file
+states plainly: *"output typemaps (ARGOUTVIEW / ARGOUTVIEWM) are intentionally
+NOT defined for Java"*.
+
+**The consequence: I added `Sampling.i` to Java on that wrong reading, and it
+was uncallable** — `sample_from_cdf(double[], double[], int,
+SWIGTYPE_p_p_double, SWIGTYPE_p_int, boolean)`, inputs fine and output opaque.
+Exactly the defect this entry exists to prevent, committed while claiming to
+have checked for it. Reverted; Java's exception restored with the measured
+reason. `Cluster.i` was verified properly at the time (it returns
+`VectorDouble`) and is fine; so are the other four.
+
+**Why it is not a typemap gap, which changes the fix.** The cause is
+structural and `jarrays.i` explains it: a Java method's return is bound to the
+C++ return type, so `void f(T** out, int* n)` returns `void` in Java and an
+argout typemap has no `jresult` to assign — it would not compile. Writing
+rank-2/3 argout typemaps therefore **would not work**, and my "one job
+unlocks three gaps" was wrong twice over.
+
+**The real shape of Java's remainder**: each affected function needs a
+per-method `%extend` that *returns* the array (or an nio buffer), which
+`jarrays.i` already lists as a follow-up. That is four functions across
+`Sampling.i`, `Deconvolution.i`, `Jitter.i` plus MaxEntTcspc's builders —
+per-function work, not one typemap.
+
+**The lesson, since I had already written the rule and then broke it**:
+generate the wrapper and read the signature. Do not infer callability from
+grepping a typemap file for names — comments and NOTEs match the same words,
+and here the file's own summary contradicted its own implementation.
+
+**What is actually left, and who it belongs to:**
+
+* **Java's argout story** — the pattern was already in the tree and I had not
+  looked: `ext/java/helpers.i` solves exactly this for `Pda`, `CLSMImage`,
+  `TTTR`, `TTTRMask`, `Histogram`, `Column` and `read_tiff`, and states the
+  same diagnosis in its own comments ("jarrays.i defines no ARGOUTVIEW
+  typemaps, because a void-returning method has no jresult to assign"). The
+  recipe is a `_into` helper: the caller preallocates, `INPLACE_ARRAY1` (which
+  Java *does* marshal) is filled, the count comes back as the return.
+
+  **Sampling is done this way as of 2026-08-11** —
+  `weighted_choice_into(double[], int[])` and
+  `sample_from_cdf_into(double[], double[], double[], boolean)`, both callable,
+  no opaque parameter. Simpler than the accessors above because the *native*
+  `Sampling.h` functions already take a caller-provided buffer, so there is no
+  malloc/free at all; the interface's `%inline` versions that allocate exist
+  for the languages that can return an array.
+
+  `Sampling.i` itself deliberately stays off Java's list rather than being
+  re-added alongside the helpers. That differs from `Pda.i`, which *is* on the
+  list, and the reason is worth stating: `Pda` has plenty of other usable
+  methods, so including it buys real surface and the one opaque getter is
+  noise beside them. `Sampling.i` contains **only** the two functions, both
+  argout, so including it would add two uncallable overloads and nothing else.
+
+  **Deconvolution followed, same day**: `richardson_lucy_2d_into(double[][]
+  image, double[][] psf, double[] out, …)` and `wiener_deconvolve_2d_into(…)`,
+  both callable, the image and PSF going in as `double[][]` through
+  `IN_ARRAY2` — which Java marshals fine; it is only the *out* direction it
+  cannot express. Worth recording why the obvious shortcut fails: the
+  vector-returning C++ overloads (`std::vector<double> richardson_lucy(...)`)
+  look like the answer, and are not, because they take a bare `const double*`
+  with no companion length, so no `IN_ARRAY` typemap can match them.
+
+  **A hole in the checks, found by writing into it.** These helpers are the one
+  place the Java binding carries hand-written C++, and nothing compiled it:
+  `check_swig_multilang.sh` ran SWIG and then `javac` on the generated
+  *proxies*, which says nothing about the generated `.cxx`. A mistake in a
+  `%inline` body therefore generated fine, compiled fine as Java, and would
+  have failed only in a full native build — i.e. in CI, or in somebody else's
+  checkout. The script now has a **generated-C++ compile** stage
+  (`c++ -fsyntax-only` against the JDK's JNI headers, so it costs a parse).
+  Confirmed live rather than assumed: replacing `out.size()` with
+  `out.length()` in one helper fails the stage with *"no member named 'length'
+  in 'std::vector<double>'"* and the offending line.
+
+  Left for whoever continues: `richardson_lucy_3d`,
+  `richardson_lucy_events_2d`, `Jitter.i`, and MaxEntTcspc's two builders. The
+  builders are the awkward ones — each returns *four* arrays, so a single
+  `_into` cannot carry them and it wants either four calls or a small result
+  class. That is a design decision, not typing.
+* **`HmmLattice.i`** (r, java, js) — claimed by the session that wrote it
+  ("mine … not yet offered to the others"). Its typemaps are rank-1, so it is
+  a `%include` away whenever that session offers it.
+* **`documentation.i`** (java) — docstrings, not API; a separate question about
+  whether Java proxies should carry them at all.
+
+**2026-08-11, `Streaming.i` closed for all three — 9 declared gaps remain, from
+51. And it exposes a limit the gap count cannot see, which is worth more than
+the three gaps it closed.** The six streaming consumers now generate in R,
+Java and JavaScript with callable signatures (`push_photon(BigInteger,
+double)`, `get_correlation() -> VectorDouble`, the readouts and `flush`).
+`HmmLattice.i` and `MaxEntTcspc.i` are still declared, both claimed by the
+session writing them.
+
+**But "the interface is present" is not "the API is whole", and the parity
+checker cannot tell the difference** — it compares `%include` lists, so a file
+counts as closed the moment it appears. In `Streaming.i` the *bulk* entry
+point is Python-only: `push_arrays` (one chunk, one call) and the `push_np`
+that wraps it sit inside a single `#ifdef SWIGPYTHON` spanning lines 81-248.
+The other three languages get only the per-photon `push_photon`, plus a
+`push_photons` raw-pointer overload that generates as
+`SWIGTYPE_p_unsigned_long_long` / `SWIGTYPE_p_double` and cannot be called.
+
+That matters because per-photon is precisely the cost this changelog just
+removed for Python: looping in the host language measured **1.13 µs/photon**,
+enough to eat half a core on a 100 kHz acquisition. A live display driven from
+R or JavaScript would hit exactly that, having been told the subsystem is
+available.
+
+**And it is a fence, not a limitation.** The `%apply ... IN_ARRAY1` lines that
+`push_arrays` depends on are applied *unconditionally* at the top of the file,
+and `rarrays.i` / `jarrays.i` / `jsarrays.i` all implement `IN_ARRAY1`. The
+C++ bodies touch no Python C-API — they take the typemap pairs and throw
+`std::invalid_argument`. So the same `push_arrays` would work in all four
+languages today; only `%pythoncode push_np` genuinely has to stay Python-only.
+
+**2026-08-11, done — the fence moved inside.** Each of the five `%extend`
+blocks now guards only its `%pythoncode`; `push_arrays` sits outside, visible
+to every backend. Checked first rather than assumed, since adding things
+blindly is what this entry warns against: `push_arrays` needs `IN_ARRAY1` for
+`unsigned long long`, `double`, `int` and `unsigned short`, and all four are
+instantiated in both `rarrays.i` (`%r_numpy_typemaps`) and `jarrays.i`
+(`%java_numpy_typemaps`) — they are macro-generated over a type list, which is
+why grepping for the type names undercounts them.
+
+Generated Java, all five callable with no opaque parameter:
+
+```java
+public void push_arrays(long[] st_macro_times, double[] st_weights, int[] st_channels)
+public void push_arrays(short[] st_microtimes, int[] st_channels)
+public void push_arrays(long[] st_macro_times)
+```
+
+Python is unchanged and was checked directly, not inferred from the
+reproducibility gate (which only proves the wrapper regenerates
+deterministically): `push_np`, `push_arrays`, the `correlation` / `x_axis`
+properties and `__repr__` all still work, a 1000-photon bulk push arrives, and
+the 55 streaming tests pass.
+
+**Swept the rest rather than leaving that as a worry, and the good news is
+that `Streaming.i` is the only one.** 39 of the closed interfaces do contain a
+`#ifdef SWIGPYTHON`, which looks alarming until you read what is inside them:
+in 38 it is only `%pythoncode` and the Python protocol methods (`__getitem__`,
+properties, `__len__`) — genuinely Python-only, correctly fenced, nothing owed
+to the other languages. `Streaming.i` is the single file whose fence holds
+**C++** methods: the five `push_arrays`, one per consumer.
+
+So the defect is one file, not a class of them. (Method-counting was a regex
+over signature lines inside each fence, so read it as "one file stands out by
+an order of magnitude", not as an exact census.)
+
+**The lesson worth keeping** is about the tool rather than the code: the parity
+checker compares `%include` lists, so it reports a file as closed the moment
+the line appears, and cannot see that a third of its API is fenced off. A
+future `%include`-only closure should be checked the way this one was —
+generate the wrapper and read the class's methods — because the checker's
+"closed" and a caller's "usable" are different claims.
 
 ## FIXED — A wall-clock assertion in the unit suite fails when the machine is busy
 

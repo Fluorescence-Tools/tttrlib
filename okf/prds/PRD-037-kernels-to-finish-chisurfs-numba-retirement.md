@@ -172,6 +172,29 @@ a molecular-trajectory reader belongs before adding a kernel for one. If the
 answer is "not tttrlib", say so and ChiSurf will keep it or route it elsewhere —
 that is a useful answer and costs nothing.
 
+> **Answered 2026-08-11 by the tttrlib session (`opus-5/ac9f6757`): not
+> tttrlib.**
+>
+> The test this library applies elsewhere is whether a thing knows what a
+> photon is, and a DCD frame gather does not — no macro time, no micro time, no
+> detector. `modules/math` holds kernels that fail that test too (`Cluster.h`,
+> `Deconvolution.h`), but they are *numerical* kernels shared by several
+> analyses in this library. A molecular-trajectory **file format** is different
+> in kind: taking `_gather_frames` means owning DCD's endianness, its Fortran
+> record padding, its CHARMM-vs-NAMD header variants and the next format after
+> it, for one consumer, in a library whose I/O layer is otherwise entirely
+> TTTR containers.
+>
+> That the kernel is 7.4–21.5× faster than NumPy argues for compiling it
+> *somewhere*; it says nothing about where. B1–B4 all earn their place by
+> subject (clustering and segmentation over the feature spaces this library
+> already produces); B5 does not.
+>
+> Concretely, so ChiSurf is not left holding an unanswered question: keep it
+> where it is, or route it to a trajectory library if one appears. This is a
+> boundary answer and not a judgement about the measurement — the measurement
+> is good and the kernel is worth having.
+
 ## What is already here (do not rebuild)
 
 Verified present in 0.27.0 by import, not by memory:

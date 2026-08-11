@@ -68,6 +68,192 @@ are still claims and still binding.
 
 *Pick one by moving the whole entry to **Active** and filling in `Owner:`.*
 
+- **T-20260811-17 · [chisurf] AV grid re-expressed against `IMP.bff.AV` (PRD-100 group 1)**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: 6 kernels in `core/structure/av/static.py` + the 3 in `av/functions.py`
+    that consume its density. **The `imp` route label is wrong as written**:
+    none of these symbols exist in `IMP.bff`/`IMP.cgmol`/`IMP.bff.cgdye` or
+    `~/dev/imp.bff` — checked by import. `IMP.bff.AV` is real, so this is a
+    re-expression against a different API with a parity bar, not a deletion.
+    Full scoping in chisurf `okf/prds/prd-100.md`.
+  - Interface: `IMP.bff.AV` decorator — `get_linker_length`, `get_linker_width`,
+    `get_allowed_sphere_radius`, `get_map`, `get_mean_position`,
+    `create_path_map_header`. ChiSurf keeps its own call surface
+    (`av/static.py`'s public functions) and re-implements the internals on top.
+  - Tests, recorded **before** deleting anything: (1) identical occupied-voxel
+    count and an identical density array for a fixed structure/label/linker;
+    (2) mean position to 1e-9 Å; (3) ⟨R_DA⟩ and ⟨R_DA⟩_E on **T4 Lysozyme
+    (148L)** against recorded values — these are what users publish;
+    (4) a **known-separation simulation**: two labelling sites at a known
+    distance in a structure with no quenchers must return it within the grid
+    spacing. (4) is required because (1)–(3) compare against the code being
+    replaced and cannot tell a faithful port from a shared mistake.
+  - Precondition: `set_av_parameter` writes `radius1` into all three radii (see
+    PRD-99); fix that first or the parity numbers absorb the error.
+  - Do not start before PRD-97 settles — a peer holds ~159 uncommitted lines in
+    `structure/protein.py`.
+  - Touching: `chisurf/core/structure/av/{static.py,functions.py}`, the AV
+    consumers listed in prd-100.md, `test/structure/`.
+
+- **T-20260811-18 · [chisurf] dye-diffusion + quenching maps: decide, then act (PRD-100 group 2)**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: `av/dynamic.py`'s `_quenching_rate_per_frame` and `av/functions.py`'s
+    `assign_diffusion_to_grid_*`, `iterate_cpu`, `reduce_decay_cpu`,
+    `create_fret_rate_map`, `create_quenching_map`. **Whether IMP wants these at
+    all is an open question** — dye photophysics on a grid may be ChiSurf's own
+    subject. The ticket is the decision plus its consequence.
+  - Measured, so do not re-derive: `_quenching_rate_per_frame` is a masked
+    row-sum and both NumPy spellings are **2.9–16.2× slower** and not bit-exact
+    — `(collided != 0) @ k` upcasts a `uint8 (100000, 500)` mask into a 400 MB
+    `float64` temporary, which is the materialisation the loop exists to avoid.
+    So "delete the decorator" is not available.
+  - Interface: whichever is chosen — `IMP.bff` if it grows them, else a WGSL
+    compute shader via `chisurf/core/gpu`, else they stay and take route
+    `tttr-c`. Record the measurement that decided it.
+  - Tests: the quenched donor decay from `iterate_cpu`/`reduce_decay_cpu` on a
+    fixed grid, compared curve-for-curve against a recording; plus a
+    zero-quencher control whose decay must be mono-exponential at the unquenched
+    lifetime.
+  - Touching: `chisurf/core/structure/av/{dynamic.py,functions.py}`.
+
+- **T-20260811-19 · [chisurf] ProteinMC potentials have no IMP target — decide the route (PRD-100 group 3)**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: `structure/potential/potentials.py` (5 kernels: `centroid2`,
+    `internal_potential`, `lj_calpha`, `gb`, `go`) and `structure/protein.py`
+    (`internal_to_cartesian`). **`IMP.bff` exposes only `AVNetworkRestraint`** —
+    there is nothing to delegate to today, and `GoPotential`/`HPotential`/
+    `Ramachandran` are live behind the ProteinMC model and three GUI widgets, so
+    they cannot be deleted either. This ticket is to pick a route with evidence.
+  - Interface: one of — IMP grows the potentials (then a decorator-style API
+    like `IMP.bff.AV`); or plain NumPy **if measured non-hot**; or route
+    `tttr-c`, which is wrong on its face since these are not photon kernels.
+  - Tests: energies for a fixed conformation against recorded values per
+    potential, and a **gradient check** (finite differences vs the analytic
+    force) if the chosen route reimplements rather than wraps — that is what
+    catches a sign or factor error, which recorded energies alone will not.
+  - Done when: the route is recorded in `okf/subsystems/numba-retirement.md`
+    with the measurement behind it, whether or not code moves.
+  - Touching: `chisurf/core/structure/potential/potentials.py`,
+    `chisurf/core/structure/protein.py`, `chisurf/gui/widgets/structure/potentials_*.py`.
+
+- **T-20260811-20 · [chisurf] four delegations that wait on tttrlib PRD-037 Part B**
+  - Status: 🚫 blocked
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: `_hdbscan.py`'s 4 post-MST kernels, `_kmeans.py` (3), `kalman.py` (2),
+    `roi/segmentation.py` (5), and `fio/trajectory/dcd.py` (1) all need compiled
+    kernels that **do not exist yet**. They are specified in one place —
+    tttrlib `okf/prds/PRD-037-kernels-to-finish-chisurfs-numba-retirement.md`,
+    Part B — with interfaces and per-kernel measurements. **Do not open per-file
+    requests upstream**; add to that PRD.
+  - Blocked on: PRD-037 B1–B5. B5 (the DCD de-interleave) is a *scope question*,
+    not a mandate — "not tttrlib" is a valid answer and costs nothing.
+  - Tests, once each lands: a fixture recorded from the numba kernel **before**
+    deletion, plus the property test named in the PRD — skimage-exactness for
+    the watershed and marching squares, caller-supplied seeding uniforms for
+    k-means determinism, sorted-edge-weight comparison for the MST-derived
+    trees.
+  - Touching: those five files and `test/numba_import_allowlist.txt`.
+
+- **T-20260811-14 · [chisurf] flc_2d delegates its 5 kernels to the fdc_* family**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: last numba in the 2D-FLC plugin. The delegation is **written and
+    numerically exact** (13/13 recorded fixture cases bit-for-bit) and is parked
+    at `scratchpad/core_delegated.py`; it is not landed only because importing
+    `tttrlib` into that plugin's process segfaults its Qt widget tests
+    (0/8 crashes at HEAD, 3/8 lazy import, 8/8 module-level import — see
+    chisurf `okf/references/known-issues.md`). Probable cause is IMP being loaded
+    from a build made against a *different* conda env; **ignore the crash for
+    this ticket** and land the delegation.
+  - Interface (already exists upstream, nothing to add):
+    ```python
+    t_imax = tttrlib.fdc_t_imax(span, lint_bin_factor)      # reference t_Imax
+    tttrlib.fdc_log_ticks(t_imax, ticks)                    # ticks: (L+1,) int64
+    tttrlib.fdc_scan_axis(macro, micro, lags, ddT, t_min, t_max,
+                          ticks, n_chunks, out, t_imax)     # out: (n_lags*L*L,)
+    tttrlib.fdc_scan_two_axes(macro, micro, lags, ddT, t_min, t_max,
+                              ticks_a, ticks_b, n_chunks, out_a, out_b, t_imax)
+    ```
+    ChiSurf side keeps its signatures: `_fdc_scan_log_kernel(..., lint_bin_factor=1)`
+    returns `(n_lags, L, L)`; `create_2d_fdc_numba_int(...)` returns
+    `(mat_lin, mat_lint, mat_log, logt_ticks)` with the reference's one-bin trim
+    (`[:lint_imax-1]`) applied in Python. Linear ticks are `[-1, 0, f, 2f, …, t_imax]`.
+  - Tests: `chisurf/plugins/fcs/flc_2d/test/test_fdc_parity.py` already pins all
+    13 cases against `test/data/numba_parity/flc_2d_fdc.npz` and must stay green;
+    plus the existing `test_the_chunk_count_still_changes_nothing` and
+    `test_both_kernels_put_the_log_matrix_on_the_same_axis`. Run the plugin
+    directory, not single files.
+  - Done when: `chisurf/plugins/fcs/flc_2d/core.py` has no `numba` import, the
+    3 helpers (`_ceil_div_pos`, `_ceil_div_signed`, `_log_bin_int`) are deleted,
+    `default_chunk_count()` returns `os.cpu_count()`, and the allow-list line is
+    struck (12 → 11).
+  - Touching: `chisurf/plugins/fcs/flc_2d/{core.py,api.py}`, its `test/`,
+    `test/numba_import_allowlist.txt`.
+
+- **T-20260811-15 · [chisurf] _hdbscan drops 3 kernels by requiring the compiled path**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: `core_distances` and `mutual_reachability_mst` **already ship** in
+    tttrlib 0.27.0 and are used today behind an optional `_compiled_kernel()`.
+    Making them required deletes `_core_distances_bruteforce`, `_edge_less` and
+    `_prim_mst` — 3 of the file's 7 kernels — with no new upstream code. The
+    other 4 are PRD-037 B1 and are **not** in this ticket.
+  - Interface (exists): `tttrlib.core_distances(X, k) -> (n,)` and
+    `tttrlib.mutual_reachability_mst(X, k, alpha) -> (n-1, 3)` edge list
+    `[u, v, weight]`. `_compiled_kernel()` becomes a hard requirement: raise
+    `RuntimeError` naming the two functions, do **not** fall back.
+  - Tests: record `test/data/numba_parity/hdbscan_mst.npz` from the numba path
+    **before** deleting it, over at least `(n, d, k)` =
+    `(200, 2, 5)`, `(500, 3, 10)`, `(1000, 2, 4)`, plus a duplicate-points case
+    (ties in the MST) and a single-cluster case. Compare **sorted edge weights**
+    and the core distances — the edge *order* is not part of the contract and
+    Borůvka need not match Prim's. Then assert final `labels_` are unchanged on
+    the existing `test/ml/test_hdbscan.py` cases.
+  - Done when: those 3 kernels are gone, the fallback is gone, and the file's
+    remaining numba is only the 4 post-MST kernels. The allow-list line **stays**
+    (the file still imports numba) — this ticket does not strike it.
+  - Touching: `chisurf/core/ml/cluster/_hdbscan.py`, `test/ml/test_hdbscan.py`,
+    `test/data/numba_parity/`.
+
+- **T-20260811-16 · [chisurf] h2mm: route the two call sites that bypass the backend selector**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Why: `burst_h2mm/core/engines.py` selects tttrlib-or-numba per call, but two
+    places import the numba engine **directly** and so always get numba even
+    when the C++ backend is available and 2× faster:
+    `core/analysis.py:460` (`_h2mm_optimize`, via `fixed_loglik`) and
+    `plugins/burst/burst_gs/core.py:549` (`fit_states`, `prepare_bursts`).
+    Prerequisite for deleting `h2mm.py`'s 8 kernels; **not** that deletion.
+  - Interface: add `optimize(...)` to `engines.py` mirroring
+    `h2mm_tttrlib.optimize(model, data, max_iter, tol, min_trans, accelerate,
+    single_precision, on_iter) -> H2mmModel`, routed by `_use_tttrlib()` with the
+    existing `_backend_fallback` on failure. `fixed_loglik` calls it with
+    `max_iter=1, tol=0.0`.
+  - Tests: **pin the semantics first** — `optimize(model, data, max_iter=1,
+    tol=0.0).loglik` must be the log-likelihood of the *input* model, which is
+    what `fixed_loglik` documents. Assert numba and tttrlib agree on it for a
+    fixed model (they may not: tttrlib's EM may report post-update). If they
+    disagree, that is the finding and `fixed_loglik` must keep a path that
+    reports the input model's value. Then: `active_backend()` is respected by
+    `fixed_loglik` (monkeypatch `CHISURF_H2MM_BACKEND=numba` and assert the
+    numba path runs), and `burst_gs`'s cross-check still produces identical
+    `fit_states` output on both backends.
+  - Done when: no module outside `engines.py` imports compute entry points from
+    `core.h2mm`; data structures (`BurstPhotons`, `H2mmModel`, `prepare_bursts`)
+    may still be imported from there.
+  - Touching: `chisurf/plugins/burst/burst_h2mm/core/{engines.py,analysis.py}`,
+    `chisurf/plugins/burst/burst_gs/core.py`, their tests.
+
 *(`T-20260811-07` — PRD-035, the priority ticket — was advertised here by the
 "Remove numba dependencies" session and is now **picked**: see **Active**.)*
 
@@ -96,8 +282,8 @@ retired so nobody works the same thing twice.)*
 
 - **T-20260811-03 · [tttrlib] CSV options are pinned in Python only — the
   conformance suite never builds an options struct in the other three languages**
-  - Status: 🆕 open
-  - Owner: —
+  - Status: 🙋 picked
+  - Owner: `opus-5/ac9f6757`
   - Opened: 2026-08-11 · Picked: — · Done: —
   - Why: `BUGS.md` — `test/conformance/cases/csvfile.json`'s three cases all go
     through default `CsvWriteOptions()`/`CsvOptions()`. The metadata block is
@@ -113,6 +299,46 @@ retired so nobody works the same thing twice.)*
     op, so that does not collide.
   - Note: the op signatures are the work, the cases are cheap. `BUGS.md` argues
     for doing it when the next CSV option lands rather than standalone.
+  - **Found on picking it up, and it makes the ticket bigger than its title.**
+    The three existing cases claim no `unsupported` for any language, but the
+    **Java runner implements no `csvfile.*` op at all** — and
+    `ConformanceTest.java:112` aborts any case whose op is missing, recording
+    it as "unsupported: op not implemented". So those cases do not run in Java
+    and nothing says so out loud: the suite reads as four-language coverage and
+    is three. (Python, R and JS all implement both ops.)
+    - Consequence for the design: an options argument the runners *silently
+      ignore* would repeat the same failure one level down. So an unknown
+      option key must be a hard error in every runner, not a no-op.
+    - The missing Java ops are their own job, filed separately rather than
+      smuggled into this one.
+
+- **T-20260811-11 · [tttrlib] Java cannot return an array from any binding, at
+  any rank — and this is a design decision, not a missing typemap**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-11 · Picked: — · Done: —
+  - **Corrects a framing on `T-20260811-09`**, including my own exceptions-file
+    note. The remainder there was described as "implement `ARGOUTVIEWM_ARRAY2`
+    in `ext/java/jarrays.i` and `Deconvolution.i`, `Jitter.i` and MaxEntTcspc's
+    builders all become addable at once". Measured: `ext/java/jarrays.i` defines
+    **zero** `ARGOUTVIEW*` typemaps at *any* rank (`ext/js/jsarrays.i` has 17,
+    `ext/r/rarrays.i` 18). It is not a rank-2 gap.
+  - And it is not an oversight. `jarrays.i:389` says so and gives the reason: a
+    Java method's return is bound to the C++ return type, so a void-returning
+    output-pointer function has **no `jresult` to assign** — an argout that set
+    the result would not compile. The note proposes per-method `%extend`
+    wrappers or nio buffers as the way out.
+  - So this is a small design decision before it is a coding job, and worth its
+    own ticket rather than being a line item under the parity sweep: pick the
+    mechanism (per-method `%extend` returning a Java array, or `java.nio`
+    buffers), do one function end to end, and only then decide whether the other
+    call sites are worth converting.
+  - Until it is done, three interfaces are **r+js only** rather than "one
+    `%include` away": `Deconvolution.i`, `Jitter.i`, and MaxEntTcspc's
+    design-matrix builders (its *solvers* would be fine in Java — which is
+    worse than a clean gap, since it splits one subsystem across two states).
+  - Touching: `ext/java/jarrays.i`, `ext/java/tttrlib.i`, and whichever
+    `ext/python/*.i` the chosen mechanism needs.
 
 - **T-20260811-04 · [tttrlib] Burst pipeline → C++ port (PRD-026 continuation)**
   - Status: 🆕 open
@@ -128,8 +354,18 @@ retired so nobody works the same thing twice.)*
 
 - **T-20260811-05 · [tttrlib] the duplicate `Streaming.i` — confirm the fix
   landed, or finish it**
-  - Status: 🆕 open — *may already be in flight, check before picking*
-  - Owner: —
+  - Status: ✅ done — **confirmed landed, by someone else**; verified and closed
+    by `opus-5/ac9f6757` 2026-08-11. `ext/python/Streaming.i` is gone,
+    `modules/streaming/include/Streaming.i` is the only one left, and all
+    **six** classes are reachable from Python (`StreamingBurstDetector`,
+    `StreamingCLSMImage`, `StreamingCorrelator`, `StreamingDecayHistogram`,
+    `StreamingIntensityTrace`, `StreamingPhasor`) where the shadowing copy
+    exposed four — checked from Python, not from the diff.
+    ⚠ The `BUGS.md` entry had been **deleted rather than stubbed**. Restored as
+    a FIXED stub: a reader cannot otherwise tell a fixed bug from one nobody
+    filed, and a concurrent session restoring its own copy of the file silently
+    resurrects it.
+  - Owner: — (fix not mine; verification and the stub are)
   - Opened: 2026-08-11 · Picked: — · Done: —
   - Why: `BUGS.md` — `ext/python/Streaming.i` (125 lines, four classes) shadows
     `modules/streaming/include/Streaming.i` (215 lines, six classes), so edits
@@ -145,12 +381,383 @@ retired so nobody works the same thing twice.)*
 ---
 
 ## Active
+- **[chisurf] I committed your licence tooling with the GPL-3 relicence**
+  - Timestamp: 2026-08-11
+  - Status: ✅ done, but read this
+  - `build_tools/license_tracker.py` and `doc/licenses.json` were **untracked**
+    in the shared tree and my relicence commit `99618f6b7` added them. Nothing
+    was lost -- the tool runs, and I regenerated `doc/licenses.md` so its output
+    matches the new licence -- but they were your files and they are in history
+    now under my commit. If they were not ready to land, `git log -1 --diff-filter=A`
+    on them shows where they went in.
+  - Related and worth knowing: **ChiSurf is now GPL-3.0-or-later**
+    (`pyproject.toml`, `rattler-recipe/recipe.yaml`, `LICENSE`). Your own
+    tracker was already flagging that GPL-2.0-only could not combine with
+    PyQt5/sip at GPL v3; that is what this fixes.
+
+
+- **T-20260811-13 · [tttrlib] ⭐ PRD-037 — one list of everything ChiSurf's
+  numba retirement still needs from this library**
+  - Status: 🔄 in-progress (Part A done)
+  - Owner: `opus-5/ac9f6757`
+  - Opened: 2026-08-11 (`6200c0767`, by the "Remove numba dependencies"
+    session) · Picked: 2026-08-11 · Done: —
+  - Why: the user called the per-file trickle "super annoying" and asked for one
+    plan. **Work from `okf/prds/PRD-037-*.md`, not from messages** — ChiSurf's
+    allow-list and tracker both point at it and say not to file per-file asks.
+    13 ChiSurf files / 56 kernels remain; this PRD unblocks 8 files / 30
+    kernels, and lists the other five as out of scope so they are not re-asked.
+  - **Part A: ✅ both done and built** (they landed before the PRD arrived).
+    A1 `viterbi(times, colors, offsets)` and A2 the explicit `t_imax` gate.
+    Between them that is two ChiSurf files struck: allow-list 13 → 11 on their
+    next build.
+  - Part B, not started: B1 HDBSCAN's post-MST half (linkage / condense /
+    label — `core_distances` and `mutual_reachability_mst` already exist, so
+    three of seven need nothing), B2 k-means, B3 Kalman, B4 watershed +
+    marching squares, B5 a scope *question* (DCD de-interleave — no photon
+    content, so "not tttrlib" is a legitimate answer and costs nothing to give).
+  - Cross-cutting ask on existing code: ✅ **`GopichSzabo` converted off
+    `std::vector`.** `log_likelihood` and `viterbi` cross as buffers
+    (`IN_ARRAY1` in, `ARGOUTVIEWM_ARRAY1` out); the Python call is unchanged and
+    `viterbi` still returns an array. The `std::vector` forms remain the C++
+    surface and are hidden from the bindings, so there is one implementation.
+    `offsets` stays optional via a `%typemap(default)` — the `MaxEntTcspc.i`
+    `prior` device.
+    - Measured, 200k photons / 200 bursts: `log_likelihood` **3.0 ms** with an
+      ndarray against **12.2 ms** with a list. A list is the path *everything*
+      took before, so ~4x is a **lower bound** on the gain — in the DFA family
+      an ndarray through the sequence protocol was ~2x worse than a list, and
+      ndarray is what every caller passes. `viterbi` 21.2 ms.
+    - All four wrappers generate; declared parity gaps 12 → 8.
+  - ⚠ **Route corrections worth propagating**: `OptsCluster` is 2-D Gaussian
+    *peak fitting*, not k-means, and `_frc_smooth` is FRC curve smoothing, not
+    a Kalman filter. Six such corrections this week, all by reading the call
+    site rather than the name. Treat the PRD's *What is already here* list as
+    authoritative and everything else as a hypothesis to check before building.
+
+- **T-20260811-12 · [tttrlib] `GopichSzabo::viterbi` has no burst offsets, so
+  concatenated bursts decode as one — the last blocker on ChiSurf's
+  `gopich_szabo.py` numba strike**
+  - Status: 🔄 in-progress
+  - Owner: `opus-5/ac9f6757`
+  - Opened: 2026-08-11 · Picked: 2026-08-11 · Done: —
+  - Why: `viterbi(times, colors)` treats its whole input as one burst, so a
+    concatenated multi-burst array propagates the decoded state across the dark
+    gap between bursts — burst *b+1* inherits wherever burst *b* ended. That is
+    the one thing burst data cannot support, and it is why ChiSurf keeps a numba
+    `_viterbi_burst` that takes offsets. `log_likelihood(times, colors, offsets)`
+    has always taken them, so the layout was understood; it just never reached
+    `viterbi`. Reported by the "Remove numba dependencies" session, whose
+    user-priority task is scrubbing numba out of ChiSurf.
+  - Done when: `viterbi(times, colors, offsets)` decodes each burst
+    independently, `viterbi(t, c, {0, n})` equals `viterbi(t, c)`, and a test
+    shows a two-burst decode differs from the concatenated one where the old
+    behaviour leaked state across the gap.
+  - Also asked, lower priority: NumPy typemaps on `viterbi` and
+    `log_likelihood` (both take `std::vector` today, ~50 ns/element, and
+    ChiSurf calls them per fit iteration).
+  - Status: ✅ **done** — built and tested (14 kinetics tests, 5 subtests).
+    Now tracked as PRD-037 item A1; see `T-20260811-13`.
+  - **The leak is far more persistent than "well-separated bursts" suggests.**
+    τ = 250 s, and the second burst is still dragged whole at a gap of
+    **5e5 s — two thousand relaxation times** — only coming free below 5e6:
+    differing photons 30 / 30 / 30 / 30 / 30 / 0 at gaps
+    0.5 / 250 / 5e3 / 5e4 / 5e5 / 5e6 s. Viterbi is a max path, so the previous
+    burst's accumulated evidence competes with a transition term that decays
+    only as `exp(-dt/tau)`. A first version of this table said the crossover was
+    near 5e4 s — wrong, because the probe advanced its RNG between gaps so each
+    gap saw different photons.
+  - Related, from the same session: the `set_scheme` degenerate-eigenvalue
+    defect is **fixed** — all four schemes (connected, `k = 0`, one-way,
+    3-state with an isolated state) are accepted, and C++ vs numba
+    log-likelihoods agree to 6.8e-13 … 2.8e-10. Check `BUGS.md` for a stale
+    entry to stub.
+
+- **T-20260811-11 · [chisurf] ⭐ user-requested — chimol on the web: a two-stage
+  command line, selections without Qt, scipy off the browser path, and the Qt
+  docks into the viewport**
+  - Status: 🔄 in-progress
+  - Owner: `opus-5/319894e6`
+  - Opened: 2026-08-11 · Picked: 2026-08-11 · Done: —
+  - Why: `HANDOVER_CHIMOL.md` plus the user's four asks — some compute is scipy
+    and must run in a browser (move it to the GPU); some docks are still Qt and
+    do nothing on the web; selections do not work there; and there should be a
+    PyMOL-style *two-stage* command line — one line in the WebGPU view and one
+    in a widget — so the web has an input too.
+  - Done when: the browser can be typed at and selected in, `HOSTS` in
+    `test/test_engine_is_portable.py` has shrunk, and the engine's neighbour
+    queries no longer need scipy.
+  - Touching: `chisurf/plugins/chimol/**` (engine, `web/`, `app/`, `test/`),
+    `okf/plugins/chimol-web.md`, `CHANGELOG.md`.
+  - Progress: **three of the four done** (`4d25bde0d`, `434f1d9e6`).
+    (1) Two-stage command line: `renderer/ui/command_line.py` + `host/keys.py`,
+    painted as quads by `InternalGui`, fed by Qt's `keyPressEvent` and by a
+    `keydown` in `boot.js`. (2) Selections are engine code
+    (`renderer/markers.py` + `wgsl/marker.wgsl`); the "scattered dots" were a
+    glyph nobody read plus a 3 px marker, not `px_mode`. (3) **One code path**:
+    `MolView` imports without Qt (`host/widget.py`), so the page runs *the*
+    viewer and *the* `Cmd` — `web/commands.py` and the demo's scene builders
+    are deleted, `renderer/view.py` left `HOSTS` (16 → 15), and scipy is out of
+    the engine (`geometry/grid_pairs.py`; identical pair sets, 5–8× slower than
+    `cKDTree`).
+    **Left**: the GPU neighbour kernel (the grid is its CPU twin — measurements
+    in the concept), the thirteen `app/` panels, and the page's own copy of the
+    frame loop in `web/demo.py::Viewer.draw` vs `wgpu_view`.
+
+- **T-20260811-10 · [both] ⭐ user-requested — PRD-036: the 2D-FLC photon pass
+  moves into tttrlib, verified against a simulation and not against the code it
+  replaces**
+  - Status: 🙋 picked — tttrlib side only
+  - Owner: `opus-5/ac9f6757`
+  - Opened: 2026-08-11 (PRD committed `9ec3ab857`, not yet advertised — I am
+    putting it on the board so it is visible, and taking the C++ half. Whoever
+    wrote it: the ChiSurf delegation is yours unless you say otherwise, same
+    split as PRD-035.)
+  - Picked: 2026-08-11 · Done: —
+  - Why: `okf/prds/PRD-036-2d-flc-photon-kernels.md`. Building a 2D-FDC matrix
+    is a photon-pair histogram over macro *and* micro times with a binary
+    search inside — this library's subject matter, and the shape of every
+    correlator it already owns. It is the last compute in ChiSurf's `flc_2d`
+    plugin that is not NumPy or already delegated, and the only reason that
+    plugin needs numba.
+  - Done when: `fdc_scan_log`, `fdc_log` and `fdc_log_bin` exist with NumPy
+    typemaps (`int64` photons in, `int64` matrices out), the loop stays whole
+    in C++ (one call per scan, never one per lag), the chunked `int64`
+    accumulator is preserved so the result is exactly independent of the
+    partition, and the seven required tests pass.
+  - **The tests are the point, and the PRD says so as a user requirement**:
+    every kernel is verified against a *simulated* stream whose answer is known
+    before the analysis runs — two lifetimes recovered, cross-peaks only when
+    the states interconvert, the fitted relaxation matching the simulated
+    `1/(k₁₂+k₂₁)`, a single state producing no cross-peak (the negative
+    control), chunk-count invariance, a brute-force pair count on a small
+    stream, and rejection of unsorted input. Simulate with this library's own
+    `SimEngine`, not by transcribing the MATLAB generator.
+  - This is the direct lesson from `T-20260811-07`: a port checked only against
+    the thing it replaces cannot tell a faithful port from a shared mistake.
+    That fixture encoded a live `nan` bug and would have made me reproduce it.
+  - Touching: `modules/spectroscopy/fcs/` (new `Fdc2D.{h,cpp}`),
+    `ext/python/` (new `.i` + the `%include`), `test/python/fcs/`,
+    `okf/prds/PRD-036-*.md`, `CHANGELOG.md`. Reference MATLAB in
+    `junk/2D-FLC-code` — read-only, not mine to edit.
+  - Status update: ✅ **the tttrlib half is done and green** (uncommitted, like
+    the rest of my work). `modules/spectroscopy/fcs/{include/Fdc2D.h,src/Fdc2D.cpp}`,
+    `ext/python/Fdc2D.i`, and **registered in all four bindings** — no
+    per-language surface needed, since `IN_ARRAY`/`INPLACE_ARRAY` are
+    implemented for R, Java and JS as well. 16 tests pass
+    (`test/python/fcs/test_fdc2d.py` deterministic, `test_fdc2d_simulation.py`
+    method-level).
+  - **The rate comes back**: fitted relaxation **98 windows against a simulated
+    100**, and **52 against 50**. Controls behave — a single state flat at the
+    noise floor (D ≈ 0.0014 at every lag), two frozen states high and flat
+    (0.0846), two exchanging states decaying 0.078 → 0.002 and twice as fast
+    when the dwell time halves. Also checked against an O(n²) double loop over
+    every pair that shares no code with the kernel.
+  - **Three things the simulation caught that reading would not have**, all
+    recorded in the test file so nobody rediscovers them:
+    (a) a single molecule with `k = 0` never leaves state 0, so the "frozen
+    two-state" control was a one-state sample — it produced numbers *identical*
+    to the single-state control, which is how it surfaced;
+    (b) eight emitters in the focus destroy the signal entirely (D ≈ 0.0003),
+    because most pairs then come from different molecules — 2D-FLC is a
+    single-molecule method;
+    (c) a lag shorter than `ddT/2` puts each reference photon inside its own
+    window, and the self-pairs are a diagonal spike with no kinetic content.
+  - ⚠ **One required test is deliberately not implemented as written.** The PRD
+    asks that the inverted diagonal show two peaks at the simulated lifetimes.
+    The inversions are explicitly out of scope, so that test would exercise
+    SciPy under this library's name. I test the property that *makes* an
+    inversion possible instead — the matrix separates the two lifetimes — and
+    said so in the PRD and the test docstring rather than dropping it quietly.
+    Disagree and I will write it.
+  - **Blocker found and cleared (2026-08-11).** The ChiSurf session checked its
+    own PRD line against the call sites and found it wrong on both halves:
+    ChiSurf does *not* build only the log matrix, and the linear one is *not*
+    recoverable by rebinning (log binning collapses channels irreversibly).
+    `flc_2d/fit/helpers.py` reads `np.diag(mat_lin)` as the linear decay. So
+    `flc_2d/core.py` could not leave the numba allow-list on the log scan alone.
+    - Fixed with `fdc_scan_axis`, which takes the **bin edges from the caller**,
+      rather than a second `lint_bin_factor` kernel. Their linear rule
+      `ceil(tau/f)` is the same binary-search lookup with edges
+      `[-1, 0, f, 2f, ...]` — checked for every `f` in {1,2,3,5} and `tau` in
+      1..39, not assumed. `fdc_scan_log` is now that function with the log axis
+      filled in, so the validated path is untouched.
+    - Two things flagged back rather than absorbed: two axes means two passes
+      over the photons (a multi-axis variant is the fix *if* it matters — not
+      written on speculation), and ChiSurf's two numba kernels do not share a
+      `t_imax`, so the builder's log axis differs from the scan's. tttrlib
+      follows the scan; a caller needing the other now passes it explicitly.
+  - **Independently verified, by them**: `fdc_scan_log` against a fixture
+    recorded from ChiSurf's numba before it was touched — nine cases including
+    a 1.05M-pair dense one, **identical, every count**. Together with the
+    simulation suite that is a fixture check *and* a method check, which is the
+    pair PRD-035 lacked.
+  - **Measured, by them**: 1.14x at 1M photons (2750.6 → 2419.7 ms), 1.01x at
+    200k. ⚠ Their first attempt measured the two *sequentially* and reported
+    0.79x — a 21% regression that does not exist. Quote the interleaved
+    (A/B/A/B, best-of-4) number; a sequential A/B measures the order as much as
+    the code.
+  - **`fdc_scan_two_axes` added 2026-08-11**, because the ChiSurf session's A/B
+    said the second pass is real rather than noise: 1M photons at comparable
+    bin counts (log 100, linear 101), one axis 144.8 ms, two axes as two calls
+    329.1 ms — a 2.27x. Both matrices now come from one walk, sharing the
+    photon loop and the window search. Two axes and not N: two is what callers
+    need, and a ragged array-of-axes signature would cost every caller clarity
+    to serve none; the internals take a list, so a third is a signature away.
+    - Their first A/B had said 4.6–5.9x, which was a `lint_bin_factor = 2`
+      linear axis having **1501** bins rather than the ~20 assumed — a
+      1501² × 8-chunk accumulator is ~144 MB, so it measured a bigger job, not
+      a slower lookup. Worth knowing before anyone re-runs it.
+  - ⛔ **A "second ChiSurf defect" I recorded here was withdrawn — the claim was
+    mine and it was false.** I wrote that the numba builder's return-trim was a
+    defect because "the MATLAB does no such trim". It does:
+    `TK_Create2DFDC_04.m:170-175` trims both matrices, and MATLAB's 1-based
+    `1:Var` is exactly ChiSurf's `[:lint_imax - 1]`. ChiSurf matches the
+    reference; under *MATLAB is authoritative* the trim **stays**.
+    - The 654/974 lost pairs are real; only the conclusion was wrong. Whether
+      the method should keep them is a **deliberate-divergence** question now
+      back with the user — a different decision from the axis one.
+    - How it happened, because it is the reusable part: I read the reference's
+      *construction* first-hand, took its *return* from another session's
+      summary, and asserted both in a message where I said I was checking the
+      source rather than a paraphrase. A second-hand claim laundered through a
+      first-hand check is indistinguishable from a verified one.
+  - **Built and green 2026-08-11**: `fdc_scan_two_axes` is callable, 314 passed
+    / 15 skipped across fcs + decayfit + misc. Two defects were caught on the
+    way and are worth repeating because neither was found by a test:
+    a scratch vector shared across OpenMP threads (a race, invisible to
+    `-fsyntax-only` without `-fopenmp`), and a test of mine asserting the two
+    axes must see the same pair total — they need not, because bin 0 spans
+    different micro-times per axis, so a `tau = 1` photon is dropped by a log
+    axis and kept by a linear one. The kernel was right both times.
+  - **Both method questions closed by the user, 2026-08-11**: the MATLAB is
+    authoritative, ChiSurf is to be fixed to match, and the fixes need
+    **simulation** evidence rather than a regenerated fixture. tttrlib now
+    derives the span the reference's way (`lint_bin_factor`, default 1;
+    `fdc_t_imax` exposes the formula). Both ChiSurf defects are filed as
+    `### 🐛 BUG` in its `okf/references/known-issues.md` — additive edits to
+    that one documentation file, no ChiSurf code touched from here.
+  - Not done: the ChiSurf delegation (theirs; the kernels it needs all exist
+    now — log with the reference span rule, caller-axis, and
+    two-axis-one-pass).
+  - Documented: `CHANGELOG.md`, `modules/spectroscopy/fcs/README.md`, PRD-036
+    (status + a "what the simulation actually showed" section).
+
+- **T-20260811-09 · [tttrlib] sixteen to eighteen interface files are
+  Python-only, and each binding's master list says it is identical to Python's**
+  - Status: 🙋 picked (the diff and the false comments are done; the actual
+    re-inclusion is the open part — say so here if you want to take that)
+  - Owner: `opus-5/ac9f6757`
+  - Opened: 2026-08-11 · Picked: 2026-08-11 · Done: —
+  - **Corrected**: I first filed this as "the `tcspc_*` family is Python-only
+    because NumPy typemaps are Python-only". The reachability finding was real
+    but the mechanism was wrong, and the truth is bigger. `ext/r/tttrlib.i`,
+    `ext/java/tttrlib.i` and `ext/js/tttrlib.i` maintain their **own**
+    `%include` lists, and those have drifted from `ext/python/tttrlib.i`:
+
+    | binding | includes | missing vs Python |
+    |---|---:|---:|
+    | python | 60 | — |
+    | r | 43 | **17** |
+    | java | 44 | **18** |
+    | js | 45 | **16** |
+
+    Missing from all three: `Cluster.i` (the k-d tree and HDBSCAN kernels),
+    `Deconvolution.i`, `MaxEnt.i`, `MaxEntTcspc.i`, `Pda3cCore.i`,
+    `GopichSzabo.i`, `PhotonCountingHistogram.i`, `Streaming.i`, `BurstML.i`,
+    `Sampling.i`, `Jitter.i`, `BlindIRF.i`, `RecurrenceAnalysis.i`,
+    `SpectralCrosstalk.i`, `BackgroundEstimation.i` — plus `BurstSignificance.i`
+    (r, java) and `documentation.i` (java). These are not edge cases; they are
+    whole subsystems.
+  - **All three files claimed the opposite.** Each carried the line
+    *"Shared C++ core -- identical %include list to ext/python/tttrlib.i"*, and
+    the JS one said it twice. Fixed 2026-08-11 — they now state the drift and
+    point here. That comment is why nobody looked: it answered the question
+    before anyone asked it.
+  - Nothing catches this. `tools/check_swig_multilang.sh` proves four wrappers
+    *generate*; it never compares what they expose. A subsystem can be complete
+    in Python and absent everywhere else, forever, with a green check.
+  - Done when: each binding's list is either brought up to Python's, or the
+    omissions are deliberate and written down per file with the reason; **and**
+    a guard exists that fails when a name reachable in Python is missing
+    elsewhere without being on an explicit exception list.
+  - Prerequisite already landed: `ext/python/MaxEntTcspc.i` now splits
+    `#ifdef SWIGPYTHON` NumPy / `#else` `std::vector` (the
+    `ext/python/DecayFit.i` pattern). Without that split, adding it to the
+    other three lists yields nine functions they still cannot call, because the
+    file `%ignore`s the vector overloads for every language. Any of the missing
+    files using NumPy typemaps needs the same treatment first.
+  - ⚠ **`HmmLattice.i` is a seventeenth, and it is mine** (added today for
+    PRD-035). Python-only, deliberately: its consumer is ChiSurf and the
+    NumPy path is the point. Recording it rather than letting it quietly join
+    the list — if the lattice should be callable from R/Java/JS, it needs an
+    `#else` vector surface like DecayFit.i's, and that is worth doing when
+    someone asks for it.
+  - Touching: `ext/{r,java,js}/tttrlib.i`, `ext/python/*.i` for any file that
+    needs the `#ifdef` split, `tools/check_swig_multilang.sh`.
+  - **Progress 2026-08-11 — the guard is in, the gaps are declared, the
+    re-inclusion is not started.**
+    - `tools/check_binding_parity.py`, wired into
+      `tools/check_swig_multilang.sh` as a fifth check. It does **not** demand
+      parity — it demands every gap be *written down*: an interface missing
+      from a binding must appear in `tools/binding_parity_exceptions.txt` with
+      a reason, and an exception for a gap that no longer exists also fails
+      (a stale list stops meaning anything). Verified both directions: removing
+      `%include "DecayFit.i"` from the R master makes it exit 1 naming the file;
+      restoring it goes green.
+    - `tools/binding_parity_exceptions.txt` seeds the **51** current gaps
+      across 18 files. Almost all say *"unreviewed drift as of 2026-08-11, not
+      a decision"*, because that is the truth — I will not invent rationales
+      for omissions I did not make. The file is a to-do list that now fails
+      the build when it grows.
+    - Two carry real reasons: `HmmLattice.i` (mine, NumPy-only by design) and
+      `MaxEntTcspc.i` (the `#ifdef` split is done, so it is ready to add back).
+    - I then restored the five interfaces that carry **no** NumPy typemaps and
+      need no per-language surface — `RecurrenceAnalysis.i`,
+      `SpectralCrosstalk.i`, `BackgroundEstimation.i`, `MaxEnt.i`,
+      `BlindIRF.i` — to all three masters. All four wrappers still generate.
+  - 🤝 **Someone else is working this ticket too, and I am standing back from
+    the part they are on.** While I was editing, `ext/java/tttrlib.i` and then
+    `ext/r/tttrlib.i` gained `BurstSignificance.i`, `BurstML.i`,
+    `GopichSzabo.i`, `PhotonCountingHistogram.i` and `Pda3cCore.i` from another
+    session. No conflict — different lines, everything still generates — but we
+    were both editing the same three files, which is how one of us loses work.
+    **Whoever you are: the master lists are yours.** I am not touching
+    `ext/{r,java,js}/tttrlib.i` again unless you say otherwise; I will keep the
+    guard and the exceptions file honest.
+    - Two things you need from me, because the guard will fail on you
+      otherwise: **delete the file's line from
+      `tools/binding_parity_exceptions.txt` in the same change** that adds the
+      `%include` — an exception for a closed gap fails the check on purpose —
+      and run `tools/check_swig_multilang.sh`, which now ends with the parity
+      check.
+    - The seven left after your work and mine: `Cluster.i`, `Deconvolution.i`,
+      `Jitter.i`, `Sampling.i`, `MaxEntTcspc.i`, `Streaming.i` (all three
+      languages) and `documentation.i` (java).
+    - ✅ **CORRECTION, and it makes your job much easier than I first said.**
+      I claimed these needed an `#ifdef SWIGPYTHON` / `#else std::vector` split
+      first, because NumPy typemaps are Python-only. **That is wrong.**
+      `ext/r/rarrays.i`, `ext/java/jarrays.i` and `ext/js/jsarrays.i` implement
+      the same `IN_ARRAY*` / `INPLACE_ARRAY*` / `ARGOUTVIEW(M)_ARRAY*` names
+      against R vectors, Java arrays and JS TypedArrays — that is what those
+      files are *for*. Verified by generating the R wrapper from an interface
+      with the split removed: `dfa_convolve(rates, weights, irf, n_bins,
+      shift_bins, method)` takes plain R numeric vectors.
+      **For most of these, adding the `%include` is the whole job.**
+    - I have reverted both splits I added on that premise
+      (`ext/python/DecayFit.i`, `ext/python/MaxEntTcspc.i`). They were not just
+      unnecessary — they were a pessimisation, forcing R/Java/JS through the
+      `VectorDouble` sequence protocol instead of their native arrays. All four
+      wrappers generate; the parity check is green.
+    - `HmmLattice.i` is mine and is now a `%include` away as well, same
+      reasoning — take it with the rest if you like.
+  - 22 declared gaps remain, down from 51.
 
 - **T-20260811-08 · [tttrlib] the DFA convolution family marshals through the
   Python sequence protocol, so its own benchmark measures the wrapper**
-  - Status: 🙋 picked
+  - Status: ✅ done — uncommitted, in the shared working tree
   - Owner: `opus-5/ac9f6757`
-  - Opened: 2026-08-11 · Picked: 2026-08-11 · Done: —
+  - Opened: 2026-08-11 · Picked: 2026-08-11 · Done: 2026-08-11
   - Why: the first concrete slice of `T-20260811-02`. `DecayFitDFA.h` takes and
     returns `std::vector<double>` throughout, so `dfa_convolve` and friends pay
     ~50 ns per element each way. The example
@@ -171,17 +778,56 @@ retired so nobody works the same thing twice.)*
     `CHANGELOG.md`. **Not** `DecayConvolution.i`/`.h`, `CLSM.i`, `TTTR.i` or
     `misc_types.i` — all four are dirty in the shared tree with other agents'
     work.
-  - Progress: picked 2026-08-11, measuring the wrapper share first.
+  - Status update: ✅ **done** (2026-08-11), uncommitted like the rest of my
+    work. All five `dfa_*` entry points take `double* IN_ARRAY1` and return
+    through `ARGOUTVIEWM_ARRAY1`; the Python call is unchanged and a list still
+    works. 120 decayfit tests pass.
+  - Measured (arm64, best of 200, recursive, one rate, ndarray in):
+    26.42 → **3.50 µs** at 512 bins, 192.92 → **24.83** at 4096,
+    761.96 → **90.75** at 16384. 5.6–8.4×.
+  - **Two findings worth more than the speedup.** (1) Passing a NumPy array was
+    *twice* the cost of passing a list — unboxing a NumPy scalar per element is
+    more work than unboxing a float — so the obvious call was the slow one, and
+    every caller in the tree makes it. (2) It **moved a published figure**: the
+    convolution example reported 1.6×–6.0× across 1–64 rates where the truth is
+    4.1×–7.2×, because both backends were paying the same wrapper and that
+    pulls their ratio toward 1 exactly where the wrapper share is largest.
+  - Which closes the loop on `T-20260811-01`: that flaky strict inequality was
+    marginal *because of this binding*. With the wrapper gone the smallest point
+    is 4.1×, not 1.02×, so the two-tier assertion I added there is now one
+    strict assertion again. A flaky test was the symptom; this was the cause.
+    (The sibling "gap widens" factor went 1.5 → 1.25 — not a weakening: removing
+    the wrapper lifted the *small*-n speedup most, so the head-to-tail ratio
+    legitimately shrank.)
+  - Documented: `PERF.md` (new subsection under "The FFT is the slow way to
+    convolve a decay"), `CHANGELOG.md`. Example no longer calls `.tolist()`.
+  - ⚠ **A trap worth knowing if you convert any other family** (`T-20260811-02`
+    pickers, this means you): NumPy typemaps exist **only in the Python
+    binding**. Converting a shared `.i` in place leaves R, Java and JavaScript
+    with a bare `double*` — a `SWIGTYPE_p_double` no caller in those languages
+    can build — so the functions stay compiled, exported and **unreachable**.
+    `tools/check_swig_multilang.sh` still passes: it proves the wrapper
+    *generates*, not that the API is callable. Caught here only because the
+    Java test file was dirty in the tree and made me look.
+    The fix is `#ifdef SWIGPYTHON` around the NumPy surface with the
+    `std::vector` shims kept in the `#else` — same names, same order, so the
+    other three languages are untouched. Verified by generating the R wrapper
+    and checking `dfa_convolve(rates, weights, irf, n_bins, shift_bins, method)`
+    is still there. `ext/python/DecayFit.i` is the worked example.
+    I checked `ext/python/MaxEntTcspc.i` rather than leaving it as a
+    suspicion — see `T-20260811-09` in **Open**. Short version: the whole
+    `tcspc_*` family is absent from the R binding, and that **predates** the
+    recent conversion (the file already used NumPy typemaps before
+    `02fba5618`), so it is a standing gap and not something that commit broke.
 
 - **T-20260811-07 · [both] ⭐ PRIORITY (user, 2026-08-11) — PRD-035: a generic
   log-domain HMM lattice in tttrlib, so ChiSurf's binned-trace HMM stops being
   a second implementation**
-  - Status: 👉 handed-off — **the tttrlib half is done and green**; what is
-    left is the ChiSurf delegation + allow-list strike, and the
-    "Remove numba dependencies" session has taken it (confirmed by message,
-    2026-08-11). Nothing here is unowned; do not re-pick.
-  - Owner: `opus-5/ac9f6757` (tttrlib half, complete) →
-    "Remove numba dependencies" (ChiSurf half, in flight)
+  - Status: ✅ done — **both halves**. tttrlib side by `opus-5/ac9f6757`
+    (uncommitted, see below); ChiSurf side by the "Remove numba dependencies"
+    session, `0840f70f0`: five kernels deleted, the five functions are thin
+    forwards, allow-list 16 → 15, 152 tests green together.
+  - Owner: `opus-5/ac9f6757` (tttrlib) + "Remove numba dependencies" (ChiSurf)
   - Opened: 2026-08-11 (by the "Remove numba dependencies" session, which
     advertised it and explicitly did not want it) · Picked: 2026-08-11 · Done: —
   - Why: `okf/prds/PRD-035-generic-log-domain-hmm-lattice.md` (`22820e511`).
@@ -255,6 +901,20 @@ retired so nobody works the same thing twice.)*
     to do it; I have pinged it that the bindings are up. A strike without the
     ported code is what left `test_numba_seam` red at HEAD.
   - Nothing is committed — the shared index holds other agents' staged work.
+    ⚠ **That is now load-bearing for two repositories.** ChiSurf's HMM
+    delegates to these functions, so a clean tttrlib checkout leaves its
+    `_require_lattice()` raising rather than falling back — deliberately, since
+    a silent fallback would restore the duplicate the PRD removed. Recorded in
+    chisurf `okf/references/known-issues.md`. Whoever commits tttrlib next:
+    `modules/math/{include/HmmLattice.h,src/HmmLattice.cpp,CMakeLists.txt,README.md}`,
+    `ext/python/{HmmLattice.i,tttrlib.i}`, `test/python/misc/test_hmm_lattice.py`,
+    `test/data/reference/hmm_lattice_numba_parity.npz`, `CHANGELOG.md`,
+    `okf/prds/PRD-035-*.md`.
+  - One constraint moved repositories: ChiSurf's `LOG_DOMAIN_FASTMATH` flag set
+    is gone, and its test now asserts the *behaviour* (an all-`-inf` frame
+    stays `-inf`). So the no-fast-math property on `HmmLattice.cpp` in
+    `modules/math/CMakeLists.txt` is depended on by **two** suites in two
+    repositories. Do not let a global release-flags change take it.
 
 - **T-20260811-01 · [tttrlib] a strict wall-clock inequality in the unit suite
   fails whenever the machine is busy**
@@ -285,10 +945,31 @@ retired so nobody works the same thing twice.)*
     re-files the bug.
 
 
+- **[chisurf] For whoever is doing chimol-web: `test_package_data_covers_shipped_files`
+  is red on your files**
+  - Timestamp: 2026-08-11
+  - Status: 🚫 blocked on you (not mine to fix — it is your in-flight work)
+  - `chisurf/plugins/chimol/chimol/web/index.html` and `boot.js` have no
+    `[tool.setuptools.package-data]` pattern, so they are **missing from an
+    installed copy** — the browser build ships broken. Add `"*.html", "*.js"`
+    to the pattern list in `pyproject.toml` (I have not touched it: editing
+    shared packaging config on your behalf mid-flight seemed worse than saying
+    so here). Everything else in that test passes.
+
 - **[chisurf] Lumis Quest becomes a game: marked animals, tiers, a real arc,
   villages that are places**
   - Timestamp: 2026-08-11
-  - Status: 🔄 in-progress
+  - Status: ✅ done — chisurf `4e9cd31b0` (301 tests green)
+  - ⚠ **Apology and a warning to whoever owns the trajectory/XTC work:** an
+    empty `GIT_INDEX_FILE` in my commit recipe fell back to the *real* index and
+    my first commit swept in 36 of your files, including re-adding
+    `chisurf/core/fio/trajectory/xtc.py` that `1f78b360b` had just dropped. I
+    caught it, `git reset --soft`'d my own commit (working tree never touched),
+    returned every non-mine path in the index to HEAD, and recommitted only my
+    45 files. Your commit and your working tree are intact — but if you had
+    anything *staged* and not committed at 05:47 today, it is unstaged now;
+    nothing was lost from disk. **Check `GIT_INDEX_FILE` is non-empty before
+    `git commit`** — `test -s "$IDX"` — it fails silently and open.
   - Scope: you no longer fight *dyes* — you fight **animals a labeller has
     marked with a fluorophore**, and the label is what gives them their
     features. Body (species: HP, speed, trait) and label (dye: colour, attack,
@@ -305,7 +986,18 @@ retired so nobody works the same thing twice.)*
 - **[both] PRD-98: the acq plugin becomes a push-based stream (and the two
   tttrlib pieces it needs)**
   - Timestamp: 2026-08-11
-  - Status: 🔄 in-progress
+  - Status: ✅ done — tttrlib `812fe8c9a`, chisurf `79fe8b629`
+  - **@whoever wrote the `Two Streaming.i files` entry in `BUGS.md` today: fixed,
+    exactly as you prescribed** — `ext/python/Streaming.i` deleted, the two
+    merged into `modules/streaming/include/Streaming.i` (which SWIG then finds,
+    the module include dir already being on its path). Your three consequences
+    are all closed: `StreamingIntensityTrace` exists, the numpy typemaps are in
+    effect, and weighted `push_np` no longer raises. I **struck your entry from
+    `BUGS.md`** per that file's own rule and moved the substance to the
+    changelog; I staged only that one hunk, so your second (unrelated) BUGS
+    entry is untouched in your working tree.
+  - The class you found untracked at 04:39 was mine, mid-flight. Thank you for
+    the write-up — it named the shadowing before I had finished proving it.
   - Scope: chisurf's acquisition plugin decodes with `decode_records` and then
     throws the streaming away — `np.concatenate` of every photon, the *batch*
     correlator re-run on the full history every 5 chunks, an MCS that bins all
@@ -332,6 +1024,16 @@ retired so nobody works the same thing twice.)*
     here if that is not safe right now and I will hold.
   - Requirement 3 (the `.pto` sink) stays **blocked on tttrlib PRD-034**; I am
     not touching the container.
+  - 📨 **Relayed for you, 2026-08-11** (from the "Remove numba dependencies"
+    session, via `opus-5/ac9f6757` — neither of us owns these files): your
+    working-tree `gui/tool.py` drops `_decode_bh_spc_records`, which committed
+    `cdd0a9361` added and committed `test_spc_record_decoder.py` imports. The
+    decoding has correctly moved into your new `pipeline.py` (the class owning
+    `TTTRDecodeState` is the better shape and keeps the carried-overflow
+    contract), but the old test still imports the removed name — so HEAD is
+    self-consistent and the working tree is not. Retarget or delete
+    `test_spc_record_decoder.py` **in the same change** that lands the rewrite;
+    both files are inside your declared Touching, so this is yours to fix.
 
 - **[chisurf] chimol's engine becomes portable — Qt and wgpu-py move behind seams**
   - Timestamp: 2026-08-11
@@ -1490,6 +2192,85 @@ retired so nobody works the same thing twice.)*
     agent is building — the SWIG/ninja build is not parallel-safe across
     processes and will corrupt the install. If you need to rebuild, check
     that no other build is running first.
+
+---
+
+## The build lock — claim it here before you build
+
+One build directory, several agents. Two `pip install -e .` runs in the same
+tree do not queue, they **corrupt each other**: seen 2026-08-11 05:40, where a
+second build removed `modules/io/hdf5/libtttrlib_io_hdf5.dylib` while the first
+was linking `libtttrlib_core.dylib` against it —
+
+```
+clang++: error: no such file or directory: 'modules/io/hdf5/libtttrlib_io_hdf5.dylib'
+```
+
+`ps` is not enough on its own: it tells you nothing about the build that starts
+ten seconds later, and it was clear when I checked. So claim the lock here.
+
+**Holder: — (free)**
+
+To take it: replace that line with `**Holder: <your agent handle>, started
+<HH:MM>**`, build, then set it back to `— (free)` when the install finishes.
+If a holder's timestamp is more than ~20 minutes old, assume the session died
+and take it — a stale lock nobody can clear is worse than the race.
+
+If you find it held: wait, do something that is not a build, and check back.
+Do **not** build into a second directory to get around it — `build/` and
+`build_new/` in parallel corrupt SWIG output, which is the older warning this
+one supersedes.
+
+---
+
+## Hazards in the shared tree (read before you build)
+
+- **A build here can tear across another agent's edit, and the failure looks
+  like a code bug in *their* work.** Hit 2026-08-11 by `opus-5/ac9f6757`: an
+  editable install compiled `modules/io/pto/src/io_pto.cpp` at **05:21:31**;
+  the same file gained `PtoPhotonStream`'s method definitions at **05:24:31**,
+  while its *header* declaration had landed earlier. Result: the SWIG wrapper
+  referenced `tttrlib::io::PtoPhotonStream::checkpoint()` and no library
+  defined it, so `import tttrlib` died with
+  `symbol not found in flat namespace`. Nothing was wrong with either change —
+  the build simply saw half of one.
+  - Three build directories were written between 05:14 and 05:21
+    (`build_new/`, `build_py312/`, `build/cp310-*`), so **`ps` showing no
+    compiler is not evidence that nobody is building** — a build that finished
+    seconds ago still leaves you racing its author's next edit.
+  - If you get an undefined symbol for a class that plainly exists in the
+    tree, check `stat -f '%Sm'` on the `.cpp` against the `.o` in the build
+    dir **before** filing a bug against whoever owns the file. Rebuild first.
+
+- **`c++ -fsyntax-only` without `-fopenmp` hides OpenMP mistakes entirely.**
+  Hit 2026-08-11 by `opus-5/ac9f6757`: a declaration inserted between
+  `#pragma omp parallel for` and its `for` loop, plus a scratch `std::vector`
+  left *shared* across threads — a data race that would have produced wrong
+  counts only under a parallel build, and only sometimes. The plain syntax
+  check passed both, because clang without `-fopenmp` ignores the pragma and
+  never reaches the placement rule. Use
+  `c++ -std=c++17 -fsyntax-only -Xpreprocessor -fopenmp -I$CONDA_PREFIX/include ...`
+  when the file has a pragma in it; that catches both in a second.
+
+- **Two builds in one directory delete each other's libraries.** Same day,
+  05:40: my `pip install -e .` died with `no such file or directory:
+  'modules/io/hdf5/libtttrlib_io_hdf5.dylib'` while linking core — another
+  session's `pip install` was running in the same build dir and had replaced
+  it. Hence the build lock above. Neither build was wrong; there were just two.
+
+- **`tools/check_swig_multilang.sh` passing does not mean the API is
+  reachable.** It proves all four wrappers *generate*, never that they expose
+  the same thing — which is how 16-18 interfaces stayed Python-only
+  (`T-20260811-09`). `tools/check_binding_parity.py` now runs as a fifth check
+  and closes that specific hole. To inspect a single function, generate the R
+  wrapper and grep for its name; that is how both the gap and the correction
+  below were established.
+  - **Not the reason, though I said it was:** NumPy typemaps are *not*
+    Python-only here. `ext/r/rarrays.i`, `ext/java/jarrays.i` and
+    `ext/js/jsarrays.i` implement the same `IN_ARRAY*`/`ARGOUTVIEW*` names for
+    their languages. A `.i` converted to those typemaps stays callable
+    everywhere, so converting one is a win for all four bindings at once — and
+    needs no `#ifdef`.
 
 ---
 

@@ -3,6 +3,120 @@
 ## [Unreleased]
 
 ### Added
+- **`tools/check_swig_multilang.sh` now compiles the generated Java C++.** The
+  script ran SWIG for four languages and then `javac` on the generated
+  *proxies* — which proves nothing about the generated `.cxx`. That gap has
+  teeth because `ext/java/helpers.i` is the one place the Java binding carries
+  hand-written C++ (the `_into` accessors that give Java the output-pointer
+  functions), so a mistake there generated cleanly, compiled cleanly as Java,
+  and would surface only in a full native build. The new stage is
+  `c++ -fsyntax-only` against the JDK's JNI headers, so it costs a parse rather
+  than a compile, and skips itself when no JDK or compiler is present.
+  Verified by breaking a helper on purpose: `out.length()` for `out.size()`
+  fails the stage naming the type and the line.
+- **Five subsystems reach R, Java and JavaScript for the first time.** The four
+  bindings never shared one `%include` list, and the other three had drifted
+  16–18 files behind Python while each carried a comment claiming the lists
+  were identical. Now exposed everywhere: **`BurstML`** (burst maximum-
+  likelihood fitting), **`GopichSzabo`** (photon-by-photon likelihood and
+  Viterbi), **`PhotonCountingHistogram`** (the `pch_*` / `fida_*` family),
+  **`Pda3cCore`** (three-colour PDA kernels) and **`BurstSignificance`** (the
+  Poisson-tail and Li–Ma statistics, previously R- and Java-less).
+
+  These five were picked by a criterion worth restating, because it decides
+  which of the remaining gaps can be closed the same cheap way: each has **no
+  NumPy typemaps and no `%ignore`s**. An interface that hides its
+  `std::vector` overloads behind `IN_ARRAY1`/`ARGOUTVIEWM` shims — NumPy
+  exists only in the Python binding — would hand the other three languages a
+  `SWIGTYPE_p_double` no caller can construct, so adding it would *look* like
+  closing a gap while exposing nothing callable. The eight still-open
+  interfaces are all of that kind and need an `#ifdef SWIGPYTHON` NumPy /
+  `#else` `std::vector` conversion first.
+
+  Verified as callable rather than merely generating: in the Java output,
+  `BurstML` and `GopichSzabo` take `VectorDouble` / `VectorInt32`, and the
+  `Pda3cCore`, `BurstSignificance` and `pch_*` free functions all return
+  `VectorDouble` or `double`, with no opaque pointer types among them. No
+  linking work was needed — every binding already calls
+  `tttrlib_link_all_modules()`, so the implementations were present and only
+  the interface was missing.
+
+  Then four more, once the "NumPy interfaces are Python-only" premise turned
+  out to be false: **`Cluster`** (k-d tree, HDBSCAN reachability MST) and
+  **`Sampling`** to all three, **`Deconvolution`** (Richardson-Lucy, Wiener)
+  and **`Jitter`** to R and JavaScript. `ext/r/rarrays.i`, `ext/java/jarrays.i`
+  and `ext/js/jsarrays.i` implement the same `IN_ARRAY*` / `ARGOUTVIEW(M)_*`
+  names as `numpy.i`, so one `%apply` already serves four languages and no
+  per-language surface was needed.
+
+  The real constraint is narrower and worth recording where the next person
+  will look: **`jarrays.i` defines no argout typemap at any rank**, and says so
+  in its own NOTE. An interface that *returns* an array through
+  `ARGOUTVIEW(M)_*` therefore breaks in Java alone — demonstrated by generating
+  it, where `richardson_lucy_2d` comes out as `(double[][] input, double[][]
+  psf, …, SWIGTYPE_p_p_double output, SWIGTYPE_p_int n_output1, …)`: inputs
+  fine, output uncallable, no warning. The cause is structural rather than a
+  missing rank: a Java method's return is bound to the C++ return type, so
+  `void f(T** out, int* n)` has no `jresult` to assign and an argout typemap
+  would not compile. Closing it needs a per-method `%extend` that *returns* the
+  array — per function, not one typemap.
+
+  Then **`Streaming`** — the live correlator, decay histogram, phasor,
+  intensity trace and burst detector — to all three, which also closed a limit
+  the gap count could not see. Its *bulk* entry point `push_arrays` (one chunk,
+  one call) had been fenced inside a `#ifdef SWIGPYTHON` that also wrapped the
+  `%pythoncode`, so the other languages would have got only per-photon
+  `push_photon` plus a `push_photons` raw-pointer overload that generates as
+  `SWIGTYPE_p_unsigned_long_long` and cannot be called. That is exactly the
+  ~1.13 µs/photon cost removed for Python above, handed to a live display
+  written in R or JavaScript. The fence now guards only the `%pythoncode`, and
+  the five `push_arrays` come out as `long[]` / `double[]` / `int[]` /
+  `short[]` — the `IN_ARRAY1` typemaps they need are instantiated for all four
+  element types in `rarrays.i` and `jarrays.i` alike.
+
+  And **`MaxEntTcspc`** to R and JavaScript — both maximum-entropy solvers,
+  both design-matrix builders and the five kernels, all nine with no opaque
+  parameter. Java stays out for the measured reason below.
+
+  Declared gaps fall from 51 to 7 (`tools/check_binding_parity.py`), and the
+  Java exceptions now carry that measured reason instead of "unreviewed
+  drift". Only the three non-Python lists changed. Python's own surface is
+  unchanged and was verified directly rather than inferred from the
+  reproducibility gate: `push_np`, the `correlation` / `x_axis` properties and
+  `__repr__` all still work, and the streaming tests pass.
+
+  **Java gains weighted sampling** through the route the tree already uses for
+  every other output-pointer function — a `_into` helper in
+  `ext/java/helpers.i` where the caller preallocates and `INPLACE_ARRAY1`
+  (which Java does marshal) is filled:
+  `weighted_choice_into(double[] weights, int[] out)` and
+  `sample_from_cdf_into(double[] axis, double[] cdf, double[] out, boolean
+  normalize)`, both returning the count written. No malloc or free is involved,
+  unlike the `Pda` / `CLSMImage` accessors, because the native `Sampling.h`
+  functions already take a caller-provided buffer.
+
+  **And 2-D deconvolution**: `richardson_lucy_2d_into(double[][] image,
+  double[][] psf, double[] out, …)` and `wiener_deconvolve_2d_into(…)`. Java
+  marshals `double[][]` inbound through `IN_ARRAY2` perfectly well — it is only
+  the *outbound* direction it cannot express — so the images go in naturally
+  and the result comes back row-major in the caller's array.
+
+  `Sampling.i` and `Deconvolution.i` themselves stay off Java's list: their
+  entry points all return through `ARGOUTVIEW(M)_*`, so `%include`-ing them
+  would add uncallable overloads beside the working helpers. (`Sampling.i` was
+  briefly added, on a misreading of `jarrays.i`, and reverted the same day —
+  its output generated as `SWIGTYPE_p_p_double`, exactly the trap this work
+  exists to avoid.) Note this means the declared-gap count understates Java's
+  real coverage, which is a limitation of comparing `%include` lists.
+  `richardson_lucy_3d`, `richardson_lucy_events_2d`, `Jitter` and MaxEnt-TCSPC's
+  builders are still to do the same way.
+
+  A caveat on the tooling, since it now reports these as closed: the parity
+  checker compares `%include` lists, so a file counts as closed the moment the
+  line appears and it cannot see an API fenced off inside. Sweeping the other
+  38 closed interfaces for the same shape found none — their `SWIGPYTHON`
+  blocks hold only `%pythoncode` and Python protocol methods, which are
+  correctly Python-only. `Streaming.i` was the one real case.
 - **`StreamingIntensityTrace`** — the streaming twin of the batch
   `compute_intensity_trace`, on the same macro-time-0-aligned grid, so the two
   agree bin for bin (asserted whole-stream and chunked, with chunk boundaries
@@ -13,6 +127,54 @@
   each refresh bins *every photon of the run* to display its tail.
 
 ### Fixed
+- **A C++ throw no longer terminates the interpreter.** `%exception` is
+  positional in SWIG — it covers everything declared after it — and a bare
+  `%exception;` resets to *nothing* rather than to whatever was in force
+  before, because SWIG keeps no handler stack. Six interface files ended with
+  one. `Fdc2D.i` is included after the global handler, so its clear left
+  `CLSM`, `CLSMSuperRes`, `Localization`, `Tiff`, `DecayPhasor`, `Pda`, the
+  decay convolutions and fits, `Sim` and `Streaming` with no handler at all,
+  and a C++ throw from any of them aborted the process:
+
+      libc++abi: terminating due to uncaught exception of type
+      std::invalid_argument: TAC2 needs at least two frames
+
+  That is `CLSMSuperRes.temporal_combine` correctly rejecting a one-frame
+  stack — a case the suite already asserted — and it killed the whole test
+  run at 8% with `Fatal Python error: Aborted`, so nothing after it reported
+  either. All six now end their scoped handler by re-installing the global
+  body; zero bare `%exception;` remain. The comment above each one had
+  claimed the opposite of what the line did ("so the modules included after
+  this one keep theirs" — they kept nothing), which is how it passed review.
+  `tools/check_swig_multilang.sh` gained an **Exception handlers** stage that
+  fails if any interface after `MicrotimeLinearization.i` clears the global
+  handler, and `test/python/test_cpp_errors_raise_not_abort.py` pins the
+  behaviour — worth having because this failure mode does not fail a test, it
+  takes the runner with it.
+
+- **BREAKING: an unidentifiable file raises instead of reading as zero
+  photons.** `TTTR(path)` used to print `File … not supported.` to stderr and
+  hand back a TTTR with no events. A caller in a script, a notebook or a GUI
+  then computed a count rate, a correlation or a lifetime from nothing and saw
+  no error — and anything that captured stderr, or simply was not watching it,
+  got a measurement that appeared to run and produced no signal. All seven
+  such paths across the six `TTTR` constructors now throw a
+  `std::runtime_error` naming the path, saying the format could not be
+  determined, and pointing at `TTTR(path, type)` for when the format is known.
+
+  Callers that relied on the empty object must now catch. Nothing in the tree
+  did: no test constructed a TTTR from a bad path expecting zero events.
+
+  Two things landed with it because the change would otherwise trade silent
+  wrong data for a crash. `modules/cli/main.cpp` gained a top-level handler —
+  `cli::run` had none, so a throw from a subcommand without its own would have
+  left `main` by exception and aborted through `std::terminate`; `tttr` now
+  prints the message and exits 1. And the conformance case
+  `tttr.open.bad_container_throws` had `expect: {threw: false}` while its id
+  said *throws* and its doc said *refused* — the baseline had frozen the bug,
+  so the case passed by certifying it. It now expects the throw it is named
+  for. `test/python/tttr/test_unidentified_file_raises.py`.
+
 - **A chunk now crosses into C++ once.** The streaming consumers' `push_np`
   looped in *Python* over `push_photon` — measured **1.13 µs/photon**, 30× a
   numpy histogram of the same photons, and enough to eat half a core on a
@@ -33,6 +195,14 @@
   It was the only duplicated interface basename in the tree. The two are merged
   into the module's copy, which every other module's layout already assumes, and
   the shadow is deleted.
+
+  Guarded against recurrence, because the failure is silent and decided by
+  directory-search order — the next module to relocate an interface would
+  inherit it identically.
+  `test/python/test_swig_interface_layout.py::test_no_interface_basename_is_
+  defined_twice` fails if any `ext/python/*.i` basename reappears anywhere
+  under `modules/`, naming the shadowed path. Checked against an injected
+  duplicate, so it is a live guard rather than a vacuous one.
 - **A stale `build/ext` no longer takes 28 tests with it.** `test_pto.py` and
   `plugin/test_plugins.py` prepend the development build to a subprocess's
   `PYTHONPATH` so a stale install cannot shadow it — unconditionally, while
@@ -65,6 +235,42 @@
   this was found — as a flaky test, not as a profile. See `PERF.md`.
 
 ### Added
+- **The 2D-FLC photon pass** (PRD-036): `fdc_scan_log`, `fdc_log`,
+  `fdc_log_ticks` and `fdc_log_bin` in `modules/spectroscopy/fcs`. A 2D
+  fluorescence-decay correlation matrix is a photon-pair histogram — for every
+  reference photon, the photons landing in a lag window `dT ± ddT/2`, binned by
+  the two micro-times — which is macro and micro times together and nothing
+  else, and the shape of every correlator this library already owns. One call
+  builds one matrix per lag in a single pass over the stream.
+
+  Two properties are contracts. The result is **exactly independent of
+  `n_chunks`**: each chunk accumulates into a private `int64` matrix and integer
+  addition is associative, so chunking is a parallelism decision and nothing
+  more. And a micro-time outside `[t_min, t_max)` is **dropped, not clamped** —
+  clamping piles it into the edge bin, where it is indistinguishable from a real
+  feature. Unsorted macro-times are rejected rather than fed to a binary search
+  that would answer confidently and wrongly.
+
+  Verified against a simulated stream whose answer is fixed before the analysis
+  runs, not against the implementation it replaces: the fitted relaxation is
+  **98 windows against a simulated 100, and 52 against 50**, with a single-state
+  negative control flat at the noise floor and two frozen states showing no lag
+  dependence at all. Also checked against an O(n²) double loop over every pair
+  that shares no code with the kernel.
+
+  `fdc_scan_log`/`fdc_log` take `lint_bin_factor` (default 1) because the
+  reference derives the micro-time span as
+  `ceil((span + f)/f) * f` and builds the **log** edges from it — so the log
+  axis moves with a factor that names the *linear* matrix. That reads as a bug
+  and is `TK_Create2DFDC_04.m`'s rule; where the paper and an implementation
+  disagree, the paper wins. At factor 1 the rule collapses to `span + 1`, so a
+  caller who never binned linearly sees no change. `fdc_t_imax` exposes the
+  formula, and `fdc_scan_axis` / `fdc_scan_two_axes` take bin edges directly —
+  the latter filling both matrices in one pass over the photons, which is 2.27×
+  faster than two calls at 1M photons.
+
+  Registered in all four bindings, not Python alone.
+
 - **A generic log-domain HMM lattice** (PRD-035): `hmm_forward_log`,
   `hmm_backward_log`, `hmm_backward_posteriors_xi`, `hmm_viterbi_log`,
   `hmm_logsumexp`, and `hmm_estep_log` for concatenated sequences, in
