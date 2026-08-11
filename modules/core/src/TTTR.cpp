@@ -13,6 +13,7 @@
 #include "io_hdf5.h"
 #include "TTTRMask.h"
 #include "FileCheck.h"
+#include <stdexcept>
 #include "PhotonscoreD7.h"
 #include "Verbose.h"
 
@@ -233,6 +234,30 @@ TTTR::TTTR(const TTTR &p2){
     copy_from(p2, true);
 }
 
+// A path whose format cannot be identified used to print to stderr and leave a
+// TTTR with zero events, so a caller who was not watching stderr computed a
+// count rate, a correlation or a lifetime from nothing and got no error at all
+// (BUGS 2026-08-11). Detection failure is now an exception, and the message
+// names the path and says which step failed -- the two things stderr said and
+// the empty object did not.
+static void tttr_throw_unidentified(const char* fn, const char* what) {
+    std::string msg = std::string("TTTR: ") + what + " for '" + (fn ? fn : "") +
+            "'. The file's format could not be determined, so nothing was "
+            "read. Pass the container type explicitly -- TTTR(path, type) -- "
+            "if the format is known.";
+    // Some formats claim an extension and deliberately cannot be identified
+    // from their contents, because too many formats share it to tell apart
+    // safely. Naming them turns "unsupported" into an instruction: those are
+    // the types to pass.
+    const std::string undetectable =
+            fn ? tttrlib::IORegistry::undetectable_claimants(fn) : std::string();
+    if (!undetectable.empty()) {
+        msg += " These formats claim this extension but cannot be recognised "
+               "from content, so one of them has to be named: " + undetectable + ".";
+    }
+    throw std::runtime_error(msg);
+}
+
 TTTR::TTTR(const char *filename, int container_type, bool read_input) : TTTR(){
     if(container_type >= 0){
         tttr_container_type_str = container_names().right.at(container_type);
@@ -243,7 +268,7 @@ TTTR::TTTR(const char *filename, int container_type, bool read_input) : TTTR(){
                 find_used_routing_channels();
         }
     } else{
-        std::cerr << "File " << filename << " not supported." << std::endl;
+        tttr_throw_unidentified(filename, "unsupported container type");
     }
 }
 
@@ -267,7 +292,7 @@ TTTR::TTTR(const char *filename, int container_type,
             }
         }
     } else{
-        std::cerr << "File " << filename << " not supported." << std::endl;
+        tttr_throw_unidentified(filename, "unsupported container type");
     }
 }
 
@@ -289,9 +314,10 @@ TTTR::TTTR(const char *fn, const char *container_type, bool read_input) : TTTR()
         if (read_input && read_file())
             find_used_routing_channels();
     }
-    catch (...) {
-        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type, bool read_input): "
-                  << "Container type " << container_type << " not supported." << std::endl;
+    catch (const std::exception&) {
+        tttr_throw_unidentified(fn, std::string("container type '")
+                                        .append(container_type ? container_type : "")
+                                        .append("' not supported").c_str());
     }
 }
 
@@ -313,9 +339,10 @@ TTTR::TTTR(const char *fn, const char *container_type) : TTTR() {
         if (read_file())
             find_used_routing_channels();
     }
-    catch (...) {
-        std::cerr << "TTTR::TTTR(const char *fn, const char *container_type): "
-                  << "Container type " << container_type << " not supported." << std::endl;
+    catch (const std::exception&) {
+        tttr_throw_unidentified(fn, std::string("container type '")
+                                        .append(container_type ? container_type : "")
+                                        .append("' not supported").c_str());
     }
 }
 
@@ -336,9 +363,10 @@ TTTR::TTTR(const char *fn, const char *container_type,
         if (read_input && read_file())
             find_used_routing_channels();
     }
-    catch (...) {
-        std::cerr << "TTTR::TTTR(fn, container_type, parameters, read_input): "
-                  << "Container type " << container_type << " not supported." << std::endl;
+    catch (const std::exception&) {
+        tttr_throw_unidentified(fn, std::string("container type '")
+                                        .append(container_type ? container_type : "")
+                                        .append("' not supported").c_str());
     }
 }
 
@@ -352,7 +380,7 @@ TTTR::TTTR(const char *fn, int container_type,
         if (read_input && read_file())
             find_used_routing_channels();
     } else {
-        std::cerr << "File " << fn << " not supported." << std::endl;
+        tttr_throw_unidentified(fn, "unsupported container type");
     }
 }
 

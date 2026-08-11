@@ -232,8 +232,18 @@ void my_fconv(
 
 //// fconv_simd
 ///////////////////
+// Deprecated alias: fconv already picks the best (SIMD or scalar) kernel at
+// runtime, so a separate _simd name promises a choice the caller does not
+// have (BUGS 2026-08-11). Shim kept for one release.
 %ignore fconv_simd;
 %rename (fconv_simd) my_fconv_simd;
+%feature("pythonprepend") my_fconv_simd %{
+    import warnings
+    warnings.warn(
+        "fconv_simd is deprecated: fconv already selects the best "
+        "(SIMD or scalar) kernel at runtime; call fconv.",
+        DeprecationWarning, stacklevel=2)
+%}
 %inline %{
 void my_fconv_simd(
         double* fit, int n_fit,
@@ -267,7 +277,7 @@ void my_fconv_simd(
                      "Stop index (%d) too large for array of lengths (%d).",
                      stop, n_irf);
     }
-    fconv_simd(fit, x, irf, n_x / 2, start, stop, dt);
+    fconv(fit, x, irf, n_x / 2, start, stop, dt);
 }
 %}
 
@@ -316,8 +326,16 @@ void my_fconv_per(
 
 //// fconv_per_simd
 ///////////////////
+// Deprecated alias of fconv_per; see fconv_simd above.
 %ignore fconv_per_simd;
 %rename (fconv_per_simd) my_fconv_per_simd;
+%feature("pythonprepend") my_fconv_per_simd %{
+    import warnings
+    warnings.warn(
+        "fconv_per_simd is deprecated: fconv_per already selects the best "
+        "(SIMD or scalar) kernel at runtime; call fconv_per.",
+        DeprecationWarning, stacklevel=2)
+%}
 %inline %{
 void my_fconv_per_simd(
         double* fit, int n_fit,
@@ -352,7 +370,7 @@ void my_fconv_per_simd(
                      "Stop index (%d) too large for array of lengths (%d).",
                      stop, n_irf);
     }
-    fconv_per_simd(fit, x, irf, n_x / 2, start, stop, n_irf, period, dt);
+    fconv_per(fit, x, irf, n_x / 2, start, stop, n_irf, period, dt);
 }
 %}
 

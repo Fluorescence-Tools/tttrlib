@@ -27,6 +27,17 @@
 #define TTTRLIB_MAX_ROUTING_CHANNELS 256
 #endif
 
+// The TTTRLIB_X86_FEATURES / TTTRLIB_COMPILE_AVX / TTTRLIB_COMPILE_NEON macros
+// below are answers from the compiler that builds the library. A wrapper
+// generator (SWIG) runs its OWN preprocessor over this header and defines none
+// of the architecture macros, so any of these it exported as a bindings
+// constant would read 0 on every platform — observed as
+// tttrlib.TTTRLIB_COMPILE_NEON == 0 on an arm64 build whose NEON kernels were
+// compiled in and running (BUGS 2026-08-11). Hidden from SWIG entirely; a
+// binding asks get_avx_compiled() / get_neon_compiled() below, which the
+// library's compiler evaluated.
+#ifndef SWIG
+
 // CPUID for runtime CPU feature detection (x86/x64 only)
 #if (defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86))
     #if defined(__GNUC__) || defined(__clang__)
@@ -85,6 +96,8 @@
 #else
     #define TTTRLIB_COMPILE_NEON 0
 #endif
+
+#endif // ifndef SWIG
 
 // Runtime CPU feature detection
 namespace tttrlib {
@@ -152,19 +165,29 @@ namespace cpu_features {
         return default_value;
     }
     
+    // Whether the AVX kernels were compiled into this binary (and not
+    // force-disabled by a TTTRLIB_WITH_AVX=0 scalar-only build). Whether they
+    // RUN on this CPU is get_avx_enabled(). A function, never an exported
+    // macro: the answer must come from the compiler that built the library,
+    // not from a wrapper generator's preprocessor (see the SWIG note above).
+    inline bool get_avx_compiled() {
+#if defined(TTTRLIB_WITH_AVX) && (TTTRLIB_WITH_AVX == 0)
+        return false;
+#else
+        return TTTRLIB_COMPILE_AVX != 0;
+#endif
+    }
+
+    // Whether the NEON kernels were compiled into this binary. On AArch64 they
+    // always are (NEON is baseline ISA); the runtime opt-out is
+    // get_neon_enabled().
+    inline bool get_neon_compiled() {
+        return TTTRLIB_COMPILE_NEON != 0;
+    }
+
     // Get AVX status (CPU detection + environment override)
     inline bool get_avx_enabled() {
-        // The AVX kernels are compiled into the binary whenever we build for an
-        // x86 target (TTTRLIB_COMPILE_AVX); whether they run is decided here at
-        // runtime. TTTRLIB_WITH_AVX, if defined by the build to 0, force-disables
-        // AVX entirely (e.g. for a deliberately scalar-only build).
-#if defined(TTTRLIB_WITH_AVX) && (TTTRLIB_WITH_AVX == 0)
-        constexpr bool avx_compiled_in = false;
-#else
-        constexpr bool avx_compiled_in = (TTTRLIB_COMPILE_AVX != 0);
-#endif
-
-        if (!avx_compiled_in) {
+        if (!get_avx_compiled()) {
             return false;
         }
 
@@ -189,11 +212,10 @@ namespace cpu_features {
     // Get NEON status. NEON is guaranteed present on AArch64, so this is a
     // compile-time capability with an environment opt-out (TTTRLIB_USE_NEON=0).
     inline bool get_neon_enabled() {
-#if TTTRLIB_COMPILE_NEON
+        if (!get_neon_compiled()) {
+            return false;
+        }
         return is_feature_enabled_by_env("TTTRLIB_USE_NEON", true);
-#else
-        return false;
-#endif
     }
 
     // Get OpenMP status (compile-time + environment override)

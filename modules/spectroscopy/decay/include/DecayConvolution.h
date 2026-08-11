@@ -112,10 +112,10 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
  * once; spectra whose lifetime count is not a multiple of the register width
  * are zero padded.
  *
- * The kernel is chosen at **runtime** for the host CPU: AVX+FMA on x86_64
- * (four lifetimes per register), NEON on AArch64 (two per register), and the
- * scalar fconv() elsewhere. Results match the scalar path to rounding on every
- * backend.
+ * @deprecated Alias of fconv(). The scalar/SIMD choice is made at runtime
+ * inside fconv() itself (AVX+FMA on x86_64, NEON on AArch64, scalar
+ * elsewhere), so this name promises a decision the caller does not have.
+ * Call fconv(); this shim goes away after one release.
  *
  * @param fit
  * @param x
@@ -157,10 +157,9 @@ void fconv_per(
  * @brief Convolve lifetime spectrum with instrument response (fast convolution,
  * high repetition rate), SIMD optimized version
  *
- * This function computes the convolution of a lifetime spectrum (a set of
- * lifetimes with corresponding amplitudes) with a instrument response function
- * (irf). This function does consider periodic excitation and is suited for experiments
- * at high repetition rate.
+ * @deprecated Alias of fconv_per(), which already selects the best kernel at
+ * runtime; see fconv_simd(). Call fconv_per(); this shim goes away after one
+ * release.
  *
  * @param fit[out] model function. The convoluted decay is written to this array
  * @param x[in] lifetime spectrum (amplitude1, lifetime1, amplitude2, lifetime2, ...)

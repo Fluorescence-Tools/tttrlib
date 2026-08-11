@@ -78,7 +78,6 @@
 %include "StreamingDecayHistogram.h"
 %include "StreamingIntensityTrace.h"
 
-#ifdef SWIGPYTHON
 %extend tttrlib::StreamingCorrelator {
     // One chunk, one call. `st_n_weights == 0` means unit weights and
     // `st_n_channels == 0` means the autocorrelation (both channels fed).
@@ -99,6 +98,12 @@
             $self->push_photons(mt, w, st_n_macro_times);
     }
 
+// Only the %pythoncode below is Python-only. push_arrays above is portable
+// C++ over the IN_ARRAY1 typemaps, which rarrays.i/jarrays.i/jsarrays.i all
+// implement for these types -- fencing it made bulk push Python-only for no
+// reason, leaving the other three languages with per-photon calls at ~1.13us
+// each (BUGS 2026-08-11).
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def x_axis(self):
@@ -135,6 +140,7 @@
         return (f"StreamingCorrelator(n_bins={self.n_bins()}, "
                 f"n_casc={self.n_casc()}, photons={self.photon_count()})")
     %}
+#endif
 }
 
 %extend tttrlib::StreamingBurstDetector {
@@ -143,6 +149,12 @@
             reinterpret_cast<const uint64_t*>(st_macro_times), st_n_macro_times);
     }
 
+// Only the %pythoncode below is Python-only. push_arrays above is portable
+// C++ over the IN_ARRAY1 typemaps, which rarrays.i/jarrays.i/jsarrays.i all
+// implement for these types -- fencing it made bulk push Python-only for no
+// reason, leaving the other three languages with per-photon calls at ~1.13us
+// each (BUGS 2026-08-11).
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def bursts(self):
@@ -156,6 +168,7 @@
         import numpy as np
         self.push_arrays(np.ascontiguousarray(macro_times, dtype=np.uint64))
     %}
+#endif
 }
 
 %extend tttrlib::StreamingDecayHistogram {
@@ -172,6 +185,12 @@
             st_n_microtimes);
     }
 
+// Only the %pythoncode below is Python-only. push_arrays above is portable
+// C++ over the IN_ARRAY1 typemaps, which rarrays.i/jarrays.i/jsarrays.i all
+// implement for these types -- fencing it made bulk push Python-only for no
+// reason, leaving the other three languages with per-photon calls at ~1.13us
+// each (BUGS 2026-08-11).
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def histogram(self):
@@ -187,6 +206,7 @@
               else np.ascontiguousarray(channels, dtype=np.int32))
         self.push_arrays(mt, ch)
     %}
+#endif
 }
 
 %extend tttrlib::StreamingPhasor {
@@ -195,6 +215,12 @@
             reinterpret_cast<const uint16_t*>(st_microtimes), st_n_microtimes);
     }
 
+// Only the %pythoncode below is Python-only. push_arrays above is portable
+// C++ over the IN_ARRAY1 typemaps, which rarrays.i/jarrays.i/jsarrays.i all
+// implement for these types -- fencing it made bulk push Python-only for no
+// reason, leaving the other three languages with per-photon calls at ~1.13us
+// each (BUGS 2026-08-11).
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def phasor(self):
@@ -204,6 +230,7 @@
         import numpy as np
         self.push_arrays(np.ascontiguousarray(microtimes, dtype=np.uint16))
     %}
+#endif
 }
 
 %extend tttrlib::StreamingIntensityTrace {
@@ -221,6 +248,12 @@
             st_n_macro_times);
     }
 
+// Only the %pythoncode below is Python-only. push_arrays above is portable
+// C++ over the IN_ARRAY1 typemaps, which rarrays.i/jarrays.i/jsarrays.i all
+// implement for these types -- fencing it made bulk push Python-only for no
+// reason, leaving the other three languages with per-photon calls at ~1.13us
+// each (BUGS 2026-08-11).
+#ifdef SWIGPYTHON
     %pythoncode %{
     @property
     def y(self):
@@ -244,5 +277,5 @@
         return (f"StreamingIntensityTrace(bin_width={self.bin_width():.3e} s, "
                 f"bins={self.n_bins()}, photons={self.photon_count()})")
     %}
-}
 #endif
+}

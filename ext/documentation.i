@@ -3775,12 +3775,11 @@ Parameters
 
 %feature("docstring") fconv_simd "
 
-Convolve lifetime spectrum with instrument response (fast convolution, AVX
-optimized for large lifetime spectra)  
+Deprecated alias of fconv.
 
-This function is a modification of fconv for large lifetime spectra. The
-lifetime spectrum is processed by AVX intrinsics. Four lifetimes are convolved
-at once. Spectra with lifetimes that are not multiple of four are zero padded.  
+fconv already selects the best kernel (AVX, NEON or scalar) at runtime, so
+this name promises a scalar/SIMD choice the caller does not have. Call fconv;
+this shim goes away after one release.
 
 Parameters
 ----------
@@ -3829,13 +3828,11 @@ Parameters
 
 %feature("docstring") fconv_per_simd "
 
-Convolve lifetime spectrum with instrument response (fast convolution, high
-repetition rate), AVX optimized version.  
+Deprecated alias of fconv_per.
 
-This function computes the convolution of a lifetime spectrum (a set of
-lifetimes with corresponding amplitudes) with a instrument response function
-(irf). This function does consider periodic excitation and is suited for
-experiments at high repetition rate.  
+fconv_per already selects the best kernel (AVX, NEON or scalar) at runtime,
+so this name promises a scalar/SIMD choice the caller does not have. Call
+fconv_per; this shim goes away after one release.
 
 Parameters
 ----------

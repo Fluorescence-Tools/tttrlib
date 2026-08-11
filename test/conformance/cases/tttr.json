@@ -217,10 +217,10 @@
     },
     {
       "id": "tttr.open.bad_container_throws",
-      "doc": "An unknown container type is refused rather than guessed at.",
+      "doc": "An unknown container type is refused rather than guessed at. The expectation read `false` until 2026-08-11 -- the case's own id and doc said 'throws' and 'refused' while the recorded baseline captured the opposite, because opening an unidentifiable file printed to stderr and returned an empty object instead of raising. The constructors now throw, so the case finally asserts what it was named for.",
       "data": ["bh/bh_spc132.spc"],
       "steps": [{"op": "tttr.open", "args": ["$data0", "NOT-A-CONTAINER"], "as": "threw", "throws": true}],
-      "expect": {"threw": false}
+      "expect": {"threw": true}
     }
   ]
 }

@@ -205,7 +205,10 @@ void fconv(double *fit, double *x, double *lamp, int numexp, int start, int stop
     fconv_scalar(fit, x, lamp, numexp, start, stop, dt);
 }
 
-/// Explicit name for the same automatic selection; kept because callers use it.
+/// Deprecated alias of fconv(): the scalar/SIMD choice is made inside fconv()
+/// itself, so this name promises a decision the caller does not have. Kept as
+/// a shim for one release (exported, and downstream callers exist); remove
+/// after that.
 void fconv_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop, double dt) {
     fconv(fit, x, lamp, numexp, start, stop, dt);
 }
@@ -437,7 +440,7 @@ void fconv_per(double *fit, double *x, double *lamp, int numexp, int start, int 
     fconv_per_scalar(fit, x, lamp, numexp, start, stop, n_points, period, dt);
 }
 
-/// Explicit name for the same automatic selection; kept because callers use it.
+/// Deprecated alias of fconv_per(); see fconv_simd() above.
 void fconv_per_simd(double *fit, double *x, double *lamp, int numexp, int start, int stop,
                    int n_points, double period, double dt) {
     fconv_per(fit, x, lamp, numexp, start, stop, n_points, period, dt);
@@ -812,9 +815,9 @@ void fconv_per_cs_time_axis(
         double period
 ){
     double dt = time_axis[1] - time_axis[0];
-    // fconv_per_simd() dispatches to a SIMD kernel when the CPU supports one and
-    // falls back to the scalar fconv_per() otherwise.
-    fconv_per_simd(
+    // fconv_per() dispatches to a SIMD kernel when the CPU supports one and
+    // falls back to the scalar path otherwise.
+    fconv_per(
             model, lifetime_spectrum, irf, (int) n_lifetime_spectrum / 2,
             convolution_start, convolution_stop, n_model, period, dt
     );
@@ -831,9 +834,9 @@ void fconv_cs_time_axis(
         int convolution_stop
 ){
     double dt = time_axis[1] - time_axis[0];
-    // fconv_simd() dispatches to a SIMD kernel when the CPU supports one and
-    // falls back to the scalar fconv() otherwise.
-    fconv_simd(
+    // fconv() dispatches to a SIMD kernel when the CPU supports one and
+    // falls back to the scalar path otherwise.
+    fconv(
             output,
             lifetime_spectrum,
             irf,

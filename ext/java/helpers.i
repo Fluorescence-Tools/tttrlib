@@ -17,6 +17,8 @@
 #include "Histogram.h"
 #include "BurstFilter.h"
 #include "TiffArrayIO.h"
+#include "Sampling.h"
+#include "Deconvolution.h"
 #include "Correlator.h"
 #include "TTTRMask.h"
 #include "DataStore.h"
@@ -120,6 +122,112 @@
     return n;
   }
 }
+
+// ── Deconvolution, for Java ────────────────────────────────────────────────
+// Richardson-Lucy and Wiener reach the other bindings through
+// ARGOUTVIEWM_ARRAY2/3, which java has no equivalent of, so the flat entry
+// points wrap as SWIGTYPE_p_p_double. The vector-returning C++ overloads are
+// no help either: they take a bare `const double*` with no companion length,
+// which no IN_ARRAY typemap can match.
+//
+// So the same `_into` shape as everything above -- the caller preallocates the
+// result and gets the true element count back. The image and PSF go in as
+// java double[][] via IN_ARRAY2 (which java DOES marshal); the result comes
+// back flat and row-major, as helpers.i does everywhere for >1-D data.
+%apply(double* IN_ARRAY2, int DIM1, int DIM2) {
+    (double* dc_image, int n_dc_image1, int n_dc_image2),
+    (double* dc_psf, int n_dc_psf1, int n_dc_psf2)
+}
+%inline %{
+namespace tttrlib {
+/*! Richardson-Lucy deconvolution of a 2-D image. Returns the element count
+    (n_dc_image1 * n_dc_image2); `dc_out` is filled row-major. */
+int richardson_lucy_2d_into(
+        double* dc_image, int n_dc_image1, int n_dc_image2,
+        double* dc_psf, int n_dc_psf1, int n_dc_psf2,
+        double* INPLACE_ARRAY1, int DIM1,
+        int n_iter = 30, bool clip = false,
+        double filter_epsilon = 0.0, bool acceleration = false) {
+    const std::vector<int> shape{n_dc_image1, n_dc_image2};
+    const std::vector<int> psf_shape{n_dc_psf1, n_dc_psf2};
+    const std::vector<double> out = tttrlib::richardson_lucy(
+            dc_image, shape, dc_psf, psf_shape,
+            n_iter, clip, filter_epsilon, acceleration);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+
+/*! Wiener deconvolution of a 2-D image. Returns the element count; `dc_out`
+    is filled row-major. */
+int wiener_deconvolve_2d_into(
+        double* dc_image, int n_dc_image1, int n_dc_image2,
+        double* dc_psf, int n_dc_psf1, int n_dc_psf2,
+        double* INPLACE_ARRAY1, int DIM1,
+        double balance = 0.1) {
+    const std::vector<int> shape{n_dc_image1, n_dc_image2};
+    const std::vector<int> psf_shape{n_dc_psf1, n_dc_psf2};
+    const std::vector<double> out = tttrlib::wiener_deconvolve(
+            dc_image, shape, dc_psf, psf_shape, balance);
+    const size_t m = ((size_t) DIM1 < out.size()) ? (size_t) DIM1 : out.size();
+    for (size_t i = 0; i < m; ++i) INPLACE_ARRAY1[i] = out[i];
+    return (int) out.size();
+}
+}  // namespace tttrlib
+%}
+%clear (double* dc_image, int n_dc_image1, int n_dc_image2);
+%clear (double* dc_psf, int n_dc_psf1, int n_dc_psf2);
+
+// ── Sampling, for Java ─────────────────────────────────────────────────────
+// `weighted_choice` and `sample_from_cdf` reach the other bindings through
+// ARGOUTVIEWM_ARRAY1, which Java has no equivalent of, so both wrap as
+// SWIGTYPE_p_p_* and cannot be called. Adding Sampling.i to the Java list
+// without these was tried on 2026-08-11 and reverted, because it looked like
+// coverage and gave a caller nothing.
+//
+// These need no malloc/free dance, unlike the accessors above: the *native*
+// functions in Sampling.h already take a caller-provided output buffer, which
+// is exactly Java's INPLACE_ARRAY1. The interface's own %inline versions --
+// the ones that allocate and hand back a fresh array -- exist for the
+// languages that can return one.
+%apply(double* IN_ARRAY1, int DIM1) {
+    (const double* sj_weights, int n_sj_weights),
+    (const double* sj_axis, int n_sj_axis),
+    (const double* sj_cdf, int n_sj_cdf)
+}
+%inline %{
+namespace tttrlib {
+/*! Draw DIM1 indices in proportion to `sj_weights`, into a preallocated
+    int[]. Returns the number of draws written. */
+int weighted_choice_into(const double* sj_weights, int n_sj_weights,
+                         unsigned int* INPLACE_ARRAY1, int DIM1) {
+    if (DIM1 < 0)
+        throw std::invalid_argument("weighted_choice_into: negative length");
+    tttrlib::weighted_choice(sj_weights, n_sj_weights,
+                             reinterpret_cast<uint32_t*>(INPLACE_ARRAY1), DIM1);
+    return DIM1;
+}
+
+/*! Draw DIM1 samples by inverting the tabulated CDF over `sj_axis`, into a
+    preallocated double[]. Returns the number of samples written. */
+int sample_from_cdf_into(const double* sj_axis, int n_sj_axis,
+                         const double* sj_cdf, int n_sj_cdf,
+                         double* INPLACE_ARRAY1, int DIM1,
+                         bool normalize = true) {
+    if (n_sj_axis != n_sj_cdf)
+        throw std::invalid_argument(
+            "sample_from_cdf_into: axis and cdf must have the same length");
+    if (DIM1 < 0)
+        throw std::invalid_argument("sample_from_cdf_into: negative length");
+    tttrlib::sample_from_cdf(sj_axis, n_sj_axis, sj_cdf, n_sj_cdf,
+                             INPLACE_ARRAY1, DIM1, normalize);
+    return DIM1;
+}
+}  // namespace tttrlib
+%}
+%clear (const double* sj_weights, int n_sj_weights);
+%clear (const double* sj_axis, int n_sj_axis);
+%clear (const double* sj_cdf, int n_sj_cdf);
 
 // ── TIFF, for Java ─────────────────────────────────────────────────────────
 // read_tiff is a free function with an output-pointer block, so neither
