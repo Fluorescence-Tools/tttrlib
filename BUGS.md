@@ -3,6 +3,116 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## Two `Streaming.i` files: the module's is shadowed, so edits to it do nothing
+
+**2026-08-11.** `Streaming.i` exists twice —
+`modules/streaming/include/Streaming.i` (215 lines, six classes) and
+`ext/python/Streaming.i` (125 lines, four classes, last touched by
+`ac3cadda2 refactor(modules): relocate the decay, imaging and test trees`).
+It is the **only** duplicated interface basename in the tree; every other
+module's `.i` is unique:
+
+```
+for f in ext/python/*.i; do b=$(basename $f); find modules -name "$b"; done
+# -> modules/streaming/include/Streaming.i, and nothing else
+```
+
+`ext/python/tttrlib.i:220` says `%include "Streaming.i"`, and SWIG resolves a
+quoted include from **the including file's own directory first** — so
+`ext/python/Streaming.i` wins and the module's copy is dead code. The module
+declares `SWIG_INTERFACES Streaming.i` in its `CMakeLists.txt` and
+`tttrlib_add_module` dutifully stores it in
+`TTTRLIB_MODULE_streaming_SWIG`, but grepping the tree finds **no reader of
+that property** — nothing ever puts the module's interface on SWIG's path.
+
+This is not a stale build. The generated wrapper was produced at **04:43:03**,
+*after* `modules/streaming/include/Streaming.i` (04:40) and
+`StreamingIntensityTrace.h` (04:39), and the class is simply absent from it
+while its four siblings are present:
+
+```
+W=build/cp310-cp310-macosx_26_0_arm64/ext/CMakeFiles/tttrlib.dir/tttrlibPYTHON_wrap.cxx
+grep -c StreamingCorrelator      $W   # 170
+grep -c StreamingIntensityTrace  $W   # 0
+```
+
+Three things are consequently untrue of the built library, each of which the
+tree already documents as true:
+
+1. **`StreamingIntensityTrace` does not exist.** `modules/streaming/README.md`
+   documents it, `modules/streaming/CMakeLists.txt` lists it among the
+   module's six consumers, and `test/python/streaming/test_streaming_
+   intensity_trace.py` tests it — but
+   `hasattr(tttrlib, "StreamingIntensityTrace")` is `False`, so that test
+   file cannot pass.
+2. **The `push_np` numpy-typemap fix is not in effect.** The shadowed file
+   carries the `%apply` typemaps and explains why they matter: looping in
+   Python over `push_photon` measures 1.13 µs/photon, "30× a numpy histogram
+   of the same photons, and enough to eat half a core on a 100 kHz live
+   acquisition". The live file still has the Python `for` loop. The README's
+   "until 2026-08-11 that is what `push_np` did" describes a fix the built
+   module never received.
+3. **`push_np(macro_times, weights)` raises.** The live file's loop does
+   `self.push_photon(int(t), float(weights))` — passing the whole array
+   instead of `weights[i]`:
+
+```python
+import numpy as np, tttrlib
+c = tttrlib.StreamingCorrelator(16, 4, 1.0)
+c.push_np(np.arange(1, 6, dtype=np.uint64), np.ones(5))
+# TypeError: only length-1 arrays can be converted to Python scalars
+```
+
+   The unweighted `push_np(mt)` works, which is why this has survived: every
+   test and example takes the default path.
+
+The fix is to delete `ext/python/Streaming.i` and make the module's copy
+reachable — either by putting module include dirs on `CMAKE_SWIG_FLAGS`
+(which is what `TTTRLIB_MODULE_streaming_SWIG` looks like it was meant for)
+or by including it by path. Worth doing as one change rather than three: a
+duplicated basename on an include path fails silently and by
+directory-search order, so the next module to relocate its `.i` inherits
+exactly this. Not fixed here because
+`modules/streaming/include/StreamingIntensityTrace.h` is untracked
+work-in-progress from a concurrent session and this file is not mine to
+land — but that session's class cannot appear in any binding until the
+shadowing goes.
+
+Filed while scoping chisurf PRD-98, whose live MCS display is the intended
+first consumer of the missing class.
+
+## A wall-clock assertion in the unit suite fails when the machine is busy
+
+**2026-08-11.** `test_convolution_methods_example.py::test_the_recursion_is_
+faster_at_every_rate_count` asserts `np.all(speedup > 1.0)` on timings measured
+during the test run. Observed failing while a compile was saturating the
+machine, and passing three times in a row on the same build once it was quiet:
+
+```
+the text says the recursion wins everywhere:
+[1.635 0.827 2.614 3.414 4.394 5.328 6.045]
+                ^ the second rate count, under load
+```
+
+The example is not at fault — `plot_convolution_methods.py:timed()` already
+takes a best-of-50, which is the right robust estimator. What fails is
+asserting a *strict* inequality at the smallest problem size, where the true
+gap is a few percent and one descheduled run in fifty is enough to invert it.
+The neighbouring `test_the_gap_widens_with_the_rate_count` in the same file
+already says "timings are noisy, so compare the ends" and does not have this
+problem, so the file disagrees with itself about how much to trust a
+stopwatch.
+
+Worth deciding rather than patching blind: either drop the smallest rate
+counts from the strict claim (the example's real argument is the trend, which
+the sibling test already checks), or keep the claim and move it out of the
+unit suite into the benchmark harness where a loaded machine is not a
+correctness failure. A CI runner is a shared machine, so this will fire there.
+
+Not fixed here because the answer is the example author's call, and a
+wall-clock assertion weakened by whoever happens to trip over it is how a test
+stops meaning anything.
+
 ## FIXED — SIGSEGV: `TTTR(path).header` on a temporary — the header outlives its owner
 
 > **Fixed 2026-08-11** (removal = fix landed, not a concurrent-write loss).
@@ -15,8 +125,25 @@ to the changelog and leaves here.
 > property routes through `__getattr__` → `get_header`, so it is covered.
 > The entry's repro now survives a `gc.collect()`;
 > `test/python/tttr/test_header_lifetime.py` pins it; tttr (633) and clsm
-> (196) groups green. This stub can be deleted once both sessions have seen
-> it.
+> (196) groups green.
+>
+> **2026-08-11, two corrections to this stub, from running
+> `tools/check_swig_multilang.sh` rather than reading:**
+>
+> * **The fix is Python-only, and the entry did not say so.** `%pythonappend`
+>   emits nothing for the other backends, so **R, Java and JavaScript still
+>   have the use-after-free** — same accessors, same crash, no keep-alive.
+>   Each needs its own equivalent (R: an attribute on the returned S4 object;
+>   Java: a strong field on the proxy; JS: a Napi reference). Reopening is the
+>   author's call; recorded here so the stub does not read as "closed
+>   everywhere".
+> * **It broke wrapper generation for those three bindings for a day.**
+>   `%pythonappend` is an *unknown directive*, not a no-op, in the R/Java/JS
+>   backends: generation stopped at `TTTR.i:116` while `pip install -e .` went
+>   on succeeding, so nothing local showed it. Both files are now
+>   `#ifdef SWIGPYTHON`-guarded and all four backends generate again. The
+>   lesson generalises past this entry: **`ext/python/*.i` is the SHARED SWIG
+>   core** — run the four-language check after touching any of it.
 
 ## FIXED — TCSPC MaxEnt is half-landed: the lifetime axis is here, the FRET distance axis is not
 
@@ -121,7 +248,29 @@ Related: the benchmark-suite enhancement below is what would have caught this
 in CI. A benchmark that calls the library the way a user does — through the
 Python bindings — measures the wrapper; one that times C++ directly does not.
 
-## `fconv_simd` is not measurably faster than `fconv`
+## FIXED — `fconv_simd` is not measurably faster than `fconv`
+
+> **Fixed 2026-08-11**, as the entry's own disposition prescribed: deprecate
+> the alias, keep a shim for one release because both names are exported and
+> ChiSurf may call them. `fconv_simd` / `fconv_per_simd` are now marked
+> `@deprecated` in the header, their docstrings say they are aliases rather
+> than repeating the old "AVX optimized, four lifetimes at once" claim (which
+> described `fconv`'s internals, not theirs), and the Python bindings raise a
+> `DeprecationWarning` naming the replacement. The two internal callers
+> (`fconv_cs_time_axis`, `fconv_per_cs_time_axis`) and the two SWIG wrapper
+> bodies now call `fconv` / `fconv_per` directly, so the shim has no callers
+> left inside the library and can be deleted outright next release.
+>
+> Nothing about the measurement changed and nothing needed to: the entry had
+> already settled that 1.00× is the correct answer for a function compared
+> with itself, and that the NEON path is alive at 1.87×. The defect was the
+> *name*, and that is what was removed.
+> `test/python/misc/test_capability_report.py::TestSimdAliasDeprecation`
+> pins both aliases warning and returning bit-identical results to the
+> functions they forward to. This stub can be deleted once both sessions have
+> seen it.
+
+<details><summary>Original entry</summary>
 
 **2026-08-11.** Both are exposed, the name promises a vectorised inner loop, and
 from Python the two measure the same: **1.73 µs vs 1.56 µs at n=512 (1.11×) and
@@ -171,7 +320,33 @@ make at the call site, and there is not. Whoever removes them should keep a
 deprecating shim for one release — both names are exported and ChiSurf may
 call them.
 
-## An exposed capability constant says NEON is not compiled in, on a build where it is
+</details>
+
+## FIXED — An exposed capability constant says NEON is not compiled in, on a build where it is
+
+> **Fixed 2026-08-11**, taking the entry's *second* option — `%ignore` rather
+> than a parallel function — and its first as well, because a caller still
+> needs the answer. `TTTRLIB_COMPILE_NEON`, `TTTRLIB_COMPILE_AVX` and
+> `TTTRLIB_X86_FEATURES` are now inside `#ifndef SWIG` in `info.h`, so no
+> wrapper generator can see them and no binding can read a fabricated value;
+> `get_neon_compiled()` and `get_avx_compiled()` answer beside the existing
+> `get_neon_enabled()` / `get_avx_enabled()`, evaluated by the compiler that
+> built the library. One guard covers all four bindings, since Python, R,
+> Java and JavaScript each `%include "info.h"`. `get_avx_enabled()` and
+> `get_neon_enabled()` now route through the new predicates rather than
+> repeating the macro test, so compiled-vs-enabled cannot drift apart.
+> Verified on this arm64 build: the constants are gone,
+> `get_neon_compiled()` is `True`, `get_avx_compiled()` is `False`.
+> `test/python/misc/test_capability_report.py` pins that no fabricated
+> constant is exported, that enabled implies compiled, and that the answer
+> matches `platform.machine()`.
+>
+> **The entry's audit suggestion was taken and found nothing else:** no other
+> `#define` gated on a compiler-supplied predefined macro reaches a binding.
+> `TTTRLIB_TARGET_AVX` is inside the same guarded block. This stub can be
+> deleted once both sessions have seen it.
+
+<details><summary>Original entry</summary>
 
 **2026-08-11.** Found while settling the entry above, and it is the reason that
 entry guessed wrong. `tttrlib.TTTRLIB_COMPILE_NEON` is **`0` on this arm64
@@ -210,6 +385,8 @@ the same shape elsewhere: any `#define` guarded by a compiler-supplied
 predefined macro that reaches a binding through `%include` has this defect —
 `TTTRLIB_TARGET_AVX`, and anything gated on `__x86_64__`, `_OPENMP` or
 `__APPLE__`, are the candidates.
+
+</details>
 
 ## Enhancement: automated performance measurement via GitHub Actions with docs auto-update
 
@@ -551,7 +728,52 @@ The downstream `mkdir(parents=True)` workaround can go.
 "reject a separator" — would have closed both. Read the two together: a name is
 now a path, and nothing constrains where it points.
 
-## `disassemble` writes outside the directory it is given
+## FIXED — `disassemble` writes outside the directory it is given
+
+> **Fixed 2026-08-11, same session that filed it** (removal = fix landed, not
+> a concurrent-write loss). Gated at both ends as the entry prescribed, and
+> the audit it asked for found a hole the fix would otherwise have left:
+> `pto_add_store` lays down its own object header instead of going through
+> `emit_object`, so a single writer-side check would have missed the call
+> every burst table in the ecosystem is written with. Both now share one
+> refusal.
+>
+> **And the gate alone was not enough: `tttr pto extract FILE DIR` bypassed
+> it.** The CLI carried its own copy of `disassemble`'s naming and loop —
+> kept, its comment said, "so the progress count matches the object list" —
+> so the library was fixed and the command a recipient actually unpacks with
+> still wrote outside `DIR`. Found by running the built binary against the
+> hostile file rather than trusting the library test. Fixed by deleting the
+> copy: `disassemble` took an optional per-path callback, the CLI passes its
+> progress tick through it, and there is one implementation again. Two
+> lessons worth keeping — a duplicated loop is a second place every future
+> fix must reach, and a security check has to be tested at the surface a user
+> touches, not only at the API beneath it.
+>
+> Two more things the entry did not anticipate, both found by the tests:
+>
+> * **The reader's check has to be a pre-pass.** Checking inside the loop
+>   refused the hostile object correctly and still left the objects *before*
+>   it on disk — a directory neither empty nor complete, which is the failure
+>   the entry's own "refuse, don't skip" wording was aiming at. Every name is
+>   now verified before anything is written.
+> * **A hostile container cannot be produced by this library any more**, so
+>   the reader test byte-patches a written one (equal-length name, every
+>   offset stays valid) — the writer's refusal proves nothing about a file
+>   somebody else wrote, which is the entire threat.
+>
+> `\` counts as a separator on every platform, so a Windows-shaped traversal
+> is refused on POSIX too. Legitimate nested names are unaffected, verified
+> against `countrate_All 0.2000#30/bursts` and four levels of nesting. Now
+> normative in `doc/formats/pto.rst` (`_pto_object_names`), including that a
+> name is rejected rather than sanitised. `test/python/test_pto_names.py`,
+> 22 cases. **Not audited, and still worth it:** `extract` takes its path
+> from the caller rather than the container so it is not exposed, but
+> `add_file` / `add_sidecar_file` / `attach` were not examined. This stub can
+> be deleted once both sessions have seen it.
+
+<details>
+<summary>Original entry</summary>
 
 **2026-08-11.** **Severity: arbitrary file overwrite from an untrusted input
 file.** Found while checking whether the entry above was fixed; it is the fix's
@@ -610,7 +832,42 @@ Worth a look wherever else a container-supplied name becomes a path: `extract`,
 `add_file` / `add_sidecar_file` and the `attach` family take or produce names
 the same way, and were not tested here.
 
-## A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
+</details>
+
+## MOSTLY FIXED — A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
+
+> **Fixed 2026-08-11** for the part that caused the wrong plot, by the lighter
+> of the two routes the entry proposes. No `superseded_by` edge and no
+> `current` flag — those are a format change, and the entry's actual
+> complaint is answered without one:
+>
+> * **`objects()` promising write order** is exactly what the entry asked for,
+>   and is now normative in `doc/formats/pto.rst` (`_pto_object_identity`)
+>   rather than a property readers were quietly leaning on. A writer appends
+>   and may not reorder.
+> * **`find(name)` returned the *oldest* match**, which the entry did not know
+>   — it describes the workaround as "take the last object", and the library
+>   call gave the first. So the most natural spelling handed back the stalest
+>   analysis in the container. It now returns the newest, and "most recently
+>   written wins" is normative, which is what stops two readers disagreeing
+>   about what a container shows.
+> * **New `find_all(name)`** returns every match in write order, so a reader
+>   can see the history, or notice there is more than one at all, without
+>   re-deriving newest-wins for itself.
+>
+> `test/python/test_pto_names.py::TestANameIsNotAnIdentity`, 5 cases,
+> including one that distinguishes the runs by row count so a `find` resolving
+> to the wrong object fails even if the uids line up.
+>
+> **Still open from this entry:** `Measurement.metadata()` returning `""` for a
+> container written by `Measurement.create()` (the "related and smaller" note
+> below) is untouched. And the deliberate decision worth revisiting if this
+> proves insufficient: an explicit edge or flag still buys something write
+> order cannot — an object that supersedes one written *before* the container
+> was last compacted, or a "current" that is not the newest.
+
+<details>
+<summary>Original entry</summary>
 
 Found driving ChiSurf's burst pipeline end to end over a `.pto` built from ten
 `.spc` files: search, change one setting, search again. Each run writes an
@@ -666,6 +923,8 @@ Two corrections to the notes above, from measuring rather than reading:
   most natural spelling. Whatever resolves the identity question should settle
   `find`'s tie-break explicitly; leaving it as "first in file order" is a
   defensible answer but an undocumented and surprising one.
+
+</details>
 
 ## FIXED — Tags are appended, never replaced, and nothing dedupes an edge
 
