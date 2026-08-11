@@ -221,6 +221,19 @@ is how a typemap file acquires a second wrong comment.
 > insists on — a PTO **FileUID still crosses as a string**, because Pto.i's
 > name-matched typemaps still win. That was the one way this fix could have
 > done damage.
+>
+> **Scope of the broadening, measured rather than asserted**, since applying a
+> typemap to an unqualified name touches more than the one function that
+> prompted it. Diffing the generated R wrapper against the commit before the
+> fix: **26 conversions moved**, `SWIG_AsVal_long` 151 -> 125 and `Rf_asReal`
+> 90 -> 116. Every one moved in the same direction, as.integer() -> double,
+> which for a magnitude is strictly 22 more bits of exactness and cannot make
+> anything worse. The single case where it *would* be wrong is an identity too
+> large for a double — the FileUID — and that still crosses as a string.
+>
+> (Naming the 26 individually defeated three attempts at parsing the R
+> wrapper's function layout; the aggregate and the direction are what the
+> safety argument needs, so I stopped there rather than keep digging.)
 
 <details><summary>Original entry</summary>
 
