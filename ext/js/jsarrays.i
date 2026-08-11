@@ -468,6 +468,18 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 // returns a Number there and a BigInt on macOS. Matching the fixed-width
 // spelling keeps the API BigInt on every platform while leaving size_t
 // and plain long as the Numbers they are meant to be.
+//
+// These are a MACRO rather than a one-off because they have to be applied
+// again after <stdint.i> is included. `Sim.i` is the only interface that
+// includes it and it must stay last (its own comment explains why: including
+// it earlier changes how SWIG resolves int64_t in the R and Java wrappers,
+// differently across SWIG versions). Once <stdint.i> has redefined uint64_t as
+// its own typedef, SWIG resolves a `uint64_t` parameter past the NAME these
+// typemaps are keyed to, and every interface parsed after Sim.i silently loses
+// the BigInt half of the contract -- StreamingCorrelator.push_photon(5n) threw
+// "Illegal arguments" while pto_mark_sidecar, parsed earlier, took it fine
+// (BUGS 2026-08-11). Re-invoking the macro after Sim.i restores it.
+%define TTTRLIB_JS_FIXED_WIDTH_64_TYPEMAPS
 %typemap(out) int64_t, const int64_t&
   %{ $result = Napi::BigInt::New(env, (int64_t) $1); %}
 %typemap(out) uint64_t, const uint64_t&
@@ -478,6 +490,9 @@ bool arraysAreZeroCopy() { return tttrlib_js::zero_copy_compiled_in(); }
 %typemap(in) const uint64_t& = unsigned long long;
 %typemap(typecheck, precedence=SWIG_TYPECHECK_INT64) int64_t, uint64_t, const int64_t&, const uint64_t&
   %{ $1 = $input.IsBigInt() || $input.IsNumber(); %}
+%enddef
+
+TTTRLIB_JS_FIXED_WIDTH_64_TYPEMAPS
 
 // Input accepts a BigInt or a Number. A Number is allowed because most values
 // in this API are small and a caller should not have to write 0n everywhere;

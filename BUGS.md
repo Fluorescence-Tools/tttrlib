@@ -109,7 +109,7 @@ unchecked, and the 85 call sites are per-photon.
 
 </details>
 
-## A `uint64_t` parameter in the JavaScript binding takes a Number but refuses a BigInt
+## FIXED — A `uint64_t` parameter in the JavaScript binding takes a Number but refuses a BigInt
 
 **2026-08-11.** `jsarrays.i` states its contract plainly — *"Input accepts a
 BigInt or a Number"* — and carries `%typemap(in) uint64_t = unsigned long
@@ -169,11 +169,38 @@ overloaded `uint64_t` method reaches it. Recorded rather than fixed because
 the two possibilities above want different repairs and guessing between them
 is how a typemap file acquires a second wrong comment.
 
+> **Fixed 2026-08-11**, taking the option that leaves include order alone.
+> `Sim.i` must stay last — its own comment explains that moving it changes how
+> SWIG resolves `int64_t` in the R and Java wrappers, differently across SWIG
+> versions, and R cannot be tested on this machine. So the six fixed-width
+> typemaps became a `%define` macro,
+> `TTTRLIB_JS_FIXED_WIDTH_64_TYPEMAPS`, invoked where they were and **again
+> immediately after `Sim.i`** in `ext/js/tttrlib.i`.
+>
+> A macro rather than a copied block on purpose: two hand-maintained copies of
+> a typemap set is how the `out` direction and the `in` direction drift apart,
+> which is the shape of the original defect.
+>
+> Verified by running, not by generating — generation was never the broken part:
+> `push_photon(5n)` is accepted where it threw `Illegal arguments`,
+> `push_photon(5)` still works, and the repository's JS suite is **44 passed, 0
+> failed** against the rebuilt addon.
+>
+> **Still worth doing, and not done here:** R and Java include `<stdint.i>` from
+> `Sim.i` in the same position. Whether they lose an equivalent contract is
+> unknown — `rarrays.i` gives `std::uint64_t` its own double-backed typemaps and
+> Java has none of this — and `Sim.i`'s comment says the answer is SWIG-version
+> dependent. The three-row table in this entry is the way to check.
+
+<details><summary>Original entry</summary>
+
 **Verified working in the same session, so the scope is clear:** the
 JavaScript binding builds and the repository's own suite is **44 passed, 0
 failed** against it, and all fourteen newly exposed symbols exist and run —
 `li_ma_significance`, `pch_single_species`, `sample_from_cdf` (the argout path
 Java cannot express), the streaming classes, and the MaxEnt entry points.
+
+</details>
 
 ## Streaming into `.sm` writes a header the `.sm` reader does not parse back
 

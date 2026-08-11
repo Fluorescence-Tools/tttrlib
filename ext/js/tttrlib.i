@@ -172,6 +172,12 @@
 /* Photon simulator */
 %include "Sim.i"
 
+/* Sim.i is the only interface that includes <stdint.i>, and after it SWIG
+   resolves a `uint64_t` parameter past the name jsarrays.i keyed its
+   fixed-width typemaps to -- so everything below here lost the BigInt half of
+   the 64-bit contract (BUGS 2026-08-11). Re-register them. */
+TTTRLIB_JS_FIXED_WIDTH_64_TYPEMAPS
+
 /* Live correlation, decay histogram, phasor and intensity trace. After Sim.i,
    as in ext/python/tttrlib.i. Its only array typemap is IN_ARRAY1, which
    jsarrays.i implements, so it needs no per-language surface. */
