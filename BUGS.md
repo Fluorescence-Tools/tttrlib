@@ -19,6 +19,60 @@ to the changelog and leaves here.
 > the file silently resurrects it. Restored as a stub by `opus-5/ac9f6757`,
 > who did not do the fix.
 
+## A `uint64_t` parameter in the JavaScript binding takes a Number but refuses a BigInt
+
+**2026-08-11.** `jsarrays.i` states its contract plainly — *"Input accepts a
+BigInt or a Number"* — and carries `%typemap(in) uint64_t = unsigned long
+long;` plus a `typecheck` whose body is
+`$1 = $input.IsBigInt() || $input.IsNumber();`. The BigInt half does not
+reach the caller:
+
+```js
+const c = new tttrlib.StreamingCorrelator(16, 4, 1.0);
+c.push_photon(5);     // OK
+c.push_photon(5n);    // Error: Illegal arguments for function push_photon.
+c.push_photon(5n, 1.0, 0);   // same, with every argument supplied
+```
+
+Same for `StreamingIntensityTrace.push_photon`. Supplying all three arguments
+rules out the dispatcher merely failing to *choose* between candidates: the
+one candidate that matches by arity still rejects the BigInt.
+
+**Why it matters, and how much.** A `uint64_t` macro time passed as a Number
+is exact only to 2^53. That is years of acquisition at any real resolution, so
+this is not an imminent wrong-number bug — but BigInt is the escape hatch this
+binding deliberately built (see the 64-bit work in `jsarrays.i`: arrays were
+exact while scalars rounded, and these typemaps were the fix), and for these
+methods it is not there. A caller who follows the file's own documentation
+gets an exception.
+
+**What is NOT established**, and would decide the fix:
+
+* whether this affects *every* `uint64_t` parameter or only those on
+  **overloaded** methods. Both functions above are overloaded — each has a
+  defaulted `weight`, so SWIG emits several forms — and I could not find a
+  genuinely single-form `uint64_t` scalar entry point to separate the two.
+  SWIG-JS dispatches overloads by calling each candidate and catching
+  `Napi::TypeError`, so a typecheck that is correct in isolation can still
+  lose there.
+* whether the `%typemap(typecheck)` is being applied at all for these
+  declarations. `uint64_t` is spelled unqualified in the streaming headers,
+  and `<stdint.i>` is included by `Sim.i`, which comes **before** `Streaming.i`
+  in the JavaScript list — the same include-order sensitivity `Sim.i`'s own
+  comment warns about for R and Java.
+
+**Not caused by exposing Streaming to JavaScript**, only surfaced by it: the
+behaviour is a property of `jsarrays.i` and SWIG's dispatcher, and any
+overloaded `uint64_t` method reaches it. Recorded rather than fixed because
+the two possibilities above want different repairs and guessing between them
+is how a typemap file acquires a second wrong comment.
+
+**Verified working in the same session, so the scope is clear:** the
+JavaScript binding builds and the repository's own suite is **44 passed, 0
+failed** against it, and all fourteen newly exposed symbols exist and run —
+`li_ma_significance`, `pch_single_species`, `sample_from_cdf` (the argout path
+Java cannot express), the streaming classes, and the MaxEnt entry points.
+
 ## Streaming into `.sm` writes a header the `.sm` reader does not parse back
 
 **2026-08-11.** `RecordStreamWriter` produces an SM file whose header is
