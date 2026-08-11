@@ -154,3 +154,10 @@ ext/js/pkg/package-lock.json
 ext/js/pkg/prebuilds/
 build-js-prebuild/
 npm-package/
+
+# The naming repository, pulled at run time -- CI checks out
+# Fluorescence-Tools/mmfdb here and points MMFDB_DIC_DIR at it, and a developer
+# reproducing a run does the same. It is the vocabulary authority, never
+# content of this repository: committing it is the one thing
+# test_vocabulary_matches_mmfdb exists to prevent.
+.mmfdb/
