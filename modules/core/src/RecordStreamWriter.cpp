@@ -60,6 +60,21 @@ bool record_stream_supported(int container_type, int record_type) {
         case FL_STT1_CONTAINER:
         case FL_ITT1_CONTAINER:
             return false;
+        case SM_CONTAINER:
+            // "Header plus records" is not one shape, and this is where that
+            // bites. A PTU header is a tag list a reader walks to a terminator,
+            // so an extra field is harmless; an SM header is a FIXED sequence
+            // of fields, and the header this writer produces came out 280 bytes
+            // where the reader parses 176 -- the payload was then offset by 104
+            // and the file read as zero events.
+            //
+            // Declined rather than left to write a file its own reader cannot
+            // parse: a named refusal is recoverable and a silently unreadable
+            // acquisition is not. Whole-file TTTR.write to .sm is unaffected.
+            // See BUGS.md; closing it means building the header exactly as
+            // TTTR::write does for this container rather than running
+            // ensure_minimal_tags over a copy.
+            return false;
         default:
             break;
     }
@@ -111,6 +126,12 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
     Impl& m = *p_;
 
     if (m.container < 0) return fail("no container type was given");
+    // The same predicate the factory answers with, so create() and
+    // can_stream() cannot disagree -- open_target used to repeat the checks
+    // and missed the containers record_stream_supported excludes.
+    if (!record_stream_supported(m.container, m.record))
+        return fail("container " + std::to_string(m.container) +
+                    " cannot be streamed into as a record stream");
     const FileFormat* f = IORegistry::by_container_type(m.container);
     if (f == nullptr) return fail("no format with container type " +
                                   std::to_string(m.container));

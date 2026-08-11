@@ -370,6 +370,27 @@ public:
     /// Container id for \p filename's extension alone, without reading it. -1 if none.
     static int container_type_from_extension(const std::string& filename);
 
+    /*!
+     * \brief Why detection failed for \p filename, in a sentence a caller can act on.
+     *
+     * Detection answers yes or no; this answers "and what should I do". Two
+     * cases it separates, which look identical from a failed open and need
+     * different responses:
+     *
+     * - **Formats claim the extension but cannot be identified from content.**
+     *   `SPC-600_256` and `SPC-600_4096` are deliberately `detectable = false`
+     *   — four formats claim `.spc` and only two can be told apart by their
+     *   bytes — so a caller must name one. Guessing between them on record-size
+     *   divisibility is precisely the weak heuristic that makes a small `.png`
+     *   look like a photon stream. Naming the candidates costs nothing and is
+     *   the one thing the caller needs.
+     * - **Nothing claims the extension at all**, which is a different problem
+     *   with a different fix.
+     *
+     * Empty when the extension is unknown to every format.
+     */
+    static std::string undetectable_claimants(const std::string& filename);
+
     /// Lowercased extension of \p filename without the dot, or "".
     static std::string extension_of(const std::string& filename);
 };

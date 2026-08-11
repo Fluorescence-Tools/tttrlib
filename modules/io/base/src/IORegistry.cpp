@@ -378,6 +378,17 @@ int IORegistry::container_type_from_extension(const std::string& filename) {
     return candidates.empty() ? -1 : candidates.front()->container_type;
 }
 
+std::string IORegistry::undetectable_claimants(const std::string& filename) {
+    const auto claimants = by_extension(extension_of(filename));
+    std::string names;
+    for (const FileFormat* f : claimants) {
+        if (f->detectable) continue;
+        if (!names.empty()) names += ", ";
+        names += f->name + " (" + std::to_string(f->container_type) + ")";
+    }
+    return names;
+}
+
 int IORegistry::infer_container_type(const std::string& filename) {
     const std::string ext = extension_of(filename);
     const auto claimants = by_extension(ext);
