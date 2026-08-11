@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "PhotonSink.h"
+
 class TTTRHeader;
 
 namespace tttrlib {
@@ -18,38 +20,44 @@ namespace io {
  *
  * `TTTR::write` stores a measurement that is already finished, and to do that
  * it needs the whole measurement in memory. An acquisition is a different
- * problem and this is the interface for it: the photon count is unknown when
- * the file is opened, the run may last hours, the process may be killed, and
- * **the data may be larger than RAM** — which is the constraint that shapes
- * everything here. An implementation that buffers the run and writes at
- * `close()` satisfies the signatures and defeats the purpose.
+ * problem: the photon count is unknown when the file is opened, the run may
+ * last hours, the process may be killed, and **the data may be larger than
+ * RAM**.
  *
- * \par The contract every implementation owes
+ * \par The producer must not wait for the disk, and must not lose a photon
+ * Those two pull against each other and this class is where they are
+ * reconciled, once, for every format:
  *
- * - **Bounded memory.** What an implementation holds may grow with the
- *   checkpoint interval and must not grow with the length of the run.
+ * - \ref append copies into a buffer and returns. It does no file I/O, so an
+ *   instrument thread is never blocked by a slow disk, an fsync, or a
+ *   filesystem that stalls for a second.
+ * - A **writer thread** drains that buffer to the format underneath. Disk
+ *   throughput and photon arrival are therefore decoupled, which is the point:
+ *   neither one has to be uniform.
+ * - When the buffer reaches \ref buffer_limit, \ref append **blocks until
+ *   space frees**. It does not drop, it does not truncate, and it does not
+ *   silently grow without bound. That is the guarantee: *photons are never
+ *   lost, and memory is never unbounded* — if the disk cannot keep up, the
+ *   producer is slowed down and \ref n_stalls says so.
+ *
+ * \ref n_dropped exists to be asserted on rather than consulted: it is zero by
+ * construction, and a test that watches it turns "we never drop" from a claim
+ * into a checked property.
+ *
+ * \par The contract an implementation owes
+ * A backend implements only the format-specific half (\ref open_target,
+ * \ref write_chunk, \ref close_target) and inherits the rest, so no backend can
+ * get the buffering, the backpressure or the loss accounting subtly different.
+ *
  * - **A checkpoint is durable.** Everything appended before a successful
- *   \ref checkpoint is readable afterwards by this process and by any other,
- *   and survives the writer being killed. What was appended after it may be
- *   lost, and losing it must leave a file that still reads.
- *   \ref n_committed counts exactly what a reader would get.
- * - **A checkpoint with nothing buffered succeeds and writes nothing.** A
- *   caller checkpointing on a timer must not have to ask first whether any
- *   photons arrived.
- * - **Equal-length arrays are checked, not trusted.** Four arrays that
- *   disagree would attribute every photon after the short one to the wrong
- *   event, which no later stage can detect.
- * - **`close()` checkpoints first**, and so does the destructor, so a stream
- *   unwound by an exception does not discard what it was holding.
- *
- * \par What it deliberately does not promise
- * Nothing here says the file is *complete* between checkpoints, and nothing
- * says an implementation appends to one object, one record stream or one
- * anything. A container may write a sequence of committed chunks and a record
- * stream may append records; both satisfy this interface, and the difference
- * belongs to the format rather than to the caller.
+ *   \ref checkpoint is readable afterwards, by this process and by any other,
+ *   and survives the writer being killed. \ref n_committed counts exactly what
+ *   a reader would get.
+ * - **A checkpoint with nothing buffered succeeds and writes nothing**, so a
+ *   caller checkpointing on a timer need not ask whether photons arrived.
+ * - **`close()` drains and checkpoints first**, and so does the destructor.
  */
-class TTTRStreamWriter {
+class TTTRStreamWriter : public PhotonSink {
 public:
     virtual ~TTTRStreamWriter();
 
@@ -57,77 +65,134 @@ public:
     TTTRStreamWriter& operator=(const TTTRStreamWriter&) = delete;
 
     /*!
-     * \brief Open `filename` and begin a stream.
+     * \brief Open `filename` and start the writer thread.
      *
      * \param header supplies the clocks. Required, and not by convention: a
      *        photon stream without them is a column of integers with no unit,
-     *        so an implementation must refuse rather than invent a default.
+     *        so this refuses rather than inventing a default.
      * \param name what the measurement is called, where the format has a place
      *        to put a name. Ignored by formats that hold one measurement.
-     * \return false on failure; see \ref error.
      */
-    virtual bool create(const std::string& filename, TTTRHeader* header,
-                        const std::string& name = std::string()) = 0;
-
-    /// Add events. Buffered; nothing is durable until \ref checkpoint.
-    virtual bool append(const unsigned long long* macro_times, std::size_t n_macro,
-                        const unsigned short* micro_times, std::size_t n_micro,
-                        const signed char* routing_channels, std::size_t n_routing,
-                        const signed char* event_types, std::size_t n_event) = 0;
-
-    /// Make everything appended so far durable and readable. \see TTTRStreamWriter
-    virtual bool checkpoint() = 0;
-
-    /// Final checkpoint, then close. Also what the destructor does.
-    virtual bool close() = 0;
-
-    virtual bool is_open() const = 0;
-
-    /// Events a reader would get from the file right now.
-    virtual std::uint64_t n_committed() const = 0;
-    /// Events appended but not yet durable.
-    virtual std::uint64_t n_buffered() const = 0;
+    bool create(const std::string& filename, TTTRHeader* header,
+                const std::string& name = std::string());
 
     /*!
-     * \brief Checkpoint automatically once this many events are buffered.
+     * \brief Hand over events. Copies and returns; does no file I/O.
      *
-     * Zero (the default) never checkpoints on its own. Setting it is how a
-     * caller bounds memory without running a timer, which is the usual way an
-     * acquisition larger than RAM is kept honest.
+     * Blocks only when the buffer is full, and then only until the writer
+     * thread has made room. \see buffer_limit
      */
-    void set_auto_checkpoint(std::uint64_t events) { auto_at_ = events; }
-    std::uint64_t auto_checkpoint() const { return auto_at_; }
+    bool append(const unsigned long long* macro_times, std::size_t n_macro,
+                const unsigned short* micro_times, std::size_t n_micro,
+                const signed char* routing_channels, std::size_t n_routing,
+                const signed char* event_types, std::size_t n_event);
+
+    /// Drain everything appended so far to disk and make it durable.
+    bool checkpoint();
+
+    /// Drain, checkpoint, stop the writer thread, close. Also done by the destructor.
+    bool close();
+
+    bool is_open() const;
+
+    /// Events a reader would get from the file right now.
+    std::uint64_t n_committed() const;
+    /// Events handed over but not yet on disk.
+    std::uint64_t n_buffered() const;
+    /*!
+     * \brief Photons lost. **Always zero**, and public so a test can say so.
+     *
+     * There is no path that discards an event: a full buffer blocks the
+     * producer instead. A non-zero value here is a bug in this class, not a
+     * capacity setting somebody should tune.
+     */
+    std::uint64_t n_dropped() const;
+    /// How often \ref append had to wait for the disk. The backpressure signal.
+    std::uint64_t n_stalls() const;
+    /// Nanoseconds \ref append has spent waiting, in total.
+    std::uint64_t stall_nanoseconds() const;
+
+    /*!
+     * \brief How many events may sit in memory before \ref append blocks.
+     *
+     * This is the memory bound and the loss guarantee in one number: the
+     * writer holds at most this many events plus whatever the backend needs
+     * for one chunk, whatever the run's length or the disk's mood. Default is
+     * 8 M events, about 96 MB of columns.
+     */
+    void set_buffer_limit(std::uint64_t events);
+    std::uint64_t buffer_limit() const;
+
+    /*!
+     * \brief Write a chunk automatically once this many events are buffered.
+     *
+     * The unit of work the writer thread takes, and for a chunked format the
+     * unit that becomes durable. Zero means "only on checkpoint or when the
+     * buffer limit is reached".
+     */
+    void set_auto_checkpoint(std::uint64_t events);
+    std::uint64_t auto_checkpoint() const;
 
     /// Why the last call returned false.
-    const std::string& error() const { return err_; }
+    const std::string& error() const;
+
+    // --- PhotonSink: a file is a consumer like any other -------------------
+    //
+    // What makes "write it AND correlate it AND burst-search it" one
+    // acquisition rather than three passes: the writer attaches to a
+    // PhotonStreamHub beside the analyses. It is also the sink that most needs
+    // the buffering above, since it is the only one waiting on a disk.
+
+    bool submit(const std::uint64_t* macro_times,
+                const std::uint16_t* micro_times,
+                const std::int8_t* routing_channels,
+                const std::int8_t* event_types,
+                std::size_t n) override;
+    bool flush() override;
+    std::string sink_name() const override { return "file"; }
 
 protected:
     TTTRStreamWriter();
 
     /// Record a failure and return false, so a caller can `return fail(...)`.
-    bool fail(const std::string& why) { err_ = why; return false; }
-    void clear_error() { err_.clear(); }
+    bool fail(const std::string& why);
+    void clear_error();
+
+    // --- what a backend implements ------------------------------------------
+    //
+    // Called only from the writer thread, one at a time, so an implementation
+    // needs no locking of its own.
+
+    /// Open the file and write whatever must precede the events.
+    virtual bool open_target(const std::string& filename, TTTRHeader* header,
+                             const std::string& name) = 0;
 
     /*!
-     * \brief The equal-length check, shared so no implementation forgets it.
-     * \return true when all four match.
+     * \brief Put `n` events on disk.
+     *
+     * \param durable true when this chunk must be readable and crash-safe
+     *        before returning -- a checkpoint. False lets a backend buffer at
+     *        the OS level and postpone the expensive part.
      */
-    bool lengths_agree(std::size_t n_macro, std::size_t n_micro,
-                       std::size_t n_routing, std::size_t n_event);
+    virtual bool write_chunk(const std::uint64_t* macro_times,
+                             const std::uint16_t* micro_times,
+                             const std::int8_t* routing_channels,
+                             const std::int8_t* event_types,
+                             std::size_t n, bool durable) = 0;
 
-    std::uint64_t auto_at_ = 0;
+    /// Finish the file: patch counts, flush, close.
+    virtual bool close_target() = 0;
 
 private:
-    std::string err_;
+    struct Impl;
+    std::unique_ptr<Impl> p_;
 };
 
 /*!
  * \brief A stream writer for `filename`, chosen by its extension, or null.
  *
- * The registry counterpart of \ref FileFormat::write_from: a format that can
- * stream registers a factory and this finds it. Null means the format holds a
- * finished measurement and cannot be streamed into, which is a real answer —
- * most vendor formats put a record count in a header they write first.
+ * The registry counterpart of \ref FileFormat::write_from. Null means the
+ * format cannot be streamed into, which is a real answer rather than a gap.
  */
 std::unique_ptr<TTTRStreamWriter> make_stream_writer(const std::string& filename);
 

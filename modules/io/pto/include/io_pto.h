@@ -740,40 +740,29 @@ public:
     PtoPhotonStream();
     ~PtoPhotonStream() override;
 
-    /*!
-     * \brief Open a **new** container and begin a photon stream in it.
-     *
-     * \param filename must not exist; see "Fresh files only" above.
-     * \param header   supplies the clocks written onto every chunk. Without it
-     *                 the events have no units -- the same requirement, and
-     *                 the same reason, as the write-once path.
-     * \param name     what the measurement is called. Chunks are named under
-     *                 it, and reading the container back gives one TTTR.
-     * \return false if the file exists, cannot be locked, or `header` is null.
-     */
-    bool create(const std::string& filename, TTTRHeader* header,
-                const std::string& name = std::string()) override;
-
-    bool append(const unsigned long long* macro_times, std::size_t n_macro,
-                const unsigned short* micro_times, std::size_t n_micro,
-                const signed char* routing_channels, std::size_t n_routing,
-                const signed char* event_types, std::size_t n_event) override;
-
-    /*!
-     * \brief Commit what has been appended, as one chunk object.
-     *
-     * Everything appended before this call becomes readable, by this process
-     * and by any other, and survives the writer being killed.
-     */
-    bool checkpoint() override;
-
-    bool close() override;
-    bool is_open() const override;
-    std::uint64_t n_committed() const override;
-    std::uint64_t n_buffered() const override;
-
     /// How many chunk objects have been committed. \see PtoPhotonStream
     std::uint64_t n_chunks() const;
+
+protected:
+    /*!
+     * \brief Create the container. Refuses a path that exists.
+     *
+     * Appending a live stream to a container somebody else assembled means
+     * writing chunk objects between their objects, and the "several photons
+     * objects are one measurement" rule would then absorb theirs into the
+     * acquisition.
+     */
+    bool open_target(const std::string& filename, TTTRHeader* header,
+                     const std::string& name) override;
+
+    /// One committed chunk object. Every chunk is complete on its own.
+    bool write_chunk(const std::uint64_t* macro_times,
+                     const std::uint16_t* micro_times,
+                     const std::int8_t* routing_channels,
+                     const std::int8_t* event_types,
+                     std::size_t n, bool durable) override;
+
+    bool close_target() override;
 
 private:
     struct Impl;

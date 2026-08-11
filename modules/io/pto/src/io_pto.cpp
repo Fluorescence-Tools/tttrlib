@@ -3330,38 +3330,32 @@ struct PtoPhotonStream::Impl {
     PtoFile file;
     std::string name;
     std::uint64_t chunk = 0;
-    std::uint64_t committed = 0;
 
-    // Clocks, copied at create() rather than held by pointer: a stream outlives
+    // Clocks, copied at open rather than held by pointer: a stream outlives
     // the call that opened it and the caller's header may not.
     double macro_res = 0.0, micro_res = 0.0;
     long long n_micro_channels = 0;
     long long src_container = -1, src_record = -1;
     std::string source_header_json;
-
-    // The buffer, in the column layout the chunk is written from. Cleared on
-    // every checkpoint, which is what bounds memory: an acquisition larger than
-    // RAM is the point, so nothing here may grow with the run, only with the
-    // checkpoint interval.
-    std::vector<std::uint64_t> macro;
-    std::vector<std::uint16_t> micro;
-    std::vector<std::int8_t> chan, type;
 };
 
 PtoPhotonStream::PtoPhotonStream() : p_(new Impl) {}
+
 PtoPhotonStream::~PtoPhotonStream() {
-    // A stream unwound by an exception still keeps what it was holding.
-    if (p_ && p_->file.is_open()) close();
+    // Closed HERE, not in the base destructor: close() drains through
+    // write_chunk() and close_target(), and by the time ~TTTRStreamWriter runs
+    // this object's overrides no longer exist. A stream dropped without an
+    // explicit close still keeps the photons it was holding.
+    if (is_open()) {
+        try { close(); } catch (...) {}
+    }
 }
 
-bool PtoPhotonStream::create(const std::string& filename, TTTRHeader* header,
-                             const std::string& name) {
+std::uint64_t PtoPhotonStream::n_chunks() const { return p_->chunk; }
+
+bool PtoPhotonStream::open_target(const std::string& filename, TTTRHeader* header,
+                                  const std::string& name) {
     Impl& m = *p_;
-    clear_error();
-    if (m.file.is_open()) return fail("this stream is already open");
-    if (header == nullptr)
-        return fail("a photon stream needs a header: without the clocks the "
-                    "events it writes have no units");
     if (std::filesystem::exists(std::filesystem::u8path(filename)))
         return fail(filename + " already exists; a photon stream writes a new "
                     "container, because chunks written between somebody "
@@ -3371,7 +3365,6 @@ bool PtoPhotonStream::create(const std::string& filename, TTTRHeader* header,
     m.file.set_writing_app("tttrlib");
     m.name = name.empty() ? std::string("photons") : name;
     m.chunk = 0;
-    m.committed = 0;
 
     m.macro_res = header->get_macro_time_resolution();
     m.micro_res = header->get_micro_time_resolution();
@@ -3384,36 +3377,17 @@ bool PtoPhotonStream::create(const std::string& filename, TTTRHeader* header,
     return true;
 }
 
-bool PtoPhotonStream::append(const unsigned long long* macro_times, std::size_t n_macro,
-                             const unsigned short* micro_times, std::size_t n_micro,
-                             const signed char* routing_channels, std::size_t n_routing,
-                             const signed char* event_types, std::size_t n_event) {
+bool PtoPhotonStream::write_chunk(const std::uint64_t* macro_times,
+                                  const std::uint16_t* micro_times,
+                                  const std::int8_t* routing_channels,
+                                  const std::int8_t* event_types,
+                                  std::size_t n, bool durable) {
     Impl& m = *p_;
-    clear_error();
-    if (!m.file.is_open()) return fail("this stream is not open");
-    // The base class owns this check, so every backend gives the same message
-    // and none of them can forget it.
-    if (!lengths_agree(n_macro, n_micro, n_routing, n_event)) return false;
-    if (n_macro == 0) return true;
+    // A chunk object IS the durability: it is committed or it does not exist,
+    // so an empty checkpoint has nothing left to do.
+    if (n == 0) return true;
+    (void) durable;
 
-    m.macro.insert(m.macro.end(), macro_times, macro_times + n_macro);
-    m.micro.insert(m.micro.end(), micro_times, micro_times + n_micro);
-    m.chan.insert(m.chan.end(), routing_channels, routing_channels + n_routing);
-    m.type.insert(m.type.end(), event_types, event_types + n_event);
-
-    if (auto_at_ != 0 && m.macro.size() >= auto_at_) return checkpoint();
-    return true;
-}
-
-bool PtoPhotonStream::checkpoint() {
-    Impl& m = *p_;
-    clear_error();
-    if (!m.file.is_open()) return fail("this stream is not open");
-    // Nothing buffered is not a failure: a caller checkpointing on a timer
-    // should not have to ask first whether any photons arrived.
-    if (m.macro.empty()) return true;
-
-    const std::size_t n = m.macro.size();
     data::DataStore store("photons");
     store.set_n_rows(n);
     const int cm = store.add_column("macro_time", data::ColumnType::UInt64);
@@ -3424,14 +3398,13 @@ bool PtoPhotonStream::checkpoint() {
     store.column(cu).resize_uninitialized(n);
     store.column(cc).resize_uninitialized(n);
     store.column(ct).resize_uninitialized(n);
-    std::memcpy(store.column(cm).data_ptr(), m.macro.data(), n * sizeof(std::uint64_t));
-    std::memcpy(store.column(cu).data_ptr(), m.micro.data(), n * sizeof(std::uint16_t));
-    std::memcpy(store.column(cc).data_ptr(), m.chan.data(), n);
-    std::memcpy(store.column(ct).data_ptr(), m.type.data(), n);
+    std::memcpy(store.column(cm).data_ptr(), macro_times, n * sizeof(std::uint64_t));
+    std::memcpy(store.column(cu).data_ptr(), micro_times, n * sizeof(std::uint16_t));
+    std::memcpy(store.column(cc).data_ptr(), routing_channels, n);
+    std::memcpy(store.column(ct).data_ptr(), event_types, n);
 
     // Zero-padded, so lexical order -- which is the order the reader stacks
-    // them in -- is numeric order. Six digits is a million chunks; at one a
-    // second that is eleven days of acquisition.
+    // them in -- is numeric order. Six digits is a million chunks.
     char suffix[16];
     std::snprintf(suffix, sizeof(suffix), "/%06llu",
                   static_cast<unsigned long long>(m.chunk));
@@ -3440,7 +3413,7 @@ bool PtoPhotonStream::checkpoint() {
     const std::uint64_t uid = pto_add_store(m.file, "photons", chunk_name, store);
     if (uid == 0) return fail(m.file.error());
 
-    // Every chunk carries the clocks. Each is a complete photons object and a
+    // Every chunk carries the clocks: each is a complete photons object, and a
     // reader may be handed any one of them -- including a reader recovering a
     // container whose writer was killed.
     PtoTag t;
@@ -3455,44 +3428,23 @@ bool PtoPhotonStream::checkpoint() {
     m.file.add_tag(b);
     b.name = "_pto_photons.source_container_type"; b.i = m.src_container; m.file.add_tag(b);
     b.name = "_pto_photons.source_record_type"; b.i = m.src_record; m.file.add_tag(b);
-    // The instrument header, on the first chunk only: it is identical on every
+    // The instrument header on the first chunk only: it is identical on every
     // one, and repeating a hundred rows per chunk would make the tag block the
     // largest thing in a long acquisition.
     if (m.chunk == 0 && !m.source_header_json.empty()) {
-        const nlohmann::json j =
-                nlohmann::json::parse(m.source_header_json, nullptr, false);
-        if (!j.is_discarded() && j.contains("tags") && j["tags"].is_array()) {
-            TTTRHeader tmp;
-            tmp.set_json(m.source_header_json);
-            write_source_header_tags(m.file, uid, &tmp);
-        }
+        TTTRHeader tmp;
+        tmp.set_json(m.source_header_json);
+        write_source_header_tags(m.file, uid, &tmp);
     }
 
     if (!m.file.commit()) return fail(m.file.error());
-
     m.chunk++;
-    m.committed += n;
-    // Freed, not just emptied: an acquisition bigger than RAM is the whole
-    // point, and a buffer that keeps its capacity keeps the largest burst of
-    // photons the run ever saw, for the rest of the run.
-    std::vector<std::uint64_t>().swap(m.macro);
-    std::vector<std::uint16_t>().swap(m.micro);
-    std::vector<std::int8_t>().swap(m.chan);
-    std::vector<std::int8_t>().swap(m.type);
     return true;
 }
 
-std::uint64_t PtoPhotonStream::n_committed() const { return p_->committed; }
-std::uint64_t PtoPhotonStream::n_buffered() const { return p_->macro.size(); }
-std::uint64_t PtoPhotonStream::n_chunks() const { return p_->chunk; }
-bool PtoPhotonStream::is_open() const { return p_->file.is_open(); }
-
-bool PtoPhotonStream::close() {
-    Impl& m = *p_;
-    if (!m.file.is_open()) return true;
-    const bool ok = checkpoint();
-    m.file.close();
-    return ok;
+bool PtoPhotonStream::close_target() {
+    p_->file.close();
+    return true;
 }
 
 namespace {

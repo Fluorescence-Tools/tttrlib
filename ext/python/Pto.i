@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 %module tttrlib
 %{
+#include "PhotonSink.h"
 #include "TTTRStreamWriter.h"
 #include "io_pto.h"
 %}
@@ -111,10 +112,11 @@
 // it: without this SWIG sees an unknown base class, silently drops it, and the
 // inherited half of the API (error, set_auto_checkpoint, the counters) is
 // missing from every binding.
-%include "TTTRStreamWriter.h"
-
-// PtoPhotonStream::append takes the four event arrays the way TTTR's
-// constructor does, so it accepts the same NumPy arrays with no copy.
+// TTTRStreamWriter::append takes the four event arrays the way TTTR's
+// constructor does, so it accepts the same NumPy arrays. These MUST precede
+// the %include that declares append(): a typemap applied afterwards does not
+// reach the already-parsed declaration, and the binding then demands the
+// lengths as separate arguments.
 %apply (unsigned long long* IN_ARRAY1, int DIM1)
        {(const unsigned long long* macro_times, std::size_t n_macro)}
 %apply (unsigned short* IN_ARRAY1, int DIM1)
@@ -123,6 +125,19 @@
        {(const signed char* routing_channels, std::size_t n_routing)}
 %apply (signed char* IN_ARRAY1, int DIM1)
        {(const signed char* event_types, std::size_t n_event)}
+
+// The sink interface first: TTTRStreamWriter derives from PhotonSink, and a
+// base SWIG was not shown is silently dropped along with everything it carries.
+// A unique_ptr by value cannot cross a binding -- SWIG generates a copy and
+// the copy constructor is deleted. Ownership from a scripting language is the
+// language's job anyway: a Python caller holds its correlator to read the
+// result out of it, which is add_sink's contract, not this one's.
+%ignore tttrlib::io::PhotonStreamHub::add_owned_sink;
+
+%feature("director") tttrlib::io::PhotonSink;
+%include "PhotonSink.h"
+
+%include "TTTRStreamWriter.h"
 
 %include "io_pto.h"
 

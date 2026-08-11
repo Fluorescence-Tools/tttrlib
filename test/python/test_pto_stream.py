@@ -199,6 +199,10 @@ class TestTheAcquisitionProperties:
             h.set_micro_time_resolution(3.2e-11)
             h.set_number_of_micro_time_channels(4096)
             s = tttrlib.PtoPhotonStream(); s.create(out, h, "run")
+            # buffer_limit is the memory bound -- how much the writer may hold
+            # while the disk catches up. auto_checkpoint is the durability
+            # cadence. This test is about the first.
+            s.set_buffer_limit(1_000_000)
             s.set_auto_checkpoint(500_000)
             B = 500_000
             macro = np.arange(B, dtype=np.uint64)
@@ -227,6 +231,29 @@ class TestTheAcquisitionProperties:
         # and the batch arrays: the claim being pinned is that peak memory does
         # not scale with the run, not that it is constant to the byte.
         assert peaks[1] < 1.5 * peaks[0], f"peak RSS grew with the run: {peaks}"
+
+    def test_no_photon_is_ever_dropped(self, tmp_path):
+        """The guarantee, asserted rather than described. A full buffer blocks
+        the producer; there is no path that discards an event. Driven with a
+        buffer far smaller than the data so the backpressure path is the one
+        actually taken -- `n_stalls` proves it was."""
+        out = str(tmp_path / "pressure.pto")
+        s = tttrlib.PtoPhotonStream()
+        assert s.create(out, _header(), "run"), s.error()
+        s.set_buffer_limit(5_000)            # far below what is handed over
+
+        total = 200_000
+        macro, micro, chan, etype = _events(total)
+        for i in range(0, total, 2_000):
+            sl = slice(i, i + 2_000)
+            assert s.append(macro[sl], micro[sl], chan[sl], etype[sl]), s.error()
+        assert s.close()
+
+        assert s.n_dropped() == 0
+        assert s.n_stalls() > 0, "the backpressure path was never taken"
+        t = tttrlib.TTTR(out)
+        assert len(t) == total
+        np.testing.assert_array_equal(np.asarray(t.macro_times), macro)
 
     def test_a_reader_may_open_the_file_during_the_acquisition(self, tmp_path):
         """A read-only open takes no lock, so a live viewer sees the committed
@@ -308,3 +335,98 @@ class TestTheAcquisitionProperties:
         assert len(t) >= last
         m = np.asarray(t.macro_times)
         np.testing.assert_array_equal(m, np.arange(len(t), dtype=np.uint64))
+
+
+class TestOneStreamManyConsumers:
+    """One source, one hub, several consumers — the file among them.
+
+    An acquisition is written *and* analysed from the same photons, without
+    anybody copying the stream or reading the file back. The file writer is a
+    `PhotonSink` like any other, which is what makes that one pass instead of
+    three.
+    """
+
+    class _Counter(tttrlib.PhotonSink):
+        """A consumer written in Python, through the director."""
+        def __init__(self):
+            super().__init__()
+            self.n = 0
+            self.flushed = False
+
+        def submit(self, macro, micro, chan, etype, n):
+            self.n += n
+            return True
+
+        def flush(self):
+            self.flushed = True
+            return True
+
+        def sink_name(self):
+            return "counter"
+
+    class _Broken(tttrlib.PhotonSink):
+        def submit(self, macro, micro, chan, etype, n):
+            return False
+
+        def sink_name(self):
+            return "broken"
+
+    def test_every_consumer_sees_every_photon(self, tmp_path):
+        out = str(tmp_path / "live.pto")
+        hub = tttrlib.PhotonStreamHub()
+        writer = tttrlib.PtoPhotonStream()
+        assert writer.create(out, _header(), "run"), writer.error()
+        counter = self._Counter()
+        hub.add_sink(writer)
+        hub.add_sink(counter)
+        assert hub.n_sinks() == 2
+
+        macro, micro, chan, etype = _events(20_000)
+        for i in range(0, 20_000, 1000):
+            sl = slice(i, i + 1000)
+            assert hub.submit_events(macro[sl], micro[sl], chan[sl], etype[sl]), hub.error()
+        assert hub.flush()
+        assert writer.close()
+
+        assert hub.n_events() == 20_000
+        assert counter.n == 20_000
+        assert counter.flushed
+        assert len(tttrlib.TTTR(out)) == 20_000
+        assert list(hub.failed_sinks()) == []
+
+    def test_a_broken_consumer_does_not_stop_the_others(self, tmp_path):
+        """A file writer that has run out of disk must not silently stop the
+        correlator that is still perfectly able to work — and a caller watching
+        a live plot would have no way to tell those two apart."""
+        hub = tttrlib.PhotonStreamHub()
+        broken = self._Broken()
+        counter = self._Counter()
+        hub.add_sink(broken)
+        hub.add_sink(counter)
+
+        macro, micro, chan, etype = _events(500)
+        assert not hub.submit_events(macro, micro, chan, etype)
+        assert counter.n == 500, "the working consumer was skipped"
+        assert "broken" in list(hub.failed_sinks())
+        assert "broken" in hub.error()
+
+    def test_a_detached_consumer_stops_receiving(self, tmp_path):
+        hub = tttrlib.PhotonStreamHub()
+        counter = self._Counter()
+        hub.add_sink(counter)
+        macro, micro, chan, etype = _events(100)
+        hub.submit_events(macro, micro, chan, etype)
+        hub.remove_sink(counter)
+        hub.submit_events(macro, micro, chan, etype)
+        assert counter.n == 100
+        assert hub.n_sinks() == 0
+
+    def test_mismatched_lengths_are_refused_before_any_consumer_sees_them(self):
+        """Rejected whole: a consumer that took the batch and a consumer that
+        did not would disagree about the measurement afterwards."""
+        hub = tttrlib.PhotonStreamHub()
+        counter = self._Counter()
+        hub.add_sink(counter)
+        macro, micro, chan, etype = _events(100)
+        assert not hub.submit_events(macro, micro[:50], chan, etype)
+        assert counter.n == 0
