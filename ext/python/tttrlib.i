@@ -157,6 +157,9 @@ def experimental(cls):
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
 %include "Jitter.i"
+/* the log-domain HMM lattice over a caller-supplied frame matrix -- the
+   binned-trace counterpart to the photon-stream HMM above */
+%include "HmmLattice.i"
 %include "Sampling.i"
 %include "HMMSurrogate.i"
 %include "MicrotimeLinearization.i"
@@ -190,6 +193,9 @@ def experimental(cls):
 
 /* Correlation of data */
 %include "Correlator.i"
+/* 2D fluorescence-decay correlation: the photon-pair pass (PRD-036). */
+%include "Fdc2D.i"
+
 
 /* Microscopy */
 %include "CLSM.i"

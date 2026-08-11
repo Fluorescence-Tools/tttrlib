@@ -23,10 +23,12 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Cluster.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Deconvolution.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Jitter.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/HmmLattice.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i Sampling.i
+                    HmmLattice.i
     TEST_DIR test/python/misc
 )
 
@@ -43,4 +45,29 @@ if(NOT MSVC)
     set_source_files_properties(
         "${CMAKE_CURRENT_SOURCE_DIR}/src/Cluster.cpp"
         PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+endif()
+
+# HmmLattice.cpp must not be compiled with fast math.
+#
+# -inf is a value in a log-domain lattice, not an error: a structurally
+# constrained model has whole -inf columns, and a frame no state can explain is
+# -inf across. `-ffast-math` implies `nnan`/`ninf`, which license the compiler
+# to assume no operand is NaN or infinite -- and that folds away exactly the
+# guards the recursion depends on (`vmax == -inf`, `maximum == -inf`,
+# `total > 0`). The nan that appears instead spreads through the M-step into
+# every later EM iteration *and* destroys the -inf log-likelihood that would
+# have reported it, so the failure is both silent and permanent.
+#
+# The flag is pinned rather than merely not-set, because it is the kind of
+# thing a global release-flags change adds without anyone thinking about this
+# file. `test_hmm_lattice.py` has the all--inf test that catches it if this
+# line is ever lost.
+if(MSVC)
+    set_source_files_properties(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/HmmLattice.cpp"
+        PROPERTIES COMPILE_OPTIONS "/fp:precise")
+else()
+    set_source_files_properties(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/HmmLattice.cpp"
+        PROPERTIES COMPILE_OPTIONS "-fno-fast-math")
 endif()

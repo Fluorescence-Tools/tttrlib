@@ -23,6 +23,13 @@ static inline std::vector<double> mem_in(const double* p, int n) {
 }
 %}
 
+// This file is absent from ext/{r,java,js}/tttrlib.i, so the tcspc_* family is
+// Python-only today -- see T-20260811-09. It does not need a per-language
+// surface to be added back: `IN_ARRAY1` and `ARGOUTVIEWM_ARRAY1` are
+// implemented for R, Java and JavaScript too (ext/r/rarrays.i,
+// ext/java/jarrays.i, ext/js/jsarrays.i) against native vectors, arrays and
+// TypedArrays. Adding the %include is the whole job.
+
 // Every array here crosses as a NumPy buffer, never as `VectorDouble`.
 //
 // SWIG's default `std::vector<double>` typemaps convert through the Python
@@ -296,3 +303,4 @@ tttrlib::MemTcspcResult my_solve_tcspc_mem_fret(
 %clear (double** y, int* n_y);
 %clear (double** sigma, int* n_sigma);
 %clear (double** fit_additive, int* n_fit_additive);
+
