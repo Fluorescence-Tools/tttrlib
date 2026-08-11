@@ -19,6 +19,14 @@ def _ids():
 
 
 def test_a_store_appears_and_disappears():
+    # Collect first, so the baseline holds only stores that are genuinely still
+    # reachable. Without this the baseline can include a store an earlier test
+    # left unreachable but uncollected, the gc.collect() below reaps it too,
+    # and the comparison fails saying the opposite of what happened -- the
+    # store this test dropped did disappear; a different one did as well.
+    # Python 3.13 is where it showed: the collector is lazier, so a leftover
+    # survives long enough to be counted.
+    gc.collect()
     before = _ids()
     s = tttrlib.DataStore("scratch")
     s.add("x", np.zeros(1000))
