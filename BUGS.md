@@ -525,8 +525,19 @@ and here the file's own summary contradicted its own implementation.
 * **`HmmLattice.i`** (r, java, js) — claimed by the session that wrote it
   ("mine … not yet offered to the others"). Its typemaps are rank-1, so it is
   a `%include` away whenever that session offers it.
-* **`documentation.i`** (java) — docstrings, not API; a separate question about
-  whether Java proxies should carry them at all.
+* **`documentation.i`** (java) — settled by measuring rather than arguing:
+  adding it is a **no-op**. Generating the Java wrapper with and without it
+  gives **zero** differing proxies and **zero** javadoc comments, because the
+  file is `%feature("docstring")` blocks, which is Python-oriented; SWIG-Java
+  documents from `%feature("autodoc")`, already set in
+  `ext/java/tttrlib.i`. Giving Java these docs means re-expressing them as
+  `%javadoc`, which is a separate piece of work and not an `%include`.
+
+**So every declared gap is now either a recorded deliberate choice with the
+capability present via helpers, or `HmmLattice.i`, which its author has
+claimed.** The number in `check_binding_parity.py` is bookkeeping about
+`%include` lists at this point, not a measure of what a caller in any language
+can do.
 
 **2026-08-11, `Streaming.i` closed for all three — 9 declared gaps remain, from
 51. And it exposes a limit the gap count cannot see, which is worth more than
