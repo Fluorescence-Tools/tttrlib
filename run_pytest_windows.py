@@ -28,7 +28,12 @@ def main():
         else:
             filtered.append(a)
 
-    cmd = [sys.executable, "-m", "pytest"] + filtered
+    # -u and faulthandler: a native crash in the extension takes the whole
+    # interpreter with it, and anything still sitting in a block-buffered pipe
+    # dies with it -- the CI log then ends at "collecting ..." and says nothing
+    # about where. Unbuffered output survives the crash, and faulthandler
+    # prints the Python stack the crash happened under.
+    cmd = [sys.executable, "-u", "-X", "faulthandler", "-m", "pytest"] + filtered
     result = subprocess.run(cmd)
     code = result.returncode
 
