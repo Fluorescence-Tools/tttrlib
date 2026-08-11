@@ -545,6 +545,74 @@ a name is a flat identifier and reject a separator — the present behaviour
 accepts the name and then fails on it, which is the one option that teaches
 nothing.
 
+**2026-08-11: the directory half is fixed, and it took the first of the two
+options.** Verified — an object named `countrate_All 0.2000#30/bursts`
+disassembles into a created subdirectory, and `a/b/c/d/deep` nests four deep.
+The downstream `mkdir(parents=True)` workaround can go.
+
+**Choosing that option is what opened the entry below.** The other option —
+"reject a separator" — would have closed both. Read the two together: a name is
+now a path, and nothing constrains where it points.
+
+## `disassemble` writes outside the directory it is given
+
+**2026-08-11.** **Severity: arbitrary file overwrite from an untrusted input
+file.** Found while checking whether the entry above was fixed; it is the fix's
+direct consequence, because creating the parent directories is what makes a
+traversing name *succeed* where it used to fail.
+
+An object name is used as a relative path and is never checked, so `..` in a
+name escapes the target directory:
+
+```python
+# an object named "../victim/keep.txt", disassembled into base/unpack/
+g.disassemble(str(base / "unpack"))
+
+>>> (victim / "keep.txt").read_text()
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xa0 in position 32
+```
+
+The file outside the target held ASCII before the call and holds dstore binary
+after it. It was overwritten, and `disassemble` returned success with an empty
+`error()`. Enough `../` reaches any path the process can write.
+
+Measured on the same run, so the shape of the hole is on record:
+
+| Object name | Lands at | |
+|---|---|---|
+| `one/two` | `unpack/one/two` | intended |
+| `a/b/c/d/deep` | `unpack/a/b/c/d/deep` | intended |
+| `../escape` | `unpack/../escape` | **outside the target** |
+| `/abs/rooted` | `unpack//abs/rooted` | inside, by luck |
+
+The absolute-path row is not a defence, it is a coincidence of naive
+concatenation: the leading `/` collapses into a double separator instead of
+resetting the root. A join that follows POSIX semantics — `os.path.join`,
+`std::filesystem::path::operator/` — resets to the root and writes to
+`/abs/rooted` for real. So the same names behave differently depending on how
+the path is assembled, and the safe-looking row is the fragile one.
+
+**Why this is not theoretical.** A `.pto` is an interchange container — being
+passed between people is the whole point of the format, and ChiSurf addresses
+containers like folders on the strength of exactly this name-as-path feature.
+`disassemble` is what a recipient runs on a file they were sent. Nothing in the
+writer stops a name from being written, so a container can be built with any
+name at all; the entry above records that names with separators arrive from
+normal analysis runs, not just crafted ones.
+
+**Fix.** Resolve each destination and require it to stay under the target —
+`weakly_canonical(out / name)` compared against `weakly_canonical(out)` — and
+refuse the object naming both the file and the target rather than skipping it
+quietly. Reject, do not sanitise: silently rewriting `../x` to `x` puts an
+object somewhere the container did not ask for and the caller cannot predict.
+A `..` component, an absolute name, and (on Windows) a drive letter or UNC
+prefix should all be refused at the same gate, and the gate belongs in the
+writer too, so an unwritable name cannot enter a container in the first place.
+
+Worth a look wherever else a container-supplied name becomes a path: `extract`,
+`add_file` / `add_sidecar_file` and the `attach` family take or produce names
+the same way, and were not tested here.
+
 ## A container's objects have no identity beyond `(kind, name)`, so a reader cannot tell two runs apart
 
 Found driving ChiSurf's burst pipeline end to end over a `.pto` built from ten
@@ -582,6 +650,25 @@ make that unnecessary, and the second matters more:
 Related and smaller: `Measurement.metadata()` returns `""` for a container
 written by `Measurement.create()`, so nothing at the file level says what the
 measurement *is* while every object below it is richly tagged.
+
+**2026-08-11, still open, re-verified — and the workaround is on thinner ice
+than the entry says.** Three stores written as `('burst_table', 'bursts')` come
+back as three objects with no distinguishing field; there is no `current`,
+`is_current` or `superseded_by` anywhere on `PtoObject`.
+
+Two corrections to the notes above, from measuring rather than reading:
+
+* **`objects()` does return write order** — the three come back in the order
+  they were added. So the workaround's assumption holds today. It is still
+  undocumented, which is the entry's point and remains the thing to fix.
+* **`find(name)` returns the *first* match, not the last.** The entry describes
+  the workaround as "take the last object of the right `operation_type`", i.e.
+  newest-wins — and `find` gives the **oldest**. A reader that reaches for the
+  obvious call gets the stalest analysis in the container, which is precisely
+  the failure mode the entry warns about, reachable in one line and with the
+  most natural spelling. Whatever resolves the identity question should settle
+  `find`'s tie-break explicitly; leaving it as "first in file order" is a
+  defensible answer but an undocumented and surprising one.
 
 ## FIXED — Tags are appended, never replaced, and nothing dedupes an edge
 
