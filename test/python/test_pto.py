@@ -975,8 +975,11 @@ def test_one_measurement_in_one_file(tmp_path):
 # actually materialised the payload, which is the thing in question.
 
 import hashlib
-import resource
 import sys
+try:
+    import resource
+except ImportError:                     # POSIX only; Windows has no equivalent
+    resource = None
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_settings import DATA_AVAILABLE, DATA_ROOT  # type: ignore  # noqa: E402
@@ -985,6 +988,12 @@ SMALL_PTU = DATA_ROOT / "pq" / "ptu" / "pq_ptu_hh_t3.ptu"
 BIG_PTU = DATA_ROOT / "pq" / "ptu" / "pq_ptu_hh_t3_cw_5GB.ptu"
 
 needs_data = pytest.mark.skipif(not DATA_AVAILABLE, reason="no tttr-data")
+# The byte-volume claims are asserted through resident memory, and getrusage
+# is POSIX only. Without it there is nothing to measure, so those three skip
+# rather than failing the whole module at import time -- which is what an
+# unguarded `import resource` did: two collection errors, and not one of the
+# 2516 tests ran on Windows.
+needs_rss = pytest.mark.skipif(resource is None, reason="resource is POSIX only")
 
 
 def _rss_mb():
@@ -1340,6 +1349,7 @@ def test_add_file_refuses_a_path_that_is_not_there(tmp_path):
 
 @pytest.mark.slow
 @needs_data
+@needs_rss
 def test_embedding_a_gigabyte_does_not_hold_it_in_memory(tmp_path):
     """The reason add_file exists. Measured as resident memory, because that is
     what "did not materialise it" means -- a timer would measure the cache."""
@@ -1361,6 +1371,7 @@ def test_embedding_a_gigabyte_does_not_hold_it_in_memory(tmp_path):
 
 @pytest.mark.slow
 @needs_data
+@needs_rss
 def test_compacting_an_object_does_not_hold_it_in_memory(tmp_path):
     """Compaction touches every payload in the file, so materialising them
     would make compacting an eight-gigabyte container need eight gigabytes --
@@ -1382,6 +1393,7 @@ def test_compacting_an_object_does_not_hold_it_in_memory(tmp_path):
 
 @pytest.mark.slow
 @needs_data
+@needs_rss
 def test_taking_a_gigabyte_back_out_does_not_hold_it_either(tmp_path):
     """Criterion 6, and the read side of the one above. `extract` is now
     `stream` with a file-writing sink, so this is what bounds `stream`."""

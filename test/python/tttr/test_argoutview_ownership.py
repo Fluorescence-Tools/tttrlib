@@ -14,13 +14,23 @@ over these iterations and the fixed path moves it by a couple of MB, so the
 threshold sits an order of magnitude away from the noise rather than beside it.
 """
 
-import resource
 import gc
 
 import pytest
 import tttrlib
 
 from test_settings import settings, DATA_AVAILABLE  # type: ignore
+
+try:
+    import resource
+except ImportError:                     # POSIX only; Windows has no equivalent
+    resource = None
+
+# The whole module is a memory measurement, so without getrusage there is
+# nothing here to run. Skipping beats an unguarded import, which made this a
+# collection error and stopped the entire suite from running on Windows.
+if resource is None:
+    pytest.skip("maxrss needs the POSIX resource module", allow_module_level=True)
 
 
 ITERATIONS = 200
