@@ -289,7 +289,7 @@ struct Blobs {
         if (r.bytes == 0) return;
         if (r.offset + r.bytes > file_bytes)
             throw std::runtime_error("store file: a column points past the end");
-        if (std::fseek(f, static_cast<long>(base + r.offset), SEEK_SET) != 0 ||
+        if (fseek64(f, static_cast<std::int64_t>(base + r.offset), SEEK_SET) != 0 ||
             std::fread(into, 1, static_cast<std::size_t>(r.bytes), f) != r.bytes)
             throw std::runtime_error("store file: could not read a column");
         g_bytes_read += r.bytes;
@@ -483,7 +483,7 @@ struct OpenStore {
               std::uint64_t region = 0)
             : f(filename.c_str(), "rb"), base(base_) {
         if (!f.ok()) throw std::runtime_error("cannot open " + filename);
-        if (base != 0 && std::fseek(f.get(), static_cast<long>(base), SEEK_SET) != 0)
+        if (base != 0 && fseek64(f.get(), static_cast<std::int64_t>(base), SEEK_SET) != 0)
             throw std::runtime_error(filename + " is shorter than the store in it");
 
         unsigned char head[kHeaderBytes];
@@ -513,7 +513,7 @@ struct OpenStore {
                                      " opposite byte order, which is not supported");
 
         std::fseek(f.get(), 0, SEEK_END);
-        const std::uint64_t whole = static_cast<std::uint64_t>(std::ftell(f.get()));
+        const std::uint64_t whole = static_cast<std::uint64_t>(ftell64(f.get()));
         file_bytes = region != 0 ? region : (whole > base ? whole - base : 0);
         if (declared != file_bytes)
             throw std::runtime_error(filename + " is truncated or was appended to");
@@ -521,7 +521,7 @@ struct OpenStore {
             throw std::runtime_error(filename + " has no directory where it says");
 
         directory.resize(static_cast<std::size_t>(dir_bytes));
-        if (std::fseek(f.get(), static_cast<long>(base + dir_offset), SEEK_SET) != 0 ||
+        if (fseek64(f.get(), static_cast<std::int64_t>(base + dir_offset), SEEK_SET) != 0 ||
             std::fread(directory.data(), 1, directory.size(), f.get()) != directory.size())
             throw std::runtime_error(filename + ": could not read the directory");
         if (fnv1a(directory.data(), directory.size()) != checksum)
@@ -647,11 +647,11 @@ bool emit_store(BlobStream& out, const data::DataStore& store) {
     std::memcpy(head + 32, &file_bytes, 8);
     std::memcpy(head + 40, &checksum, 4);
 
-    if (std::fseek(out.h, static_cast<long>(out.base), SEEK_SET) != 0 ||
+    if (fseek64(out.h, static_cast<std::int64_t>(out.base), SEEK_SET) != 0 ||
         std::fwrite(head, 1, kHeaderBytes, out.h) != kHeaderBytes)
         out.ok = false;
-    if (out.ok && std::fseek(out.h, static_cast<long>(out.base + file_bytes),
-                             SEEK_SET) != 0)
+    if (out.ok && fseek64(out.h, static_cast<std::int64_t>(out.base + file_bytes),
+                          SEEK_SET) != 0)
         out.ok = false;
     return out.ok;
 }
@@ -660,7 +660,9 @@ bool emit_store(BlobStream& out, const data::DataStore& store) {
 
 std::uint64_t write_store_at(std::FILE* f, const data::DataStore& store) {
     if (f == nullptr) return 0;
-    const long here = std::ftell(f);
+    // A store embedded in a bigger container starts wherever that container is
+    // already at, which on a large .pto is past the 2 GiB a 32-bit long holds.
+    const std::int64_t here = ftell64(f);
     if (here < 0) return 0;
     BlobStream out(f, static_cast<std::uint64_t>(here));
     if (!emit_store(out, store)) return 0;
