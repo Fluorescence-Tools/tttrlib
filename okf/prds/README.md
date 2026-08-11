@@ -53,6 +53,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [032](PRD-032-migrate-algos-to-registry.md) | Migrate existing algorithms onto register_algorithm | 🟡 In Progress |
 | [033](PRD-033-streaming-correlator.md) | Streaming correlator agrees with the batch correlator | 🟢 Done |
 | [034](PRD-034-pto-native-tttr-sink.md) | .pto as its own TTTR sink — native photon tables + header definitions | 🔵 Proposed |
+| [035](PRD-035-generic-log-domain-hmm-lattice.md) | Generic log-domain HMM lattice (forward / backward+xi / Viterbi) over a caller-supplied frame-probability matrix | 🔵 Proposed |
 
 **019** is yellow rather than green for one reason: criterion 21 asks for the
 same assertions from Python, R, Java and JavaScript in the PRD-015 conformance
