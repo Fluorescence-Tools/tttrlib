@@ -3,7 +3,44 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-## A file tttrlib wrote is not recognised by tttrlib, and opening it returns zero events instead of failing
+## PARTLY FIXED — A file tttrlib wrote is not recognised by tttrlib, and opening it returns zero events instead of failing
+
+> **`.sm` fixed 2026-08-11**, by the session that filed this. Three separate
+> discrepancies against a real file, each enough on its own, and all of them
+> in the writer:
+>
+> * the version defaulted to **1** where real files carry 2 and `isSMFile`
+>   requires 2 — a source without its own `version` tag (any non-SM source)
+>   therefore produced an unidentifiable file;
+> * every counted string was written **a byte longer than its content**,
+>   counting a terminating null the format does not have — a real `.sm` stores
+>   `"Simple"` as a count of 6 and six bytes;
+> * the `simple` field defaulted to **empty**, so that extra byte was an
+>   unprintable `0x00` exactly where the detector checks for printable
+>   characters.
+>
+> Fixing the writer exposed a **latent overread in the reader**: `read_string`
+> allocated the count and handed the buffer to `add_tag`, which takes a
+> `char*` and reads to the first null. Real files have no terminating null
+> either, so this was always reading past the allocation — it only became a
+> crash once the bytes that followed changed. The buffer is now one longer and
+> terminated.
+>
+> Verified both directions: an HT3 written as `.sm` opens **by name** with all
+> 11,605,946 events and identical macro times, and a real `.sm` still round
+> trips by name. `test/python/tttr/test_written_files_are_re_detected.py`
+> pins all three header facts as bytes, because each defect was invisible at
+> every level above them — the events were always correct.
+>
+> **Still open from this entry**, and the more valuable half:
+>
+> 1. **SPC-600/256 and SPC-600/4096** are untouched. `.spc` is claimed by four
+>    formats told apart by content, so the diagnosis is not the same as `.sm`'s.
+> 2. **`TTTR(path)` still returns an empty object rather than raising** for any
+>    unidentifiable path. That is not specific to these formats and is what
+>    turns a detection failure into silent wrong data.
+
+## The original entry
 
 **2026-08-11.** Three formats — **SPC-600/256, SPC-600/4096 and `.sm`** — write
 correctly and cannot be opened again by name. `write()` returns `True`, the
@@ -165,13 +202,61 @@ reproducible — Python's list was not touched.
 the R/Java/JS targets and only the interface was absent. That is why these
 five could be closed by an `%include` alone.
 
-**The remaining eight are not the same job.** `Cluster.i`,
-`Deconvolution.i`, `Jitter.i`, `MaxEntTcspc.i`, `Sampling.i`, `HmmLattice.i`
-and `Streaming.i` all carry NumPy typemaps and need the
-`#ifdef SWIGPYTHON` NumPy / `#else` `std::vector` conversion **first** — adding
-them as-is would hand three languages exactly the uncallable
-`SWIGTYPE_p_double` this entry describes. `documentation.i` (java) is a
-separate question, being docstrings rather than API.
+**2026-08-11, later — and the paragraph I wrote above was wrong, so read this
+instead.** Four more closed; **12 declared gaps remain, down from 51.**
+`Cluster.i` and `Sampling.i` to all three, `Deconvolution.i` and `Jitter.i` to
+**r and js only**.
+
+**This entry's second mechanism is real but its stated cause is not.** The
+entry says NumPy typemaps "exist only in the Python binding". They do not:
+`ext/r/rarrays.i`, `ext/java/jarrays.i` and `ext/js/jsarrays.i` implement the
+same `IN_ARRAY*` / `INPLACE_ARRAY*` / `ARGOUTVIEW(M)_ARRAY*` names against R
+vectors, Java arrays and JS TypedArrays, exactly so one `%apply` serves all
+four languages — `ext/python/DecayFit.i` says so at length and had verified it.
+So an interface carrying NumPy typemaps is **not** disqualified, and the
+`#ifdef SWIGPYTHON` / `#else` conversion the entry prescribes is usually
+unnecessary.
+
+**The actual discriminator is rank, and it is one binding.** Coverage,
+measured:
+
+| | IN/INPLACE 1,2,3 | ARGOUTVIEW(M) 1 | ARGOUTVIEW(M) 2,3 |
+|---|---|---|---|
+| r | yes | yes | **yes** |
+| js | yes | yes | **yes** |
+| java | yes | yes | **no** |
+
+`jarrays.i` implements the argout views at rank 1 only. So an interface that
+*returns* a 2-D or 3-D array is the only one that breaks, and only in Java.
+`Cluster.i` (IN_ARRAY2 in, nothing out) and `Sampling.i` (rank-1 argout) are
+therefore fine everywhere; `Deconvolution.i` and `Jitter.i` return through
+`ARGOUTVIEWM_ARRAY2/3` and are fine in r and js.
+
+**Demonstrated rather than reasoned, by generating the Java that was not
+added.** With `Deconvolution.i` on Java's list, SWIG emits — without a warning
+— `richardson_lucy_2d(double[][] input, double[][] psf, …,
+SWIGTYPE_p_p_double output, SWIGTYPE_p_int n_output1, SWIGTYPE_p_int
+n_output2)`: the *inputs* convert fine, the *output* is uncallable. That is
+this entry's warning, reproduced on demand, and it is what the two Java
+exceptions now record instead of "unreviewed drift".
+
+**One correction to the exceptions list, same method.** `MaxEntTcspc.i` was
+annotated "needs nothing but the %include — its IN_ARRAY typemaps work in all
+four languages". True for r and js; **half true for Java**, which is worse
+than false because it splits the subsystem: `solve_tcspc_mem_lifetime` comes
+out fully callable (`double[]` in, `MemTcspcResult` out) while
+`tcspc_build_fi_lifetimes` returns its four arrays through
+`ARGOUTVIEWM_ARRAY2/1` and every out-parameter is an opaque pointer. A Java
+caller would get a working solver and an unusable design-matrix builder.
+
+**So what closing the rest actually needs**, which is smaller than this entry
+assumed: `HmmLattice.i`, `Streaming.i` and `MaxEntTcspc.i` (r, js) are a
+`%include` away — left here only because all three were being written by
+another session this morning. Java's share of the remainder is **one job, not
+several**: implement `ARGOUTVIEWM_ARRAY2` / `ARGOUTVIEW_ARRAY2` (and rank 3)
+in `ext/java/jarrays.i`, and `Deconvolution.i`, `Jitter.i` and MaxEntTcspc's
+builders all become addable at once. `documentation.i` (java) is separate,
+being docstrings rather than API.
 
 ## FIXED — A wall-clock assertion in the unit suite fails when the machine is busy
 

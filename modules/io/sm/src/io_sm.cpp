@@ -27,13 +27,19 @@ size_t read_sm_header(FILE* file, nlohmann::json &j) {
     };
 
     // Helper lambda to read a string with its size
+    // The count is the number of CHARACTERS, and a real .sm does not store a
+    // terminating null -- "Simple" is a count of 6 and six bytes. The buffer
+    // is therefore one byte longer than the count and terminated here, because
+    // add_tag takes a char* and reads to the first null: without this it runs
+    // off the end of the allocation, which is a read of whatever follows and,
+    // on a file whose next bytes happen to be non-zero, a crash.
     auto read_string = [&](const std::string& tag_name) {
         uint32_t size;
         read_and_swap(size);
-        char* buffer = new char[size];
-        fread(buffer, sizeof(char), size, file);
-        add_tag(j, tag_name, buffer, tyAnsiString);
-        delete[] buffer;
+        std::vector<char> buffer(static_cast<std::size_t>(size) + 1, '\0');
+        if (size > 0) fread(buffer.data(), sizeof(char), size, file);
+        buffer[size] = '\0';
+        add_tag(j, tag_name, buffer.data(), tyAnsiString);
     };
     sm_header_t header;  // Use only the 'header' structure
 
@@ -130,15 +136,25 @@ if (is_verbose()) {
     };
     // Strings are stored as a 32-bit big-endian length followed by the
     // characters including a terminating null byte
+    // Exactly the bytes, with no terminating null. A real .sm writes "Simple"
+    // as a count of 6 and six characters; counting a null made every string a
+    // byte longer than the format states and put an unprintable byte where the
+    // detector checks for printable ones -- so a file written here could not
+    // be identified again and TTTR(path) returned zero events.
     auto write_string = [&](const std::string &s) {
-        uint32_t size = (uint32_t) s.size() + 1;
-        write_swapped(size);
-        fwrite(s.c_str(), sizeof(char), size, fp);
+        write_swapped((uint32_t) s.size());
+        if (!s.empty()) fwrite(s.c_str(), sizeof(char), s.size(), fp);
     };
 
-    write_swapped((uint32_t) tag_int("version", 1));
+    // Default 2, not 1: 2 is what real .sm files carry and the only version
+    // isSMFile() accepts, so a 1 here produced a file this library could write
+    // and then not identify -- TTTR(path) came back with zero events and no
+    // exception. A source that states its own version still keeps it.
+    write_swapped((uint32_t) tag_int("version", 2));
     write_string(tag_string("comment", "tttrlib"));
-    write_string(tag_string("simple", ""));
+    // "Simple" is what real files carry here, and the detector requires this
+    // field to be printable; an empty default wrote a lone null byte.
+    write_string(tag_string("simple", "Simple"));
     write_swapped((uint32_t) tag_int("pointer1", 0));
     write_string(tag_string("file_section_type", ""));
     write_swapped((uint32_t) tag_int("magic1", 0));
