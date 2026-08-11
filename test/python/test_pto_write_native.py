@@ -203,3 +203,73 @@ class TestTheFormatTableAgrees:
         assert "PTO" in reg, "PTO is not in the format registry"
         assert reg["PTO"]["can_read"] is True
         assert reg["PTO"]["can_write"] is True
+
+
+class TestRangesOverANativeTable:
+    """PRD-034 item 5. A cue index answers "where does event N start" for a
+    record stream, which must be decoded from a known point to be counted at
+    all. Columnar storage answers it arithmetically — the row number *is* the
+    seek position — so the cue machinery is not needed on this path.
+
+    It was not being used, though: the native path read the whole object and
+    sliced it in memory. Correct, and 9x slower than the embedded-PTU-with-cues
+    path it is supposed to beat.
+    """
+
+    def test_a_range_equals_the_same_slice_of_the_whole(self, ptu, tmp_path):
+        out = str(tmp_path / "run.pto")
+        ptu.write(out)
+        whole = tttrlib.TTTR(out)
+        m, u = np.asarray(whole.macro_times), np.asarray(whole.micro_times)
+
+        part = tttrlib.TTTR(out, "PTO", '{"first_event": 400000, "n_events": 5000}')
+        assert len(part) == 5000
+        np.testing.assert_array_equal(np.asarray(part.macro_times), m[400000:405000])
+        np.testing.assert_array_equal(np.asarray(part.micro_times), u[400000:405000])
+
+    def test_a_range_still_carries_the_header(self, ptu, tmp_path):
+        """A slice is a measurement too: without the clocks it is integers."""
+        out = str(tmp_path / "run.pto")
+        ptu.write(out)
+        part = tttrlib.TTTR(out, "PTO", '{"first_event": 1000, "n_events": 100}')
+        assert part.header.macro_time_resolution == pytest.approx(
+            ptu.header.macro_time_resolution, rel=1e-12)
+
+    def test_a_range_reads_less_than_the_whole_object(self, ptu, tmp_path):
+        """The property the row slice exists for, measured rather than assumed:
+        asking for 5,000 of 870,161 events must not cost a full read. Timed
+        against the full read on the same file, so the threshold does not
+        depend on the machine."""
+        import time
+        out = str(tmp_path / "run.pto")
+        ptu.write(out)
+
+        def best(fn, n=7):
+            t = 1e9
+            for _ in range(n):
+                t0 = time.perf_counter()
+                fn()
+                t = min(t, time.perf_counter() - t0)
+            return t
+
+        whole = best(lambda: tttrlib.TTTR(out))
+        part = best(lambda: tttrlib.TTTR(
+            out, "PTO", '{"first_event": 400000, "n_events": 5000}'))
+        # 5,000 of 870,161 rows is 0.6% of the data, and the slice measures
+        # ~10x cheaper than the full read. Asserting 4x leaves room for a slow
+        # or loaded machine while still failing outright if the whole object is
+        # read and sliced in memory, which scores about 1x.
+        assert part < whole / 4, f"range {part*1e3:.1f} ms vs whole {whole*1e3:.1f} ms"
+
+    def test_build_cues_on_a_native_table_is_a_no_op_not_an_error(self, ptu, tmp_path):
+        """Returning zero cues with no error is the honest report. An error
+        would tell a caller that indexes before reading that the object is
+        unreadable, when it is the one kind that never needed an index."""
+        out = str(tmp_path / "run.pto")
+        ptu.write(out)
+        f = tttrlib.PtoFile()
+        f.open(out)
+        uid = f.objects()[0].uid
+
+        assert f.build_cues(uid, 1000) == 0
+        assert f.error() == ""

@@ -2911,6 +2911,45 @@ bool apply_photon_header(const PtoFile& file, std::uint64_t uid, TTTR* out) {
     return have_macro && have_micro && have_bins;
 }
 
+/*!
+ * \brief `n_rows` rows of a native photons table, starting at `first_row`.
+ *
+ * What makes a range over a native table cheap, and the reason PRD-034 says a
+ * cue index is not needed here: a dstore knows where every row of every column
+ * begins, so asking for 5,000 events out of 870,161 reads 5,000 events. The
+ * record-stream path cannot do that -- a record stream has to be decoded from
+ * somewhere known to be counted at all, which is what cues exist for.
+ *
+ * Without this the native path fell back to reading the whole object and
+ * slicing it in memory, which is correct and was **9x slower** than the
+ * embedded-PTU-with-cues path it is supposed to beat.
+ *
+ * \param n_rows 0 means "to the end".
+ */
+bool read_one_rows(const PtoFile& file, const PtoObject& o, TTTR* out,
+                   std::uint64_t first_row, std::uint64_t n_rows) {
+    data::DataStore store;
+    pto_read_store(file, o.uid, store, std::vector<std::string>(), first_row, n_rows);
+    const int mt = store.find("macro_time"), ut = store.find("micro_time");
+    const int rc = store.find("routing_channel"), et = store.find("event_type");
+    const std::size_t n = store.n_rows();
+    std::vector<unsigned long long> macro(n, 0);
+    std::vector<unsigned short> micro(n, 0);
+    std::vector<signed char> chan(n, 0), type(n, 0);
+    for (std::size_t i = 0; i < n; i++) {
+        if (mt >= 0) macro[i] = static_cast<unsigned long long>(store.column(mt).value_at(i));
+        if (ut >= 0) micro[i] = static_cast<unsigned short>(store.column(ut).value_at(i));
+        if (rc >= 0) chan[i] = static_cast<signed char>(store.column(rc).value_at(i));
+        if (et >= 0) type[i] = static_cast<signed char>(store.column(et).value_at(i));
+    }
+    out->append_events(macro.data(), static_cast<int>(n), micro.data(),
+                       static_cast<int>(n), chan.data(), static_cast<int>(n),
+                       type.data(), static_cast<int>(n), false, 0);
+    apply_source_header_tags(file, o.uid, out);
+    apply_photon_header(file, o.uid, out);
+    return true;
+}
+
 /// One object into `out`, read where it lies.
 bool read_one(const PtoFile& file, const std::string& path, const PtoObject& o,
               TTTR* out) {
@@ -2959,6 +2998,19 @@ std::uint64_t PtoFile::build_cues(std::uint64_t uid, std::uint64_t every_n_event
     const Impl::Slot* s = m.find(uid);
     if (s == nullptr) { m.fail("no object with that uid"); return 0; }
     if (every_n_events == 0) { m.fail("a cue spacing of zero indexes nothing"); return 0; }
+    // A native PHOTONS table needs no index and saying so is not a failure.
+    // Narrowly a photons object, not any dstore: a burst table is also a
+    // dstore and a cue into one would index nothing, which is a genuine error
+    // and stays one.
+    // A cue exists to answer "where does event N start" for a record stream,
+    // which has to be decoded from the beginning to be counted. Columnar
+    // storage answers it arithmetically: row N is at a known offset, so the
+    // seek IS the row number. Returning 0 cues with no error is the honest
+    // report -- an error would make a caller that indexes before reading think
+    // the object was unreadable, when it is the one kind that never needed the
+    // index. \see pto_read_events, which slices such a table directly.
+    if (holds_photons(s->meta) && lowered(s->meta.encoding) == "dstore") return 0;
+
     const int container = container_for(s->meta.encoding);
     if (container < 0) {
         m.fail("object " + std::to_string(uid) + " is encoded as '" + s->meta.encoding +
@@ -3292,6 +3344,12 @@ int pto_read_events(const std::string& spec, std::uint64_t first_event,
     bool have_from = false;
     std::uint64_t stop_at = 0;
     if (container >= 0) bracket(cues, first_event, end, &from, &have_from, &stop_at);
+    if (lowered(chosen->encoding) == "dstore") {
+        // The row IS the seek position; no whole-object read and no slice.
+        if (!read_one_rows(file, *chosen, out, first_event, n_events)) return 0;
+        out->find_used_routing_channels();
+        return 1;
+    }
     if (container < 0 || !have_from || from.event == 0) {
         if (!read_one(file, path, *chosen, out)) return 0;
         keep_range(out, first_event, n_events);

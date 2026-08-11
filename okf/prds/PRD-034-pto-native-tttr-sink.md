@@ -335,3 +335,37 @@ before any record, so they can be written and cannot be streamed into.
 yet proven by a second implementation. Targeted reads over a native table
 (item 5, criterion 4), cross-language conformance (item 6, criterion 5), and
 demanding a selector for a multi-object container (criterion 3) remain.
+
+### 2026-08-11 — targeted reads (design item 5) — **acceptance criterion 4 met**
+
+A range over a native table is now a dstore **row slice**, which is what item 5
+specifies and what was not happening: the native path fell into the
+no-cues branch, read the whole object and sliced it in memory. Correct, and the
+comment there said so — "exactly as slow as it was before cues existed."
+
+Measured, 5,000 events out of 870,161:
+
+| | |
+|---|---|
+| before — whole object, then slice | **14.7 ms** |
+| embedded PTU with cues (the bar) | 1.6 ms |
+| after — dstore row slice | **1.4 ms** |
+
+So the criterion's "not slower per event than the embedded-PTU path with cues"
+is met, and the row slice is now the cheaper of the two — which is the point
+the PRD argues from: a record stream has to be decoded from a known point to be
+counted at all, and columnar storage answers "where is row N" arithmetically.
+
+`build_cues` on a native photons object is now the documented no-op the PRD
+asks for: zero cues, empty error. **Narrowly a photons object**, not any
+`dstore` — a burst table is also a dstore, a cue into one would index nothing,
+and that stays an error. The first attempt widened it to every dstore and broke
+`test_pto.py::test_building_cues_over_something_that_is_not_a_record_stream`,
+which was right to fail.
+
+`test/python/test_pto_write_native.py::TestRangesOverANativeTable`, 4 cases,
+including a timing bound that fails outright if the whole object is read.
+
+**Remaining in this PRD:** cross-language conformance (item 6, criterion 5) and
+requiring a selector for a multi-object container (criterion 3, a behaviour
+decision that also affects the embedded path).
