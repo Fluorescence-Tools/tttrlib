@@ -23,19 +23,65 @@ import tttrlib
 SM = 7
 
 
-def _source():
-    hits = sorted(glob.glob("tttr-data/**/*.ht3", recursive=True))
+HT3 = 1
+
+
+def _first(pattern):
+    hits = sorted(glob.glob(f"tttr-data/**/{pattern}", recursive=True))
     if not hits:
-        pytest.skip("no test data")
+        pytest.skip(f"no {pattern} test data")
     return tttrlib.TTTR(hits[0])
 
 
-class TestSmIsReDetected:
+class TestAFormatSurvivesItsOwnRoundTrip:
+    """`.sm` written from a `.sm`, `.ht3` from a `.ht3` — a format against
+    itself, which is the case that has to hold before any other does.
 
-    def test_a_written_sm_opens_by_name(self, tmp_path):
-        """Without the container type. This is what a user does."""
-        src = _source()
-        out = str(tmp_path / "written.sm")
+    Read `TTTR(path)` here rather than `TTTR(path, container)`: passing the
+    container is what every other round-trip test in the suite does, and it is
+    exactly the path that kept working while detection was broken."""
+
+    def test_sm_round_trips_by_name(self, tmp_path):
+        src = _first("*.sm")
+        out = str(tmp_path / "roundtrip.sm")
+        assert src.write(out, None, SM)
+
+        back = tttrlib.TTTR(out)
+        assert len(back) == len(src), "written by name and came back empty"
+        np.testing.assert_array_equal(np.asarray(back.macro_times),
+                                      np.asarray(src.macro_times))
+        np.testing.assert_array_equal(np.asarray(back.micro_times),
+                                      np.asarray(src.micro_times))
+
+    def test_ht3_round_trips_by_name(self, tmp_path):
+        """Its own format, its own extension, its own record type. Here so the
+        `.sm` case above is not the only thing holding this property — the two
+        are different files and different record encodings, and a change to one
+        writer must not be checked through the other."""
+        src = _first("*.ht3")
+        out = str(tmp_path / "roundtrip.ht3")
+        assert src.write(out, None, HT3)
+
+        back = tttrlib.TTTR(out)
+        assert len(back) == len(src)
+        np.testing.assert_array_equal(np.asarray(back.macro_times),
+                                      np.asarray(src.macro_times))
+
+
+class TestATranscodeIsAlsoReDetected:
+    """A *different* thing from the round trips above, and labelled as one.
+
+    `TTTR.write` supports transcoding — reading one format and writing another
+    — and the events are re-encoded into the target's record layout on the way.
+    It is worth testing because it is how the defect was found (an HT3 source
+    has no `version` tag, so the SM writer took its default, which was wrong),
+    but it must not stand in for a format's own round trip: a `.ht3` and a
+    `.sm` are different files with different record types, and proving one
+    through the other proves neither."""
+
+    def test_an_ht3_written_as_sm_opens_by_name(self, tmp_path):
+        src = _first("*.ht3")
+        out = str(tmp_path / "transcoded.sm")
         assert src.write(out, None, SM)
 
         back = tttrlib.TTTR(out)
@@ -43,25 +89,24 @@ class TestSmIsReDetected:
         np.testing.assert_array_equal(np.asarray(back.macro_times),
                                       np.asarray(src.macro_times))
 
-    def test_a_real_sm_still_round_trips_by_name(self, tmp_path):
-        """The fix changed the byte layout of every counted string, so the
-        format's own files have to survive it too."""
-        hits = sorted(glob.glob("tttr-data/**/*.sm", recursive=True))
-        if not hits:
-            pytest.skip("no .sm test data")
-        src = tttrlib.TTTR(hits[0])
-        out = str(tmp_path / "roundtrip.sm")
-        assert src.write(out, None, SM)
+    def test_the_transcode_is_stored_as_sm_not_as_the_source_format(self, tmp_path):
+        """What "different types" means concretely: the file must describe
+        itself as SM, not carry the source's container and record type."""
+        import json
+        src = _first("*.ht3")
+        out = str(tmp_path / "transcoded.sm")
+        src.write(out, None, SM)
 
-        back = tttrlib.TTTR(out)
-        assert len(back) == len(src)
-        np.testing.assert_array_equal(np.asarray(back.macro_times),
-                                      np.asarray(src.macro_times))
+        header = json.loads(tttrlib.TTTR(out).header.json)
+        assert header["MeasDesc_ContainerType"] == SM
+        assert header["MeasDesc_RecordType"] != json.loads(src.header.json)["MeasDesc_RecordType"]
+
+class TestTheSmHeaderBytes:
 
     def test_the_header_matches_what_a_real_file_carries(self, tmp_path):
         """Pinned as bytes, because each of the three defects was invisible at
         every level above them: the events were always correct."""
-        src = _source()
+        src = _first("*.sm")
         out = tmp_path / "written.sm"
         src.write(str(out), None, SM)
         head = out.read_bytes()[:14]

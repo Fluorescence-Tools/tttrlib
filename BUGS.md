@@ -26,11 +26,17 @@ to the changelog and leaves here.
 > crash once the bytes that followed changed. The buffer is now one longer and
 > terminated.
 >
-> Verified both directions: an HT3 written as `.sm` opens **by name** with all
-> 11,605,946 events and identical macro times, and a real `.sm` still round
-> trips by name. `test/python/tttr/test_written_files_are_re_detected.py`
-> pins all three header facts as bytes, because each defect was invisible at
-> every level above them — the events were always correct.
+> Verified on each format **against itself**, which is the case that has to
+> hold before any other: `.sm` → `.sm` gives back all 2,060,245 events with
+> identical macro *and* micro times, and `.ht3` → `.ht3` its 11,605,946 — a
+> `.ht3` and a `.sm` are different files with different record types, and
+> proving one through the other proves neither. The transcode that exposed the
+> defect (an HT3 source has no `version` tag, so the SM writer took its wrong
+> default) is tested separately and labelled as a transcode, including that
+> the result describes itself as SM rather than carrying the source's record
+> type. `test/python/tttr/test_written_files_are_re_detected.py` also pins the
+> three header facts as bytes, because each defect was invisible at every
+> level above them — the events were always correct.
 >
 > **Still open from this entry**, and the more valuable half:
 >
