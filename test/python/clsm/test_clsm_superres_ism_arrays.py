@@ -248,15 +248,34 @@ def test_focus_ism_needs_a_square_array_without_coordinates():
 
 def _brighteyes_frc_lib():
     """Load the reference FRC_lib directly; its package __init__ pulls in a
-    reader we do not have."""
+    reader we do not have.
+
+    The reference is somebody else's checkout, so everything about it is
+    optional: where it lives (BRIGHTEYES_ISM_SRC names the `src` directory) and
+    what it imports -- FRC_lib itself needs matplotlib and statsmodels, which
+    this suite does not depend on. Any of that missing is a skip: these three
+    tests compare against an external implementation, and not having it says
+    nothing about our own.
+    """
     import importlib.util
-    path = ("/Users/tpeulen/dev/chisurf/junk/brighteyes-ism/src/"
-            "brighteyes_ism/analysis/FRC_lib.py")
-    if not __import__("os").path.exists(path):
+    import os
+
+    candidates = []
+    env = os.environ.get("BRIGHTEYES_ISM_SRC")
+    if env:
+        candidates.append(os.path.join(env, "brighteyes_ism/analysis/FRC_lib.py"))
+    candidates.append("/Users/tpeulen/dev/chisurf/junk/brighteyes-ism/src/"
+                      "brighteyes_ism/analysis/FRC_lib.py")
+    path = next((p for p in candidates if os.path.exists(p)), None)
+    if path is None:
         pytest.skip("BrightEyes-ISM reference not available")
+
     spec = importlib.util.spec_from_file_location("FRC_lib", path)
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    try:
+        spec.loader.exec_module(mod)
+    except ImportError as e:
+        pytest.skip("BrightEyes-ISM reference needs %s" % e.name)
     return mod
 
 
