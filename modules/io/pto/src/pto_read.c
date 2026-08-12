@@ -19,6 +19,42 @@
 #define pto_ftell64(fp)              ftello(fp)
 #endif
 
+/* The narrow fopen() on Windows takes the active code page, so it cannot name
+ * a container whose path is outside it -- and a path is not the library's to
+ * restrict. open_file() does this for the C++ side; C cannot include it, so
+ * the same conversion lives here. Everything the library hands down is UTF-8.
+ */
+#if defined(_WIN32)
+#include <windows.h>
+static FILE* pto_fopen(const char* path, const char* mode) {
+    wchar_t wmode[8];
+    wchar_t* wpath;
+    FILE* fp;
+    int n;
+    if (path == NULL) return NULL;
+    /* Asked for rather than assumed: a Windows path may be 32,767 characters,
+     * and that is not a buffer to put on the stack of every open. */
+    n = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+    if (n <= 0) return NULL;
+    wpath = (wchar_t*) malloc((size_t) n * sizeof(wchar_t));
+    if (wpath == NULL) return NULL;
+    if (MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, n) == 0) {
+        free(wpath);
+        return NULL;
+    }
+    if (MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode,
+                            (int)(sizeof(wmode) / sizeof(wmode[0]))) == 0) {
+        free(wpath);
+        return NULL;
+    }
+    fp = _wfopen(wpath, wmode);
+    free(wpath);
+    return fp;
+}
+#else
+#define pto_fopen(path, mode) fopen((path), (mode))
+#endif
+
 static uint64_t read_vint(FILE* fp, uint32_t* octets_read, bool mask_length_bit) {
     int first = fgetc(fp);
     if (first == EOF) return 0;
@@ -316,7 +352,7 @@ int pto_read_open(const char* filename, PtoReadFileInfo* info) {
     memset(info, 0, sizeof(*info));
     strncpy(info->filename, filename, sizeof(info->filename) - 1);
 
-    FILE* fp = fopen(filename, "rb");
+    FILE* fp = pto_fopen(filename, "rb");
     if (!fp) return 4; /* IO error */
 
     fseek(fp, 0, SEEK_END);
@@ -409,7 +445,7 @@ void pto_read_close(PtoReadFileInfo* info) {
 
 int pto_read_cat(const char* filename, const PtoReadObject* obj, FILE* out_fp) {
     if (!filename || !obj || !out_fp) return 4;
-    FILE* fp = fopen(filename, "rb");
+    FILE* fp = pto_fopen(filename, "rb");
     if (!fp) return 4;
 
     if (pto_fseek64(fp, obj->offset, SEEK_SET) != 0) {
@@ -439,7 +475,7 @@ int pto_read_cat(const char* filename, const PtoReadObject* obj, FILE* out_fp) {
 
 int pto_read_extract(const char* filename, const PtoReadObject* obj, const char* out_path) {
     if (!filename || !obj || !out_path) return 4;
-    FILE* out = fopen(out_path, "wb");
+    FILE* out = pto_fopen(out_path, "wb");
     if (!out) return 4;
     int res = pto_read_cat(filename, obj, out);
     fclose(out);
@@ -528,7 +564,7 @@ int pto_read_get_inspection_data(const char* filename, const PtoReadFileInfo* in
     if (!out_data) return 1;
     memset(out_data, 0, sizeof(*out_data));
 
-    FILE* fp = filename ? fopen(filename, "rb") : NULL;
+    FILE* fp = filename ? pto_fopen(filename, "rb") : NULL;
 
     /* Check for embedded time_trace object */
     if (info && fp) {
