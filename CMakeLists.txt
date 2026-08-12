@@ -20,6 +20,20 @@ MESSAGE(STATUS "tttrlib version: ${PROJECT_VERSION}")
 
 # C++ standard
 ENABLE_LANGUAGE(CXX)
+
+# On Windows this project is MSVC, and nothing else. The check exists because the
+# failure it catches is silent: a Ninja configure takes the first compiler on
+# PATH, the runners carry a MinGW gcc, and a wheel built with it looks fine until
+# it is loaded next to an MSVC-built Python. The Visual Studio generator used to
+# rule that out by construction; Ninja is 2.3x faster and does not, so the
+# guarantee moves here.
+IF(WIN32 AND NOT MSVC)
+  MESSAGE(FATAL_ERROR
+    "Windows builds must use MSVC; CMake selected "
+    "'${CMAKE_CXX_COMPILER_ID}' (${CMAKE_CXX_COMPILER}). With the Ninja "
+    "generator the compiler comes from PATH, so run from a Visual Studio "
+    "developer prompt, or pass -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl.")
+ENDIF()
 SET(CMAKE_CXX_STANDARD 17)
 ADD_DEFINITIONS(-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES)
 

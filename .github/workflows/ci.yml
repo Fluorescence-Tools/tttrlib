@@ -898,6 +898,12 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - run: python -m pip install cibuildwheel==${{ env.CIBW_VERSION }} uv
+      # Ninja needs cl on PATH: scikit-build-core only arranges the MSVC
+      # environment for "Visual Studio" generators, so with Ninja the job has to
+      # do it. cibuildwheel's build subprocesses inherit it.
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
       - name: Install HDF5
         shell: pwsh
         run: |
