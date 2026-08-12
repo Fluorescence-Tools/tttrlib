@@ -1,29 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "ImageLocalization.h"
 
-#include <autodiff/forward/dual.hpp>
-
+#include "Dual.h"
 #include "GradVec.h"
 
 using namespace std;
-
-// autodiff's Dual can carry a whole vector as its derivative part, so a single
-// forward pass yields every partial derivative at once. That combination is not
-// documented upstream and needs this trait; without it dual.hpp cannot find
-// NumericType. The carrier was `Eigen::Array<double, N, 1>` and is now
-// GradVec<N> (modules/math) -- it was the last thing in the library that needed
-// Eigen, for one struct member. Guarded by test/cpp/test_ad_gradient.cpp, which
-// compares the vectorized gradient against scalar `dual`, so an autodiff bump
-// fails loudly rather than silently producing wrong derivatives.
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
-}  // namespace detail
-}  // namespace autodiff
 
 namespace {
 
@@ -155,16 +136,19 @@ double gauss_target(double* u, void* p) {
 }
 
 /// Exact gradient in one forward-mode pass; returns f(u) as well.
+///
+/// A `Dual` whose derivative slot is an N-vector, seeded with the N basis
+/// vectors, carries every partial through one evaluation of the objective --
+/// where central differences would need 2N of them. Both pieces are the
+/// library's own (modules/math); test/cpp/test_ad_gradient.cpp is what keeps
+/// them honest.
 double gauss_gradient(double* u, double* grad_out, void* p) {
     using Arr = tttrlib::GradVec<kNModelPar>;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = tttrlib::Dual<Arr>;
     const FitContext& ctx = *static_cast<FitContext*>(p);
 
     DualN ud[kNModelPar];
-    for (int j = 0; j < kNModelPar; ++j) {
-        ud[j].val = u[j];
-        ud[j].grad = Arr::Unit(j);
-    }
+    for (int j = 0; j < kNModelPar; ++j) ud[j] = DualN(u[j], Arr::Unit(j));
     const DualN r = gauss_cost<DualN>(ud, ctx);
     for (int j = 0; j < kNModelPar; ++j) grad_out[j] = r.grad[j];
     for (int j = kNModelPar; j < 18; ++j) grad_out[j] = 0.0;  // flags/outputs

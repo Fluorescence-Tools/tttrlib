@@ -13,7 +13,7 @@
 #       SOURCES       <files...>          # .cpp files this module claims
 #       HEADERS       <dirs...>           # PUBLIC include dirs (defaults to none)
 #       DEPENDS       <module names...>   # other tttrlib modules
-#       EXTERNAL_DEPS <targets...>        # e.g. tttrlib::json, tttrlib::autodiff
+#       EXTERNAL_DEPS <targets...>        # e.g. tttrlib::json, tttrlib::pocketfft
 #       SWIG_INTERFACES <files...>        # .i fragments this module contributes
 #       TEST_DIR      <dir>               # test/python/<dir>, linked not moved
 #       INTERFACE                         # header-only: no SOURCES, no library

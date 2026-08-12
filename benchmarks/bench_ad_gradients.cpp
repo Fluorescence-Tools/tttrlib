@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// PRD-010 phase 3 — MEASURE ONLY. Compares gradient strategies for the L-BFGS
+// MEASURE ONLY. Compares gradient strategies for the L-BFGS
 // fitting path without converting any production code.
 //
 // The objective replicates tttrlib's real decay-fit shape: a multi-exponential
@@ -17,10 +17,10 @@
 //   1. objective            — the cost unit everything else is quoted in
 //   2. central differences, h = eps*|x|        (what i_lbfgs.h does today)
 //   3. central differences, h = eps^(1/3)*|x|  (the retuned honest baseline)
-//   4. vectorized forward AD, Dual<double, GradVec<N>>
+//   4. vectorized forward AD, tttrlib::Dual<GradVec<N>>
 //
 // Build (from the repository root):
-//   c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+//   c++ -std=c++17 -O3 -I modules/math/include \
 //       benchmarks/bench_ad_gradients.cpp -o /tmp/bench_ad
 //
 // Note the SIMD caveat: tttrlib's production `double` path can use fconv_simd(),
@@ -29,8 +29,7 @@
 // scalar numbers are an UPPER bound. bench_ad_vectorized.cpp measures the
 // with-SIMD comparison directly.
 
-#include <autodiff/forward/dual.hpp>
-
+#include "Dual.h"
 #include "GradVec.h"
 
 #include <chrono>
@@ -38,18 +37,8 @@
 #include <cstdio>
 #include <vector>
 
-// autodiff's Dual can carry a whole vector as its derivative part, giving all N
-// partials in a single pass. That combination is undocumented and needs this
-// trait specialization; without it dual.hpp fails to find NumericType.
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
-}  // namespace detail
-}  // namespace autodiff
+// A Dual whose derivative part is a whole vector gives all N partials in a
+// single pass; both halves are tttrlib's own (modules/math).
 
 static const int NCH = 1024;
 static std::vector<double> g_irf, g_data;
@@ -106,13 +95,10 @@ void grad_central(std::vector<double>& x, int n, double eps, std::vector<double>
 template <int N>
 void grad_ad(const std::vector<double>& x, std::vector<double>& g) {
     using Arr = tttrlib::GradVec<N>;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = tttrlib::Dual<Arr>;
 
     std::vector<DualN> xd(N);
-    for (int j = 0; j < N; ++j) {
-        xd[j].val = x[j];
-        xd[j].grad = Arr::Unit(j);
-    }
+    for (int j = 0; j < N; ++j) xd[j] = DualN(x[j], Arr::Unit(j));
     const DualN f = objective<DualN>(xd.data(), N);
     for (int j = 0; j < N; ++j) g[j] = f.grad[j];
 }

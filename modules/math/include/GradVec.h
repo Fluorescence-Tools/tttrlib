@@ -12,10 +12,10 @@
 /// difference gradient costs.
 ///
 /// The operator set below is not general-purpose: it is exactly what
-/// `autodiff::detail::Dual<double, G>` calls on its `grad` member -- copy, `=`
-/// from a scalar zero, unary minus, `+= -= *= /=`, and scalar-by-vector
-/// products in both orders. Nothing else is provided on purpose; an operation
-/// autodiff does not use has no test that would notice it being wrong.
+/// `tttrlib::Dual<G>` (Dual.h) calls on its `grad` member -- copy, `=` from a
+/// scalar zero, unary minus, `+= -= *= /=`, and scalar-by-vector products in
+/// both orders. Nothing else is provided on purpose; an operation with no
+/// consumer has no test that would notice it being wrong.
 ///
 /// This replaces `Eigen::Array<double, N, 1>`, which was the only use of Eigen
 /// left in the library and made a header-only third-party package a hard
@@ -26,12 +26,11 @@
 /// help are recorded there too, so they are not retried: `alignas(32)` (slower,
 /// it inflates every Dual) and padding N to the SIMD width.
 ///
-/// A `NumberTraits<GradVec<N>>` specialization is required before
-/// `Dual<double, GradVec<N>>` will compile -- autodiff cannot otherwise deduce
-/// the underlying floating-point type. It lives with the consumer rather than
-/// here, so this header stays free of any autodiff include, and it is
-/// undocumented upstream: `test/cpp/test_ad_gradient.cpp` is what stands between
-/// an autodiff bump and a silently wrong derivative.
+/// Nothing here knows about `Dual`, and `Dual` needs nothing from here beyond
+/// the operators above -- a carrier that provides them works, which is how
+/// `benchmarks/bench_gradvec.cpp` still measures against Eigen without the
+/// library depending on it. `test/cpp/test_ad_gradient.cpp` checks both halves,
+/// separately and together.
 
 namespace tttrlib {
 
@@ -40,12 +39,12 @@ struct GradVec;
 
 /// `scalar * grad`, not evaluated yet.
 ///
-/// autodiff never uses that product on its own -- every occurrence is
-/// immediately accumulated: `grad += val * aux` in the product rule,
-/// `grad -= val * other.grad` in the quotient rule. Returning a plain GradVec
-/// would materialise an N-double temporary per operation and then run a second
-/// loop to add it. This proxy is the smallest thing that lets the multiply and
-/// the accumulate fuse into one pass, which is the part of Eigen's
+/// `Dual` never uses that product on its own -- every occurrence is immediately
+/// accumulated: `grad += val * aux` in the product rule, `grad -= val *
+/// other.grad` in the quotient rule. Returning a plain GradVec would
+/// materialise an N-double temporary per operation and then run a second loop
+/// to add it. This proxy is the smallest thing that lets the multiply and the
+/// accumulate fuse into one pass, which is the part of Eigen's
 /// expression-template machinery that actually matters here. It holds a
 /// reference and must not outlive the expression it appears in -- which is
 /// exactly the guarantee an operand of `+=` has.
@@ -61,7 +60,7 @@ struct GradVec {
 
     GradVec() = default;
 
-    /// Broadcast. autodiff assigns `Zero<G>()`, which is a plain `double`.
+    /// Broadcast. This is how a zero derivative is made (`DualGradTraits`).
     GradVec(double s) {
         for (int i = 0; i < N; ++i) v[i] = s;
     }
@@ -120,10 +119,10 @@ struct GradVec {
     }
 
     /// True division, not a reciprocal multiply. `x / s` and `x * (1/s)` differ
-    /// in the last place, and autodiff's scalar `Dual<double, double>` divides
-    /// -- so the shortcut would make the vectorized gradient disagree with the
-    /// reference it is tested against by 1 ulp, for nothing. The divisor is a
-    /// loop invariant either way and this runs once per objective evaluation.
+    /// in the last place, and the scalar `Dual<double>` this is tested against
+    /// divides -- so the shortcut would make the vectorized gradient disagree
+    /// with its reference by 1 ulp, for nothing. The divisor is a loop
+    /// invariant either way and this runs once per objective evaluation.
     GradVec& operator/=(double s) {
         for (int i = 0; i < N; ++i) v[i] /= s;
         return *this;

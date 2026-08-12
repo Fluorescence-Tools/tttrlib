@@ -18,7 +18,7 @@
 //
 // Build (from the repository root):
 //
-//   c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+//   c++ -std=c++17 -O3 -I modules/math/include \
 //       -DHAVE_EIGEN -I "$CONDA_PREFIX/include/eigen3" \
 //       benchmarks/bench_gradvec.cpp -o /tmp/bench_gradvec && /tmp/bench_gradvec
 //
@@ -26,9 +26,8 @@
 // the GradVec column still runs, which is the point -- the library no longer
 // needs Eigen to be installed at all.
 
+#include "Dual.h"
 #include "GradVec.h"
-
-#include <autodiff/forward/dual.hpp>
 
 #ifdef HAVE_EIGEN
 #include <Eigen/Core>
@@ -55,22 +54,20 @@ static double cpu_ms() {
     return ts.tv_sec * 1e3 + ts.tv_nsec * 1e-6;
 }
 
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
 #ifdef HAVE_EIGEN
+// `Eigen::Array<double, N, 1>(0.0)` reads its argument as a size, so the
+// default "broadcast a scalar" zero does not compile for it. Everything else
+// Dual asks of a carrier -- `+= -=`, `*= /=` by a double, unary minus,
+// `double * carrier` -- Eigen already provides.
+namespace tttrlib {
 template <int N>
-struct NumberTraits<Eigen::Array<double, N, 1>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
+struct DualGradTraits<Eigen::Array<double, N, 1>> {
+    static Eigen::Array<double, N, 1> zero() {
+        return Eigen::Array<double, N, 1>::Zero();
+    }
 };
+}  // namespace tttrlib
 #endif
-}  // namespace detail
-}  // namespace autodiff
 
 static const int XLEN = 13;
 static const int YLEN = 13;
@@ -154,7 +151,7 @@ static void seed_point(double* u, int np) {
 template <typename Arr, int NGAUSS>
 static double time_gradient(int reps, double* checksum) {
     const int NP = 3 * NGAUSS + 3;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = tttrlib::Dual<Arr>;
 
     double u[12];
     seed_point(u, NP);
@@ -164,9 +161,9 @@ static double time_gradient(int reps, double* checksum) {
     for (int r = 0; r < reps; ++r) {
         DualN ud[12];
         for (int j = 0; j < NP; ++j) {
-            ud[j].val = u[j] + 1e-9 * r;  // defeat hoisting out of the loop
-            ud[j].grad = 0.0;
-            ud[j].grad[j] = 1.0;
+            Arr seed = tttrlib::DualGradTraits<Arr>::zero();
+            seed[j] = 1.0;
+            ud[j] = DualN(u[j] + 1e-9 * r, seed);  // +r defeats loop hoisting
         }
         const DualN res = cost<DualN, NGAUSS>(ud);
         for (int j = 0; j < NP; ++j) acc += res.grad[j];

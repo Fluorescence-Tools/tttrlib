@@ -176,7 +176,7 @@ from `scalar * grad` so the multiply fuses with the accumulate that always
 follows it, rather than materialising an N-double temporary.
 
 ```bash
-c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+c++ -std=c++17 -O3 -I modules/math/include \
     -DHAVE_EIGEN -I "$CONDA_PREFIX/include/eigen3" \
     benchmarks/bench_gradvec.cpp -o /tmp/bench_gradvec && /tmp/bench_gradvec
 ```
@@ -260,7 +260,7 @@ is where the wrapper share is largest. The example's own figure went from
 1.6× → 6.0× across 1–64 rates to **4.1× → 7.2×**. The 1-rate point had been
 close enough to 1.0 that a busy machine could invert it, which is how this was
 found: as a flaky strict inequality in
-`test_convolution_methods_example.py`, filed in `BUGS.md`, split into a
+`test_convolution_methods_example.py` split into a
 two-tier assertion — and then made a single strict assertion again once the
 real cause was gone.
 
@@ -620,32 +620,40 @@ Measured on a 1024-channel multi-exponential decay
 
 | n_exp | N | CD (× obj) | AD (× obj) | **AD gain** | bytes/dual | MB per model intermediate |
 |---|---|--:|--:|--:|--:|--:|
-| 2 | 4 | 7.9× | 1.6× | 4.8× | 40 | 0.04 |
-| 4 | 8 | 16.3× | 1.5× | 11.0× | 72 | 0.07 |
-| 8 | 16 | 32.4× | 2.4× | **13.3×** | 136 | 0.13 |
-| 16 | 32 | 66.7× | 11.6× | 5.7× | 264 | 0.26 |
-| 32 | 64 | 142× | 16.4× | 8.7× | 520 | 0.51 |
-| 64 | 128 | 293× | 36.5× | 8.0× | 1032 | 1.01 |
-| 128 | 256 | 586× | 161× | 3.7× | 2056 | 2.01 |
-| 200 | 400 | 895× | 257× | **3.3×** | 3208 | 3.13 |
+| 2 | 4 | 7.9× | 1.5× | 5.2× | 40 | 0.04 |
+| 4 | 8 | 16.0× | 1.5× | 10.5× | 72 | 0.07 |
+| 8 | 16 | 31.8× | 2.0× | 15.6× | 136 | 0.13 |
+| 16 | 32 | 63.9× | 3.5× | **18.4×** | 264 | 0.26 |
+| 32 | 64 | 132× | 9.2× | 14.4× | 520 | 0.51 |
+| 64 | 128 | 260× | 25.5× | 11.1× | 1032 | 1.01 |
+| 128 | 256 | 532× | 157× | 3.4× | 2056 | 2.01 |
+| 200 | 400 | 847× | 249× | **3.4×** | 3208 | 3.13 |
 
-**The advantage peaks around 8–16 exponentials and then decays.** Central
-differences stay near-linear (895× against the theoretical 2N = 800×), while AD
-goes *superlinear*: 257× where pure O(N) predicts ~160×. The last column is why.
-A `Dual<double, GradVec<400>>` is 3.2 kB, so one 1024-channel intermediate is
-3.13 MB — far outside any cache — while the finite-difference path re-walks a
-plain 8 kB array 2N times.
+**The advantage peaks around 16–32 free parameters and then decays.** Central
+differences stay near-linear (847× against the theoretical 2N = 800×), while AD
+goes *superlinear*: 249× where pure O(N) predicts ~160×. The last column is why.
+A `Dual<GradVec<400>>` is 3.2 kB, so one 1024-channel intermediate is 3.13 MB —
+far outside any cache — while the finite-difference path re-walks a plain 8 kB
+array 2N times.
 
-Absolute cost matters as much as the ratio: one gradient at N = 400 is 149 ms by
-AD against 518 ms by central differences. At ~100 iterations that is 15 s versus
-52 s. AD wins, and neither is cheap.
+Absolute cost matters as much as the ratio: one gradient at N = 400 is 135 ms by
+AD against 455 ms by central differences. At ~100 iterations that is 13 s versus
+45 s. AD wins, and neither is cheap.
 
 **At that size both are the wrong tool.** For a sum of exponentials the analytic
 gradient is closed-form — ∂/∂amplitude *is* the convolved exponential already
 computed, and ∂/∂τ is a related recursion — so a hand-written gradient costs
-about one objective evaluation and would beat the AD column by roughly its 257×.
-The dip at N = 32 is reproducible across runs rather than noise; it was not
-chased, because it changes no decision.
+about one objective evaluation and would beat the AD column by roughly its 249×.
+
+The table above is measured with `Dual.h`; the earlier one, measured with
+autodiff, had a reproducible **dip at N = 32** (gain 5.7×, AD at 11.6× the
+objective) that was recorded as unexplained and left alone because it changed no
+decision. It was autodiff: the same row is 3.5× the objective and a gain of
+18.4× once the expression templates stop materialising temporaries. The whole
+tail moved with it — N = 128 from 8.0× to 11.1×, N = 400 from 3.3× to 3.4× — so
+the shape of the curve was partly the AD library and not only the memory
+traffic. Left as a caution: "reproducible, not noise, changes no decision" is
+how a fixable 5× hides.
 
 Note this is a scaling study of the *method*, not a to-do for `FitNExp`, which
 has no N-dimensional gradient to convert: it optimises lifetimes coordinate-wise

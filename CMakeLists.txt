@@ -589,19 +589,13 @@ ADD_SUBDIRECTORY(examples/plugin)
 # (-DTTTRLIB_BUILD_CPP_TESTS=ON) because they need nothing but an include path
 # and a compiler — no library, no Python, no test data — so they are also
 # runnable by hand; see test/cpp/README.md.
-#
-# test_ad_gradient additionally needs thirdparty/ for the autodiff headers: it
-# guards the vectorized forward-mode gradient, which is the one place a
-# third-party template and a tttrlib type have to agree on a contract that is
-# not documented upstream.
 OPTION(TTTRLIB_BUILD_CPP_TESTS "Build the header-only C++ math tests" OFF)
 IF(TTTRLIB_BUILD_CPP_TESTS)
     ENABLE_TESTING()
     FOREACH(_cpp_test test_mat_linalg test_qreigen test_ad_gradient)
         ADD_EXECUTABLE(${_cpp_test} "${PROJECT_SOURCE_DIR}/test/cpp/${_cpp_test}.cpp")
         TARGET_INCLUDE_DIRECTORIES(${_cpp_test}
-            PRIVATE "${PROJECT_SOURCE_DIR}/modules/math/include"
-                    "${PROJECT_SOURCE_DIR}/thirdparty")
+            PRIVATE "${PROJECT_SOURCE_DIR}/modules/math/include")
         ADD_TEST(NAME ${_cpp_test} COMMAND ${_cpp_test})
     ENDFOREACH()
 
@@ -641,8 +635,8 @@ IF(BUILD_LIBRARY)
   # libtttrlib.so is what a C++ consumer links and libtttrlib_static.a is what
   # the conda R package links, and both must stay complete: globbing src/ alone
   # would silently drop a capability with each extraction (the R package wraps
-  # both Histogram and Tiff). See modules/MODULE-DEBT.md -- collapsing these onto
-  # the module objects is the exit, and it must not change either artefact's name.
+  # both Histogram and Tiff). The exit is to collapse these onto the module
+  # objects, which must not change either artefact's name.
   ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${TTTRLIB_ALL_SOURCES})
   ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${TTTRLIB_ALL_SOURCES})
   IF(NOT MSVC)

@@ -1,58 +1,52 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// Guard for the vectorized forward-mode gradient used by the 2D-Gaussian
-// localization fit.
+// The vectorized forward-mode gradient used by the 2D-Gaussian localization
+// fit: `tttrlib::Dual<GradVec<N>>` (modules/math).
 //
-//   c++ -std=c++17 -O2 -I modules/math/include -I thirdparty \
+//   c++ -std=c++17 -O2 -I modules/math/include \
 //       test/cpp/test_ad_gradient.cpp -o /tmp/test_ad_gradient && /tmp/test_ad_gradient
 //
-// `ImageLocalization.cpp` differentiates its objective by seeding
-// `autodiff::detail::Dual<double, GradVec<N>>` with the N basis vectors and
-// reading all N partials out of one forward pass. Two things about that are
-// fragile enough to need a test that fails loudly:
+// `ImageLocalization.cpp` differentiates its objective by seeding one Dual per
+// parameter with a basis vector and reading all N partials out of a single
+// forward pass. Both halves are now the library's own -- Dual.h replaced
+// autodiff, which was a ~10k-line vendored package used for one class template
+// and which only worked here through an undocumented trait hook.
 //
-//   1. Carrying a *vector* in the derivative slot is not a documented autodiff
-//      feature. It works because `NumberTraits` can be specialized to say what
-//      the underlying scalar is. An autodiff upgrade that changes what Dual
-//      calls on `grad` would not fail to compile in an obvious place -- it
-//      would compile and propagate wrong derivatives.
-//   2. `GradVec` implements exactly the operators Dual uses. Getting one of
-//      them wrong (a sign, an aliasing bug in `*=`) is silent in the same way:
-//      the fit still converges, to the wrong place.
+// Owning the code changes what this test is for. It used to guard a contract
+// with an upstream package: an autodiff bump could keep compiling and silently
+// propagate wrong derivatives. Now it checks an implementation, and the failure
+// mode is the same either way -- a sign, an aliasing bug in `*=`, a missing
+// term in the product rule does not crash and does not fail to compile. The fit
+// still converges, to the wrong place.
 //
-// So the check is a differential one. The same objective is differentiated
-// three ways -- vectorized dual, scalar dual seeded N times, and central
-// differences -- and they must agree. Scalar `dual` is the reference because it
-// is autodiff's own tested path; central differences are the independent one,
-// slack enough not to be a precision test and tight enough to catch a sign.
+// So the checks are differential and layered:
+//
+//   1. GradVec's algebra and Dual's algebra, directly, against derivatives
+//      that can be written down by hand.
+//   2. The localization objective differentiated four ways -- vectorized dual,
+//      scalar dual, a long-double scalar dual, and central differences -- which
+//      must agree. The scalar dual shares Dual's formulas, so it only catches a
+//      carrier bug; the long-double dual shares them at higher precision, so it
+//      bounds the rounding; central differences share nothing at all, so they
+//      are what catches a wrong formula.
 //
 // The objective replicates `gauss_cost`: the logistic/exponential
 // reparameterisation, a sum of Gaussians, and a Poisson maximum-likelihood
 // cost. Not the production function itself (which is in an anonymous namespace
 // inside a module source), but the same operation set -- exp, log, the four
 // arithmetic operators, unary minus and division by a scalar -- which is what
-// determines which of Dual's assignment paths get instantiated.
+// determines which of Dual's paths get instantiated.
 //
 // Exit status is the number of failed checks.
 
+#include "Dual.h"
 #include "GradVec.h"
-
-#include <autodiff/forward/dual.hpp>
 
 #include <cmath>
 #include <cstdio>
 #include <vector>
 
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
-}  // namespace detail
-}  // namespace autodiff
-
+using tttrlib::Dual;
 using tttrlib::GradVec;
 
 static int g_failures = 0;
@@ -144,38 +138,77 @@ static T cost(const T* u, const double* data) {
 }
 
 // --------------------------------------------------------------------------
-// The three gradients.
+// The four gradients.
 // --------------------------------------------------------------------------
 
 /// One forward pass, all NP partials -- what the library actually does.
 static double grad_vectorized(const double* u, const double* data, double* g) {
     using Arr = GradVec<NP>;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = Dual<Arr>;
     DualN ud[NP];
-    for (int j = 0; j < NP; ++j) {
-        ud[j].val = u[j];
-        ud[j].grad = Arr::Unit(j);
-    }
+    for (int j = 0; j < NP; ++j) ud[j] = DualN(u[j], Arr::Unit(j));
     const DualN r = cost<DualN>(ud, data);
     for (int j = 0; j < NP; ++j) g[j] = r.grad[j];
     return r.val;
 }
 
-/// NP forward passes with autodiff's own scalar dual -- the reference.
+/// NP forward passes with a plain `double` in the derivative slot. Same
+/// formulas, different carrier -- so this isolates GradVec from Dual.
 static double grad_scalar_dual(const double* u, const double* data, double* g) {
-    using Dual1 = autodiff::detail::Dual<double, double>;
+    using Dual1 = Dual<double>;
     double val = 0.0;
     for (int k = 0; k < NP; ++k) {
         Dual1 ud[NP];
-        for (int j = 0; j < NP; ++j) {
-            ud[j].val = u[j];
-            ud[j].grad = (j == k) ? 1.0 : 0.0;
-        }
+        for (int j = 0; j < NP; ++j) ud[j] = Dual1(u[j], (j == k) ? 1.0 : 0.0);
         const Dual1 r = cost<Dual1>(ud, data);
         g[k] = r.grad;
         val = r.val;
     }
     return val;
+}
+
+/// The same arithmetic in long double, written out independently of Dual.h.
+///
+/// It cannot catch a wrong derivative *rule* -- it uses the same rules -- but
+/// it computes them to a 64-bit mantissa, which is what makes the tolerance
+/// below meaningful: it says how much of the disagreement between the double
+/// paths is rounding and how much is not.
+namespace {
+struct LDual {
+    long double val, grad;
+    LDual() : val(0), grad(0) {}
+    explicit LDual(double v) : val(v), grad(0) {}
+    LDual(long double v, long double g) : val(v), grad(g) {}
+    LDual& operator+=(const LDual& o) { val += o.val; grad += o.grad; return *this; }
+    LDual& operator-=(const LDual& o) { val -= o.val; grad -= o.grad; return *this; }
+    LDual& operator*=(const LDual& o) {
+        grad = grad * o.val + val * o.grad;
+        val *= o.val;
+        return *this;
+    }
+    LDual& operator/=(const LDual& o) {
+        val /= o.val;
+        grad = (grad - val * o.grad) / o.val;
+        return *this;
+    }
+    LDual operator-() const { return LDual(-val, -grad); }
+};
+LDual operator+(LDual a, const LDual& b) { a += b; return a; }
+LDual operator-(LDual a, const LDual& b) { a -= b; return a; }
+LDual operator*(LDual a, const LDual& b) { a *= b; return a; }
+LDual operator/(LDual a, const LDual& b) { a /= b; return a; }
+LDual operator*(double s, const LDual& a) { return LDual(s * a.val, s * a.grad); }
+LDual operator/(const LDual& a, double s) { return LDual(a.val / s, a.grad / s); }
+LDual exp(const LDual& a) { const long double v = expl(a.val); return LDual(v, a.grad * v); }
+LDual log(const LDual& a) { return LDual(logl(a.val), a.grad / a.val); }
+}  // namespace
+
+static void grad_long_double(const double* u, const double* data, double* g) {
+    for (int k = 0; k < NP; ++k) {
+        LDual ud[NP];
+        for (int j = 0; j < NP; ++j) ud[j] = LDual((long double)u[j], (j == k) ? 1.0L : 0.0L);
+        g[k] = (double)cost<LDual>(ud, data).grad;
+    }
 }
 
 /// Central differences at the cube-root step -- the independent check.
@@ -212,7 +245,7 @@ static void test_gradvec_algebra() {
     check(e[0] == 0.0 && e[1] == 0.0 && e[2] == 1.0 && e[3] == 0.0, "Unit(2) is e_2");
 
     GradVec<4> s;
-    s = 7.0;  // autodiff assigns Zero<G>(), a plain double
+    s = 7.0;  // a scalar broadcasts, which is how a zero derivative is made
     check(s[0] == 7.0 && s[3] == 7.0, "assignment from a scalar broadcasts");
 
     GradVec<4> n = -a;
@@ -234,13 +267,98 @@ static void test_gradvec_algebra() {
     GradVec<4> q = a / 2.0;
     check(q[3] == 2.0, "division by a scalar");
 
-    // Dual's assignMul does `grad *= other.val; grad += val * aux` with aux a
-    // copy of grad, guarding against self-aliasing. Confirm the copy is a real
-    // copy and not a reference into the same storage.
+    // The fused `x += s * g` path: the proxy must not be evaluated into a
+    // temporary that then gets added to itself.
+    GradVec<4> f = a;
+    f += 2.0 * a;
+    check(f[3] == 12.0, "fused += scalar * GradVec");
+    f -= 2.0 * a;
+    check(f[3] == 4.0, "fused -= scalar * GradVec");
+
+    // Dual's operator*= does `grad *= other.val; grad += val * aux` with aux a
+    // copy of the other gradient, guarding against self-aliasing. Confirm the
+    // copy is a real copy and not a reference into the same storage.
     GradVec<4> self = a;
     const GradVec<4> aux = self;
     self *= 2.0;
     check(aux[3] == 4.0 && self[3] == 8.0, "copy is independent of its source");
+}
+
+/// Dual's own algebra: each rule against a derivative written by hand.
+///
+/// Every check is at x = 2, y = 3 with dx = 1, dy = 0 unless stated, so the
+/// expected values are exact in binary and the comparisons can be equalities.
+static void test_dual_algebra() {
+    std::printf("Dual algebra\n");
+
+    using D = Dual<double>;
+    const D x(2.0, 1.0), y(3.0, 0.0);
+
+    check(D(5.0).val == 5.0 && D(5.0).grad == 0.0, "a constant has zero derivative");
+    check(D().val == 0.0 && D().grad == 0.0, "default construction is zero");
+
+    const D s = x + y;
+    check(s.val == 5.0 && s.grad == 1.0, "sum rule");
+    const D d = x - y;
+    check(d.val == -1.0 && d.grad == 1.0, "difference rule");
+    const D p = x * y;
+    check(p.val == 6.0 && p.grad == 3.0, "product rule");
+    const D q = x / y;   // d/dx (x/y) = 1/y
+    check(std::fabs(q.grad - 1.0 / 3.0) < 1e-16, "quotient rule");
+
+    // The other operand differentiated too: d/dy (x/y) = -x/y^2 = -2/9.
+    const D x0(2.0, 0.0), y1(3.0, 1.0);
+    const D q2 = x0 / y1;
+    check(std::fabs(q2.grad + 2.0 / 9.0) < 1e-16, "quotient rule, denominator");
+
+    const D n = -x;
+    check(n.val == -2.0 && n.grad == -1.0, "unary minus");
+
+    // Aliasing: x *= x and x /= x must not read a gradient they have already
+    // overwritten. d/dx x^2 = 2x = 4; d/dx (x/x) = 0.
+    D sq = x;
+    sq *= sq;
+    check(sq.val == 4.0 && sq.grad == 4.0, "self-multiplication");
+    D one = x;
+    one /= one;
+    check(one.val == 1.0 && one.grad == 0.0, "self-division");
+
+    // Mixed with plain doubles: the scalar contributes no derivative.
+    check((x + 3.0).grad == 1.0 && (x + 3.0).val == 5.0, "dual + scalar");
+    check((3.0 + x).val == 5.0, "scalar + dual");
+    check((x - 3.0).val == -1.0 && (x - 3.0).grad == 1.0, "dual - scalar");
+    check((3.0 - x).val == 1.0 && (3.0 - x).grad == -1.0, "scalar - dual");
+    check((x * 3.0).val == 6.0 && (x * 3.0).grad == 3.0, "dual * scalar");
+    check((3.0 * x).grad == 3.0, "scalar * dual");
+    check((x / 4.0).val == 0.5 && (x / 4.0).grad == 0.25, "dual / scalar");
+    check(std::fabs((4.0 / x).val - 2.0) < 1e-16 &&
+          std::fabs((4.0 / x).grad + 1.0) < 1e-16, "scalar / dual");
+
+    // exp and log, and the identity log(exp(x)) == x with derivative 1.
+    const D ex = exp(x);
+    check(std::fabs(ex.val - std::exp(2.0)) < 1e-15 &&
+          std::fabs(ex.grad - std::exp(2.0)) < 1e-15, "d/dx exp(x) = exp(x)");
+    const D lg = log(x);
+    check(std::fabs(lg.val - std::log(2.0)) < 1e-16 &&
+          std::fabs(lg.grad - 0.5) < 1e-16, "d/dx log(x) = 1/x");
+    const D round_trip = log(exp(x));
+    check(std::fabs(round_trip.val - 2.0) < 1e-15 &&
+          std::fabs(round_trip.grad - 1.0) < 1e-15, "log(exp(x)) is the identity");
+
+    check((x < y) && (y > x) && (x != y) && (x == D(2.0, 99.0)),
+          "comparisons look only at the value");
+
+    // The vector carrier reaches every branch above through the same code, so
+    // one composite check on it is enough here -- the objective below is what
+    // exercises it in anger. f(a,b) = a*b + exp(a)/b at (2,3):
+    // df/da = b + exp(a)/b = 3 + e^2/3, df/db = a - exp(a)/b^2 = 2 - e^2/9.
+    using D2 = Dual<GradVec<2>>;
+    const D2 a(2.0, GradVec<2>::Unit(0)), b(3.0, GradVec<2>::Unit(1));
+    const D2 f = a * b + exp(a) / b;
+    const double e2 = std::exp(2.0);
+    check(std::fabs(f.val - (6.0 + e2 / 3.0)) < 1e-14, "vector carrier: value");
+    check(std::fabs(f.grad[0] - (3.0 + e2 / 3.0)) < 1e-14, "vector carrier: d/da");
+    check(std::fabs(f.grad[1] - (2.0 - e2 / 9.0)) < 1e-14, "vector carrier: d/db");
 }
 
 int main() {
@@ -253,9 +371,10 @@ int main() {
     };
 
     test_gradvec_algebra();
+    test_dual_algebra();
 
     std::printf("vectorized dual vs scalar dual\n");
-    double gv[NP], gs[NP], gc[NP];
+    double gv[NP], gs[NP], gl[NP], gc[NP];
     const double fv = grad_vectorized(u, data.data(), gv);
     const double fs = grad_scalar_dual(u, data.data(), gs);
     const double fd = cost<double>(u, data.data());
@@ -268,12 +387,12 @@ int main() {
     // Bitwise agreement is *nearly* the expectation -- both paths execute the
     // same operations in the same order on the same doubles, only packed
     // differently -- but not quite, and the reason is worth recording rather
-    // than rediscovering. `Dual::assignMul` computes `grad*other.val +
+    // than rediscovering. `Dual::operator*=` computes `grad*other.val +
     // val*aux`, and whether the compiler contracts that into an FMA depends on
     // the shape it is inlined into: it does for the scalar `grad`, and not
     // always for the loop over GradVec's array. Compiling this file with
     // `-ffp-contract=off` makes the two agree to the last bit; at clang's
-    // default (`on`) one component differs by 1 ulp.
+    // default (`on`) one component can differ by 1 ulp.
     //
     // So the tolerance is tight enough that any real defect -- a sign, an
     // aliasing bug in `*=`, a missing term -- shows up as a relative error near
@@ -289,6 +408,17 @@ int main() {
     double max_mag = 0.0;
     for (int j = 0; j < NP; ++j) max_mag = std::max(max_mag, std::fabs(gs[j]));
     check(max_mag > 1e-6, "the reference gradient is not identically zero");
+
+    // Against long double. Scaled by the largest component, because a gradient
+    // is consumed as a vector: a component passing through zero is not a
+    // precision problem, and dividing by it would invent one.
+    std::printf("vectorized dual vs long double\n");
+    grad_long_double(u, data.data(), gl);
+    double ginf = 0.0;
+    for (int j = 0; j < NP; ++j) ginf = std::max(ginf, std::fabs(gl[j]));
+    double max_ld = 0.0;
+    for (int j = 0; j < NP; ++j) max_ld = std::max(max_ld, std::fabs(gv[j] - gl[j]) / ginf);
+    report(max_ld < 1e-14, "gradient: vectorized vs long-double dual", max_ld, 1e-14);
 
     std::printf("vectorized dual vs central differences\n");
     grad_central(u, data.data(), gc);

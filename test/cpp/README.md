@@ -6,10 +6,9 @@ surrogate, Gopich–Szabo, BurstML. A defect here surfaces as a plausible-lookin
 but wrong result several layers up, which is exactly the kind of defect that
 survives an end-to-end test. These check the kernels directly.
 
-`GradVec.h` is here for the same reason and one more: it has to satisfy a
-contract with a third-party template (`autodiff`'s `Dual`) that upstream does
-not document, so nothing but a test stands between an autodiff bump and a
-silently wrong gradient. See "the AD guard" below.
+`Dual.h` and `GradVec.h` are here for the same reason and one more: a wrong
+derivative does not crash and does not fail to compile — the fit converges, to
+the wrong place. Nothing but a test notices. See "the AD checks" below.
 
 ## Running
 
@@ -20,11 +19,9 @@ c++ -std=c++17 -O2 -I modules/math/include test/cpp/test_mat_linalg.cpp \
     -o /tmp/test_mat_linalg && /tmp/test_mat_linalg
 c++ -std=c++17 -O2 -I modules/math/include test/cpp/test_qreigen.cpp \
     -o /tmp/test_qreigen && /tmp/test_qreigen
-c++ -std=c++17 -O2 -I modules/math/include -I thirdparty \
+c++ -std=c++17 -O2 -I modules/math/include \
     test/cpp/test_ad_gradient.cpp -o /tmp/test_ad_gradient && /tmp/test_ad_gradient
 ```
-
-`test_ad_gradient` additionally needs `thirdparty/` for the autodiff headers.
 
 Or through CMake:
 
@@ -63,22 +60,25 @@ by 1e-15 (an absolute `rcond` zeroes it), a cyclic permutation (a QR iteration
 with no exceptional shift never deflates it), and a matrix scaled by
 `10^(3(i-j))` (eigenvectors read off the unbalanced matrix are unusable).
 
-## The AD guard (`test_ad_gradient`)
+## The AD checks (`test_ad_gradient`)
 
 `imaging/localization` differentiates its 2D-Gaussian objective by seeding
-`autodiff::detail::Dual<double, GradVec<N>>` with the N basis vectors and
-reading all N partials out of one forward pass. Carrying a *vector* in the
-derivative slot is not a documented autodiff feature — it works because
-`NumberTraits` can be specialized to say what the underlying scalar is — and
-`GradVec` implements exactly the operators `Dual` happens to call. Both halves
-of that fail quietly: an autodiff upgrade, or a sign or aliasing bug in one
-operator, still compiles, still converges, and lands somewhere else.
+`tttrlib::Dual<GradVec<N>>` with the N basis vectors and reading all N partials
+out of one forward pass. `Dual.h` is the dual number and `GradVec.h` implements
+exactly the operators it calls; both fail quietly — a sign, an aliasing bug, a
+missing term in the product rule still compiles, still converges, and lands
+somewhere else.
 
-So the check is differential. The same objective is differentiated three ways —
-vectorized dual, autodiff's own scalar `dual` seeded N times, and central
-differences — and they must agree. Scalar `dual` is the reference because it is
-autodiff's tested path; central differences are the independent one, at a
-tolerance loose enough not to be a precision test.
+This used to be a guard on someone else's contract: the derivative slot held a
+vector, which `autodiff` does not document as possible, so an upstream bump
+could silently change the answer. `Dual.h` replaced autodiff and the test
+changed with it — it now checks an implementation. First every operator of
+`Dual` and `GradVec` against a derivative written by hand, then the objective
+differentiated four ways — vectorized dual, scalar dual, a long-double dual, and
+central differences — which must agree. The scalar dual shares `Dual`'s
+formulas, so it isolates the carrier; the long-double dual shares them at higher
+precision, so it says how much of the disagreement is rounding; central
+differences share nothing, so they are what catches a wrong formula.
 
 Two findings from writing it, both worth not rediscovering:
 

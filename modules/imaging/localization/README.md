@@ -12,15 +12,18 @@ localization from photon images.
 ## Dependencies
 
 - `core`, `clsm`, `math`
-- `autodiff` (vendored, header-only) — forward-mode automatic differentiation
+
+No third-party dependency. The forward-mode AD below used to come from a
+vendored copy of `autodiff`; it is now `Dual.h` in
+[`math`](../../math/README.md).
 
 ## The gradient, and why the objective looks the way it does
 
 The fit is driven by `i_lbfgs.h`, which by default estimates its gradient with
 central differences: 2N objective evaluations per gradient. This module instead
 supplies an **exact gradient from one forward-mode AD pass**, seeding
-`autodiff::detail::Dual<double, GradVec<N>>` with the N basis vectors so all N
-partial derivatives come out of a single evaluation. Measured against a *tuned*
+`tttrlib::Dual<GradVec<N>>` with the N basis vectors so all N partial
+derivatives come out of a single evaluation. Measured against a *tuned*
 central difference (not the untuned one it replaced), that is **3.95×–5.44×**
 faster per gradient at this objective's real free-parameter counts.
 
@@ -49,19 +52,22 @@ stall — the failure mode that made the conversion order matter. The public
 `vars` vector keeps its original constrained meaning; the transform is applied
 only around the optimiser.
 
-`GradVec<N>` (in [`math`](../../math/README.md)) is the derivative carrier. It
-replaced `Eigen::Array<double, N, 1>`, which was the last thing in tttrlib that
-needed Eigen and made it a hard `REQUIRED` of the whole build for one struct
-member. The two are measured head to head in `benchmarks/bench_gradvec.cpp`.
+`Dual<G>` and `GradVec<N>` both live in [`math`](../../math/README.md): the dual
+number and the vector it carries in its derivative slot. Each replaced a
+third-party header — `autodiff` and `Eigen::Array<double, N, 1>` — that the
+whole build had to find in order to compile one file. `Dual` is measured against
+autodiff in the log entry for the removal, and `GradVec` against Eigen in
+`benchmarks/bench_gradvec.cpp`, which still builds the Eigen column when Eigen
+is present.
 
 ## Testing
 
 `test/python/misc/test_image_localization.py` covers the fit end to end.
 
-The AD machinery itself is guarded separately by `test/cpp/test_ad_gradient.cpp`,
-which differentiates the same objective three ways — vectorized dual, autodiff's
-own scalar `dual`, and central differences — and requires them to agree. That
-test exists because the `NumberTraits` specialization the vectorized path relies
-on is **undocumented upstream**: an autodiff bump that changed what `Dual` calls
-on its `grad` member would not fail to compile, it would silently produce wrong
-derivatives, and the fit would converge to the wrong place.
+The AD machinery itself is checked separately by `test/cpp/test_ad_gradient.cpp`,
+which differentiates the same objective four ways — vectorized dual, scalar
+dual, a long-double dual, and central differences — and requires them to agree,
+on top of unit checks of every `Dual` and `GradVec` operator. The layering is
+the point: a wrong sign, an aliasing bug in `*=` or a missing term in the
+product rule does not fail to compile and does not crash. The fit still
+converges, to the wrong place.

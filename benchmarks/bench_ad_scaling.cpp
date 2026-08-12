@@ -2,7 +2,7 @@
 //
 // How does the vectorized forward-mode gradient scale in the parameter count?
 //
-// The PRD-010 numbers stop at N = 18. Every conversion decision so far has been
+// The recorded numbers stop at N = 18. Every conversion decision so far has been
 // taken in that regime, where AD beats central differences by 4-10x. A
 // multi-exponential decay is not in that regime: 200 exponentials is N = 400
 // free parameters, and nothing measured says the advantage survives there.
@@ -16,37 +16,26 @@
 //
 // So the ratio is a race between two O(N) costs and the answer is decided by
 // constants and by memory traffic, which is why it has to be measured rather
-// than reasoned about. A Dual<double, GradVec<N>> is 8(N+1) bytes; at N = 400
+// than reasoned about. A Dual<GradVec<N>> is 8(N+1) bytes; at N = 400
 // that is 3.2 kB per intermediate, and a 1024-channel model vector of them is
 // 3.3 MB -- far outside any cache, while the central-difference path walks a
 // plain 8 kB array 2N times.
 //
 // Build (from the repository root):
 //
-//   c++ -std=c++17 -O3 -I modules/math/include -I thirdparty \
+//   c++ -std=c++17 -O3 -I modules/math/include \
 //       benchmarks/bench_ad_scaling.cpp -o /tmp/bench_ad_scaling && /tmp/bench_ad_scaling
 //
 // Timing uses CLOCK_THREAD_CPUTIME_ID and min-of-trials for the reason recorded
 // in benchmarks/README.md: on a loaded machine wall clock reports the scheduler.
 
+#include "Dual.h"
 #include "GradVec.h"
-
-#include <autodiff/forward/dual.hpp>
 
 #include <cmath>
 #include <cstdio>
 #include <ctime>
 #include <vector>
-
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
-}  // namespace detail
-}  // namespace autodiff
 
 using tttrlib::GradVec;
 
@@ -137,14 +126,13 @@ static void row() {
 
     // 3. vectorized forward AD: one pass, all N partials
     using Arr = GradVec<N>;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = tttrlib::Dual<Arr>;
     double best_ad = 1e300;
     for (int t = 0; t < TRIALS; ++t) {
         const double t0 = cpu_ms();
         std::vector<DualN> xd(N);
         for (int j = 0; j < N; ++j) {
-            xd[j].val = x[j];
-            xd[j].grad = Arr::Unit(j);
+            xd[j] = DualN(x[j], Arr::Unit(j));
         }
         const DualN r = decay_objective<DualN>(xd.data(), N);
         const double e = cpu_ms() - t0;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
-// PRD-010 phase 3, part 2 — the two questions bench_ad_gradients.cpp left open.
+// The two questions bench_ad_gradients.cpp left open.
 //
 // A. Does AD still win when central differences keep the hand-vectorized
 //    convolution kernel? The scalar-vs-scalar numbers in bench_ad_gradients.cpp
@@ -19,13 +19,12 @@
 //
 // Build (from the repository root):
 //   c++ -std=c++17 -O3 -I modules/math/include -I modules/util/include \
-//       -I modules/spectroscopy/decay/include -I thirdparty \
+//       -I modules/spectroscopy/decay/include \
 //       benchmarks/bench_ad_vectorized.cpp \
 //       modules/spectroscopy/decay/src/DecayConvolution.cpp \
 //       modules/util/src/*.cpp -o /tmp/bench_ad_vec
 
-#include <autodiff/forward/dual.hpp>
-
+#include "Dual.h"
 #include "GradVec.h"
 
 #include <chrono>
@@ -34,16 +33,6 @@
 #include <vector>
 
 #include "DecayConvolution.h"
-
-namespace autodiff {
-namespace detail {
-template <int N>
-struct NumberTraits<tttrlib::GradVec<N>> {
-    using NumericType = double;
-    static constexpr auto Order = 0;
-};
-}  // namespace detail
-}  // namespace autodiff
 
 static const int NCH = 1024;
 static std::vector<double> g_irf, g_data;
@@ -200,12 +189,9 @@ void grad_central(Obj&& f, std::vector<double>& x, int n, double eps, std::vecto
 template <int N, typename ObjT>
 void grad_ad(ObjT&& f, const std::vector<double>& x, std::vector<double>& g) {
     using Arr = tttrlib::GradVec<N>;
-    using DualN = autodiff::detail::Dual<double, Arr>;
+    using DualN = tttrlib::Dual<Arr>;
     std::vector<DualN> xd(N);
-    for (int j = 0; j < N; ++j) {
-        xd[j].val = x[j];
-        xd[j].grad = Arr::Unit(j);
-    }
+    for (int j = 0; j < N; ++j) xd[j] = DualN(x[j], Arr::Unit(j));
     const DualN r = f(xd.data(), N);
     for (int j = 0; j < N; ++j) g[j] = r.grad[j];
 }

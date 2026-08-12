@@ -148,40 +148,6 @@
   each refresh bins *every photon of the run* to display its tail.
 
 ### Fixed
-- **Windows test failures print their tracebacks again, and the heap-corruption
-  workarounds are gone.** Two layers existed to survive a `0xC0000374`
-  (`STATUS_HEAP_CORRUPTION`) crash at interpreter shutdown: a
-  `pytest_sessionfinish` hook in `test/python/conftest.py` calling `os._exit()`
-  on win32, and `run_pytest_windows.py`, a wrapper that ran pytest in a
-  subprocess and wrote its exit code to a file. Neither is needed, and the first
-  was doing active harm.
-
-  The crash no longer reproduces. With both layers removed so that interpreter
-  shutdown genuinely runs, the full suite is **2449 passed, 205 skipped, 64
-  subtests passed in 1941 s with process exit code 0** on Windows 11
-  (MSVC 14.35, Python 3.11, `dev` at `e166ded0`); `test/run_suite.py` is clean
-  across all 19 groups. The likely reason it is gone is that the cause was
-  addressed in `CLSMImage.cpp`, where OpenMP is still disabled on Windows.
-
-  **The `os._exit()` hook was the reason Windows CI showed no tracebacks.** A
-  `pytest_sessionfinish` in a non-rootdir `conftest.py` is registered after
-  pytest's terminal reporter and therefore runs before it, so `os._exit()` ended
-  the process before the reporter could print anything: the log reached `100%`,
-  returned a failure code, and showed no `FAILURES` section for any test. This
-  was reproduced in an isolated two-file project with tttrlib absent entirely,
-  which is what distinguishes it from the native crash it was blamed on.
-  `--report-log` and the "Show the failures the terminal did not" step existed
-  only to recover those lost tracebacks and have been removed with it.
-
-  `run_pytest_windows.py` could not have done what its docstring claimed: the
-  wrapper process never imported tttrlib, so its `os._exit(0)` could not affect
-  any tttrlib destructor, and because it wrote the *child's* return code to a
-  file that CI passed to `exit`, a genuine crash would have failed the step
-  anyway. Both Windows test jobs now call `python test/run_suite.py -v
-  --tb=short`, the same command Linux and macOS use, which runs each directory
-  as its own session and reports any group that dies while keeping the
-  tracebacks of every group that did not.
-
 - **A C++ throw no longer terminates the interpreter.** `%exception` is
   positional in SWIG — it covers everything declared after it — and a bare
   `%exception;` resets to *nothing* rather than to whatever was in force
@@ -266,6 +232,50 @@
   `No module named '_tttrlib'` under 3.12. Both now use one guard,
   `test_settings.build_ext_for_this_interpreter()`, matching what `conftest.py`
   already did for its own `sys.path` insert.
+
+### Removed
+- **The vendored `autodiff` package is gone; `modules/math/include/Dual.h`
+  replaces it.** `thirdparty/autodiff/` was ~10k lines across 20 headers —
+  forward dual, forward real, reverse `var`, four Eigen bridges, Taylor series —
+  and the library used one class template and two elementary functions from it,
+  in one file. It also only worked here through an undocumented hook: the
+  localization fit carries a whole `GradVec<N>` in the derivative slot of a
+  `Dual`, which the documentation describes as a scalar, and that compiles only
+  because `NumberTraits` can be specialized to say otherwise. That hook was the
+  real dependency — an upstream bump could keep compiling and silently
+  propagate wrong derivatives, which is why `test/cpp/test_ad_gradient.cpp` was
+  written in the first place.
+
+  `Dual<G>` is ~200 lines, a third of it comment, and takes the carrier as a
+  template parameter, so
+  there is no hook to keep working: `Dual<double>` is one directional
+  derivative and `Dual<GradVec<N>>` is a whole gradient from one pass. Only the
+  operators the objectives use are defined — the four arithmetic operators in
+  every dual/scalar combination, unary minus, comparison on the value, `exp`
+  and `log`.
+
+  Converted against autodiff as an A/B before autodiff was deleted, on three
+  levels. **Gradient:** at 400 random points of the localization objective the
+  two agree to 2.3e-13 relative, and against a long-double reference the
+  replacement is the *more* accurate of the two (2.3e-15 vs 3.4e-15 of
+  `|grad|_inf`, closer in 2336 of 4800 components against 955). They cannot
+  agree bitwise — autodiff evaluates an expression tree right to left, so
+  `A*ex*ey` associates differently — which is why the fit was checked too.
+  **Fit:** 44 end-to-end `fit2DGaussian` cases (one/two/three Gaussians, fixed
+  and free background and ellipticity, Poisson noise, starts on and outside a
+  bound) give a **bitwise identical** minimised objective in every one; the
+  parameter vectors differ only where the objective is flat, at most 0.058 in
+  an amplitude of ~89 in the ill-conditioned three-Gaussian fits.
+  **Speed:** faster wherever N is large enough to matter, because the eager
+  form materialises fewer temporaries than the expression templates — the
+  1024-channel decay gradient at N=32 goes 0.76 → 0.15 ms, at N=400 160 → 134
+  ms, and the localization gradient at N=12 is 23% cheaper. At N≤6 it is a few
+  percent slower. See `PERF.md`.
+
+  `test/cpp/test_ad_gradient.cpp` changed with it: it no longer guards a foreign
+  contract, it checks an implementation — every `Dual` and `GradVec` operator
+  against a hand-written derivative, then the objective differentiated four
+  ways (vectorized dual, scalar dual, long-double dual, central differences).
 
 ### Changed
 - **The `dfa_*` convolution entry points take NumPy buffers** — 5.6–8.4× on the

@@ -9,6 +9,7 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`NelderMead.h`**: Header-only simplex optimiser for derivative-free problems.
 - **`NeuralNet.h` / `NeuralNet.cpp`**: Feed-forward multilayer perceptron with Adam training, explicit backprop, StandardScaler, and JSON serialisation. Uses `Mat.h` for all dense linear algebra.
 - **`i_lbfgs.h`**: Header-only limited-memory BFGS optimiser with central-difference numerical gradients and Armijo backtracking line search. A consumer may supply an exact gradient instead; `imaging/localization` does.
+- **`Dual.h`**: Forward-mode dual number, `val + eps*grad` with `eps^2 = 0`, templated on what sits in the derivative slot. `Dual<double>` is one directional derivative; `Dual<GradVec<N>>` is a whole gradient from one pass. See below.
 - **`GradVec.h`**: Fixed-size vector of doubles used as the *derivative part* of a vectorized forward-mode dual number, so one pass through an objective yields all N partial derivatives. See below.
 - **`HmmLattice.h` / `HmmLattice.cpp`**: The log-domain HMM recursions over a **caller-supplied** `log_frameprob` (T×K) — `hmm_forward_log`, a fused `hmm_backward_posteriors_xi` sweep, `hmm_viterbi_log`, a standalone `hmm_backward_log` for tests, and `hmm_estep_log` for concatenated sequences. Emissions belong to the caller, which is what lets one lattice serve a Gaussian mixture, a Poisson rate and a lookup table. Not to be confused with `spectroscopy/hmm`: that is a photon-stream model with Δt-dependent transitions and a *scaled* recursion, and it stays. Two contracts worth knowing before calling: `xi_sum` is **accumulated** (`+=`, never zeroed inside) because a fit sums it across sequences, and `-inf` is a value — an impossible sequence returns `-inf` with no `nan` and contributes zero transition counts. That is also why the CMakeLists pins fast math **off** on that translation unit.
 - **`Random.h`**: Centralised counter-based RNG (Philox / PCG / SplitMix64 / MT19937) with thread-safe deterministic parallel draws.
@@ -19,30 +20,41 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - `util` (for CPU feature detection, verbose output)
 - nlohmann/json (for NeuralNet serialisation)
 
-No Eigen, and no other external linear algebra. `Mat.h` and `GradVec.h` between
-them removed the last two consumers; see below and `benchmarks/bench_mat.cpp`.
+No Eigen, no autodiff, and no other external numerics. `Mat.h` and `GradVec.h`
+between them removed the last two Eigen consumers, and `Dual.h` removed the
+vendored autodiff package; see below and `benchmarks/bench_mat.cpp`.
 
 ## Why a separate module?
 
 Previously these files lived in `util`, which meant every module that needed `Verbose.h` also transitively pulled the matrix library and neural net. The split separates "stuff that does math" from "stuff that does plumbing" (logging, progress, byte order, bit ops).
 
-## `GradVec.h` — the derivative slot of a vectorized dual number
+## `Dual.h` + `GradVec.h` — vectorized forward-mode AD
 
 Forward-mode automatic differentiation carries one derivative alongside each
 value. Seed the derivative with an N-vector instead — `e_j` in slot `j` — and a
 single evaluation of the objective propagates all N partials at once. That is
 what makes forward mode cheaper than the 2N objective evaluations a central
-difference costs, and `GradVec<N>` is the thing carried.
+difference costs. `Dual<G>` is the number; `GradVec<N>` is what it carries.
 
-Its operator set is deliberately not general-purpose: it is exactly what
-`autodiff::detail::Dual<double, G>` calls on its `grad` member. Two details are
-load-bearing:
+**`Dual.h` replaced autodiff.** The vendored package was ~10k lines — forward
+dual, forward real, reverse var, four Eigen bridges, Taylor series — of which
+the library used one class template and two elementary functions, and it only
+worked at all because an undocumented `NumberTraits` hook let a vector sit in a
+slot the documentation describes as a scalar. `Dual.h` is ~200 lines with no
+hook: the carrier is a template parameter because that is the point of the
+class. The conversion was checked against autodiff as an A/B before autodiff was
+deleted — see the log entry — and the replacement came out marginally *more*
+accurate against a long-double reference and faster wherever the parameter count
+is large enough to matter.
+
+`GradVec`'s operator set is deliberately not general-purpose: it is exactly what
+`Dual<G>` calls on its `grad` member. Two details are load-bearing:
 
 * **`operator/=` divides; it does not multiply by a reciprocal.** `x / s` and
-  `x * (1/s)` differ in the last place, and autodiff's scalar `Dual<double,
-  double>` — the reference the vectorized path is tested against — divides. The
-  shortcut bought nothing and cost exact agreement.
-* **`scalar * grad` returns a proxy, not a vector.** autodiff never uses that
+  `x * (1/s)` differ in the last place, and the scalar `Dual<double>` — the
+  reference the vectorized path is tested against — divides. The shortcut bought
+  nothing and cost exact agreement.
+* **`scalar * grad` returns a proxy, not a vector.** `Dual` never uses that
   product alone; every occurrence is immediately accumulated (`grad += val *
   aux` in the product rule, `grad -= val * other.grad` in the quotient rule).
   Returning a `GradVec` would materialise an N-double temporary and then run a
@@ -62,12 +74,17 @@ recorded rather than rounded away; it is also small against the 3.95–5.44× th
 AD wins over central differences in the first place. Numbers and method are in
 [`PERF.md`](../../PERF.md).
 
-A `NumberTraits<GradVec<N>>` specialization is required before
-`Dual<double, GradVec<N>>` will compile. It lives with each consumer rather than
-in this header, so `GradVec.h` stays free of any autodiff include — and it is
-**undocumented upstream**, which is why `test/cpp/test_ad_gradient.cpp` compares
-the vectorized gradient against autodiff's own scalar `dual`. An autodiff bump
-that changed the contract would compile and silently produce wrong derivatives.
+The two headers know nothing about each other beyond that operator list, which
+is what lets `benchmarks/bench_gradvec.cpp` keep an Eigen column (via a
+`DualGradTraits` specialization, because `Eigen::Array<double, N, 1>(0.0)` reads
+its argument as a size) without the library depending on Eigen.
+
+`test/cpp/test_ad_gradient.cpp` checks every operator of both against
+hand-written derivatives, then differentiates the localization objective four
+ways — vectorized dual, scalar dual, long-double dual, central differences — and
+requires agreement. The layering matters because the failure mode here is
+silent: a sign, an aliasing bug in `*=`, a missing term in the product rule
+compiles, runs, and converges to the wrong place.
 
 ## Correctness and performance
 

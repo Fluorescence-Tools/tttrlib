@@ -4,7 +4,6 @@ tttrlib_add_module(
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/ImageLocalization.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  math core clsm
-    EXTERNAL_DEPS tttrlib::autodiff
     SWIG_INTERFACES Localization.i
     TEST_DIR test/python/clsm
 )

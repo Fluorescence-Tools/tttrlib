@@ -7,7 +7,8 @@
 # which means every target in the project gets every dependency, and nothing
 # records which subsystem actually needs what. Eigen was the case that made the
 # cost visible -- a hard `REQUIRED` of the whole build for two source files --
-# and it is now gone entirely (Mat.h and GradVec.h replaced it).
+# and it is now gone entirely (Mat.h and GradVec.h replaced it). autodiff went
+# the same way: Dual.h replaced ~10k vendored lines used for one class template.
 #
 # The targets defined here name each dependency once so that a target can ask
 # for exactly what it uses. Switching a target over is what removes it from the
@@ -19,7 +20,6 @@
 #
 #   tttrlib::json          nlohmann/json
 #   tttrlib::pocketfft     pocketfft (vendored, header-only FFT)
-#   tttrlib::autodiff      autodiff (vendored, forward-mode AD)
 #   tttrlib::highfive      HighFive + HDF5   (only when BUILD_PHOTON_HDF)
 #   tttrlib::build_config  the project's own include dirs and compile definitions
 
@@ -54,13 +54,6 @@ _tttrlib_define_interface(tttrlib_pocketfft)
 target_include_directories(tttrlib_pocketfft INTERFACE
         "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 add_library(tttrlib::pocketfft ALIAS tttrlib_pocketfft)
-
-# --- autodiff -----------------------------------------------------------------
-# Vendored and header-only; used only by the localization fit.
-_tttrlib_define_interface(tttrlib_autodiff)
-target_include_directories(tttrlib_autodiff INTERFACE
-        "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
-add_library(tttrlib::autodiff ALIAS tttrlib_autodiff)
 
 # --- HighFive / HDF5 ----------------------------------------------------------
 # The only consumer is io_hdf5, and it is now the only module that pays for HDF5
@@ -126,4 +119,4 @@ endif()
 add_library(tttrlib::build_config ALIAS tttrlib_build_config)
 
 message(STATUS "Third-party INTERFACE targets defined (tttrlib::json, ::pocketfft, "
-               "::autodiff, ::highfive, ::build_config)")
+               "::highfive, ::build_config)")
