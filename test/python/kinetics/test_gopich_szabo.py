@@ -239,15 +239,37 @@ class TestViterbiDecodesEachBurstIndependently(unittest.TestCase):
 
         So a consumer cannot argue its bursts are far enough apart for the
         missing offsets not to matter.
+
+        **Where the crossover falls is not asserted, because it is not a
+        property of this library.** A max path is decided by which of two
+        accumulated log-likelihoods is larger, and near the crossover they
+        differ in the last bits — so `exp` and `log` from a different libm put
+        it somewhere else. A Windows runner on Python 3.9 has it below 5e3
+        (both conda and pip; the same runner on 3.10 and 3.12 agrees with this
+        machine), and asserting 5e5 there failed on a number that came from
+        somebody's laptop. What every machine agrees on, and what the claim
+        needs, is the two ends: a gap around one relaxation time leaks, and a
+        gap of ten thousand does not.
         """
         gs = self.two_state()
-        for gap in (0.5, 250.0, 5000.0, 50_000.0, 500_000.0):
+        # Up to one relaxation time. Not near the crossover on any platform.
+        for gap in (0.5, 250.0):
             with self.subTest(gap=gap):
                 times, colors, offsets = self.two_bursts(gap=gap)
                 self.assertFalse(
                     np.array_equal(np.asarray(gs.viterbi(times, colors, offsets)),
                                    np.asarray(gs.viterbi(times, colors))),
                     "no leak at %g s, so the bound has moved" % gap)
+
+        # Measured, not asserted: this is the curve the docstring quotes, and
+        # the middle of it moves with the machine's libm.
+        observed = []
+        for gap in (5000.0, 50_000.0, 500_000.0):
+            times, colors, offsets = self.two_bursts(gap=gap)
+            a = np.asarray(gs.viterbi(times, colors, offsets))
+            b = np.asarray(gs.viterbi(times, colors))
+            observed.append("%g s: %d photons differ" % (gap, int((a != b).sum())))
+        print("    viterbi leak across a gap -- " + ", ".join(observed))
 
         times, colors, offsets = self.two_bursts(gap=5_000_000.0)
         np.testing.assert_array_equal(
