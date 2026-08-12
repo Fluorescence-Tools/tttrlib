@@ -1,5 +1,90 @@
 # Bundle update log
 
+## 2026-08-12 (24th entry)
+
+* **The Windows `0xC0000374` shutdown crash does not reproduce, and two of the
+  three workarounds for it were never doing what they claimed.** Full suite on
+  `dev` at `e166ded0`, both suppression layers removed so interpreter shutdown
+  actually runs: 2449 passed, 205 skipped, exit code 0, 32 min. `run_suite.py`
+  clean across 19 groups.
+* **The generalisable trap, which cost most of the investigation time: a
+  workaround can hide the thing you are trying to reproduce from *inside the
+  test suite*.** `run_pytest_windows.py` was the visible layer, but
+  `test/python/conftest.py` also called `os._exit(int(exitstatus))` at session
+  finish on win32. Running pytest directly — the obvious way to bypass the
+  wrapper — therefore *still* skipped shutdown and still exited 0. Before
+  concluding a shutdown bug is gone, grep the test tree for `os._exit`, not just
+  the runner.
+* **A `pytest_sessionfinish` hook that calls `os._exit()` destroys pytest's own
+  reporting, and it is easy to misattribute to a native crash.** A hook in a
+  *non-rootdir* `conftest.py` is registered after the terminal reporter and so
+  runs before it; the process dies at `100%` with no `FAILURES` section. That is
+  exactly the symptom `tools/print_report_log.py` was written for, and its
+  docstring blames "the documented heap corruption at interpreter shutdown".
+  Reproduced in a two-file project with tttrlib absent, which is what separates
+  the two causes. Note the asymmetry that makes it confusing: the same hook in
+  the *rootdir* `conftest.py` prints normally, so a minimal repro that flattens
+  the directory layout will not show the bug.
+* **Cross-DLL CRT mismatch was the leading hypothesis and is measurably not the
+  cause.** All 34 `tttrlib_*.dll` plus `_tttrlib.pyd` import the same
+  `VCRUNTIME140`, `MSVCP140` and `api-ms-win-crt-heap-l1-1-0` — one shared heap,
+  no static-CRT outlier. Incidentally `CMAKE_MSVC_RUNTIME_LIBRARY` is set only
+  under `[tool.cibuildwheel.windows.environment]`, so a plain `pip install .`
+  never receives it; this is harmless because CMake already defaults to the
+  shared runtime, but it means the setting is not the guarantee it looks like.
+* **The OpenMP guards in `CLSMImage.cpp` are worth keeping, but not for the
+  reason the comment gives.** Re-enabling all nine `#ifndef _WIN32` blocks and
+  re-parallelising `create_lines()`, with `min_frames_for_parallel` forced to 1
+  so the parallel regions actually execute on the test images, produced no
+  corruption: full `clsm` suite clean, and the image-building files clean over
+  six consecutive runs. Parallel execution was confirmed by CPU-over-wall of
+  **5.71** against **0.97** for the serial control — linkage cannot tell them
+  apart, because both DLLs import `VCOMP140` whether or not the `if(use_openmp
+  && …)` clause lets the region run wide. **The parallelism buys nothing:
+  1.47 s against 1.48 s on the 93-frame 512×512 image, 5.7× the CPU for the same
+  wall time, because the path is memory-bound.** So the code should stay serial
+  on the strength of that measurement, while the claim above it — that
+  "concurrent heap allocation of `CLSMLine` objects via `new` … causes heap
+  corruption with MSVC's OpenMP 2.0 runtime" — is false: concurrent `new` is
+  thread-safe under MSVC. Corrected in place.
+* **A predicted race, written down because the refutation is the reusable
+  part.** `create_lines()` calls `tttr->header->get_line_duration()` inside what
+  used to be a parallel region, which looks like a lazily-cached header mutated
+  from several threads. It is not: `TTTRHeader::get_tag()` takes a
+  `const nlohmann::json&` and returns **by value**, so the `["value"]` indexing
+  lands on a copy and concurrent calls are pure reads. The general shape is
+  still worth watching — nlohmann's *non-const* `operator[]` inserts a null on a
+  missing key, so any accessor that takes the header by non-const reference and
+  is reachable from a parallel region is a real hazard.
+* **Not settled: PageHeap and Application Verifier need Administrator**, which
+  the investigating session did not have — `gflags` fails silently rather than
+  erroring, and the giveaway is that no `python.exe` key appears under
+  `Image File Execution Options`. Six clean runs are evidence, not proof of the
+  absence of a race. The remaining check is
+  `gflags /p /enable python.exe /full`, the `clsm` directory, then
+  `gflags /p /disable python.exe`.
+* **Windows CI is the pipeline's tail because nothing sets build parallelism,
+  and the obvious fixes are the wrong ones.** Measured, clean builds of the same
+  tree on 12 cores: serial (**what CI does today**) 507 s; MSBuild
+  `--parallel 4` 333 s; `--parallel 12` **334 s — no better than 4**; adding
+  `/MP` 341 s and 344 s, i.e. *slower* both times. The wrapper looked like the
+  obvious floor and is not: isolated by touching only the generated `.cxx` on a
+  built tree, `tttrlibPYTHON_wrap.cxx` is **63 s** of that 334. The real
+  constraint is granularity — MSBuild parallelises whole *projects*, so a module
+  waits for each dependency to compile **and link**, and the critical path
+  through 34 chained DLLs sets the wall time. **Ninja, which schedules
+  individual compiles, is 218 s at four jobs and 165 s at twelve** — 2.3× today
+  at runner core count, and unlike MSBuild it keeps scaling. Any move to Ninja
+  must pin `CMAKE_CXX_COMPILER=cl` and assert the compiler identification in the
+  log, which is the trap `pyproject.toml` already warns about: a bare Ninja
+  configure once picked up a MinGW `gcc` from `PATH`. Two structural notes:
+  `cibuildwheel` loops five Python versions *inside* one job, so that job pays
+  the build five times, and `modules/`/`cmake/` reference Python nowhere — the
+  34 module DLLs are identical work for every version, which is what a compiler
+  cache would exploit. On the test side `run_suite.py --lane fast` is **72.5 s**
+  against ~26 min for the full lane, with every test file still represented via
+  the `smoke` marker, and nothing in CI uses it.
+
 ## 2026-08-11 (23rd entry)
 
 * **The capability constants a binding reads were decided by SWIG, not by the

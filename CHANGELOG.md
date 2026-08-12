@@ -148,6 +148,40 @@
   each refresh bins *every photon of the run* to display its tail.
 
 ### Fixed
+- **Windows test failures print their tracebacks again, and the heap-corruption
+  workarounds are gone.** Two layers existed to survive a `0xC0000374`
+  (`STATUS_HEAP_CORRUPTION`) crash at interpreter shutdown: a
+  `pytest_sessionfinish` hook in `test/python/conftest.py` calling `os._exit()`
+  on win32, and `run_pytest_windows.py`, a wrapper that ran pytest in a
+  subprocess and wrote its exit code to a file. Neither is needed, and the first
+  was doing active harm.
+
+  The crash no longer reproduces. With both layers removed so that interpreter
+  shutdown genuinely runs, the full suite is **2449 passed, 205 skipped, 64
+  subtests passed in 1941 s with process exit code 0** on Windows 11
+  (MSVC 14.35, Python 3.11, `dev` at `e166ded0`); `test/run_suite.py` is clean
+  across all 19 groups. The likely reason it is gone is that the cause was
+  addressed in `CLSMImage.cpp`, where OpenMP is still disabled on Windows.
+
+  **The `os._exit()` hook was the reason Windows CI showed no tracebacks.** A
+  `pytest_sessionfinish` in a non-rootdir `conftest.py` is registered after
+  pytest's terminal reporter and therefore runs before it, so `os._exit()` ended
+  the process before the reporter could print anything: the log reached `100%`,
+  returned a failure code, and showed no `FAILURES` section for any test. This
+  was reproduced in an isolated two-file project with tttrlib absent entirely,
+  which is what distinguishes it from the native crash it was blamed on.
+  `--report-log` and the "Show the failures the terminal did not" step existed
+  only to recover those lost tracebacks and have been removed with it.
+
+  `run_pytest_windows.py` could not have done what its docstring claimed: the
+  wrapper process never imported tttrlib, so its `os._exit(0)` could not affect
+  any tttrlib destructor, and because it wrote the *child's* return code to a
+  file that CI passed to `exit`, a genuine crash would have failed the step
+  anyway. Both Windows test jobs now call `python test/run_suite.py -v
+  --tb=short`, the same command Linux and macOS use, which runs each directory
+  as its own session and reports any group that dies while keeping the
+  tracebacks of every group that did not.
+
 - **A C++ throw no longer terminates the interpreter.** `%exception` is
   positional in SWIG — it covers everything declared after it — and a bare
   `%exception;` resets to *nothing* rather than to whatever was in force
