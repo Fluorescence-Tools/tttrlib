@@ -1180,7 +1180,7 @@ jobs:
           PY_VER="${{ matrix.python }}"
           PY_VER_SHORT="${PY_VER/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
-          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
           # Per-directory sessions: a segfault in one group must not take the
           # other groups' tracebacks down with it. See test/run_suite.py.
           python test/run_suite.py -v --tb=short
@@ -1285,7 +1285,7 @@ jobs:
           # every one of these test jobs behind a 49-minute build they never
           # installed from. That wheel is still built, and still published.
           python -m pip install wheelhouse/*cp${{ matrix.nodot }}*arm64*.whl
-          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
           # See the linux job: one group's crash must not hide the others.
           python test/run_suite.py -v --tb=short
 
@@ -1323,7 +1323,7 @@ jobs:
           cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
           for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
-          python -m pip install pytest pytest-reportlog scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
+          python -m pip install pytest pytest-reportlog scipy click click-didyoumean tqdm matplotlib scikit-image
         shell: cmd
       - name: Test
         run: |
