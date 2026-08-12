@@ -10,6 +10,11 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  # Nightly, for the checks that are too expensive to sit on every push but too
+  # useful to see for the first time at release. Currently just the bioconda
+  # gate, which builds against a recipe this repository does not own.
+  schedule:
+    - cron: '0 4 * * *'
 
 # One run per branch. Without this every push queues a fresh copy of ~58 jobs
 # behind the last: four runs of this workflow sat queued simultaneously on
@@ -26,7 +31,13 @@ concurrency:
 env:
   DEFAULT_PYTHON: "3.10"
   CIBW_VERSION: "2.23.3"
+  # The full set, for main / tags / releases.
   MAIN_PY_VERSIONS: "3.9 3.10 3.11 3.12 3.13"
+  # dev's set: oldest and newest. The interpreters in between do not disagree
+  # with both of these about anything this library does -- ABI changes and
+  # deprecations show up at the ends. main still runs all five, so nothing
+  # merges without having been seen on the full matrix.
+  DEV_PY_VERSIONS: "3.9 3.13"
 
 jobs:
   setup:
@@ -34,26 +45,86 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is_main: ${{ steps.check.outputs.is_main }}
-      cibw_build: ${{ steps.check.outputs.cibw_build }}
-      py_versions: ${{ steps.check.outputs.py_versions }}
       py_matrix: ${{ steps.check.outputs.py_matrix }}
+      src_matrix: ${{ steps.check.outputs.src_matrix }}
+      has_src: ${{ steps.check.outputs.has_src }}
+      lane: ${{ steps.check.outputs.lane }}
     steps:
       - id: check
         run: |
           BRANCH="${{ github.ref }}"
-          if [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == "refs/heads/dev" ]]; then
-            echo "is_main=true" >> $GITHUB_OUTPUT
-            BUILD_SPEC=$(python -c "print(' '.join('cp' + v.replace('.', '') + '-*' for v in '${{ env.MAIN_PY_VERSIONS }}'.split()))")
-            echo "cibw_build=$BUILD_SPEC" >> $GITHUB_OUTPUT
-            echo "py_versions=${{ env.MAIN_PY_VERSIONS }}" >> $GITHUB_OUTPUT
-            echo 'py_matrix={"python":["3.9","3.10","3.11","3.12","3.13"]}' >> $GITHUB_OUTPUT
+          # `is_main` gates the packaging path: build each artifact in its own
+          # job, in its own clean tree, then install and test that artifact --
+          # so what gets tested is what gets shipped. That isolation is worth
+          # its cost when something is about to be published, and only then.
+          # dev builds from source and tests in the same job instead: same
+          # platforms, same suite, none of the artifact round-trip.
+          #
+          # The nightly exists for the bioconda gate alone, and it fires on the
+          # default branch -- which would otherwise read as main here and queue
+          # the whole packaging path every night for one job's worth of signal.
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            IS_MAIN=false; VERSIONS="${{ env.DEFAULT_PYTHON }}"
+            SRC_OSES=""; LANE=standard
+          elif [[ "$BRANCH" == "refs/heads/main" || "$BRANCH" == refs/tags/* ]]; then
+            IS_MAIN=true;  VERSIONS="${{ env.MAIN_PY_VERSIONS }}"
+            SRC_OSES=""; LANE=full
+          elif [[ "$BRANCH" == "refs/heads/dev" ]]; then
+            IS_MAIN=false; VERSIONS="${{ env.DEV_PY_VERSIONS }}"
+            SRC_OSES="ubuntu-latest macos-latest windows-2022"; LANE=full
           else
-            echo "is_main=false" >> $GITHUB_OUTPUT
-            PY_VER_SHORT="${DEFAULT_PYTHON/./}"
-            echo "cibw_build=cp${PY_VER_SHORT}-*" >> $GITHUB_OUTPUT
-            echo "py_versions=${{ env.DEFAULT_PYTHON }}" >> $GITHUB_OUTPUT
-            echo 'py_matrix={"python":["3.10"]}' >> $GITHUB_OUTPUT
+            IS_MAIN=false; VERSIONS="${{ env.DEFAULT_PYTHON }}"
+            SRC_OSES="ubuntu-latest"; LANE=fast
           fi
+          echo "is_main=$IS_MAIN" >> $GITHUB_OUTPUT
+          echo "lane=$LANE" >> $GITHUB_OUTPUT
+          # A matrix with an empty `include` is an error, not zero jobs, so the
+          # source job is gated on this rather than on the matrix being empty.
+          [ -n "$SRC_OSES" ] && echo "has_src=true" >> $GITHUB_OUTPUT || echo "has_src=false" >> $GITHUB_OUTPUT
+          # `include`-only, so each entry carries both the dotted version that
+          # setup-python wants and the dotless one that cibuildwheel's
+          # `cpXY-*` selector wants. A job that needs neither can still read
+          # `matrix.python`.
+          python - "$VERSIONS" "$SRC_OSES" >> $GITHUB_OUTPUT <<'EOF'
+          import json, sys
+          versions = sys.argv[1].split()
+          oses = sys.argv[2].split()
+          print('py_matrix=' + json.dumps(
+              {'include': [{'python': v, 'nodot': v.replace('.', '')} for v in versions]}))
+          # Exactly one entry writes the conformance report; the file is a
+          # property of the code, not of the platform that ran it.
+          src = [{'os': o, 'python': v} for o in oses for v in versions]
+          if src:
+              src[0]['conformance'] = 'yes'
+          print('src_matrix=' + json.dumps({'include': src}))
+          EOF
+
+  # ── prototype/ is a dev-branch scratch area and must not reach main ───────
+  #
+  # Runs on pull requests into main so the merge is blocked rather than
+  # discovered afterwards, and on main itself as a backstop. Nothing under
+  # prototype/ is built, packaged, or API-stable: it is where a numpy oracle or
+  # a half-ported algorithm lives until it becomes a module or is deleted.
+
+  no_prototype_on_main:
+    name: prototype/ stays on dev
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse a prototype/ directory
+        run: |
+          files=$(git ls-files prototype | head -20)
+          if [ -n "$files" ]; then
+            echo "::error::prototype/ is tracked on a branch that must not carry it."
+            echo "$files"
+            echo
+            echo "prototype/ is dev-only (AGENTS.md). Before this reaches main:"
+            echo "  - promote what has earned it into modules/ or examples/, and"
+            echo "  - delete the rest."
+            exit 1
+          fi
+          echo "no prototype/ directory - ok"
 
   # ── Multi-language SWIG generation guard (Python + R + Java) ──────────────
 
@@ -62,8 +133,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -83,8 +152,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       # Pin R to a version compatible with the SWIG release on the runner.
       # SWIG's R runtime lags new R internals (e.g. R 4.6 made CHARACTER_POINTER
       # read-only and changed S4 macros), so avoid bleeding-edge "release".
@@ -103,12 +170,12 @@ jobs:
           sudo pip3 install --break-system-packages "swig~=4.4"
       - name: Configure and build R module
         run: |
-          cmake -S . -B build-r -G Ninja \
+          cmake -S . -B build/r -G Ninja \
             -DBUILD_PYTHON_INTERFACE=OFF \
             -DBUILD_R_INTERFACE=ON \
             -DBUILD_LIBRARY=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-r --target tttrlibR
+          cmake --build build/r --target tttrlibR
       - name: Install R packages
         # jsonlite reads the conformance case list. It is the only new R
         # dependency the suite needs; hand-rolling a JSON parser in R is worse.
@@ -126,20 +193,20 @@ jobs:
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       - name: Run R tests
         env:
-          TTTRLIB_R_SO: ${{ github.workspace }}/build-r/ext/tttrlib.so
-          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build-r/ext/tttrlib.R
+          TTTRLIB_R_SO: ${{ github.workspace }}/build/r/ext/tttrlib.so
+          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build/r/ext/tttrlib.R
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
         run: |
           Rscript test/r/test_clsm.R
           Rscript test/r/test_decayfit.R
           Rscript test/r/test_pda.R
-      # The conformance suite (PRD-015): the same case list the Python, Java and
+      # The conformance suite: the same case list the Python, Java and
       # JavaScript runners execute. A failure is an R binding bug, never a stale
       # constant -- see test/conformance/README.md.
       - name: Run the conformance suite
         env:
-          TTTRLIB_R_SO: ${{ github.workspace }}/build-r/ext/tttrlib.so
-          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build-r/ext/tttrlib.R
+          TTTRLIB_R_SO: ${{ github.workspace }}/build/r/ext/tttrlib.so
+          TTTRLIB_R_WRAPPER: ${{ github.workspace }}/build/r/ext/tttrlib.R
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
           TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-r.json
         run: Rscript test/r/conformance.R
@@ -156,33 +223,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+          cache: maven
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libhdf5-dev swig cmake ninja-build
       - name: Configure and build JNI module
         run: |
-          cmake -S . -B build-java -G Ninja \
+          cmake -S . -B build/java -G Ninja \
             -DBUILD_PYTHON_INTERFACE=OFF \
             -DBUILD_JAVA_INTERFACE=ON \
             -DBUILD_LIBRARY=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-java --target tttrlibJava
+          cmake --build build/java --target tttrlibJava
       # The binding tests are JUnit 5 and live in the tttrlib Maven module
       # (ext/java/pkg). Stage the CMake-generated proxies and the JNI native into
       # its source roots, exactly as the ImageJ module does.
       - name: Stage SWIG proxies and JNI native into the Maven source tree
         run: |
           DST=ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib
-          cp build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java "$DST/"
+          cp build/java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java "$DST/"
           mkdir -p ext/java/pkg/src/main/resources/native/linux-x86-64
-          cp build-java/java-pkg/native/libtttrlibjni.so \
+          cp build/java/java-pkg/native/libtttrlibjni.so \
              ext/java/pkg/src/main/resources/native/linux-x86-64/
       # The four files the conformance cases name. A missing one skips its cases
       # with a reason rather than failing, so a silent gap is easy to acquire --
@@ -220,11 +286,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
+          # package.json, not the lockfile: ext/js/pkg/package-lock.json is in
+          # .gitignore, so it does not exist in a fresh checkout and setup-node
+          # fails when its dependency path matches nothing.
+          cache-dependency-path: ext/js/pkg/package.json
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -236,12 +305,12 @@ jobs:
         run: npm install
       - name: Configure and build the addon
         run: |
-          cmake -S . -B build-js -G Ninja \
+          cmake -S . -B build/js -G Ninja \
             -DBUILD_PYTHON_INTERFACE=OFF \
             -DBUILD_JAVASCRIPT_INTERFACE=ON \
             -DBUILD_LIBRARY=ON \
             -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-js --target tttrlibJs
+          cmake --build build/js --target tttrlibJs
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
@@ -289,7 +358,7 @@ jobs:
 
   # ── AddressSanitizer over the JS binding ──────────────────────────────────
   #
-  # PRD-016 asks for this and it is deliberately a Linux job: on macOS arm64,
+  # Deliberately a Linux job: on macOS arm64,
   # preloading the ASAN runtime into Node hangs before any JavaScript runs, with
   # no addon loaded at all -- a platform problem, not a tttrlib one. The cases
   # that matter are the lifetime ones (a TypedArray view outliving the object
@@ -302,11 +371,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
+          # package.json, not the lockfile: ext/js/pkg/package-lock.json is in
+          # .gitignore, so it does not exist in a fresh checkout and setup-node
+          # fails when its dependency path matches nothing.
+          cache-dependency-path: ext/js/pkg/package.json
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -316,7 +388,7 @@ jobs:
         run: npm install
       - name: Build the addon with -fsanitize=address
         run: |
-          cmake -S . -B build-js-asan -G Ninja \
+          cmake -S . -B build/js-asan -G Ninja \
             -DBUILD_PYTHON_INTERFACE=OFF \
             -DBUILD_JAVASCRIPT_INTERFACE=ON \
             -DBUILD_LIBRARY=ON \
@@ -324,7 +396,7 @@ jobs:
             -DTTTRLIB_LTO=OFF \
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
             -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"
-          cmake --build build-js-asan --target tttrlibJs
+          cmake --build build/js-asan --target tttrlibJs
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
@@ -347,13 +419,13 @@ jobs:
       - name: Run the JavaScript tests under ASAN
         env:
           TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
-          TTTRLIB_ADDON: ${{ github.workspace }}/build-js-asan/js-pkg/tttrlib.node
+          TTTRLIB_ADDON: ${{ github.workspace }}/build/js-asan/js-pkg/tttrlib.node
           ASAN_OPTIONS: detect_leaks=0:abort_on_error=1:allocator_may_return_null=1
         run: |
           export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
           node --expose-gc --test test/js/
 
-  # ── npm prebuilds and release (PRD-016 M5) ────────────────────────────────
+  # ── npm prebuilds and release ─────────────────────────────────────────────
   #
   # One prebuilt binary per platform, which is the whole point of Node-API: its
   # ABI is stable across Node majors, so there is no per-version matrix here the
@@ -386,11 +458,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
+          # package.json, not the lockfile: ext/js/pkg/package-lock.json is in
+          # .gitignore, so it does not exist in a fresh checkout and setup-node
+          # fails when its dependency path matches nothing.
+          cache-dependency-path: ext/js/pkg/package.json
       - name: Install build dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -402,11 +477,18 @@ jobs:
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install swig ninja hdf5
+      - name: Cache vcpkg HDF5
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
       - name: Install build dependencies (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           choco install swig ninja -y
+          # See build_pip_win: the same tree, cached under the same key.
           $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
           # hdf5[core,zlib]: see build_pip_win for why szip is skipped.
           $attempts = 3
@@ -520,8 +602,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -550,8 +630,8 @@ jobs:
         run: |
           # STATIC modules: the plugin bundles ONE JNI library per platform, so the
           # native must be self-contained rather than dlopen'ing sibling module .so's.
-          cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-java --target tttrlibJava
+          cmake -S . -B build/java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/java --target tttrlibJava
         shell: bash
       # Self-contained is the whole premise of bundling one native per platform,
       # so it is checked rather than assumed. A MinGW build imports libstdc++ or
@@ -583,12 +663,12 @@ jobs:
             darwin-*) name=libtttrlibjni.dylib ;;
             win32-*)  name=tttrlibjni.dll ;;
           esac
-          src=$(find build-java \( -name 'libtttrlibjni*' -o -name 'tttrlibjni.dll' \) | head -1)
+          src=$(find build/java \( -name 'libtttrlibjni*' -o -name 'tttrlibjni.dll' \) | head -1)
           cp "$src" "stage/native/${{ matrix.dir }}/$name"
           # the SWIG-generated .java proxies are identical across platforms; upload once (from Linux)
           if [ "${{ matrix.dir }}" = "linux-x86-64" ]; then
             mkdir -p stage/proxies
-            cp build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java stage/proxies/
+            cp build/java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java stage/proxies/
           fi
       - uses: actions/upload-artifact@v4
         with:
@@ -697,21 +777,35 @@ jobs:
             commit -m "ImageJ update site: tttrlib ${VER}" || echo "nothing to commit"
           git push origin gh-pages
 
-  # ── Quick smoke test for feature branches (no artifact builds) ────────────
+  # ── Source build + test, in one job (everything that is not main) ─────────
+  #
+  # No artifact isolation: this configures, compiles and tests in the same
+  # workspace. A feature branch gets one Linux job on the standard lane; dev
+  # gets every platform and the full suite. The packaging path below -- wheels
+  # and conda packages built in clean per-artifact jobs, then installed and
+  # tested somewhere else -- is what main and releases pay for.
 
-  test_quick:
-    name: Quick Test (lnx)
+  build_and_test:
+    name: Build & Test ${{ matrix.os }} py${{ matrix.python }}
     needs: setup
-    if: needs.setup.outputs.is_main == 'false'
-    runs-on: ubuntu-latest
+    if: needs.setup.outputs.has_src == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.src_matrix) }}
     steps:
+      # fetch-depth: 0 because setuptools_scm reads the tags (pyproject.toml,
+      # `version.provider`). blob:none because the pack is 1.45 GB of test data
+      # deleted long ago -- the filter keeps every commit and tag and fetches
+      # blobs only for HEAD. Every full-history checkout below does the same.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python }}
+          cache: pip
       # The controlled vocabulary every `.pto` is written in lives in mmfdb, and
       # nowhere else (okf/specs/mmfdb-is-the-vocabulary.md). Checked out rather
       # than pip-installed: the tests read four `.dic` files, and installing the
@@ -724,10 +818,42 @@ jobs:
         with:
           repository: Fluorescence-Tools/mmfdb
           path: .mmfdb
-      - name: Install system dependencies
+      # SWIG and CMake come from the build requirements in pyproject.toml, so
+      # only HDF5 has to be installed by hand.
+      - name: Install HDF5 (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake
+          sudo apt-get install -y libhdf5-dev cmake
+      - name: Install HDF5 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install hdf5 || brew upgrade hdf5 || true
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix hdf5)" >> $GITHUB_ENV
+      - name: Cache vcpkg HDF5
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
+      - name: Install HDF5 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # See build_pip_win for why szip is skipped and why this retries.
+          $vcpkg = "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe"
+          $attempts = 3
+          for ($i = 1; $i -le $attempts; $i++) {
+            & $vcpkg install hdf5[core,zlib]:x64-windows --recurse --no-print-usage
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($i -eq $attempts) { exit 1 }
+            Write-Host "vcpkg install failed (attempt $i of $attempts); retrying in 90 s"
+            Start-Sleep -Seconds 90
+          }
+          $root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "HDF5_ROOT=$root" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
+          echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
       - name: Cache test data
         id: cache
         uses: actions/cache@v4
@@ -739,23 +865,33 @@ jobs:
         run: |
           python -m pip install pooch tqdm
           python test/download_test_data.py --output-dir ./tttr-data --quiet
-      - name: Build and Test
+      - name: Build
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[test]" jsonschema
+          python -m pip install click click-didyoumean tqdm matplotlib scikit-image
+      # The `heavy` tier is 85% of the runtime for statistics that a branch
+      # push cannot break without also breaking something cheaper, so a feature
+      # branch gets `standard`. dev runs the whole suite.
+      - name: Test
+        shell: bash
         env:
           TTTRLIB_DATA: ./tttr-data
           TTTRLIB_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-python.json
           MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
           MMFDB_REQUIRED: "1"
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install ".[test]" jsonschema
-          # The `heavy` tier is 85% of the runtime for statistics that a branch
-          # push cannot break without also breaking something cheaper. The
-          # jobs below still run the whole suite on main.
-          python -m pytest --lane standard
+        run: python test/run_suite.py -v --tb=short --lane ${{ needs.setup.outputs.lane }}
+      # always(), and the same one-entry rule test_pip_lnx uses: a suite that
+      # fails still reports which cases passed, and that is the interesting
+      # table. Only one of the two jobs ever runs -- this one off main, that
+      # one on it -- so the artifact never has two producers in a run.
       - uses: actions/upload-artifact@v4
+        if: always() && matrix.conformance == 'yes'
         with:
           name: conformance-python
           path: conformance-python.json
+          if-no-files-found: ignore
 
   # ── Publish the conformance coverage matrix ───────────────────────────────
   #
@@ -768,7 +904,10 @@ jobs:
 
   conformance_matrix:
     name: Conformance coverage matrix
-    needs: [build_test_r_lnx, build_test_java_lnx, build_test_js_lnx, test_pip_lnx]
+    # Both producers of the Python column: test_pip_lnx on main, build_and_test
+    # everywhere else. Whichever did not run is skipped, and always() below
+    # keeps the table publishing regardless.
+    needs: [build_test_r_lnx, build_test_java_lnx, build_test_js_lnx, test_pip_lnx, build_and_test]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -826,16 +965,23 @@ jobs:
 
   # ── Pip builds ────────────────────────────────────────────────────────────
 
+  # One job per interpreter, not one job building all of them. cibuildwheel
+  # given five `cpXY-*` specs builds them strictly in sequence and shares
+  # nothing between them -- 51 minutes on Windows for five compiles of a core
+  # that only differs in which Python headers the SWIG wrapper sees.
   build_pip_lnx:
-    name: Pip Build lnx
+    name: Pip Build lnx py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -843,25 +989,28 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_BUILD: cp${{ matrix.nodot }}-*
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-ubuntu-latest
+          name: pip-wheels-ubuntu-latest-py${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   build_pip_osx_arm64:
-    name: Pip Build osx arm64
+    name: Pip Build osx arm64 py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -869,7 +1018,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_BUILD: cp${{ matrix.nodot }}-*
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
@@ -877,19 +1026,22 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-macos-arm64
+          name: pip-wheels-macos-arm64-py${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   build_pip_osx_x86_64:
-    name: Pip Build osx x86_64
+    name: Pip Build osx x86_64 py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-15-intel
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -897,7 +1049,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_BUILD: cp${{ matrix.nodot }}-*
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
@@ -905,11 +1057,11 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-macos-x86_64
+          name: pip-wheels-macos-x86_64-py${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   build_pip_win:
-    name: Pip Build win
+    name: Pip Build win py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     # windows-latest again. The pin to windows-2022 existed because the
@@ -920,11 +1072,14 @@ jobs:
     # configure if the compiler is ever not MSVC, so a silent regression here
     # is not available.
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -935,6 +1090,15 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      # vcpkg builds HDF5 from source -- ~4 minutes, on the critical path, and
+      # dependent on mirrors that rate-limit the runners (see below). The tree
+      # only changes when the package spec does, so cache it and let the
+      # install step below short-circuit on a hit.
+      - name: Cache vcpkg HDF5
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
       - name: Install HDF5
         shell: pwsh
         run: |
@@ -961,13 +1125,13 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: ${{ needs.setup.outputs.cibw_build }}
+          CIBW_BUILD: cp${{ matrix.nodot }}-*
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
       - uses: actions/upload-artifact@v4
         with:
-          name: pip-wheels-windows-latest
+          name: pip-wheels-windows-latest-py${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
   # ── Pip tests: one job per platform×python-version ────────────────────────
@@ -989,7 +1153,7 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          name: pip-wheels-ubuntu-latest
+          name: pip-wheels-ubuntu-latest-py${{ matrix.python }}
           path: wheelhouse
       - uses: actions/download-artifact@v4
         with:
@@ -1016,7 +1180,7 @@ jobs:
           PY_VER="${{ matrix.python }}"
           PY_VER_SHORT="${PY_VER/./}"
           python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
-          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
           # Per-directory sessions: a segfault in one group must not take the
           # other groups' tracebacks down with it. See test/run_suite.py.
           python test/run_suite.py -v --tb=short
@@ -1080,7 +1244,7 @@ jobs:
 
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
-    needs: [setup, build_pip_osx_arm64, build_pip_osx_x86_64, download_test_data]
+    needs: [setup, build_pip_osx_arm64, download_test_data]
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-26
     strategy:
@@ -1098,9 +1262,8 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          pattern: pip-wheels-macos-*
+          name: pip-wheels-macos-arm64-py${{ matrix.python }}
           path: wheelhouse
-          merge-multiple: true
       - uses: actions/download-artifact@v4
         with:
           name: tttr-test-data
@@ -1116,15 +1279,13 @@ jobs:
           MMFDB_REQUIRED: "1"
         run: |
           python -m pip install --upgrade pip
-          PY_VER="${{ matrix.python }}"
-          PY_VER_SHORT="${PY_VER/./}"
-          ARCH=$(uname -m)
-          if [ "$ARCH" = "arm64" ]; then
-            python -m pip install wheelhouse/*cp${PY_VER_SHORT}*arm64*.whl
-          else
-            python -m pip install wheelhouse/*cp${PY_VER_SHORT}*x86_64*.whl
-          fi
-          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
+          # arm64 unconditionally: this job runs on macos-26, where `uname -m`
+          # is always arm64. The x86_64 branch that used to sit here could not
+          # execute, and the dependency on the x86_64 build it implied held
+          # every one of these test jobs behind a 49-minute build they never
+          # installed from. That wheel is still built, and still published.
+          python -m pip install wheelhouse/*cp${{ matrix.nodot }}*arm64*.whl
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
           # See the linux job: one group's crash must not hide the others.
           python test/run_suite.py -v --tb=short
 
@@ -1148,7 +1309,7 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          name: pip-wheels-windows-latest
+          name: pip-wheels-windows-latest-py${{ matrix.python }}
           path: wheelhouse
       - uses: actions/download-artifact@v4
         with:
@@ -1162,7 +1323,7 @@ jobs:
           cd D:\a\tttrlib\tttrlib
           python -m pip install --upgrade pip
           for %%i in (wheelhouse\*.whl) do python -m pip install "%%i"
-          python -m pip install pytest pytest-reportlog scipy click click-didyoumean tqdm matplotlib scikit-image
+          python -m pip install pytest pytest-reportlog scipy click click-didyoumean tqdm matplotlib scikit-image phconvert
         shell: cmd
       - name: Test
         run: |
@@ -1178,17 +1339,23 @@ jobs:
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 
+  # Same reasoning as the pip builds: a `for VER in ...` loop inside one job is
+  # five sequential compiles. The 180-minute timeouts on these three jobs were
+  # sized for that loop.
   build_conda_lnx:
-    name: Conda Build lnx
+    name: Conda Build lnx py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-variant: Miniforge3
@@ -1203,12 +1370,39 @@ jobs:
         shell: bash -l {0}
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe recipes/py \
-              --variant "python=$VER" \
-              --output-dir ./conda-bld \
-              -c conda-forge
-          done
+          rattler-build build --recipe recipes/py \
+            --variant "python=${{ matrix.python }}" \
+            --output-dir ./conda-bld \
+            -c conda-forge
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conda-packages-ubuntu-latest-py${{ matrix.python }}
+          path: ./conda-bld
+
+  # The R package does not vary with the Python version, so it does not belong
+  # in the matrix above -- riding along there would build it once per
+  # interpreter for one artifact.
+  build_conda_r_lnx:
+    name: Conda Build R (lnx)
+    needs: setup
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: build
+          use-mamba: true
+          conda-remove-defaults: true
+      - name: Install rattler-build
+        shell: bash -l {0}
+        run: conda install -y rattler-build -c conda-forge
       - name: Build R Conda package (rattler)
         shell: bash -l {0}
         run: |
@@ -1218,20 +1412,23 @@ jobs:
             -c conda-forge
       - uses: actions/upload-artifact@v4
         with:
-          name: conda-packages-ubuntu-latest
+          name: conda-packages-r-ubuntu-latest
           path: ./conda-bld
 
   build_conda_osx:
-    name: Conda Build osx
+    name: Conda Build osx py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: macos-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-variant: Miniforge3
@@ -1246,28 +1443,29 @@ jobs:
         shell: bash -l {0}
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe recipes/py \
-              --variant "python=$VER" \
-              --output-dir ./conda-bld \
-              -c conda-forge
-          done
+          rattler-build build --recipe recipes/py \
+            --variant "python=${{ matrix.python }}" \
+            --output-dir ./conda-bld \
+            -c conda-forge
       - uses: actions/upload-artifact@v4
         with:
-          name: conda-packages-macos-latest
+          name: conda-packages-macos-latest-py${{ matrix.python }}
           path: ./conda-bld
 
   build_conda_win:
-    name: Conda Build win
+    name: Conda Build win py${{ matrix.python }}
     needs: setup
     if: needs.setup.outputs.is_main == 'true'
     runs-on: windows-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.py_matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
+          filter: blob:none
       - uses: conda-incubator/setup-miniconda@v3
         with:
           miniforge-variant: Miniforge3
@@ -1282,77 +1480,23 @@ jobs:
         shell: bash -l {0}
         run: |
           export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          for VER in ${{ needs.setup.outputs.py_versions }}; do
-            rattler-build build --recipe recipes/py \
-              --variant "python=$VER" \
-              --variant "c_compiler=vs2022" \
-              --variant "cxx_compiler=vs2022" \
-              --output-dir ./conda-bld \
-              -c conda-forge
-          done
-      - uses: actions/upload-artifact@v4
-        with:
-          name: conda-packages-windows-latest
-          path: ./conda-bld
-
-  # ── Documentation build via rattler (recipes/docs) ───────────────────────
-  # Builds the Sphinx+Doxygen HTML through the rattler recipe and uploads the
-  # resulting conda package. The gh-pages deploy is handled by build_docs.
-
-  build_conda_docs:
-    name: Docs Build (rattler)
-    needs: [setup, build_conda_lnx]
-    if: needs.setup.outputs.is_main == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-          miniforge-variant: Miniforge3
-          miniforge-version: latest
-          activate-environment: build
-          use-mamba: true
-          conda-remove-defaults: true
-      - name: Install rattler-build
-        shell: bash -l {0}
-        run: conda install -y rattler-build -c conda-forge
-      # The docs recipe consumes the tttrlib conda package built by
-      # build_conda_lnx instead of rebuilding from source, so the docs are
-      # rendered against exactly what gets shipped.
-      - uses: actions/download-artifact@v4
-        with:
-          name: conda-packages-ubuntu-latest
-          path: local-channel
-      - name: Build documentation package (rattler)
-        shell: bash -l {0}
-        run: |
-          export PKG_VERSION=$(python -c "import re; v=re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()); print(v.group(1))")
-          rattler-build build --recipe recipes/docs \
+          rattler-build build --recipe recipes/py \
+            --variant "python=${{ matrix.python }}" \
+            --variant "c_compiler=vs2022" \
+            --variant "cxx_compiler=vs2022" \
             --output-dir ./conda-bld \
-            -c "file://$PWD/local-channel" \
             -c conda-forge
-      # PRD-003 M1: extract the built HTML from the docs package (install it into a
-      # throwaway prefix, then copy) so the gh-pages deploy job can consume the
-      # rattler-built docs instead of re-running Sphinx.
-      - name: Extract built HTML
-        shell: bash -l {0}
-        run: |
-          mamba create -y -p ./docsenv -c ./conda-bld -c ./local-channel -c conda-forge tttrlib-docs
-          mkdir -p docs-html
-          cp -r ./docsenv/share/doc/tttrlib/html/. docs-html/
-          ls docs-html | head
       - uses: actions/upload-artifact@v4
         with:
-          name: docs-html
-          path: docs-html
-      - uses: actions/upload-artifact@v4
-        with:
-          name: conda-docs-package
+          name: conda-packages-windows-latest-py${{ matrix.python }}
           path: ./conda-bld
+
+  # The rattler docs job that used to sit here (`build_conda_docs`)
+  # rendered the whole Sphinx+Doxygen site and uploaded it as `docs-html` --
+  # which nothing ever downloaded. `build_docs` below renders the same site
+  # again and is the only one that deploys. Finishing the M1 wiring instead of
+  # deleting this would not have helped: `build_docs` compiles the library for
+  # autodoc regardless, and that compile is what makes it expensive.
 
   # ── Conda tests: one job per platform×python-version ─────────────────────
 
@@ -1373,7 +1517,7 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          name: conda-packages-ubuntu-latest
+          name: conda-packages-ubuntu-latest-py${{ matrix.python }}
           path: conda-bld
       - uses: actions/download-artifact@v4
         with:
@@ -1418,7 +1562,7 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          name: conda-packages-macos-latest
+          name: conda-packages-macos-latest-py${{ matrix.python }}
           path: conda-bld
       - uses: actions/download-artifact@v4
         with:
@@ -1463,7 +1607,7 @@ jobs:
           path: .mmfdb
       - uses: actions/download-artifact@v4
         with:
-          name: conda-packages-windows-latest
+          name: conda-packages-windows-latest-py${{ matrix.python }}
           path: conda-bld
       - uses: actions/download-artifact@v4
         with:
@@ -1500,10 +1644,20 @@ jobs:
   # (build.sh, deps, test commands) stays exactly as upstream bioconda has it.
   # This catches breakage against the real recipe before a bioconda PR is filed.
 
+  # Not on a dev push: this builds a recipe the repository does not own, against
+  # a tarball GitHub only has once the commit is pushed, and it is the longest
+  # job in the run at ~74 minutes. It gates a release, so it runs on main, on a
+  # release, on demand -- and nightly, so recipe breakage on dev surfaces within
+  # a day rather than at the next tag.
   test_bioconda:
     name: Bioconda Build Test (lnx)
     needs: setup
-    if: needs.setup.outputs.is_main == 'true'
+    if: >-
+      github.ref == 'refs/heads/main'
+      || startsWith(github.ref, 'refs/tags/')
+      || github.event_name == 'release'
+      || github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -1556,6 +1710,12 @@ jobs:
 
   # ── Docs: after all tests pass ────────────────────────────────────────────
 
+  # main and releases only. This used to name dev as well, but it gates on the
+  # packaging tests passing and those no longer run there -- a dev push would
+  # have skipped this silently rather than deploying. It is also a ~20-minute
+  # job that recompiles the library for autodoc, which is exactly the kind of
+  # cost dev is not paying any more. To publish docs from dev again, add
+  # build_and_test to `needs` and to the branch clause below.
   build_docs:
     name: Build Documentation
     needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
@@ -1564,7 +1724,7 @@ jobs:
       (
         github.event_name == 'release' ||
         (
-          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') &&
+          github.ref == 'refs/heads/main' &&
           needs.test_pip_lnx.result == 'success' &&
           needs.test_conda_lnx.result == 'success' &&
           needs.test_pip_osx.result == 'success' &&
@@ -1581,8 +1741,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
+          filter: blob:none
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -1590,18 +1750,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: pip
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install scikit-build-core numpy swig
           python -m pip install sphinx sphinx-copybutton sphinx-design sphinxext-opengraph numpydoc nbsphinx matplotlib ipython sphinxcontrib-bibtex sphinx-gallery pydata-sphinx-theme scikit-image phconvert numba imagecodecs
           python -m pip install .[examples]
+      # Same key as build_and_test and download_test_data: this is the same ~1.5 GB
+      # from the same manifest, and a separate key meant downloading and storing
+      # it a second time.
       - name: Cache documentation test data
         id: docs-data-cache
         uses: actions/cache@v4
         with:
           path: ./tttr-data
-          key: tttr-doc-data-${{ hashFiles('test/settings.json') }}
+          key: tttr-test-data-${{ hashFiles('test/settings.json') }}
       - name: Download documentation test data
         if: steps.docs-data-cache.outputs.cache-hit != 'true'
         run: |
@@ -1759,8 +1923,9 @@ jobs:
       - name: Download conda packages (Windows)
         uses: actions/download-artifact@v4
         with:
-          name: conda-packages-windows-latest
+          pattern: conda-packages-windows-latest-*
           path: conda-bld
+          merge-multiple: true
       - name: List packages
         run: find conda-bld -name '*.conda' -o -name '*.tar.bz2' | sort
       - uses: conda-incubator/setup-miniconda@v3
