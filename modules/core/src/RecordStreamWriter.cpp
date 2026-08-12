@@ -61,33 +61,6 @@ bool record_stream_supported(int container_type, int record_type) {
         case FL_STT1_CONTAINER:
         case FL_ITT1_CONTAINER:
             return false;
-        case CZ_CONFOCOR3_CONTAINER:
-            // Same class as SM below, and found the same way: a whole-file
-            // TTTR.write gives 200,000 events back and the streamed file gives
-            // 0. It read back before the TTTR constructor started raising on
-            // unidentified files, so it was a false pass all along -- the
-            // streaming example's whole-file control column is what showed it.
-            return false;
-        case SM_CONTAINER:
-            // Still open. An SM header is a positional struct, and the file
-            // this writer produces carries 280 bytes before the records where
-            // a whole-file TTTR.write of the same events and the same header
-            // carries 176 -- so the payload is offset by 104, does not divide
-            // by the 12-byte record, and the file reads as zero events.
-            //
-            // Narrowed, and NOT where it first looked: passing the caller's
-            // header verbatim instead of a copy, and skipping
-            // ensure_minimal_tags entirely, both leave it at 280. The extra
-            // bytes are therefore written by the streaming path itself rather
-            // than being header content, which is where the next attempt
-            // should start.
-            //
-            // Declined rather than left to write a file its own reader cannot
-            // parse: a named refusal is recoverable, a silently unreadable
-            // acquisition is not. Whole-file TTTR.write to .sm is unaffected
-            // and exact. See BUGS.md.
-            return false;
-
         default:
             break;
     }
@@ -171,17 +144,17 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
     m.header.set_tttr_container_type(m.container);
     m.header.set_tttr_record_type(m.record);
     // A FIXED-LAYOUT header is a sequence of fields the reader parses
-    // positionally, so nothing may be added to it -- and nothing needs to be,
-    // since there is no record-count tag to fill in. Only a tag-list header
-    // (PTU and friends) gets the minimal tags, and only it can carry the
-    // placeholder count that patch_record_count later corrects.
+    // positionally. That is why it carries no record count to patch -- but it
+    // is NOT a reason to skip the minimal tags: ensure_minimal_tags only fills
+    // in values (the clocks, the micro-time channel count) that are missing,
+    // and a positional writer emits its fields whether or not the tag behind
+    // one exists. Skipping it wrote 1.0 where the macro time resolution
+    // belongs, so a streamed .sm came back without its clock.
     m.fixed_layout = (m.container == SM_CONTAINER ||
                       m.container == CZ_CONFOCOR3_CONTAINER);
-    if (!m.fixed_layout) {
-        // The count is unknown at open. Zero is the honest placeholder and is
-        // patched at every checkpoint; see the class documentation.
-        TTTRHeader::ensure_minimal_tags(&m.header, m.container, 0);
-    }
+    // The count is unknown at open. Zero is the honest placeholder and is
+    // patched at every checkpoint; see the class documentation.
+    TTTRHeader::ensure_minimal_tags(&m.header, m.container, 0);
     if (m.container == PQ_PTU_CONTAINER) {
         // json_data() is protected, so this goes through the public JSON.
         nlohmann::json j = nlohmann::json::parse(m.header.get_json(), nullptr, false);
@@ -196,16 +169,16 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
     // TTTR::write_header is what every whole-file write uses, so a streamed
     // file and a written one have byte-identical headers.
     //
-    // For a fixed-layout container the CALLER'S header goes out verbatim: a
-    // copy of a TTTRHeader does not reproduce it field for field, and for a
-    // positional header that is not cosmetic -- the reader parses by offset,
-    // so a header a few fields longer moves the payload and the file reads as
-    // zero events.
+    // Always the copy, never the caller's header: write_header dispatches on
+    // the container type IT is given, and the caller's says where the header
+    // came from -- streaming an .ht3 measurement into .sm wrote the source's
+    // 880-byte HT3 header in front of 12-byte SM records, which is what made
+    // the file read as zero events. Only m.header carries the target.
     TTTR probe;
     std::string fn = filename;
-    probe.write_header(fn, m.fixed_layout ? header : &m.header);
+    probe.write_header(fn, &m.header);
 
-    m.fp = std::fopen(filename.c_str(), "ab");
+    m.fp = open_file(filename, "ab");
     if (m.fp == nullptr) return fail("cannot open " + filename + " for writing");
     m.header_bytes = (std::size_t) ftell64(m.fp);
     m.filename = filename;
@@ -273,9 +246,12 @@ bool RecordStreamWriter::write_chunk(const std::uint64_t* macro_times,
             case PQ_RECORD_TYPE_PHT2:
                 w.write_pht2_events(m.fp, &chunk, &m.mt_ov); break;
             case CZ_RECORD_TYPE_CONFOCOR3:
-                w.write_cz_events(m.fp, &chunk); break;
+                w.write_cz_events(m.fp, &chunk, &m.mt_ov); break;
             case SM_RECORD_TYPE:
-                w.write_sm_events(m.fp, &chunk); break;
+                // No trailer per chunk: it ends the file, not a block of
+                // records, and one in the middle shifts everything after it.
+                // close_target writes the single one this file gets.
+                w.write_sm_events(m.fp, &chunk, false); break;
             default:
                 return fail("record type " + std::to_string(m.record) +
                             " has no encoder");
@@ -283,8 +259,14 @@ bool RecordStreamWriter::write_chunk(const std::uint64_t* macro_times,
         const std::int64_t after = ftell64(m.fp);
         if (after < before) return fail("the record encoder did not advance the file");
         // Records, not events: an overflow record is written and is not a photon.
-        const int width = m.header.get_bytes_per_record();
-        m.records += static_cast<std::uint64_t>(after - before) / (width > 0 ? width : 4);
+        // The RECORD decides the width, and the header may describe something
+        // else entirely: streaming an .ht3 measurement into .sm keeps the
+        // source's 32-bit tag, and dividing 12-byte records by 4 counted three
+        // for every one written. Only .sm has a width its header cannot state.
+        int width = (m.record == SM_RECORD_TYPE)
+                            ? 12 : (int) m.header.get_bytes_per_record();
+        if (width <= 0) width = 4;
+        m.records += static_cast<std::uint64_t>(after - before) / width;
     }
 
     if (durable) {
@@ -367,6 +349,9 @@ bool RecordStreamWriter::patch_record_count() {
 bool RecordStreamWriter::close_target() {
     Impl& m = *p_;
     if (m.fp != nullptr) {
+        // The one thing a chunk may not write: an .sm ends with 26 zero bytes,
+        // and every chunk writing its own put them through the record stream.
+        if (m.record == SM_RECORD_TYPE) TTTR::write_sm_trailer(m.fp);
         std::fflush(m.fp);
         patch_record_count();
         std::fclose(m.fp);

@@ -2338,7 +2338,14 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_cz_events(FILE* fp, TTTR* tttr);
+    /*!
+     * @param previous the macro time the last record was written against. A
+     *        CZ record holds a DELTA, so a writer emitting records in several
+     *        calls must carry this across them -- starting from zero again
+     *        makes the first record of every block absolute, and the times
+     *        after it jump. Null means a single self-contained block.
+     */
+    void write_cz_events(FILE* fp, TTTR* tttr, unsigned long long* previous = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SM records.
@@ -2349,7 +2356,18 @@ public:
      * @param fp The FILE pointer for the output file.
      * @param tttr The TTTR object containing the events to be written.
      */
-    void write_sm_events(FILE* fp, TTTR* tttr);
+    /*!
+     * @param with_trailer write the 26-byte end-of-file trailer after the
+     *        records. It belongs to the FILE, not to a block of records, so a
+     *        writer that emits records in several calls must pass false for
+     *        every one but the last -- a trailer in the middle of the stream
+     *        shifts everything after it and the file no longer divides by the
+     *        record size.
+     */
+    void write_sm_events(FILE* fp, TTTR* tttr, bool with_trailer = true);
+
+    /// The 26 zero bytes an .sm file ends with. \see write_sm_events.
+    static void write_sm_trailer(FILE* fp);
 
     /*!
      * @brief Writes the content of the TTTR object to a Photon-HDF5 file.

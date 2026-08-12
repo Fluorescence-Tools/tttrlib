@@ -57,6 +57,14 @@ def text_of(longrepr):
 
 
 def main(argv):
+    # A Windows console is cp1252, and a traceback that names a file under a
+    # path this suite deliberately writes in three scripts at once cannot be
+    # encoded into it. Printing raised UnicodeEncodeError, the step exited 1,
+    # and the one traceback worth having was the one that killed the report.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
     if not argv:
         print(__doc__)
         return 0

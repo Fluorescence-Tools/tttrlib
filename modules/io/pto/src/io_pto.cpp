@@ -473,7 +473,10 @@ public:
 
     bool open(const std::string& path, const char* mode) {
         close();
-        f_ = std::fopen(path.c_str(), mode);
+        // open_file, not fopen: a container may live under a path the active
+        // Windows code page cannot name, and reading one must not depend on
+        // what the machine is set to.
+        f_ = open_file(path, mode);
         return f_ != nullptr;
     }
 
@@ -494,8 +497,8 @@ public:
 #ifdef _WIN32
         const int flags = _O_RDWR | _O_BINARY | (create ? (_O_CREAT) : 0);
         int fd = -1;
-        if (::_sopen_s(&fd, path.c_str(), flags, _SH_DENYNO,
-                       _S_IREAD | _S_IWRITE) != 0 || fd < 0)
+        if (::_wsopen_s(&fd, utf8_to_wide_path(path).c_str(), flags, _SH_DENYNO,
+                        _S_IREAD | _S_IWRITE) != 0 || fd < 0)
             return false;
         HANDLE h = reinterpret_cast<HANDLE>(::_get_osfhandle(fd));
         if (h != INVALID_HANDLE_VALUE) {

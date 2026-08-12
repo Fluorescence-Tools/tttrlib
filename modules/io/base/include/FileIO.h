@@ -81,5 +81,16 @@ std::string native_to_utf8(const std::string& native_str);
  */
 FILE* open_file(const std::string& filename, const char* mode);
 
+#ifdef _WIN32
+/*!
+ * \brief UTF-8 path -> UTF-16, for the wide CRT and Win32 file calls.
+ *
+ * The narrow calls take the active code page, so they cannot name a file whose
+ * path is outside it. Anything opening a descriptor by hand (a lock, a shared
+ * open) needs this; open_file() already does it internally.
+ */
+std::wstring utf8_to_wide_path(const std::string& s);
+#endif
+
 
 #endif  // TTTRLIB_FILEIO_H

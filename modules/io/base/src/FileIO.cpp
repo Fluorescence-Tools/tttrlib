@@ -35,6 +35,8 @@ static std::wstring utf8_to_wide(const std::string& s) {
     return w;
 }
 
+std::wstring utf8_to_wide_path(const std::string& s) { return utf8_to_wide(s); }
+
 FILE* open_file(const std::string& filename, const char* mode) {
     std::wstring wfilename = utf8_to_wide(filename);
     std::wstring wmode     = utf8_to_wide(std::string(mode ? mode : "rb"));

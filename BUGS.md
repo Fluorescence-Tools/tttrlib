@@ -430,7 +430,43 @@ header:** this is not caused by the `Column::value_at` guard. `__getitem__`
 and `column_by_name` return a `Column`; neither calls `value_at`, and the
 whole DataStore/CSV/PTO/conformance set is 336 passed with the guard active.
 
-## Streaming into `.sm` writes a header the `.sm` reader does not parse back
+## FIXED — Streaming into `.sm` writes a header the `.sm` reader does not parse back
+
+**Fixed 2026-08-12, and it was not the header.** The extra bytes scale with the
+number of `append()` calls — 26 per chunk beyond the first (2 chunks: +26,
+5: +104, 10: +234), which is the 104 this entry reported, at five chunks. An
+`.sm` file ends with a **26-byte trailer**, and `write_sm_events` wrote one at
+the end of every call, so every chunk boundary put 26 bytes through the middle
+of the record stream. That is also why a single-chunk stream always worked and
+nobody saw it.
+
+`write_sm_events` takes `with_trailer` (default true, so whole-file writes are
+unchanged); the streaming path passes false and `close_target` writes the one
+trailer the file gets. Two more defects surfaced behind it:
+
+* **the clock.** Skipping `ensure_minimal_tags` for a fixed-layout header wrote
+  `1.0` where the macro time resolution belongs, so a streamed `.sm` came back
+  without its clock. That guard was a misdiagnosis of this bug:
+  `ensure_minimal_tags` only fills in *missing values*, and a positional writer
+  emits its fields either way. Removed.
+* **the record count.** `n_records()` divided by the header's bit-width tag,
+  which after a transcode still describes the SOURCE — 12-byte SM records
+  divided by 4 counted three for every one written.
+
+**`.cz` (ConfoCor3) is fixed too**, and had its own second defect: a CZ record
+holds a macro time *delta*, and `write_cz_events` restarted from zero on each
+call, so every chunk after the first jumped. It now carries the previous time
+across chunks the way the overflow counter already was.
+
+Verified against a whole-file `TTTR.write` of the same events at 1, 5 and 37
+chunks: **byte-for-byte identical** files for `.sm`, `.cz`, `.spc`, and equal
+macro times for `.ptu`/`.ht3`. Both containers are back in
+`record_stream_supported`, and `examples/streaming/stream_to_any_format.py` --
+the example whose whole-file control column exposed this -- now reports 200,000
+events for SM and Confocor3 across 8 chunks.
+
+The entry as filed follows.
+
 
 **2026-08-11.** `RecordStreamWriter` produces an SM file whose header is
 **280 bytes on disk where the reader parses 176**, so the payload is offset by

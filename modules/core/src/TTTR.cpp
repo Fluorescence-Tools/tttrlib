@@ -2958,10 +2958,11 @@ void TTTR::write_pht2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
     }
 }
 
-void TTTR::write_cz_events(FILE* fp, TTTR* tttr){
+void TTTR::write_cz_events(FILE* fp, TTTR* tttr, unsigned long long* carried){
     // CZ ConfoCor3 raw records store 32-bit macro time deltas; micro times,
     // channel numbers (header carries a single channel) and event types drop.
-    uint64_t previous = 0;
+    uint64_t local = 0;
+    uint64_t& previous = carried != nullptr ? *carried : local;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
         cz_confocor3_raw_record_t rec;
@@ -2971,7 +2972,7 @@ void TTTR::write_cz_events(FILE* fp, TTTR* tttr){
     }
 }
 
-void TTTR::write_sm_events(FILE* fp, TTTR* tttr){
+void TTTR::write_sm_events(FILE* fp, TTTR* tttr, bool with_trailer){
     // SM records: 8-byte big-endian macro time + 4-byte big-endian channel.
     // Micro times drop. The file ends with a 26-byte trailer.
     for (size_t n = 0; n < tttr->size(); n++) {
@@ -2982,6 +2983,10 @@ void TTTR::write_sm_events(FILE* fp, TTTR* tttr){
         for (int b = 0; b < 4; b++) rec[8 + b] = (channel >> (8 * (3 - b))) & 0xFF;
         fwrite(rec, sizeof(rec), 1, fp);
     }
+    if (with_trailer) write_sm_trailer(fp);
+}
+
+void TTTR::write_sm_trailer(FILE* fp){
     unsigned char trailer[26];
     std::memset(trailer, 0, sizeof(trailer));
     fwrite(trailer, sizeof(trailer), 1, fp);
