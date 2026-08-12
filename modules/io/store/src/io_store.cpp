@@ -48,7 +48,11 @@ std::uint32_t fnv1a(const unsigned char* p, std::size_t n) {
  */
 class File {
 public:
-    File(const char* path, const char* mode) : f_(std::fopen(path, mode)) {}
+    // open_file, not fopen: the narrow CRT on Windows takes the active code
+    // page, so a store -- or a .pto with one embedded in it -- under a path
+    // outside that page could be written and then not read back.
+    File(const char* path, const char* mode, bool report = true)
+            : f_(open_file(path, mode, report)) {}
     ~File() { close(); }
     File(const File&) = delete;
     File& operator=(const File&) = delete;
@@ -799,7 +803,9 @@ data::DataStore read_store(const std::string& filename) {
 }
 
 bool is_store_file(const std::string& filename) {
-    File f(filename.c_str(), "rb");
+    // Quiet: this asks whether a path is a store, and "it is not" -- including
+    // "there is nothing there" -- is the answer, not a failure to report.
+    File f(filename.c_str(), "rb", false);
     if (!f.ok()) return false;
     char magic[kMagicBytes];
     return std::fread(magic, 1, kMagicBytes, f.get()) == kMagicBytes &&

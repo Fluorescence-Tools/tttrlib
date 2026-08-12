@@ -37,7 +37,7 @@ static std::wstring utf8_to_wide(const std::string& s) {
 
 std::wstring utf8_to_wide_path(const std::string& s) { return utf8_to_wide(s); }
 
-FILE* open_file(const std::string& filename, const char* mode) {
+FILE* open_file(const std::string& filename, const char* mode, bool report) {
     std::wstring wfilename = utf8_to_wide(filename);
     std::wstring wmode     = utf8_to_wide(std::string(mode ? mode : "rb"));
     FILE* file = nullptr;
@@ -51,16 +51,16 @@ FILE* open_file(const std::string& filename, const char* mode) {
 #else
     file = _wfopen(wfilename.c_str(), wmode.c_str());
 #endif
-    if (!file) {
+    if (!file && report) {
         std::cerr << "Error opening file: " << filename << std::endl;
     }
     return file;
 }
 #else
 // POSIX: fopen handles UTF-8 paths in modern locales.
-FILE* open_file(const std::string& filename, const char* mode) {
+FILE* open_file(const std::string& filename, const char* mode, bool report) {
     FILE* file = std::fopen(filename.c_str(), mode);
-    if (!file) {
+    if (!file && report) {
         std::cerr << "Error opening file: " << filename << std::endl;
     }
     return file;

@@ -79,7 +79,15 @@ std::string native_to_utf8(const std::string& native_str);
  * @param mode The file opening mode (e.g., "rb", "w", etc.).
  * @return A FILE pointer to the opened file, or nullptr if the file could not be opened.
  */
-FILE* open_file(const std::string& filename, const char* mode);
+/*!
+ * \brief fopen for UTF-8 paths, Unicode-safe on Windows.
+ *
+ * \param report print a line to stderr when the open fails. True is right for
+ *        a caller that was told to open this file; a probe that ASKS whether a
+ *        path is one of its own passes false, because "no" is an answer rather
+ *        than an error and printing it makes a silent check chatty.
+ */
+FILE* open_file(const std::string& filename, const char* mode, bool report = true);
 
 #ifdef _WIN32
 /*!
