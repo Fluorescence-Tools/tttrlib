@@ -25,7 +25,7 @@ pip install -e .
 **Install dependencies:**
 ```bash
 # Install build tools
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 
 # Install HDF5 via vcpkg (for wheel builds)
 vcpkg install hdf5:x64-windows
@@ -50,7 +50,7 @@ sudo apt-get install -y \
     python3-dev \
     python3-pip
 
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 ```
 
 ### macOS
@@ -64,7 +64,7 @@ pip install scikit-build-core numpy swig<4.2
 **Install dependencies:**
 ```bash
 brew install cmake hdf5 swig
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 ```
 
 ## 🔧 Development Build
@@ -182,7 +182,7 @@ If cibuildwheel fails, you can build wheels manually:
 
 ```bash
 # Install build dependencies
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 
 # Build wheel for current Python version
 python -m pip wheel . --no-deps -w wheelhouse
@@ -501,8 +501,21 @@ Ensure CMake ≥ 3.13 is installed and in PATH
 ```
 
 **3. SWIG version issues:**
-```
-Use SWIG < 4.2: pip install swig<4.2
+
+SWIG 4.1 or newer is required (`pyproject.toml` declares `swig>=4.1` as a build
+requirement, and `pip install .` fetches it for you — you only need to install it
+by hand when configuring with CMake directly). There is no upper bound: CI builds
+with 4.2.1 and 4.4, and the one place the versions genuinely differ is handled in
+`ext/CMakeLists.txt` — `-DSWIGWORDSIZE64` is passed to the R backend only for
+SWIG >= 4.4, because 4.2's R backend mishandles `long long` returns under that
+flag.
+
+Distribution packages are often too old: Ubuntu 22.04 ships SWIG 4.0, which has
+no Node-API backend and fails the JavaScript build with "Unknown engine". Install
+from PyPI instead.
+
+```bash
+pip install "swig>=4.1"
 ```
 
 **4. HDF5 not found:**
@@ -579,7 +592,7 @@ When preparing a release:
 
 ```bash
 # 1. Install build dependencies
-pip install scikit-build-core numpy swig<4.2 cibuildwheel
+pip install scikit-build-core numpy "swig>=4.1" cibuildwheel
 
 # 2. Build and install tttrlib (editable)
 pip install -e .
@@ -603,7 +616,7 @@ sudo apt-get update
 sudo apt-get install -y cmake libhdf5-dev swig python3-dev
 
 # 2. Install Python dependencies
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 
 # 3. Build and install
 pip install -e .
@@ -627,7 +640,7 @@ python -m sphinx -T -d _build/doctrees -b html . _build/html/stable
 brew install cmake hdf5 swig
 
 # 2. Install Python dependencies
-pip install scikit-build-core numpy swig<4.2
+pip install scikit-build-core numpy "swig>=4.1"
 
 # 3. Build and install
 pip install -e .
