@@ -1263,7 +1263,7 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
     if (!m.f.open_exclusive(filename, true, &lock)) {
         if (lock == File::kLockBusy)
             return m.fail(filename + " is open for writing elsewhere");
-        return m.fail("cannot create " + filename);
+        return m.fail("cannot create " + filename + ": " + std::strerror(errno));
     }
     m.path = filename;
     m.writable = true;
@@ -1444,10 +1444,15 @@ bool PtoFile::open(const std::string& filename, bool writable) {
         if (!m.f.open_exclusive(filename, false, &lock)) {
             if (lock == File::kLockBusy)
                 return m.fail(filename + " is open for writing elsewhere");
-            return m.fail("cannot open " + filename);
+            // Which open failed, and why the OS says it did: the two branches
+            // used the same words, so a failure here could not be told from a
+            // failure to read and every diagnosis started by guessing.
+            return m.fail("cannot open " + filename + " for writing: " +
+                          std::strerror(errno));
         }
     } else if (!m.f.open(filename, "rb")) {
-        return m.fail("cannot open " + filename);
+        return m.fail("cannot open " + filename + " for reading: " +
+                      std::strerror(errno));
     }
     m.path = filename;
     m.writable = writable;
