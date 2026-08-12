@@ -536,6 +536,16 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: choco install swig ninja -y
+      # `-G Ninja` below names no toolchain, so CMake takes the first compiler on
+      # PATH -- and on this runner that is a MinGW gcc, which is what built this
+      # native until now. MinGW links libstdc++ and libwinpthread into it, and
+      # the plugin ships ONE file per platform, so those become dependencies a
+      # user does not have. cl is the compiler the rest of the Windows artefacts
+      # use; msvc-dev-cmd puts it on PATH for Ninja to find.
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
       - name: Build JNI native (no HDF5 needed for PTU/HT3/SPC)
         run: |
           # STATIC modules: the plugin bundles ONE JNI library per platform, so the
@@ -543,6 +553,25 @@ jobs:
           cmake -S . -B build-java -G Ninja -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DWITH_AVX=OFF -DTTTRLIB_MODULE_TYPE=STATIC -DCMAKE_BUILD_TYPE=Release
           cmake --build build-java --target tttrlibJava
         shell: bash
+      # Self-contained is the whole premise of bundling one native per platform,
+      # so it is checked rather than assumed. A MinGW build imports libstdc++ or
+      # libwinpthread; an MSVC one imports only the system runtime, which every
+      # Windows machine already has.
+      - name: The native must not depend on a runtime we do not ship (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dll = (Get-ChildItem -Recurse -Filter tttrlibjni.dll build-java | Select-Object -First 1).FullName
+          Write-Host "checking $dll"
+          $deps = & dumpbin /dependents $dll
+          $deps | Select-String -Pattern '\.dll' | ForEach-Object { $_.Line.Trim() }
+          $bad = $deps | Select-String -Pattern 'libstdc\+\+|libwinpthread|libgcc'
+          if ($bad) {
+            Write-Host "::error::the JNI native links a MinGW runtime that the plugin does not ship:"
+            $bad | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+            exit 1
+          }
+          Write-Host "no MinGW runtime dependencies"
       - name: Collect native + proxies
         shell: bash
         run: |
