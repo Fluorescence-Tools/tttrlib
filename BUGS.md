@@ -3,6 +3,41 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## The published conformance table has no Python column, and Python is the one binding it is measured against
+
+**2026-08-12.** Every conformance run on `dev` publishes a table whose Python
+column is empty, with its own warning at the top:
+
+> No report for: Python. Those columns are blank because the runner did not
+> execute, which is not the same as having nothing to run.
+
+R, Java and JavaScript are all ✓. The Python cases **do run** — they are in the
+pip and conda test logs as `test/python/test_conformance.py::test_conformance[…]`
+— so this is not a coverage hole in the suite. It is the report that is missing,
+and PRD-015's whole claim is that the four runners share one case list; a table
+that silently drops the reference implementation cannot support it.
+
+**Why.** `conformance-python.json` is written and uploaded by exactly one entry
+of the `build_and_test` matrix (`matrix.conformance == 'yes'`), and that job is
+`if: needs.setup.outputs.has_src == 'true'` — false on this branch, so it never
+runs. The packaging test jobs that *do* run the cases (`Pip Test …`, `Conda
+Test …`) neither set `TTTRLIB_CONFORMANCE_REPORT` nor upload the artifact.
+`conformance_matrix` then `needs:` only the R, Java and JS jobs, so it does not
+wait for a Python report that was never coming, downloads three of four, and
+publishes.
+
+**Fix.** One packaging test entry — one OS, one Python — should set
+`TTTRLIB_CONFORMANCE_REPORT` and upload `conformance-python`, exactly as the
+source job does, and `conformance_matrix` should `needs:` it. The report is a
+property of the code rather than of the platform, so one entry is enough; the
+existing `src[0]['conformance'] = 'yes'` selection says the same thing.
+
+**Not done here**: `.github/workflows/ci.yml` is being rewritten by another
+session (310 insertions against HEAD in the worktree), and editing it would
+publish their unfinished work. Verified against artifacts of run 31560520656:
+`conformance-r`, `conformance-java`, `conformance-js` are present and
+`conformance-python` is absent.
+
 ## FIXED — Two `Streaming.i` files: the module's is shadowed, so edits to it do nothing
 
 > **Fixed 2026-08-11.** `ext/python/Streaming.i` (125 lines, four classes) is
