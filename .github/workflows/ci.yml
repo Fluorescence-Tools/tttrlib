@@ -992,6 +992,55 @@ jobs:
           path: conformance-python.json
           if-no-files-found: ignore
 
+  # The oldest LTS the project supports, which nothing else here exercises.
+  #
+  # Ubuntu 22.04 is supported until 2027 and ships glibc 2.35, so a
+  # manylinux_2_28 wheel installs and runs on it -- but every other Linux test
+  # job runs on 24.04, so that was an assumption rather than a fact. The wheel
+  # is the thing to test: building from source on 22.04 additionally needs SWIG
+  # >= 4.1 from PyPI, because apt ships 4.0 and the bindings use the newer
+  # SWIG_Python_AppendOutput API (1150fb51c).
+  #
+  # One interpreter, not the full matrix: this checks the platform floor, and
+  # the per-version surface is already covered on 24.04.
+  test_pip_lnx_oldest_lts:
+    name: Pip Test lnx 22.04 (oldest LTS)
+    needs: [setup, build_pip_lnx, download_test_data]
+    if: needs.setup.outputs.is_main == 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the mmfdb vocabulary
+        uses: actions/checkout@v4
+        with:
+          repository: Fluorescence-Tools/mmfdb
+          path: .mmfdb
+      - uses: actions/download-artifact@v4
+        with:
+          name: pip-wheels-ubuntu-latest
+          path: wheelhouse
+      - uses: actions/download-artifact@v4
+        with:
+          name: tttr-test-data
+          path: ./tttr-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install and Test
+        shell: bash
+        env:
+          TTTRLIB_DATA: ./tttr-data
+          MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
+          MMFDB_REQUIRED: "1"
+        run: |
+          python -m pip install --upgrade pip
+          PY_VER="${{ env.DEFAULT_PYTHON }}"
+          PY_VER_SHORT="${PY_VER/./}"
+          python -m pip install wheelhouse/*cp${PY_VER_SHORT}*.whl
+          python -c "import tttrlib, platform; print('glibc', platform.libc_ver()); print('tttrlib', tttrlib.__file__)"
+          python -m pip install pytest scipy click click-didyoumean tqdm matplotlib scikit-image
+          python test/run_suite.py -v --tb=short
+
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
     needs: [setup, build_pip_osx_arm64, build_pip_osx_x86_64, download_test_data]
