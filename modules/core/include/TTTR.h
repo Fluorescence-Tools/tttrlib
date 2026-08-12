@@ -2345,7 +2345,7 @@ public:
      *        makes the first record of every block absolute, and the times
      *        after it jump. Null means a single self-contained block.
      */
-    void write_cz_events(FILE* fp, TTTR* tttr, unsigned long long* previous = nullptr);
+    void write_cz_events(FILE* fp, TTTR* tttr, uint64_t* previous = nullptr);
 
     /*!
      * @brief Write events from the TTTR object to a file as SM records.

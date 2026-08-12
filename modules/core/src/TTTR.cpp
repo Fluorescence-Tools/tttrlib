@@ -2958,7 +2958,7 @@ void TTTR::write_pht2_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
     }
 }
 
-void TTTR::write_cz_events(FILE* fp, TTTR* tttr, unsigned long long* carried){
+void TTTR::write_cz_events(FILE* fp, TTTR* tttr, uint64_t* carried){
     // CZ ConfoCor3 raw records store 32-bit macro time deltas; micro times,
     // channel numbers (header carries a single channel) and event types drop.
     uint64_t local = 0;
