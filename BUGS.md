@@ -3,7 +3,20 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
-## The published conformance table has no Python column, and Python is the one binding it is measured against
+## FIXED — The published conformance table has no Python column, and Python is the one binding it is measured against
+
+**Fixed 2026-08-12.** `test_pip_lnx` now sets `TTTRLIB_CONFORMANCE_REPORT` on
+its py3.11 entry alone and uploads `conformance-python`, and
+`conformance_matrix` waits for that job. One entry, because the answers are a
+property of the code rather than of the platform — the same rule the source
+matrix already used. The upload is `always()`: a suite that fails still says
+which cases passed, and that is the interesting table.
+
+Committed against `HEAD`'s workflow rather than the working tree, which another
+session is rewriting; if that rewrite reshapes these jobs, the two edits to
+carry across are the env line and the `needs:`.
+
+The entry as filed follows.
 
 **2026-08-12.** Every conformance run on `dev` publishes a table whose Python
 column is empty, with its own warning at the top:

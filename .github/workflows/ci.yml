@@ -739,7 +739,7 @@ jobs:
 
   conformance_matrix:
     name: Conformance coverage matrix
-    needs: [build_test_r_lnx, build_test_java_lnx, build_test_js_lnx]
+    needs: [build_test_r_lnx, build_test_java_lnx, build_test_js_lnx, test_pip_lnx]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -967,6 +967,13 @@ jobs:
           TTTRLIB_DATA: ./tttr-data
           MMFDB_DIC_DIR: ${{ github.workspace }}/.mmfdb/src/mmfdb/data
           MMFDB_REQUIRED: "1"
+          # Exactly one entry writes the conformance report, the same rule the
+          # source matrix uses: the answers are a property of the code, not of
+          # the platform that ran it. Empty elsewhere, and the runner writes
+          # nothing when it is empty. Without this the published table has no
+          # Python column at all -- the cases run here, but nothing collected
+          # them, and Python is the binding the other three are compared to.
+          TTTRLIB_CONFORMANCE_REPORT: ${{ matrix.python == '3.11' && format('{0}/conformance-python.json', github.workspace) || '' }}
         run: |
           python -m pip install --upgrade pip
           PY_VER="${{ matrix.python }}"
@@ -976,6 +983,14 @@ jobs:
           # Per-directory sessions: a segfault in one group must not take the
           # other groups' tracebacks down with it. See test/run_suite.py.
           python test/run_suite.py -v --tb=short
+      # always(): a suite that fails still reports which cases passed, and that
+      # is the interesting table -- a blank column says nothing about why.
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.python == '3.11'
+        with:
+          name: conformance-python
+          path: conformance-python.json
+          if-no-files-found: ignore
 
   test_pip_osx:
     name: Pip Test osx py${{ matrix.python }}
