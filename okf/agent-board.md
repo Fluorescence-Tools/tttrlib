@@ -2305,6 +2305,29 @@ one supersedes.
 ---
 
 ## Resolved (recent)
+- **[tttrlib] The Windows `0xC0000374` shutdown crash does not reproduce; `run_pytest_windows.py` and the `os._exit` hook are gone**
+  - Timestamp: 2026-08-12
+  - Status: ✅ done — branch `fix/windows-shutdown-workarounds` off `dev` `e166ded0`, for merge into `dev`
+  - Touched: `run_pytest_windows.py` (deleted), `test/python/conftest.py`,
+    `test/conftest.py`, `.github/workflows/ci.yml`, `CHANGELOG.md`, `okf/log.md`,
+    and a comment-only fix in `modules/imaging/clsm/src/CLSMImage.cpp`.
+  - Evidence: full suite with shutdown genuinely running — 2449 passed, 205
+    skipped, exit 0, 32 min; `run_suite.py` clean across 19 groups. Both Windows
+    CI jobs now call `python test/run_suite.py -v --tb=short` like Linux/macOS.
+  - **Read `okf/log.md` (24th entry) before touching any of this.** Two things
+    there will save you the day they cost me: a second `os._exit` inside
+    `test/python/conftest.py` meant running pytest directly did *not* bypass the
+    workaround, and that hook — not a native crash — is why Windows CI printed no
+    `FAILURES` section, which `tools/print_report_log.py` exists to work around.
+  - ⚠ **`tools/print_report_log.py` is now unreferenced by CI** and its docstring
+    still blames the heap corruption. Left in place deliberately: deleting a tool
+    is someone's call, not mine. Whoever picks that up, the premise is fixed.
+  - Still open, and needs Administrator, which I did not have: PageHeap /
+    Application Verifier over the `clsm` directory to rule out a latent OpenMP
+    race rather than merely failing to trigger one. `gflags` fails *silently*
+    without elevation — check for a `python.exe` key under Image File Execution
+    Options before believing it worked. The OpenMP guards in `CLSMImage.cpp` were
+    left ON (serial) because parallelising measured no wall-time gain at all.
 - **[chisurf+imp.bff] PRD-97 stages 0–3 — FRET docking, the AV backend and the one fps.json reader moved to `IMP.bff.fret`**
   - Timestamp: 2026-08-11
   - Status: ✅ done — imp.bff `7ab41d1` (+ okf bundle `a7eb94d`), chisurf `046cb9989`

@@ -1130,22 +1130,14 @@ jobs:
       - name: Test
         run: |
           cd D:\a\tttrlib\tttrlib
-          python run_pytest_windows.py -v --tb=short --report-log=pytest-report.jsonl --exitcode-file=pytest_exitcode.txt
-          set /p PYTEST_EXIT=<pytest_exitcode.txt
-          echo Pytest exited with: %PYTEST_EXIT%
-          exit %PYTEST_EXIT%
+          REM Per-directory sessions: a segfault in one group must not take the
+          REM other groups' tracebacks down with it. See test/run_suite.py.
+          python test/run_suite.py -v --tb=short
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
           MMFDB_DIC_DIR: ${{ github.workspace }}\.mmfdb\src\mmfdb\data
           MMFDB_REQUIRED: "1"
-      # The run reaches 100%, returns 1, and prints no FAILURES section at all
-      # on this platform, so the tracebacks come from the report log instead --
-      # it is written one line per test as the test finishes.
-      - name: Show the failures the terminal did not
-        if: always()
-        run: python tools/print_report_log.py pytest-report.jsonl
-        shell: cmd
 
   # ── Conda builds ──────────────────────────────────────────────────────────
 
@@ -1456,22 +1448,14 @@ jobs:
       - name: Run tests
         run: |
           call conda activate test
-          python run_pytest_windows.py -v --tb=short --report-log=pytest-report.jsonl --exitcode-file=pytest_exitcode.txt
-          set /p PYTEST_EXIT=<pytest_exitcode.txt
-          echo Pytest exited with: %PYTEST_EXIT%
-          exit %PYTEST_EXIT%
+          REM Per-directory sessions: a segfault in one group must not take the
+          REM other groups' tracebacks down with it. See test/run_suite.py.
+          python test/run_suite.py -v --tb=short
         shell: cmd
         env:
           TTTRLIB_DATA: D:\a\tttrlib\tttrlib\tttr-data
           MMFDB_DIC_DIR: ${{ github.workspace }}\.mmfdb\src\mmfdb\data
           MMFDB_REQUIRED: "1"
-      # The run reaches 100%, returns 1, and prints no FAILURES section at all
-      # on this platform, so the tracebacks come from the report log instead --
-      # it is written one line per test as the test finishes.
-      - name: Show the failures the terminal did not
-        if: always()
-        run: python tools/print_report_log.py pytest-report.jsonl
-        shell: cmd
 
   # ── Bioconda build test (linux only, dev branch) ─────────────────────────
   # Clones the OFFICIAL bioconda-recipes, then patches only the version, source

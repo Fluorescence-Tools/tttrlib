@@ -1537,11 +1537,10 @@ void CLSMImage::create_lines() {
     
     int pixel_duration = (settings.marker_line_stop < 0) ? tttr->header->get_pixel_duration() : -1;
 
-    // NOTE: create_lines() runs serially (no OpenMP) on purpose.
-    // Concurrent heap allocation of CLSMLine objects via new CLSMLine() inside
-    // an OpenMP parallel for causes heap corruption (0xC0000374) with MSVC's
-    // OpenMP 2.0 runtime on Windows. The per-frame line-finding work is not a
-    // bottleneck; the expensive parallelism lives in fill() and get_intensity().
+    // serial on purpose: parallelising this measured 1.47s against 1.48s on a
+    // 93-frame 512x512 stack -- 5.7x the CPU for the same wall time, memory-bound
+    // (an earlier note here blamed concurrent `new` under MSVC's OpenMP; that is
+    // wrong, concurrent new is thread-safe there)
     for (int f_idx = 0; f_idx < static_cast<int>(frames.size()); ++f_idx) {
         auto &frame = frames[f_idx];
         
