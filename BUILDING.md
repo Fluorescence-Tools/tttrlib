@@ -46,12 +46,19 @@ sudo apt-get install -y \
     build-essential \
     cmake \
     libhdf5-dev \
-    swig \
     python3-dev \
     python3-pip
 
+# SWIG from PyPI, deliberately not from apt: Ubuntu 22.04 ships SWIG 4.0, which
+# has no Node-API backend and fails the JavaScript build with "Unknown engine".
+# Installing both leaves /usr/bin/swig beside the newer one and which is used
+# comes down to PATH order. The PyPI wheel is current on every release.
 pip install scikit-build-core numpy "swig>=4.1"
 ```
+
+If `apt install swig` already put an old one on the system, check which is
+actually being used — `swig -version` must report 4.1 or newer, and `which swig`
+should not be `/usr/bin/swig`.
 
 ### macOS
 
@@ -611,9 +618,10 @@ python -c "import os; os.environ['VCPKG_ROOT'] = r'E:\vcpkg'; import subprocess;
 ### Linux (Recommended for Documentation)
 
 ```bash
-# 1. Install system dependencies
+# 1. Install system dependencies (SWIG comes from PyPI below, not from apt --
+#    22.04's apt SWIG is 4.0 and too old)
 sudo apt-get update
-sudo apt-get install -y cmake libhdf5-dev swig python3-dev
+sudo apt-get install -y cmake libhdf5-dev python3-dev
 
 # 2. Install Python dependencies
 pip install scikit-build-core numpy "swig>=4.1"
