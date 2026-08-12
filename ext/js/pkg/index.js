@@ -68,15 +68,25 @@ function loadAddon() {
     path.join(__dirname, 'build', 'Release', 'tttrlib.node'),
   ];
 
-  // Any build*/js-pkg/ at the repository root, so `cmake -B build`,
-  // `-B build-js`, `-B build-debug` and the like all work without configuration.
+  // Any build tree at the repository root, so `cmake -B build`, `-B build-js`,
+  // `-B build-debug` and the like all work without configuration -- and one level
+  // deeper, because the convention is `build/<name>` and CI uses `build/js`.
   // Sorted newest first: a developer with several build trees means the one just
   // built, not whichever the directory listing happens to return first.
   const repoRoot = path.join(__dirname, '..', '..', '..');
   try {
-    const builds = fs.readdirSync(repoRoot, { withFileTypes: true })
+    const roots = fs.readdirSync(repoRoot, { withFileTypes: true })
       .filter((e) => e.isDirectory() && /^(build|cmake-build)/.test(e.name))
-      .map((e) => path.join(repoRoot, e.name, 'js-pkg', 'tttrlib.node'))
+      .map((e) => path.join(repoRoot, e.name));
+    const nested = roots.flatMap((r) => {
+      try {
+        return fs.readdirSync(r, { withFileTypes: true })
+          .filter((e) => e.isDirectory())
+          .map((e) => path.join(r, e.name));
+      } catch { return []; }
+    });
+    const builds = [...roots, ...nested]
+      .map((d) => path.join(d, 'js-pkg', 'tttrlib.node'))
       .filter((p) => fs.existsSync(p))
       .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
     candidates.push(...builds);

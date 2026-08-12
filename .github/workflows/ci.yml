@@ -871,6 +871,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[test]" jsonschema
           python -m pip install click click-didyoumean tqdm matplotlib scikit-image
+      # Windows resolves an extension's dependent DLLs from the directory the
+      # .pyd sits in, not from PATH -- Python 3.8 stopped searching PATH. The
+      # wheel jobs do not hit this because delvewheel bundles HDF5 into the
+      # wheel; a source install leaves it in the vcpkg prefix, and every test
+      # then fails at import with "DLL load failed while importing _tttrlib".
+      - name: Put HDF5 beside the extension (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          pkg=$(python -c "import sysconfig, os; print(os.path.join(sysconfig.get_paths()['purelib'], 'tttrlib'))")
+          cp "$HDF5_ROOT"/bin/*.dll "$pkg"/
+          python -c "import tttrlib; print('import ok:', tttrlib.__file__)"
       # The `heavy` tier is 85% of the runtime for statistics that a branch
       # push cannot break without also breaking something cheaper, so a feature
       # branch gets `standard`. dev runs the whole suite.
