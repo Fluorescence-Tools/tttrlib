@@ -617,9 +617,22 @@ adding a sixth interface.
 >
 > 1. **SPC-600/256 and SPC-600/4096** are untouched. `.spc` is claimed by four
 >    formats told apart by content, so the diagnosis is not the same as `.sm`'s.
-> 2. **`TTTR(path)` still returns an empty object rather than raising** for any
->    unidentifiable path. That is not specific to these formats and is what
->    turns a detection failure into silent wrong data.
+> 2. ~~**`TTTR(path)` still returns an empty object rather than raising**~~
+>    **— fixed since, verified 2026-08-12.** Writing 5,000 events as each of
+>    the three `.spc` containers and reopening by path: SPC-130 reads back
+>    5,000, and both SPC-600 variants now raise *"TTTR: unsupported container
+>    type for ..."* instead of coming back empty. Both still read correctly
+>    when the container is named, so what is left of this entry is item 1
+>    alone, and it is no longer silent.
+>
+> On item 1, for whoever picks it up: the two SPC-600 formats are marked
+> `detectable = false` in `IORegistry.cpp` deliberately, not by omission. There
+> is nothing in the bytes that says which one a `.spc` is — SPC-600/256 and
+> SPC-130 both use 4-byte records, and the sizes do not separate them either
+> (a 5,000-event write gives 22,404 bytes for /256 and 30,024 for /4096, both
+> divisible by 4). A heuristic here would guess, and guessing wrong on a real
+> SPC-130 file is silent wrong data, which is worse than requiring the caller
+> to name the format. Left as it stands on purpose.
 
 ## The original entry
 
