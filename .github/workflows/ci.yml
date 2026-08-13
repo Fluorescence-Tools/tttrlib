@@ -488,11 +488,22 @@ jobs:
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install swig ninja hdf5
+      # actions/cache's `path` is evaluated from the `env` context, which holds
+      # only what a workflow, job or step declared -- not the runner image's own
+      # environment. VCPKG_INSTALLATION_ROOT is the latter, so
+      # `${{ env.VCPKG_INSTALLATION_ROOT }}` was the empty string and the path was
+      # `\installed`: the cache saved nothing and every run paid 4-5 minutes to
+      # compile HDF5 again. Writing it to GITHUB_ENV first puts it where the
+      # expression can see it, without hardcoding C:\vcpkg.
+      - name: Resolve the vcpkg root into the env context
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "VCPKG_ROOT_RESOLVED=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
       - name: Cache vcpkg HDF5
         if: runner.os == 'Windows'
         uses: actions/cache@v4
         with:
-          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          path: ${{ env.VCPKG_ROOT_RESOLVED }}\installed
           key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
       - name: Install build dependencies (Windows)
         if: runner.os == 'Windows'
@@ -858,11 +869,22 @@ jobs:
           arch: x64
       - uses: mozilla-actions/sccache-action@v0.0.9
         if: runner.os == 'Windows'
+      # actions/cache's `path` is evaluated from the `env` context, which holds
+      # only what a workflow, job or step declared -- not the runner image's own
+      # environment. VCPKG_INSTALLATION_ROOT is the latter, so
+      # `${{ env.VCPKG_INSTALLATION_ROOT }}` was the empty string and the path was
+      # `\installed`: the cache saved nothing and every run paid 4-5 minutes to
+      # compile HDF5 again. Writing it to GITHUB_ENV first puts it where the
+      # expression can see it, without hardcoding C:\vcpkg.
+      - name: Resolve the vcpkg root into the env context
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "VCPKG_ROOT_RESOLVED=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
       - name: Cache vcpkg HDF5
         if: runner.os == 'Windows'
         uses: actions/cache@v4
         with:
-          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          path: ${{ env.VCPKG_ROOT_RESOLVED }}\installed
           key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
       - name: Install HDF5 (Windows)
         if: runner.os == 'Windows'
@@ -1150,10 +1172,21 @@ jobs:
       # dependent on mirrors that rate-limit the runners (see below). The tree
       # only changes when the package spec does, so cache it and let the
       # install step below short-circuit on a hit.
+      # actions/cache's `path` is evaluated from the `env` context, which holds
+      # only what a workflow, job or step declared -- not the runner image's own
+      # environment. VCPKG_INSTALLATION_ROOT is the latter, so
+      # `${{ env.VCPKG_INSTALLATION_ROOT }}` was the empty string and the path was
+      # `\installed`: the cache saved nothing and every run paid 4-5 minutes to
+      # compile HDF5 again. Writing it to GITHUB_ENV first puts it where the
+      # expression can see it, without hardcoding C:\vcpkg.
+      - name: Resolve the vcpkg root into the env context
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "VCPKG_ROOT_RESOLVED=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
       - name: Cache vcpkg HDF5
         uses: actions/cache@v4
         with:
-          path: ${{ env.VCPKG_INSTALLATION_ROOT }}\installed
+          path: ${{ env.VCPKG_ROOT_RESOLVED }}\installed
           key: vcpkg-hdf5-core-zlib-x64-windows-${{ runner.os }}-v1
       - name: Install HDF5
         shell: pwsh
