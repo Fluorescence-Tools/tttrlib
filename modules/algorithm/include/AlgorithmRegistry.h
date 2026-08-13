@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-/// PRD-027 Part 1 — one descriptor and one registration call for every
+/// One descriptor and one registration call for every
 /// algorithm, whether it is compiled into the core library or arrives in a
 /// plugin.
 ///
@@ -31,7 +31,7 @@ namespace tttrlib {
  * `operation_type`, `row_grain`, `inputs_json`, `outputs_json` and
  * `can_replay`.
  *
- * `impl` is opaque to the host. A capability registrar (PRD-027 Part 2) knows
+ * `impl` is opaque to the host. A capability registrar knows
  * how to turn it into the C++ object or call for its capability — which is the
  * seam that lets a C ABI plugin table and a C++ built-in factory travel one
  * registration path.

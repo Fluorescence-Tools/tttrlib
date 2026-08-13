@@ -58,7 +58,7 @@ static bool is_known_cmd(const char* c) {
 
 static void print_usage(void) {
     printf(
-        "PhoTon cOntainer (PTO) - Self-Executing Container (tttrlib PRD-025)\n\n"
+        "PhoTon cOntainer (PTO) - Self-Executing Container (tttrlib)\n\n"
         "Usage:\n"
         "  ./file.pto [GLOBAL...] [<command>] [ARGS...]\n\n"
         "Commands:\n"

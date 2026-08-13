@@ -20,6 +20,11 @@ import pytest
 import tttrlib
 
 PROTOTYPE_DIR = Path(__file__).parents[3] / "prototype" / "esrrf"
+# prototype/ is dev-only (AGENTS.md), so this reference is absent on main.
+# Skip rather than fail collection: it is a development oracle, not a contract.
+if not PROTOTYPE_DIR.is_dir():
+    pytest.skip("prototype/esrrf is not in this checkout (dev-only)",
+                allow_module_level=True)
 if str(PROTOTYPE_DIR) not in sys.path:
     sys.path.insert(0, str(PROTOTYPE_DIR))
 

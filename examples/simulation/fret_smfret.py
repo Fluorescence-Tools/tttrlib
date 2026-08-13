@@ -1,4 +1,4 @@
-"""Single-molecule FRET: burst-wise proximity-ratio histograms (PRD-008).
+"""Single-molecule FRET: burst-wise proximity-ratio histograms.
 
 This example shows the full, realistic single-molecule pipeline end to end using
 only tttrlib:

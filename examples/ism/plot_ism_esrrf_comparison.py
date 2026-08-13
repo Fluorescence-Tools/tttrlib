@@ -51,9 +51,9 @@ from scipy.signal import fftconvolve
 import tttrlib
 
 # The array-detector PSF model is a simulation helper, not part of the library.
-proto_dir = Path(__file__).resolve().parents[2] / "prototype" / "esrrf"
-if str(proto_dir) not in sys.path:
-    sys.path.insert(0, str(proto_dir))
+sim_dir = Path(__file__).resolve().parent.parent / "simulation"
+if str(sim_dir) not in sys.path:
+    sys.path.insert(0, str(sim_dir))
 
 from simulate import generate_ism_psf
 

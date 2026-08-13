@@ -162,8 +162,8 @@ def test_the_column_lookup_did_not_get_slower():
     raises. Measured as a ratio against the call it wraps, so the number does
     not depend on the machine.
 
-    Each side is the *best* of several rounds, not a single timing. BUGS.md
-    recorded this assertion failing 2 runs in 3 on an idle machine, reporting
+    Each side is the *best* of several rounds, not a single timing. This
+    assertion failed 2 runs in 3 on an idle machine, reporting
     4.14x against a 3.0 bound, and diagnosed why: dividing one noisy loop by
     another compounds the noise instead of cancelling it -- a scheduler slice
     landing on the denominator moves the quotient as far as one on the
@@ -364,7 +364,7 @@ def test_np_asarray_of_a_column_outlives_the_root():
     lambda s: s.columns[0],
 ])
 def test_every_way_of_getting_a_column_keeps_the_store(how):
-    """BUGS.md: a zero-copy view outliving its store, reading reused memory.
+    """A zero-copy view outliving its store, reading reused memory.
 
     The fix has to hold for EVERY accessor, not just the two that go through
     DataStore.py -- ``store.column(0)`` and ``store.column_by_name("x")`` are
@@ -399,7 +399,7 @@ def test_holding_the_store_from_every_column_does_not_leak_it():
 
 
 def test_a_csv_column_survives_the_store_it_was_read_from(tmp_path):
-    """The reproduction from BUGS.md, unchanged.
+    """The original reproduction, unchanged.
 
     Eight runs of it gave ``1, 1, 0, 0, 1, 1, 1, 1`` values wrong -- always row
     2, read back as 0.0 or 6.001000000000001e-05 instead of 6.0, i.e. a

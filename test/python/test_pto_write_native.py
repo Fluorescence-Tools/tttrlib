@@ -1,6 +1,6 @@
 """`tttr.write("run.pto")` — the container as a sink, not a wrapper.
 
-PRD-034. Until this landed a `.pto` could only *carry* a photon stream as an
+Until this landed a `.pto` could only *carry* a photon stream as an
 embedded vendor file reached through `run.pto|m001.ptu`; there was no writer at
 all, so the native photons table the reader already understood could only be
 produced by something else. These pin the writer against the reader that was
@@ -206,7 +206,7 @@ class TestTheFormatTableAgrees:
 
 
 class TestRangesOverANativeTable:
-    """PRD-034 item 5. A cue index answers "where does event N start" for a
+    """A cue index answers "where does event N start" for a
     record stream, which must be decoded from a known point to be counted at
     all. Columnar storage answers it arithmetically — the row number *is* the
     seek position — so the cue machinery is not needed on this path.

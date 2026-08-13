@@ -11,7 +11,7 @@ cycle here is not merely inelegant: IMP is a compiled C++ module built from a
 sibling checkout, so an ``import IMP`` inside the shipped library would make a
 photon library undistributable without a structural-modelling toolkit.
 
-**The carve-out is deliberate.** ``bench/``, ``test/`` and ``tools/`` may import
+**The carve-out is deliberate.** ``benchmarks/``, ``test/`` and ``tools/`` may import
 chisurf, because measuring this library against its consumer, and cross-checking
 results with it, is the point of those trees -- eight files do so today. What
 must stay clean is what ships: ``ext/python``. A rule without that carve-out

@@ -1,8 +1,8 @@
 """2D-FDC as a *method*, against simulated streams whose answer is known first.
 
-PRD-036 makes this a requirement rather than a nicety, and the reason is
+This is a requirement rather than a nicety, and the reason is
 specific: a kernel checked only against the implementation it replaces cannot
-tell a faithful port from a shared mistake. PRD-035 walked into exactly that —
+tell a faithful port from a shared mistake. The phasor port walked into exactly that —
 a fixture recorded from the code being replaced encoded a live `nan` bug, and
 reproducing it would have been "passing".
 
@@ -22,7 +22,7 @@ without assuming anything about lifetimes, bin edges or normalisation. Its decay
 along `dT` is the interconversion, which is the quantity 2D-FLC exists to
 measure.
 
-**What is deliberately not tested here.** PRD-036 lists "invert the diagonal and
+**What is deliberately not tested here.** "Invert the diagonal and
 see two peaks at the simulated lifetimes". The inversions — Tikhonov, MEM, the
 rate-matrix fit — are explicitly *not* moving into this library, so a test of
 them would be a test of SciPy wearing this file's name. What is tested instead

@@ -9,7 +9,7 @@ So the reference here is a **double loop over every pair** — no search, no
 shared code with the kernel — and the bin edges are recomputed from the
 published axis rather than read back out of the thing under test. A port
 checked only against the implementation it replaces cannot tell a faithful port
-from a shared mistake; PRD-035 hit exactly that when a recorded fixture turned
+from a shared mistake; the phasor port hit exactly that when a recorded fixture turned
 out to encode a live bug in the original.
 
 The method-level tests — that two lifetimes come back, that cross-peaks appear

@@ -57,9 +57,6 @@ def _load_clsm_image(ptu_file: str, *, n_det: int | None) -> tuple[np.ndarray, d
         from scipy.signal import fftconvolve
 
         ground_truth = generate_tubulin_phantom(n_filaments=18, size_px=128, pixel_size_nm=10.0)
-        proto_dir = Path(__file__).resolve().parents[2] / "prototype" / "esrrf"
-        if str(proto_dir) not in sys.path:
-            sys.path.insert(0, str(proto_dir))
         from simulate import generate_ism_psf
 
         psf_sim = generate_ism_psf(na=1.4, n_det=5, pitch_au=0.25, nx=64, ny=64)

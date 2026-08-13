@@ -1,4 +1,4 @@
-"""Recording the state trajectory of an exchanging molecule (PRD-005).
+"""Recording the state trajectory of an exchanging molecule.
 
 A simulated molecule hops between photophysical states — a FRET pair breathing between
 a compact and an extended conformation, a fluorophore blinking, a binding site filling

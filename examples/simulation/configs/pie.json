@@ -1,5 +1,5 @@
 {
-  "_comment": "Pulsed-interleaved excitation (PIE) via micro-time windows (PRD-008). No PIE engine feature: species 0 (donor-excited FRET pair) emits in the PROMPT half of the 32 ns laser period (decay t0=0); species 1 (directly-excited acceptor) emits in the DELAYED half (decay t0=16 ns) into the red channel. Gating the micro-time on prompt vs delay separates the two excitation sources (ALEX/PIE stoichiometry). Immobile emitters keep it deterministic; use population for diffusing PIE.",
+  "_comment": "Pulsed-interleaved excitation (PIE) via micro-time windows. No PIE engine feature: species 0 (donor-excited FRET pair) emits in the PROMPT half of the 32 ns laser period (decay t0=0); species 1 (directly-excited acceptor) emits in the DELAYED half (decay t0=16 ns) into the red channel. Gating the micro-time on prompt vs delay separates the two excitation sources (ALEX/PIE stoichiometry). Immobile emitters keep it deterministic; use population for diffusing PIE.",
   "settings": {"dt": 0.01, "n_ph_max": 200000, "n_channels": 2,
                "n_microtime_channels": 4096, "microtime_resolution": 0.008, "laser_period": 32.0},
   "box": {"xy": 2.0, "z": 4.0},

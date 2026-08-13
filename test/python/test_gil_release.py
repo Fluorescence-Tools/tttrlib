@@ -1,7 +1,7 @@
 """A long tttrlib call must not stall other Python threads.
 
 The wrapper is generated with SWIG ``-threads``, so the GIL is released
-around every C++ call. The test is the one BUGS.md prescribes: a worker
+around every C++ call. A worker
 thread runs a long computation while the main thread keeps a heartbeat
 alive, and the heartbeat must not stall for the duration of the call --
 which is exactly what happens when the GIL is held.

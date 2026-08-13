@@ -10,7 +10,7 @@ Central registry for decay fit models, burst algorithms, and format schemas.
 
 - Depends on `util`.
 
-## Two sources, one output (PRD-027)
+## Two sources, one output
 
 The registry is assembled from two places, and is migrating from one to the
 other:
@@ -22,7 +22,7 @@ other:
   `AlgorithmRegistry.h`. The algorithm declares itself; the registry serves
   what registered. FCS, HMM, PDA and **burst searches** use this.
 
-`kBurstSearchRegistry` is gone (PRD-032). Its seven searches now declare
+`kBurstSearchRegistry` is gone. Its seven searches now declare
 description and dispatch function in one `register_burst_search(descriptor, fn)`
 call in `BurstSearchRegistry.cpp`, so the two cannot drift — which they had:
 `bocpd` and `coincident` were advertised with a `method` the dispatcher had

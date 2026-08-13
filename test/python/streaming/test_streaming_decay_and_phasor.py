@@ -1,6 +1,6 @@
 """StreamingDecayHistogram and StreamingPhasor against their batch equivalents.
 
-PRD-033 recorded these two as "correct and usable" while the correlator beside
+These two were recorded as "correct and usable" while the correlator beside
 them was not. That was an untested claim, and the correlator's cascades 0 and 1
 were "correct" in the same sense — so it is checked here rather than asserted:
 the histogram against `TTTR.get_microtime_histogram`, the phasor against

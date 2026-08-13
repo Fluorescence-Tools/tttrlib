@@ -1,4 +1,4 @@
-"""Fluorescence anisotropy simulation (PRD-005).
+"""Fluorescence anisotropy simulation.
 
 Polarised excitation preferentially excites molecules whose absorption dipole is
 aligned with the laser (photoselection), creating an oriented excited-state

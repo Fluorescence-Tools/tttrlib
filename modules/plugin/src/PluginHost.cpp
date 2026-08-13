@@ -210,7 +210,7 @@ struct HostState {
     /// higher layer. That is why this one is simply a table.
     std::vector<const tttrlib_burst_search_v1*> burst_searches;
 
-    // Generic operations (PRD-027). Same pattern: a plugin registers a
+    // Generic operations. Same pattern: a plugin registers a
     // self-describing analysis step; the host stores the table and publishes
     // it via operations_json(). The pipeline dispatches by name.
     std::vector<const tttrlib_operation_v1*> operations;
@@ -738,7 +738,7 @@ std::string PluginHost::burst_searches_json() {
     return out;
 }
 
-// ── generic operations (PRD-027) ──────────────────────────────────────
+// ── generic operations ────────────────────────────────────────────────
 
 const tttrlib_operation_v1* PluginHost::operation(const std::string& name) {
     ensure_loaded();

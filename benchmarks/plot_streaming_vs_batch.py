@@ -30,7 +30,7 @@ INK_MUTED = "#8a8984"
 SURFACE = "#fcfcfb"
 GRID = "#e3e2dd"
 
-# Recorded in PRD-033 before the fix, on a different dataset (42k photons,
+# Recorded before the fix, on a different dataset (42k photons,
 # tau_D = 15.6 ms). Shown for the shape of the failure, not to be compared
 # value-for-value with the run below.
 BEFORE = {0: 1.031, 1: 1.031, 2: 1.23, 3: 1.25, 4: 1.12, 5: 2.39}
@@ -168,7 +168,7 @@ def main():
     ax3.set_ylabel("streaming / batch", color=INK, fontsize=10)
     ax3.set_title("Before — inflated, and worse the coarser the level",
                   color=INK, fontsize=11, loc="left", pad=6)
-    ax3.text(0.02, 0.93, "recorded in PRD-033 on other data",
+    ax3.text(0.02, 0.93, "recorded earlier on other data",
              transform=ax3.transAxes, color=INK_MUTED, fontsize=8.5, va="top")
 
     fig.suptitle("StreamingCorrelator vs the batch Wahl correlator",

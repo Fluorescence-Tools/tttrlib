@@ -1,4 +1,4 @@
-"""PRD-027 criterion 6: `TTTR::burst_search` dispatches on a name through a
+"""`TTTR::burst_search` dispatches on a name through a
 table, not a chain of `if (mode == "...")`.
 
 What the criterion is actually protecting: the chain lived inside the one
@@ -139,7 +139,7 @@ def test_every_registry_entry_with_a_method_is_dispatchable(data):
                 f"through the dispatch rather than running")
 
 
-# --- PRD-032: one registration path ----------------------------------------
+# --- one registration path --------------------------------------------------
 #
 # The seven built-ins used to be described in a JSON literal
 # (`kBurstSearchRegistry`) and dispatched from a separate table in another file.

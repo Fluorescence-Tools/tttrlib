@@ -1,4 +1,4 @@
-"""Write a simulated molecule trajectory to RMF and plot the tracks (PRD-005).
+"""Write a simulated molecule trajectory to RMF and plot the tracks.
 
 The photon simulator can record the trajectory of every molecule (its position each
 frame). This script simulates freely diffusing molecules, saves the trajectory to an

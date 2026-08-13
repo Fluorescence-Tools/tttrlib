@@ -96,7 +96,7 @@ TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::ensure_group)
 // so the same rule has to hold for EVERY way of getting a column -- not just
 // for the two that go through DataStore.py. `store.column(0).numpy()` and
 // `store.column_by_name("x").numpy()` handed back arrays that outlived the
-// store and read reused memory: see BUGS.md, where a 1000-row CSV column came
+// store and read reused memory: a 1000-row CSV column came
 // back with row 2 as 6.001000000000001e-05 instead of 6.0, and a burst table
 // read 84 of 154 rows of `First Photon` as 3.3e-319.
 TTTRLIB_DS_KEEP_ROOT(tttrlib::data::DataStore::column)

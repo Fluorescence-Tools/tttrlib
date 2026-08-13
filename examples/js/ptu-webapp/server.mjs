@@ -7,7 +7,7 @@
 // It is deliberately small -- one file of server, one page of front end, no
 // framework, no build step, no dependencies beyond Node and tttrlib itself -- so
 // it can be read start to finish. It is the shop window for the binding and the
-// starting point for the burst and single-molecule applications (PRD-017), which
+// starting point for the burst and single-molecule applications, which
 // is why the two things those need are already done properly here:
 //
 //   * every tttrlib call runs in a worker_thread, so a 200 MB read does not

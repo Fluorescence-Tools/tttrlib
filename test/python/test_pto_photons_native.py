@@ -2,7 +2,7 @@
 
 `PtoKind "photons"` + `PtoEncoding "dstore"` is a photon stream stored as its
 own four columns, with no vendor container inside. The specification is
-``doc/formats/pto.rst``, section "Photon streams, natively"; PRD-034 tracks the
+``doc/formats/pto.rst``, section "Photon streams, natively". The
 implementation.
 
 What these pin, and why each one is not obvious:
@@ -123,7 +123,7 @@ class TestTheHeaderRoundTrips:
         path = str(tmp_path / "run.mmfdb.pto")
         _write(path)
         # NB: bind the TTTR. `TTTR(path).header` on a temporary is a hard
-        # SIGSEGV -- the header pointer outlives its owner. See BUGS.md.
+        # SIGSEGV -- the header pointer outlives its owner.
         t = tttrlib.TTTR(path)
         h = t.header
 

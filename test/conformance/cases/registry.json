@@ -10,7 +10,7 @@
     },
     {
       "id": "registry.live_algorithm_categories",
-      "doc": "The categories built from live register_algorithm calls rather than from a hand-authored literal (PRD-027). FCS, HMM and PDA worked and were invisible before this: a binding that serves the literal-backed categories only would pass every other case here and still leave a UI unable to offer them.",
+      "doc": "The categories built from live register_algorithm calls rather than from a hand-authored literal. FCS, HMM and PDA worked and were invisible before this: a binding that serves the literal-backed categories only would pass every other case here and still leave a UI unable to offer them.",
       "steps": [
         {"op": "registry.category_json", "args": ["fcs"], "as": "fcs"},
         {"op": "registry.category_json", "args": ["hmm"], "as": "hmm"},

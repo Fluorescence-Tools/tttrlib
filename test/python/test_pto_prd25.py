@@ -69,7 +69,7 @@ class TestPtoPRD25(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_banner_presence_and_compact_roundtrip(self):
-        """PRD-025 Part 2 & Criterion 5: PtoBanner presence & compact roundtrip"""
+        """PtoBanner presence & compact roundtrip"""
         with open(self.pto_path, "rb") as fp:
             head_bytes = fp.read(512)
             self.assertIn(b"pto\n", head_bytes)
@@ -88,7 +88,7 @@ class TestPtoPRD25(unittest.TestCase):
 
     @needs_pto
     def test_cli_ls_and_json(self):
-        """PRD-025 Criterion 2 & 4: CLI ls command and --json output"""
+        """CLI ls command and --json output"""
         res = subprocess.run([PTO_BIN, "ls", self.pto_path], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
         self.assertIn("PRD-25 Test Container", res.stdout)
@@ -105,7 +105,7 @@ class TestPtoPRD25(unittest.TestCase):
 
     @needs_pto
     def test_cli_tree_and_alignment(self):
-        """PRD-025 Criterion 3: tree command and 8-byte payload alignment"""
+        """tree command and 8-byte payload alignment"""
         res = subprocess.run([PTO_BIN, "tree", self.pto_path], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
         self.assertIn("EBML", res.stdout)
@@ -115,7 +115,7 @@ class TestPtoPRD25(unittest.TestCase):
 
     @needs_pto
     def test_cli_cat_and_extract(self):
-        """PRD-025 Criterion 2 & 9: cat and extract commands"""
+        """cat and extract commands"""
         # cat by name
         res = subprocess.run([PTO_BIN, "cat", "stream1", self.pto_path], capture_output=True)
         self.assertEqual(res.returncode, 0)
@@ -135,7 +135,7 @@ class TestPtoPRD25(unittest.TestCase):
 
     @needs_pto
     def test_cli_exit_codes(self):
-        """PRD-025 Criterion 4: Exit codes 0, 1, 2, 3, 4"""
+        """Exit codes 0, 1, 2, 3, 4"""
         # Non-existent file -> exit 4
         res4 = subprocess.run([PTO_BIN, "ls", "non_existent_file.pto"], capture_output=True)
         self.assertEqual(res4.returncode, 4)
@@ -150,7 +150,7 @@ class TestPtoPRD25(unittest.TestCase):
 
     @needs_pto
     def test_bundle_creation_and_execution(self):
-        """PRD-025 Criterion 6, 9, 10, 11, 13: Executable bundling, P % 8 == 0, execution & reader open"""
+        """Executable bundling, P % 8 == 0, execution & reader open"""
         bundle_path = os.path.join(self.temp_dir.name, "run.pto.com")
         res_b = subprocess.run([PTO_BIN, "bundle", self.pto_path, "-o", bundle_path], capture_output=True, text=True)
         self.assertEqual(res_b.returncode, 0)

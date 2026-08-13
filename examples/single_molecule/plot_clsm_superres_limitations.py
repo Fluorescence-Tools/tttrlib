@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tttrlib
 
-PROTOTYPE_DIR = Path(__file__).parents[2] / "prototype" / "esrrf"
+PROTOTYPE_DIR = Path(__file__).parents[2] / "examples" / "simulation"
 if str(PROTOTYPE_DIR) not in sys.path:
     sys.path.insert(0, str(PROTOTYPE_DIR))
 

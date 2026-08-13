@@ -189,7 +189,7 @@ TTTRLIB_R_UINT64_TYPEMAPS
 
 /* Correlation of data */
 %include "Correlator.i"
-/* 2D fluorescence-decay correlation: the photon-pair pass (PRD-036). */
+/* 2D fluorescence-decay correlation: the photon-pair pass. */
 %include "Fdc2D.i"
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """NeuralNet / HMM-surrogate benchmark — tttrlib C++ vs scikit-learn vs EM.
 
-Answers three questions the PRD-010 design rests on, on the *real*
+Answers three questions the AD/surrogate design rests on, on the *real*
 implementation rather than a standalone probe:
 
 1. How does ``NeuralNet::train`` compare with ``sklearn.MLPRegressor`` in

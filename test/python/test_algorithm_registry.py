@@ -1,4 +1,4 @@
-"""PRD-027 Parts 1-3: algorithms register themselves, and the registry reflects
+"""Algorithms register themselves, and the registry reflects
 what registered.
 
 The gap this closes is the PRD's first stated problem: FCS, HMM and PDA worked

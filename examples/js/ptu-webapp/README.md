@@ -31,7 +31,7 @@ face them and both are load-bearing rather than stylistic.
 the whole file before it returns; for a 200 MB PTU that is seconds. On Node's
 main thread that blocks the event loop and the server answers nothing at all
 during a read — including the request that would report progress. This is the
-operational risk PRD-016 names for a synchronous binding, and a worker is its
+operational risk of a synchronous binding, and a worker is its
 mitigation.
 
 **Photon arrays never leave the worker.** Binning and histogramming happen in
@@ -43,7 +43,7 @@ doubles, and would produce a different answer from every other tttrlib tool.
 ## Scope
 
 This is a *viewer*. Burst analysis, correlation, fitting and the rest of the
-tttrlib surface are all reachable from the same binding — see PRD-017 for the
+tttrlib surface are all reachable from the same binding — the
 burst web UI this is the groundwork for — but they are not here.
 
 ## Not for a network

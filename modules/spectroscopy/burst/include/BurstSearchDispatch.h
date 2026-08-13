@@ -10,7 +10,7 @@
 
 class TTTR;
 
-/// PRD-027 criterion 6 — `TTTR::burst_search` dispatches on a name through a
+/// `TTTR::burst_search` dispatches on a name through a
 /// table, not through a chain of `if (mode == "...")`.
 ///
 /// The chain was not merely inelegant. It lived inside the one function every
@@ -48,7 +48,7 @@ bool register_burst_search(const std::string& name, BurstSearchFn fn);
 /*!
  * \brief Declare a burst search once: what it is, and the function that runs it.
  *
- * PRD-032. The name-only overload above registers dispatch and nothing else, so
+ * The name-only overload above registers dispatch and nothing else, so
  * a search registered through it runs but is invisible to the registry — which
  * is how the built-ins came to be described in one file and dispatched from
  * another, and how two of them ended up advertising a `method` the dispatcher
@@ -66,7 +66,7 @@ bool register_burst_search(const AlgorithmDescriptor& desc, BurstSearchFn fn);
 /// The registered search, or null. Registers the built-ins on first call, and
 /// falls back to the plugin host — a search a plugin contributed is reachable
 /// by name through `TTTR::burst_search` like any other, which is what
-/// PRD-032 criterion 4 asks for. A plugin's search is memoised into the table
+/// the registry requires. A plugin's search is memoised into the table
 /// on first lookup.
 const BurstSearchFn* find_burst_search(const std::string& name);
 

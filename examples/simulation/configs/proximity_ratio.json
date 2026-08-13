@@ -1,5 +1,5 @@
 {
-  "_comment": "Static two-state smFRET (PRD-008). Two species with FRET efficiencies E=0.25 and E=0.75, encoded purely through per-channel brightness q = [(1-E)*b, E*b] on channels [green(donor), red(acceptor)]. Slow, bright molecules (D=0.05 um2/ms ~ a large protein/complex, b=300 kcps) and a dilute population give well-separated single-molecule bursts; run a burst search on the exported TTTR and histogram the per-burst proximity ratio to see two peaks. See examples/simulation/fret_smfret.py.",
+  "_comment": "Static two-state smFRET. Two species with FRET efficiencies E=0.25 and E=0.75, encoded purely through per-channel brightness q = [(1-E)*b, E*b] on channels [green(donor), red(acceptor)]. Slow, bright molecules (D=0.05 um2/ms ~ a large protein/complex, b=300 kcps) and a dilute population give well-separated single-molecule bursts; run a burst search on the exported TTTR and histogram the per-burst proximity ratio to see two peaks. See examples/simulation/fret_smfret.py.",
   "settings": {"dt": 0.01, "n_ph_max": 400000, "n_channels": 2, "laser_period": 32.0,
                "active_margin": 1.0, "fast_grid_bbox": true,
                "seed_diffusion": 12345, "seed_emission": 54321},

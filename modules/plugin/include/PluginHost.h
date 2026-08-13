@@ -179,7 +179,7 @@ public:
      */
     static std::string burst_searches_json();
 
-    // ── generic operations (PRD-027) ───────────────────────────────
+    // ── generic operations ─────────────────────────────────────────
 
     /// The operation registered under \p name, or nullptr.
     static const tttrlib_operation_v1* operation(const std::string& name);

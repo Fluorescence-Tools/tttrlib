@@ -1313,7 +1313,7 @@ bool PtoFile::create(const std::string& filename, const std::string& title) {
 
     Buf banner;
     std::string banner_str = "pto\n"
-                             "This is a .pto photon container (tttrlib PRD-020).\n"
+                             "This is a .pto photon container (tttrlib).\n"
                              "Get a reader: https://github.com/Fluorescence-Tools/tttrlib/releases\n"
                              "\n"
                              "=== HOW TO DECODE THIS BINARY (Linux & macOS / POSIX) ===\n"
@@ -1465,7 +1465,7 @@ bool PtoFile::open(const std::string& filename, bool writable) {
     m.info_bytes = m.tags_bytes = m.notes_bytes = m.cues_bytes = 0;
 
     // EBML header, and the DocType that says this is ours.
-    // PRD-025 Part 6: Skip up to 4 leading non-EBML elements / 2 MB prefix.
+    // Skip up to 4 leading non-EBML elements / 2 MB prefix.
     // Check offset 0 first, then scan for PTO_ID_EBML in Cosmopolitan APE binary prefix
     std::uint64_t ebml_offset = 0;
     std::uint32_t id = 0;
@@ -2925,7 +2925,7 @@ bool apply_photon_header(const PtoFile& file, std::uint64_t uid, TTTR* out) {
 /*!
  * \brief `n_rows` rows of a native photons table, starting at `first_row`.
  *
- * What makes a range over a native table cheap, and the reason PRD-034 says a
+ * What makes a range over a native table cheap, and the reason a
  * cue index is not needed here: a dstore knows where every row of every column
  * begins, so asking for 5,000 events out of 870,161 reads 5,000 events. The
  * record-stream path cannot do that -- a record stream has to be decoded from
@@ -3520,7 +3520,7 @@ namespace {
 
 /*!
  * \brief Write a TTTR into a container as a native photons object.
- *        \see FileFormat::write_from, PRD-034.
+ *        \see FileFormat::write_from.
  *
  * The counterpart of \ref read_one's dstore branch, and what makes a `.pto` a
  * *sink* rather than a wrapper: the stream goes in as its own four columns,
@@ -3535,7 +3535,7 @@ namespace {
  * integers, which is the defect \ref apply_photon_header was added to fix, and
  * a writer that produced one would be manufacturing it.
  *
- * Writing into an **existing** container appends, per PRD-034: one measurement
+ * Writing into an **existing** container appends: one measurement
  * per object, `tttr pto add` semantics. So a second write to the same path
  * does not destroy the first, which is what a caller writing two channels or
  * two runs into one container needs.
@@ -3625,7 +3625,7 @@ int write_tttr_into_pto(void*, const char* path_c, void* tttr, void* header_v) {
         file.add_tag(b);
 
         // Provenance: which container and record type the events were decoded
-        // from. PRD-034 makes this the fourth required tag, and it is not
+        // from. This is the fourth required tag, and it is not
         // decoration -- a marker convention is a property of the source
         // format, not of the events. PTU stores marker *indices* that decode
         // to routing channels as 2^idx; HT3 stores the channel directly. A

@@ -4,7 +4,7 @@
  * \brief Every burst search declares itself here -- what it is, what parameters
  *        it takes, and the function that runs it.
  *
- * PRD-032: the built-in searches used to be a hand-authored JSON literal
+ * The built-in searches used to be a hand-authored JSON literal
  * (`kBurstSearchRegistry`) sitting beside a separate table of dispatch
  * functions. Two lists of the same seven algorithms, in two files, with nothing
  * keeping them in step -- and they did fall out of step: `bocpd` and

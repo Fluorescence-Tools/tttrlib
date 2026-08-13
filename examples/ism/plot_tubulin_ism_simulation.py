@@ -29,10 +29,8 @@ import tttrlib
 # The phantom and the array-detector PSF model are simulation helpers, not part
 # of the library.
 sim_dir = Path(__file__).resolve().parent.parent / "simulation"
-proto_dir = Path(__file__).resolve().parents[2] / "prototype" / "esrrf"
-for extra in (sim_dir, proto_dir):
-    if str(extra) not in sys.path:
-        sys.path.insert(0, str(extra))
+if str(sim_dir) not in sys.path:
+    sys.path.insert(0, str(sim_dir))
 
 from generate_tubulin_phantom import generate_tubulin_phantom
 from simulate import generate_ism_psf

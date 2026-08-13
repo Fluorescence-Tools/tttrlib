@@ -1,6 +1,6 @@
 """Acquiring into a container: photons to disk as they arrive.
 
-PRD-034 design item 7. `TTTR.write` stores a measurement that is already
+`TTTR.write` stores a measurement that is already
 finished, and to do that it needs the whole measurement in memory. An
 acquisition is a different problem: the photon count is unknown when the file
 is opened, the run may last hours, the process may be killed, and **the data
@@ -305,7 +305,7 @@ class TestTheAcquisitionProperties:
             p.wait()
 
     def test_a_killed_writer_keeps_every_checkpointed_photon(self, tmp_path):
-        """PRD-034 acceptance criterion 6. An uncommitted chunk lies outside
+        """An uncommitted chunk lies outside
         the Segment and is invisible, per the format's abandoned-write rule, so
         the file holds exactly the last checkpoint — not almost it."""
         out = tmp_path / "killed.pto"

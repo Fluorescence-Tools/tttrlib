@@ -1,4 +1,4 @@
-"""FLIM micro-time from an arbitrary decay pattern (PRD-005).
+"""FLIM micro-time from an arbitrary decay pattern.
 
 Each species carries a micro-time *decay pattern* (an arbitrary probability density
 over micro-time — not restricted to a multi-exponential), optionally convolved with

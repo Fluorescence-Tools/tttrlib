@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "decayfit.fit23_published_answer",
-      "doc": "The published fit23 answer: the same IRF, counts and starting values the per-model API returned, so a change in the physics moves it. Values re-pinned after the likelihood-floor/tau-penalty sign correction (6723893fa) deliberately moved the optimum. tau and gamma free, r0 and rho held -- the mask that takes the general optimiser rather than the tau-only fast path.",
+      "doc": "The published fit23 answer: the same IRF, counts and starting values the per-model API returned, so a change in the physics moves it. tau and gamma free, r0 and rho held -- the mask that takes the general optimiser rather than the tau-only fast path.",
       "steps": [
         {
           "op": "fit.setup_vector",

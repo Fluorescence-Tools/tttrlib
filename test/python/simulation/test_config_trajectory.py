@@ -24,7 +24,7 @@ def test_background_without_decay_warns(capfd):
     """A background with no background_decay writes every background photon
     into micro-time channel 0 -- what scatter looks like, not what
     uncorrelated background is. Until the default changes, the config must
-    at least be told (BUGS.md 2026-08-10)."""
+    at least be told."""
     cfg = json.loads(tttrlib.SimEngine.default_json())
     cfg["background"] = [0.02, 0.02]
     cfg.pop("background_decay", None)

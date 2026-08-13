@@ -706,7 +706,7 @@ private:
  * `TTTR::write` stores a measurement that is already finished. An acquisition
  * is the other case, and it is not the same problem: the photon count is
  * unknown when the file is opened, the run may last hours, and the process may
- * be killed. PRD-034 calls this the case the sink exists for.
+ * be killed. That is the case this sink exists for.
  *
  * \par How the growth actually happens, and why it is not one object
  * A `dstore` payload writes its column blobs and *then* a directory describing

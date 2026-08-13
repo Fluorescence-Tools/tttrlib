@@ -6,7 +6,7 @@
 // `new TTTR(path)` reads and decodes the whole file before it returns, which for
 // a 200 MB PTU is seconds. On Node's main thread that blocks the event loop --
 // no other request is served, not even the one that would report progress. This
-// is the operational risk PRD-016 names, and running the analysis in a worker is
+// is the operational risk of a synchronous binding, and running the analysis in a worker is
 // its mitigation.
 //
 // The thread boundary is also where the data shrinks. Photon arrays stay here;

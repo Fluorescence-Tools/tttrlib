@@ -60,6 +60,28 @@ static int myErr = 0; // flag to save error state
 TTTRLIB_NOGIL(CLSMImage::fill)      // src/CLSMImage.cpp:1394
 TTTRLIB_NOGIL(CLSMImage::CLSMImage) // filling constructor calls fill() (src/CLSMImage.cpp:641)
 
+// Frames, lines and pixels are pointers into their container; the returned
+// proxies must keep it alive (the same use-after-free class as TTTR.header,
+// BUGS 2026-08-11). SWIG returns the pointer vectors as tuples of element
+// proxies, so each element carries its owner.
+//
+// Python-only: %pythonappend is an unknown directive to the R, Java and
+// JavaScript backends, which parse this same file and stop at it.
+#ifdef SWIGPYTHON
+%pythonappend CLSMFrame::get_lines() %{
+        for _e in (val or ()):
+            _e._keepalive_owner = self
+%}
+%pythonappend CLSMImage::get_frames() %{
+        for _e in (val or ()):
+            _e._keepalive_owner = self
+%}
+%pythonappend CLSMImage::get_frame_for_channel(int, int) %{
+        if val is not None:
+            val._keepalive_owner = self
+%}
+#endif
+
 %include "CLSMPixel.h"
 %include "CLSMLine.h"
 %include "CLSMFrame.h"

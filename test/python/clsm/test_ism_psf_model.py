@@ -1,7 +1,7 @@
 """
 The simulated ISM PSF the array-detector examples and notebooks rest on.
 
-`prototype/esrrf/simulate` is a *scalar* model. The vectorial calculation in
+`examples/simulation/simulate` is a *scalar* model. The vectorial calculation in
 BrightEyes-ISM `PSF_sim` needs torch, psf_generator and zernikepy, so it cannot
 be run here; what can be checked is that the detector geometry reproduces the
 reference's lattices exactly, and that the optical model agrees with the
@@ -17,12 +17,17 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import tttrlib
 
-PROTOTYPE = Path(__file__).parents[3] / "prototype" / "esrrf"
-if str(PROTOTYPE) not in sys.path:
-    sys.path.insert(0, str(PROTOTYPE))
+SIM_DIR = Path(__file__).parents[3] / "examples" / "simulation"
+if str(SIM_DIR) not in sys.path:
+    sys.path.insert(0, str(SIM_DIR))
 
-from simulate import airy_psf, detector_grid, generate_ism_psf  # noqa: E402
+# airy_psf and detector_grid are the library's own -- the simulation helper
+# only ever re-exported them under these names.
+airy_psf = tttrlib.CLSMSuperRes.airy_psf
+detector_grid = tttrlib.CLSMSuperRes.detector_grid
+from simulate import generate_ism_psf  # noqa: E402
 
 
 def test_detector_grid_matches_the_reference_lattices():

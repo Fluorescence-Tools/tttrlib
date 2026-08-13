@@ -1012,7 +1012,7 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
         progress.begin();
 
         std::cout << "Loading: " << file << std::endl;
-        // `-` is stdin (PRD-026 R2), so `tttr sim ... | tttr sm - ...` needs no
+        // `-` is stdin, so `tttr sim ... | tttr sm - ...` needs no
         // intermediate file from the user. It is spooled, not streamed -- see
         // InputPath.
         InputPath input;

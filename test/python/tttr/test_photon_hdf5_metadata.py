@@ -62,6 +62,7 @@ def test_every_event_is_a_photon(data):
     assert set(np.unique(np.asarray(data.event_types)).tolist()) == {0}
 
 
+@pytest.mark.heavy
 def test_the_written_file_validates_against_phconvert(data, tmp_path):
     """Conformance judged by the reference implementation, not by our own reading.
 

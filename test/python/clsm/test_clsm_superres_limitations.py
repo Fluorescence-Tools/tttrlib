@@ -12,9 +12,9 @@ import numpy as np
 import pytest
 import tttrlib
 
-PROTOTYPE_DIR = Path(__file__).parents[3] / "prototype" / "esrrf"
-if str(PROTOTYPE_DIR) not in sys.path:
-    sys.path.insert(0, str(PROTOTYPE_DIR))
+SIM_DIR = Path(__file__).parents[3] / "examples" / "simulation"
+if str(SIM_DIR) not in sys.path:
+    sys.path.insert(0, str(SIM_DIR))
 
 from simulate import Emitter, CLSMScanParameters, render_frame, render_photon_stream
 

@@ -195,7 +195,7 @@ def test_indexing_a_bool_column_does_not_unpack_it():
 
 
 def test_the_idioms_the_migration_needed():
-    """The four shapes counted in BUGS.md, in one place, so it is obvious what
+    """The four shapes the migration counted, in one place, so it is obvious what
     this bought."""
     s = store()
     col = s["f64"]

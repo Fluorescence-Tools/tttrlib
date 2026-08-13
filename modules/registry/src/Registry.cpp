@@ -206,7 +206,7 @@ json build() {
     root["objective"] = json::parse(fit_objectives_json());
     root["operation"] = json::parse(operation_registry_json());
 
-    // PRD-027 Part 3: categories built from live `register_algorithm` calls
+    // Categories built from live `register_algorithm` calls
     // rather than from a hand-authored literal. These three families worked and
     // were invisible -- no entry meant no UI listing, no schema for the
     // provenance system to validate or replay against, and no name for a plugin

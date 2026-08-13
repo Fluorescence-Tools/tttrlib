@@ -3,7 +3,7 @@
 
 #include <mutex>
 
-/// PRD-027 Part 1/3 — the built-in algorithm families that had no registry
+/// The built-in algorithm families that had no registry
 /// entry at all.
 ///
 /// Burst searches and decay fits were already listed, because someone wrote a
@@ -16,7 +16,7 @@
 /// These declarations live next to the registry rather than inside each
 /// algorithm module on purpose, for now: moving a declaration into its module
 /// is a one-line change once that module is migrated onto `register_algorithm`
-/// (PRD-032), and doing it here first means the families become visible without
+/// elsewhere, and doing it here first means the families become visible without
 /// touching five modules another agent may be editing.
 
 namespace tttrlib {

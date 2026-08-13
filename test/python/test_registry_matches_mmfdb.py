@@ -1,4 +1,4 @@
-"""PRD-027 criterion 10: every name the registry publishes is defined in the
+"""Every name the registry publishes is defined in the
 mmfdb dictionary.
 
 The registry is the live source of what tttrlib can do; `okf/nomenclature/mmfdb.dic`
@@ -117,7 +117,7 @@ def test_the_data_format_vocabulary_is_about_storage_not_content():
 
     The MFD companion suffixes — .bg4, .bv4, .2c4, .td4 — are deliberately not
     values here: they name what a table *is*, which is `operation_type`'s job,
-    and an object inside a container has no suffix at all. PRD-026 settled that
+    and an object inside a container has no suffix at all. That was settled
     every artifact the .pto writer emits is stored as `dstore`.
 
     The `data_format` field on the registry's *operation* entries still carries

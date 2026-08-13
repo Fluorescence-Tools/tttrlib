@@ -1,4 +1,4 @@
-"""CLSM raster simulation → CLSMImage reconstruction (PRD-005).
+"""CLSM raster simulation → CLSMImage reconstruction.
 
 Places immobile fluorophores in the shape of a star, scans them with the photon
 simulator's discrete per-pixel-dwell raster (SimScanner), builds a marker-annotated

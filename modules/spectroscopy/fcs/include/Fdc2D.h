@@ -25,8 +25,7 @@
 // with a binary search inside -- the shape array languages express badly, and
 // the reason the implementation this replaces needed a JIT.
 //
-// Reference: Toru Kondo (Schlau-Cohen lab, MIT), `TK_Create2DFDC_04.m`, and
-// PRD-036.
+// Reference: Toru Kondo (Schlau-Cohen lab, MIT), `TK_Create2DFDC_04.m`.
 //
 // ---------------------------------------------------------------------------
 // The log axis depends on `lint_bin_factor`, and that is the reference's rule
@@ -55,7 +54,7 @@
 // This library follows the MATLAB, by ruling: where an implementation and the
 // paper disagree, the paper wins. The port originally inherited a Python
 // implementation's `span + 1` unconditionally, which matches the reference only
-// at factor 1. See PRD-036.
+// at factor 1.
 //
 // ---------------------------------------------------------------------------
 // Two properties are contracts, not implementation details
