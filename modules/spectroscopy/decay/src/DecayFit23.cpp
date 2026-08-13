@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayFit23.h"
 #include "Verbose.h"
+#include "Dual.h"
+#include "GradVec.h"
 
 #include <algorithm>
 #include <array>
@@ -142,6 +144,192 @@ inline double safe_harmonic_mean(double a, double b) {
         return a;
     }
     return 1. / denom;
+}
+
+/*!
+ * @brief Same shape as safe_harmonic_mean(), templated for an exact gradient
+ * (see decay23_cost's docstring). Written with `!(x > y)` rather than `<=`
+ * because `Dual<G>` (Dual.h) only defines `<`/`>` against a plain `double` --
+ * comparisons are value-only there, so the branch taken is identical to
+ * safe_harmonic_mean()'s for `T = double`.
+ */
+template <typename T>
+inline T safe_harmonic_mean_ad(const T& a, const T& b) {
+    if (!(b > 0.)) return a;
+    const T denom = 1. / a + 1. / b;
+    if (!(denom > std::numeric_limits<double>::min())) return a;
+    return 1. / denom;
+}
+
+/*!
+ * @brief `DecayFitIntegrateSignals::Fp()`, templated on `gamma` for an exact
+ * gradient. `Sp`/`Bp` are the fit's data-derived integrals -- constant for
+ * the whole optimisation, so they stay `double` -- gamma is the one quantity
+ * here the objective is differentiated with respect to. The `gamma == 1`
+ * branch of the original is dropped: gamma is clamped to `kMaxGamma = 0.999`
+ * before this is ever called (see decay23_cost), so it is unreachable.
+ */
+template <typename T>
+inline T decay23_Fp_ad(double Sp, double Bp, const T& gamma) {
+    return (Sp - gamma * Bp) / (1. - gamma);
+}
+
+/// `DecayFitIntegrateSignals::Fs()`, templated -- see decay23_Fp_ad.
+template <typename T>
+inline T decay23_Fs_ad(double Ss, double Bs, const T& gamma) {
+    return (Ss - gamma * Bs) / (1. - gamma);
+}
+
+/// `DecayFitIntegrateSignals::r()`, templated -- see decay23_Fp_ad. `g`, `l1`,
+/// `l2` are instrument corrections, not fit parameters, so they stay `double`.
+template <typename T>
+inline T decay23_r_ad(double Sp, double Ss, double Bp, double Bs,
+                      double g, double l1, double l2, const T& gamma) {
+    const T fp = decay23_Fp_ad(Sp, Bp, gamma);
+    const T fs = decay23_Fs_ad(Ss, Bs, gamma);
+    const T nom = fp - g * fs;
+    const T denom = fp * (1. - 3. * l2) + (2. - 3. * l1) * g * fs;
+    return nom / denom;
+}
+
+/// `DecayFitIntegrateSignals::rho()`, templated -- see decay23_Fp_ad. The
+/// `std::max(rh, 1.e-4)` hard floor becomes the same value-only comparison
+/// safe_harmonic_mean_ad uses.
+template <typename T>
+inline T decay23_rho_ad(const T& tau, const T& r0, const T& r_value) {
+    const T rh = tau / (r0 / r_value - 1.);
+    if (rh < 1.e-4) return T(1.e-4);
+    return rh;
+}
+
+/*!
+ * @brief `DecayFit23::modelf` + `normM` + `Wcm`, templated for an exact
+ * gradient via forward-mode AD (`tttrlib::Dual<GradVec<4>>`, Dual.h/GradVec.h)
+ * in place of the 2N=8 objective evaluations a central-difference gradient
+ * costs (see PRD-010, "Still open" item 2). `param` is `[tau, gamma, r0, rho]`
+ * seeded with the four basis vectors -- the caller (decay23_gradient) builds
+ * that seed; this function is a pure transcription of the model chain and is
+ * exercised directly by test_ad_gradient's value check.
+ *
+ * Two deliberate departures from modelf/targetf, both harmless to the result:
+ *
+ *  - `fconv_per_cs_2ch`'s fused NEON kernel is not at stake here -- vv and vh
+ *    are convolved separately via fconv_per_cs_ad, which is what
+ *    fconv_per_cs_2ch's own docstring says is mathematically identical to.
+ *  - `Wcm_p2s`'s series expansion is not templated (its chi2 fallback and
+ *    overflow retry are real work for a branch few callers exercise -- see
+ *    PRD-010). decay23_gradient only registers this path when
+ *    `fit_settings.p2s_twoIstar` is off; the caller falls back to central
+ *    differences otherwise.
+ *
+ * `softbifl_correction` is `Bexpected*log(Bexpected) - loggammaf(Bexpected+1)`
+ * when the soft-BIFL term is active, `0.0` otherwise -- a data-only constant
+ * (see DecayFit23::targetf), passed in rather than recomputed so this stays a
+ * pure function of `param`.
+ */
+template <typename T>
+T decay23_cost(const T param[4], bool fixedrho,
+               double Sp, double Ss, double Bp, double Bs,
+               const int* counts, const double* irf, const double* bg,
+               int Nchannels, double dt, const double* corrections,
+               double softbifl_correction) {
+    const T tau = soft_floor_ad(param[0], kMinTau);
+    const T gamma = clamp_value_ad(param[1], kMinGamma, kMaxGamma);
+    const T r0 = param[2];
+
+    const double period = corrections[0];
+    const double g = corrections[1];
+    const double l1 = corrections[2];
+    const double l2 = corrections[3];
+    const int conv_stop = (int) corrections[4];
+
+    T rho;
+    if (fixedrho) {
+        rho = soft_floor_ad(param[3], kMinRho);
+    } else {
+        const T r_value = decay23_r_ad(Sp, Ss, Bp, Bs, g, l1, l2, gamma);
+        rho = soft_floor_ad(decay23_rho_ad(tau, r0, r_value), kMinRho);
+    }
+
+    const T taurho = safe_harmonic_mean_ad(tau, rho);
+
+    T x_vv[4], x_vh[4];
+    x_vv[0] = T(1.);
+    x_vv[1] = tau;
+    x_vv[2] = r0 * (2. - 3. * l1);
+    x_vv[3] = taurho;
+    x_vh[0] = T(1. / g);
+    x_vh[1] = tau;
+    x_vh[2] = x_vh[0] * r0 * (-1. + 3. * l2);
+    x_vh[3] = taurho;
+
+    std::vector<T> model(2 * Nchannels);
+    fconv_per_cs_ad(model.data(), x_vv, irf, 2, Nchannels - 1, Nchannels,
+                    period, conv_stop, dt);
+    fconv_per_cs_ad(model.data() + Nchannels, x_vh, irf + Nchannels, 2,
+                    Nchannels - 1, Nchannels, period, conv_stop, dt);
+
+    T sum_m(0.);
+    for (int i = 0; i < 2 * Nchannels; i++) sum_m += model[i];
+    if (!(sum_m > 0.)) {
+        for (int i = 0; i < 2 * Nchannels; i++) model[i] = T(bg[i]) * gamma;
+    } else {
+        const T scale = (1. - gamma) / sum_m;
+        for (int i = 0; i < 2 * Nchannels; i++)
+            model[i] = model[i] * scale + T(bg[i]) * gamma;
+    }
+
+    const double Sexp = Sp + Ss;
+    for (int i = 0; i < 2 * Nchannels; i++) model[i] *= Sexp;
+
+    T w = Wcm_ad(counts, model.data(), Nchannels);
+    w = w - softbifl_correction;
+    return w / double(Nchannels);
+}
+
+/*!
+ * @brief Exact gradient for DecayFit23's general (non tau-only) fit branch.
+ * Registered with `bfgs::set_gradient` in `DecayFit23::fit`, only when
+ * `fit_settings.p2s_twoIstar` is off (see decay23_cost's docstring).
+ *
+ * Seeds all four parameter slots even though `fit()`'s general branch only
+ * ever frees tau and/or gamma (r0 and rho are always `bfgs_o.fix()`'d) --
+ * `i_lbfgs` reads back only the free entries of `grad_out`, so the other two
+ * are computed but unused. Kept general on purpose, matching
+ * `gauss_gradient` (ImageLocalization.cpp)'s kNModelPar pattern, in case a
+ * future `fit()` frees r0 or rho directly.
+ */
+double decay23_gradient(double* x, double* grad_out, void* pv) {
+    using Grad4 = tttrlib::GradVec<4>;
+    using Dual4 = tttrlib::Dual<Grad4>;
+
+    DecayFitContext* p = (DecayFitContext*) pv;
+    if (p == nullptr || !p->is_usable())
+        return std::numeric_limits<double>::max();
+
+    p->iterations++;
+    const int Nchannels = p->n_bins;
+    const double* irf = p->irf();
+    const double* bg = p->background();
+    const double* corrections = p->corrections;
+
+    Dual4 xd[4];
+    for (int j = 0; j < 4; ++j) xd[j] = Dual4(x[j], Grad4::Unit(j));
+
+    const double softbifl_correction =
+            (fit_settings.softbifl && fit_signals.Bexpected > 0.)
+            ? fit_signals.Bexpected * std::log(fit_signals.Bexpected) -
+              loggammaf(fit_signals.Bexpected + 1.)
+            : 0.0;
+
+    const Dual4 r = decay23_cost<Dual4>(
+            xd, fit_settings.fixedrho != 0,
+            fit_signals.Sp, fit_signals.Ss, fit_signals.Bp, fit_signals.Bs,
+            p->counts, irf, bg, Nchannels, p->dt, corrections,
+            softbifl_correction);
+
+    for (int j = 0; j < 4; ++j) grad_out[j] = r.grad[j];
+    return r.val;
 }
 
 } // namespace
@@ -414,6 +602,14 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitContext *p) {
         info = 1;
     } else {
         bfgs bfgs_o(DecayFit23::targetf, 4);
+
+        // Exact gradient in one forward-mode pass instead of central
+        // differences' 2N=8 objective evaluations (PRD-010). decay23_gradient
+        // does not cover the Wcm_p2s branch (its series expansion is not
+        // templated), so central differences stay the fallback there.
+        if (!fit_settings.p2s_twoIstar) {
+            bfgs_o.set_gradient(decay23_gradient);
+        }
 
         // One mechanism for every bound in this fit.
         //

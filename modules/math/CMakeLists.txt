@@ -24,6 +24,8 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Deconvolution.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Jitter.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/HmmLattice.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/MaxEntQp.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/Nnls.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft

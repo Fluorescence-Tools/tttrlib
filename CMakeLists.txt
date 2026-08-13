@@ -599,6 +599,12 @@ IF(TTTRLIB_BUILD_CPP_TESTS)
         ADD_TEST(NAME ${_cpp_test} COMMAND ${_cpp_test})
     ENDFOREACH()
 
+    # test_ad_gradient also exercises DecayFit23's objective (fconv_per_cs_ad,
+    # Wcm_ad/log_m_ext_ad), which are header-only templates in the decay
+    # module -- so it needs that include path too, on top of modules/math's.
+    TARGET_INCLUDE_DIRECTORIES(test_ad_gradient
+        PRIVATE "${PROJECT_SOURCE_DIR}/modules/spectroscopy/decay/include")
+
     # test_decay_likelihood is the odd one out: the Poisson likelihoods are not
     # header-only, so it compiles the two translation units it needs rather than
     # linking the decay module. That keeps it runnable by hand from a bare

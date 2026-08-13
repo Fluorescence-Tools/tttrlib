@@ -63,6 +63,35 @@ inline double log_m_ext(double m) {
 }
 
 /*!
+ * @brief Same shape as log_m_ext(), templated so it also runs under a
+ * forward-mode derivative carrier (`tttrlib::Dual<G>`, Dual.h). Comparison on
+ * a `Dual` looks at the value only, so `T = double` takes the same branch as
+ * log_m_ext() itself.
+ */
+template <typename T>
+inline T log_m_ext_ad(const T& m) {
+    using std::log;
+    if (m > kModelFloor) return log(m);
+    const double log_floor = std::log(kModelFloor);
+    return log_floor + (m - kModelFloor) / kModelFloor;
+}
+
+/*!
+ * @brief Same shape as Wcm(), templated for an exact gradient. Does **not**
+ * cover Wcm_p2s()/wcm_p2s() -- that series expansion with its chi2 fallback
+ * and overflow retry is not templated (see PRD-010's "Still open"), so a
+ * caller wiring an analytic gradient must only do so when
+ * `fit_settings.p2s_twoIstar` is off.
+ */
+template <typename T>
+inline T Wcm_ad(const int* C, const T* M, int Nchannels) {
+    T W(0.0);
+    for (int i = 0; i < 2 * Nchannels; i++)
+        W += C[i] * log_m_ext_ad(M[i]);
+    return -W;
+}
+
+/*!
  * Initialize an array containing pre-computed logratithms
  */
 void init_fact();

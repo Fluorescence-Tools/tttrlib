@@ -3,8 +3,10 @@
  * \file MaxEnt.h
  * \brief Maximum entropy regularized inversion.
  *
- * Minimizes ||Ax - b||^2 - nu^2 * S(x) where S is Shannon entropy,
- * via gradient descent with analytic chi^2 and entropy gradients.
+ * Minimizes ||Ax - b||^2 - nu^2 * S(x) where S is Shannon entropy relative to
+ * a uniform prior, via the shared Skilling-Bryan MEM engine (see
+ * modules/math/include/MaxEntQp.h) -- an active-set bound-constrained QP
+ * inside an outer Newton-like iteration, not gradient descent.
  */
 #ifndef TTTRLIB_MAXENT_H
 #define TTTRLIB_MAXENT_H

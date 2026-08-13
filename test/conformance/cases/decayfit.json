@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "decayfit.fit23_published_answer",
-      "doc": "The published fit23 answer: the same IRF, counts and starting values the per-model API returned, so a change in the physics moves it. tau and gamma free, r0 and rho held -- the mask that takes the general optimiser rather than the tau-only fast path.",
+      "doc": "The published fit23 answer: the same IRF, counts and starting values the per-model API returned, so a change in the physics moves it. tau and gamma free, r0 and rho held -- the mask that takes the general optimiser rather than the tau-only fast path, which is also the branch PRD-010 Phase 6 gave an exact forward-mode gradient (previously central differences). Re-pinned 2026-08-13 for that reason, not a physics change: i_lbfgs.h's set_gradient doc says the exact gradient 'also makes the EpsG termination test trustworthy at tight tolerances', so it legitimately stops one step differently along this fit's very flat tau valley (see modules/spectroscopy/decay/README.md's 'floors are numerical guards' section) than a central-difference gradient did -- objective 23.79112398420848 -> 23.791082287859183, tau 0.721353235715964 -> 0.7212727630506686, verified against an independent AD-vs-central-difference check in test/cpp/test_ad_gradient.cpp before re-pinning.",
       "steps": [
         {
           "op": "fit.setup_vector",
@@ -300,7 +300,7 @@
         {"op": "fit.parameters", "on": "out", "as": "params"},
         {"op": "first", "on": "params", "as": "best"}
       ],
-      "expect": {"objective": 23.79112398420848, "best": 0.721353235715964},
+      "expect": {"objective": 23.791082287859183, "best": 0.7212727630506686},
       "tolerance": {"objective": 1e-06, "best": 1e-06}
     },
     {

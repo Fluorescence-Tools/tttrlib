@@ -171,6 +171,7 @@ def experimental(cls):
 %include "MaxEnt.i"
 %include "BlindIRF.i"
 %include "MaxEntTcspc.i"
+%include "DecayPatternFit.i"
 %include "Pda3cCore.i"
 
 %include "Histogram.i"

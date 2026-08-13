@@ -85,6 +85,38 @@ inline double soft_floor(double v, double floor) {
     return floor * std::exp((v - floor) / floor);
 }
 
+/*!
+ * @brief Same shape as soft_floor(), templated so it also runs under a
+ * forward-mode derivative carrier (`tttrlib::Dual<G>`, Dual.h) for an exact
+ * gradient instead of a central difference. Comparison on a `Dual` looks at
+ * the value only, so `T = double` takes the same branches as soft_floor()
+ * itself -- the two are kept as separate functions rather than one converted
+ * in place so soft_floor() stays exactly what it was pinned as.
+ *
+ * `exp` is called unqualified so ADL finds `tttrlib::exp` for `T = Dual<G>`;
+ * the local `using std::exp` supplies the `T = double` overload, since a
+ * built-in type contributes nothing to ADL.
+ */
+template <typename T>
+inline T soft_floor_ad(const T& v, double floor) {
+    using std::exp;
+    if (v < floor) return floor * exp((v - floor) / floor);
+    return v;
+}
+
+/*!
+ * @brief Hard clamp, templated for the same reason as soft_floor_ad(). Below
+ * or above the bound this returns a genuine constant (`T(lower)`/`T(upper)`),
+ * so its derivative there is exactly zero -- a limitation inherited from
+ * whatever clamp this replaces, not introduced by templating it.
+ */
+template <typename T>
+inline T clamp_value_ad(const T& v, double lower, double upper) {
+    if (v < lower) return T(lower);
+    if (v > upper) return T(upper);
+    return v;
+}
+
 
 struct DecayFitCorrections {
 

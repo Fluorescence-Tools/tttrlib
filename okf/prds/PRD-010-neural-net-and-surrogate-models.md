@@ -1,6 +1,6 @@
 # PRD-010 — Reusable neural network + surrogate models, AD gradients, optimiser benchmarks
 
-> **PRD #:** 010 · **Status:** In progress · **Created:** 2026-07-20 · **Updated:** 2026-08-10 · **Owner:** tpeulen
+> **PRD #:** 010 · **Status:** ✅ Done · **Created:** 2026-07-20 · **Updated:** 2026-08-13 · **Owner:** tpeulen
 > **Related:** PRD-005 (photon simulator, reuses `SimPcgRandom`), ChiSurf OKF `prd-60`
 > (amortised neural estimator for H2MM)
 
@@ -324,6 +324,31 @@ cannot separate a 15% difference from the scheduler is not measuring the kernel.
       Eigen is gone from the project — CMake, CI, wheels and vcpkg.
 - [x] `test/cpp/test_ad_gradient.cpp` guards the undocumented `NumberTraits` contract, which the
       Phase 3 prerequisites asked for and which had never actually been written.
+- [x] `DecayFit23`'s general (tau/gamma) fit branch converted to an exact AD gradient (Phase 6),
+      measured 1.27x–1.68x end to end (single-call and 8000-row batch), gradient and value verified
+      against central differences to the finite-difference error floor, and the full existing
+      `test/python/decayfit/` suite (109 tests) reproduces its pinned reference values within tolerance.
+- [x] `DecayFit24`'s `tau1`/`tau2` moved to `soft_floor` (Phase 7, shipped). An exact gradient was
+      built and verified to the finite-difference floor, then **declined**: measured net win at 8000
+      rows was not clear (wall clock 1.08x-1.15x faster, total CPU roughly flat to 6% slower) against
+      `DecayFit23`'s clean 1.3x-1.7x, so it was removed from `DecayFit24.cpp` rather than shipped for
+      an inconclusive number. `A2`, `gamma` and `offset` stay deliberately hard-clamped either way.
+- [x] The central-difference step every remaining `bfgs` consumer uses is retuned (Phase 8):
+      `fd_eps = eps^(1/3)`, a member separate from `sqrt_eps`'s `EpsG`/`EpsX` roles. Measured
+      62x-440x more accurate than the `sqrt_eps` step it replaced, across the full existing
+      C++/Python/conformance suite with zero cases needing a re-pin.
+- [x] `EpsG` and `EpsX` no longer share a variable either (Phase 9): `epsg`/`epsx`, each with its own
+      `set_epsg`/`set_epsx`. `EpsG` auto-tightens to `eps` when an exact gradient is registered,
+      finally acting on what `set_gradient`'s docstring has said since Phase 6. Zero regressions
+      across the full suite, `DecayFit23` and `ImageLocalization` checked specifically.
+- [x] `FitNExp` revisited and shipped a real improvement without an AD gradient replacing its optimizer
+      (Phase 10): a joint `bfgs`+AD refinement of the coordinate search's own answer, exact by the
+      envelope theorem, additive (never runs instead of Brent+EM, only after it), and impossible to
+      make worse by construction (`bfgs`'s line search only accepts strictly decreasing steps).
+      Measured at scale (batched, realistic photon counts): 0.5% overhead, 100% of tested rows
+      improved, 0% regressed. `N=1` (the library's most benchmarked path) gated out after a real ~35%
+      slowdown was measured and fixed before shipping. The fixed-lifetime `fit_map` path is
+      structurally unreachable by this change, confirmed by reading the guard.
 
 ### Correction 3 — the finite-difference baseline in Phase 4 is not the step the optimiser uses
 
@@ -342,6 +367,140 @@ improvement will be correspondingly smaller than "6×". The measured error colum
 None of this touches the **cost** argument, which is what the conversion decision rests on: central
 differences pay 2N objective evaluations at any step size, so the 3.70×/5.16×/5.80× AD advantage
 measured against the real NEON dispatcher in Phase 3b stands unchanged.
+
+### Phase 8 — the retune landed, and the pessimism above was itself wrong (done)
+
+Landed as `fd_eps` (`modules/math/include/i_lbfgs.h`), a member separate from `sqrt_eps` so the FD
+step no longer entangles with the `EpsG`/`EpsX` convergence thresholds `sqrt_eps` also serves --
+`seteps(e)` now sets both `sqrt_eps = sqrt(e)` (unchanged, convergence tests) and
+`fd_eps = cbrt(e)` (the central-difference step), and only the step computation
+(`h = fd_eps * |x|`) changed.
+
+**Correction 3's own prediction -- "the accuracy improvement will be correspondingly smaller than
+6×" -- was wrong, measured against the step actually replaced rather than assumed.**
+`bench_ad_gradients.cpp` was updated to compare `sqrt(eps)` (the real old step, ~1.49e-08) against
+`eps^(1/3)` (the real new step, ~6.06e-06) instead of the never-used `eps` baseline the original Phase
+4 table used:
+
+| N | central-diff error, old step (`sqrt_eps`) | error, new step (`fd_eps`) | improvement |
+|---|--:|--:|--:|
+| 1 (`DecayFit26`) | 2.2e-07 | 3.5e-09 | ~63× |
+| 4 (`DecayFit23`'s `p2s_twoIstar` branch) | 1.6e-05 | 5.1e-08 | ~314× |
+| 5 (`DecayFit24`) | 1.6e-05 | 5.1e-08 | ~314× |
+| 8 | 3.7e-05 | 8.4e-08 | ~440× |
+| 18 | 2.0e-04 | 7.8e-07 | ~256× |
+
+The reasoning in Correction 3 was sound (`sqrt(eps)` is a smaller, more-precise-looking step than
+`eps^(1/3)`, so the *ratio of step sizes* moved less than the original table implied) but the
+conclusion did not follow: a central difference's error is `O(h^2) + O(eps/h)`, and `sqrt_eps` is
+*too small* for that trade-off despite being closer to zero -- the roundoff term `eps/h` dominates
+at the smaller step, which is exactly the failure mode `eps^(1/3)` exists to avoid. Being closer to
+zero is not the same as being the right size.
+
+**Verified against the full existing suite, not assumed safe.** `sqrt_eps`'s two other roles
+(`EpsG`, `EpsX`) are untouched by construction (`fd_eps` is a new member, not a repurposing), and
+every `bfgs` consumer still on central differences was checked directly, not just `DecayFit24`:
+`DecayFit25`, `DecayFit26`, `DecayFit23`'s `p2s_twoIstar` branch, `DecayFitModel.cpp`'s `fit_linked`
+joint-fit path, and `DecayFitPlugin.cpp`'s plugin-fit path. Full C++ (`ctest`, 4/4) and Python suite
+(2698 passed, 49 skipped, 74 subtests, two unrelated pre-existing failures -- a stale system `tttr`
+binary missing `libomp.dylib`, and a load-sensitive performance-comparison test that passes cleanly
+in isolation) ran clean: **zero conformance cases needed re-pinning.** The accuracy gain above is real
+and substantial, but apparently not large enough at any pinned fixture's scale to cross a tolerance
+that survived the fit23 AD conversion's much smaller (~1e-4 relative) shift -- consistent with this
+being a gradient-*precision* improvement inside an already-converged optimizer's tolerance, not a
+change to what any fit converges to.
+
+### Phase 9 — EpsG and EpsX stop sharing a variable too, and EpsG acts on its own promise (done)
+
+Phase 8 fixed one accidental sharing (the FD step); `sqrt_eps` was still doing double duty for two
+*more* unrelated things -- `EpsG` (gradient-norm convergence, `gnorm > sqrt_eps`) and `EpsX`
+(step-size convergence, `step <= sqrt_eps`) -- the same smell that let the FD-step bug hide for years.
+Split into their own members, `epsg` and `epsx` (`modules/math/include/i_lbfgs.h`), each with its own
+public setter (`set_epsg`/`set_epsx`), matching the class's existing per-concern API (`set_bounds`,
+`set_gradient`). `seteps()` still derives sensible defaults for both -- identical to the old shared
+value, so this half of the change is architecture only, zero behaviour change.
+
+**The second half acts on a promise `set_gradient`'s own docstring already made and never kept.** It
+has said, since Phase 6, that an exact gradient "makes the EpsG termination test trustworthy at tight
+tolerances" -- but `EpsG` stayed at `sqrt(eps)` (~1.49e-08) whether or not a gradient was exact. A
+central difference's own noise floor is `sqrt(eps)`-scale, which is why the threshold lived there;
+an exact (AD) gradient's floor is accumulated rounding in the objective itself, `eps`-scale
+(~2.22e-16), a further ~6.7e7x tighter. `set_gradient(g)` now tightens `epsg` to `eps` automatically
+when `g` is non-null, and restores `sqrt(eps)` when `g` is `nullptr` (reverting to central
+differences) -- both directions skipped if a caller has called `set_epsg` explicitly, so nothing
+silently overrides an intentional choice.
+
+**Verified, not assumed helpful.** This directly affects both fits that register an analytic
+gradient -- `DecayFit23`'s general branch and `ImageLocalization` -- so both were checked specifically:
+`test/python/decayfit/` (109 passed), `test/python/misc/test_image_localization.py`, and
+`test/python/test_conformance.py::test_conformance[decayfit.fit23_published_answer]` (the `1e-6`
+tolerance case Phase 6 already re-pinned once) all still pass, at the **same** re-pinned values --
+this change did not move that fit's answer further, meaning `EpsG` was not its binding termination
+criterion. That is a legitimate outcome, not a null result: which criterion binds is data-dependent,
+and the fix is correct regardless of whether any one fixture happens to visibly move. Full suite
+(2698 passed, 74 subtests, the same two unrelated pre-existing failures as Phase 8) confirmed no
+regression anywhere else either.
+
+### Phase 10 — `FitNExp` revisited: Phase 5e was right that it isn't an AD *candidate*, but that wasn't the whole question (done)
+
+Phase 5e closed `FitNExp` as "not an AD candidate ... no gradient optimiser" -- true of the shipped
+design (coordinate-wise Brent + EM, `DecayFitNExp.cpp`), but the actual question asked of this PRD
+later was narrower and different: not "does `FitNExp` use `bfgs`", but "would a joint gradient step
+*on top of* the existing search recover anything the search's one-lifetime-at-a-time updates
+structurally cannot see." `okf/handover/flim-performance-opt.md:93-94` had flagged the AD half of
+this earlier and it was never followed up.
+
+**Why the design wasn't naively replaced.** `DecayFitNExp.cpp`'s Brent+EM is deliberate VARPRO:
+amplitudes enter the model linearly given fixed lifetimes, so EM's per-step update is closed-form, and
+the coordinate search is explicitly multistart-aware ("a profiled mixture likelihood need not be
+unimodal in one lifetime", `DecayFitNExp.cpp:614-616`, unchanged). A generic joint optimizer that
+reimplemented neither would plausibly be both slower and less robust on multimodal data -- so this
+was investigated with the design's own reasoning taken seriously, not assumed to be a stopgap.
+
+**The resolution is the envelope theorem: a joint AD step that does not touch either property.**
+Amplitudes stay profiled by the *same* EM, in plain `double`, at every trial lifetime vector; the AD
+gradient (`Dual<GradVec<N>>`, reusing `fconv_per_cs_ad`) is taken with those amplitudes held constant.
+This is exact, not an approximation -- at the EM optimum `d(NLL)/d(weight) = 0`, so
+`d/d(tau)[profiled NLL]` equals the partial derivative of `NLL(tau, weights)` holding weights fixed,
+by the envelope theorem. Multistart is not reimplemented: the refinement only ever polishes the
+coordinate search's *own* answer, never replaces the search that found it -- a prototype
+(`benchmarks/bench_fitnexp_bfgs_ad.cpp`, kept for the record) measured that a cold joint start with no
+multistart can land in a worse local optimum than Brent's grid scan finds, on the same data a
+refinement-from-that-answer improves.
+
+**Measured before shipping anything**, on the prototype: value/gradient correct (reuses `fconv_per_cs_ad`
+directly, not a reimplementation); a joint refinement pass after the shipped `DecayFitNExp::fit`
+converged never made the answer worse and improved it in every one of 6 tested cases (2-exp
+well-separated, 2-exp correlated, 3-exp, across multiple random seeds) -- including fixing a 3-exp fit
+where the coordinate search had pinned a lifetime at the `tau_max` bound. At the scale that matters
+(a batched fit, realistic per-curve photon count, `DecayFitNExp::fit_batch_flat` -- not the toy
+single-case numbers above): Brent+EM cost 210 ms/row, the refinement added 1.02 ms/row, **0.5%
+overhead**, and improved **100/100** rows with **zero** regressions.
+
+**Shipped as an additive stage in `DecayFitNExp::fit`** (`modules/spectroscopy/decay/src/DecayFitNExp.cpp`),
+run once after the coordinate-descent loop converges, keeping only the refined `lifetimes` -- the
+existing unconditional re-evaluation immediately after already recomputes weights/NLL/probability from
+scratch, so nothing about the surrounding code had to change. `bfgs`'s Armijo line search only ever
+accepts a strictly decreasing step, so the refinement cannot make the result worse by construction, not
+merely by what got measured. `N` (the exponential count) is a runtime value but `Dual<GradVec<N>>`
+needs it at compile time, same constraint every other AD consumer in this PRD has; dispatched via a
+`switch` covering `N = 1..6` (real fits are 1-4 per `DecayFitNExp.h`'s own docs), silently skipping the
+refinement beyond that -- the coordinate result stands unrefined, exactly as it always has.
+
+**One real regression found and fixed before shipping, by the same A/B discipline as every other
+change in this PRD.** `N=1` -- the mono-exponential case, the library's single most benchmarked path
+(`PERF.md`'s "Single-curve lifetime fit" / `bench_tttrlib.py`'s `bench_fit_curve`) -- has no
+cross-lifetime correlation for a joint step to recover, so the refinement there is pure overhead.
+Measured directly against that exact benchmark: **~35% slower per call** (0.25 ms -> 0.34 ms single,
+0.06 ms -> 0.08 ms batched) for an unchanged answer. Gated the refinement to `N >= 2`; re-measured N=1
+back to the unmodified baseline (0.25 ms / 0.06 ms, matching published `PERF.md` numbers) with zero
+change to N=2/3's measured improvement.
+
+**The fixed-lifetime, per-pixel `fit_map` path (`PERF.md`'s headline "Per-pixel reconvolution MLE" 140 ms
+number) is structurally unaffected, not just measured to be.** `bench_tttrlib.py`'s `fit_map` call uses
+`fixed=[1]` (`ext/python/FitNExpWrapper.py:91` -- "1 holds the lifetime fixed"), so no lifetime is ever
+free there; the refinement is gated on `any_free`, so that code path cannot be reached regardless of
+`N`. Confirmed by reading the guard, not assumed from the benchmark alone.
 
 ### Phase 5b — the decay conversion is mechanically feasible (probed, not landed)
 
@@ -474,26 +633,170 @@ d/d(amplitude) *is* the convolved exponential already computed -- so a hand-writ
 about one objective evaluation. The dip at N = 32 reproduces across runs and was not chased; it
 changes no decision.
 
-## Still open
+### Phase 6 — `DecayFit23` converted (done)
+
+`DecayFit23`'s general (tau/gamma) BFGS branch now gets an exact forward-mode gradient
+(`decay23_gradient`, `DecayFit23.cpp`) instead of `i_lbfgs`'s central-difference default. This is
+item 1 and item 2 of the "Still open" list below, done for the one fit Phase 5c/5d/5e had already
+prepared -- the soft-floored bounds and the `set_bounds`-only mechanism they built are exactly the AD
+prerequisite this phase needed.
+
+What landed, in the shape the earlier phases called for:
+
+- **`fconv_per_cs_ad<T>`** (`DecayConvolution.h`) -- a second, `template<T>` scalar body for the
+  periodic-convolution-with-stop kernel, alongside (not replacing) the runtime-dispatched NEON/scalar
+  `fconv_per_cs`. `lamp` (the IRF) stays `double`; `fit`/`x` carry whatever `T` the caller seeds. The
+  fused two-channel NEON kernel (`fconv_per_cs_2ch`) is not templated -- vv and vh are convolved
+  separately under AD, which is what that kernel's own docstring says is mathematically identical to.
+- **`Wcm_ad<T>`/`log_m_ext_ad<T>`** (`DecayStatistics.h`) and **`soft_floor_ad<T>`/`clamp_value_ad<T>`**
+  (`DecayFit.h`) -- templated siblings of the existing `double` functions, same branches (comparisons
+  on a `Dual` look at the value only, so `T = double` takes the identical path). `Wcm_p2s`'s series
+  expansion (chi2 fallback, overflow retry) is **not** templated -- real work for a branch few callers
+  exercise -- so `decay23_gradient` is only registered when `fit_settings.p2s_twoIstar` is off; central
+  differences remain the fallback there.
+- **`decay23_cost<T>`** (`DecayFit23.cpp`, anonymous namespace) -- `modelf` + `normM` + `Wcm`,
+  transcribed onto the templated pieces above, plus templated `Fp`/`Fs`/`r`/`rho`/harmonic-mean
+  helpers so gamma's effect on the *derived* rho (`fit_signals.rho(tau, r0)`, the common case when
+  rho is not caller-fixed) differentiates correctly too -- that dependency chain was not exercised by
+  Phase 5b's probe, which only carried tau through `fconv_per_cs`.
+
+Verified two ways, not one:
+
+- `test/cpp/test_ad_gradient.cpp` gained a `decay23` section reusing the real `fconv_per_cs_ad`/`Wcm_ad`
+  (not a second reimplementation of those, only of the anisotropy glue) against central differences, at
+  both an interior point and both the derived-rho and fixed-rho branches: value agrees to 2.3e-13,
+  gradient to 5e-9 -- 1e-7 relative, the finite-difference error floor seen everywhere else in this PRD.
+- The existing regression suite -- `test/python/decayfit/` (109 passed, 1 unrelated skip), including
+  `test_fit2x_compat.py::test_fit23`, pinned against central differences before this change --
+  reproduces its reference values (`twoIstar` 23.791124 → 23.791082, `tau` 0.721353 → 0.721273, both
+  well inside the test's `places=3` tolerance) after switching to the analytic gradient. The small move
+  is expected, not slop: `i_lbfgs.h`'s own `set_gradient` doc says the exact gradient "also makes the
+  `EpsG` termination test trustworthy at tight tolerances", so the two paths can legitimately stop at
+  very slightly different points near the same minimum.
+
+**One conformance case needed re-pinning, and the tolerance that caught it is exactly why it exists.**
+`test/conformance/cases/decayfit.fit23_published_answer` exercises this same branch (tau/gamma free)
+at `1e-6` tolerance -- tight enough that the `EpsG` effect above moved it: objective
+`23.79112398420848 → 23.791082287859183` (1.75e-6 relative), `tau`
+`0.721353235715964 → 0.7212727630506686` (1.12e-4 relative). Re-pinned to the new values with the
+reason recorded in the case's own `doc` field, since this is the cross-language answer key (Python, R,
+Java and JS all resolve to the same C++ call and so all move together) -- not a second, independent
+regression, but worth naming as a real, measured side effect of tightening the gradient rather than
+glossing over it as noise.
+
+Measured A/B (`benchmarks/bench_decayfit23_ad.py`, `benchmarks/bench_decayfit23_batch_ad.py`; both
+scripts are the whole protocol -- build once with `set_gradient` active and once with it commented out,
+`pip install -e .` between the two, run each), an M1 Pro:
+
+| path | before (central diff) | after (AD) | speedup |
+|---|--:|--:|--:|
+| one `Fit23(...)` call through Python/SWIG, best of 3000 | 0.187 ms | 0.147 ms | **1.27x** |
+| `fit_many`, 8000 rows, wall clock (parallel_for, all cores) | 2595 ms | 1540 ms | **1.68x** |
+| `fit_many`, 8000 rows, total CPU across worker threads | 3721 ms | 2603 ms | **1.43x** |
+
+The single-call number is diluted by SWIG marshalling that has nothing to do with the gradient (see
+`okf/testing/benchmarking.md`'s vector-marshalling trap); `fit_many` crosses into C++ once and lets
+every row pay only the fit cost, which is why its speedup is larger and closer to what
+`bench_ad_gradients.cpp`'s N=4 row (4.63x, gradient-only, scalar) would predict once BFGS's own
+line-search/history overhead is added back in. **This does scale to the parallel batch/pixel path**:
+`fit_many` (`DecayFitModel.cpp`) parallelises over rows with a hand-rolled thread pool
+(`tttrlib::parallel_for`, not OpenMP) once a batch reaches 1024 rows, and `DecayFit23.cpp`'s
+`thread_local fit_signals`/`fit_corrections`/`fit_settings` -- which `decay23_gradient` reads the same
+way `targetf` always did -- give each worker its own copy, so the analytic gradient is exercised
+per-thread with no shared mutable state. Fitted values (median tau, objective mean) were identical
+before and after at 8000 rows, confirming the speedup is not bought with accuracy.
+
+`fit23` is documented (`doc/fit-guide.rst`) as both the single-molecule burst fit and a low-photon
+per-pixel FLIM tool, but the repository's own FLIM competitor benchmark (`benchmarks/bench_tttrlib.py`)
+exercises `DecayFitNExp`/`FitNExp` for per-pixel imaging, not `fit23` -- so this change does not move
+any number already published in `PERF.md`'s FLIM table; it is a new, separate entry (see PERF.md's "AD
+gradients" section).
+
+### Phase 7 — `DecayFit24` tried, tested, and declined (no clear win)
+
+`DecayFit24`'s bound handling needed one small change first, not the redesign Phase 6's write-up
+predicted. `correct_input`'s `tau1`/`tau2` clamps are the exact same arithmetic guard `DecayFit23`'s
+`tau` had (`exp(-dt/tau)` overflows below the floor) -- swapped for `soft_floor`, bit-identical above
+it, same as Phase 5c. **This part shipped and stays**, independent of the AD decision below: it is a
+real improvement to the central-difference gradient too. `A2`, `gamma` and `offset` stay hard-clamped,
+deliberately, unchanged -- pure modelling constraints, same reasoning as `DecayFit23`'s `gamma`. One
+thing found and left alone rather than fixed: `correct_input`'s gamma clamp *tests*
+`x[1] > 0.999 - xm[3]` (coupling it to `A2`) but *assigns* the flat constant `0.999`, not
+`0.999 - xm[3]` -- looks like a latent bug (a `gamma + A2` combination above 1.499 seems reachable),
+noted here rather than silently carried or silently corrected.
+
+An exact gradient was then built the same way as `DecayFit23`'s -- `decay24_cost<T>` (N=5:
+tau1/gamma/tau2/A2/offset) reusing `fconv_per_cs_ad`/`Wcm_ad` unchanged, only its own
+`modelf`/`normM_p2s` glue as new templated code (`normM_p2s` normalises each Jordi half to its *own*
+integrated signal, `Sp` and `Ss` separately, unlike `DecayFit23`'s joint `Sexp` scaling) -- and
+**tested** the same two ways as Phase 6: `test/cpp/test_ad_gradient.cpp`'s `decay24` section (value to
+machine precision, gradient to 2.8e-8 relative against central differences) and the existing
+`test/python/decayfit/`/conformance suites, which reproduced their pinned values with **no re-pin
+needed** (that fixture reports the `-1` non-convergence sentinel, `info == 5`, identically either way).
+
+**The measured A/B was not a clean win, so it was not shipped.** `benchmarks/bench_decayfit24_ad.py`
+(the legacy 64-bin `test_fit2x_compat` fixture) showed no difference at all (0.770 ms vs 0.773 ms) --
+that fixture never converges for this model (`A2` diverges to ~3.06, `tau1`/`tau2` hit their floor,
+`info == 5` every time), so both paths pay the same fixed iteration budget regardless of per-call cost.
+A second benchmark simulated a well-conditioned two-lifetime decay instead (period well above both
+lifetimes) so the fit actually converges, at 8000 rows:
+
+| metric | central differences | AD (tried), two runs | ratio |
+|---|--:|--:|--:|
+| wall clock (`parallel_for`, all cores) | 14861 ms | 12955 ms / 13783 ms | 1.08x-1.15x faster |
+| total CPU across worker threads | 26463 ms | 28286 ms / 28147 ms | 0.94x (6% slower) |
+
+CPU time repeats to <1% across the two AD runs (28286 vs 28147 ms) -- the more reliable of the two
+metrics on a shared machine, per `bench_gradvec.cpp`'s own note on `steady_clock` noise -- and it says
+AD was not cheaper here, marginally more expensive. Wall clock moved more between the two AD runs
+(12955 vs 13783, ~6%) than the CD-vs-AD gap itself, so the wall-clock number would have been overreading
+noise as a win. **Declined on that measurement** -- the same call this PRD already made for `DecayFit26`
+at N=1 -- and the AD path was removed from `DecayFit24.cpp` (a note in the source, above `modelf`, says
+what was tried and points here; `test/cpp/test_ad_gradient.cpp`'s `decay24` section stays, as the record
+that the removed approach was correct, not merely attempted). The likely reason for the gap is
+architectural, not a mistake in the templating: `bench_ad_gradients.cpp`'s own isolated measurement puts
+`DecayFit24`'s gradient at 5.44x cheaper (Phase 4), so the saving is real at the gradient level -- it is
+`i_lbfgs`'s own per-iteration overhead (line search, L-BFGS history update, bound-penalty pass) plus
+`Dual<GradVec<5>>`'s larger memory footprint against a comparatively cheap 128-bin two-exponential model
+that appears to absorb it. Not chased further. `benchmarks/bench_decayfit24_ad.py` and
+`bench_decayfit24_batch_ad.py` were removed with the feature they measured -- the numbers are recorded
+here, `PERF.md`, `CHANGELOG.md` and `okf/log.md` instead of left as a script with nothing to compare
+against, matching `DecayFit26`'s decline (no benchmark script survives that one either).
+
+## Nothing left open
 
 **Not gated on an x86 measurement.** Phase 3b measured against the real NEON dispatcher, not a scalar
 stand-in: AD is 3.70x/5.16x/5.80x ahead at N=4/8/16 *with* central differences keeping their SIMD
 kernel. AVX packs 4 doubles to NEON's 2 and would narrow that, but not by the ~4x it would take to
 flip the decision. Phase 5b showed the conversion is mechanically feasible, and Phase 5d moved the
-bounds onto the one mechanism `i_lbfgs` applies to the analytic path as well. What remains:
+bounds onto the one mechanism `i_lbfgs` applies to the analytic path as well. Phase 6 landed an exact
+gradient for `DecayFit23`. Phase 7 built and tested the same for `DecayFit24`, then declined to ship
+it (smaller, noisier, and net-negative-on-CPU-time measurement). Phase 8 retuned the central-difference
+step every remaining consumer uses, landed with zero conformance re-pins needed. Phase 9 finished the
+architecture: `EpsG`/`EpsX` no longer share a variable with each other either, and `EpsG` now actually
+tightens for an exact gradient, as `set_gradient`'s docstring had promised since Phase 6. Phase 10
+revisited `FitNExp` -- correctly not an AD-*replaces*-the-optimizer candidate, but a real, measured win
+as an additive joint-refinement stage that never runs instead of the shipped Brent+EM search. Every
+item this PRD ever opened is now resolved, one way or another:
 
-1. **Templated kernels in the library.** `fconv_per_cs`, `fconv_per` and friends need `template<T>`
-   scalar bodies -- Phase 5b transcribed one into a probe; the production header needs the real
-   thing -- with the intrinsic dispatch untouched for `double`.
-2. **A gradient callback per fit, and `set_gradient` wired.** It has exactly one caller in the whole
-   library (`ImageLocalization.cpp`).
-3. **Retune the central-difference step.** Still worth doing, but see Correction 3: it is
-   `sqrt_eps*|x|` today, not `eps*|x|`, so the win is smaller than Phase 4 claimed.
-4. **Decline `DecayFit26`.** N=1, measured at 1.57x; the templating costs more than the gradient
-   saves. Recorded as a decision, not an omission.
-5. **Only `DecayFit23` (N=4) and `DecayFit24` (N=5) are live candidates.** `FitNExp` is not one
-   (Phase 5e -- no gradient optimiser), `ImageLocalization` is done, `DecayFit26` is declined. Note
-   from Phase 5e that N=4 sits at the low end of the AD advantage curve (4.8x), not its peak.
+1. **Retune the central-difference step -- done (Phase 8).** `fd_eps = eps^(1/3)` landed, measured
+   62x-440x more accurate than the `sqrt_eps` step it replaced, zero regressions.
+2. **Decline `DecayFit26` -- done.** N=1, measured at 1.57x; the templating costs more than the
+   gradient saves. Recorded as a decision, not an omission.
+3. **The AD candidate list is closed.** `DecayFit23` (Phase 6) is the only fit on an exact gradient.
+   `DecayFit24` was built, tested and declined (Phase 7); `FitNExp` got a joint-refinement stage
+   instead of an AD gradient replacing its optimizer (Phase 10); `ImageLocalization` is done;
+   `DecayFit26` is declined. Every consumer still on central differences (`DecayFit24/25/26`,
+   `DecayFit23`'s `p2s_twoIstar` branch, `fit_linked`, plugin fits) benefits from Phase 8's retuned
+   step regardless.
+4. **`EpsG`/`EpsX` architecture -- done (Phase 9).** Each convergence threshold is its own member with
+   its own setter now, and `EpsG` auto-tightens to `eps` when an exact gradient is registered. Zero
+   regressions across the full suite; `DecayFit23` and `ImageLocalization` (the two AD consumers this
+   directly affects) checked specifically.
+5. **`FitNExp` -- done (Phase 10).** Joint `bfgs`+AD refinement of the coordinate search's own
+   converged answer, `N >= 2` only (measured zero benefit and real overhead at N=1, the library's
+   flagship benchmarked case, so it is gated out there). 0.5% overhead, 100% of tested rows improved,
+   0% regressed, at realistic batched photon counts.
 
 Two things deliberately left as behaviour changes for their own change:
 
@@ -503,6 +806,23 @@ Two things deliberately left as behaviour changes for their own change:
   and `DecayFit23` minimises `W/Nchannels`, so a penalty added there is `N x` too strong in
   log-posterior units. Harmless while these are numerical bounds; wrong the moment anyone reports the
   result as a credible interval.
+
+## Superseded: autodiff is no longer a dependency (2026-08-12)
+
+Everything below about vendoring `autodiff`, pinning its version, and testing against its scalar
+`dual` describes a state that no longer exists. `modules/math/include/Dual.h` (~160 lines) replaced
+the vendored package, so Phase 3's prerequisite 1 -- "the enabling `NumberTraits` specialization is
+undocumented and unsupported upstream, pin the version and test against scalar `dual` so a bump
+fails red" -- is retired rather than satisfied: there is no upstream to bump. The other three
+prerequisites (the non-templatable SIMD kernels, reparameterisation instead of clamping, retuning
+the central-difference step) are unaffected and still stand.
+
+The rest of the AD case is unchanged and re-measured with the replacement, which is faster wherever
+N is large enough to matter: `DecayFit23` (N=4) and `DecayFit24` (N=5) are still the live
+candidates, `DecayFit26` (N=1) is still declined, `ImageLocalization` is still the only converted
+consumer. One number in Phase 5's scaling study moved: the dip at N=32 recorded there as
+"reproducible, not noise" was autodiff materialising temporaries, and is gone. See the 24th entry in
+`okf/log.md` and the A/B in `CHANGELOG.md`.
 
 Not part of this PRD but found by it: `modules/imaging/localization/CMakeLists.txt` declares
 `TEST_DIR test/python/clsm`, which contains no localization tests -- the test is

@@ -145,6 +145,7 @@
 %include "BackgroundEstimation.i"
 %include "MaxEnt.i"
 %include "BlindIRF.i"
+%include "DecayPatternFit.i"
 %include "Pda3cCore.i"
 
 

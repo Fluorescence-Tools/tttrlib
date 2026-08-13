@@ -218,6 +218,62 @@ void fconv_per_cs_2ch(double *fit0, double *fit1,
 
 
 /*!
+ * @brief Templated scalar core of fconv_per_cs(), for automatic
+ * differentiation.
+ *
+ * Same recursion as fconv_per_cs's own scalar fallback, transcribed onto a
+ * template parameter so it also runs under `tttrlib::Dual<GradVec<N>>`
+ * (modules/math/include/Dual.h): one forward-mode pass then yields the model
+ * *and* its gradient with respect to whichever entries of `x` carry a
+ * derivative, in place of a central-difference gradient's 2N evaluations.
+ *
+ * `lamp` (the IRF) stays `double` -- it is measured data, never a fit
+ * parameter, so there is nothing to differentiate it with respect to. The
+ * runtime-dispatched NEON/AVX kernels in DecayConvolution.cpp are untouched
+ * and still serve the plain-`double` objective; this is a second, separate
+ * scalar body for the type that needs to carry a derivative, not a
+ * replacement for the fast path.
+ *
+ * `exp` is called unqualified so ADL finds `tttrlib::exp` for
+ * `T = Dual<G>`; the local `using std::exp` supplies the `T = double`
+ * overload, which reproduces fconv_per_cs's own scalar fallback op-for-op.
+ */
+template <typename T>
+void fconv_per_cs_ad(T *fit, const T *x, const double *lamp, int numexp,
+                     int stop, int n_points, double period, int conv_stop,
+                     double dt) {
+    using std::exp;
+    const int period_n = (int)std::ceil(period / dt - 0.5);
+    const double deltathalf = dt * 0.5;
+    for (int i = 0; i <= stop; i++) fit[i] = T(0.0);
+    const int stop1 = (period_n > n_points - 1) ? n_points - 1 : period_n;
+
+    for (int ne = 0; ne < numexp; ne++) {
+        const T expcurr = exp(-dt / x[2 * ne + 1]);
+        const T tail_a = 1.0 / (1.0 - exp(-period / x[2 * ne + 1]));
+        T fitcurr(0.0);
+        fit[0] += (deltathalf * lamp[0]) * (expcurr + 1.0) * x[2 * ne];
+        int i = 1;
+        for (; i <= conv_stop; i++) {
+            fitcurr = (fitcurr + deltathalf * lamp[i - 1]) * expcurr + deltathalf * lamp[i];
+            fit[i] += fitcurr * x[2 * ne];
+        }
+        for (; i <= stop1; i++) {
+            fitcurr = fitcurr * expcurr;
+            fit[i] += fitcurr * x[2 * ne];
+        }
+        // wrap-around tail -- see fconv_per_cs's own scalar fallback for why
+        // fitcurr is used as-is at bin 0 before it steps.
+        fitcurr = fitcurr * exp(-(period_n - stop1) * dt / x[2 * ne + 1]);
+        for (i = 0; i <= stop; i++) {
+            fit[i] += fitcurr * x[2 * ne] * tail_a;
+            fitcurr = fitcurr * expcurr;
+        }
+    }
+}
+
+
+/*!
  * @brief Convolve lifetime spectrum - fast convolution with reference compound
  * decay
  *

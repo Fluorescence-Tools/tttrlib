@@ -7,10 +7,11 @@ Iterative reconvolution fitting algorithms and maximum likelihood estimation for
 - **`DecayFit.h` / `DecayFit.cpp`**: Base decay fitting engine and cost function evaluation.
 - **`DecayConvolution.h` / `DecayConvolution.cpp`**: Fast numerical convolution routines with instrument response functions (IRF). SIMD-accelerated (AVX+FMA on x86_64, NEON on AArch64) with runtime CPU dispatch.
 - **`DecayFit23.cpp` - `DecayFit26.cpp`**: Non-linear optimization algorithms (Levenberg-Marquardt, Nelder-Mead, L-BFGS) for multi-exponential model fits.
-- **`DecayFitNExp.h` / `DecayFitNExp.cpp`**: General bounded multi-exponential reconvolution by Poisson MLE. Uses EM variable-projection for amplitudes and coordinate-wise Brent minimization for lifetimes. Allocation-free inner optimization loop via `FitWorkspace` scratch buffers. Supports single-curve, batch, and per-pixel image fitting.
+- **`DecayFitNExp.h` / `DecayFitNExp.cpp`**: General bounded multi-exponential reconvolution by Poisson MLE. Uses EM variable-projection for amplitudes and coordinate-wise Brent minimization for lifetimes, followed by an additive joint `bfgs`+AD refinement pass for `N >= 2` lifetimes (see below). Allocation-free inner optimization loop via `FitWorkspace` scratch buffers. Supports single-curve, batch, and per-pixel image fitting.
 - **`DecayStatistics.h` / `DecayStatistics.cpp`**: Goodness-of-fit statistics (chi-squared, weighted residuals, autocorrelation of residuals).
 - **`BlindIRF.h` / `BlindIRF.cpp`**: Blind instrument response function estimation from fluorescence decays via Savitzky-Golay derivative, truncated exponential fitting, and Richardson-Lucy deconvolution with median-filter regularization. ~4.7x faster than the Python reference.
-- **`MaxEntTcspc.h` / `MaxEntTcspc.cpp`**: Maximum-entropy TCSPC lifetime analysis (`me_vin4_E.m` analogue, ported from `chisurf maxent_decay.core.solver`). Recovers a lifetime distribution P(tau) via the quadratic MEM objective with bounded-QP active-set steps. Matches the ChiSurf reference to 1e-12 (p, chisq, Q, niter) and is ~11x faster.
+- **`MaxEntTcspc.h` / `MaxEntTcspc.cpp`**: Maximum-entropy TCSPC lifetime analysis (`me_vin4_E.m` analogue, ported from `chisurf maxent_decay.core.solver`). Recovers a lifetime distribution P(tau) via the quadratic MEM objective with bounded-QP active-set steps. Matches the ChiSurf reference to 1e-12 (p, chisq, Q, niter) and is ~11x faster. Its bounded-QP/MEM engine now lives in `modules/math/include/MaxEntQp.h`, shared with `modules/spectroscopy/corrections/src/MaxEnt.cpp`; see PRD-038.
+- **`DecayPatternFit.h` / `DecayPatternFit.cpp`**: General N-arbitrary-pattern fit — non-negative amplitudes of caller-supplied fixed reference patterns (e.g. `DecayFitProblem::patterns`), with a choice of plain NNLS, L2 (Tikhonov), or Skilling-Bryan maximum-entropy regularisation. See PRD-038.
 
 ## Dependencies
 
@@ -124,12 +125,54 @@ at gamma = −0.2 and 1.5), so its clamp is purely a modelling constraint and
 removing it is a behaviour change worth making on its own.
 
 So the two roles are separated. The floors keep the model evaluable; the soft
-bounds shape the fit. That split is also what makes the AD conversion possible:
+bounds shape the fit. That split is also what made the AD conversion possible:
 `i_lbfgs` adds the bound penalty *and its gradient* to whatever a registered
 analytic-gradient callback returns (`i_lbfgs.h:313-320`), whereas a term added
 to the objective by hand — as the old `tau` penalty was — is invisible to that
 callback and would have made the analytic gradient wrong by exactly `-1` in the
 `tau` component below the bound.
+
+### The general (tau/gamma) branch now uses that gradient
+
+`decay23_gradient` (`DecayFit23.cpp`, anonymous namespace) is a one-pass
+forward-mode gradient — `tttrlib::Dual<GradVec<4>>`, the same machinery the
+2D-Gaussian localization fit uses — registered via `bfgs_o.set_gradient(...)`
+in place of `i_lbfgs`'s central-difference default. It differentiates the same
+chain `targetf`/`modelf` runs (`sanitise_parameters`'s soft floor and hard
+clamp, the derived-or-fixed `rho`, both `fconv_per_cs` calls, the background
+mix, `normM`, `Wcm`) via templated siblings of those functions
+(`fconv_per_cs_ad`/`Wcm_ad`/`log_m_ext_ad`/`soft_floor_ad`/`clamp_value_ad`),
+not a reimplementation next to them. `Wcm_p2s`'s series expansion is not
+templated, so `fit_settings.p2s_twoIstar` fits keep using central differences.
+
+Measured (`benchmarks/bench_decayfit23_ad.py`, `benchmarks/bench_decayfit23_batch_ad.py`):
+one `Fit23()` call through Python is **1.27×** faster; `fit_many` on 8000 rows
+(`tttrlib::parallel_for`, all cores) is **1.68×** faster wall clock, with fitted
+values unchanged. See PRD-010's Phase 6 and `PERF.md`'s "Exact gradient in
+DecayFit23's general (tau/gamma) branch" for the full numbers.
+
+### `DecayFit24`: an exact gradient was tried, tested, and declined
+
+`tau1`/`tau2` moved to `soft_floor` (the same arithmetic-overflow guard as
+`DecayFit23`'s `tau`) — this part shipped and stays. An exact gradient was
+then built the same way as `DecayFit23`'s, for the two-lifetime model (N=5:
+tau1/gamma/tau2/A2/offset), reusing `fconv_per_cs_ad`/`Wcm_ad` unchanged (only
+`normM_p2s`'s per-half scaling needed new templated code); `A2`, `gamma` and
+`offset` stay hard-clamped, deliberately, for the same reason `DecayFit23`'s
+`gamma` does. One thing found and preserved rather than fixed while building
+it: `correct_input`'s gamma clamp *tests* `x[1] > 0.999 - xm[3]` (coupled to
+`A2`) but *assigns* the flat constant `0.999`, not `0.999 - xm[3]` —
+reproducing `correct_input` exactly was the job, not correcting a latent bug
+in it.
+
+Measured at 8000 rows: wall clock **1.08×–1.15×** faster, but total CPU
+across worker threads — the more repeatable metric — **roughly flat to 6%
+slower**. Unlike `DecayFit23` this was not a clean win, so the gradient was
+**not shipped** — removed from `DecayFit24.cpp` (a note above `modelf` says
+what was tried and why), same call already made for `DecayFit26`.
+`test/cpp/test_ad_gradient.cpp`'s `decay24` section stays, as the record that
+the removed approach was correct, not merely attempted. See PRD-010's Phase 7
+and `PERF.md` for the full numbers and the likely cause.
 
 ### Also unified
 
@@ -153,3 +196,48 @@ stays as the arithmetic guard.
 Verified the same way as fit23: every in-range starting point gives an identical
 fraction and 2I*; a start at `f = -0.3` differs in the sixth decimal with the
 same 2I*, i.e. the same minimum reached by a marginally different path.
+
+## `DecayFitNExp`: a joint AD refinement pass, additive to the shipped search
+
+`DecayFitNExp.cpp` deliberately never used `bfgs`: amplitudes are profiled by
+EM (closed-form given fixed lifetimes, since they enter the model linearly)
+and lifetimes are searched one at a time by a Brent search that is explicitly
+multistart-aware ("a profiled mixture likelihood need not be unimodal in one
+lifetime", `DecayFitNExp.cpp`). Both properties are real and are unchanged —
+this adds a joint gradient step *after* the coordinate search converges,
+never instead of it.
+
+`refine_lifetimes_ad` (`DecayFitNExp.cpp`, anonymous namespace) profiles
+amplitudes with the *same* EM (`evaluate_profile_ws`, plain `double`, re-run
+at every trial lifetime vector) and takes the AD gradient
+(`tttrlib::Dual<GradVec<N>>`, reusing `fconv_per_cs_ad`) holding those
+amplitudes constant. This is exact by the envelope theorem: at the EM
+optimum `d(NLL)/d(weight) = 0`, so `d/d(tau)[profiled NLL]` equals the
+partial derivative of `NLL(tau, weights)` holding weights fixed — the term
+through weights' own dependence on tau vanishes identically, so there is no
+need to differentiate through the EM iteration itself. `N` is a runtime
+value but `Dual<GradVec<N>>` needs it at compile time, so
+`refine_lifetimes_ad_dispatch` switches on it for `N = 1..6` and silently
+skips the refinement beyond that (real fits are 1-4 exponentials).
+
+Multistart robustness is deliberately not reimplemented: a prototype
+(`benchmarks/bench_fitnexp_bfgs_ad.cpp`, kept for the record) found that a
+*cold* joint start with no grid scan can land in a worse local optimum than
+Brent's multistart finds, on data where refining Brent's own answer
+afterward improves it. So the refinement only ever polishes the coordinate
+search's own converged answer. `bfgs`'s Armijo line search only accepts
+strictly decreasing steps, so it cannot make that answer worse by
+construction, not merely by what was measured.
+
+Measured at scale (batched, realistic per-curve photon counts,
+`DecayFitNExp::fit_batch_flat`): **0.5% overhead**, **100%** of tested rows
+improved, **0%** regressed. One real regression was found and fixed before
+shipping: `N=1` (mono-exponential, the library's single most benchmarked
+path — `PERF.md`'s "Single-curve lifetime fit") has no cross-lifetime
+correlation for a joint step to recover, so the refinement there was pure
+overhead — measured at +35% per call for an unchanged answer, so it is
+gated to `N >= 2`. The fixed-lifetime `fit_map` path (`fixed=[1]`,
+`ext/python/FitNExpWrapper.py`) never has a free lifetime, so the
+refinement's `any_free` guard makes it structurally unreachable there
+regardless of `N`. See PRD-010's Phase 10 and `PERF.md` for the full
+numbers.

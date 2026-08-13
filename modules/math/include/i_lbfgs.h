@@ -10,11 +10,22 @@
  * search and central-difference gradients. Licensed with the library
  * (BSD-3-Clause); no third-party code.
  *
- * The public interface of the bfgs class (construction with a target
- * function double f(double* x, void* user), fixed-parameter masks, eps and
- * iteration control, minimize() info codes) is unchanged:
+ * The original public interface (construction with a target function
+ * double f(double* x, void* user), fixed-parameter masks, eps and iteration
+ * control, minimize() info codes) is unchanged:
  *   -1 wrong parameters, 0 aborted, 1 function decrease below EpsF,
  *    2 step below EpsX, 4 gradient norm below EpsG, 5 iteration limit.
+ *
+ * `set_epsg`/`set_epsx` are new (PRD-010): EpsG and EpsX used to share one
+ * derived value, `sqrt_eps`, with each other and (until PRD-010's Correction
+ * 3) with the central-difference step -- three unrelated quantities picked
+ * the same formula by convenience rather than by contract, which is exactly
+ * how the FD-step bug went unnoticed. Each is now its own member with its
+ * own setter; `seteps()` still derives sensible defaults for all of them, and
+ * `set_gradient()` auto-tightens EpsG when an exact gradient is registered
+ * (an exact gradient's noise floor is `eps`-scale, not the `sqrt(eps)`-scale
+ * floor a central difference has), unless a caller has called `set_epsg`
+ * explicitly.
  */
 
 #include <cmath>      /* std::sqrt, std::fabs, std::isfinite */
@@ -212,10 +223,33 @@ class bfgs
     has_bounds = true;
   }
 
-  // set epsilon explicitly
+  /*!
+   * @brief Set every epsilon-derived default at once.
+   *
+   * ``eps`` (``EpsF``, function-value convergence) is the only quantity the
+   * caller states; everything else used to be *one* derived value,
+   * ``sqrt_eps``, standing in for three unrelated things: the gradient-norm
+   * convergence test (``EpsG``), the step-size convergence test (``EpsX``),
+   * and the central-difference step. That the first two happened to want the
+   * same formula is not a reason to share a variable -- it is exactly the
+   * kind of accidental coupling that let the third one (the FD step) go
+   * unnoticed as wrong for years (PRD-010, "Correction 3": a central
+   * difference wants ``eps^(1/3)``, not ``sqrt(eps)``, the *forward*-difference
+   * optimum). ``EpsG`` and ``EpsX`` get their own members now too, so a future
+   * change to one cannot silently move the other two by construction rather
+   * than by discipline. ``set_epsg``/``set_epsx`` override the default computed
+   * here; this function does not touch either once a caller has called them.
+   */
   void seteps(double e) {
     eps = e;
-    sqrt_eps = std::sqrt(e);
+    if (!epsg_explicit) epsg = std::sqrt(e);
+    if (!epsx_explicit) epsx = std::sqrt(e);
+    // eps^(1/3): a central difference's error is O(h^2) (truncation) +
+    // O(eps/h) (roundoff); balancing the two gives a larger optimal step than
+    // sqrt(eps), which minimises the *forward*-difference error O(h) + O(eps/h)
+    // instead. Own member for the same reason epsg/epsx are now separate --
+    // see the class doc above.
+    fd_eps = std::cbrt(e);
   }
 
   // estimate epsilon
@@ -229,6 +263,13 @@ class bfgs
     seteps(e);
   }
 
+  /// Override the gradient-norm convergence threshold (``EpsG``) explicitly.
+  /// Once called, `set_gradient` no longer auto-tightens it (see below).
+  void set_epsg(double v) { epsg = v; epsg_explicit = true; }
+
+  /// Override the step-size convergence threshold (``EpsX``) explicitly.
+  void set_epsx(double v) { epsx = v; epsx_explicit = true; }
+
   /*!
    * @brief Register an analytic gradient, replacing central differences.
    *
@@ -238,9 +279,20 @@ class bfgs
    *
    * Exact gradients cost one pass instead of @f$2N@f$ objective evaluations
    * and remove the step-size compromise, which also makes the ``EpsG``
-   * termination test trustworthy at tight tolerances.
+   * termination test trustworthy at tight tolerances -- and now actually acts
+   * on that: unless a caller has called `set_epsg` explicitly, registering a
+   * gradient tightens ``EpsG`` to ``eps`` (a central difference's own noise
+   * floor is ``~sqrt(eps)``, which is why ``EpsG`` lived there; an exact
+   * gradient's floor is accumulated rounding in the objective itself, which is
+   * ``eps``-scale, not ``sqrt(eps)``-scale). Passing ``nullptr`` restores the
+   * ``sqrt(eps)`` default along with the finite-difference fallback, for the
+   * same reason. Both directions leave an explicit `set_epsg` alone.
    */
-  void set_gradient(GradientFP g) { fgrad = g; }
+  void set_gradient(GradientFP g) {
+    fgrad = g;
+    if (epsg_explicit) return;
+    epsg = (fgrad != nullptr) ? eps : std::sqrt(eps);
+  }
   /// Whether an analytic gradient is in use.
   bool has_gradient() const { return fgrad != nullptr; }
 
@@ -302,8 +354,10 @@ class bfgs
 
     // Gradient in the reduced space. Uses the registered analytic gradient when
     // one is available (one pass, exact); otherwise falls back to the
-    // central-difference scheme with step h = sqrt_eps * |x| (h = sqrt_eps at
-    // 0), matching the previous 2-point behaviour. Returns f(zz).
+    // central-difference scheme with step h = fd_eps * |x| (h = fd_eps at 0),
+    // fd_eps = eps^(1/3), the step size a central difference actually wants
+    // (PRD-010, "Correction 3") rather than sqrt(eps)'s forward-difference
+    // optimum. Returns f(zz).
     std::vector<double> gfull(N);
     auto grad = [&](const std::vector<double>& zz, std::vector<double>& g) -> double {
       for (int j = 0; j < n; j++) xd[idx[j]] = zz[j];
@@ -325,8 +379,8 @@ class bfgs
       double fval = fp(xd.data());
       for (int j = 0; j < n; j++) {
         const double temp = zz[j];
-        double h = sqrt_eps * std::fabs(temp);
-        if (h == 0.) h = sqrt_eps;
+        double h = fd_eps * std::fabs(temp);
+        if (h == 0.) h = fd_eps;
         xd[idx[j]] = temp + h;
         const double w1 = fp(xd.data());
         xd[idx[j]] = temp - h;
@@ -355,7 +409,7 @@ class bfgs
     int info = 5;  // default: iteration limit
     for (int iter = 0; iter < maxiter; ++iter) {
       const double gnorm = std::sqrt(dot(g, g));
-      if (!(gnorm > sqrt_eps)) { info = 4; break; }
+      if (!(gnorm > epsg)) { info = 4; break; }
 
       // two-loop recursion: d = -H*g
       q = g;
@@ -430,7 +484,7 @@ class bfgs
       fx = f_new;
 
       if (df <= eps * fscale) { info = 1; break; }
-      if (step <= sqrt_eps) { info = 2; break; }
+      if (step <= epsx) { info = 2; break; }
     }
 
     // copy results back to x
@@ -441,8 +495,12 @@ class bfgs
  private:
 
   int N;
-  double eps;
-  double sqrt_eps;
+  double eps;          ///< EpsF: function-value convergence threshold
+  double epsg;          ///< EpsG: gradient-norm convergence threshold -- see seteps()/set_gradient()
+  double epsx;          ///< EpsX: step-size convergence threshold -- see seteps()
+  double fd_eps;         ///< central-difference step multiplier, eps^(1/3) -- see seteps()
+  bool epsg_explicit = false;  ///< true once set_epsg() has been called; freezes auto-tightening
+  bool epsx_explicit = false;  ///< true once set_epsx() has been called
   TargetFP f;
   GradientFP fgrad = nullptr;  ///< optional analytic gradient; central differences when null
   void* pcopy;

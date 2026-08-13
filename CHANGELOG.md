@@ -3,6 +3,16 @@
 ## [Unreleased]
 
 ### Added
+- **A general N-arbitrary-pattern fit: `decay_pattern_fit`.** Given N fixed
+  reference decay shapes and data, finds non-negative amplitudes, with a
+  choice of three regularisations — `PatternFitMode_kNone` (plain NNLS,
+  `Nnls.h`'s new Lawson-Hanson solver, verified against
+  `scipy.optimize.nnls`), `kTikhonov` (L2-regularised, non-negative) and
+  `kMaxEnt` (Skilling-Bryan maximum-entropy, toward a uniform or
+  caller-supplied prior). `DecayFit26` fits a *fixed pair* of patterns with
+  one constrained mixing fraction; this is the general case `DecayFitProblem
+  ::patterns` was built to carry but that no built-in model had consumed yet.
+  See PRD-038, `modules/spectroscopy/decay/include/DecayPatternFit.h`.
 - **`tools/check_swig_multilang.sh` now compiles the generated Java C++.** The
   script ran SWIG for four languages and then `javac` on the generated
   *proxies* — which proves nothing about the generated `.cxx`. That gap has
@@ -148,6 +158,17 @@
   each refresh bins *every photon of the run* to display its tail.
 
 ### Fixed
+- **`maxent_invert`'s entropy regulariser had the sign backwards.** Measured:
+  at the uniform prior its formula gave `S = -3.0` (should be `0`, its
+  maximum) and `S = +12.9` for a spiky, far-from-prior solution — larger, not
+  smaller, the further the solution moved away. Since the objective
+  *minimises* `chi^2 - nu^2*S(x)`, the old formula rewarded moving away from
+  the prior instead of penalising it. `MaxEnt.cpp` now routes through the
+  same verified Skilling-Bryan engine `MaxEntTcspc.cpp` uses (both now share
+  `modules/math/include/MaxEntQp.h`) instead of its own separate
+  projected-gradient implementation. Public signature unchanged; both
+  existing `TestMaxEnt` tests still pass — their tolerances were always loose
+  enough to hold under either engine. See PRD-038.
 - **A C++ throw no longer terminates the interpreter.** `%exception` is
   positional in SWIG — it covers everything declared after it — and a bare
   `%exception;` resets to *nothing* rather than to whatever was in force
@@ -1464,6 +1485,69 @@
   curve), `fit_many` (batch), and `fit_map` (per-pixel image). Delegates to the
   optimized C++ `DecayFitNExp` API. The benchmarks reference `tttrlib.FitNExp`;
   this implements it.
+- **`DecayFit23`'s general (tau/gamma) fit branch now uses an exact forward-mode
+  gradient instead of central differences** — the same `Dual<GradVec<N>>`
+  machinery the localization fit uses, applied to a second consumer for the
+  first time (PRD-010). `fconv_per_cs_ad<T>` (`DecayConvolution.h`),
+  `Wcm_ad`/`log_m_ext_ad` (`DecayStatistics.h`) and
+  `soft_floor_ad`/`clamp_value_ad` (`DecayFit.h`) are templated siblings of the
+  existing `double` functions, alongside (not replacing) the runtime-dispatched
+  NEON/scalar kernels. Measured A/B (build with/without the gradient
+  registered): one `Fit23()` call through Python is 1.27× faster (0.187 →
+  0.147 ms), and `fit_many` on 8000 rows is 1.68× faster wall clock (2595 →
+  1540 ms, `tttrlib::parallel_for` across all cores) — fitted values unchanged
+  (median tau, mean objective identical at 8000 rows; the existing
+  `test/python/decayfit/` suite, including the pinned `test_fit23` reference,
+  still passes). `Wcm_p2s`'s series expansion is not templated, so
+  `fit_settings.p2s_twoIstar` fits keep using central differences.
+- **`DecayFit24`'s `tau1`/`tau2` moved to `soft_floor`** (same arithmetic-
+  overflow guard `DecayFit23`'s `tau` had); `A2`/`gamma`/`offset` stay
+  deliberately hard-clamped.
+- **An exact forward-mode gradient for `DecayFit24` was built, verified to the
+  finite-difference floor, measured, and declined — not shipped.** Reused
+  `fconv_per_cs_ad`/`Wcm_ad` unchanged, same shape as `DecayFit23`'s. At 8000
+  rows the measured win was not clear: wall clock 1.08×–1.15× faster, but
+  total CPU across worker threads — the more repeatable metric — roughly flat
+  to 6% *slower*, against `DecayFit23`'s clean 1.3×–1.7×. Removed from
+  `DecayFit24.cpp` rather than shipped on an inconclusive number, the same
+  call already made for `DecayFit26`; `test/cpp/test_ad_gradient.cpp`'s
+  `decay24` section stays as the record that the removed approach was
+  correct, not merely attempted. See PRD-010 Phase 7 and `PERF.md` for the
+  full numbers and the likely cause (`i_lbfgs`'s own per-iteration overhead
+  absorbing the gradient-level saving on this comparatively cheap model).
+- **`i_lbfgs`'s central-difference gradient is 62×-440× more accurate** (PRD-010
+  Phase 8). `bfgs` was using `sqrt(eps)` as its step, the optimum for a
+  *forward* difference, because it shared the `sqrt_eps` member with two
+  unrelated convergence thresholds (`EpsG`, `EpsX`). A central difference
+  wants `eps^(1/3)` instead — now its own member, `fd_eps`, set alongside
+  `sqrt_eps` in `seteps()` without touching what `sqrt_eps` still does.
+  Benefits every remaining central-difference consumer (`DecayFit24/25/26`,
+  `DecayFit23`'s `p2s_twoIstar` branch, `fit_linked`, plugin fits) at no cost:
+  the full C++/Python/conformance suite passed with zero cases needing a
+  re-pin — the precision gain lands inside every existing tolerance.
+- **`i_lbfgs`'s `EpsG`/`EpsX` convergence thresholds no longer share a
+  variable either, and `EpsG` finally acts on what its own docs promised**
+  (PRD-010 Phase 9). Split `sqrt_eps` into `epsg`/`epsx`, each with its own
+  setter (`set_epsg`/`set_epsx`), the same architectural fix Phase 8 applied
+  to the FD step. `set_gradient()` now auto-tightens `epsg` to `eps` when an
+  exact gradient is registered (its noise floor is `eps`-scale, not the
+  `sqrt(eps)`-scale floor a central difference has) and restores `sqrt(eps)`
+  when reverting to `nullptr`, unless a caller has called `set_epsg`
+  explicitly. Verified against `DecayFit23` and `ImageLocalization` (the two
+  AD-gradient consumers) and the full suite: zero regressions.
+- **`DecayFitNExp` (multi-exponential decay fit) gained a joint `bfgs`+AD
+  refinement pass, additive to its shipped Brent+EM search** (PRD-010
+  Phase 10). Amplitudes stay profiled by the existing EM (closed-form given
+  fixed lifetimes); the AD gradient holds them constant, exact by the
+  envelope theorem. Runs once after the coordinate search converges and
+  keeps only the refined lifetimes — the search itself, its multistart
+  robustness, and the EM amplitude step are all unchanged. `bfgs`'s line
+  search only accepts strictly decreasing steps, so this cannot make a fit's
+  answer worse. Measured at scale (batched, realistic photon counts):
+  0.5% overhead, 100/100 tested rows improved, 0 regressed. `N=1`
+  (mono-exponential, the library's most benchmarked path) is gated out after
+  a real ~35% slowdown was measured and fixed before shipping; the
+  fixed-lifetime `fit_map` path is structurally unreachable by this change.
 
 ### Added
 - **A `DataStore` tree is reached with `/`, the way `pathlib` reaches a

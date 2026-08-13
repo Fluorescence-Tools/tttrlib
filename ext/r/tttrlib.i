@@ -223,6 +223,7 @@ TTTRLIB_R_UINT64_TYPEMAPS
 %include "BackgroundEstimation.i"
 %include "MaxEnt.i"
 %include "BlindIRF.i"
+%include "DecayPatternFit.i"
 /* Maximum-entropy TCSPC: lifetime and FRET-distance distributions. Its inputs
    go through IN_ARRAY1 and its outputs through ARGOUTVIEWM_ARRAY1/2, all of
    which rarrays.i implements -- unlike jarrays.i, which has no rank-2 argout,

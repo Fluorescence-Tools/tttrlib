@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 //
 // The vectorized forward-mode gradient used by the 2D-Gaussian localization
-// fit: `tttrlib::Dual<GradVec<N>>` (modules/math).
+// fit and DecayFit23's tau/gamma fit: `tttrlib::Dual<GradVec<N>>`
+// (modules/math).
 //
-//   c++ -std=c++17 -O2 -I modules/math/include \
+//   c++ -std=c++17 -O2 -I modules/math/include -I modules/spectroscopy/decay/include \
 //       test/cpp/test_ad_gradient.cpp -o /tmp/test_ad_gradient && /tmp/test_ad_gradient
 //
 // `ImageLocalization.cpp` differentiates its objective by seeding one Dual per
@@ -41,6 +42,8 @@
 
 #include "Dual.h"
 #include "GradVec.h"
+#include "DecayConvolution.h"   // fconv_per_cs_ad -- the shared, production kernel
+#include "DecayStatistics.h"    // Wcm_ad/log_m_ext_ad -- likewise
 
 #include <cmath>
 #include <cstdio>
@@ -361,6 +364,330 @@ static void test_dual_algebra() {
     check(std::fabs(f.grad[1] - (2.0 - e2 / 9.0)) < 1e-14, "vector carrier: d/db");
 }
 
+// --------------------------------------------------------------------------
+// DecayFit23's objective (PRD-010's second AD candidate, N=4). Reuses the
+// actual production kernels -- fconv_per_cs_ad (DecayConvolution.h) and
+// Wcm_ad/log_m_ext_ad (DecayStatistics.h) -- rather than reimplementing them,
+// so this exercises the same templates decay23_gradient (DecayFit23.cpp)
+// instantiates. Only the anisotropy glue (Fp/Fs/r/rho, the harmonic mean) is
+// reimplemented, mirroring DecayFit23.cpp's anonymous-namespace helpers of
+// the same names -- kept local for the same reason the ImageLocalization
+// objective above is: the production versions are anonymous-namespace and
+// not linkable from here.
+// --------------------------------------------------------------------------
+
+namespace decay23 {
+
+constexpr int FN = 32;         // channels per polarization
+constexpr double DT = 0.5;
+constexpr double kMinTau = 1.0e-3, kMinRho = 1.0e-6;
+constexpr double kMinGamma = 0.0, kMaxGamma = 0.999;
+
+// Local transcriptions of DecayFit.h's soft_floor_ad/clamp_value_ad (not
+// pulled in directly: DecayFit.h drags in DecayFitContext.h/nlohmann json,
+// which this file's standalone build command does not set up an include path
+// for). Same two functions, same shape.
+template <typename T>
+T soft_floor_ad(const T& v, double floor) {
+    using std::exp;
+    if (v < floor) return floor * exp((v - floor) / floor);
+    return v;
+}
+
+template <typename T>
+T clamp_value_ad(const T& v, double lower, double upper) {
+    if (v < lower) return T(lower);
+    if (v > upper) return T(upper);
+    return v;
+}
+
+template <typename T>
+T harmonic_mean(const T& a, const T& b) {
+    if (!(b > 0.)) return a;
+    const T denom = 1. / a + 1. / b;
+    if (!(denom > 1e-300)) return a;
+    return 1. / denom;
+}
+
+template <typename T>
+T Fp(double Sp, double Bp, const T& gamma) { return (Sp - gamma * Bp) / (1. - gamma); }
+
+template <typename T>
+T Fs(double Ss, double Bs, const T& gamma) { return (Ss - gamma * Bs) / (1. - gamma); }
+
+template <typename T>
+T r_value(double Sp, double Ss, double Bp, double Bs, double g, double l1, double l2,
+         const T& gamma) {
+    const T fp = Fp(Sp, Bp, gamma), fs = Fs(Ss, Bs, gamma);
+    return (fp - g * fs) / (fp * (1. - 3. * l2) + (2. - 3. * l1) * g * fs);
+}
+
+template <typename T>
+T rho_of(const T& tau, const T& r0, const T& r) {
+    const T rh = tau / (r0 / r - 1.);
+    if (rh < 1.e-4) return T(1.e-4);
+    return rh;
+}
+
+struct Fixture {
+    std::vector<double> irf, bg;
+    int* counts;   // Jordi layout, 2*FN
+    double Sp, Ss, Bp, Bs;
+    double corrections[5];  // period, g, l1, l2, conv_stop
+};
+
+static std::vector<int> make_counts() {
+    // A synthetic anisotropy decay: enough counts to keep Wcm_ad away from
+    // its C1-continuation floor almost everywhere, which is what makes a
+    // central-difference cross-check meaningful (the floor's derivative is a
+    // fixed 1/kModelFloor, not something a wrong formula would visibly miss).
+    std::vector<int> c(2 * FN);
+    for (int i = 0; i < FN; ++i) {
+        const double t = i * DT;
+        const double vv = 400.0 * std::exp(-t / 2.3) * (1.0 + 0.3 * std::exp(-t / 1.1));
+        const double vh = 130.0 * std::exp(-t / 2.3) * (1.0 - 0.15 * std::exp(-t / 1.1));
+        c[i] = (int)std::floor(vv) + (i % 3);
+        c[FN + i] = (int)std::floor(vh) + (i % 2);
+    }
+    return c;
+}
+
+/// Same shape as DecayFit23.cpp's decay23_cost: tau/gamma/r0/rho in, 2I*-style
+/// Poisson MLE cost out, in one pass under whatever T the caller seeds.
+template <typename T>
+T cost(const T param[4], bool fixedrho, const Fixture& fx, const int* counts) {
+    const T tau = soft_floor_ad(param[0], kMinTau);
+    const T gamma = clamp_value_ad(param[1], kMinGamma, kMaxGamma);
+    const T r0 = param[2];
+
+    const double period = fx.corrections[0], g = fx.corrections[1],
+                l1 = fx.corrections[2], l2 = fx.corrections[3];
+    const int conv_stop = (int)fx.corrections[4];
+
+    T rho;
+    if (fixedrho) {
+        rho = soft_floor_ad(param[3], kMinRho);
+    } else {
+        const T r = r_value(fx.Sp, fx.Ss, fx.Bp, fx.Bs, g, l1, l2, gamma);
+        rho = soft_floor_ad(rho_of(tau, r0, r), kMinRho);
+    }
+    const T taurho = harmonic_mean(tau, rho);
+
+    T x_vv[4] = {T(1.), tau, r0 * (2. - 3. * l1), taurho};
+    T x_vh[4] = {T(1. / g), tau, T(1. / g) * r0 * (-1. + 3. * l2), taurho};
+
+    std::vector<T> model(2 * FN);
+    fconv_per_cs_ad(model.data(), x_vv, fx.irf.data(), 2, FN - 1, FN, period, conv_stop, DT);
+    fconv_per_cs_ad(model.data() + FN, x_vh, fx.irf.data() + FN, 2, FN - 1, FN, period, conv_stop, DT);
+
+    T sum_m(0.);
+    for (int i = 0; i < 2 * FN; ++i) sum_m += model[i];
+    if (!(sum_m > 0.)) {
+        for (int i = 0; i < 2 * FN; ++i) model[i] = T(fx.bg[i]) * gamma;
+    } else {
+        const T scale = (1. - gamma) / sum_m;
+        for (int i = 0; i < 2 * FN; ++i) model[i] = model[i] * scale + T(fx.bg[i]) * gamma;
+    }
+    const double Sexp = fx.Sp + fx.Ss;
+    for (int i = 0; i < 2 * FN; ++i) model[i] *= Sexp;
+
+    return Wcm_ad(counts, model.data(), FN) / double(FN);
+}
+
+static void run() {
+    std::printf("DecayFit23 objective: vectorized dual vs central differences\n");
+
+    static std::vector<double> irf(2 * FN, 0.0), bg(2 * FN, 0.0);
+    for (int half = 0; half < 2; ++half)
+        for (int i = 0; i < FN; ++i)
+            irf[half * FN + i] = std::exp(-((i - 6.0) * (i - 6.0)) / (2 * 0.6 * 0.6));
+
+    static std::vector<int> counts_v = make_counts();
+
+    Fixture fx;
+    fx.irf = irf;
+    fx.bg = bg;
+    fx.corrections[0] = 2.0 * FN;  // period
+    fx.corrections[1] = 1.0;       // g
+    fx.corrections[2] = 0.1;       // l1
+    fx.corrections[3] = 0.1;       // l2
+    fx.corrections[4] = FN / 2 - 1;  // conv_stop
+
+    // Sp/Ss/Bp/Bs as compute_signal_and_background would produce them, for an
+    // interior point away from the fit's optimum (where a wrong gradient and
+    // a right one both look small).
+    fx.Sp = 0.0; fx.Ss = 0.0; fx.Bp = 0.0; fx.Bs = 0.0;
+    for (int i = 0; i < FN; ++i) { fx.Sp += counts_v[i]; fx.Ss += counts_v[FN + i]; }
+
+    using Grad4 = GradVec<4>;
+    using D4 = Dual<Grad4>;
+
+    // Two points: rho derived (the common case) and rho fixed (the other
+    // branch decay23_cost takes).
+    const double points[2][4] = {
+        {2.0, 0.15, 0.38, 1.2},
+        {0.9, 0.05, 0.38, 1.2},
+    };
+    for (bool fixedrho : {false, true}) {
+        for (const auto& u : points) {
+            D4 ud[4];
+            for (int j = 0; j < 4; ++j) ud[j] = D4(u[j], Grad4::Unit(j));
+            const D4 rv = cost<D4>(ud, fixedrho, fx, counts_v.data());
+
+            const double fd0 = cost<double>(u, fixedrho, fx, counts_v.data());
+            char label[64];
+            std::snprintf(label, sizeof(label), "value (fixedrho=%d)", (int)fixedrho);
+            report(std::fabs(rv.val - fd0) < 1e-12, label, std::fabs(rv.val - fd0), 1e-12);
+
+            double gc[4];
+            const double eps13 = std::cbrt(2.220446049250313e-16);
+            double x[4] = {u[0], u[1], u[2], u[3]};
+            for (int j = 0; j < 4; ++j) {
+                const double h = eps13 * std::max(std::fabs(u[j]), 1.0);
+                x[j] = u[j] + h;
+                const double fp = cost<double>(x, fixedrho, fx, counts_v.data());
+                x[j] = u[j] - h;
+                const double fm = cost<double>(x, fixedrho, fx, counts_v.data());
+                x[j] = u[j];
+                gc[j] = (fp - fm) / (2.0 * h);
+            }
+
+            double max_rel = 0.0;
+            for (int j = 0; j < 4; ++j) {
+                const double scale = std::max(std::fabs(gc[j]), 1e-8);
+                max_rel = std::max(max_rel, std::fabs(rv.grad[j] - gc[j]) / scale);
+            }
+            std::snprintf(label, sizeof(label), "gradient vs central differences (fixedrho=%d)",
+                         (int)fixedrho);
+            report(max_rel < 1e-6, label, max_rel, 1e-6);
+        }
+    }
+}
+
+}  // namespace decay23
+
+// --------------------------------------------------------------------------
+// DecayFit24's objective (PRD-010's other AD candidate, N=5) -- kept as a
+// record that the approach was TESTED and correct, even though it was not
+// shipped. An exact gradient this shape was implemented in DecayFit24.cpp and
+// measured against central differences: no clear win (see the note above
+// DecayFit24::modelf and PRD-010's Phase 7), so it was declined and removed
+// from production, the same call already made for DecayFit26 at N=1. This
+// section still reuses the real production kernels (fconv_per_cs_ad, Wcm_ad)
+// and reimplements only the model-specific glue (correct_input's clamps), so
+// it keeps proving the math was right independent of whether it is used.
+// --------------------------------------------------------------------------
+
+namespace decay24 {
+
+constexpr int FN = 32;
+constexpr double DT = 0.5;
+constexpr double kMinTau = 0.001;
+
+/// Same shape as DecayFit24::correct_input + modelf + normM_p2s + Wcm.
+/// param is [tau1, gamma, tau2, A2, offset]. A2/gamma reproduce
+/// correct_input's three-way clamp exactly, including the gamma upper-bound
+/// test referencing `0.999 - A2` while the clamped value is the flat
+/// constant `0.999` -- that looks like a latent bug in correct_input (see the
+/// note above DecayFit24::modelf in DecayFit24.cpp), and reproducing it
+/// exactly, not fixing it, is the point of this cross-check.
+template <typename T>
+T cost(const T param[5], double Sp, double Ss, const double* irf,
+      const double* bg, const int* counts) {
+    const T tau1 = decay23::soft_floor_ad(param[0], kMinTau);
+    const T tau2 = decay23::soft_floor_ad(param[2], kMinTau);
+
+    T A2;
+    if (param[3] < 0.) A2 = T(0.);
+    else if (param[3] > 0.999) A2 = T(0.999);
+    else A2 = param[3];
+
+    T gamma;
+    if (param[1] < 0.) gamma = T(0.);
+    else if (param[1] > 0.999 - A2) gamma = T(0.999);
+    else gamma = param[1];
+
+    T offset = (param[4] < 0.) ? T(0.) : param[4];
+    offset = offset / double(FN);
+
+    const double period = 2.0 * FN, dt = DT;
+    const int conv_stop = FN / 2 - 1;
+
+    T spectrum[4] = {T(1.) - A2, tau1, A2, tau2};
+    std::vector<T> model(2 * FN);
+    fconv_per_cs_ad(model.data(), spectrum, irf, 2, FN - 1, FN, period, conv_stop, dt);
+    fconv_per_cs_ad(model.data() + FN, spectrum, irf + FN, 2, FN - 1, FN, period, conv_stop, dt);
+
+    T sum_m(0.);
+    double sum_s = 0.;
+    for (int i = 0; i < 2 * FN; ++i) { sum_m += model[i]; sum_s += bg[i]; }
+    for (int i = 0; i < 2 * FN; ++i)
+        model[i] = model[i] * (1. - gamma) / sum_m + (bg[i] * gamma) / sum_s + offset;
+
+    T s1(0.);
+    for (int i = 0; i < FN; ++i) s1 += model[i];
+    if (s1 > 0.) { const T scale = Sp / s1; for (int i = 0; i < FN; ++i) model[i] *= scale; }
+    T s2(0.);
+    for (int i = FN; i < 2 * FN; ++i) s2 += model[i];
+    if (s2 > 0.) { const T scale = Ss / s2; for (int i = FN; i < 2 * FN; ++i) model[i] *= scale; }
+
+    return Wcm_ad(counts, model.data(), FN) / double(FN);
+}
+
+static void run() {
+    std::printf("DecayFit24 objective: vectorized dual vs central differences\n");
+
+    static std::vector<double> irf(2 * FN, 0.0), bg(2 * FN, 0.2);
+    for (int half = 0; half < 2; ++half)
+        for (int i = 0; i < FN; ++i)
+            irf[half * FN + i] = std::exp(-((i - 6.0) * (i - 6.0)) / (2 * 0.6 * 0.6));
+
+    std::vector<int> counts(2 * FN);
+    double Sp = 0.0, Ss = 0.0;
+    for (int i = 0; i < FN; ++i) {
+        const double t = i * DT;
+        const double vv = 400.0 * (0.7 * std::exp(-t / 3.8) + 0.3 * std::exp(-t / 0.8)) + 20.0;
+        const double vh = 380.0 * (0.7 * std::exp(-t / 3.8) + 0.3 * std::exp(-t / 0.8)) + 18.0;
+        counts[i] = (int)std::floor(vv) + (i % 3);
+        counts[FN + i] = (int)std::floor(vh) + (i % 2);
+        Sp += counts[i];
+        Ss += counts[FN + i];
+    }
+
+    using Grad5 = GradVec<5>;
+    using D5 = Dual<Grad5>;
+
+    const double u[5] = {3.8, 0.02, 0.4, 0.8, 1.0};
+    D5 ud[5];
+    for (int j = 0; j < 5; ++j) ud[j] = D5(u[j], Grad5::Unit(j));
+    const D5 rv = cost<D5>(ud, Sp, Ss, irf.data(), bg.data(), counts.data());
+
+    const double fd0 = cost<double>(u, Sp, Ss, irf.data(), bg.data(), counts.data());
+    report(std::fabs(rv.val - fd0) < 1e-12, "value", std::fabs(rv.val - fd0), 1e-12);
+
+    double gc[5];
+    const double eps13 = std::cbrt(2.220446049250313e-16);
+    double x[5] = {u[0], u[1], u[2], u[3], u[4]};
+    for (int j = 0; j < 5; ++j) {
+        const double h = eps13 * std::max(std::fabs(u[j]), 1.0);
+        x[j] = u[j] + h;
+        const double fp = cost<double>(x, Sp, Ss, irf.data(), bg.data(), counts.data());
+        x[j] = u[j] - h;
+        const double fm = cost<double>(x, Sp, Ss, irf.data(), bg.data(), counts.data());
+        x[j] = u[j];
+        gc[j] = (fp - fm) / (2.0 * h);
+    }
+
+    double max_rel = 0.0;
+    for (int j = 0; j < 5; ++j) {
+        const double scale = std::max(std::fabs(gc[j]), 1e-8);
+        max_rel = std::max(max_rel, std::fabs(rv.grad[j] - gc[j]) / scale);
+    }
+    report(max_rel < 1e-6, "gradient vs central differences", max_rel, 1e-6);
+}
+
+}  // namespace decay24
+
 int main() {
     const std::vector<double> data = make_data();
 
@@ -428,6 +755,9 @@ int main() {
         max_rel = std::max(max_rel, std::fabs(gv[j] - gc[j]) / scale);
     }
     report(max_rel < 1e-6, "gradient: vectorized vs central differences", max_rel, 1e-6);
+
+    decay23::run();
+    decay24::run();
 
     if (g_failures) std::printf("\n%d check(s) FAILED\n", g_failures);
     else            std::printf("\nall checks passed\n");

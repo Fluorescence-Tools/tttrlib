@@ -15,8 +15,11 @@ Correction and inversion utilities for single-molecule fluorescence.
 
 - **`MaxEnt.h` / `MaxEnt.cpp`**:
   - Maximum entropy regularized inversion: minimizes ||Ax - b||^2 - nu^2 * S(x)
-  - Gradient descent with backtracking line search
+  - A thin wrapper over the shared Skilling-Bryan engine in
+    `modules/math/include/MaxEntQp.h` (also used by `spectroscopy/decay`'s
+    `MaxEntTcspc.cpp`). Previously its own projected-gradient implementation
+    whose entropy term had the wrong sign — see PRD-038.
 
 ## Dependencies
 
-- `core`, `util`
+- `core`, `util`, `math`

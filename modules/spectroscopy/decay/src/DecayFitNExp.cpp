@@ -2,6 +2,9 @@
 #include "DecayFitNExp.h"
 
 #include "DecayConvolution.h"
+#include "Dual.h"
+#include "GradVec.h"
+#include "i_lbfgs.h"
 
 #include <algorithm>
 #include <cmath>
@@ -628,6 +631,168 @@ CoordinateMinimum multistart_coordinate_minimize(
     return best;
 }
 
+/*!
+ * @brief Joint gradient-based polish after the coordinate-descent loop
+ * converges, added as a measured, additive stage -- it never runs instead of
+ * the coordinate search, only after it.
+ *
+ * The coordinate search moves one lifetime at a time, holding the others
+ * fixed, and cannot see how two lifetimes trade off against each other. A
+ * joint step over all free lifetimes at once can, and empirically does:
+ * at realistic per-curve photon counts a prototype comparison found the
+ * refinement improved every tested row (never worse) at ~0.5% of the
+ * coordinate search's own cost -- see the decay module README and PRD-010.
+ *
+ * Exact by the envelope theorem, not an approximation of the profiled
+ * likelihood: amplitudes stay profiled by the *same* EM this file already
+ * uses (`evaluate_profile_ws`, unchanged), re-run in plain `double` at every
+ * trial lifetime vector before the AD gradient is taken. At the EM optimum
+ * `d(NLL)/d(weight) = 0`, so `d/d(tau)[profiled NLL]` equals the partial
+ * derivative of NLL(tau, weights) holding weights fixed at that optimum --
+ * the term through weights' own dependence on tau vanishes identically.
+ * There is no need to differentiate through the EM iteration itself.
+ *
+ * Multistart robustness is not reimplemented here on purpose: a prototype
+ * comparison found a *cold* joint start (no grid scan) can land in a worse
+ * local optimum than the coordinate search's multistart-aware Brent finds,
+ * so this only ever refines the coordinate search's own answer, never
+ * replaces the search that found it.
+ */
+template <typename T>
+void fill_component_ad(T* out, int n_bins, const T& tau, const double* irf,
+                       const DecayFitNExpOptions& options) {
+    if (options.tail_start >= 0) {
+        for (int i = 0; i < n_bins; ++i) out[i] = T(0.0);
+        const int t0 = std::min(options.tail_start, n_bins - 1);
+        using std::exp;
+        for (int i = t0; i < n_bins; ++i)
+            out[i] = exp(-static_cast<double>(i - t0) * options.dt / tau);
+    } else {
+        const double period = options.period > 0.0
+                                  ? options.period
+                                  : static_cast<double>(n_bins) * options.dt;
+        const int conv_stop = options.convolution_stop < 0
+                                  ? n_bins - 1
+                                  : std::min(options.convolution_stop, n_bins - 1);
+        T spectrum[2] = {T(1.0), tau};
+        fconv_per_cs_ad(out, spectrum, irf, 1, n_bins - 1, n_bins, period,
+                        conv_stop, options.dt);
+    }
+    T sum(0.0);
+    for (int i = 0; i < n_bins; ++i) {
+        if (!(out[i] > 0.0)) out[i] = T(0.0);
+        sum += out[i];
+    }
+    if (sum > 0.0) {
+        for (int i = 0; i < n_bins; ++i) out[i] = out[i] / sum;
+    }
+}
+
+struct RefineContext {
+    int n_exp;
+    const std::vector<double>* counts;
+    const std::vector<double>* irf;
+    const std::vector<double>* background;
+    const DecayFitNExpOptions* options;
+    std::vector<double> weights;          // seed in, profiled out on every call
+    std::vector<double> lifetimes_scratch;
+    FitWorkspace* ws;
+};
+
+double refine_target(double* x, void* pv) {
+    auto* ctx = static_cast<RefineContext*>(pv);
+    std::copy(x, x + ctx->n_exp, ctx->lifetimes_scratch.begin());
+    ProfileResult profile = evaluate_profile_ws(
+            *ctx->counts, *ctx->irf, *ctx->background, ctx->lifetimes_scratch,
+            ctx->weights, *ctx->options, *ctx->ws);
+    ctx->weights = profile.weights;
+    return profile.nll;
+}
+
+template <int N>
+double refine_gradient(double* x, double* grad_out, void* pv) {
+    auto* ctx = static_cast<RefineContext*>(pv);
+    std::copy(x, x + N, ctx->lifetimes_scratch.begin());
+    ProfileResult profile = evaluate_profile_ws(
+            *ctx->counts, *ctx->irf, *ctx->background, ctx->lifetimes_scratch,
+            ctx->weights, *ctx->options, *ctx->ws);
+    ctx->weights = profile.weights;
+
+    using Grad = tttrlib::GradVec<N>;
+    using D = tttrlib::Dual<Grad>;
+    D tau_d[N];
+    for (int k = 0; k < N; ++k) tau_d[k] = D(x[k], Grad::Unit(k));
+
+    std::vector<std::vector<D>> components(N, std::vector<D>(ctx->irf->size()));
+    const int n_bins = static_cast<int>(ctx->irf->size());
+    for (int k = 0; k < N; ++k)
+        fill_component_ad(components[k].data(), n_bins, tau_d[k],
+                          ctx->irf->data(), *ctx->options);
+
+    std::vector<D> prob(n_bins, D(0.0));
+    for (int k = 0; k < N; ++k)
+        for (int i = 0; i < n_bins; ++i)
+            prob[i] += D(ctx->weights[k]) * components[k][i];
+    const bool has_bg = !ctx->background->empty();
+    if (has_bg)
+        for (int i = 0; i < n_bins; ++i)
+            prob[i] += D(ctx->weights[N]) * D((*ctx->background)[i]);
+
+    D nll(0.0);
+    for (int i = 0; i < n_bins; ++i) {
+        if ((*ctx->counts)[i] > 0.0) {
+            D p = (prob[i] > kProbabilityFloor) ? prob[i] : D(kProbabilityFloor);
+            nll -= D((*ctx->counts)[i]) * log(p);
+        }
+    }
+    for (int k = 0; k < N; ++k) grad_out[k] = nll.grad[k];
+    return nll.val;
+}
+
+template <int N>
+void refine_lifetimes_ad(std::vector<double>& lifetimes,
+                         const std::vector<int>& lifetime_fixed,
+                         const std::vector<double>& counts,
+                         const std::vector<double>& irf,
+                         const std::vector<double>& background,
+                         const DecayFitNExpOptions& options,
+                         std::vector<double>& weights, FitWorkspace& ws) {
+    RefineContext ctx{N, &counts, &irf, &background, &options,
+                      weights, std::vector<double>(N), &ws};
+    bfgs opt(refine_target, N);
+    opt.set_gradient(refine_gradient<N>);
+    opt.maxiter = 50;
+    for (int k = 0; k < N; ++k) {
+        opt.set_bounds(k, options.tau_min, options.tau_max);
+        if (lifetime_fixed[k] != 0) opt.fix(k);
+    }
+    opt.minimize(lifetimes.data(), &ctx);
+    weights = ctx.weights;
+}
+
+/// Dispatches on the (small, always known at a call site) number of
+/// exponentials. Real fits are 1-4 (DecayFitNExp.h's own docs; more than a
+/// handful of well-resolved lifetimes is rarely identifiable from real TCSPC
+/// data), so this covers 1-6 and silently skips the refinement beyond that --
+/// the coordinate-search result stands unrefined, exactly as it always has.
+void refine_lifetimes_ad_dispatch(std::vector<double>& lifetimes,
+                                  const std::vector<int>& lifetime_fixed,
+                                  const std::vector<double>& counts,
+                                  const std::vector<double>& irf,
+                                  const std::vector<double>& background,
+                                  const DecayFitNExpOptions& options,
+                                  std::vector<double>& weights, FitWorkspace& ws) {
+    switch (static_cast<int>(lifetimes.size())) {
+        case 1: refine_lifetimes_ad<1>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        case 2: refine_lifetimes_ad<2>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        case 3: refine_lifetimes_ad<3>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        case 4: refine_lifetimes_ad<4>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        case 5: refine_lifetimes_ad<5>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        case 6: refine_lifetimes_ad<6>(lifetimes, lifetime_fixed, counts, irf, background, options, weights, ws); break;
+        default: break;
+    }
+}
+
 void validate_options(const DecayFitNExpOptions& options) {
     if (!(options.dt > 0.0) || !std::isfinite(options.dt))
         throw std::invalid_argument("dt must be positive and finite");
@@ -788,6 +953,28 @@ DecayFitNExpResult DecayFitNExp::fit(
                 break;
             }
         }
+    }
+
+    // Joint AD-gradient polish of the coordinate search's own answer -- see
+    // refine_lifetimes_ad's docstring for why this is exact (envelope
+    // theorem) and why it is additive rather than a replacement. bfgs's
+    // Armijo line search only ever accepts a strictly decreasing step, so
+    // this cannot make `lifetimes` worse; at worst it leaves them unchanged.
+    // Only `lifetimes` is kept from it -- the unconditional re-evaluation
+    // below recomputes weights/nll/probability from scratch either way, so a
+    // throwaway seed is enough here.
+    // N=1 is skipped: a single lifetime has no cross-parameter correlation
+    // for a joint step to recover over Brent's 1-D search, so the bfgs
+    // construction and one AD gradient pass would be pure overhead for zero
+    // benefit -- measured directly (bench_tttrlib.py's bench_fit_curve, the
+    // library's most benchmarked case): ~35% slower per call with the answer
+    // unchanged. N>=2 is where lifetimes can trade off against each other,
+    // which is what the refinement is for; see its own docstring.
+    if (any_free && photons > 0.0 && lifetimes.size() >= 2) {
+        std::vector<double> refine_weights = seed_weights;
+        refine_lifetimes_ad_dispatch(lifetimes, lifetime_fixed, counts, irf,
+                                     background_probability, options,
+                                     refine_weights, ws);
     }
 
     // Re-evaluate once so returned amplitudes/model correspond exactly to the

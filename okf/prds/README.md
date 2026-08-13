@@ -28,7 +28,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [007](PRD-007-burstnet-simulator-integration.md) | BurstNet integration for the photon simulator | 🟡 In Progress |
 | [008](PRD-008-simulator-openmm-api.md) | Simulator OpenMM-style API, manual & use-case coverage | 🟡 In Progress |
 | [009](PRD-009-sim-driven-feature-docs.md) | Documenting every tttrlib feature by simulated example | 🔵 Proposed |
-| [010](PRD-010-neural-net-and-surrogate-models.md) | Reusable neural network + surrogate models, AD gradients | 🟡 In Progress |
+| [010](PRD-010-neural-net-and-surrogate-models.md) | Reusable neural network + surrogate models, AD gradients | 🟢 Done |
 | [011](PRD-011-photon-hmm.md) | Photon-by-photon HMM: one class, three inference paths | 🟢 Done |
 | [012](PRD-012-flimlabs-brighteyes-readers.md) | FLIM LABS and BrightEyes-TTM native readers | 🟢 Done |
 | [013](PRD-013-gaussian-emission-hmm.md) | Gaussian emissions: the binned-trace HMM on the photon HMM's core | ⚪ Draft |
@@ -37,7 +37,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [016](PRD-016-javascript-node-api-bindings.md) | JavaScript bindings via SWIG Node-API | 🟢 Complete |
 | [017](PRD-017-burst-web-ui.md) | Node.js burst-analysis web UI, driven by the registry | 🔵 Proposed |
 | [018](PRD-018-abi-stability.md) | A stable ABI within a minor series | ⚪ Draft |
-| [019](PRD-019-data-groups.md) | Data groups: a store is a tree, in memory and in the file | 🟡 In Progress |
+| [019](PRD-019-data-groups.md) | Data groups: a store is a tree, in memory and in the file | 🟢 Done |
 | [020](PRD-020-pto-streaming-and-targeted-reads.md) | PTO: streaming and targeted reads | 🟢 Done |
 | [021](PRD-021-record-decoding-streams-and-the-set-sidecar.md) | Decoding a buffer, reading a stream, and the whole `.set` sidecar | 🟢 Done |
 | [022](PRD-022-column-metadata.md) | A column is described, not just named | 🟢 Done |
@@ -56,13 +56,14 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [035](PRD-035-generic-log-domain-hmm-lattice.md) | Generic log-domain HMM lattice (forward / backward+xi / Viterbi) over a caller-supplied frame-probability matrix | 🟢 Done |
 | [036](PRD-036-2d-flc-photon-kernels.md) | 2D-FLC photon kernels — the fluorescence-decay correlation (2D-FDC) pass | 🟡 In Progress |
 | [037](PRD-037-kernels-to-finish-chisurfs-numba-retirement.md) | Everything tttrlib needs so ChiSurf can drop numba entirely | 🔵 Proposed |
+| [038](PRD-038-general-pattern-fit-and-maxent-consolidation.md) | General N-pattern fit (NNLS/Tikhonov/MaxEnt) and one MaxEnt engine instead of two | 🟢 Done |
 
-**019** is yellow rather than green for one reason: criterion 21 asks for the
-same assertions from Python, R, Java and JavaScript in the PRD-015 conformance
-suite, and that suite does not exist yet -- nor do R and Java wrap `DataStore`
-at all. Everything else is done, and there is a third piece the PRD did not ask
-for: a native `.dstore` file, because the PRD's premise that HDF5 is the only
-way to serialise a store is what made it slow. See `doc/saving-tables.rst`.
+**019** is green: criterion 21 (the same assertions from Python, R, Java and
+JavaScript in the PRD-015 conformance suite) was the last one open, and it
+landed once R and Java wrapped `DataStore` and the eleven `datastore.*` cases
+went in. There is also a third piece the PRD did not ask for: a native
+`.dstore` file, because the PRD's premise that HDF5 is the only way to
+serialise a store is what made it slow. See `doc/saving-tables.rst`.
 
 **036** is yellow because only the tttrlib half is done: the kernels, bindings
 and tests landed, and ChiSurf's `flc_2d` still calls its own numba (board ticket

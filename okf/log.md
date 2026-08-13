@@ -1,89 +1,186 @@
 # Bundle update log
 
+## 2026-08-13 (25th entry)
+
+* **`DecayFit23`'s general (tau/gamma) fit branch converted to an exact
+  forward-mode gradient (PRD-010 Phase 6).** `fconv_per_cs_ad`/`Wcm_ad`/
+  `log_m_ext_ad`/`soft_floor_ad`/`clamp_value_ad` are templated siblings of the
+  existing `double` kernels, not replacements; the fit's `set_bounds`-only
+  bound mechanism (Phase 5c/5d) was the prerequisite that made this a
+  templating exercise. Measured A/B: one `Fit23()` call 1.27× faster, `fit_many`
+  on 8000 rows 1.68× faster wall clock (`tttrlib::parallel_for`, all cores),
+  fitted values unchanged. `Wcm_p2s` stays on central differences (not
+  templated). See PRD-010, `PERF.md` and `CHANGELOG.md` for the numbers.
+* **One conformance case re-pinned as a direct, predicted consequence.**
+  `decayfit.fit23_published_answer` runs at `1e-6` tolerance, tight enough that
+  the exact gradient's more trustworthy `EpsG` termination (documented in
+  `i_lbfgs.h`'s `set_gradient`) stops the fit at a measurably different point
+  along the same flat tau valley: objective 23.79112398420848 →
+  23.791082287859183, tau 0.721353235715964 → 0.7212727630506686. Cross-language
+  answer key, so Python/R/Java/JS all move together from one JSON edit.
+* **`DecayFit24` got the same AD conversion (PRD-010 Phase 7), built and
+  verified -- then declined and removed, because the measured win was not
+  clear.** `tau1`/`tau2` moved to `soft_floor` first (this part shipped and
+  stays); `A2`/`gamma`/`offset` stay deliberately hard-clamped either way.
+  `fconv_per_cs_ad`/`Wcm_ad` reused unchanged for the gradient itself, verified
+  to the finite-difference floor (`test/cpp/test_ad_gradient.cpp`'s `decay24`
+  section, kept as the record it was correct), and existing regression/
+  conformance suites passed with no re-pin needed. Measured at 8000 rows: wall
+  clock 1.08x-1.15x faster, but total CPU across worker threads -- the more
+  repeatable metric -- roughly flat to 6% slower, against `DecayFit23`'s clean
+  1.3x-1.7x. **Declined on that measurement** (same call already made for
+  `DecayFit26`): the gradient callback was removed from `DecayFit24.cpp`, a
+  note in the source says what was tried and why, and the two throwaway A/B
+  benchmark scripts were removed with it -- the numbers live in PRD-010,
+  `PERF.md`, `CHANGELOG.md` and here instead. Likely cause: `i_lbfgs`'s own
+  per-iteration overhead absorbing the gradient-level saving (5.44x in
+  isolation, Phase 4) against a comparatively cheap 128-bin model.
+* **The central-difference step retune (PRD-010 Phase 8) landed, closing PRD-010
+  entirely.** `bfgs` (`i_lbfgs.h`) was using `sqrt(eps)` -- the forward-difference
+  optimum -- as its central-difference step, because it shared the `sqrt_eps`
+  member with two unrelated convergence thresholds (`EpsG`, `EpsX`). Gave the
+  step its own member, `fd_eps = eps^(1/3)`, set alongside `sqrt_eps` in
+  `seteps()` without repurposing it. This is not a narrow fix: every `bfgs`
+  consumer still on central differences benefits (`DecayFit24/25/26`,
+  `DecayFit23`'s `p2s_twoIstar` branch, `fit_linked`, plugin fits), so before
+  touching it I surfaced the actual blast radius to the user rather than
+  quietly landing a change with that reach -- they chose "do it fully, re-pin
+  whatever moves." **Nothing moved**: the full C++ (`ctest`) and Python suite
+  (2698 passed, 74 subtests, two unrelated pre-existing failures) ran clean at
+  zero re-pins. Also corrected PRD-010's own Correction 3, which had predicted
+  a smaller-than-6x win from the retune: measured against the step actually
+  replaced (not the never-used `eps` baseline Phase 4's original table
+  compared against), the real gain is 62x-440x more accurate
+  (`benchmarks/bench_ad_gradients.cpp`, updated to measure it) -- `sqrt_eps`
+  being numerically closer to zero than `eps^(1/3)` is not the same as being
+  the right size for a central difference, whose error is `O(h^2) + O(eps/h)`.
+  PRD-010 flipped to Done.
+* **Follow-up, same day: `EpsG`/`EpsX` don't share a variable either, and `EpsG`
+  finally acts on a promise its own docstring made (PRD-010 Phase 9).** Asked
+  to make the fix an architectural one -- if giving every conflated quantity
+  its own identity also makes things more accurate, better -- so `sqrt_eps`'s
+  remaining two roles (gradient-norm convergence `EpsG`, step-size convergence
+  `EpsX`) got split into `epsg`/`epsx`, each with its own `set_epsg`/`set_epsx`
+  setter, matching the class's existing per-concern API. `set_gradient()`'s
+  docstring has said since Phase 6 that an exact gradient "makes the EpsG
+  termination test trustworthy at tight tolerances"; the code never acted on
+  it. Now it does: registering a gradient auto-tightens `epsg` to `eps`
+  (`sqrt(eps)`'s ~1.49e-08 was a central difference's noise floor, not an
+  exact gradient's, which is `eps`-scale, ~6.7e7x tighter), and un-registering
+  restores `sqrt(eps)` -- both skipped if a caller has called `set_epsg`
+  explicitly. Verified against both AD-gradient consumers specifically
+  (`DecayFit23`, `ImageLocalization`) plus the full suite: zero regressions,
+  same re-pinned `fit23` conformance value as before (that fixture's
+  termination was not `EpsG`-bound -- a legitimate, data-dependent outcome,
+  not evidence the fix does nothing elsewhere).
+* **Follow-up, same day: `FitNExp` revisited and shipped a real improvement
+  (PRD-010 Phase 10), without touching the reason its optimizer was chosen.**
+  `DecayFitNExp.cpp` never used `bfgs`, deliberately -- amplitudes are
+  profiled by EM (closed-form given fixed lifetimes) and lifetimes are
+  searched one at a time by a multistart-aware Brent search, both real
+  properties, not a stopgap. Investigated a handover note
+  (`okf/handover/flim-performance-opt.md`) that had flagged AD as a possible
+  future item and been closed as "not a candidate" without the narrower
+  question actually being tested: not "does it use bfgs" but "does a joint
+  step on top of the search recover anything coordinate-wise updates cannot
+  see." Answer: yes, measurably. Added a joint `bfgs`+AD refinement pass,
+  additive after the coordinate search converges -- amplitudes stay profiled
+  by the same EM, the AD gradient holds them constant (exact by the envelope
+  theorem: the EM optimum's own zero-gradient condition kills the term
+  through weights' dependence on lifetime). Multistart is not reimplemented;
+  a prototype (`benchmarks/bench_fitnexp_bfgs_ad.cpp`, kept) confirmed a cold
+  joint start without it can land in a worse basin than Brent's grid scan,
+  on data the same refinement improves when started from Brent's own answer.
+  Measured before shipping, per instruction ("if cheap proceed check perf"):
+  at realistic batched photon counts (`fit_batch_flat`, not a toy single
+  case), 210 ms/row baseline, 1.02 ms/row refinement, **0.5% overhead**,
+  **100/100** rows improved, **0** regressed. `bfgs`'s Armijo line search
+  only accepts strictly decreasing steps, so this cannot make an answer
+  worse by construction. **One real regression found and fixed before
+  shipping**: N=1 (mono-exponential, the library's most benchmarked path)
+  has no cross-lifetime correlation to recover, so the refinement there was
+  pure overhead -- measured +35% per call against `bench_tttrlib.py`'s own
+  published benchmark, for an unchanged answer. Gated to N>=2; N=1
+  re-measured back to the unmodified baseline. The fixed-lifetime `fit_map`
+  path (the actual `PERF.md` 140 ms headline number) is structurally
+  unreachable by this change -- confirmed by reading the `any_free` guard,
+  not by re-running that benchmark.
+* **Two independent MaxEnt implementations found while investigating "pattern
+  fit"; consolidated onto one, fixing a real sign bug on the way (PRD-038).**
+  `MaxEntTcspc.cpp` (decay) had the real Skilling-Bryan (1984) algorithm,
+  verified against simulated data; `MaxEnt.cpp` (corrections) had a separate
+  projected-gradient implementation whose entropy term was measurably
+  backwards -- `S = -3.0` at the uniform prior (should be its maximum, `0`)
+  and `S = +12.9` for a spiky far-from-prior solution, so its regulariser
+  rewarded moving away from the prior instead of penalising it. Both engines
+  are byte-identical-algorithm now: `modules/math/include/MaxEntQp.h` /
+  `src/MaxEntQp.cpp` (`quadpr_bound`, `run_mem`, plus a new
+  `build_normal_equations`), with `MaxEntTcspc.cpp`'s two functions and
+  `MaxEnt.cpp`'s `maxent_invert` both reduced to thin wrappers over it. Public
+  signatures unchanged. Verified: all 15 `test_maxent_tcspc.py` cases pass
+  unchanged (same algorithm, relocated); both `TestMaxEnt` cases in
+  `test_corrections.py` still pass -- their tolerances were always loose
+  enough to hold under either engine, so this is a real, previously
+  uncaught behaviour change, not a no-op refactor.
+* **A general N-arbitrary-pattern fit, requested by name ("general NNLS
+  pattern, maybe with regu try thikonov and maxent") after "what about pattern
+  fit?" turned up that `DecayFit26` only mixes a *fixed pair* with one
+  constrained fraction, and `DecayFitProblem::patterns` -- built for the C-ABI
+  plugin interface -- had no built-in consumer (PRD-038).**
+  `modules/spectroscopy/decay/include/DecayPatternFit.h`: `decay_pattern_fit`,
+  three modes sharing one design matrix (`build_normal_equations`) --
+  `kNone` (plain NNLS), `kTikhonov` (L2, bound-constrained via
+  `quadpr_bound`), `kMaxEnt` (the now-shared Skilling-Bryan engine, toward a
+  uniform or caller-supplied prior). NNLS itself is new:
+  `modules/math/include/Nnls.h`, the classical Lawson-Hanson (1974)
+  algorithm -- deliberately not `quadpr_bound`'s active-set sweep at `nu=0`,
+  since that solver's own docstring says it is not KKT-correct. Verified
+  against `scipy.optimize.nnls` directly (max abs diff `<2e-10` across clean,
+  noisy, and near-collinear pattern sets); Tikhonov and MaxEnt checked for
+  non-negativity and monotonic shrinkage toward zero/prior with increasing
+  regularisation strength. SWIG-bound in all four languages
+  (`ext/python/DecayPatternFit.i`, following `MaxEnt.i`'s plain-`std::vector`
+  pattern, included from all of `ext/{python,r,java,js}/tttrlib.i`).
+  `test/python/decayfit/test_decay_pattern_fit.py`, 9 cases.
+
 ## 2026-08-12 (24th entry)
 
-* **The Windows `0xC0000374` shutdown crash does not reproduce, and two of the
-  three workarounds for it were never doing what they claimed.** Full suite on
-  `dev` at `e166ded0`, both suppression layers removed so interpreter shutdown
-  actually runs: 2449 passed, 205 skipped, exit code 0, 32 min. `run_suite.py`
-  clean across 19 groups.
-* **The generalisable trap, which cost most of the investigation time: a
-  workaround can hide the thing you are trying to reproduce from *inside the
-  test suite*.** `run_pytest_windows.py` was the visible layer, but
-  `test/python/conftest.py` also called `os._exit(int(exitstatus))` at session
-  finish on win32. Running pytest directly — the obvious way to bypass the
-  wrapper — therefore *still* skipped shutdown and still exited 0. Before
-  concluding a shutdown bug is gone, grep the test tree for `os._exit`, not just
-  the runner.
-* **A `pytest_sessionfinish` hook that calls `os._exit()` destroys pytest's own
-  reporting, and it is easy to misattribute to a native crash.** A hook in a
-  *non-rootdir* `conftest.py` is registered after the terminal reporter and so
-  runs before it; the process dies at `100%` with no `FAILURES` section. That is
-  exactly the symptom `tools/print_report_log.py` was written for, and its
-  docstring blames "the documented heap corruption at interpreter shutdown".
-  Reproduced in a two-file project with tttrlib absent, which is what separates
-  the two causes. Note the asymmetry that makes it confusing: the same hook in
-  the *rootdir* `conftest.py` prints normally, so a minimal repro that flattens
-  the directory layout will not show the bug.
-* **Cross-DLL CRT mismatch was the leading hypothesis and is measurably not the
-  cause.** All 34 `tttrlib_*.dll` plus `_tttrlib.pyd` import the same
-  `VCRUNTIME140`, `MSVCP140` and `api-ms-win-crt-heap-l1-1-0` — one shared heap,
-  no static-CRT outlier. Incidentally `CMAKE_MSVC_RUNTIME_LIBRARY` is set only
-  under `[tool.cibuildwheel.windows.environment]`, so a plain `pip install .`
-  never receives it; this is harmless because CMake already defaults to the
-  shared runtime, but it means the setting is not the guarantee it looks like.
-* **The OpenMP guards in `CLSMImage.cpp` are worth keeping, but not for the
-  reason the comment gives.** Re-enabling all nine `#ifndef _WIN32` blocks and
-  re-parallelising `create_lines()`, with `min_frames_for_parallel` forced to 1
-  so the parallel regions actually execute on the test images, produced no
-  corruption: full `clsm` suite clean, and the image-building files clean over
-  six consecutive runs. Parallel execution was confirmed by CPU-over-wall of
-  **5.71** against **0.97** for the serial control — linkage cannot tell them
-  apart, because both DLLs import `VCOMP140` whether or not the `if(use_openmp
-  && …)` clause lets the region run wide. **The parallelism buys nothing:
-  1.47 s against 1.48 s on the 93-frame 512×512 image, 5.7× the CPU for the same
-  wall time, because the path is memory-bound.** So the code should stay serial
-  on the strength of that measurement, while the claim above it — that
-  "concurrent heap allocation of `CLSMLine` objects via `new` … causes heap
-  corruption with MSVC's OpenMP 2.0 runtime" — is false: concurrent `new` is
-  thread-safe under MSVC. Corrected in place.
-* **A predicted race, written down because the refutation is the reusable
-  part.** `create_lines()` calls `tttr->header->get_line_duration()` inside what
-  used to be a parallel region, which looks like a lazily-cached header mutated
-  from several threads. It is not: `TTTRHeader::get_tag()` takes a
-  `const nlohmann::json&` and returns **by value**, so the `["value"]` indexing
-  lands on a copy and concurrent calls are pure reads. The general shape is
-  still worth watching — nlohmann's *non-const* `operator[]` inserts a null on a
-  missing key, so any accessor that takes the header by non-const reference and
-  is reachable from a parallel region is a real hazard.
-* **Not settled: PageHeap and Application Verifier need Administrator**, which
-  the investigating session did not have — `gflags` fails silently rather than
-  erroring, and the giveaway is that no `python.exe` key appears under
-  `Image File Execution Options`. Six clean runs are evidence, not proof of the
-  absence of a race. The remaining check is
-  `gflags /p /enable python.exe /full`, the `clsm` directory, then
-  `gflags /p /disable python.exe`.
-* **Windows CI is the pipeline's tail because nothing sets build parallelism,
-  and the obvious fixes are the wrong ones.** Measured, clean builds of the same
-  tree on 12 cores: serial (**what CI does today**) 507 s; MSBuild
-  `--parallel 4` 333 s; `--parallel 12` **334 s — no better than 4**; adding
-  `/MP` 341 s and 344 s, i.e. *slower* both times. The wrapper looked like the
-  obvious floor and is not: isolated by touching only the generated `.cxx` on a
-  built tree, `tttrlibPYTHON_wrap.cxx` is **63 s** of that 334. The real
-  constraint is granularity — MSBuild parallelises whole *projects*, so a module
-  waits for each dependency to compile **and link**, and the critical path
-  through 34 chained DLLs sets the wall time. **Ninja, which schedules
-  individual compiles, is 218 s at four jobs and 165 s at twelve** — 2.3× today
-  at runner core count, and unlike MSBuild it keeps scaling. Any move to Ninja
-  must pin `CMAKE_CXX_COMPILER=cl` and assert the compiler identification in the
-  log, which is the trap `pyproject.toml` already warns about: a bare Ninja
-  configure once picked up a MinGW `gcc` from `PATH`. Two structural notes:
-  `cibuildwheel` loops five Python versions *inside* one job, so that job pays
-  the build five times, and `modules/`/`cmake/` reference Python nowhere — the
-  34 module DLLs are identical work for every version, which is what a compiler
-  cache would exploit. On the test side `run_suite.py --lane fast` is **72.5 s**
-  against ~26 min for the full lane, with every test file still represented via
-  the `smoke` marker, and nothing in CI uses it.
+* **`autodiff` removed; `modules/math/include/Dual.h` replaces it.** The
+  vendored package was 20 headers and ~10k lines — forward dual, forward real,
+  reverse `var`, four Eigen bridges, Taylor series — and the whole library used
+  one class template and two elementary functions from it, in one file. The
+  replacement is ~200 lines, a third of it comment. Same story as Eigen before
+  it: a third-party package every build had to find, for one struct member.
+* **The dependency was really an undocumented hook, not a package.** The
+  localization fit carries a whole `GradVec<N>` in the derivative slot of a
+  `Dual`, which upstream documents as a scalar; it compiles only because
+  `NumberTraits` can be specialized to say otherwise. `test/cpp/test_ad_gradient.cpp`
+  existed *because* of that — an upstream bump could keep compiling and
+  silently propagate wrong derivatives. Taking the code in-house deletes the
+  hazard rather than watching it: `Dual<G>` takes the carrier as a template
+  parameter, because that is the point of the class.
+* **Converted as a measured A/B, before deleting the thing being compared
+  against** — the only order in which the comparison is possible, and worth
+  repeating for the next vendored-package removal. Three levels: gradient
+  (400 random points, agreement to 2.3e-13, and *closer* to a long-double
+  reference than autodiff in 2336 of 4800 components), fit (44 end-to-end
+  `fit2DGaussian` cases — **bitwise identical minimised objective in every
+  one**), and speed. The harness was throwaway and lived outside the tree; to
+  re-run it, both sides come out of git — `git show <this commit>^:thirdparty/autodiff/...`
+  and the old `ImageLocalization.cpp` — compiled against the current header.
+* **The A/B answered a question that was on file as unexplained.** PERF.md
+  recorded a reproducible dip in the AD scaling curve at N = 32 — gain 5.7×
+  between neighbours at 13× and 8.7× — noted as "not noise, changes no
+  decision" and left. It was autodiff's expression templates materialising
+  temporaries: the same row is now an 18.4× gain, 0.72 → 0.15 ms. The whole
+  tail moved with it. *"Reproducible, not noise, changes no decision"* is how a
+  fixable 5× hides for a release.
+* **The test changed character with the code.** It no longer guards a foreign
+  contract; it checks an implementation — every `Dual` and `GradVec` operator
+  against a hand-written derivative, then the objective differentiated four
+  ways (vectorized dual, scalar dual, long-double dual, central differences).
+  The long-double path is new and is what makes the tolerances mean something:
+  it separates rounding from a wrong formula.
 
 ## 2026-08-11 (23rd entry)
 
@@ -428,7 +525,7 @@
   `CLOCK_THREAD_CPUTIME_ID` with interleaved implementations and min-of-nine
   made it repeatable to a few percent.
 
-  Also closed `modules/MODULE-DEBT.md` item 3, and not by its stated exit — the
+  Also closed `okf/MODULE-DEBT.md` item 3, and not by its stated exit — the
   plan was to extract `nn` so Eigen would be needed by two modules instead of
   all of them; what happened is that both consumers stopped needing it. The
   audit that came with it found `clsm` and `superres` declaring

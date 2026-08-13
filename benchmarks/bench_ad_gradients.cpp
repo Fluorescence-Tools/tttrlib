@@ -15,8 +15,13 @@
 // benchmarks its real 2D-Gaussian objective at its real free-parameter counts.
 //
 //   1. objective            — the cost unit everything else is quoted in
-//   2. central differences, h = eps*|x|        (what i_lbfgs.h does today)
-//   3. central differences, h = eps^(1/3)*|x|  (the retuned honest baseline)
+//   2. central differences, h = sqrt(eps)*|x|    (what i_lbfgs.h did before
+//                                                  PRD-010's Correction 3 --
+//                                                  the *forward*-difference
+//                                                  optimum, reused by accident)
+//   3. central differences, h = eps^(1/3)*|x|    (what i_lbfgs.h does now --
+//                                                  landed, see fd_eps in
+//                                                  i_lbfgs.h's seteps())
 //   4. vectorized forward AD, tttrlib::Dual<GradVec<N>>
 //
 // Build (from the repository root):
@@ -124,8 +129,16 @@ void run_case() {
 
     const double t_obj = timeit([&] { objective<double>(x.data(), N); }, 200);
 
-    const double eps_now = 1e-6;                    // i_lbfgs.h fgrad2
-    const double eps_opt = std::cbrt(2.22e-16);     // ~6.06e-6, the theoretical optimum
+    // Step sizes bracketing PRD-010's Correction 3 / the FD-step retune:
+    // eps_now was i_lbfgs.h's actual central-difference step before the
+    // retune -- sqrt(eps), the optimum for a *forward* difference, reused for
+    // this *central* one by accident of both formulas sharing `sqrt_eps`
+    // (see i_lbfgs.h's seteps()). eps_opt is what it uses now: eps^(1/3), the
+    // step a central difference actually wants, in its own `fd_eps` member so
+    // it no longer entangles with the EpsG/EpsX convergence thresholds that
+    // also used to share sqrt_eps.
+    const double eps_now = std::sqrt(2.22e-16);     // ~1.49e-8, i_lbfgs.h before the retune
+    const double eps_opt = std::cbrt(2.22e-16);     // ~6.06e-6, i_lbfgs.h today
     const double t_cd_now = timeit([&] { grad_central(x, N, eps_now, g); }, 50);
     const double t_cd_opt = timeit([&] { grad_central(x, N, eps_opt, g); }, 50);
     const double t_ad = timeit([&] { grad_ad<N>(x, g); }, 50);

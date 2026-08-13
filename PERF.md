@@ -139,10 +139,151 @@ the same noise-free image:
 The AD gradient agrees with central differences to 2.5e-08 relative — the
 finite-difference error floor — for all three models.
 
-**`DecayFit23/24/25/26` and `FitNExp` still use central differences.** The
+**`DecayFit24/25/26` and `FitNExp` still use central differences.** The
 gradient hook defaults to null, so the curve-fit and per-pixel-MLE rows above are
-unaffected by this work; converting them is gated on measuring AD against the
-SIMD convolution path they depend on, which cannot be templated.
+unaffected by this work; converting `DecayFit24` and `DecayFit26` was measured
+and declined in both cases -- `DecayFit24` (N=5) at no clear net win, `DecayFit26`
+(N=1) at 1.57x, the templating costing more than the gradient saves. See PRD-010.
+
+### Exact gradient in DecayFit23's general (tau/gamma) branch
+
+`DecayFit23`'s bounds were already reworked onto a single `set_bounds` mechanism
+(PRD-010 Phase 5c/5d) specifically so an analytic gradient could be registered
+without missing the bound's own contribution -- that groundwork is what made this
+conversion a templating exercise rather than a redesign. `fconv_per_cs_ad<T>`
+(`DecayConvolution.h`) is a second, `template<T>` scalar body for the periodic
+convolution, alongside (not replacing) the runtime-dispatched NEON/scalar kernel;
+`Wcm_ad`/`log_m_ext_ad` (`DecayStatistics.h`) and `soft_floor_ad`/`clamp_value_ad`
+(`DecayFit.h`) are templated the same way. `Wcm_p2s`'s series expansion is not
+templated, so the gradient is only registered when `fit_settings.p2s_twoIstar` is
+off; central differences remain the fallback there.
+
+Measured A/B (`benchmarks/bench_decayfit23_ad.py`, `benchmarks/bench_decayfit23_batch_ad.py` --
+build once with the gradient registered and once with that call commented out,
+`pip install -e .` between the two):
+
+| path | central differences | AD | |
+|---|--:|--:|--:|
+| one `Fit23(...)` call through Python/SWIG, best of 3000 | 0.187 ms | 0.147 ms | **1.27×** |
+| `fit_many`, 8000 rows, wall clock (parallel_for, all cores) | 2595 ms | 1540 ms | **1.68×** |
+| `fit_many`, 8000 rows, total CPU across worker threads | 3721 ms | 2603 ms | **1.43×** |
+
+The single-call number is diluted by SWIG list marshalling that has nothing to do
+with the gradient; `fit_many` crosses into C++ once per batch and lets every row
+pay only the fit cost, which is why its speedup is larger. Fitted values (median
+tau, mean objective) were identical before and after at 8000 rows -- the speedup
+is not bought with accuracy, and the existing `test/python/decayfit/` suite (109
+tests, including the pinned `test_fit23` reference) still passes.
+
+`fit_many` (`DecayFitModel.cpp`) parallelises over rows once a batch reaches 1024
+rows with a hand-rolled thread pool (`tttrlib::parallel_for`, not OpenMP), and
+`DecayFit23.cpp`'s `thread_local` `fit_signals`/`fit_corrections`/`fit_settings` --
+which the new gradient callback reads the same way `targetf` always did -- give
+each worker its own copy, so this is safe under that parallelism with no new
+locking. `fit23` is documented as both a burst fit and a low-photon per-pixel FLIM
+tool, but the FLIM competitor benchmark above exercises `FitNExp`, not `fit23`, so
+this conversion does not move any number already published in the table above.
+
+### DecayFit24: an exact gradient was tried, tested, and declined
+
+`DecayFit24` (two-lifetime model, N=5: tau1/gamma/tau2/A2/offset) got a small,
+kept fix -- `tau1`/`tau2` moved to `soft_floor`, matching `DecayFit23`'s `tau` --
+and then a full AD conversion the same shape as `DecayFit23`'s, reusing
+`fconv_per_cs_ad`/`Wcm_ad` unchanged. It was verified correct (value to machine
+precision, gradient to 2.8e-8 relative against central differences,
+`test/cpp/test_ad_gradient.cpp`), and then measured:
+
+| metric | central differences | AD (tried), two runs | ratio |
+|---|--:|--:|--:|
+| wall clock (`parallel_for`, all cores) | 14861 ms | 12955 ms / 13783 ms | 1.08×-1.15× faster |
+| total CPU across worker threads | 26463 ms | 28286 ms / 28147 ms | 0.94× (6% slower) |
+
+Total CPU time -- the more reliable metric on a shared machine (repeats to <1%
+across the two AD runs, versus ~6% run-to-run noise in wall clock) -- says AD
+was marginally *more* expensive here, even though `bench_ad_gradients.cpp`'s
+isolated measurement puts `DecayFit24`'s gradient at 5.44× cheaper (Phase 4).
+The likely reason is `i_lbfgs`'s own per-iteration overhead (line search,
+history update, bound penalty) plus `Dual<GradVec<5>>`'s larger memory
+footprint absorbing the saving against a comparatively cheap 128-bin model —
+not chased further. **No clear win, so it was not shipped**: the gradient
+callback was removed from `DecayFit24.cpp` (a note in the source says what was
+tried and why), the `tau1`/`tau2` fix stayed, and `test_ad_gradient.cpp`'s
+`decay24` section stays too, as the record that the removed approach was
+correct rather than merely attempted. Same call already made for `DecayFit26`.
+
+### The central-difference step, retuned: 62×-440× more accurate
+
+`bfgs` (`modules/math/include/i_lbfgs.h`) computed its central-difference gradient step as
+`sqrt(eps)*|x|` -- the optimum for a *forward* difference, reused here because the step shared a
+`sqrt_eps` member with two unrelated convergence thresholds (`EpsG`, `EpsX`). A central difference
+wants `eps^(1/3)` instead: its error is `O(h^2) + O(eps/h)`, and `sqrt_eps` is too small for that
+trade-off despite looking more precise. Landed as its own member, `fd_eps`, set alongside `sqrt_eps`
+in `seteps()` without repurposing it -- so `EpsG`/`EpsX` are untouched and only the FD step moved.
+
+This benefits every consumer still on central differences: `DecayFit24/25/26`, `DecayFit23`'s
+`p2s_twoIstar` branch, `DecayFitModel.cpp`'s `fit_linked` joint-fit path, and plugin fits.
+
+Measured against the step actually replaced (not the never-used `eps` baseline an earlier version of
+`bench_ad_gradients.cpp` compared against -- see PRD-010's Correction 3, which predicted a smaller win
+from exactly that mistake):
+
+| N | error, old step (`sqrt(eps)`, ~1.49e-08) | error, new step (`eps^(1/3)`, ~6.06e-06) | improvement |
+|---|--:|--:|--:|
+| 1 (`DecayFit26`) | 2.2e-07 | 3.5e-09 | ~63× |
+| 4 (`DecayFit23`'s `p2s_twoIstar` branch) | 1.6e-05 | 5.1e-08 | ~314× |
+| 5 (`DecayFit24`) | 1.6e-05 | 5.1e-08 | ~314× |
+| 8 | 3.7e-05 | 8.4e-08 | ~440× |
+| 18 | 2.0e-04 | 7.8e-07 | ~256× |
+
+Full C++ and Python suite (2698 passed, 74 subtests, two unrelated pre-existing failures) ran clean
+with **zero conformance cases needing a re-pin** -- the precision gain lands inside every existing
+tolerance rather than moving a converged fit's reported answer.
+
+`EpsG` and `EpsX` (gradient-norm and step-size convergence) were sharing `sqrt_eps` too, the same
+accidental-coupling smell that hid the FD-step bug. Split into their own members (`epsg`/`epsx`) with
+their own setters, and `EpsG` now auto-tightens to `eps` when an exact gradient is registered — a
+central difference's own noise floor is `sqrt(eps)`-scale, which is why the threshold lived there, but
+an exact gradient's is `eps`-scale, ~6.7e7x tighter, and `set_gradient`'s docstring has claimed this
+was "trustworthy at tight tolerances" since Phase 6 without the code ever acting on it. Checked
+against both fits that register a gradient (`DecayFit23`, `ImageLocalization`) and the full suite:
+zero regressions, same re-pinned `fit23` conformance value as before — this fixture's termination was
+not `EpsG`-bound, which is a legitimate outcome given how convergence-criterion binding is
+data-dependent, not evidence the fix does nothing.
+
+### FitNExp: a joint AD refinement pass, additive to the shipped Brent+EM search
+
+`DecayFitNExp.cpp` deliberately never used `bfgs`: amplitudes are profiled by EM (closed-form given
+fixed lifetimes, since they enter the model linearly) and lifetimes are searched one at a time by a
+multistart-aware Brent search. Both are real properties worth keeping, not stopgaps -- so this adds a
+joint gradient step *after* that search converges rather than replacing any of it. The amplitudes stay
+profiled by the same EM (plain `double`, re-run at every trial lifetime vector); the AD gradient
+(`Dual<GradVec<N>>`, reusing `fconv_per_cs_ad`) is taken holding those amplitudes constant, which is
+exact by the envelope theorem (`d(NLL)/d(weight) = 0` at the EM optimum, so the term through weights'
+own dependence on lifetime vanishes). `bfgs`'s Armijo line search only accepts strictly decreasing
+steps, so this cannot make a fit's answer worse by construction.
+
+Measured at the scale that matters -- a batched fit at realistic per-curve photon counts
+(`DecayFitNExp::fit_batch_flat`, not a single cold call):
+
+| metric | value |
+|---|--:|
+| Brent+EM (shipped, unchanged) | 210 ms/row |
+| + joint AD refinement | 1.02 ms/row |
+| **overhead** | **0.5%** |
+| rows improved | **100/100** |
+| rows regressed | **0/100** |
+
+**One real regression was found and fixed before shipping.** `N=1` (mono-exponential) has no
+cross-lifetime correlation for a joint step to recover, so the refinement there is pure overhead --
+measured directly against `bench_tttrlib.py`'s `bench_fit_curve`, the library's single most benchmarked
+path: single-curve 0.25 ms → 0.34 ms (+35%), batched 0.06 ms → 0.08 ms (+35%), for an unchanged
+answer. Gated to `N >= 2`; re-measured N=1 back to the unmodified baseline with zero change to N≥2's
+improvement.
+
+**The headline "Per-pixel reconvolution MLE" 140 ms number is unaffected, structurally.** That
+benchmark fits at a *fixed* reference lifetime (`fixed=[1]`, `ext/python/FitNExpWrapper.py:91`), so no
+lifetime is ever free there and the refinement's `any_free` guard makes that code path unreachable
+regardless of `N` -- confirmed by reading the guard, not inferred from not having re-run the benchmark.
 
 #### The derivative carrier: `GradVec` replaced Eigen
 

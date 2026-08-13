@@ -8,7 +8,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/BackgroundEstimation.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MaxEnt.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  core util
+    DEPENDS  core util math
     SWIG_INTERFACES SpectralCrosstalk.i BackgroundEstimation.i MaxEnt.i
     TEST_DIR test/python/corrections
 )
