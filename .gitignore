@@ -54,11 +54,6 @@ nul
 CMakeCache.txt
 CMakeFiles/
 CMakeScripts/
-# Anchored: unanchored `Testing/` matches at any depth, and this filesystem is
-# case-insensitive, so it silently swallowed okf/testing/ -- benchmarking.md
-# and three test files were untrackable for as long as the rule has existed.
-# CTest only writes this under a build directory, and those are ignored above.
-/Testing/
 cmake_install.cmake
 compile_commands.json
 CTestTestfile.cmake

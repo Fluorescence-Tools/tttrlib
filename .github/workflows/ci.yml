@@ -45,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is_main: ${{ steps.check.outputs.is_main }}
+      is_dev: ${{ steps.check.outputs.is_dev }}
       py_matrix: ${{ steps.check.outputs.py_matrix }}
       src_matrix: ${{ steps.check.outputs.src_matrix }}
       has_src: ${{ steps.check.outputs.has_src }}
@@ -77,6 +78,11 @@ jobs:
             SRC_OSES="ubuntu-latest"; LANE=fast
           fi
           echo "is_main=$IS_MAIN" >> $GITHUB_OUTPUT
+          # dev keeps the packaging jobs that are cheap to keep honest --
+          # the Windows wheel, the ImageJ natives and the docs -- without
+          # taking the whole packaging path back.
+          [ "$BRANCH" = "refs/heads/dev" ] && [ "${{ github.event_name }}" != "schedule" ] \
+            && echo "is_dev=true" >> $GITHUB_OUTPUT || echo "is_dev=false" >> $GITHUB_OUTPUT
           echo "lane=$LANE" >> $GITHUB_OUTPUT
           # A matrix with an empty `include` is an error, not zero jobs, so the
           # source job is gated on this rather than on the matrix being empty.
@@ -589,6 +595,7 @@ jobs:
     needs: [setup, swig_multilang]
     if: >-
       needs.setup.outputs.is_main == 'true' ||
+      needs.setup.outputs.is_dev == 'true' ||
       github.event_name == 'release' ||
       startsWith(github.ref, 'refs/tags/v')
     strategy:
@@ -1075,7 +1082,7 @@ jobs:
   build_pip_win:
     name: Pip Build win py${{ matrix.python }}
     needs: setup
-    if: needs.setup.outputs.is_main == 'true'
+    if: needs.setup.outputs.is_main == 'true' || needs.setup.outputs.is_dev == 'true'
     # windows-latest again. The pin to windows-2022 existed because the
     # "Visual Studio 17 2022" generator could not discover a VS instance on
     # windows-2025; Ninja discovers nothing -- msvc-dev-cmd puts cl on PATH and
@@ -1102,6 +1109,15 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      # sccache, not ccache: ccache has no usable MSVC support, sccache does.
+      #
+      # The win here is structural. `modules/` and `cmake/` reference Python
+      # nowhere, so the 34 module DLLs are byte-identical work for every
+      # interpreter in the matrix -- only the SWIG wrapper differs. sccache keys
+      # on the preprocessed source and the flags, so the first leg to compile a
+      # module populates the cache and the rest read it, here and on the next
+      # run. The GitHub Actions cache is the backend, so it survives the job.
+      - uses: mozilla-actions/sccache-action@v0.0.9
       # vcpkg builds HDF5 from source -- ~4 minutes, on the critical path, and
       # dependent on mirrors that rate-limit the runners (see below). The tree
       # only changes when the package spec does, so cache it and let the
@@ -1135,12 +1151,21 @@ jobs:
           echo "CMAKE_PREFIX_PATH=$hdf5root" >> $env:GITHUB_ENV
           echo "PATH=$hdf5root\bin;$env:PATH" >> $env:GITHUB_ENV
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+          sccache --show-stats
         env:
           CIBW_BUILD: cp${{ matrix.nodot }}-*
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
+          SCCACHE_GHA_ENABLED: "true"
+          # cibuildwheel runs the build in a subprocess of this job on Windows --
+          # no container -- so the environment is inherited and these reach CMake.
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            CMAKE_C_COMPILER_LAUNCHER=sccache
+            CMAKE_CXX_COMPILER_LAUNCHER=sccache
+            SCCACHE_GHA_ENABLED=true
       - uses: actions/upload-artifact@v4
         with:
           name: pip-wheels-windows-latest-py${{ matrix.python }}
@@ -1730,11 +1755,20 @@ jobs:
   # build_and_test to `needs` and to the branch clause below.
   build_docs:
     name: Build Documentation
-    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win]
+    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win,
+            build_and_test]
+    # Two gates, because the two branches prove the code different ways: main
+    # runs the packaging tests, dev runs the source build. Each waits for the one
+    # it actually has -- a skipped job's result is 'skipped', never 'success', so
+    # neither condition can be satisfied by absence.
     if: |
       always() &&
       (
         github.event_name == 'release' ||
+        (
+          github.ref == 'refs/heads/dev' &&
+          needs.build_and_test.result == 'success'
+        ) ||
         (
           github.ref == 'refs/heads/main' &&
           needs.test_pip_lnx.result == 'success' &&
