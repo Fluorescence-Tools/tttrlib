@@ -57,7 +57,7 @@ new tttrlib isn't installed.
 
 tttrlib: `test/python/{burstfilter,kinetics,fluctuation,corrections,decayfit,pda}/`
 → **43 tests pass**. Validated against chisurf/numpy references (LAPACK = Eigen3 backend).
-Benchmarks live in `bench/bench_{bocpd,gopich_szabo,pch_fida,pda3c}.py`.
+Benchmarks live in `benchmarks/bench_{bocpd,gopich_szabo,pch_fida,pda3c}.py`.
 
 ## Build / environment state (important)
 
@@ -110,7 +110,7 @@ Benchmarks live in `bench/bench_{bocpd,gopich_szabo,pch_fida,pda3c}.py`.
   SWIG-overhead-bound; batched C++ wins where the inner loop is the cost.
 - The chisurf GUI test `maxent_decay/test/test_lcurve_corner.py` needs
   PyQt/PySide (not installed here) — pre-existing environment issue.
-- `modules/MODULE-DEBT.md` notes R/Java `%include` lists lag Python; new SWIG
+- `okf/MODULE-DEBT.md` notes R/Java `%include` lists lag Python; new SWIG
   interfaces (`GopichSzabo.i`, `PhotonCountingHistogram.i`,
   `RecurrenceAnalysis.i`, `SpectralCrosstalk.i`, `BackgroundEstimation.i`,
   `MaxEnt.i`, `BlindIRF.i`, `MaxEntTcspc.i`, `Pda3cCore.i`) are Python-only so far.

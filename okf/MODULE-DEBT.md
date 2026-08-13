@@ -50,7 +50,7 @@ artefact nobody exercises.
 **Exit:** make them thin aggregates over the module objects once the modules
 exist, keeping the installed names.
 
-## 3. ~~`legacy` still carries every third-party dependency~~ -- Eigen is gone
+## 3. ~~`legacy` still carries every third-party dependency~~ -- Eigen and autodiff are gone
 
 Eigen was the case that made this debt visible: a project-wide `REQUIRED` for
 the sake of two files. It is now removed entirely, and the exit was not the one
@@ -68,10 +68,20 @@ So `FIND_PACKAGE(Eigen3 REQUIRED)` is gone from the top-level `CMakeLists.txt`,
 `tttrlib::eigen` is gone from `cmake/TTTRLibThirdParty.cmake`, and the four CI
 platforms, the vcpkg port and the two wheel-builder images no longer install it.
 
+`autodiff` then went the same way, and it was the cheaper case to argue: it was
+*vendored*, so nothing had to be installed anywhere — but 20 headers and ~10k
+lines of it sat in the tree so that one file could use one class template, and
+the class only did what that file needed through an undocumented trait hook.
+`Dual.h` in `modules/math` (~200 lines) replaced it, `tttrlib::autodiff` is gone
+from `cmake/TTTRLibThirdParty.cmake`, and `localization` now declares no
+external dependency at all. The conversion was measured against autodiff before
+autodiff was deleted; see the 24th log entry.
+
 Worth keeping in view: `superres` and `clsm` were *declaring*
 `EXTERNAL_DEPS tttrlib::eigen` (and `superres` also `tttrlib::autodiff`) while
 including neither, and `localization` was declaring Eigen while actually using
-autodiff. Nothing caught it, because the top-level `INCLUDE_DIRECTORIES` for
+autodiff. Both target names have since been deleted, which retires those
+particular wrong declarations without fixing the mechanism that hid them. Nothing caught it, because the top-level `INCLUDE_DIRECTORIES` for
 `thirdparty/` puts the vendored headers on every module's include path anyway.
 A declared dependency is documentation until a module compiles with only what
 it asked for.
