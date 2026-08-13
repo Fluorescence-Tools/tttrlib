@@ -122,6 +122,68 @@ Every model reports at least ``twoIstar`` — the Poisson deviance against a
 perfectly fitting model, near 1 for a good fit to counting data — plus
 ``converged`` and ``iterations``.
 
+What a fit returns
+------------------
+
+A single fit returns a ``DecayFitOutcome`` with three fields:
+
+``parameters``
+   The fitted parameter vector, ``n_parameters`` long, in the order given by
+   ``decay_fit_parameter_names(name)``.
+
+``results``
+   The derived quantities, ``n_results`` long, in the order given by
+   ``decay_fit_result_names(name)``. Use ``results_as_dict`` to read them by
+   name rather than by position.
+
+``objective``
+   The objective function at the optimum. This is the same value as
+   ``results[0]`` for every model, and is duplicated so that a caller comparing
+   fits does not have to consult the result schema first.
+
+``fit_many`` returns a ``DecayFitBatchOutcome`` with the same three fields, one
+entry per input row. ``parameters`` and ``results`` are row-major and therefore
+``n_rows * n_parameters`` and ``n_rows * n_results`` elements long
+respectively; ``objective`` holds one value per row. Reshape rather than
+iterate:
+
+.. code-block:: python
+
+   taus = np.asarray(batch.parameters).reshape(n_rows, n_parameters)[:, 0]
+
+Both are plain structs rather than tuples so that each language binding exposes
+the same named fields.
+
+Inspecting the registry
+-----------------------
+
+The set of available models, and the layout of each one, can be queried at run
+time. An application that builds a fit dialog from these calls does not need to
+be recompiled when a model is added.
+
+``decay_fit_names()``
+   Every registry key, for example ``"fit23"`` or ``"fit25"``.
+
+``decay_fit_setup_names(name)``
+   The name of each slot in that model's setup vector, in order. Pair with
+   ``decay_fit_setup_vector`` to build the vector without counting positions.
+
+``decay_fit_parameter_names(name)``, ``decay_fit_result_names(name)``
+   The corresponding orders for the parameter and result vectors described
+   above.
+
+``decay_fit_default_links(name, n=0)``
+   The default link vector for the model, in the form described in *Fixing,
+   freeing and linking* below. Pass ``n`` to obtain the vector sized for a
+   linked fit over ``n`` decays; the default of ``0`` returns the single-decay
+   form.
+
+Read the default links before overriding them. They are not a convenience:
+several parameters in these models are not independently identifiable from a
+single decay, and the optimiser will not report that as an error. Freeing them
+yields a fit that converges, reports a plausible ``twoIstar``, and returns
+parameter values that are not determined by the data.
+
 Fixing, freeing and linking
 ---------------------------
 
@@ -337,6 +399,36 @@ divide out of a rate spectrum but reweights it (0.5% at ``k = 0.01`` against 5%
 at ``k = 0.1``). Relative weights are the measurement in a FRET-rate
 distribution, so that would be a systematic error in the answer rather than in
 the last digit.
+
+The remaining decay kernels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``dfa_convolve`` is the entry point for convolving a rate spectrum that you
+already have. Three further kernels are exposed for models that assemble their
+own decay, and for tests that check an assembled decay against the reference
+form. All take and return flat ``double`` arrays, for the same reason the setup
+vectors do: one representation shared by every language binding.
+
+``dfa_periodic_decay(rates, weights, n_bins)``
+   A single periodic multiexponential decay evaluated from the closed form —
+   the expression the spectral backend of ``dfa_convolve`` evaluates, without
+   the convolution step. Returns ``n_bins`` values.
+
+``dfa_vv_vh_decay(kd, pd, kf, pf, ka, pa, r0, g, n_bins)``
+   The VV and VH decays of a donor × FRET × anisotropy rate spectrum, given as
+   three rate/weight pairs: donor (``kd``, ``pd``), FRET (``kf``, ``pf``) and
+   anisotropy (``ka``, ``pa``). ``r0`` is the fundamental anisotropy and ``g``
+   the detection correction factor, so the polarisation mixing is applied here
+   rather than by the caller. Returns ``2 * n_bins`` values in ``VV|VH``
+   layout: the parallel channel first, then the perpendicular.
+
+``dfa_vv_vh_convolved(kd, pd, kf, pf, ka, pa, r0, g, irf, n_bins, shift_bins, method)``
+   The same pair convolved with ``irf``, with the same two trailing arguments
+   as ``dfa_convolve``: ``shift_bins`` shifts the response, and ``method``
+   selects the backend (``0`` recursion, ``1`` spectral). This is the kernel an
+   anisotropy-resolved model calls, and it produces the convolved pair directly
+   rather than requiring the caller to convolve the output of
+   ``dfa_vv_vh_decay``.
 
 Common failure modes
 --------------------

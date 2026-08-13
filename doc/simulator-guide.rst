@@ -661,8 +661,9 @@ What does **not** help, measured so that nobody repeats it:
 
   The transform turns out to matter more than the vectorisation. A rational approximation of
   the normal quantile is the obvious choice and a trap: its central branch covers only
-  |z| < 1.97, so 4.85 % of lanes need a scalar fix-up that costs more than vectorising
-  saves (0.71x), while skipping the fix-up truncates the distribution at |z| = 3.22 with
+  :math:`|z| < 1.97`, so 4.85 % of lanes need a scalar fix-up that costs more than
+  vectorising saves (0.71x), while skipping the fix-up truncates the distribution at
+  :math:`|z| = 3.22` with
   mean, variance and a KS test all still clean. Box-Muller is exact, table-free and
   branch-free, and has neither problem.
 

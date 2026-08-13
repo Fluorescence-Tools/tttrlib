@@ -727,7 +727,7 @@ of 4.0 / 2.0), and the fitted table has no interior holes by construction.
    on the universal semicircle.
 
 Measured decays: patterns, not spectra
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A decay usually arrives as a **measured pattern**, not as amplitudes and
 lifetimes — a donor-only reference, a scatter pattern, an IRF. That is why
@@ -759,7 +759,7 @@ HMM fit only the mixture — which is the pattern-fitting approach familiar from
 MFD and PDA analyses.
 
 Refining the physics against the photons
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A fixed pattern is the right answer when reference decays are measured. When
 they are not, the thing to refine is **not the pattern** — that is the free

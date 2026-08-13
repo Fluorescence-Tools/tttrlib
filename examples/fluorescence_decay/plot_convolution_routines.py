@@ -58,9 +58,9 @@ start = 0
 # +-----------------------------------------+-----------------+
 # |Fast periodic convolution                |fconv_per        |
 # +-----------------------------------------+-----------------+
-# |Fast convolution (AVX)                   |fconv_simd        |
+# |Fast convolution (AVX)                   |fconv_simd       |
 # +-----------------------------------------+-----------------+
-# |Fast periodic convolution (AVX)          |fconv_per_simd    |
+# |Fast periodic convolution (AVX)          |fconv_per_simd   |
 # +-----------------------------------------+-----------------+
 # |Fast periodic convolution (with stop)    |fconv_per_cs     |
 # +-----------------------------------------+-----------------+

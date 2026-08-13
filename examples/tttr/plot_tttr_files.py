@@ -65,7 +65,7 @@ A detailed description on the meta data in :class:`TTTRHeader`is given in :ref:`
 
     +----------------+----------------------------------------------------------------------------------+
     | Name           | Description                                                                      |
-    +================+========+=========================================================================+
+    +================+==================================================================================+
     |Macro time      | Number of macro time clock cycles since the start of the recording               |
     +----------------+----------------------------------------------------------------------------------+
     |Micro time      | Number of micro time channels since last macro time (unused in PicoQuant T2 mode)|
@@ -88,9 +88,9 @@ events. Currently the following events are considered.
 .. table:: Table of event type identifiers
     :widths: auto
 
-    +--------------------------+--------+----------------+
+    +--------------------------+-------------------------+
     | Event type               | Event type number       |
-    +==========================+========+================+
+    +==========================+=========================+
     |Photon event              |0                        |
     +--------------------------+-------------------------+
     |Special event             |1                        |

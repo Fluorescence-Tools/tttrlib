@@ -726,11 +726,15 @@ the elements themselves:
 - **A directory means everything under it**, each object named by its path
   relative to that directory (``raw/m001.ptu``), so two files of the same name
   in different folders stay two files and the directory comes back as it was.
+- **A ``.set`` is tied to the ``.spc`` beside it** with ``pto.sidecar_of``
+  (see :ref:`pto_provenance`), which is what makes the pair readable
+  afterwards: a Becker & Hickl reader handed the ``.spc`` alone silently reads
+  half a header.
 
 .. _pto_object_names:
 
 An object name is a relative path, and only that
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Because a name carries the layout, unpacking a container writes to the path the
 name spells. That makes a name an instruction to write somewhere, so the
@@ -782,10 +786,6 @@ written one wins**. That is what a caller asking for "the" object means, and
 fixing it here is the point of stating it at all — without a rule in the
 specification each reader invents its own, they disagree, and a reader that
 guesses differently shows old numbers with nothing on screen to say so.
-- **A ``.set`` is tied to the ``.spc`` beside it** with ``pto.sidecar_of``
-  (see :ref:`pto_provenance`), which is what makes the pair readable
-  afterwards: a Becker & Hickl reader handed the ``.spc`` alone silently reads
-  half a header.
 
 .. _pto_tags:
 
