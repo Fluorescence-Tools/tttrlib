@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 const PKG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = path.resolve(PKG_DIR, '..', '..', '..');
 
-// The five platforms PRD-016 M5 commits to. Named here rather than inferred
+// The five platforms the npm package commits to. Named here rather than inferred
 // from whatever happens to be in the download directory: a runner that silently
 // failed leaves a gap, and a package published with four of five prebuilds is
 // indistinguishable from a complete one until a user on the missing platform
