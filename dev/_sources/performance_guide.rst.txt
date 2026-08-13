@@ -1,8 +1,15 @@
 Performance Guide
 =================
 
-This page summarizes tips for fast and memory-efficient use of ``tttrlib`` and
-tracks how performance and memory consumption evolve across releases.
+This page summarizes tips for fast and memory-efficient use of ``tttrlib``.
+
+.. note::
+
+   Full benchmark results — comparisons against other packages, per-release
+   time and memory tracking, methodology, the reference machine and the honest
+   caveats — live in `PERF.md
+   <https://github.com/Fluorescence-Tools/tttrlib/blob/master/PERF.md>`_ in the
+   repository. The section below is a summary of the most recent release.
 
 Cross-version performance & memory (0.27.0 vs 0.26.2)
 -----------------------------------------------------
@@ -91,6 +98,10 @@ Honest caveat: the warm mean-lifetime / phasor caches trade a little resident
 memory (a few tens of bytes per pixel) for large speed-ups when the IRF,
 background or modulation frequency is re-tuned on an already-built map — the
 opposite direction from the fill wins above, and only paid once a cache is warm.
+
+Comparisons against other packages (flimlib, ptufile, FRETBursts, pycorrelate,
+FLIMKit, H2MM_C, PyBroMo) and the remaining caveats are in `PERF.md
+<https://github.com/Fluorescence-Tools/tttrlib/blob/master/PERF.md>`_.
 
 Selections and Slicing
 ----------------------

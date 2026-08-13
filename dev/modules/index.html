@@ -79,7 +79,7 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Correlators" href="correlation.html" />
-    <link rel="prev" title="2D Gaussian image localization" href="../auto_examples/microscopy_localization/plot_image_localization.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../auto_examples/streaming/stream_to_any_format.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -213,6 +213,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
     Workflow Index
   </a>
@@ -234,6 +241,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
     Burst Analysis
   </a>
@@ -241,8 +269,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -264,6 +299,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -532,6 +574,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../workflows.html">
     Workflow Index
   </a>
@@ -553,6 +602,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../burst-analysis.html">
     Burst Analysis
   </a>
@@ -560,8 +630,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -583,6 +660,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -805,7 +889,7 @@
 <li class="toctree-l1"><a class="reference internal" href="imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="single-molecule.html">11.1. Burst Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pda.html">11.3. Photon distribution analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="h2mm_bva.html">Dynamic FRET: H2MM and BVA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hmm_bva.html">Dynamic FRET: HMM and BVA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">11.2. Fluorescence intensity analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ics.html">12.12. Image correlation spectroscopy</a></li>
 </ul>
@@ -906,15 +990,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="decay.html">Fluorescence decay and lifetime analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Core-data-model">Core data model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Which-fit-should-I-use?">Which fit should I use?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Result-dictionary-contract">Result dictionary contract</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Minimal-synthetic-setup">Minimal synthetic setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#One-call-helper-path">One-call helper path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Reusable-class-path">Reusable class path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Low-level-DecayFitData-path">Low-level <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Phasor-and-mean-lifetime-summaries">Phasor and mean-lifetime summaries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decay.html#Troubleshooting-checklist">Troubleshooting checklist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#The-four-pieces">The four pieces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#What-can-I-fit?">What can I fit?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#A-synthetic-measurement">A synthetic measurement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Build-the-fit-and-the-problem">Build the fit and the problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Simulate-a-decay">Simulate a decay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Fit">Fit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Read-the-answer-by-name">Read the answer by name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Swapping-the-model-is-a-change-of-name">Swapping the model is a change of name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Fitting-many-decays">Fitting many decays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Bounds-are-priors">Bounds are priors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Convolving:-the-recursion-or-the-transform?">Convolving: the recursion or the transform?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decay.html#Deprecated-API">Deprecated API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="imaging.html">12.1. Imaging</a></li>
@@ -968,11 +1055,11 @@
 <li class="toctree-l2"><a class="reference internal" href="pda.html#Dynamic-PDA">11.3.4. Dynamic PDA</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="h2mm_bva.html">Dynamic FRET: H2MM and BVA</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="h2mm_bva.html#Simulate-a-two-state-dynamic-FRET-dataset">Simulate a two-state dynamic FRET dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm_bva.html#Fit-H2MM-and-select-the-number-of-states-by-BIC">Fit H2MM and select the number of states by BIC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm_bva.html#Per-photon-state-path-(Viterbi)">Per-photon state path (Viterbi)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm_bva.html#Burst-Variance-Analysis">Burst Variance Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hmm_bva.html">Dynamic FRET: HMM and BVA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hmm_bva.html#Simulate-a-two-state-dynamic-FRET-dataset">Simulate a two-state dynamic FRET dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm_bva.html#Fit-H2MM-and-select-the-number-of-states-by-BIC">Fit H2MM and select the number of states by BIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm_bva.html#Per-photon-state-path-(Viterbi)">Per-photon state path (Viterbi)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm_bva.html#Burst-Variance-Analysis">Burst Variance Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">11.2. Fluorescence intensity analysis</a></li>
@@ -992,12 +1079,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../auto_examples/microscopy_localization/plot_image_localization.html"
+       href="../auto_examples/streaming/stream_to_any_format.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">2D Gaussian image localization</p>
+        <p class="prev-next-title">&lt;no title&gt;</p>
       </div>
     </a>
     <a class="right-next"

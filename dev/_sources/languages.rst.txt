@@ -3,11 +3,12 @@
 tttrlib in your language
 ========================
 
-tttrlib is one C++ core exposed to **Python**, **R**, and **Java** through a
-shared `SWIG <https://www.swig.org/>`__ interface. The same objects, the same
-algorithms, and the same file readers are available from every language — only
-the surface syntax differs. Pick a language below; the tabs on this page stay in
-sync, so every example is shown the way *you* would write it.
+tttrlib is one C++ core exposed to **Python**, **R**, **Java** and
+**JavaScript** through a shared `SWIG <https://www.swig.org/>`__ interface. The
+same objects, the same algorithms, and the same file readers are available from
+every language — only the surface syntax differs. Pick a language below; the tabs
+on this page stay in sync, so every example is shown the way *you* would write
+it.
 
 .. tab-set::
 
@@ -30,6 +31,17 @@ sync, so every example is shown the way *you* would write it.
       A self-contained JNI JAR (also shipped as an ImageJ/Fiji plugin). Arrays are
       Java primitives (``long[]``, ``int[]``, ``double[]``); large "output" getters
       use ``…_into(array)`` accessors. See :doc:`the ImageJ guide <imagej-plugin>`.
+
+   .. tab-item:: JavaScript
+      :sync: javascript
+
+      A Node.js native addon (Node-API), covering the **same surface as Python**.
+      Arrays are TypedArrays, and 64-bit values — macro times above all — are
+      ``BigUint64Array`` rather than ``Float64Array``, because a JavaScript
+      ``number`` stops being exact at 2\ :sup:`53`. ``std::vector`` and
+      ``std::map`` become TypedArrays and plain objects, mirroring Python's list
+      and dict. Methods are available under both their C++ names and camelCase
+      aliases. See :doc:`javascript-package`.
 
 .. tip::
 
@@ -75,6 +87,23 @@ Install
       Apple Silicon), and Windows — drop it on the class path, or into
       ``Fiji.app/plugins`` to use it as an ImageJ plugin. Details in
       :doc:`imagej-plugin`.
+
+   .. tab-item:: JavaScript
+      :sync: javascript
+
+      .. code-block:: bash
+
+         npm install tttrlib
+
+      Or build the addon from the repository:
+
+      .. code-block:: bash
+
+         cmake -S . -B build -DBUILD_JAVASCRIPT_INTERFACE=ON
+         cmake --build build -j
+
+      Needs Node ≥ 12.17 and SWIG ≥ 4.2. Because Node-API has a stable ABI, one
+      binary per platform serves every later Node version without a rebuild.
 
 
 Load a file and inspect the photon stream
@@ -131,6 +160,22 @@ SPC, …) and exposes the same per-photon arrays.
          int[] channels = new int[256];
          int nCh = data.get_used_routing_channels_into(channels);
 
+   .. tab-item:: JavaScript
+      :sync: javascript
+
+      .. code-block:: javascript
+
+         const tttrlib = require('tttrlib');
+
+         const data = new tttrlib.TTTR('bh_spc132.spc', 'SPC-130');
+         console.log(data.size());                    // number of photons
+         console.log(data.macroTimes[0]);             // BigInt: 56916n
+         console.log(data.microTimes[0]);             // first micro time
+         console.log(data.getUsedRoutingChannels());  // Int8Array [0, 1, 8, 9]
+
+         // Macro times exceed 2**53, so reduce them as BigInt, not as Number.
+         const total = data.macroTimes.reduce((a, b) => a + b, 0n);
+
 
 Build a micro-time (decay) histogram
 ------------------------------------
@@ -161,6 +206,14 @@ Build a micro-time (decay) histogram
 
          double[] hist = new double[data.get_number_of_micro_time_channels()];
          data.get_microtime_histogram_into(hist, new VectorInt32(), 1);
+
+   .. tab-item:: JavaScript
+      :sync: javascript
+
+      .. code-block:: javascript
+
+         const [hist, timeAxis] = data.getMicrotimeHistogram(1);
+         console.log(hist.length, Math.max(...hist));
 
 
 Reconstruct a FLIM image (CLSM)
@@ -205,24 +258,47 @@ image are shared across all three bindings.
          double[] lifetime = new double[nPix];
          img.get_mean_micro_time_into(lifetime, -1.0, 2, false, false);
 
+   .. tab-item:: JavaScript
+      :sync: javascript
+
+      .. code-block:: javascript
+
+         const img = new tttrlib.CLSMImage(data);
+         const intensity = img.getIntensity();      // flat Uint32Array...
+         intensity.shape;                            // ...with [frames, lines, pixels]
+         const lifetime = img.getMeanMicroTime(data);
+
 
 How consistent are the bindings?
 --------------------------------
 
-Because all three share the same C++ core, they return **identical numbers** on
+Because they all share the same C++ core, they return **identical numbers** on
 the same input. This is enforced in CI by a cross-language reference test suite
 (``test/python/*/test_*cross_language*.py``, ``test/r/test_*.R``,
-``test/java/*Test.java``) that asserts the same canonical values — photon counts,
-routing channels, correlator curves, burst results, micro-time histograms, CLSM
-intensity / lifetime / phasor, decay-fit results (fit23–fit26), and PDA
-histograms — from Python, R, and Java.
+``test/java/*Test.java``, ``test/js/cross_language_reference.test.mjs``) that
+asserts the same canonical values — photon counts, routing channels, correlator
+curves, burst results, micro-time histograms, CLSM intensity / lifetime / phasor,
+decay-fit results (fit23–fit26), and PDA histograms — from every binding.
+
+``tools/check_swig_multilang.sh`` additionally generates all four wrappers from
+the shared interface fragments on every change, so a Python-only construct
+leaking into the language-neutral core is caught without a native build.
 
 .. note::
 
    The **Python** binding is the most mature and has the broadest test suite.
-   The **R** and **Java** bindings expose the same core and are verified against
-   the same reference values, but cover a smaller slice of the API. If you hit a
-   gap, please `open an issue <https://github.com/Fluorescence-Tools/tttrlib/issues>`__.
+   **JavaScript** wraps the same full surface and is verified against the same
+   reference values. **R** and **Java** expose the same core, also verified
+   against those values, but wrap a smaller slice of the API. If you hit a gap,
+   please `open an issue <https://github.com/Fluorescence-Tools/tttrlib/issues>`__.
+
+.. note::
+
+   Two things are unavailable outside Python, for the same reason in both cases:
+   SWIG generates no *directors* for the R and JavaScript backends, so
+   ``PdaCallback`` cannot be subclassed there (PDA's built-in models are
+   unaffected). And every binding is synchronous — in a Node.js server, put
+   tttrlib calls in a ``worker_thread``, as ``examples/js/ptu-webapp/`` does.
 
 
 Where next
@@ -231,4 +307,6 @@ Where next
 * :doc:`getting-started` and :doc:`quickstart` — the full Python walk-through.
 * :doc:`r-package` — installing and using the R package.
 * :doc:`imagej-plugin` — the ImageJ/Fiji plugin and the raw Java JAR.
+* ``ext/js/pkg/README.md`` — the Node.js package, and ``examples/js/ptu-webapp/``
+  for a small web application built on it.
 * :doc:`modules/index` — the complete API reference.

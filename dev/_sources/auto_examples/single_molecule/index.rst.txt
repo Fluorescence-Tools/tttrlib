@@ -61,23 +61,6 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates microtime range selection for burst analysis without plotting.">
-
-.. only:: html
-
-  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_minimal_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/single_molecule/plot_microtime_selection_minimal`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Minimal Microtime Range Selection Example</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="    1. The minimum window length minimum_window_length     2. The minimum number of photons in a time window minimum_number_of_photons_in_time_window">
 
 .. only:: html
@@ -95,18 +78,18 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates microtime range selection for burst analysis without plotting.">
 
 .. only:: html
 
-  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_fixed_thumb.png
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_minimal_thumb.png
     :alt:
 
-  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example_fixed`
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_minimal`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example (Fixed Version)</div>
+      <div class="sphx-glr-thumbnail-title">Minimal Microtime Range Selection Example</div>
     </div>
 
 
@@ -129,6 +112,57 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_fixed_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example_fixed`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example (Fixed Version)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon-by-photon hidden Markov modelling (H2MM) normally recovers a model by iterating Baum-Welch EM on every dataset. A surrogate takes a different route: train a small neural network once on data simulated from the HMM generative model, then estimate the parameters of a real dataset in a single forward pass.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_surrogate_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_surrogate`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Training an HMM surrogate (amortised neural estimator)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to perform photon-level enhanced Super-Resolution Radial Fluctuations (eSRRF) on Confocal Laser Scanning Microscopy (CLSM) datasets using tttrlib.CLSMSuperRes.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_clsm_superres_esrrf_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_clsm_superres_esrrf`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">CLSM Super-Resolution (eSRRF) Photon Reassignment Example</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Photon distribution analysis ============================">
 
 .. only:: html
@@ -141,6 +175,23 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Photon distribution analysis - 1</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example uses simulated CLSM stripe patterns to illustrate physical and algorithmic limitations of eSRRF photon reassignment:">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_clsm_superres_limitations_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_clsm_superres_limitations`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</div>
     </div>
 
 
@@ -163,6 +214,40 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_clsm_superres_resolution_curve_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_clsm_superres_resolution_curve`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Everything else in this gallery hands the HMM a prepared photon list. This example runs the pipeline a real measurement goes through — diffusing molecules through a confocal volume, a TTTR file, a burst search, burst selection, and only then the fit — and does it in the regime where burst-wise analysis cannot answer the question.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_burst_pipeline_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_burst_pipeline`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">A full burst pipeline: simulate, search, select, resolve</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates FRET burst analysis using the new BurstFilter class in tttrlib. The BurstFilter class provides a cleaner interface for burst analysis similar to FRETBursts, with support for multi-channel FRET analysis.">
 
 .. only:: html
@@ -180,18 +265,18 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Intensity alone cannot tell a dark acceptor from real FRET: both lower the acceptor fraction. Only energy transfer also shortens the donor lifetime. This example builds two states that are deliberately identical in intensity — both emit donor and acceptor in a 50:50 ratio — and separates them on the micro-time axis alone.">
 
 .. only:: html
 
-  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_thumb.png
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_lifetime_posterior_thumb.png
     :alt:
 
-  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example`
+  :doc:`/auto_examples/single_molecule/plot_hmm_lifetime_posterior`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example</div>
+      <div class="sphx-glr-thumbnail-title">Lifetime-resolved HMM: separating a dark state from real FRET</div>
     </div>
 
 
@@ -214,6 +299,23 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to implement microtime range selection for burst analysis. While the BurstFilter class doesn&#x27;t currently have built-in microtime selection, this example shows how to achieve the same functionality by pre-filtering the TTTR data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_microtime_selection_example_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_microtime_selection_example`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microtime Range Selection Example</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with photon masking. Photon masking allows you to pre-filter photons by channel, microtime, or other criteria before performing burst analysis.">
 
 .. only:: html
@@ -226,6 +328,57 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Burst Analysis with BurstFilter Class and Photon Masking</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Photon-by-photon hidden Markov modelling (H2MM, Pirchi et al., J. Phys. Chem. B 2016) fits a hidden Markov model directly to the arrival times and detection channels of individual photons inside single-molecule bursts. Unlike a burst-wise FRET histogram — which averages each burst to a single efficiency and blurs any sub-burst kinetics — H2MM resolves state transitions on the inter-photon timescale, down to microseconds.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_analysis_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_analysis`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Photon-by-photon HMM (H2MM) of smFRET dynamics</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The emission table can be generated from physics rather than fitted freely — and then the physics itself refined against the photon data. This example runs a three-state system where each state is a distance distribution, and recovers both the distances and the transition rates from a deliberately wrong start.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_distance_refinement_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_distance_refinement`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Refining distances and kinetics together (3-state)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="HMM.fit returns a point estimate and nothing about its uncertainty. HMM.sample gives a calibrated posterior, but it needs priors and costs sweeps. Between them sits the non-parametric bootstrap: bursts are conditionally independent given the model, so resampling them with replacement and refitting gives a frequentist interval with no prior at all.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_bootstrap_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_bootstrap`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Error bars on a maximum-likelihood fit, by resampling bursts</div>
     </div>
 
 
@@ -282,6 +435,40 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Fitting an HMM tells you how many states there are. Using it means deciding which state each photon belongs to — and which decoder is right depends on the question.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_state_channels_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_state_channels`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">HMM state decoding: faithful distributions and how to store them</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A fit that converges and returns the right E can still be built on the wrong decay model, and nothing in the usual output says so. This example shows a model-free check that does: the phasor of each state&#x27;s decay, computed from the data and from the model and compared.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_phasor_diagnostic_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_phasor_diagnostic`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">A phasor check on a converged fit</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Micro-second ALEX (alternating laser excitation) rapidly switches a green (donor) and a red (acceptor) laser. Combined with two detectors this yields three photon streams per burst:">
 
 .. only:: html
@@ -294,6 +481,40 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">ALEX analysis of Shimon Weiss lab .sm files</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This is the photophysically realistic case. Three conformational states with Gaussian distance distributions, a multi-exponential donor quenched homogeneously by transfer, and an acceptor that blinks on a 10 µs timescale — faster than a burst, so blinking happens within the observation.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_blinking_acceptor_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_blinking_acceptor`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">A blinking acceptor, and why intensity alone cannot see it</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The HMM models one molecule per burst. Freely-diffusing data violate that at any finite concentration, and the violation is not a mild bias: a burst holding two molecules is a superposition of two independent chains, and a single-chain model has exactly one way to explain interleaved photons from two sources — rapid switching. Coincidence manufactures the very signal the method exists to detect.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_coincidence_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_coincidence`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Two molecules in one burst: the confound you cannot filter out</div>
     </div>
 
 
@@ -331,6 +552,23 @@ example list automatically from the scripts in this directory.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Burst detection is a foreground/background segmentation problem, and tttrlib ships several answers to it:">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_search_comparison_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_search_comparison`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Benchmarking burst searches against a simulated ground truth</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -343,20 +581,34 @@ example list automatically from the scripts in this directory.
 
    /auto_examples/single_molecule/plot_single_molecule_mcs
    /auto_examples/single_molecule/plot_pda_synthetic
-   /auto_examples/single_molecule/plot_microtime_selection_minimal
    /auto_examples/single_molecule/plot_single_molecule_burst_selection
-   /auto_examples/single_molecule/plot_microtime_selection_example_fixed
+   /auto_examples/single_molecule/plot_microtime_selection_minimal
    /auto_examples/single_molecule/plot_burstfilter_with_selection
+   /auto_examples/single_molecule/plot_microtime_selection_example_fixed
+   /auto_examples/single_molecule/plot_hmm_surrogate
+   /auto_examples/single_molecule/plot_clsm_superres_esrrf
    /auto_examples/single_molecule/plot_single_molecule_pda_1
+   /auto_examples/single_molecule/plot_clsm_superres_limitations
    /auto_examples/single_molecule/plot_burst_analysis_json
+   /auto_examples/single_molecule/plot_clsm_superres_resolution_curve
+   /auto_examples/single_molecule/plot_hmm_burst_pipeline
    /auto_examples/single_molecule/plot_fret_burst_analysis
-   /auto_examples/single_molecule/plot_microtime_selection_example
+   /auto_examples/single_molecule/plot_hmm_lifetime_posterior
    /auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced
+   /auto_examples/single_molecule/plot_microtime_selection_example
    /auto_examples/single_molecule/plot_burst_analysis_with_filter
+   /auto_examples/single_molecule/plot_hmm_analysis
+   /auto_examples/single_molecule/plot_hmm_distance_refinement
+   /auto_examples/single_molecule/plot_hmm_bootstrap
    /auto_examples/single_molecule/plot_microtime_linearization
    /auto_examples/single_molecule/plot_01_burst_analysis
    /auto_examples/single_molecule/plot_single_molecule_pda_2
+   /auto_examples/single_molecule/plot_hmm_state_channels
+   /auto_examples/single_molecule/plot_hmm_phasor_diagnostic
    /auto_examples/single_molecule/plot_alex_sm
+   /auto_examples/single_molecule/plot_hmm_blinking_acceptor
+   /auto_examples/single_molecule/plot_hmm_coincidence
    /auto_examples/single_molecule/plot_complete_burst_analysis_pipeline
    /auto_examples/single_molecule/plot_burst_selection_advanced
+   /auto_examples/single_molecule/plot_burst_search_comparison
 

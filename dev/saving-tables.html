@@ -1,0 +1,1756 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Saving a table" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="saving-tables.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="A DataStore is tttrlib’s columnar table: named columns that keep their own dtype, optional per-column validity masks, dictionary-encoded text, and a row selection. There are three ways to put one o..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_saving-tables_e4126aa9.png" />
+<meta property="og:image:alt" content="A DataStore is tttrlib’s columnar table: named columns that keep their own dtype, optional per-column validity masks, dictionary-encoded text, and a row selection. There are three ways to put one o..." />
+<meta name="description" content="A DataStore is tttrlib’s columnar table: named columns that keep their own dtype, optional per-column validity masks, dictionary-encoded text, and a row selection. There are three ways to put one o..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Saving a table &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'saving-tables';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Plugins: adding a format without rebuilding" href="plugins.html" />
+    <link rel="prev" title="PTO.MFDB — the MMFDB profile of the photon container" href="formats/pto-mfdb.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/saving-tables.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Saving a table</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="saving-a-table">
+<h1>Saving a table<a class="headerlink" href="#saving-a-table" title="Link to this heading">#</a></h1>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">DataStore</span></code> is tttrlib’s columnar table: named columns that keep their
+own dtype, optional per-column validity masks, dictionary-encoded text, and a
+row selection. There are three ways to put one on disk, and they exist for
+different reasons.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 29.0%" />
+<col style="width: 29.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>native <code class="docutils literal notranslate"><span class="pre">.dstore</span></code></p></th>
+<th class="head"><p>HDF5</p></th>
+<th class="head"><p>CSV</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>what it is for</p></td>
+<td><p>speed and exact fidelity</p></td>
+<td><p>interoperability</p></td>
+<td><p>the lowest common denominator</p></td>
+</tr>
+<tr class="row-odd"><td><p>use it when</p></td>
+<td><p>tttrlib writes it and tttrlib reads it: caches, checkpoints,
+intermediate results</p></td>
+<td><p>anything else has to read it: h5py, pandas, PyTables, MATLAB</p></td>
+<td><p>a spreadsheet, R, a plotting script, or a collaborator who will not
+install anything</p></td>
+</tr>
+<tr class="row-even"><td><p>call</p></td>
+<td><p><code class="xref py py-func docutils literal notranslate"><span class="pre">save_store()</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">load_store()</span></code></p></td>
+<td><p><code class="xref py py-func docutils literal notranslate"><span class="pre">write_hdf5()</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">read_hdf5()</span></code></p></td>
+<td><p><code class="xref py py-func docutils literal notranslate"><span class="pre">write_csv()</span></code> / <code class="xref py py-func docutils literal notranslate"><span class="pre">read_csv()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>needs HDF5</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-even"><td><p>keeps dtypes</p></td>
+<td><p>exactly</p></td>
+<td><p>all but bool</p></td>
+<td><p>no — they are inferred back from the text</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The first two round-trip the whole tree: group names, order, nesting, column
+order, dtypes, dictionary columns and validity masks. CSV is one flat table and
+keeps the values, not the types.</p>
+<section id="the-native-file">
+<h2>The native file<a class="headerlink" href="#the-native-file" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">store</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="s2">&quot;acquisition&quot;</span><span class="p">)</span>
+<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Tau&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">4096</span><span class="p">)})</span>
+<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;run.ptu&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)})</span>
+
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">save_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>
+
+<span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span>                 <span class="c1"># the column, reached by path</span>
+<span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The row count of a group follows from its first column, as <code class="docutils literal notranslate"><span class="pre">add</span></code> already does
+it. Spelling it out — <code class="docutils literal notranslate"><span class="pre">add_group</span></code> then a loop then <code class="docutils literal notranslate"><span class="pre">set_n_rows</span></code> — still
+works and is what the one-call form does underneath.</p>
+<section id="reaching-into-the-tree">
+<span id="dstore-paths"></span><h3>Reaching into the tree<a class="headerlink" href="#reaching-into-the-tree" title="Link to this heading">#</a></h3>
+<p>A store is a tree, so getting at a column used to be a four-link chain. <code class="docutils literal notranslate"><span class="pre">/</span></code>
+composes a path the way <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#module-pathlib" title="(in Python v3.14)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pathlib</span></code></a> does — it looks nothing up until the
+path is used, so a path can be built before the group exists, held, and
+resolved later:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span>     <span class="c1"># nothing looked up yet</span>
+<span class="n">p</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>                        <span class="c1"># resolved here</span>
+<span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>                       <span class="c1"># and here</span>
+<span class="n">p</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span>
+
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">]</span>              <span class="c1"># the same key space, resolved at once</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;a/b/x&quot;</span><span class="p">]</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;results/&quot;</span><span class="p">]</span>                 <span class="c1"># a group -&gt; DataStore</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">back</span><span class="o">.</span><span class="n">tree</span><span class="p">())</span>               <span class="c1"># what is in this file?</span>
+<span class="n">back</span><span class="o">.</span><span class="n">paths</span><span class="p">()</span>                     <span class="c1"># every column, by path</span>
+<span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">back</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>  <span class="c1"># depth first, parent before child</span>
+    <span class="o">...</span>
+<span class="n">back</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;Tau&quot;</span><span class="p">)</span>                <span class="c1"># every Tau anywhere, as paths</span>
+</pre></div>
+</div>
+<p>Writing works the same way, creating the groups it needs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">back</span><span class="p">[</span><span class="s2">&quot;meta/instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;MicroTime 200&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>A key without a separator is unchanged.</strong> <code class="docutils literal notranslate"><span class="pre">store[&quot;Tau&quot;]</span></code> is a column and
+always was, and a name that is only a group still raises — reaching a group by
+name is <code class="docutils literal notranslate"><span class="pre">store</span> <span class="pre">/</span> <span class="pre">&quot;results&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">store.group(&quot;results&quot;)</span></code>. A column is also
+looked up <em>before</em> the tree, so a column genuinely called <code class="docutils literal notranslate"><span class="pre">Sg/Sr</span></code> still wins
+over the path <code class="docutils literal notranslate"><span class="pre">Sg/Sr</span></code>.</p>
+<p>Histograms take paths too, on one rule: <strong>a histogram fills from one table.</strong>
+Two groups have different row counts and no row correspondence, so axes from
+two of them are not something that can be filled, and asking raises rather than
+answering.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>      <span class="c1"># one column, one line</span>
+<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;results/E&quot;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="n">back</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">&quot;results/x&quot;</span><span class="p">,</span> <span class="s2">&quot;results/y&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="s2">&quot;results/tau&quot;</span><span class="p">)</span>
+
+<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;meta/source&quot;</span><span class="p">)</span>        <span class="c1"># ValueError, and says why</span>
+</pre></div>
+</div>
+<p>The contract is <code class="docutils literal notranslate"><span class="pre">load(save(s))</span> <span class="pre">==</span> <span class="pre">s</span></code>. Two consequences worth knowing:</p>
+<ul class="simple">
+<li><p><strong>The row selection is saved, not applied.</strong> <code class="xref py py-func docutils literal notranslate"><span class="pre">write_hdf5()</span></code> writes only
+the selected rows, because its job is to export a subset. This one writes
+every row <em>and</em> the gate, because its job is to give the store back.</p></li>
+<li><p><strong>Bool survives.</strong> HDF5 has no boolean type, so a bool column written that way
+comes back as <code class="docutils literal notranslate"><span class="pre">uint8</span></code>. Here it comes back as a bool column.</p></li>
+</ul>
+</section>
+<section id="working-with-a-column">
+<h3>Working with a column<a class="headerlink" href="#working-with-a-column" title="Link to this heading">#</a></h3>
+<p>A column behaves like the array it wraps, so code that used a data frame column
+as a value needs no conversion inserted around it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">col</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span>
+
+<span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>              <span class="c1"># one value, in the column&#39;s own dtype</span>
+<span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">col</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>          <span class="c1"># an array</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="p">[</span><span class="n">v</span> <span class="o">*</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col</span><span class="p">]</span>
+<span class="n">col</span> <span class="o">&gt;</span> <span class="mf">1.0</span>                    <span class="c1"># an elementwise bool array</span>
+<span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;m000.spc&quot;</span>            <span class="c1"># on a text column, via the dictionary</span>
+<span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.2</span>                 <span class="c1"># writes through, for numeric columns</span>
+<span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Three things are worth knowing, because none is guessable:</p>
+<ul class="simple">
+<li><p><strong>Element access says nothing about validity.</strong> A masked row returns the
+value stored in it, exactly as <code class="xref py py-meth docutils literal notranslate"><span class="pre">numpy()</span></code> does. “Measured or not” stays an
+explicit question — <code class="xref py py-meth docutils literal notranslate"><span class="pre">valid()</span></code> or <code class="xref py py-meth docutils literal notranslate"><span class="pre">mask_numpy()</span></code> — because returning
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> where masked cannot be done for an integer or a text column without
+changing the dtype the mask exists to preserve.</p></li>
+<li><p><strong>Writing refuses where it would be lost.</strong> A bool column is bit-packed and a
+text one is dictionary-encoded, so both decode through a copy; <code class="docutils literal notranslate"><span class="pre">col[0]</span> <span class="pre">=</span> <span class="pre">x</span></code>
+on those raises and names the route that works, rather than silently
+changing nothing.</p></li>
+<li><p><strong>A text column compares through its dictionary.</strong> <code class="docutils literal notranslate"><span class="pre">col</span> <span class="pre">==</span> <span class="pre">&quot;m000.spc&quot;</span></code> is
+one lookup and an integer compare over the codes rather than a Python string
+comparison per row — measured 374× faster on 500 000 rows, and the column is
+never decoded. Slicing one <em>does</em> decode it, so a repeated slice in a loop
+should go through <code class="xref py py-meth docutils literal notranslate"><span class="pre">codes()</span></code> instead.</p></li>
+</ul>
+</section>
+<section id="how-several-columns-sit-in-the-file">
+<span id="dstore-columns"></span><h3>How several columns sit in the file<a class="headerlink" href="#how-several-columns-sit-in-the-file" title="Link to this heading">#</a></h3>
+<p>Nothing is interleaved and nothing is row-major. <strong>Each column’s values are one
+contiguous run, in the column’s own dtype</strong>, and a directory at the tail of the
+file says where each run begins:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[48-byte header] [blob] [blob] ... [directory]
+
+node:    label, n_rows, row_mask{n_bits, blob}, n_columns, [column],
+         n_groups, [name, node]
+column:  name, type, n, flags, data blob, mask blob, dictionary blob
+blob:    u64 offset, u64 bytes          -- 8-byte aligned, always
+</pre></div>
+</div>
+<p>A column is up to <strong>three</strong> blobs: its data, its validity mask, and — for text,
+which is dictionary-encoded — its labels. So reading a subset costs one seek to
+the tail for the directory, then one read per wanted blob; the rest of the file
+is never touched.</p>
+<p>Measured on a 1M-row burst table of four columns, 28.0 MB, counting bytes
+rather than seconds (a wall clock on a warm page cache measures the cache):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>read</p></th>
+<th class="head"><p>bytes moved</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>the whole table</p></td>
+<td><p>28 000 000</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">columns=[&quot;Tau&quot;,</span> <span class="pre">&quot;E&quot;]</span></code></p></td>
+<td><p>16 000 000</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">columns=[&quot;Tau&quot;]</span></code></p></td>
+<td><p>8 000 000</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Exactly the columns asked for, and nothing else. <code class="docutils literal notranslate"><span class="pre">tttrlib.store_bytes_read()</span></code>
+is the counter — take a difference around one call and compare it to a
+difference around another.</p>
+<p><strong>HDF5 is the same shape</strong>: a group holding one 1-D dataset per column, a
+sub-group per child. That is why a table written there loads with no conversion
+and no transpose.</p>
+<p>Every partial read works on both, and each is native — a shorter loop over the
+directory, and a hyperslab. <strong>Emulation was rejected</strong>: reading a whole file and
+slicing gives the right answer at the wrong cost, so a caller who swapped an
+extension to get a subset read would have got the opposite.</p>
+</section>
+<section id="one-way-to-ask-whatever-the-format">
+<span id="table-vocabulary"></span><h3>One way to ask, whatever the format<a class="headerlink" href="#one-way-to-ask-whatever-the-format" title="Link to this heading">#</a></h3>
+<p>Each format also has its own verb — <code class="xref py py-func docutils literal notranslate"><span class="pre">load_store()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">read_hdf5()</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pto_store()</span></code> — with its own spelling of the same argument. Five functions
+say it once:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span>     <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span>         <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.pto|bursts&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="s2">&quot;out.h5&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_groups</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>      <span class="c1"># [&#39;results&#39;]</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_columns</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_has</span><span class="p">(</span><span class="s2">&quot;run.pto|bursts&quot;</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These add <strong>no capability</strong>. Every one is a call to a reader on this page,
+chosen from the file — so a caller swaps a format by swapping a filename rather
+than by rewriting their call sites, and one reading a folder of mixed files
+carries no branch per format.</p>
+<p>A group write works on both tree formats and leaves the siblings alone —
+HDF5 replaces the group in place, the native format and PTO read, replace and
+write back. The caller is not told which, because the resulting file is the
+same either way. The cost is not the same, so it is published rather than
+hidden:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="n">caps</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry_category_json</span><span class="p">(</span><span class="s2">&quot;table_format&quot;</span><span class="p">))</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;dstore&quot;</span><span class="p">][</span><span class="s2">&quot;rewrites_on_partial_write&quot;</span><span class="p">]</span>   <span class="c1"># True  -- reads and rewrites</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">][</span><span class="s2">&quot;rewrites_on_partial_write&quot;</span><span class="p">]</span>     <span class="c1"># False -- replaces in place</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">][</span><span class="s2">&quot;groups&quot;</span><span class="p">]</span>                         <span class="c1"># False -- no tree at all</span>
+</pre></div>
+</div>
+<p>Five, not six: <strong>there is no</strong> <code class="docutils literal notranslate"><span class="pre">table_remove</span></code>. Removing a group is
+<code class="docutils literal notranslate"><span class="pre">read_table</span></code> → <code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_group()</span></code> → <code class="docutils literal notranslate"><span class="pre">write_table</span></code>, which is the rule the
+whole surface rests on — a change happens in memory, and a write is what puts
+it in a file.</p>
+<p>Four things worth knowing before relying on it:</p>
+<ul class="simple">
+<li><p><strong>The reader takes its format from the content; the writer from the
+extension.</strong> A <code class="docutils literal notranslate"><span class="pre">.dstore</span></code> named <code class="docutils literal notranslate"><span class="pre">.h5</span></code> still reads as a <code class="docutils literal notranslate"><span class="pre">.dstore</span></code>,
+because an extension is a claim and the bytes are the fact. The asymmetry is
+inherent: a file being written need not exist yet, so there is nothing to
+sniff.</p></li>
+<li><p><strong>The spec is</strong> <code class="docutils literal notranslate"><span class="pre">path</span></code> <strong>or</strong> <code class="docutils literal notranslate"><span class="pre">path|object</span></code>. A PTO holds many objects,
+each of which is a tree, and the pipe is where that extra addressing axis
+goes — the same form <code class="docutils literal notranslate"><span class="pre">TTTR(&quot;run.pto|m001.ptu&quot;)</span></code> already takes.</p></li>
+<li><p><strong>Group paths come back in the bare form.</strong> HDF5’s own listing gives
+<code class="docutils literal notranslate"><span class="pre">/results</span></code> and includes the root; the native format’s gives <code class="docutils literal notranslate"><span class="pre">results</span></code> and
+does not. One had to win, or a path taken from one listing could not be handed
+to the other.</p></li>
+<li><p><strong>The three queries are silent and the read is not.</strong> <code class="docutils literal notranslate"><span class="pre">table_groups</span></code>,
+<code class="docutils literal notranslate"><span class="pre">table_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">table_has</span></code> answer for any input, because probing is
+a normal thing to do in a loop. <code class="docutils literal notranslate"><span class="pre">read_table</span></code> raises and says what it looked
+for — an empty store returned to mean “could not read” cannot be told from one
+that read an empty table.</p></li>
+</ul>
+<p>CSV is the one that cannot do everything: it is one flat table with no tree, so
+<code class="docutils literal notranslate"><span class="pre">group</span></code> and a row range <strong>raise</strong> rather than being ignored. A knob that
+silently does nothing is worse than one that is not there.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">.dstore</span></code></p></th>
+<th class="head"><p>HDF5</p></th>
+<th class="head"><p>PTO</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>read one group</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">load_store(f,</span> <span class="pre">group=)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">read_hdf5(f,</span> <span class="pre">group)</span></code></p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>read a column subset</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">load_store(f,</span> <span class="pre">columns=)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">read_hdf5(f,</span> <span class="pre">columns=)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pto_store(f,</span> <span class="pre">uid,</span> <span class="pre">columns=)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>read a row range</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">load_store(f,</span> <span class="pre">first_row=,</span> <span class="pre">n_rows=)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">read_hdf5(f,</span> <span class="pre">first_row=,</span> <span class="pre">n_rows=)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pto_store(f,</span> <span class="pre">uid,</span> <span class="pre">first_row=,</span> <span class="pre">n_rows=)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>ask whether a group is there</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">store_has(f,</span> <span class="pre">group)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hdf5_table_has(f,</span> <span class="pre">group)</span></code></p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>list the groups</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">store_groups(f)</span></code> → <code class="docutils literal notranslate"><span class="pre">results</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hdf5_table_groups(f)</span></code> → <code class="docutils literal notranslate"><span class="pre">/results</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pto_store_groups(f,</span> <span class="pre">uid)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>bytes moved, for checking the above</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">store_bytes_read()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hdf5_bytes_read()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">store_bytes_read()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>remove a group</p></td>
+<td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hdf5_table_remove(f,</span> <span class="pre">group)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoFile</span></code> methods</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Measured on the same tree written both ways — four root columns of 20 000
+rows, one group of one column, one small nested group:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>read</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">.dstore</span></code></p></th>
+<th class="head"><p>HDF5</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>the whole file</p></td>
+<td><p>800 400</p></td>
+<td><p>800 400</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">columns=[&quot;Tau&quot;]</span></code></p></td>
+<td><p>320 000</p></td>
+<td><p>320 000</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">first_row=100,</span> <span class="pre">n_rows=50</span></code></p></td>
+<td><p>2 000</p></td>
+<td><p>2 000</p></td>
+</tr>
+<tr class="row-odd"><td><p>one group</p></td>
+<td><p>160 000</p></td>
+<td><p>160 000</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The same request moves the same bytes through either format. That is the
+property that makes them interchangeable, and it is asserted with the counters
+above rather than with a wall clock — on a warm page cache a clock measures the
+cache.</p>
+<p>Note the leading slash: the string identifying a group depends on which file it
+came out of, which is the value a caller passes straight back in. Both readers
+accept it either way, leading and trailing separators being optional.</p>
+<p>Two things about reading one group, because neither is guessable:</p>
+<ul class="simple">
+<li><p>The tree <strong>below</strong> the group comes back with it; the tree <strong>above</strong> does not.
+That is what makes the result a store in its own right rather than a view —
+it writes straight back out as a file whose root is the group asked for.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">columns=</span></code> is matched <strong>per node</strong>. A name that is in one group and not
+another leaves that other group with fewer columns rather than making the
+read an error.</p></li>
+</ul>
+<p>Two things about <code class="docutils literal notranslate"><span class="pre">columns=</span></code> that are worth knowing before you rely on them,
+because neither is guessable:</p>
+<ul class="simple">
+<li><p><strong>It matches by name in EVERY table of the tree, not just the root.</strong> A tree
+whose root, <code class="docutils literal notranslate"><span class="pre">g1</span></code> and <code class="docutils literal notranslate"><span class="pre">a/b</span></code> each hold a <code class="docutils literal notranslate"><span class="pre">Tau</span></code> gives you all three — each
+with its own row count, because they are different tables that happen to share
+a column name. Pass a group as well if you meant one of them.</p></li>
+<li><p><strong>The tree comes back whole either way.</strong> The structure <em>is</em> the directory, so
+filtering columns costs nothing structural: a table with no matching column
+comes back empty but keeps its <code class="docutils literal notranslate"><span class="pre">n_rows</span></code>, and so is still distinguishable
+from a table that genuinely has no rows.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">part</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">n_rows</span><span class="p">(),</span> <span class="n">n</span><span class="o">.</span><span class="n">column_names</span><span class="p">())</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">walk</span><span class="p">()]</span>
+<span class="c1"># [(&#39;&#39;,    4, [&#39;Tau&#39;]),</span>
+<span class="c1">#  (&#39;g1&#39;,  9, [&#39;Tau&#39;]),</span>
+<span class="c1">#  (&#39;a&#39;,   0, []),          &lt;- kept, with its row count</span>
+<span class="c1">#  (&#39;a/b&#39;, 2, [&#39;Tau&#39;])]</span>
+</pre></div>
+</div>
+<p>Reading part of a file costs only that part — the file carries a directory
+saying where each column lives:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>That works along the other axis too, and for a store that lives inside
+something bigger. The directory records where every column’s blob begins and
+how wide its elements are, so a <strong>row range</strong> is an offset and a length per
+column — which is what a table viewer needs, since paging a million-row burst
+table otherwise decodes a million rows to show fifty:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># rows 500 000-500 050 of two columns, of a store embedded at `base`</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store_region</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">nbytes</span><span class="p">,</span>
+                                 <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;n_photons&quot;</span><span class="p">],</span>
+                                 <span class="n">first_row</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Fixed-width columns are exact. A bit-packed column (bool, and every validity
+mask) reads only the words its range falls in and is repacked to start at bit
+zero. A dictionary-encoded text column reads its codes for the range and the
+whole dictionary, which is small by construction. The range applies to every
+table in the tree, each clamped to its own length: a group shorter than
+<code class="docutils literal notranslate"><span class="pre">first_row</span></code> comes back empty rather than raising.</p>
+<p>A caller with a <strong>container</strong> rather than a raw offset uses
+<code class="xref py py-func docutils literal notranslate"><span class="pre">tttrlib.pto_store()</span></code>, which is the same read with the region looked up
+from an object UID. See <a class="reference internal" href="formats/pto.html"><span class="doc">PTO — the PhoTon cOntainer</span></a>.</p>
+</section>
+<section id="what-it-is-actually-faster-at">
+<h3>What it is actually faster at<a class="headerlink" href="#what-it-is-actually-faster-at" title="Link to this heading">#</a></h3>
+<p>Measured on a million rows of mixed numeric types, 21 MB:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>native</p></th>
+<th class="head"><p>HDF5, no compression</p></th>
+<th class="head"><p>HDF5, deflate 4</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>write</p></td>
+<td><p>0.008 s</p></td>
+<td><p>0.009 s</p></td>
+<td><p>2.09 s</p></td>
+</tr>
+<tr class="row-odd"><td><p>read</p></td>
+<td><p>0.009 s</p></td>
+<td><p>0.006 s</p></td>
+<td><p>0.134 s</p></td>
+</tr>
+<tr class="row-even"><td><p>size</p></td>
+<td><p>21.0 MB</p></td>
+<td><p>21.0 MB</p></td>
+<td><p>18.5 MB</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Against <strong>uncompressed</strong> HDF5 it is a wash, and the honest reason is that both
+are writing the same bytes through the same page cache — the disk decides, not
+the format. Against <strong>compressed</strong> HDF5 it is two orders of magnitude, because
+deflate is CPU-bound and this has no deflate. Reading one column of four takes
+0.0002 s rather than 0.009 s.</p>
+<p>So the reasons to reach for it are: it is much faster than <em>compressed</em> HDF5, it
+reads a single column without touching the others, it preserves things HDF5
+cannot, and it works in a build without HDF5 at all.</p>
+</section>
+</section>
+<section id="what-a-column-knows-about-itself">
+<span id="column-descriptions"></span><h2>What a column knows about itself<a class="headerlink" href="#what-a-column-knows-about-itself" title="Link to this heading">#</a></h2>
+<p>A column carries a description alongside its values: a JSON object, one per
+column, that both the native format and HDF5 store and give back. <code class="docutils literal notranslate"><span class="pre">units</span></code> is
+what it was built for — a burst duration in milliseconds and a lifetime in
+nanoseconds otherwise say so only in their column names, when whoever wrote
+them remembered.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="s2">&quot;nanoseconds&quot;</span><span class="p">)</span>
+<span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">,</span> <span class="s2">&quot;run.ptu&quot;</span><span class="p">)</span>
+
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>          <span class="c1"># &#39;nanoseconds&#39;</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">)</span>  <span class="c1"># &#39;run.ptu&#39;</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span><span class="p">()</span>       <span class="c1"># the whole object, as JSON text</span>
+</pre></div>
+</div>
+<p>There are two setters and the difference matters. <code class="docutils literal notranslate"><span class="pre">set_attribute</span></code> stores a
+<strong>string</strong>, whatever it looks like; <code class="docutils literal notranslate"><span class="pre">set_attribute_json</span></code> takes JSON text and
+stores the <strong>value</strong> it denotes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>       <span class="c1"># the seven characters</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>  <span class="c1"># a list of ranges</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="s2">&quot;9007199254740993&quot;</span><span class="p">)</span>
+
+<span class="n">c</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">)</span>        <span class="c1"># &#39;[[2,4]]&#39;   -- unquoted, so units needs no parse</span>
+<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">)</span>   <span class="c1"># &#39;[[2,4]]&#39;   -- exact, so the round trip is exact</span>
+<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">)</span>   <span class="c1"># &#39;&quot;run.ptu&quot;&#39; -- a string keeps its quotes</span>
+</pre></div>
+</div>
+<p>Types survive the file. The description is stored as <strong>msgpack</strong>, not as JSON
+text, so an integer written as an integer reads back as one — the <code class="docutils literal notranslate"><span class="pre">n</span></code> above
+is exact, which it could not be if it had gone through a JSON number and come
+back a double. That is storage, not interface: <code class="docutils literal notranslate"><span class="pre">metadata()</span></code> still takes and
+returns JSON text in every binding.</p>
+<p>Both formats keep it, and keep it identically. In HDF5 it rides as an attribute
+on the column’s own dataset, next to the dictionary and for the same reason —
+everything needed to read a column is on the column, so a reader that takes one
+column out of a wide table gets its description too. Nothing acquires a
+description by being written: a column with none costs nothing.</p>
+<section id="rows-that-were-never-measured">
+<h3>Rows that were never measured<a class="headerlink" href="#rows-that-were-never-measured" title="Link to this heading">#</a></h3>
+<p>A column can say a row holds no measurement, and it can do so <strong>without
+touching the dtype</strong> — which is the thing a data frame cannot do, because it
+has to widen an <code class="docutils literal notranslate"><span class="pre">int64</span></code> to <code class="docutils literal notranslate"><span class="pre">float64</span></code> to hold a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> and the type is not
+recoverable afterwards.</p>
+<p><code class="docutils literal notranslate"><span class="pre">valid(i)</span></code> is the question, and there are two ways the answer is stored. A
+scattered pattern — what <code class="xref py py-meth docutils literal notranslate"><span class="pre">mask_non_finite()</span></code> produces — becomes a bit mask.
+A contiguous run becomes a range in the description:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">])</span>
+
+<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">has_mask</span><span class="p">()</span>        <span class="c1"># False -- no bit mask was allocated</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">has_missing</span><span class="p">()</span>     <span class="c1"># True  -- the rows are missing all the same</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="mi">1_000_001</span><span class="p">)</span>  <span class="c1"># False</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mask_numpy</span><span class="p">()</span>      <span class="c1"># the bool array, whichever way it was stored</span>
+
+<span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">na_ranges</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">last</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">why</span><span class="p">)</span>
+    <span class="c1"># 1000000 2000000 absent in &#39;m002.hdf5&#39;</span>
+</pre></div>
+</div>
+<p>The gap a merge leaves is one whole file’s contribution, so it is one run by
+construction, and a bit per row would be a million copies of one fact. Twenty
+files of a million rows cost about a kilobyte of description instead of 2.5 MB
+of bits.</p>
+<p><strong>The better reason is that a range can say why and a bit cannot.</strong> “These rows
+are not measured because that file did not have this column” is information;
+a zero bit is the absence of it — so a caller merging twenty files can report
+which ones contributed what, rather than keeping the file list beside the
+table.</p>
+<p>Three things follow, and none is guessable:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">has_mask()</span></code> asks about <strong>storage</strong>, not about meaning: it is <code class="docutils literal notranslate"><span class="pre">False</span></code> for
+a column whose gaps are ranges. <code class="docutils literal notranslate"><span class="pre">has_missing()</span></code> is almost always the one
+meant.</p></li>
+<li><p><strong>HDF5 writes both</strong> — the ranges in the description and the mask as a
+dataset. That format exists to hand a table to something that is not
+tttrlib, and such a reader cannot be assumed to know what an <code class="docutils literal notranslate"><span class="pre">na</span></code> range is.
+CSV, which has nowhere to put either, writes empty cells: the answer survives
+and the reason does not.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">take()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">compact()</span></code> <strong>keep the validity and drop the ranges</strong>.
+A gather reorders rows, so a range naming the source’s rows says nothing true
+about the result’s; the rest of the description is untouched.</p></li>
+</ul>
+<p>A range can also be written by hand, in either spelling:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">add_na_range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;detector off&quot;</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>      <span class="c1"># the short form, no reason</span>
+</pre></div>
+</div>
+<p>Note <code class="docutils literal notranslate"><span class="pre">set_attribute_json</span></code> and not <code class="docutils literal notranslate"><span class="pre">set_attribute</span></code>: the latter would store
+the seven characters <code class="docutils literal notranslate"><span class="pre">[[2,4]]</span></code> as a string, and the column would have no
+missing rows as a result.</p>
+</section>
+</section>
+<section id="csv">
+<h2>CSV<a class="headerlink" href="#csv" title="Link to this heading">#</a></h2>
+<p>The format that loses the most and travels the furthest. One table, one file,
+no tree:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">))</span>   <span class="c1"># a sub-table</span>
+<span class="n">text</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>                  <span class="c1"># ...or as a string</span>
+
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Only the <strong>selected</strong> rows are written when the store is gated, the same as
+<code class="xref py py-func docutils literal notranslate"><span class="pre">write_hdf5()</span></code> and for the same reason — exporting a subset should not need
+an intermediate table. Pass <code class="docutils literal notranslate"><span class="pre">selected_only=False</span></code> for all of them.</p>
+<section id="what-a-round-trip-keeps-and-what-it-cannot">
+<h3>What a round trip keeps, and what it cannot<a class="headerlink" href="#what-a-round-trip-keeps-and-what-it-cannot" title="Link to this heading">#</a></h3>
+<p>Values, column names, and order survive. Types do not, because the reader
+infers them from the text and the text does not say how many bytes a number was
+held in: an <code class="docutils literal notranslate"><span class="pre">int8</span></code> column comes back <code class="docutils literal notranslate"><span class="pre">int64</span></code>, a <code class="docutils literal notranslate"><span class="pre">float32</span></code> comes back
+<code class="docutils literal notranslate"><span class="pre">float64</span></code>.</p>
+<ul class="simple">
+<li><p><strong>A double lands on the same double.</strong> Each one is written as the shortest
+text that reads back as itself — <code class="docutils literal notranslate"><span class="pre">0.1</span></code> stays <code class="docutils literal notranslate"><span class="pre">0.1</span></code> rather than becoming
+<code class="docutils literal notranslate"><span class="pre">0.10000000000000001</span></code> or, worse, a different number.</p></li>
+<li><p><strong>Missing values survive</strong> as an empty field, which <code class="xref py py-func docutils literal notranslate"><span class="pre">read_csv()</span></code> takes
+back as missing. One exception: a table of a <em>single</em> column writes an empty
+line for a missing value, and an empty line is a blank line to every CSV
+reader there is. Give <code class="docutils literal notranslate"><span class="pre">na_rep=&quot;NA&quot;</span></code> when a lone column has gaps.</p></li>
+<li><p><strong>Text that looks numeric comes back numeric.</strong> Quoting does not prevent this,
+here or in Arrow. <code class="docutils literal notranslate"><span class="pre">read_csv(...,</span> <span class="pre">text_columns=[&quot;id&quot;])</span></code> is how to say
+otherwise.</p></li>
+<li><p><strong>An empty string and a missing value are the same eight characters of
+nothing.</strong> Set <code class="docutils literal notranslate"><span class="pre">na_rep</span></code> to something outside the value set if the difference
+matters.</p></li>
+<li><p><strong>A NaN comes back as missing</strong> rather than as a NaN, the reader’s default
+<code class="docutils literal notranslate"><span class="pre">na_values</span></code> including it. That is this library’s own reading of a NaN, but
+it is not identity.</p></li>
+</ul>
+<p>When identity is the requirement, <code class="docutils literal notranslate"><span class="pre">.dstore</span></code> is the format that promises it.</p>
+</section>
+<section id="speed">
+<h3>Speed<a class="headerlink" href="#speed" title="Link to this heading">#</a></h3>
+<p>Rows are cut into blocks, the blocks are formatted in parallel, and the buffers
+are written in order. Two things make it quick beyond that: a text column is
+dictionary-encoded, so each distinct value is quoted and escaped once rather
+than once per row, and doubles are formatted by an integer method rather than by
+<code class="docutils literal notranslate"><span class="pre">snprintf</span></code>, which on some platforms costs 280 ns a value and takes the locale
+lock.</p>
+<p>Two million rows, four columns, against <code class="docutils literal notranslate"><span class="pre">pyarrow.csv.write_csv</span></code> on the same
+table (higher is better for tttrlib):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>table</p></th>
+<th class="head"><p>arrow</p></th>
+<th class="head"><p>tttrlib, one thread</p></th>
+<th class="head"><p>tttrlib, default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>four int64</p></td>
+<td><p>0.35 s</p></td>
+<td><p>0.10 s (3.4×)</p></td>
+<td><p>0.09 s (3.7×)</p></td>
+</tr>
+<tr class="row-odd"><td><p>four float64, measured (~7 digits)</p></td>
+<td><p>0.51 s</p></td>
+<td><p>0.52 s (1.0×)</p></td>
+<td><p>0.20 s (2.6×)</p></td>
+</tr>
+<tr class="row-even"><td><p>four float64, full precision</p></td>
+<td><p>0.78 s</p></td>
+<td><p>0.87 s (0.9×)</p></td>
+<td><p>0.42 s (1.9×)</p></td>
+</tr>
+<tr class="row-odd"><td><p>two text, one int, one float</p></td>
+<td><p>0.22 s</p></td>
+<td><p>0.21 s (1.0×)</p></td>
+<td><p>0.09 s (2.5×)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="options">
+<h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">delimiter</span></code>, <code class="docutils literal notranslate"><span class="pre">quote</span></code>, <code class="docutils literal notranslate"><span class="pre">header</span></code>, <code class="docutils literal notranslate"><span class="pre">eol</span></code>, <code class="docutils literal notranslate"><span class="pre">na_rep</span></code>, <code class="docutils literal notranslate"><span class="pre">true_string</span></code> /
+<code class="docutils literal notranslate"><span class="pre">false_string</span></code>, <code class="docutils literal notranslate"><span class="pre">float_precision</span></code> (0 for shortest-round-trip),
+<code class="docutils literal notranslate"><span class="pre">columns</span></code> (a subset, in that order), <code class="docutils literal notranslate"><span class="pre">selected_only</span></code>, <code class="docutils literal notranslate"><span class="pre">threads</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">quoting</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;needed&quot;</span></code> — quote only what RFC 4180 says must be (the default);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> — quote every value, numbers included;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> — never, and refuse to write a value that would need it, rather
+than produce a file that reads back as a different table.</p></li>
+</ul>
+</section>
+</section>
+<section id="the-hdf5-file">
+<h2>The HDF5 file<a class="headerlink" href="#the-hdf5-file" title="Link to this heading">#</a></h2>
+<p>One 1-D dataset per column, which is the shape a DataStore already has, so a
+table loads with no conversion and no intermediate copy. Two conventions carry
+what HDF5 has no place for: a <code class="docutils literal notranslate"><span class="pre">columns</span></code> attribute recording the order, and a
+<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;__mask</span></code> dataset for a column’s validity mask — the only way an integer
+column can have missing values at all. Group order is recorded the same way, in
+a <code class="docutils literal notranslate"><span class="pre">groups</span></code> attribute.</p>
+<p>A file is built one group at a time:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;/meta&quot;</span><span class="p">)</span>     <span class="c1"># /results survives</span>
+
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_groups</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">)</span>     <span class="c1"># [&#39;/results&#39;, &#39;/meta&#39;]</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_has</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;/meta&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_remove</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;/meta&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Rules worth stating once:</p>
+<ul class="simple">
+<li><p><strong>Writing a group replaces that group and everything under it.</strong> Writing
+<code class="docutils literal notranslate"><span class="pre">/results</span></code> with <code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b}</span></code> over one that held <code class="docutils literal notranslate"><span class="pre">{a,</span> <span class="pre">b,</span> <span class="pre">c}</span></code> leaves <code class="docutils literal notranslate"><span class="pre">c</span></code>
+gone. A table that silently keeps a stale column from a previous run is worse
+than one that lost it, because it looks current.</p></li>
+<li><p>Every <em>other</em> group is left alone. Writing <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code> replaces the file’s whole
+content, the root being a group like any other. Pass
+<code class="docutils literal notranslate"><span class="pre">mode=tttrlib.Hdf5WriteMode_Truncate</span></code> to recreate the file instead.</p></li>
+<li><p>A file that exists and is <strong>not</strong> HDF5 is refused rather than replaced. Ask
+for <code class="docutils literal notranslate"><span class="pre">Truncate</span></code> if replacing it is what you meant.</p></li>
+<li><p>A write never half-happens: it goes to a temporary and is moved into place.</p></li>
+<li><p>Compression defaults to none. Level 4 costs roughly thirty times the write to
+save eight percent of the size, on files written once and read repeatedly.</p></li>
+<li><p>HDF5 never reclaims freed space, so repeatedly replacing one group of a
+multi-group file grows it. <code class="docutils literal notranslate"><span class="pre">h5repack</span></code> is the answer. Replacing the root does
+not, because that writes a new file and renames it over.</p></li>
+</ul>
+<p>Two things a DataStore can express and an HDF5 file cannot:</p>
+<ul class="simple">
+<li><p><strong>A column and a group of the same name.</strong> HDF5 has one link namespace per
+group; the writer refuses, before touching the file, and says which name.</p></li>
+<li><p><strong>A label.</strong> There is nowhere to put it. It round-trips through <code class="docutils literal notranslate"><span class="pre">.dstore</span></code>.</p></li>
+</ul>
+<section id="reading-foreign-files">
+<h3>Reading foreign files<a class="headerlink" href="#reading-foreign-files" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">read_hdf5()</span></code> descends into the groups the writer recorded, plus any other
+group with a table somewhere inside it. A group with nothing table-shaped under
+it is skipped, so a Photon-HDF5 or pandas file read at the root gives back
+whichever parts are tables and ignores the rest.</p>
+<p>A group that holds <strong>no</strong> table raises, rather than returning an empty store:
+zero rows is an answer, zero columns is a refusal, and the two were previously
+indistinguishable. <code class="xref py py-func docutils literal notranslate"><span class="pre">read_hdf5_table_columns()</span></code> is the cheap predicate that
+still answers with an empty list, for a caller deciding whether to open anything
+at all.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="formats/pto-mfdb.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">PTO.MFDB — the MMFDB profile of the photon container</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plugins.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Plugins: adding a format without rebuilding</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-native-file">The native file</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reaching-into-the-tree">Reaching into the tree</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-a-column">Working with a column</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-several-columns-sit-in-the-file">How several columns sit in the file</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-way-to-ask-whatever-the-format">One way to ask, whatever the format</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-is-actually-faster-at">What it is actually faster at</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-column-knows-about-itself">What a column knows about itself</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rows-that-were-never-measured">Rows that were never measured</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#csv">CSV</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-round-trip-keeps-and-what-it-cannot">What a round trip keeps, and what it cannot</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#speed">Speed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-hdf5-file">The HDF5 file</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-foreign-files">Reading foreign files</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/saving-tables.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

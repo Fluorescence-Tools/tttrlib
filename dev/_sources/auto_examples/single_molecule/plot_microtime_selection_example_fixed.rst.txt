@@ -29,19 +29,28 @@ this example shows how to achieve the same functionality by pre-filtering the TT
 
 Import required libraries
 
-.. GENERATED FROM PYTHON SOURCE LINES 11-15
+.. GENERATED FROM PYTHON SOURCE LINES 11-17
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import tttrlib
     import numpy as np
     import matplotlib.pyplot as plt
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 16-23
+.. GENERATED FROM PYTHON SOURCE LINES 18-20
+
+Make the `examples` package importable when this script is run directly,
+from any working directory.
+
+.. GENERATED FROM PYTHON SOURCE LINES 20-29
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
     # Load data
@@ -50,13 +59,13 @@ Import required libraries
     print(f"Total events: {len(data)}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-27
+.. GENERATED FROM PYTHON SOURCE LINES 30-33
 
 Analyze microtime distribution
 ------------------------------
 First, let's look at the microtime distribution to understand the data
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-41
+.. GENERATED FROM PYTHON SOURCE LINES 33-47
 
 .. code-block:: Python
 
@@ -75,13 +84,13 @@ First, let's look at the microtime distribution to understand the data
     print(f"Most common microtime: {np.argmax(n)} (count: {n.max()})")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-45
+.. GENERATED FROM PYTHON SOURCE LINES 48-51
 
 Define microtime ranges for selection
 -------------------------------------
 Define ranges of interest (min, max) in microtime channels
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-55
+.. GENERATED FROM PYTHON SOURCE LINES 51-61
 
 .. code-block:: Python
 
@@ -96,12 +105,12 @@ Define ranges of interest (min, max) in microtime channels
         print(f"  Range {i+1}: {min_mt} - {max_mt} channels")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 56-58
+.. GENERATED FROM PYTHON SOURCE LINES 62-64
 
 Select photons within microtime ranges
 --------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-76
+.. GENERATED FROM PYTHON SOURCE LINES 64-82
 
 .. code-block:: Python
 
@@ -124,13 +133,13 @@ Select photons within microtime ranges
     print(f"\nSelected {len(selected_indices)} photons ({len(selected_indices)/len(data)*100:.2f}% of total)")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-80
+.. GENERATED FROM PYTHON SOURCE LINES 83-86
 
 Create filtered TTTR object
 ---------------------------
 Create a new TTTR object containing only the selected photons
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-83
+.. GENERATED FROM PYTHON SOURCE LINES 86-89
 
 .. code-block:: Python
 
@@ -138,13 +147,13 @@ Create a new TTTR object containing only the selected photons
     print(f"Filtered data contains {len(filtered_data)} events")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-87
+.. GENERATED FROM PYTHON SOURCE LINES 90-93
 
 Perform burst analysis on filtered data
 ---------------------------------------
 Create BurstFilter with filtered data
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-107
+.. GENERATED FROM PYTHON SOURCE LINES 93-113
 
 .. code-block:: Python
 

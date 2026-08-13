@@ -31,6 +31,7 @@ import skimage.util
 import scipy
 import scipy.ndimage
 import os
+import sys
 from pathlib import Path
 
 def plot_images(images, titles, cmaps=None, **kwargs):
@@ -53,6 +54,10 @@ def plot_images(images, titles, cmaps=None, **kwargs):
 # First, we read the TTTR data, create CLSM image container, and define used channels.
 # We create a CLSM container for the green photons and the red photons. Moreover, we create
 # containers for red photons in the prompt and the delay time window.
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_path
 
 filename_data = get_data_path('imaging/pq/ht3/mGBP_DA.ht3')

@@ -24,7 +24,7 @@ Mean lifetime images
 Compute the mean lifetime in a pixel using the method of moments
 (Irvin Isenberg, 1973, Biophysical journal).
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-31
+.. GENERATED FROM PYTHON SOURCE LINES 8-33
 
 .. code-block:: Python
 
@@ -34,7 +34,9 @@ Compute the mean lifetime in a pixel using the method of moments
     import numpy as np
     import pylab as plt
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
     filename = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
     filename_irf = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/IRF.ptu')
 
@@ -52,13 +54,13 @@ Compute the mean lifetime in a pixel using the method of moments
     plt.semilogy(background)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 32-35
+.. GENERATED FROM PYTHON SOURCE LINES 34-37
 
 Create a new CLSM Image. This image will be used as a template for the green and red image.
 This avoids passing through the TTTR screen multiple times. The frame line, and pixel locations
 will be copied for the green and red image from this template.
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-80
+.. GENERATED FROM PYTHON SOURCE LINES 37-82
 
 .. code-block:: Python
 

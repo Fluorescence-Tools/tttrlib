@@ -63,13 +63,19 @@ The operations demonstrated in this script include:
 
 Note: Replace the file paths with your own data.
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-64
+.. GENERATED FROM PYTHON SOURCE LINES 47-70
 
 .. code-block:: Python
 
 
+    import sys
+    from pathlib import Path
     import tttrlib
     import numpy as np
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
 
     from examples._example_data import get_data_path
 
@@ -85,12 +91,12 @@ Note: Replace the file paths with your own data.
     print("First 5 routing channels:", data.routing_channels[0:5])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-67
+.. GENERATED FROM PYTHON SOURCE LINES 71-73
 
 Slicing TTTR data
 #######################
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-72
+.. GENERATED FROM PYTHON SOURCE LINES 73-78
 
 .. code-block:: Python
 
@@ -100,12 +106,12 @@ Slicing TTTR data
     print("First 100 events, macro times:", first_100.macro_times)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-75
+.. GENERATED FROM PYTHON SOURCE LINES 79-81
 
 Joining TTTR objects
 #######################
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-85
+.. GENERATED FROM PYTHON SOURCE LINES 81-91
 
 .. code-block:: Python
 
@@ -120,12 +126,12 @@ Joining TTTR objects
     print("Joined event count:", len(joined))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-88
+.. GENERATED FROM PYTHON SOURCE LINES 92-94
 
 Selecting by channel
 #######################
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-94
+.. GENERATED FROM PYTHON SOURCE LINES 94-100
 
 .. code-block:: Python
 
@@ -136,12 +142,12 @@ Selecting by channel
     print("Number of events in channel 0:", len(data_ch0))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-97
+.. GENERATED FROM PYTHON SOURCE LINES 101-103
 
 Selecting by count rate
 #######################
 
-.. GENERATED FROM PYTHON SOURCE LINES 97-103
+.. GENERATED FROM PYTHON SOURCE LINES 103-109
 
 .. code-block:: Python
 

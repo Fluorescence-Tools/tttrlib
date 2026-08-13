@@ -1,0 +1,1318 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Super-resolution for CLSM: eSRRF, ISM, SOFISM and s²ISM" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="modules/clsm_superres.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Every reconstruction in this notebook lives on tttrlib.CLSMSuperRes. They sharpen an image for genuinely different reasons, and knowing which is which decides what you can claim from a result:,,,, ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_modules_clsm_superres_9f118aa2.png" />
+<meta property="og:image:alt" content="Every reconstruction in this notebook lives on tttrlib.CLSMSuperRes. They sharpen an image for genuinely different reasons, and knowing which is which decides what you can claim from a result:,,,, ..." />
+<meta name="description" content="Every reconstruction in this notebook lives on tttrlib.CLSMSuperRes. They sharpen an image for genuinely different reasons, and knowing which is which decides what you can claim from a result:,,,, ..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Super-resolution for CLSM: eSRRF, ISM, SOFISM and s²ISM &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/clsm_superres';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/modules/clsm_superres.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Super-resolution for CLSM: eSRRF, ISM, SOFISM and s²ISM</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Super-resolution-for-CLSM:-eSRRF,-ISM,-SOFISM-and-s²ISM">
+<h1>Super-resolution for CLSM: eSRRF, ISM, SOFISM and s²ISM<a class="headerlink" href="#Super-resolution-for-CLSM:-eSRRF,-ISM,-SOFISM-and-s²ISM" title="Link to this heading">#</a></h1>
+<p>Every reconstruction in this notebook lives on <code class="docutils literal notranslate"><span class="pre">tttrlib.CLSMSuperRes</span></code>. They sharpen an image for genuinely different reasons, and knowing which is which decides what you can claim from a result:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Exploits</p></th>
+<th class="head"><p>Needs</p></th>
+<th class="head"><p>Linear?</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>eSRRF</strong></p></td>
+<td><p>the <em>image</em> — gradients converge on an emitter</p></td>
+<td><p>nothing else</p></td>
+<td><p>no, can create structure</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>ISM (APR)</strong></p></td>
+<td><p>the <em>detector</em> — each element sees a displaced PSF</p></td>
+<td><p>an array detector</p></td>
+<td><p>yes, photon-conserving</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SOFISM</strong></p></td>
+<td><p>the <em>emitters</em> — independent blinking</p></td>
+<td><p>array <strong>and</strong> fluctuations</p></td>
+<td><p>no, a cumulant</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>s²ISM</strong></p></td>
+<td><p>a <em>PSF model</em> — joint inversion over axial planes</p></td>
+<td><p>array and a PSF</p></td>
+<td><p>no, iterative ML</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>References: eSRRF — <a class="reference external" href="https://doi.org/10.1038/s41592-023-02057-w">Laine et al., Nat. Methods 20, 1949 (2023)</a>, ported from <a class="reference external" href="https://github.com/HenriquesLab/NanoJ-eSRRF">NanoJ-eSRRF</a>. ISM and focus-ISM — <a class="reference external" href="https://doi.org/10.1038/s41467-022-35333-y">Tortarolo et al., Nat. Commun. 13, 7929 (2022)</a>, ported from <a class="reference external" href="https://github.com/VicidominiLab/BrightEyes-ISM">BrightEyes-ISM</a>. SOFISM — <a class="reference external" href="https://doi.org/10.1364/OPTICA.399600">Sroda et al., Optica 7, 1308 (2020)</a>. s²ISM — <a class="reference external" href="https://doi.org/10.1038/s41566-025-01695-0">Zunino et al.,
+Nat. Photonics (2025)</a>.</p>
+<p>The narrative guide is <a class="reference internal" href="../superres-guide.html"><span class="doc">Super-resolution: eSRRF, ISM, SOFISM and s²ISM</span></a>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">fftconvolve</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="c1"># The tubulin phantom and the array-detector PSF model are simulation helpers</span>
+<span class="c1"># shipped with the examples, not part of the library.</span>
+<span class="n">repo</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+<span class="k">for</span> <span class="n">extra</span> <span class="ow">in</span> <span class="p">(</span><span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;examples&quot;</span> <span class="o">/</span> <span class="s2">&quot;simulation&quot;</span><span class="p">,</span> <span class="n">repo</span> <span class="o">/</span> <span class="s2">&quot;prototype&quot;</span> <span class="o">/</span> <span class="s2">&quot;esrrf&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">extra</span><span class="p">))</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">generate_tubulin_phantom</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_tubulin_phantom</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_ism_psf</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1. Simulating Ground Truth Tubulin Network Phantom (25 nm/pixel)...&quot;</span><span class="p">)</span>
+<span class="n">ground_truth</span> <span class="o">=</span> <span class="n">generate_tubulin_phantom</span><span class="p">(</span><span class="n">n_filaments</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">size_px</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">pixel_size_nm</span><span class="o">=</span><span class="mf">25.0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;2. Simulating Physical 5x5 SPAD Array Detector PSFs (0.5 AU pitch)...&quot;</span><span class="p">)</span>
+<span class="n">psf_sim</span> <span class="o">=</span> <span class="n">generate_ism_psf</span><span class="p">(</span>
+    <span class="n">na</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span>
+    <span class="n">wavelength_exc</span><span class="o">=</span><span class="mf">488.0</span><span class="p">,</span>
+    <span class="n">wavelength_det</span><span class="o">=</span><span class="mf">520.0</span><span class="p">,</span>
+    <span class="n">n_det</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>            <span class="c1"># 5x5 SPAD detector array</span>
+    <span class="n">pitch_au</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>       <span class="c1"># 0.5 Airy units pitch</span>
+    <span class="n">nx</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">pixel_size_nm</span><span class="o">=</span><span class="mf">25.0</span>
+<span class="p">)</span>
+<span class="n">channel_psfs</span> <span class="o">=</span> <span class="n">psf_sim</span><span class="p">[</span><span class="s1">&#39;channel_psfs&#39;</span><span class="p">]</span>         <span class="c1"># Shape (25, 64, 64)</span>
+<span class="n">detector_offsets</span> <span class="o">=</span> <span class="n">psf_sim</span><span class="p">[</span><span class="s1">&#39;detector_offsets&#39;</span><span class="p">]</span> <span class="c1"># Shape (25, 2)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;3. Convolving Phantom with SPAD Detector Array PSFs...&quot;</span><span class="p">)</span>
+<span class="n">n_det</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span> <span class="n">ground_truth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ground_truth</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">spad_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_det</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_det</span><span class="p">):</span>
+    <span class="n">spad_cube</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">fftconvolve</span><span class="p">(</span><span class="n">ground_truth</span><span class="p">,</span> <span class="n">channel_psfs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+
+<span class="c1"># Add Poisson photon noise</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">spad_cube</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">spad_cube</span> <span class="o">*</span> <span class="mf">150.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulated SPAD Array Cube Shape: </span><span class="si">{</span><span class="n">spad_cube</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;4. Performing ISM Super-Resolution Reconstructions from Simulation...&quot;</span><span class="p">)</span>
+<span class="c1"># Standard CLSM Open-Pinhole Sum Image</span>
+<span class="n">clsm_sum</span> <span class="o">=</span> <span class="n">spad_cube</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># The shift vectors APR is built on: how far each detector element&#39;s image has</span>
+<span class="c1"># to move to register onto the central element. They should trace out the</span>
+<span class="c1"># detector lattice, scaled by roughly one half.</span>
+<span class="n">shifts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">shift_vectors</span><span class="p">(</span><span class="n">spad_cube</span><span class="p">,</span> <span class="n">usf</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shift vectors (dy, dx), first three elements:</span><span class="se">\n</span><span class="si">{</span><span class="n">shifts</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Adaptive Pixel Reassignment (APR-ISM)</span>
+<span class="n">apr_ism</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">apr_reconstruction</span><span class="p">(</span><span class="n">spad_cube</span><span class="p">,</span> <span class="n">usf</span><span class="o">=</span><span class="mi">10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Focus-ISM: in-focus signal, out-of-focus background, and the APR sum</span>
+<span class="n">focus_signal</span><span class="p">,</span> <span class="n">focus_background</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">focus_reconstruction</span><span class="p">(</span>
+    <span class="n">spad_cube</span><span class="p">,</span> <span class="n">sigma_bound</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">calibration_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">parallelize</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reconstructions complete.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+
+<span class="n">panels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;A) Ground truth (tubulin phantom)&#39;</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;B) Confocal, open pinhole (channel sum)&#39;</span><span class="p">,</span> <span class="n">clsm_sum</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;C) APR-ISM (adaptive pixel reassignment)&#39;</span><span class="p">,</span> <span class="n">apr_ism</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;D) Focus-ISM: in-focus signal&#39;</span><span class="p">,</span> <span class="n">focus_signal</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;E) Focus-ISM: out-of-focus background&#39;</span><span class="p">,</span> <span class="n">focus_background</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;F) eSRRF map of the APR-ISM image&#39;</span><span class="p">,</span>
+     <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">rgc_map</span><span class="p">(</span><span class="n">apr_ism</span><span class="p">,</span> <span class="n">magnification</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+                                  <span class="n">sensitivity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">intensity_weighting</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">panels</span><span class="p">):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<section id="SOFISM">
+<h2>SOFISM<a class="headerlink" href="#SOFISM" title="Link to this heading">#</a></h2>
+<p>SOFISM multiplies the ISM and SOFI mechanisms. At each scan position the array records a short time series, and for each <em>pair</em> of elements the cross-correlation of the fluctuations is formed:</p>
+<div class="math notranslate nohighlight">
+\[C_{ij}(\mathbf{r},\tau) = \frac{1}{N_t-\tau}\sum_t \delta I_i(\mathbf{r},t)\,\delta I_j(\mathbf{r},t+\tau)\]</div>
+<p>Its effective PSF is the <strong>product</strong> of the two elements’ PSFs. The pair behaves as one virtual detector midway between them, so it is reassigned by <span class="math notranslate nohighlight">\(\vec{v}_{ij}=(\vec{v}_i+\vec{v}_j)/2\)</span> and the shifted images are summed. Autocorrelation terms are left out — their shot noise does not cancel.</p>
+<p>The contrast depends on the emitters blinking <strong>independently</strong>, so the cell below also runs the negative control: the same object held permanently on. That must produce nothing, and it is the check worth repeating on real data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A blinking version of the same object, recorded as a time series per scan</span>
+<span class="c1"># position. Only 3x3 elements and a small field, to keep the notebook quick.</span>
+<span class="n">N_TIME</span><span class="p">,</span> <span class="n">P_ON</span><span class="p">,</span> <span class="n">SIDE_S</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">3</span>
+<span class="n">small</span> <span class="o">=</span> <span class="n">ground_truth</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">96</span><span class="p">,</span> <span class="mi">32</span><span class="p">:</span><span class="mi">96</span><span class="p">]</span>
+<span class="n">psf_small</span> <span class="o">=</span> <span class="n">generate_ism_psf</span><span class="p">(</span><span class="n">na</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="n">wavelength_exc</span><span class="o">=</span><span class="mf">488.0</span><span class="p">,</span> <span class="n">wavelength_det</span><span class="o">=</span><span class="mf">520.0</span><span class="p">,</span>
+                             <span class="n">n_det</span><span class="o">=</span><span class="n">SIDE_S</span><span class="p">,</span> <span class="n">pitch_au</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span>
+                             <span class="n">pixel_size_nm</span><span class="o">=</span><span class="mf">25.0</span><span class="p">)[</span><span class="s2">&quot;channel_psfs&quot;</span><span class="p">]</span>
+<span class="n">n_det_s</span><span class="p">,</span> <span class="n">ny_s</span><span class="p">,</span> <span class="n">nx_s</span> <span class="o">=</span> <span class="n">psf_small</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">small</span><span class="o">.</span><span class="n">shape</span>
+
+<span class="n">ys</span><span class="p">,</span> <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">small</span> <span class="o">&gt;</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">small</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">amp</span> <span class="o">=</span> <span class="n">small</span><span class="p">[</span><span class="n">ys</span><span class="p">,</span> <span class="n">xs</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">acquire</span><span class="p">(</span><span class="n">blink</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_TIME</span><span class="p">,</span> <span class="n">n_det_s</span><span class="p">,</span> <span class="n">ny_s</span><span class="p">,</span> <span class="n">nx_s</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_TIME</span><span class="p">):</span>
+        <span class="n">on</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">amp</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">P_ON</span> <span class="k">if</span> <span class="n">blink</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">amp</span><span class="p">),</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ny_s</span><span class="p">,</span> <span class="n">nx_s</span><span class="p">));</span> <span class="n">frame</span><span class="p">[</span><span class="n">ys</span><span class="p">[</span><span class="n">on</span><span class="p">],</span> <span class="n">xs</span><span class="p">[</span><span class="n">on</span><span class="p">]]</span> <span class="o">=</span> <span class="n">amp</span><span class="p">[</span><span class="n">on</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_det_s</span><span class="p">):</span>
+            <span class="n">cube</span><span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">fftconvolve</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">psf_small</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rng</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">cube</span> <span class="o">*</span> <span class="p">(</span><span class="mf">60.0</span> <span class="o">/</span> <span class="n">P_ON</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="n">blinking</span> <span class="o">=</span> <span class="n">acquire</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">static</span> <span class="o">=</span> <span class="n">acquire</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="n">sofism</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">sofism_reconstruction</span><span class="p">(</span><span class="n">blinking</span><span class="p">,</span> <span class="n">lag</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">usf</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">sofism_static</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">sofism_reconstruction</span><span class="p">(</span><span class="n">static</span><span class="p">,</span> <span class="n">lag</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">usf</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">confocal_s</span> <span class="o">=</span> <span class="n">blinking</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">apr_s</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">apr_reconstruction</span><span class="p">(</span><span class="n">blinking</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">usf</span><span class="o">=</span><span class="mi">8</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;peak SOFISM  blinking </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sofism</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;   static </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sofism_static</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;   ratio </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sofism</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sofism_static</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">x&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">))</span>
+<span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sofism</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">vm</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;Confocal (channel sum)&quot;</span><span class="p">,</span> <span class="n">confocal_s</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;APR-ISM&quot;</span><span class="p">,</span> <span class="n">apr_s</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;SOFISM&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sofism</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="kc">None</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;SOFISM, non-blinking control</span><span class="se">\n</span><span class="s2">(same colour scale)&quot;</span><span class="p">,</span>
+     <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">sofism_static</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">vmax</span><span class="p">),</span>
+<span class="p">]):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;magma&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vm</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">();</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="s²ISM">
+<h2>s²ISM<a class="headerlink" href="#s²ISM" title="Link to this heading">#</a></h2>
+<p>s²ISM is <strong>not</strong> a reassignment. It treats the array as <span class="math notranslate nohighlight">\(N_{ch}\)</span> images of one object seen through <span class="math notranslate nohighlight">\(N_{ch}\)</span> different PSFs and inverts them jointly by multi-image Richardson–Lucy over a stack of axial planes:</p>
+<div class="math notranslate nohighlight">
+\[\hat{I}_{ch} = \sum_z O_z * h_{z,ch}, \qquad O_z \leftarrow O_z \cdot \sum_{ch}\frac{I_{ch}}{\hat{I}_{ch}} \star h_{z,ch}\]</div>
+<p>The <strong>sectioning</strong> comes from the axial stack: out-of-focus haze is explained by the defocused planes instead of being smeared into the focal one, which a single-plane deconvolution cannot do because it has nowhere else to put it. Unlike APR it needs a PSF <em>model</em> — it does not derive one from the data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sharp beads in focus, under a broad out-of-focus halo</span>
+<span class="n">NS</span><span class="p">,</span> <span class="n">SIDE_Z</span><span class="p">,</span> <span class="n">NZ</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span>
+<span class="n">yy</span><span class="p">,</span> <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">NS</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">NS</span><span class="p">]</span>
+<span class="n">psf_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">NZ</span><span class="p">,</span> <span class="n">SIDE_Z</span> <span class="o">*</span> <span class="n">SIDE_Z</span><span class="p">,</span> <span class="n">NS</span><span class="p">,</span> <span class="n">NS</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">NZ</span><span class="p">):</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="mf">1.6</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">NZ</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>          <span class="c1"># sharp in focus, broad away</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SIDE_Z</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SIDE_Z</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">row</span> <span class="o">*</span> <span class="n">SIDE_Z</span> <span class="o">+</span> <span class="n">col</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">col</span> <span class="o">-</span> <span class="p">(</span><span class="n">SIDE_Z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.6</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span> <span class="o">-</span> <span class="p">(</span><span class="n">SIDE_Z</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.6</span>
+            <span class="n">psf_z</span><span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(((</span><span class="n">xx</span> <span class="o">-</span> <span class="p">(</span><span class="n">NS</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+                                    <span class="o">+</span> <span class="p">(</span><span class="n">yy</span> <span class="o">-</span> <span class="p">(</span><span class="n">NS</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">focal_obj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">NS</span><span class="p">,</span> <span class="n">NS</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cx</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span> <span class="p">(</span><span class="mi">28</span><span class="p">,</span> <span class="mi">34</span><span class="p">),</span> <span class="p">(</span><span class="mi">38</span><span class="p">,</span> <span class="mi">30</span><span class="p">)]:</span>
+    <span class="n">focal_obj</span><span class="p">[</span><span class="n">cy</span><span class="p">,</span> <span class="n">cx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">haze</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(((</span><span class="n">xx</span> <span class="o">-</span> <span class="mi">30</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">yy</span> <span class="o">-</span> <span class="mi">34</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">11.0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">*</span> <span class="mf">0.02</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">cube_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
+    <span class="n">fftconvolve</span><span class="p">(</span><span class="n">focal_obj</span><span class="p">,</span> <span class="n">psf_z</span><span class="p">[</span><span class="n">NZ</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">k</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+    <span class="o">+</span> <span class="n">fftconvolve</span><span class="p">(</span><span class="n">haze</span><span class="p">,</span> <span class="n">psf_z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">SIDE_Z</span> <span class="o">*</span> <span class="n">SIDE_Z</span><span class="p">)])</span>
+<span class="n">cube_z</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">cube_z</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">*</span> <span class="mf">4000.0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">s2ism_reconstruction</span><span class="p">(</span><span class="n">cube_z</span><span class="p">,</span> <span class="n">psf_z</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">focal_plane</span><span class="p">,</span> <span class="n">defocused</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="n">NZ</span> <span class="o">//</span> <span class="mi">2</span><span class="p">],</span> <span class="n">obj</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">obj</span><span class="p">[</span><span class="n">NZ</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">conf_z</span> <span class="o">=</span> <span class="n">cube_z</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;photons in the focal plane : </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">focal_plane</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">obj</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> %&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;contrast, confocal -&gt; s2ISM: </span><span class="si">{</span><span class="n">conf_z</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">conf_z</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot; -&gt; </span><span class="si">{</span><span class="n">focal_plane</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">focal_plane</span><span class="p">),</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;Confocal (channel sum)&quot;</span><span class="p">,</span> <span class="n">conf_z</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;APR-ISM&quot;</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">apr_reconstruction</span><span class="p">(</span><span class="n">cube_z</span><span class="p">,</span> <span class="n">usf</span><span class="o">=</span><span class="mi">8</span><span class="p">)[</span><span class="mi">0</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s2">&quot;s2ISM, focal plane&quot;</span><span class="p">,</span> <span class="n">focal_plane</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;s2ISM, defocused planes&quot;</span><span class="p">,</span> <span class="n">defocused</span><span class="p">),</span>
+<span class="p">]):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;magma&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">();</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Choosing-a-method">
+<h2>Choosing a method<a class="headerlink" href="#Choosing-a-method" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>No array detector?</strong> Only eSRRF applies.</p></li>
+<li><p><strong>A gain you can defend without qualification?</strong> APR — linear and photon-conserving, but bounded near <span class="math notranslate nohighlight">\(\sqrt{2}\)</span>.</p></li>
+<li><p><strong>Sample blinks, and you can time-resolve it within the pixel dwell?</strong> SOFISM reaches about <span class="math notranslate nohighlight">\(2\times\)</span>, and from a physical mechanism rather than a rendering choice.</p></li>
+<li><p><strong>Out-of-focus background is the problem?</strong> s²ISM for true sectioning if you have a PSF model, focus-ISM for a cheaper two-component split.</p></li>
+</ul>
+<p>Two cautions worth carrying away:</p>
+<ol class="arabic simple">
+<li><p><strong>eSRRF is nonlinear.</strong> On a target of shrinking line pairs its modulation is not monotonic — it recovers contrast at separations where the pairs have already merged, by splitting a merged blur into an artificial doublet. Trust a resolution claim only where every wider feature is also resolved.</p></li>
+<li><p><strong>eSRRF on an APR image</strong> is sound where the background is not photon-starved, but the non-negativity clip after registration rectifies the interpolation’s negative lobes. In dim regions that leaves a positively biased, spatially <em>correlated</em> background, which is exactly what a gradient-convergence detector turns into spurious puncta. On sparse structure over a dark background, prefer SOFISM or plain APR.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#SOFISM">SOFISM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#s²ISM">s²ISM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Choosing-a-method">Choosing a method</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/modules/clsm_superres.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

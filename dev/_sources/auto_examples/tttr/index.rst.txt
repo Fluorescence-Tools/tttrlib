@@ -91,6 +91,23 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="A measurement is rarely one file. There is the instrument file, the settings sidecar it cannot be read without, the burst table somebody computed from it, the protocol, and a note about what went wrong on the third repeat. They travel as a folder, get zipped to be sent, and arrive with the sidecar missing.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_pto_bundle_files_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_pto_bundle_files`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Bundling a measurement's files into a .pto</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Convert a TTTR measurement between all writable container formats and verify what survives each trip.">
 
 .. only:: html
@@ -103,6 +120,23 @@ microtime histograms, and I/O performance benchmarking.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">TTTR file conversion between formats</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Read a measurement from an SPC-QC module (SPC-QC-104/004, SPC-QC-106/006), inspect what its records carry, and convert it to and from the other TTTR containers.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_tttr_spcqc_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_tttr_spcqc`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Becker & Hickl SPC-QC files and conversion</div>
     </div>
 
 
@@ -188,7 +222,9 @@ microtime histograms, and I/O performance benchmarking.
    /auto_examples/tttr/plot_tttr_header
    /auto_examples/tttr/plot_tttr_microtime_histogram
    /auto_examples/tttr/plot_tttr_write
+   /auto_examples/tttr/plot_pto_bundle_files
    /auto_examples/tttr/plot_tttr_file_conversion
+   /auto_examples/tttr/plot_tttr_spcqc
    /auto_examples/tttr/t2_t3_conversion
    /auto_examples/tttr/plot_tttr_read_benchmark
    /auto_examples/tttr/plot_tttr_files

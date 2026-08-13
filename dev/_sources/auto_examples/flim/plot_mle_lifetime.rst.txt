@@ -27,7 +27,7 @@ Fit a decay to photons in pixel to determine a mean fluorescence lifetime.
 
 Import necessary libraries
 
-.. GENERATED FROM PYTHON SOURCE LINES 10-18
+.. GENERATED FROM PYTHON SOURCE LINES 10-20
 
 .. code-block:: Python
 
@@ -37,17 +37,19 @@ Import necessary libraries
     import numpy as np
     import pylab as plt
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-23
+.. GENERATED FROM PYTHON SOURCE LINES 21-25
 
 The fit operates on a parallel and a perpendicular detection
 channel. Here we define the channel numbers of the two channels
 and read the tttr data of the clsm experiment. Moreover, we define
 a binning factor that is used to coarsen the micro time.
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-31
+.. GENERATED FROM PYTHON SOURCE LINES 25-33
 
 .. code-block:: Python
 
@@ -60,12 +62,12 @@ a binning factor that is used to coarsen the micro time.
     data = tttrlib.TTTR(fn_clsm)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 32-34
+.. GENERATED FROM PYTHON SOURCE LINES 34-36
 
 Next we create two CLSM container for the parallel and perpendicular
 channel and stack frames to have more photons in each pixel.
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-39
+.. GENERATED FROM PYTHON SOURCE LINES 36-41
 
 .. code-block:: Python
 
@@ -75,12 +77,12 @@ channel and stack frames to have more photons in each pixel.
     clsm_s.stack_frames()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 40-42
+.. GENERATED FROM PYTHON SOURCE LINES 42-44
 
 We determine instrument response function in parallel and perpendicular
 detection channels.
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-47
+.. GENERATED FROM PYTHON SOURCE LINES 44-49
 
 .. code-block:: Python
 
@@ -90,11 +92,11 @@ detection channels.
     irf_data_s: tttrlib.TTTR = irf_tttr[irf_tttr.get_selection_by_channel(ch_s)]
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-49
+.. GENERATED FROM PYTHON SOURCE LINES 50-51
 
 We get micro time histograms for the IRF and stack the histograms
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-53
+.. GENERATED FROM PYTHON SOURCE LINES 51-55
 
 .. code-block:: Python
 
@@ -103,47 +105,47 @@ We get micro time histograms for the IRF and stack the histograms
     irf = np.hstack([irf_p, irf_s])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-55
+.. GENERATED FROM PYTHON SOURCE LINES 56-57
 
 Settings for MLE
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-64
+.. GENERATED FROM PYTHON SOURCE LINES 57-62
 
 .. code-block:: Python
 
-    settings = {
-        'dt': data.header.micro_time_resolution * 1e9 * binning_factor,
-        'g_factor': 1.0, 'l1': 0.05, 'l2': 0.05,
-        'convolution_stop': -1,
-        'irf': irf,
-        'period': 32.0,
-        'background': np.zeros_like(irf)
-    }
+    dt = data.header.micro_time_resolution * 1e9 * binning_factor
+    setup = tttrlib.setup_vector(
+        'fit23', dt=dt, period=32.0, g_factor=1.0, l1=0.05, l2=0.05,
+        convolution_stop=-1)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-69
+.. GENERATED FROM PYTHON SOURCE LINES 63-65
 
-The settings are used to initialize an instance of the class ``Fit23``. A dataset
-is fitted by calling an instance of ``Fit23`` using the data, an array of the initial
-values of the fitting parameters, and an array that specifies which parameters are
-fixed.
+The setup and the IRF build the model once. It is immutable, so the same
+instance fits every pixel; only the per-pixel measurement changes.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-74
+.. GENERATED FROM PYTHON SOURCE LINES 65-76
 
 .. code-block:: Python
 
-    fit23 = tttrlib.Fit23(**settings)
+    fit23 = tttrlib.DecayFit2('fit23', setup, irf.tolist())
+
+    problem = tttrlib.DecayFitProblem(2, len(irf) // 2, dt)
+    problem.irf = tttrlib.VectorDouble(np.asarray(irf, dtype=float).tolist())
+    problem.background = tttrlib.VectorDouble(np.zeros_like(irf, dtype=float).tolist())
+
     tau, gamma, r0, rho = 3.2, 0.05, 0.38, 10.0
-    x0 = np.array([tau, gamma, r0, rho])
-    fixed = np.array([0, 0, 1, 0])
+    x0 = [tau, gamma, r0, rho]
+    # 0 = free, -1 = held: lifetime, scatter and rotation fitted, r0 held.
+    constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, -1, 0]))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-77
+.. GENERATED FROM PYTHON SOURCE LINES 77-79
 
 We iterate over all pixels in the image and apply the fit to
 pixels where we have at certain minimum number of photons.
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-113
+.. GENERATED FROM PYTHON SOURCE LINES 79-116
 
 .. code-block:: Python
 
@@ -172,8 +174,9 @@ pixels where we have at certain minimum number of photons.
                         np.bincount(micro_times[idx_s], minlength=n_channels)
                     ]
                 )
-                r = fit23(hist, x0, fixed)
-                tau[i, j, k] = r['x'][0]
+                problem.data = tttrlib.VectorDouble(
+                    np.asarray(hist, dtype=float).tolist())
+                tau[i, j, k] = fit23.fit(x0, constraints, problem).parameters[0]
     time_stop = time.time()
     print("Elapsed time:", time_stop - time_start)
 

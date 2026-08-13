@@ -49,7 +49,7 @@ on the macro time calibration. We print the content of the data header
 as is can be useful for asserting correct correlation parameters in later
 steps.
 
-.. GENERATED FROM PYTHON SOURCE LINES 32-42
+.. GENERATED FROM PYTHON SOURCE LINES 32-44
 
 .. code-block:: Python
 
@@ -59,24 +59,26 @@ steps.
     import tttrlib
     import numpy as np
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
     data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))
     print(data.header.get_json())
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-45
+.. GENERATED FROM PYTHON SOURCE LINES 45-47
 
 Here, we manually compute the calibration. This may not be
 necessary in many cases.
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-47
+.. GENERATED FROM PYTHON SOURCE LINES 47-49
 
 .. code-block:: Python
 
     time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-55
+.. GENERATED FROM PYTHON SOURCE LINES 50-57
 
 Next, we plan to split the TTTR data into separate data chunks. Here, chunk
 the data into at least 5 seconds long pieces. The method ``get_ranges_by_time_window``
@@ -86,7 +88,7 @@ that will be correlated. To slice the data into time windows we use the
 macro time calibration we computed previously. Note, the last chunk can
 be shorter than the specified time.
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-61
+.. GENERATED FROM PYTHON SOURCE LINES 57-63
 
 .. code-block:: Python
 
@@ -97,13 +99,13 @@ be shorter than the specified time.
     print(start_stop)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-65
+.. GENERATED FROM PYTHON SOURCE LINES 64-67
 
 Before correlating the data, we define the number of bins and the number
 of coarsening steps for the multi-tau correlation algorithm and create
 a new correlator instance.
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-71
+.. GENERATED FROM PYTHON SOURCE LINES 67-73
 
 .. code-block:: Python
 
@@ -114,13 +116,13 @@ a new correlator instance.
     correlator = tttrlib.Correlator(**corr_settings)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-75
+.. GENERATED FROM PYTHON SOURCE LINES 74-77
 
 We print the used routing channels and define the routing channels
 that should be used in the correlation as a first and second correlation
 channel.
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-95
+.. GENERATED FROM PYTHON SOURCE LINES 77-97
 
 .. code-block:: Python
 
@@ -145,12 +147,12 @@ channel.
     print(correlations)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-98
+.. GENERATED FROM PYTHON SOURCE LINES 98-100
 
 Finally, we compute the correlation for all data and plot all correlations
 for all subsets.
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-120
+.. GENERATED FROM PYTHON SOURCE LINES 100-122
 
 .. code-block:: Python
 
@@ -177,7 +179,7 @@ for all subsets.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 121-124
+.. GENERATED FROM PYTHON SOURCE LINES 123-126
 
 Slicing data and correlating photon traces of data subsets can be
 useful to discriminate artifacts or to estimate the noise of experimental

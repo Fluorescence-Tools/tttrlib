@@ -45,8 +45,14 @@ The operations demonstrated in this script include:
 Note: Replace the file paths with your own data.
 """
 
+import sys
+from pathlib import Path
 import tttrlib
 import numpy as np
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 
 from examples._example_data import get_data_path
 

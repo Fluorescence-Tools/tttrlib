@@ -38,11 +38,18 @@ Two calls do everything:
 * ``tttrlib.imread(path)`` - read a TIFF back, auto-detecting the pixel type and
   returning a NumPy array (2-D for a single page, 3-D for a stack).
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-34
+A TIFF is a flat sequence of pages, which is a problem as soon as a measurement
+has both frames *and* colours: six pages cannot say whether they are six time
+points or two time points in three channels. ``imwrite(..., axes="TCYX")``
+records that split as ImageJ hyperstack metadata, ``imread`` restores the shape,
+and ``tiff_metadata(path)`` reports it without decoding any pixels.
+
+.. GENERATED FROM PYTHON SOURCE LINES 30-45
 
 .. code-block:: Python
 
     import os
+    import sys
     import tempfile
     from pathlib import Path
 
@@ -50,10 +57,14 @@ Two calls do everything:
     import pylab as plt
 
     import tttrlib
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-44
+.. GENERATED FROM PYTHON SOURCE LINES 46-55
 
 Build FLIM images from a TTTR measurement
 -----------------------------------------
@@ -65,7 +76,7 @@ pixels. From the filled image we derive two per-pixel images:
 * a **mean micro time** image - a floating-point map that (without an IRF)
   already reflects the fluorescence lifetime contrast.
 
-.. GENERATED FROM PYTHON SOURCE LINES 44-64
+.. GENERATED FROM PYTHON SOURCE LINES 55-75
 
 .. code-block:: Python
 
@@ -90,7 +101,7 @@ pixels. From the filled image we derive two per-pixel images:
     print("mean micro time :", mean_micro_time.shape, mean_micro_time.dtype)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-70
+.. GENERATED FROM PYTHON SOURCE LINES 76-81
 
 Write the images to TIFF
 ------------------------
@@ -98,7 +109,7 @@ A 3-D array becomes a multi-page TIFF (one page per frame); a 2-D array becomes
 a single-page TIFF. The dtype is preserved on disk, so the float lifetime map
 stays floating point and the integer intensities stay integer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-79
+.. GENERATED FROM PYTHON SOURCE LINES 81-90
 
 .. code-block:: Python
 
@@ -112,14 +123,14 @@ stays floating point and the integer intensities stay integer.
         print(f"{f.name:24s} {os.path.getsize(f):>8d} bytes")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-84
+.. GENERATED FROM PYTHON SOURCE LINES 91-95
 
 Read the TIFFs back
 -------------------
 ``imread`` auto-detects the pixel type. A single-page file returns a 2-D array;
 the multi-page stack returns a 3-D array. The round-trip is exact.
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-99
+.. GENERATED FROM PYTHON SOURCE LINES 95-110
 
 .. code-block:: Python
 
@@ -139,14 +150,48 @@ the multi-page stack returns a 3-D array. The round-trip is exact.
           tttrlib.tiff_dtype(str(out_dir / "intensity_stack.tif")))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-104
+.. GENERATED FROM PYTHON SOURCE LINES 111-118
+
+Keeping frames and colours apart: a hyperstack
+----------------------------------------------
+The measurement has two detection channels. Filling one CLSM image per channel
+gives a ``(frames, channels, lines, pixels)`` array - four dimensions, where a
+plain TIFF only has pages. Naming the axes on write stores the split, so the
+file reads back as the same 4-D array instead of as ``frames x channels``
+anonymous pages, and ImageJ opens it as a hyperstack with a channel slider.
+
+.. GENERATED FROM PYTHON SOURCE LINES 118-137
+
+.. code-block:: Python
+
+    per_channel = np.stack(
+        [tttrlib.CLSMImage(data, fill=True, channels=(ch,)).intensity for ch in (0, 1)],
+        axis=1,  # (frames, channels, lines, pixels)
+    )
+    print("per-channel stack:", per_channel.shape, per_channel.dtype)
+
+    hyperstack_path = out_dir / "intensity_hyperstack.tif"
+    tttrlib.imwrite(hyperstack_path, per_channel, axes="TCYX")
+
+    meta = tttrlib.tiff_metadata(hyperstack_path)
+    print("axes on disk     :", meta["axes"], meta["shape"], meta["dtype"])
+
+    hyperstack_back = tttrlib.imread(hyperstack_path)
+    print("shape preserved  :", hyperstack_back.shape == per_channel.shape)
+    print("round-trip exact :", np.array_equal(hyperstack_back, per_channel))
+
+    # Without the axis labels the same pixels would come back as one flat page axis:
+    print("pages on disk    :", tttrlib.tiff_info(str(hyperstack_path)).n_frames)
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 138-142
 
 Visualise what was exported
 ---------------------------
 These are exactly the arrays that were written to (and read back from) the TIFF
 files - the figure below is rendered from the data ``imread`` returned.
 
-.. GENERATED FROM PYTHON SOURCE LINES 104-126
+.. GENERATED FROM PYTHON SOURCE LINES 142-164
 
 .. code-block:: Python
 
@@ -173,12 +218,12 @@ files - the figure below is rendered from the data ``imread`` returned.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 127-129
+.. GENERATED FROM PYTHON SOURCE LINES 165-167
 
 That's it: the FLIM intensity and lifetime images are now standard TIFF files
 on disk (``%s``) that open in any viewer - no ImageJ required.
 
-.. GENERATED FROM PYTHON SOURCE LINES 129-130
+.. GENERATED FROM PYTHON SOURCE LINES 167-168
 
 .. code-block:: Python
 

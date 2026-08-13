@@ -1,0 +1,2214 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Dynamic FRET: HMM and BVA" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="hmm-bva.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_hmm-bva_08735307.png" />
+<meta property="og:image:alt" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta name="description" content="tttrlib ships two photon-level tools for detecting and modelling sub-burst FRET dynamics — conformational changes that happen while a single molecule is inside the confocal volume: BVA(Burst Varian..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Dynamic FRET: HMM and BVA &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'hmm-bva';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HMM state decoding: distributions, not winner-takes-all" href="hmm-state-decoding.html" />
+    <link rel="prev" title="4. Burst Analysis" href="burst-analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/hmm-bva.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Dynamic FRET: HMM and BVA</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="dynamic-fret-hmm-and-bva">
+<span id="hmm-bva-guide"></span><h1>Dynamic FRET: HMM and BVA<a class="headerlink" href="#dynamic-fret-hmm-and-bva" title="Link to this heading">#</a></h1>
+<p>tttrlib ships two photon-level tools for detecting and modelling <strong>sub-burst
+FRET dynamics</strong> — conformational changes that happen while a single molecule is
+inside the confocal volume:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">BVA</span></code> (Burst Variance Analysis)</dt><dd><p>A fast model-free test for dynamics. It compares the measured per-burst
+spread of the FRET proximity ratio against the shot-noise limit.</p>
+</dd>
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">HMM</span></code> (photon-by-photon Hidden Markov Model)</dt><dd><p>A generative model that infers the number of hidden FRET states, their
+emission (FRET) values, and the transition rates between them — directly
+from photon arrival times, with no time binning.</p>
+<p>The class is named for what it is; <strong>H2MM</strong> names the <em>algorithm</em> it runs by
+default — the maximum-likelihood photon-by-photon EM of Pirchi et al. — and
+that name is used throughout this guide when the algorithm, rather than the
+class, is meant.</p>
+</dd>
+</dl>
+<p>Both start from a burst search (<code class="xref py py-class docutils literal notranslate"><span class="pre">BurstFilter</span></code>) and photon streams
+defined by <code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code> (routing channel + micro-time windows), so they
+compose with the rest of the tttrlib burst pipeline.</p>
+<section id="burst-variance-analysis">
+<h2>Burst Variance Analysis<a class="headerlink" href="#burst-variance-analysis" title="Link to this heading">#</a></h2>
+<p>Each burst is split into slices — either a fixed number of photons per slice or
+fixed-duration time windows. For every slice the proximity ratio
+<span class="math notranslate nohighlight">\(PR = n_A / (n_A + n_D)\)</span> is computed from the donor/acceptor photon
+counts, and the burst’s BVA statistic is the standard deviation of <span class="math notranslate nohighlight">\(PR\)</span>
+across its slices. A <em>static</em> species sits on the shot-noise line
+<span class="math notranslate nohighlight">\(\sigma = \sqrt{p(1-p)/n}\)</span>; a species that interconverts within the burst
+sits above it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;example.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+<span class="n">bf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">bf</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span><span class="n">min_photons</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">window_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">window_time_max</span><span class="o">=</span><span class="mf">0.5e-3</span><span class="p">)</span>
+<span class="n">bf</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
+
+<span class="n">bva</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span>                     <span class="c1"># reuse the filter&#39;s bursts + TTTR</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">set_donor</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>                        <span class="c1"># donor routing channel(s)</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">set_acceptor</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>                     <span class="c1"># acceptor routing channel(s)</span>
+<span class="n">bva</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">bf</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">(),</span> <span class="mi">5</span><span class="p">)</span>           <span class="c1"># burst bounds, photons per slice</span>
+
+<span class="n">mean</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_mean</span>           <span class="c1"># per-burst mean PR (NumPy array)</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">bva</span><span class="o">.</span><span class="n">proximity_ratio_std</span>             <span class="c1"># per-burst std of PR (NumPy array)</span>
+<span class="c1"># shot-noise-limited reference: proximity-ratio bins and the std line</span>
+<span class="n">bins</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="o">.</span><span class="n">compute_static_bva_line</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="photon-by-photon-hmm-h2mm">
+<h2>Photon-by-photon HMM (H2MM)<a class="headerlink" href="#photon-by-photon-hmm-h2mm" title="Link to this heading">#</a></h2>
+<p>H2MM (Pirchi <em>et al.</em>, J. Phys. Chem. B 2016) models the photon stream as a
+hidden Markov chain observed one photon at a time. The model
+<span class="math notranslate nohighlight">\(\lambda = \{\pi, A, B\}\)</span> has an initial-state vector <span class="math notranslate nohighlight">\(\pi\)</span>, a
+one-tick transition matrix <span class="math notranslate nohighlight">\(A\)</span>, and an emission matrix <span class="math notranslate nohighlight">\(B\)</span>
+(<span class="math notranslate nohighlight">\(B_{ik} = P(\text{stream } k \mid \text{state } i)\)</span>). Because photons
+arrive at irregular macro-times, propagating the chain across a gap of
+<span class="math notranslate nohighlight">\(\Delta t\)</span> ticks uses <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">);</span> <span class="n">green</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+<span class="n">red</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">);</span>    <span class="n">red</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+
+<span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
+<span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_from_filter</span><span class="p">(</span><span class="n">bf</span><span class="p">,</span> <span class="p">[</span><span class="n">green</span><span class="p">,</span> <span class="n">red</span><span class="p">],</span> <span class="n">min_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># fit 1..3 states, pick the best by BIC</span>
+<span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">eng</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">n_restarts</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">bic</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">n_states</span><span class="p">(),</span> <span class="n">best</span><span class="o">.</span><span class="n">obs_np</span><span class="p">)</span>     <span class="c1"># emission (FRET) per state</span>
+
+<span class="n">path</span><span class="p">,</span> <span class="n">icl</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">viterbi_path</span><span class="p">(</span><span class="n">best</span><span class="p">)</span>      <span class="c1"># most-likely state per photon</span>
+</pre></div>
+</div>
+<p>The engine also provides <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.factory_model()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.simulate_bursts()</span></code> for generating test data, and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.set_bursts()</span></code> to load pre-extracted per-burst photon streams directly.</p>
+</section>
+<section id="one-molecule-per-burst-the-assumption-that-matters-most">
+<span id="hmm-one-molecule"></span><h2>One molecule per burst — the assumption that matters most<a class="headerlink" href="#one-molecule-per-burst-the-assumption-that-matters-most" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>A burst holding <strong>two</strong> molecules is a superposition of two independent
+chains, not one chain. A single-chain model has exactly one way to explain
+interleaved photons from two sources — rapid switching — so multi-molecule
+coincidence manufactures the very signal these tools exist to detect.</p>
+</div>
+<p>Measured on two <strong>static</strong> species at <span class="math notranslate nohighlight">\(E = 0.25\)</span> and <span class="math notranslate nohighlight">\(0.75\)</span>, so the
+truth contains no dynamics at all and every reported transition is an artifact.
+Median over 8 independent datasets:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>coincident bursts</p></th>
+<th class="head"><p>apparent switching / tick</p></th>
+<th class="head"><p>BIC picks 3 states</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0 %</p></td>
+<td><p>none (at the floor)</p></td>
+<td><p>0 of 8</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>5 %</strong></p></td>
+<td><p><strong>7.5e-6</strong></p></td>
+<td><p><strong>8 of 8</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>10 %</p></td>
+<td><p>1.3e-5</p></td>
+<td><p>8 of 8</p></td>
+</tr>
+<tr class="row-odd"><td><p>25 %</p></td>
+<td><p>5.4e-5</p></td>
+<td><p>8 of 8</p></td>
+</tr>
+<tr class="row-even"><td><p>50 %</p></td>
+<td><p>7.9e-5</p></td>
+<td><p>8 of 8</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>5% coincidence – ordinary at typical burst concentrations – already invents
+kinetics and adds a state that is not there, in every dataset tried.</strong> That is a
+stronger confound than crosstalk or background, which bias <span class="math notranslate nohighlight">\(E\)</span> by
+0.03-0.05 but create neither states nor dynamics.</p>
+<p>The intuitive failure mode is not the dangerous one. With <em>full</em> overlap the two
+species stop being resolved at all – a superposition at every timescale has no
+time structure to separate, so the fit returns something built from the mixture
+rather than from the species, and the states are destroyed rather than the
+kinetics invented. With <em>partial</em> overlap, which is what diffusion actually
+produces, the burst contains a genuine change-point that is simply not a
+conformational one.</p>
+<p><strong>Neither selection nor concentration is a cheap fix, and per-burst detection
+does not work at all.</strong> An earlier version of this guide reported that photon
+count separates coincident bursts at AUC 0.87 and recommended filtering on it.
+That was wrong twice over: the bursts were made coincident by <em>concatenating</em>
+photon lists, so the coincident ones held more photons by construction, and the
+number came from a single dataset. Re-measured against ground truth from
+<a class="reference internal" href="simulator-guide.html#tttrlib.SimEngine" title="tttrlib.SimEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.SimEngine</span></code></a> — molecules diffusing through a focus, with
+<code class="docutils literal notranslate"><span class="pre">emitting_molecule()</span></code> naming the emitter of every photon — and replicated over
+independent seeds:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>statistic</p></th>
+<th class="head"><p>AUC at 5.3 %</p></th>
+<th class="head"><p>AUC at 17.7 %</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>burst duration</p></td>
+<td><p>0.53 ± 0.04</p></td>
+<td><p>0.542 ± 0.006</p></td>
+</tr>
+<tr class="row-odd"><td><p>photon count</p></td>
+<td><p>0.53 ± 0.04</p></td>
+<td><p>0.548 ± 0.005</p></td>
+</tr>
+<tr class="row-even"><td><p>peak count rate</p></td>
+<td><p>0.47 ± 0.04</p></td>
+<td><p>0.537 ± 0.009</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>None of these is a detector.</strong> Peak count rate lands below chance in the
+sparse sample, and nothing improves in the crowded one — at high occupancy the
+“clean” bursts are contaminated too, so the contrast the statistic depends on
+washes out and the filter is weakest where it is most needed. A statistic that
+<em>ought</em> to work fails as well: a second molecule arriving part-way should step
+the count rate at the moment the apparent <span class="math notranslate nohighlight">\(E\)</span> changes, and the correlation
+between local rate and local <span class="math notranslate nohighlight">\(E\)</span> also measures at chance.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Replicate before believing an AUC here.</strong> At 5% coincidence a single run
+holds only a handful of coincident bursts, and single-run AUCs ranged from
+<strong>0.36 to 0.63</strong> across seeds. One seed makes the statistic look publishable,
+another makes it anti-correlated. Every number in this section is a mean over
+independent seeds for that reason.</p>
+</div>
+<p>Selection is therefore a bad trade. Discarding the longest half of all bursts
+moves contamination only from 5.3% to 4.8%, at roughly <strong>25 clean bursts
+discarded per coincident burst removed</strong>.</p>
+<p>Occupancy is the better lever, but it saturates:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>population</p></th>
+<th class="head"><p>bursts / 1e6 ticks</p></th>
+<th class="head"><p>coincident</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0.125</p></td>
+<td><p>60</p></td>
+<td><p>2.5 %</p></td>
+</tr>
+<tr class="row-odd"><td><p>0.25</p></td>
+<td><p>115</p></td>
+<td><p>5.3 %</p></td>
+</tr>
+<tr class="row-even"><td><p>0.5</p></td>
+<td><p>239</p></td>
+<td><p>9.3 %</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.0</p></td>
+<td><p>530</p></td>
+<td><p>17.7 %</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Halving the occupancy costs a doubling of acquisition time for the same burst
+yield. It buys a factor of ~1.9 where the sample is crowded (17.7% → 9.3%) but
+only ~2.1 at the sparse end (5.3% → 2.5%), and spurious switching remains
+measurable even at the lowest occupancy tried. <strong>There is no setting at which
+coincidence goes away</strong>, so this is an acquisition-design problem rather than an
+analysis one: choose the occupancy before measuring, expect a floor, and treat a
+marginal extra state as suspect whenever the sample was crowded.</p>
+<p>The coincidence <em>rate</em> is predictable even though the per-burst label is not.
+Burst arrivals are Poisson, so the coincident fraction is
+<span class="math notranslate nohighlight">\(1 - e^{-\lambda \tau}\)</span> — but <span class="math notranslate nohighlight">\(\tau\)</span> is the <strong>transit</strong> time, not
+the detected burst duration. A detected burst is only the above-threshold part
+of a transit, and a molecule keeps emitting sub-threshold photons into its
+neighbours’ bursts for far longer, so using the burst duration underestimates
+coincidence by more than an order of magnitude. Take <span class="math notranslate nohighlight">\(\tau\)</span> from the FCS
+diffusion time.</p>
+<p>All of this is worked end to end, against engine ground truth, in
+<code class="docutils literal notranslate"><span class="pre">plot_hmm_coincidence.py</span></code>.</p>
+</section>
+<section id="why-there-is-no-per-state-brightness-read-out">
+<h2>Why there is no per-state brightness read-out<a class="headerlink" href="#why-there-is-no-per-state-brightness-read-out" title="Link to this heading">#</a></h2>
+<p>A recurring request is to report how bright each state is. Only the <em>ratio</em>
+between two states is identifiable — conditioning on photon arrivals removes any
+overall scale — and the natural estimator is
+<span class="math notranslate nohighlight">\((\text{photons in state}) / (\text{time in state})\)</span>. The PSF envelope
+was expected to cancel from that ratio, since a molecule’s conformational state
+and its position in the focus are independent.</p>
+<p><strong>It does not cancel</strong>, and that is why the feature is not shipped. Two
+independent errors bite, measured on a two-state system with a true ratio of
+3.00 and replicated over seeds:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>regime</p></th>
+<th class="head"><p>estimate (truth 3.00)</p></th>
+<th class="head"><p>error source</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>true tick-level path</p></td>
+<td><p>3.00–3.09 at every rate</p></td>
+<td><p>none — unbiased</p></td>
+</tr>
+<tr class="row-odd"><td><p>slow switching, flat field</p></td>
+<td><p>2.96 ± 0.02</p></td>
+<td><p>none</p></td>
+</tr>
+<tr class="row-even"><td><p>slow switching, 55× field</p></td>
+<td><p>2.66 ± 0.06</p></td>
+<td><p>envelope</p></td>
+</tr>
+<tr class="row-odd"><td><p>slow switching, 10⁶× field</p></td>
+<td><p>2.19 ± 0.07</p></td>
+<td><p>envelope</p></td>
+</tr>
+<tr class="row-even"><td><p>fast switching, flat field</p></td>
+<td><p>1.99</p></td>
+<td><p>gap attribution</p></td>
+</tr>
+<tr class="row-odd"><td><p>fast switching, 55× field</p></td>
+<td><p>1.65</p></td>
+<td><p>both</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The first row matters most: with the <strong>true tick-level</strong> path the estimator is
+unbiased at every switching rate, so there is no information-theoretic ceiling.
+What is lost is <em>attribution</em> — the state is known only at photons, so a gap
+gets charged to the state seen at its start even when the chain switched inside
+it. That error grows with switching rate.</p>
+<p>The envelope error is separate and worse, because it is present at <strong>any</strong>
+switching rate and grows monotonically with the depth of the focus. A guard on
+switching rate — the obvious way to ship this safely — would therefore have left
+users with a number that looks trustworthy and is 10–27% low.</p>
+<p>The tick-level bridge already in <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.sample()</span></code> does not rescue it either:
+it conditions on the endpoint states but not on the fact that the gap contained
+<strong>no photons</strong>, and an empty gap is evidence of the dim state. Using that
+evidence is precisely a rate-aware likelihood, which for diffusing data would
+attribute the PSF transit to state changes — the confound described above. The
+circularity is real, and the honest conclusion is that per-state brightness is
+not a quantitative read-out for freely-diffusing data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This does not contradict the invariance described earlier. The envelope is
+genuinely harmless to what the HMM infers, because <span class="math notranslate nohighlight">\(P(\text{symbol} |
+\text{state})\)</span> does not depend on the photon rate. It is a brightness
+read-out <em>bolted on afterwards</em> that the envelope breaks.</p>
+</div>
+</section>
+<section id="checking-a-converged-fit-with-phasors">
+<h2>Checking a converged fit with phasors<a class="headerlink" href="#checking-a-converged-fit-with-phasors" title="Link to this heading">#</a></h2>
+<p>A fit can converge, return the right <span class="math notranslate nohighlight">\(E\)</span>, and still rest on the wrong
+decay model. The <strong>phasor</strong> — the sine and cosine moments of a micro-time
+histogram at one frequency — gives a check that fits nothing and so cannot be
+talked into agreeing with the model it is checking.</p>
+<p>The recipe needs no new API. <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.evaluate()</span></code> returns
+<code class="docutils literal notranslate"><span class="pre">gamma_obs</span></code>, the posterior-weighted per-state micro-time histogram, and the
+fitted model carries its own table; run
+<code class="xref py py-func docutils literal notranslate"><span class="pre">tttrlib.DecayPhasor.compute_phasor_bincounts()</span></code> on both and compare:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
+<span class="n">data</span>  <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">gamma_obs_np</span><span class="p">(</span><span class="n">n_states</span><span class="p">)[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_streams</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">fit</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="c1"># (1, 0) is the identity IRF phasor, and the default -- (0, 0) is not</span>
+<span class="c1"># &quot;no IRF&quot; but a division by zero, and now raises rather than giving nan.</span>
+<span class="n">gd</span><span class="p">,</span> <span class="n">sd</span> <span class="o">=</span> <span class="n">DecayPhasor</span><span class="o">.</span><span class="n">compute_phasor_bincounts</span><span class="p">(</span><span class="n">counts</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>  <span class="n">freq</span><span class="p">)</span>
+<span class="n">gm</span><span class="p">,</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">DecayPhasor</span><span class="o">.</span><span class="n">compute_phasor_bincounts</span><span class="p">(</span><span class="n">counts</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">freq</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Measured on data generated with a <strong>multi-exponential donor</strong> and fitted once
+with a mono-exponential spec and once with the generating one, over five
+datasets:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>fitted model</p></th>
+<th class="head"><p>recovered <span class="math notranslate nohighlight">\(E\)</span></p></th>
+<th class="head"><p>phasor distance</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>mono-exponential</p></td>
+<td><p>0.247 / 0.700</p></td>
+<td><p><strong>0.0435 ± 0.0040</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>multi-exponential</p></td>
+<td><p>0.247 / 0.700</p></td>
+<td><p><strong>0.0095 ± 0.0017</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>truth</p></td>
+<td><p>0.25 / 0.70</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Both fits recover <span class="math notranslate nohighlight">\(E\)</span> to within 0.003, so the headline number gives no
+warning; the phasor distances differ by 4.6× with no overlap across datasets.
+The reason is structural — <span class="math notranslate nohighlight">\(E\)</span> is set by the <em>stream split</em> while the
+misspecification lives in the <em>decay shape</em>.</p>
+<p><strong>Use it as a relative diagnostic.</strong> The correctly specified model does not
+score zero, and should not be expected to: the distance carries sampling noise,
+and binning and truncation of the micro-time window move data and model points
+slightly differently. For the same reason, distance from the universal
+semicircle is <em>not</em> a clean multi-exponentiality test here — a binned, truncated
+mono-exponential does not lie exactly on the circle either. Compare candidate
+parameterisations on the same data and prefer the smaller distance.</p>
+<p>The likelihood remains the thing that <em>ranks</em> models, and it does rank these
+correctly (+91 nats for the multi-exponential fit). The phasor adds something
+the likelihood cannot: it says <strong>which state</strong> is failing and in which direction
+on the plane, from a statistic that never saw the model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">gamma_obs</span></code> — the posterior-weighted histogram — not a hard Viterbi
+assignment. Hard assignment discards the fit’s own uncertainty and pulls the
+data phasor toward the model that produced the assignment, which makes a
+badly specified model look self-consistent.</p>
+</div>
+<p>Worked in <code class="docutils literal notranslate"><span class="pre">plot_hmm_phasor_diagnostic.py</span></code>.</p>
+</section>
+<section id="error-bars-on-the-maximum-likelihood-path">
+<h2>Error bars on the maximum-likelihood path<a class="headerlink" href="#error-bars-on-the-maximum-likelihood-path" title="Link to this heading">#</a></h2>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.fit()</span></code> returns a point estimate and no uncertainty. <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.sample()</span></code>
+gives a calibrated posterior but needs priors and costs sweeps. Between them is
+the <strong>non-parametric bootstrap</strong>: bursts are conditionally independent given the
+model, so resampling them with replacement and refitting gives a frequentist
+interval with no prior at all.</p>
+<p><strong>No new API is needed.</strong> A replicate is the same dataset with its burst list
+resampled, which both loaders already accept — including duplicate rows, which
+is exactly what sampling with replacement means:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rows</span> <span class="o">=</span> <span class="n">bursts</span><span class="p">[</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">bursts</span><span class="p">))]</span>
+<span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
+<span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_from_tttr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">channels</span><span class="p">,</span> <span class="n">min_photons</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>On 313 bursts and ~32k photons that runs at about <strong>7 ms per replicate</strong>, so a
+200-replicate interval costs a couple of seconds and copies no photon data.</p>
+<p>Measured coverage of a nominal 95% interval, 40 datasets × 100 replicates:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>interval</p></th>
+<th class="head"><p>pooled coverage</p></th>
+<th class="head"><p>verdict</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>burst bootstrap</p></td>
+<td><p><strong>94.4 % ± 1.8 %</strong></p></td>
+<td><p>honest</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">posterior_sd_analytic</span></code></p></td>
+<td><p>~63 %</p></td>
+<td><p><strong>do not quote</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The analytic gap is not a defect — it is what that function’s own
+documentation says. Conditioning on the state path drops
+<span class="math notranslate nohighlight">\(\mathrm{Var}(E[\theta \mid y, \text{path}])\)</span>, so it is a <em>lower bound</em>
+on the width, measured at roughly half. Quoting it as an error bar overstates
+precision about twofold.</p>
+<p>Two sample sizes govern the bootstrap, each with a floor:</p>
+<ul class="simple">
+<li><p><strong>bursts</strong> — coverage runs 90 % / 94 % / 93 % at 20 / 40 / 120 bursts, so
+below a few tens of bursts the interval is mildly optimistic. That is a
+small-sample property of the percentile bootstrap, not of this engine.</p></li>
+<li><p><strong>replicates</strong> — coverage runs 89.4 % at 40 and 94.4 % at both 100 and 250.
+<strong>Use at least 100</strong>; there is nothing to gain past a few hundred.</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Order the states before summarising.</strong> States are exchangeable, so
+replicate fits can return the same model relabelled. Without a canonical
+order the spread measures label switching and every interval comes out far
+too wide — the same trap that applies to Gibbs draws.</p>
+</div>
+<p>Which interval to use: <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.sample()</span></code> when priors are wanted or the
+posterior shape matters; the bootstrap for the plain maximum-likelihood path;
+the analytic width only for a quick relative comparison between parameters.
+Worked in <code class="docutils literal notranslate"><span class="pre">plot_hmm_bootstrap.py</span></code>.</p>
+<p>ALEX stoichiometry filtering is the other standard route. It is independent of
+all of these statistics — it detects a donor-only and an acceptor-only molecule
+overlapping by their combined <span class="math notranslate nohighlight">\(S\)</span>, not by their brightness — so it
+composes with them and is likely the better lever where ALEX is available.</p>
+<p>Modelling coincidence instead requires a product state space over the two
+molecules, which is not implemented.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is specific to freely-diffusing burst data. The single-photon smFRET
+literature that this engine otherwise follows (Sgouralis &amp; Pressé) analyses
+<strong>immobilized</strong> molecules, where coincidence does not arise — so it offers no
+ready-made treatment to borrow here.</p>
+</div>
+</section>
+<section id="photon-rate-is-ignored-and-that-is-deliberate">
+<span id="hmm-rate-blind"></span><h2>Photon rate is ignored, and that is deliberate<a class="headerlink" href="#photon-rate-is-ignored-and-that-is-deliberate" title="Link to this heading">#</a></h2>
+<p>The likelihood scores <span class="math notranslate nohighlight">\(P(\text{symbol} \mid \text{state})\)</span> — a
+distribution <em>conditional on a photon having arrived</em>. Macro-times only
+propagate the chain through <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span>; the photon <strong>rate</strong> carries no
+likelihood weight. That reads like an omission and is a robustness property.</p>
+<p>A diffusing molecule’s brightness depends on its position in the focal spot, so
+the photon rate rises and falls during every burst as it transits the PSF. A
+state-dependent rate term would attribute that transit to state changes — the
+same way multi-molecule coincidence does above. Conditioning on photon arrivals
+removes the envelope entirely, because <span class="math notranslate nohighlight">\(P(\text{symbol}\mid\text{state})\)</span>
+does not depend on the overall rate.</p>
+<p>Measured on a <strong>static</strong> molecule (one state, no dynamics), BIC scan over
+<span class="math notranslate nohighlight">\(k = 1 \ldots 3\)</span>, four datasets each:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>brightness envelope</p></th>
+<th class="head"><p>intensity range</p></th>
+<th class="head"><p>BIC picks</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>flat (control)</p></td>
+<td><p>1x</p></td>
+<td><p>1 state, 4 of 4</p></td>
+</tr>
+<tr class="row-odd"><td><p>Gaussian PSF</p></td>
+<td><p>26x</p></td>
+<td><p>1 state, 4 of 4</p></td>
+</tr>
+<tr class="row-even"><td><p>narrow PSF</p></td>
+<td><p><strong>425,000x</strong></p></td>
+<td><p>1 state, 4 of 4</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A 425,000-fold intensity swing across the burst produces no spurious state and
+no more apparent switching than the flat control.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>The invariance covers position, not states.</strong> It holds when brightness
+varies for reasons unrelated to the hidden state — the PSF transit above. If
+the <em>states themselves</em> differ in brightness, gap durations become
+informative about the state, conditioning on the arrival times discards that
+information, and the <strong>kinetics</strong> are biased. Emission values are not:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>true switching</p></th>
+<th class="head"><p>brightness</p></th>
+<th class="head"><p>k01 / k10</p></th>
+<th class="head"><p>truth</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0.0003</p></td>
+<td><p>1:1</p></td>
+<td><p>1.09</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>0.0003</p></td>
+<td><p>3:1</p></td>
+<td><p>1.13</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>0.0030</p></td>
+<td><p>1:1</p></td>
+<td><p>0.95</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>0.0030</p></td>
+<td><p><strong>3:1</strong></p></td>
+<td><p><strong>1.71</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>0.0100</p></td>
+<td><p>1:1</p></td>
+<td><p>0.98</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>0.0100</p></td>
+<td><p><strong>3:1</strong></p></td>
+<td><p><strong>2.69</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With equal brightness the rates stay symmetric even when switching is fast.
+With a 3:1 brightness ratio they reach 2.69, so the inferred <em>equilibrium
+populations</em> are wrong by that factor. Recovered <span class="math notranslate nohighlight">\(E\)</span> stays correct
+throughout (0.25 / 0.75). The bias grows with the switching rate, so it is
+worst exactly where kinetics are the point.</p>
+<p>Two consequences worth stating plainly: states differing <strong>only</strong> in
+brightness are invisible to this likelihood, and reported rates should be
+treated with caution whenever the states are known to differ in brightness —
+a dark or partially quenched state, for instance.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not “fix” this by adding a state-dependent rate to the likelihood. It is
+sound only where brightness is constant during observation — immobilized or
+surface-tethered molecules — which is why the generator-based formulations in
+the literature can use it and this engine should not. For diffusing data,
+making rate informative requires joint inference of the trajectory, which is
+a switching state-space model rather than an HMM. The bias above is a real
+cost of that choice, not an argument against it: modelling rate without the
+trajectory trades a kinetics bias for a worse one.</p>
+</div>
+</section>
+<section id="background-predictable-dilution">
+<h2>Background: predictable dilution<a class="headerlink" href="#background-predictable-dilution" title="Link to this heading">#</a></h2>
+<p>Uncorrelated background — scatter, or a constant “dirt” pattern in the decay —
+arrives at a steady rate regardless of the molecule’s state, so it dilutes every
+state’s emission toward the background’s own colour. The dilution is <strong>exact</strong>:</p>
+<div class="math notranslate nohighlight">
+\[E_{\text{obs}} = (1 - f)\,E + f\,E_{\text{bg}}\]</div>
+<p>Measured against that formula, with background colour 0.5 and true states at
+0.25 / 0.75:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>background</p></th>
+<th class="head"><p>measured E</p></th>
+<th class="head"><p>predicted</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>5 %</p></td>
+<td><p>0.260 / 0.735</p></td>
+<td><p>0.263 / 0.738</p></td>
+</tr>
+<tr class="row-odd"><td><p>15 %</p></td>
+<td><p>0.288 / 0.716</p></td>
+<td><p>0.288 / 0.713</p></td>
+</tr>
+<tr class="row-even"><td><p>30 %</p></td>
+<td><p>0.323 / 0.675</p></td>
+<td><p>0.325 / 0.675</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Transition rates are essentially unaffected, and the state count is usually
+right, though BIC occasionally picks one extra. Because the relationship is
+exact, background is <em>correctable</em> once <span class="math notranslate nohighlight">\(f\)</span> is known — which is what
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">HmmEmissionSpec.background_fraction</span></code> and its per-stream <code class="docutils literal notranslate"><span class="pre">background</span></code>
+pattern are for. On a micro-time alphabet the pattern matters as well as the
+fraction: scatter follows the IRF, while “dirt” carries a long lifetime, and the
+two dilute different parts of the decay.</p>
+<p>Per-state <strong>brightness</strong> can still be read out <em>after</em> decoding, since state and
+position are independent and the unknown envelope cancels in a ratio. That is a
+post-hoc measurement, not a likelihood term, and it is only trustworthy while
+switching is slow compared with the burst transit.</p>
+</section>
+<section id="adding-the-lifetime-axis">
+<span id="hmm-micro-alphabet"></span><h2>Adding the lifetime axis<a class="headerlink" href="#adding-the-lifetime-axis" title="Link to this heading">#</a></h2>
+<p>A symbol does not have to be a detection stream. Load the data with
+<code class="docutils literal notranslate"><span class="pre">n_micro_bins</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and each photon becomes the <strong>product symbol</strong>
+<code class="docutils literal notranslate"><span class="pre">stream</span> <span class="pre">*</span> <span class="pre">n_micro_bins</span> <span class="pre">+</span> <span class="pre">micro_bin</span></code>, so the emission table is
+<span class="math notranslate nohighlight">\(P(\text{stream}|k) \cdot f_k(\text{bin})\)</span> — a state is then constrained by
+<em>when</em> its photons arrive as well as by <em>where</em>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
+<span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_from_filter</span><span class="p">(</span><span class="n">bf</span><span class="p">,</span> <span class="p">[</span><span class="n">green</span><span class="p">,</span> <span class="n">red</span><span class="p">],</span> <span class="n">min_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_micro_bins</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<span class="n">eng</span><span class="o">.</span><span class="n">get_n_symbols</span><span class="p">()</span>        <span class="c1"># 2 * 32</span>
+</pre></div>
+</div>
+<p>This costs the recursions nothing. They read <code class="docutils literal notranslate"><span class="pre">obs[i*p</span> <span class="pre">+</span> <span class="pre">y]</span></code> with <code class="docutils literal notranslate"><span class="pre">p</span></code> a
+runtime integer and never ask what <code class="docutils literal notranslate"><span class="pre">y</span></code> means, so the micro-time axis is a
+wider emission table rather than a second code path — and <code class="docutils literal notranslate"><span class="pre">n_micro_bins</span> <span class="pre">==</span> <span class="pre">1</span></code>
+is bit-identical to the stream-only engine.</p>
+<p><strong>Why it is worth the width.</strong> Intensity alone cannot tell a <em>dark acceptor</em>
+from real FRET: both lower the acceptor fraction. Only transfer also shortens
+the donor lifetime. On simulated data where the two states have an identical
+donor/acceptor ratio by construction, per-photon Viterbi accuracy against the
+known state path is 0.53 — chance — on the stream alphabet, and 0.77 once
+micro-time is included.</p>
+<section id="choosing-n-micro-bins">
+<h3>Choosing <code class="docutils literal notranslate"><span class="pre">n_micro_bins</span></code><a class="headerlink" href="#choosing-n-micro-bins" title="Link to this heading">#</a></h3>
+<p>A micro-time is a TAC channel, so it is <em>already</em> discrete; <code class="docutils literal notranslate"><span class="pre">n_micro_bins</span></code>
+applies a <strong>second, coarser</strong> binning on top. That is a compute knob, not a
+modelling choice, and specifically it is not about lookup: the E-step reads
+<code class="docutils literal notranslate"><span class="pre">obs[i*p</span> <span class="pre">+</span> <span class="pre">y]</span></code> once per photon whatever the resolution. What scales is the
+<strong>table build</strong>, which the M-step repeats for every candidate lifetime.</p>
+<p>Because each bin’s probability is the exact <em>integral</em> over the bin (see the IRF
+note below), coarsening aggregates rather than approximates. Simulating at 4096
+native channels and then binning the data down:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>fit bins</p></th>
+<th class="head"><p>bin width (ns)</p></th>
+<th class="head"><p>width / IRF</p></th>
+<th class="head"><p>fitted τ (ns)</p></th>
+<th class="head"><p>build</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>16</p></td>
+<td><p>1.000</p></td>
+<td><p>11.1</p></td>
+<td><p>3.84 / 2.05</p></td>
+<td><p>0.01 ms</p></td>
+</tr>
+<tr class="row-odd"><td><p>128</p></td>
+<td><p>0.125</p></td>
+<td><p>1.4</p></td>
+<td><p>3.85 / 2.06</p></td>
+<td><p>0.02 ms</p></td>
+</tr>
+<tr class="row-even"><td><p>1024</p></td>
+<td><p>0.016</p></td>
+<td><p>0.2</p></td>
+<td><p>3.85 / 2.06</p></td>
+<td><p>0.11 ms</p></td>
+</tr>
+<tr class="row-odd"><td><p>4096</p></td>
+<td><p>0.004</p></td>
+<td><p>0.04</p></td>
+<td><p>3.85 / 2.06</p></td>
+<td><p>0.45 ms</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(truth 4.0 / 2.0 ns). Even one-nanosecond bins — eleven times the IRF width —
+recover the lifetimes, because a <strong>mono-exponential</strong> lifetime is a <em>slope</em>
+across the whole decay rather than a narrow feature.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>That robustness does not carry to multi-exponential decays.</strong> Separating a
+fast component from a slow one depends on the first few bins, so the cost
+scales with <em>bin width ÷ fastest lifetime</em>. Photons needed to resolve a 10%
+change, 8 bins (2 ns) against native resolution:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>quantity</p></th>
+<th class="head"><p>τ_fast = 0.3</p></th>
+<th class="head"><p>τ_fast = 1.0</p></th>
+<th class="head"><p>τ_fast = 3.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>fast lifetime</p></td>
+<td><p>1.65x</p></td>
+<td><p>1.86x</p></td>
+<td><p>1.05x</p></td>
+</tr>
+<tr class="row-odd"><td><p>fast amplitude</p></td>
+<td><p><strong>2.7x</strong></p></td>
+<td><p>1.2x</p></td>
+<td><p>1.04x</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Negligible when the components are comparable (τ_fast = 3 against a 4 ns
+slow), and expensive when they are well separated — which is exactly the case
+a spectrum is fitted for. Size the bins against the <strong>fastest component</strong>,
+not against the slow one and not against the IRF.</p>
+<p>Note also the absolute scale: resolving a 10% change in a 0.3 ns component
+needs ~41 000 photons <em>even at native resolution</em>, and its amplitude ~4 900.
+Fast components are expensive to pin down however finely the axis is binned,
+which is a property of the physics rather than of the discretisation.</p>
+</div>
+<p>Fine binning otherwise earns its cost only when something <strong>narrow</strong> is being
+estimated: IRF position or width, or a lifetime comparable to the bin width. It
+is not needed merely because the instrument offers 4096 channels.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This supersedes earlier guidance to default to 1024 bins. That was measured
+on a table built by <em>point-sampling</em> the decay, where coarse bins carried a
+real discretisation bias; bin integration removed it, and with it the reason
+to pay for fine bins.</p>
+</div>
+</section>
+<section id="building-the-emission-table-from-lifetimes">
+<h3>Building the emission table from lifetimes<a class="headerlink" href="#building-the-emission-table-from-lifetimes" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">HmmEmissionSpec</span></code> generates the table from a per-state, per-stream
+lifetime spectrum instead of leaving all <code class="docutils literal notranslate"><span class="pre">n_streams</span> <span class="pre">*</span> <span class="pre">n_micro_bins</span></code> columns
+free:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmEmissionSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span><span class="mf">4.0</span><span class="p">))</span>       <span class="c1"># donor, dark acceptor</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))</span>       <span class="c1"># donor, E = 0.5</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">irf_center</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">irf_fwhm</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span> <span class="mf">0.09</span>    <span class="c1"># analytic Gaussian IRF, ns</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">background_fraction</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+<span class="c1"># factory_model(n_states, n_symbols, trans_scale, seed, n_micro_bins)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="o">.</span><span class="n">factory_model</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_n_symbols</span><span class="p">(),</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">set_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The parameter count is the point. A free categorical over a 4-stream,
+1024-bin alphabet carries 4095 numbers per state and EM does not find its good
+optimum; a spectrum carries a handful whatever the binning, and does. The
+decays are evaluated through <code class="xref py py-class docutils literal notranslate"><span class="pre">SimDecay</span></code>, so the object that <em>draws</em>
+micro-times in the simulator is the object that <em>scores</em> them here.</p>
+<p><strong>The IRF has two routes.</strong> <code class="docutils literal notranslate"><span class="pre">irf_center</span></code> / <code class="docutils literal notranslate"><span class="pre">irf_fwhm</span></code> is the analytic one: a
+photon’s micro-time is the sum of the memoryless excited-state time and whatever
+the instrument adds, so its density is an exponential convolved with a Gaussian
+— the exponentially-modified Gaussian — and each bin’s probability is a
+difference of its CDFs. That is <em>exact at any resolution</em>: a 32-bin table equals
+an 8192-bin one summed over the bins it merges. Passing a sampled pattern to
+<code class="docutils literal notranslate"><span class="pre">set_irf</span></code> instead is the route for a <strong>measured</strong> IRF of arbitrary shape, and
+costs a discrete convolution plus its aliasing (~1.7e-3 at 256 bins, needing
+~4096 bins to reach 1e-6). Setting both is rejected — it would convolve the
+Gaussian in twice.</p>
+</section>
+<section id="counting-statistics-where-they-bite-and-where-they-do-not">
+<span id="hmm-counting-statistics"></span><h3>Counting statistics: where they bite, and where they do not<a class="headerlink" href="#counting-statistics-where-they-bite-and-where-they-do-not" title="Link to this heading">#</a></h3>
+<p><strong>Scoring needs no Poisson term, and this is structural rather than an
+approximation.</strong> The likelihood is a product over photons of
+<span class="math notranslate nohighlight">\(P(\text{symbol}\mid\text{state})\)</span>; no micro-time histogram is ever
+formed, so there are no bin counts to carry Poisson noise. Conditioned on the
+photon count <span class="math notranslate nohighlight">\(N\)</span>, a Poisson likelihood factorises as</p>
+<div class="math notranslate nohighlight">
+\[P(\{n_k\}) = \underbrace{\mathrm{Poisson}(N)}_{\text{photon rate}}
+             \times \underbrace{N!\textstyle\prod_k f_k^{n_k}/n_k!}_{\text{what this engine scores}}\]</div>
+<p>so the counting statistics <em>are</em> handled exactly. Binning resolution is a
+scoring-accuracy knob with no statistical cost. The one piece genuinely omitted is the information in <span class="math notranslate nohighlight">\(N\)</span>
+itself: H2MM’s macro-times only propagate the chain, so a state’s <strong>brightness</strong>
+carries no likelihood weight. Making it count needs a state-dependent
+<span class="math notranslate nohighlight">\(\lambda_k\)</span> and an inhomogeneous-Poisson term per gap — a likelihood
+extension, not a correction to what is here.</p>
+<p><strong>The problem is in estimation, and it is structural.</strong> Micro-time bins are not
+free parameters — they are one smooth decay, of about two parameters, sampled
+onto the TAC grid. Fitting them as independent columns discards that structure
+and admits models no decay can produce: an exact zero in the <em>interior</em> of an
+exponential, declaring a photon impossible at 3 ns while allowing it at 2 and 4.</p>
+<p>So the following table should be read as <em>free parameters per state</em>, not as a
+bin threshold — more bins only widen a family that was already wrong. Measured
+on two states whose only difference is the donor lifetime (20 bursts x 300
+photons):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>bins</p></th>
+<th class="head"><p>photons/bin</p></th>
+<th class="head"><p>free <code class="docutils literal notranslate"><span class="pre">fit()</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">HmmEmissionSpec</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>16</p></td>
+<td><p>188</p></td>
+<td><p>0.715</p></td>
+<td><p>0.784</p></td>
+</tr>
+<tr class="row-odd"><td><p>32</p></td>
+<td><p>94</p></td>
+<td><p>0.531</p></td>
+<td><p>0.794</p></td>
+</tr>
+<tr class="row-even"><td><p>128</p></td>
+<td><p>23</p></td>
+<td><p>0.533</p></td>
+<td><p>0.797</p></td>
+</tr>
+<tr class="row-odd"><td><p>1024</p></td>
+<td><p>2.9</p></td>
+<td><p>0.521</p></td>
+<td><p>0.797</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>(per-photon decoding accuracy against the known state path; 0.5 is chance).
+The free fit collapses between 16 and 32 bins and leaves ~46% of its emission
+table <em>exactly</em> zero — a sparse histogram’s MLE, asserting with infinite
+confidence that no photon can arrive there. The spectrum is flat throughout.</p>
+<p><strong>Smoothing is not the fix.</strong> Dirichlet restraints on the emission rows remove
+every zero, so the <span class="math notranslate nohighlight">\(\log 0\)</span> hazard genuinely disappears — and accuracy
+stays near chance (0.55). The obstacle is the parameter count, not the
+sparsity. Cutting the parameters is what works.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>A free optimiser can destroy a correct emission table.</strong> This is not only
+a search failure. Started at the <em>exact generating model</em>, free EM sometimes
+walks away from it: over four macro-time seeds × four bin counts, three of
+sixteen runs fell from ~0.78 per-photon accuracy to ~0.51, converging to a
+“decay” with holes in its interior. The collapse is <strong>not monotone in bins</strong>
+(128 fine, 256 collapsed, 512 mixed, 1024 fine), so there is no safe bin
+count to retreat to — the family itself is wrong.</p>
+<p>So on a product alphabet, never use <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.fit()</span></code> or a bare
+<code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.optimize()</span></code> — both re-estimate the emission freely.</p>
+</div>
+</section>
+<section id="fitting-with-a-parameterised-emission">
+<h3>Fitting with a parameterised emission<a class="headerlink" href="#fitting-with-a-parameterised-emission" title="Link to this heading">#</a></h3>
+<p>Pass the spec to <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.optimize()</span></code> and the M-step re-fits <em>its</em> parameters
+instead of the <code class="docutils literal notranslate"><span class="pre">n_streams</span> <span class="pre">*</span> <span class="pre">n_micro_bins</span></code> free columns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmEmissionSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.0625</span><span class="p">,</span> <span class="n">tau</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+<span class="n">init</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmModel</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">trans</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">build</span><span class="p">())</span>
+<span class="n">init</span><span class="o">.</span><span class="n">n_micro_bins</span> <span class="o">=</span> <span class="mi">256</span>
+
+<span class="n">fit</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">spectrum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lifetimes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>      <span class="c1"># the fitted lifetime, read back out</span>
+</pre></div>
+</div>
+<p>The M-step factorises exactly, so this costs almost nothing: with
+<code class="docutils literal notranslate"><span class="pre">obs[i][k,b]</span> <span class="pre">=</span> <span class="pre">p_ik</span> <span class="pre">·</span> <span class="pre">f_ik(b)</span></code>,</p>
+<div class="math notranslate nohighlight">
+\[Q = \underbrace{\sum_{i,k} \Big(\sum_b g_{i,k,b}\Big) \log p_{ik}}_{\text{closed form}}
+  + \underbrace{\sum_{i,k} \sum_b g_{i,k,b} \log f_{ik}(b)}_{\text{1-D search per } (i,k)}\]</div>
+<p>The stream split keeps the categorical M-step’s closed form; only the lifetime
+needs a bounded golden-section search, one scalar per (state, stream).</p>
+<p>On the configuration where free EM falls from 0.775 to 0.509, this reaches
+<strong>0.776 starting from a deliberately wrong seed</strong> (8.0 / 0.8 ns against a truth
+of 4.0 / 2.0), and the fitted table has no interior holes by construction.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Restraints and constraints on <code class="docutils literal notranslate"><span class="pre">obs</span></code> do not apply here — the family is
+itself the constraint, and a far stronger one. A prior on a <em>lifetime</em>
+belongs on the lifetime, not on the table it generates. SQUAREM is also
+disabled, because an extrapolated table need not be reachable from any
+parameters. Currently only mono-exponential components are re-fitted; a
+spectrum with several components keeps its shape and contributes through the
+stream split.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the same problem, and the same class of answer, that the <strong>phasor
+transform</strong> provides elsewhere: a phasor coordinate is a mean over photons —
+an unbinned sufficient statistic — so it never forms the sparse histogram in
+the first place. For scoring, tttrlib’s HMM already has that property by
+construction, and a per-photon phasor would be a lossless reparameterisation
+of the micro-time that adds nothing to the likelihood. Where a phasor <em>is</em>
+useful here is upstream: as a cheap model-free lifetime estimate to seed a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">HmmEmissionSpec</span></code>, and as a diagnostic for whether a fitted state sits
+on the universal semicircle.</p>
+</div>
+</section>
+<section id="measured-decays-patterns-not-spectra">
+<h3>Measured decays: patterns, not spectra<a class="headerlink" href="#measured-decays-patterns-not-spectra" title="Link to this heading">#</a></h3>
+<p>A decay usually arrives as a <strong>measured pattern</strong>, not as amplitudes and
+lifetimes — a donor-only reference, a scatter pattern, an IRF. That is why
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SimDecay</span></code> treats a pattern as its first-class representation and the
+multi-exponential helpers as optional constructors, and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">HmmEmissionSpec</span></code> accepts the same:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span><span class="o">.</span><span class="n">set_pattern</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">donor_only_decay</span><span class="p">)</span>     <span class="c1"># any length; e.g. 4096 TAC channels</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">set_pattern</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">quenched_reference</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Patterns are aggregated onto the emission axis, which is <strong>exact</strong> — a bin’s
+probability <em>is</em> the sum of the source channels inside it — so an
+instrument-resolution decay can be passed straight in and coarsened by
+<code class="docutils literal notranslate"><span class="pre">build()</span></code>. Verified against the analytic table to 1e-17.</p>
+<p><strong>A supplied pattern is the shape, not a starting guess.</strong> Neither the fit nor
+the sampler touches it; only the stream split stays free. That is <em>more</em> robust
+than fitting a lifetime rather than less, because there are no decay parameters
+left to be unidentifiable — and it sidesteps the multi-exponential binning cost
+above entirely, since nothing about the shape is being estimated. On the
+dark-state example it decodes marginally better than fitting the lifetimes
+(0.781 against 0.776), simply because the shape is known.</p>
+<p>This is the natural route when reference decays are available: measure the
+donor-only and quenched decays from pure samples, hand them over, and let the
+HMM fit only the mixture — which is the pattern-fitting approach familiar from
+MFD and PDA analyses.</p>
+</section>
+<section id="refining-the-physics-against-the-photons">
+<h3>Refining the physics against the photons<a class="headerlink" href="#refining-the-physics-against-the-photons" title="Link to this heading">#</a></h3>
+<p>A fixed pattern is the right answer when reference decays are measured. When
+they are not, the thing to refine is <strong>not the pattern</strong> — that is the free
+categorical again, with all its failure modes — but the <em>physical parameter that
+generates it</em>. <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.evaluate()</span></code> is the contract for that: it returns one
+E-step’s sufficient statistics, so an external optimiser can take over the
+M-step entirely:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>        <span class="c1"># C++: one forward-backward pass</span>
+    <span class="n">A</span>  <span class="o">=</span> <span class="n">row_normalize</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">xi</span><span class="p">)</span>       <span class="c1"># closed-form M-step for the kinetics</span>
+    <span class="n">R</span>  <span class="o">=</span> <span class="n">refine</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">gamma_obs</span><span class="p">)</span>    <span class="c1"># 1-D search per state -- the physics</span>
+</pre></div>
+</div>
+<p>Nothing physical enters the engine. In the worked example
+(<code class="docutils literal notranslate"><span class="pre">plot_hmm_distance_refinement.py</span></code>) each of three states is a <strong>distance
+distribution</strong>, and 30 000 photons recover</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>quantity</p></th>
+<th class="head"><p>start</p></th>
+<th class="head"><p>recovered</p></th>
+<th class="head"><p>truth</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>distances (Å)</p></td>
+<td><p>35 / 55 / 75</p></td>
+<td><p><strong>42.11 / 52.68 / 63.95</strong></p></td>
+<td><p>42 / 52 / 64</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(k_{01}\)</span></p></td>
+<td><p>1e-3</p></td>
+<td><p>0.00097</p></td>
+<td><p>0.00080</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(k_{12}\)</span></p></td>
+<td><p>1e-3</p></td>
+<td><p>0.00059</p></td>
+<td><p>0.00060</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>with the log-likelihood increasing monotonically — which is what distinguishes a
+genuine EM step from a heuristic run alongside one.</p>
+<p>Two things this makes concrete. <strong>The E–τ coupling</strong>: one scalar per state sets
+both the acceptor fraction and the donor decay rate, which is precisely what a
+free table cannot respect and why a dark acceptor is separable from real
+transfer. And <strong>why the fitted quantity is a distance rather than a lifetime</strong>:
+a state is a <em>distribution</em> over distances, so its donor decay is a sum of
+exponentials across quadrature nodes, which no single lifetime can represent.</p>
+<p>The loop accepts any parameterisation with a tractable <span class="math notranslate nohighlight">\(Q\)</span> — a different
+distance distribution, a multi-exponential donor, a crosstalk-aware stream split
+— and nothing below it changes.</p>
+</section>
+</section>
+<section id="a-blinking-acceptor-and-the-limit-of-what-is-separable">
+<h2>A blinking acceptor, and the limit of what is separable<a class="headerlink" href="#a-blinking-acceptor-and-the-limit-of-what-is-separable" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">plot_hmm_blinking_acceptor.py</span></code> runs that same loop on the hardest confusion in
+two-colour smFRET. A <strong>dark acceptor</strong> emits no acceptor photons, so it reports
+<span class="math notranslate nohighlight">\(E = 0\)</span>; a <strong>distant</strong> acceptor reports a small <span class="math notranslate nohighlight">\(E\)</span>. By intensity the
+two are the same observation, and they differ only in the donor lifetime — a dark
+acceptor leaves the donor unquenched, a distant one still drains it.</p>
+<p>The example makes every part of that realistic at once: a <strong>multi-exponential
+donor</strong> (<span class="math notranslate nohighlight">\(a = 0.6/0.4\)</span>, <span class="math notranslate nohighlight">\(\tau = 3.8/1.4\)</span> ns), quenched
+<strong>homogeneously</strong> so that <span class="math notranslate nohighlight">\(1/\tau_{i,DA} = 1/\tau_i + k_{FRET}(R)\)</span>; three
+conformations, each a <strong>Gaussian distance distribution</strong> of width 6 Å; and an
+acceptor blinking on a <strong>10 µs</strong> timescale, faster than a burst, so it toggles
+several times <em>within</em> the observation. A state’s donor decay is then a double
+sum — 2 components × 15 quadrature nodes = <strong>30 exponentials</strong> — generated from
+one scalar.</p>
+<p>The state space is a product, <em>conformation</em> × <em>photophysics</em>, the same
+superstate construction the photon-by-photon literature uses. While the acceptor
+is dark the conformation is unobservable, so it collapses to <strong>one</strong> dark state:
+three dark states would be emission-identical and no amount of data would
+separate them.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>quantity</p></th>
+<th class="head"><p>start</p></th>
+<th class="head"><p>recovered</p></th>
+<th class="head"><p>truth</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>distances (Å)</p></td>
+<td><p>45 / 50 / 58</p></td>
+<td><p><strong>41.0 / 50.6 / 60.6</strong></p></td>
+<td><p>40 / 52 / 65</p></td>
+</tr>
+<tr class="row-odd"><td><p>blink-off rate</p></td>
+<td><p>0.10 / tick</p></td>
+<td><p><strong>0.0986</strong></p></td>
+<td><p>0.10</p></td>
+</tr>
+<tr class="row-even"><td><p>dark-state recall</p></td>
+<td><p>—</p></td>
+<td><p>0.91</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>dark-state precision</p></td>
+<td><p>—</p></td>
+<td><p>0.72</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>The 65 Å state comes back at 61 Å, and that is the physics rather than the
+fit.</strong> At 65 Å the transfer is weak, so the state’s donor decay sits close to the
+unquenched one and its separation from the dark state rests on a small lifetime
+difference; pulling the distance in buys donor photons the dark state would
+otherwise have to explain. The one-sided confusion is why precision (0.72) trails
+recall (0.91).</p>
+<p>That is an identifiability limit of the <em>measurement</em>, and it generalises: <strong>a
+dark acceptor and a sufficiently distant one converge as</strong> <span class="math notranslate nohighlight">\(R\)</span> <strong>grows</strong>,
+and no estimator separates them once the quenching falls below the lifetime
+resolution. A distance reported out there needs the interval <code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.sample()</span></code>
+gives, not a point estimate.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>No IRF is applied to a supplied pattern.</strong> A measured decay already
+contains the instrument response, so convolving again would broaden it twice.
+<code class="docutils literal notranslate"><span class="pre">irf</span></code> and <code class="docutils literal notranslate"><span class="pre">irf_fwhm</span></code> therefore affect only the cells still described by a
+spectrum — which means the two can be mixed in one spec (a measured donor
+reference alongside an analytic acceptor decay) without the IRF being applied
+inconsistently.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">HmmEmissionSpec</span></code> knows no photophysics — no Förster radius, no linker
+width, no crosstalk matrix. A state is described by what scoring needs, a
+lifetime spectrum and a stream split; the map from a structure onto those
+quantities lives outside tttrlib and enters as a prior on the parameters.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">viterbi_path</span></code> answers “what is the single most likely state sequence”.
+If your next step is instead “how do the photons distribute over the
+states” — occupancies, per-state decays, populations — the argmax is a
+<strong>biased</strong> answer to that question: it inflates well-separated states and
+erases ambiguous and short-lived ones. See
+<a class="reference internal" href="hmm-state-decoding.html#hmm-state-decoding"><span class="std std-ref">HMM state decoding: distributions, not winner-takes-all</span></a> for the per-photon posterior and the two
+decoders that reproduce the distribution faithfully, plus how to persist a
+decoded assignment.</p>
+</div>
+</section>
+<section id="why-the-tttrlib-h2mm-engine-is-fast">
+<span id="hmm-performance"></span><h2>Why the tttrlib H2MM engine is fast<a class="headerlink" href="#why-the-tttrlib-h2mm-engine-is-fast" title="Link to this heading">#</a></h2>
+<p>The reference implementation of H2MM is Harris’s <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> (a pthreads C
+library). The tttrlib engine implements the same Baum-Welch EM and Viterbi
+decoding but reaches the <strong>identical</strong> optimum several-fold faster. On a
+simulated 3-state, 200k-photon dataset (macOS, Apple silicon, CPU only):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Engine</p></th>
+<th class="head"><p>EM to tol</p></th>
+<th class="head"><p>vs. tttrlib</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> (reference C)</p></td>
+<td><p>842 ms</p></td>
+<td><p>1.0× (baseline C)</p></td>
+</tr>
+<tr class="row-odd"><td><p>ChiSurf numba</p></td>
+<td><p>402 ms</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>tttrlib (plain EM)</strong></p></td>
+<td><p>345 ms</p></td>
+<td><p><strong>2.4× vs H2MM_C</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>tttrlib (SQUAREM)</strong></p></td>
+<td><p>103 ms</p></td>
+<td><p><strong>8.2× vs H2MM_C</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Viterbi decoding runs at ~150 M photons/s. The speed comes from four
+algorithmic choices, not from micro-optimising the reference’s inner loops:</p>
+<dl class="simple">
+<dt><strong>1. Sparse unique-Δt caches.</strong></dt><dd><p>Between two consecutive photons the chain performs <span class="math notranslate nohighlight">\(\Delta t\)</span>
+unobserved transitions, so the E-step needs <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> and the
+expected-transition tensor <span class="math notranslate nohighlight">\(\rho(\Delta t)\)</span>. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> builds a
+<strong>dense</strong> cache for <em>every</em> tick from 1 to the largest inter-photon gap in
+the dataset — so a single long dark gap forces an
+<span class="math notranslate nohighlight">\(n_{states}^4 \times \Delta t_{max}\)</span> allocation and that many tensor
+builds. tttrlib builds the caches only for the <strong>observed unique</strong> gaps
+(typically a few dozen), keyed by a per-photon slot index. Cost scales with
+the number of <em>distinct</em> gaps, not the clock range.</p>
+</dd>
+<dt><strong>2. Deferred ρ contraction (O(N·n²) hot loop).</strong></dt><dd><p>The naive E-step contracts the full <span class="math notranslate nohighlight">\(\rho\)</span> tensor against the
+forward/backward messages at <em>every photon</em>, costing
+<span class="math notranslate nohighlight">\(O(N \cdot n_{states}^4)\)</span> and streaming the large tensor from memory
+once per gap. tttrlib instead accumulates a small per-slot transition weight
+<code class="docutils literal notranslate"><span class="pre">W[slot,k,m]</span></code> in an <span class="math notranslate nohighlight">\(O(N \cdot n_{states}^2)\)</span> hot loop, and performs
+the single expensive contraction
+<span class="math notranslate nohighlight">\(\xi = \sum_{slot} W \cdot \rho\)</span> <strong>once</strong> in the serial reduction
+(<span class="math notranslate nohighlight">\(O(n_{slots} \cdot n_{states}^4)\)</span> with <span class="math notranslate nohighlight">\(n_{slots} \ll N\)</span>).
+Mathematically identical, but the per-photon work drops from <span class="math notranslate nohighlight">\(n^4\)</span> to
+<span class="math notranslate nohighlight">\(n^2\)</span> and the <span class="math notranslate nohighlight">\(\rho\)</span> cache is read only <span class="math notranslate nohighlight">\(n_{slots}\)</span> times.</p>
+</dd>
+<dt><strong>3. SQUAREM acceleration.</strong></dt><dd><p>Plain Baum-Welch converges linearly. tttrlib wraps the EM map in SQUAREM
+(Varadhan &amp; Roland 2008, scheme S3), a squared-extrapolation accelerator with
+a monotonicity safeguard. It reaches the <em>same</em> EM fixed point in far fewer
+maps — 54 vs. 172 on the benchmark above — which is the difference between
+the 345 ms and 103 ms rows. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> has no equivalent.</p>
+</dd>
+<dt><strong>4. Allocation-free, persistently-threaded kernels.</strong></dt><dd><p>The <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> / <span class="math notranslate nohighlight">\(\rho\)</span> caches are rebuilt every EM map, so
+the pair-power (binary-exponentiation) build reuses per-thread scratch
+buffers instead of allocating on each call — this alone cut the cache-build
+time ~4×. Bursts are processed in parallel over a <strong>persistent</strong> fork-join
+thread pool (<code class="docutils literal notranslate"><span class="pre">std::thread</span></code>, no OpenMP dependency) created once per
+optimisation, with thread-local Baum-Welch accumulators to avoid false
+sharing. <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> spawns and joins its pthreads <em>every</em> EM iteration.</p>
+</dd>
+</dl>
+<p>The engine is a direct C++ port of the ChiSurf numba engine and reproduces its
+single-EM-iteration log-likelihood and full-convergence Viterbi path to
+~1e-9, so results are numerically interchangeable.</p>
+<p><strong>Approximate float32 fast mode.</strong> <code class="docutils literal notranslate"><span class="pre">optimize(...,</span> <span class="pre">single_precision=True)</span></code> runs
+the <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span> / <span class="math notranslate nohighlight">\(\rho\)</span> caches and the forward-backward hot loop
+in float32 (model parameters and Baum-Welch reductions stay double), roughly
+halving the memory bandwidth of the caches. Because the log-likelihood then
+carries float32 round-off (~1e-2), the convergence threshold is floored at 1e-3.
+The benefit grows with the cache size (more states, more distinct gaps), so it is
+intended for exploratory fits on very large datasets, not for final numbers.
+(ChiSurf’s other approximate estimator — a neural <em>surrogate</em> that predicts a
+model in one forward pass — is not ported: it needs a trained network and so
+falls outside tttrlib’s dependency-free C++ core.)</p>
+</section>
+<section id="reproducing-the-benchmark">
+<h2>Reproducing the benchmark<a class="headerlink" href="#reproducing-the-benchmark" title="Link to this heading">#</a></h2>
+<p>The comparison lives under <code class="docutils literal notranslate"><span class="pre">benchmarks/</span></code>. It writes one shared simulated
+dataset and a fixed initial model, then optimises the identical problem in each
+engine’s isolated environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">benchmarks</span>
+<span class="n">python</span> <span class="n">bench_h2mm</span><span class="o">.</span><span class="n">py</span>                                   <span class="c1"># tttrlib (base env)</span>
+<span class="o">.</span><span class="n">venvs</span><span class="o">/</span><span class="n">h2mm_c</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span> <span class="n">competitors</span><span class="o">/</span><span class="n">bench_h2mm_c</span><span class="o">.</span><span class="n">py</span>       <span class="c1"># reference C</span>
+<span class="o">.</span><span class="n">venvs</span><span class="o">/</span><span class="n">h2mm_numba</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span> <span class="n">competitors</span><span class="o">/</span><span class="n">bench_h2mm_numba</span><span class="o">.</span><span class="n">py</span>  <span class="c1"># numba</span>
+</pre></div>
+</div>
+<p>(Build the competitor venvs first with <code class="docutils literal notranslate"><span class="pre">benchmarks/build_envs.sh</span></code>.)</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="burst-analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">4. </span>Burst Analysis</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="hmm-state-decoding.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">HMM state decoding: distributions, not winner-takes-all</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#burst-variance-analysis">Burst Variance Analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#photon-by-photon-hmm-h2mm">Photon-by-photon HMM (H2MM)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-molecule-per-burst-the-assumption-that-matters-most">One molecule per burst — the assumption that matters most</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-there-is-no-per-state-brightness-read-out">Why there is no per-state brightness read-out</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-a-converged-fit-with-phasors">Checking a converged fit with phasors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-bars-on-the-maximum-likelihood-path">Error bars on the maximum-likelihood path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#photon-rate-is-ignored-and-that-is-deliberate">Photon rate is ignored, and that is deliberate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#background-predictable-dilution">Background: predictable dilution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-the-lifetime-axis">Adding the lifetime axis</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-n-micro-bins">Choosing <code class="docutils literal notranslate"><span class="pre">n_micro_bins</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-emission-table-from-lifetimes">Building the emission table from lifetimes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#counting-statistics-where-they-bite-and-where-they-do-not">Counting statistics: where they bite, and where they do not</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fitting-with-a-parameterised-emission">Fitting with a parameterised emission</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#measured-decays-patterns-not-spectra">Measured decays: patterns, not spectra</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#refining-the-physics-against-the-photons">Refining the physics against the photons</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-blinking-acceptor-and-the-limit-of-what-is-separable">A blinking acceptor, and the limit of what is separable</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-tttrlib-h2mm-engine-is-fast">Why the tttrlib H2MM engine is fast</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducing-the-benchmark">Reproducing the benchmark</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/hmm-bva.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

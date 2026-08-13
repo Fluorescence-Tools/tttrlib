@@ -24,7 +24,7 @@ Working with TTTR files
 
 To open TTTR files import the ``tttrlib`` library.
 
-.. GENERATED FROM PYTHON SOURCE LINES 9-18
+.. GENERATED FROM PYTHON SOURCE LINES 9-20
 
 .. code-block:: Python
 
@@ -33,12 +33,14 @@ To open TTTR files import the ``tttrlib`` library.
     import tttrlib
 
     # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
 
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-36
+.. GENERATED FROM PYTHON SOURCE LINES 21-38
 
 TTTR attributes
 ===============
@@ -58,7 +60,7 @@ provided by the TTTR class. Opening and accessing the information contained in
 TTTR files is demonstrated by the Python code examples shown below. A TTTR object
 provides getter methods to access the data contained in the associated file.
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-43
+.. GENERATED FROM PYTHON SOURCE LINES 38-45
 
 .. code-block:: Python
 
@@ -70,7 +72,7 @@ provides getter methods to access the data contained in the associated file.
     header = data.get_header()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 44-49
+.. GENERATED FROM PYTHON SOURCE LINES 46-51
 
 In Python, the getter methods for the macro time, micro time, the channel, and the
 event type return `NumPy <http://www.numpy.org/>`_ arrays. The returned header is
@@ -78,7 +80,7 @@ of the type :class:`TTTRHeader`.
 
 Alternatively, the data can be accesses by corresponding the (write-only) attributes.
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-130
+.. GENERATED FROM PYTHON SOURCE LINES 51-132
 
 .. code-block:: Python
 
@@ -99,7 +101,7 @@ Alternatively, the data can be accesses by corresponding the (write-only) attrib
 
         +----------------+----------------------------------------------------------------------------------+
         | Name           | Description                                                                      |
-        +================+========+=========================================================================+
+        +================+==================================================================================+
         |Macro time      | Number of macro time clock cycles since the start of the recording               |
         +----------------+----------------------------------------------------------------------------------+
         |Micro time      | Number of micro time channels since last macro time (unused in PicoQuant T2 mode)|
@@ -122,9 +124,9 @@ Alternatively, the data can be accesses by corresponding the (write-only) attrib
     .. table:: Table of event type identifiers
         :widths: auto
 
-        +--------------------------+--------+----------------+
+        +--------------------------+-------------------------+
         | Event type               | Event type number       |
-        +==========================+========+================+
+        +==========================+=========================+
         |Photon event              |0                        |
         +--------------------------+-------------------------+
         |Special event             |1                        |

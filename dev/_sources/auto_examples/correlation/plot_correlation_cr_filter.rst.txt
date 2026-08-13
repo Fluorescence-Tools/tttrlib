@@ -61,15 +61,17 @@ First, we do a normal correlation where all unfiltered data is correlated.
 For that, we first read the data into a TTTR container.
 Use TTTRLIB_DATA if set, otherwise fall back to repository layout
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-42
+.. GENERATED FROM PYTHON SOURCE LINES 39-44
 
 .. code-block:: Python
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-48
+.. GENERATED FROM PYTHON SOURCE LINES 45-50
 
 We use a dictionary that contains the most relevant parameters for the
 correlation algorithm, i.e., the number of bins, ``n_bins``, and the number
@@ -77,7 +79,7 @@ of coarsening steps, ``n_casc``, as we are going to reuse these parameters later
 ``n_bins`` and ``n_casc`` define the settings of the multi-tau correlation steps.
 If ``make_fine`` is set to false the micro time is not used for correlation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-54
+.. GENERATED FROM PYTHON SOURCE LINES 50-56
 
 .. code-block:: Python
 
@@ -88,13 +90,13 @@ If ``make_fine`` is set to false the micro time is not used for correlation.
     }
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-58
+.. GENERATED FROM PYTHON SOURCE LINES 57-60
 
 In the TTTR data the channel number 0 and 8 correspond to the green detectors.
 Here, ([0], [8]) is a correlation of the photons in the channel [0] and the photons
 in channel [8].
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-65
+.. GENERATED FROM PYTHON SOURCE LINES 60-67
 
 .. code-block:: Python
 
@@ -106,14 +108,14 @@ in channel [8].
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 66-70
+.. GENERATED FROM PYTHON SOURCE LINES 68-72
 
 Now, we compute the green-red cross correlation. The red detectors correspond
 to the channel numbers [1,9]. Thus, our input for the correlator is ([0, 8], [1, 9]).
 This means, that all photons in the green channels [0, 8] are correlated to
 the photons in the channel [1, 9].
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-77
+.. GENERATED FROM PYTHON SOURCE LINES 72-79
 
 .. code-block:: Python
 
@@ -125,7 +127,7 @@ the photons in the channel [1, 9].
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-85
+.. GENERATED FROM PYTHON SOURCE LINES 80-87
 
 To reduce the contribution of scattered light on the correlation we select regions in
 the TTTR stream that have a minimum count rate. Here, we select regions with
@@ -135,7 +137,7 @@ refer to TTTR events. These indices are used to create a new TTTR object by slic
 the original TTTR object. Below two options to create such a selection is
 illustrated.
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-91
+.. GENERATED FROM PYTHON SOURCE LINES 87-93
 
 .. code-block:: Python
 
@@ -146,14 +148,14 @@ illustrated.
     }
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-96
+.. GENERATED FROM PYTHON SOURCE LINES 94-98
 
 A selection can be made using the function ``selection_by_count_rate`` or using
 the method ``get_selection_by_count_rate``.
 Alternatively, a new TTTR object can be created directly using the filter options and
 the ``get_tttr_by_count_rate`` method of a TTTR object.
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-105
+.. GENERATED FROM PYTHON SOURCE LINES 98-107
 
 .. code-block:: Python
 
@@ -167,11 +169,11 @@ the ``get_tttr_by_count_rate`` method of a TTTR object.
     tttr_selection = data.get_tttr_by_count_rate(**filter_options)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-107
+.. GENERATED FROM PYTHON SOURCE LINES 108-109
 
 Next, we computed correlations for the green/green and green/red.
 
-.. GENERATED FROM PYTHON SOURCE LINES 107-118
+.. GENERATED FROM PYTHON SOURCE LINES 109-120
 
 .. code-block:: Python
 
@@ -187,13 +189,13 @@ Next, we computed correlations for the green/green and green/red.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 119-122
+.. GENERATED FROM PYTHON SOURCE LINES 121-124
 
 The correlation amplitudes of the correlation curves for data with discriminated
 background is considerably higher as seen in the plots of the raw and unfiltered
 correlations.
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-152
+.. GENERATED FROM PYTHON SOURCE LINES 124-154
 
 .. code-block:: Python
 
@@ -228,7 +230,7 @@ correlations.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-163
+.. GENERATED FROM PYTHON SOURCE LINES 155-165
 
 Count rate threshold
 --------------------
@@ -241,7 +243,7 @@ To decrease the computation time, we decrease the number of
 bins in a correlation curve. For reference, we compute the
 correlation curve of the unfiltered data.
 
-.. GENERATED FROM PYTHON SOURCE LINES 163-170
+.. GENERATED FROM PYTHON SOURCE LINES 165-172
 
 .. code-block:: Python
 
@@ -253,13 +255,13 @@ correlation curve of the unfiltered data.
     x_unfiltered, y_unfiltered = correlator.x_axis, correlator.correlation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 171-174
+.. GENERATED FROM PYTHON SOURCE LINES 173-176
 
 Next, we define the filter parameter values. Here, we select for
 time windows (TWs) with at least two photons in time windows of
 10 seconds.
 
-.. GENERATED FROM PYTHON SOURCE LINES 174-181
+.. GENERATED FROM PYTHON SOURCE LINES 176-183
 
 .. code-block:: Python
 
@@ -271,14 +273,14 @@ time windows (TWs) with at least two photons in time windows of
     }
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-186
+.. GENERATED FROM PYTHON SOURCE LINES 184-188
 
 Using our values defines for the filter, we repeat the correlation
 calculations several times for different time windows. Here, we
 vary the time window from 0.1 ms to 1 ms and require that each time
 window has at least two photons.
 
-.. GENERATED FROM PYTHON SOURCE LINES 186-196
+.. GENERATED FROM PYTHON SOURCE LINES 188-198
 
 .. code-block:: Python
 
@@ -293,7 +295,7 @@ window has at least two photons.
     correlations = np.array(correlations)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 197-202
+.. GENERATED FROM PYTHON SOURCE LINES 199-204
 
 Finally, we plot the resulting correlation curves. As expected,
 the correlation amplitude of correlation curves computed for
@@ -301,7 +303,7 @@ smaller TWs (higher count rate) is higher. Note, this effect can
 be used in methods such as Photon Arrival-Time Interval Distribution
 (PAID) to resolve species mixtures :cite:`laurence2004`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 202-216
+.. GENERATED FROM PYTHON SOURCE LINES 204-218
 
 .. code-block:: Python
 

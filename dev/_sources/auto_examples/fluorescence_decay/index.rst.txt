@@ -59,23 +59,6 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Fit25 compares four candidate lifetimes and returns the lifetime that best describes a polarization-resolved Jordi-format decay. Use it when candidate lifetimes are known from calibration or a model grid and the question is which candidate explains the measured photons best.">
-
-.. only:: html
-
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Fit25: select from fixed lifetimes</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Fluorescence decay analysis - 3">
 
 .. only:: html
@@ -110,6 +93,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Fit25 compares four candidate lifetimes and returns the lifetime that best describes a polarization-resolved Jordi-format decay. Use it when candidate lifetimes are known from calibration or a model grid and the question is which candidate explains the measured photons best.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit25_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit25`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fit25: select from fixed lifetimes</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="1) Compute model function 2) Simulate data for computed model function 3) Fit simulated data with model function">
 
 .. only:: html
@@ -122,23 +122,6 @@ routines, and demonstrations of different fit configurations and benchmarks.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">MLE fit23: Usage example 2</div>
-    </div>
-
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Pile-up">
-
-.. only:: html
-
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_pile_up_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/fluorescence_decay/plot_pile_up`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Pile-up</div>
     </div>
 
 
@@ -161,18 +144,52 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="The one-call helpers fit23, fit24, fit25, and fit26 wrap the reusable fit classes. They are useful for notebooks and scripts where one decay or one pattern mixture is fitted at a time. This example runs every helper and then runs the matching class API with the same data.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Pile-up">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit_helpers_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_pile_up_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit_helpers`
+  :doc:`/auto_examples/fluorescence_decay/plot_pile_up`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">One-call fit helper overview</div>
+      <div class="sphx-glr-thumbnail-title">Pile-up</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Before a model decay can be compared against data it has to be convolved with the instrument response. tttrlib can do that two ways, and this tutorial shows what each is for — because the obvious reason to pick one of them is the wrong one.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_convolution_methods_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_convolution_methods`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Convolving a decay: the recursion or the transform?</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Every decay fit in tttrlib is reached the same way — you name the model, hand it the measurement, and read the answer back. This example walks through that once, end to end, and then shows the two things the interface gives you that a per-model API could not: swapping models without changing your code, and fitting thousands of decays in one call.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_decay_fit_interface_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_decay_fit_interface`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Fitting a decay: one interface</div>
     </div>
 
 
@@ -205,12 +222,13 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
    /auto_examples/fluorescence_decay/plot_fit23
    /auto_examples/fluorescence_decay/plot_fit26
-   /auto_examples/fluorescence_decay/plot_fit25
    /auto_examples/fluorescence_decay/plot_decay_fit_irf_bg
    /auto_examples/fluorescence_decay/plot_fit24
+   /auto_examples/fluorescence_decay/plot_fit25
    /auto_examples/fluorescence_decay/plot_fit23_usage_2
-   /auto_examples/fluorescence_decay/plot_pile_up
    /auto_examples/fluorescence_decay/plot_convolution_routines
-   /auto_examples/fluorescence_decay/plot_fit_helpers
+   /auto_examples/fluorescence_decay/plot_pile_up
+   /auto_examples/fluorescence_decay/plot_convolution_methods
+   /auto_examples/fluorescence_decay/plot_decay_fit_interface
    /auto_examples/fluorescence_decay/plot_fit23_benchmark_1
 

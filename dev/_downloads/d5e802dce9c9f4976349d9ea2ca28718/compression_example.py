@@ -11,14 +11,12 @@ import numpy as np
 import time
 
 
-def print_compression_stats(stats):
-    """Print compression statistics"""
-    print("\n=== Compression Statistics ===")
-    print(f"Events:           {stats.n_events:,}")
-    print(f"Uncompressed:     {stats.uncompressed_bytes / 1024**2:.2f} MB")
-    print(f"Compressed:       {stats.compressed_bytes / 1024**2:.2f} MB")
-    print(f"Compression:      {stats.compression_ratio * 100:.1f}%")
-    print(f"Space saved:      {(1 - stats.compression_ratio) * 100:.1f}%")
+def print_compression_stats(data):
+    """Print compression statistics read back from the TTTR object."""
+    ratio = data.get_macro_time_compression_ratio()
+    print(f"Memory:           {data.get_memory_usage_bytes() / 1024**2:.2f} MB")
+    print(f"Compression:      {ratio * 100:.1f}%")
+    print(f"Space saved:      {(1 - ratio) * 100:.1f}%")
 
 
 def example_basic_compression():
@@ -39,14 +37,14 @@ def example_basic_compression():
     
     print("Before compression:")
     print(f"Memory: {data.get_memory_usage_bytes() / 1024**2:.2f} MB")
-    print(f"Compressed: {data.is_compressed()}")
+    print(f"Compressed: {data.is_macro_time_compression_enabled()}")
     
     # Compress
-    stats = data.compress_data()
-    print_compression_stats(stats)
+    data.compress_macro_times()
+    print_compression_stats(data)
     
     print("\nAfter compression:")
-    print(f"Compressed: {data.is_compressed()}")
+    print(f"Compressed: {data.is_macro_time_compression_enabled()}")
 
 
 def example_compression_patterns():
@@ -62,17 +60,17 @@ def example_compression_patterns():
     channels = np.zeros(n, dtype=np.int8)
     types = np.zeros(n, dtype=np.int8)
     data1.append_events(macro_times, micro_times, channels, types)
-    stats1 = data1.compress_data()
+    data1.compress_macro_times()
     print(f"\nRegular spacing (100 units):")
-    print(f"  Compression: {stats1.compression_ratio * 100:.1f}%")
+    print(f"  Compression: {data1.get_macro_time_compression_ratio() * 100:.1f}%")
     
     # Pattern 2: High count rate (small deltas, good compression)
     data2 = tttrlib.TTTR()
     macro_times = np.arange(n, dtype=np.uint64) * 10
     data2.append_events(macro_times, micro_times, channels, types)
-    stats2 = data2.compress_data()
+    data2.compress_macro_times()
     print(f"\nHigh count rate (10 units):")
-    print(f"  Compression: {stats2.compression_ratio * 100:.1f}%")
+    print(f"  Compression: {data2.get_macro_time_compression_ratio() * 100:.1f}%")
     
     # Pattern 3: Burst data (variable spacing)
     data3 = tttrlib.TTTR()
@@ -85,9 +83,9 @@ def example_compression_patterns():
             t += 1000  # Large delta between bursts
         macro_times[i] = t
     data3.append_events(macro_times, micro_times, channels, types)
-    stats3 = data3.compress_data()
+    data3.compress_macro_times()
     print(f"\nBurst pattern (mixed deltas):")
-    print(f"  Compression: {stats3.compression_ratio * 100:.1f}%")
+    print(f"  Compression: {data3.get_macro_time_compression_ratio() * 100:.1f}%")
 
 
 def example_roundtrip():
@@ -108,11 +106,11 @@ def example_roundtrip():
     print(f"Original data created: {n_events:,} events")
     
     # Compress
-    stats = data.compress_data()
-    print(f"Compressed to {stats.compression_ratio * 100:.1f}%")
+    data.compress_macro_times()
+    print(f"Compressed to {data.get_macro_time_compression_ratio() * 100:.1f}%")
     
     # Decompress
-    data.decompress_data()
+    data.decompress_macro_times()
     print("Decompressed back to normal storage")
     
     # Verify data integrity
@@ -140,15 +138,15 @@ def example_file_compression(filename):
         
         # Compress
         start = time.time()
-        stats = data.compress_data()
+        data.compress_macro_times()
         compress_time = time.time() - start
         
-        print_compression_stats(stats)
+        print_compression_stats(data)
         print(f"Compression time: {compress_time*1000:.1f} ms")
         
         # Decompress
         start = time.time()
-        data.decompress_data()
+        data.decompress_macro_times()
         decompress_time = time.time() - start
         
         print(f"Decompression time: {decompress_time*1000:.1f} ms")
@@ -212,14 +210,14 @@ def example_compress_after_filter():
           f"{filtered.get_memory_usage_bytes() / 1024**2:.2f} MB")
     
     # Option 2: Compress (even better for archival)
-    stats = filtered.compress_data()
+    filtered.compress_macro_times()
     print(f"After compression: "
-          f"{stats.compressed_bytes / 1024**2:.2f} MB")
+          f"{filtered.get_memory_usage_bytes() / 1024**2:.2f} MB")
     
     print("\nMemory reduction:")
     print(f"  Original → Filtered: {100.0 * filtered.size() / data.size():.1f}%")
     print(f"  Original → Compressed: "
-          f"{100.0 * stats.compressed_bytes / data.get_memory_usage_bytes():.1f}%")
+          f"{100.0 * filtered.get_memory_usage_bytes() / data.get_memory_usage_bytes():.1f}%")
 
 
 def example_benchmark():
@@ -242,16 +240,16 @@ def example_benchmark():
         
         # Compress
         start = time.time()
-        stats = data.compress_data()
+        data.compress_macro_times()
         compress_time = (time.time() - start) * 1000
         
         # Decompress
         start = time.time()
-        data.decompress_data()
+        data.decompress_macro_times()
         decompress_time = (time.time() - start) * 1000
         
         print("{:<15,} {:<15.2f} {:<15.2f} {:<15.1f}%".format(
-            n, compress_time, decompress_time, stats.compression_ratio * 100))
+            n, compress_time, decompress_time, data.get_macro_time_compression_ratio() * 100))
 
 
 def main():

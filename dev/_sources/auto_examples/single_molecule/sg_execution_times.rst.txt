@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 18 files **from auto_examples/single_molecule**:
+**00:00.000** total execution time for 32 files **from auto_examples/single_molecule**:
 
 .. container::
 
@@ -44,6 +44,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_with_filter.py` (``plot_burst_analysis_with_filter.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_search_comparison.py` (``plot_burst_search_comparison.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_selection_advanced.py` (``plot_burst_selection_advanced.py``)
      - 00:00.000
      - 0.0
@@ -53,10 +56,49 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstfilter_with_selection.py` (``plot_burstfilter_with_selection.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_clsm_superres_esrrf.py` (``plot_clsm_superres_esrrf.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_clsm_superres_limitations.py` (``plot_clsm_superres_limitations.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_clsm_superres_resolution_curve.py` (``plot_clsm_superres_resolution_curve.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_complete_burst_analysis_pipeline.py` (``plot_complete_burst_analysis_pipeline.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_fret_burst_analysis.py` (``plot_fret_burst_analysis.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_analysis.py` (``plot_hmm_analysis.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_blinking_acceptor.py` (``plot_hmm_blinking_acceptor.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_bootstrap.py` (``plot_hmm_bootstrap.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_burst_pipeline.py` (``plot_hmm_burst_pipeline.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_coincidence.py` (``plot_hmm_coincidence.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_distance_refinement.py` (``plot_hmm_distance_refinement.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_lifetime_posterior.py` (``plot_hmm_lifetime_posterior.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_phasor_diagnostic.py` (``plot_hmm_phasor_diagnostic.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_state_channels.py` (``plot_hmm_state_channels.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_surrogate.py` (``plot_hmm_surrogate.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_linearization.py` (``plot_microtime_linearization.py``)

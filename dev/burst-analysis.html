@@ -64,6 +64,8 @@
     <script src="_static/sg-tags.js?v=d80f6fa4"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'burst-analysis';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
@@ -76,8 +78,8 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Dynamic FRET: H2MM and BVA" href="h2mm-bva.html" />
-    <link rel="prev" title="3. TTTR File Formats and Conversion" href="file-formats.html" />
+    <link rel="next" title="Dynamic FRET: HMM and BVA" href="hmm-bva.html" />
+    <link rel="prev" title="Plugins: adding a format without rebuilding" href="plugins.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -211,6 +213,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -232,6 +241,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="#">
     Burst Analysis
   </a>
@@ -239,8 +269,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -262,6 +299,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -530,6 +574,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -551,6 +602,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="#">
     Burst Analysis
   </a>
@@ -558,8 +630,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -581,6 +660,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -802,11 +888,13 @@
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">10.6.6. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.7. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.8. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.9. TTTR compression examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
 </ul>
 </details></li>
 </ul>
@@ -818,21 +906,30 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
 
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
 
 
 
@@ -840,11 +937,16 @@
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
 </ul>
 </details></li>
 </ul>
@@ -887,8 +989,8 @@
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
@@ -903,13 +1005,13 @@
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_transform.html">Image transform</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_pixel_masks.html">Using Pixel masks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_phasor.html">Phasor analysis of images</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_flim_pie.html">FLIM-PIE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_imaging_representations.html">TTTR Image representations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
@@ -918,13 +1020,14 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit_helpers.html">One-call fit helper overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_convolution_methods.html">Convolving a decay: the recursion or the transform?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_decay_fit_interface.html">Fitting a decay: one interface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
 </ul>
 </details></li>
@@ -949,21 +1052,30 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.3. Minimal Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.4. Burst selection routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.5. Microtime Range Selection Example (Fixed Version)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.6. BurstFilter with TTTRSelection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.7. Photon distribution analysis - 1</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.8. Burst Analysis with JSON Parameter Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.9. FRET Burst Analysis with BurstFilter Class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.10. Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.11. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
 
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.16. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.17. Microtime Linearization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
 
 
 
@@ -971,11 +1083,16 @@
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.25. Burst Analysis Example with BurstFilter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.26. Photon distribution analysis - 2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.27. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.28. Complete Burst Analysis Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.29. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -983,17 +1100,20 @@
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.5. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">10.6.6. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.7. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.8. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.9. TTTR compression examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
 </ul>
 </details></li>
+
 
 </ul>
 </div>
@@ -1092,8 +1212,199 @@ downstream plots.</p>
 </div>
 <p>Then compute burst sizes, durations, and channel counts from the returned ranges.</p>
 </section>
+<section id="burst-search-algorithms">
+<h2><span class="section-number">4.3. </span>Burst Search Algorithms<a class="headerlink" href="#burst-search-algorithms" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TTTR.burst_search(...,</span> <span class="pre">mode=...)</span></code> dispatches between five algorithms, and
+<code class="docutils literal notranslate"><span class="pre">TTTR.burst_search_algorithms()</span></code> returns the same list programmatically along
+with each algorithm’s parameter schema (labels, defaults, ranges and units), so
+a GUI can build its controls without hard-coding anything.</p>
+<p>They differ mainly in <em>what they assume a burst looks like</em>. The threshold
+searches assume one rate scale; the tree and segmentation searches do not, which
+is what lets them find dim and bright bursts in the same trace.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 16.0%" />
+<col style="width: 30.0%" />
+<col style="width: 26.0%" />
+<col style="width: 28.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>How it decides</p></th>
+<th class="head"><p>Use it when</p></th>
+<th class="head"><p>Origin</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sliding_window</span></code></p></td>
+<td><p>A photon is in a burst when <code class="docutils literal notranslate"><span class="pre">m</span></code> consecutive photons span less than
+<code class="docutils literal notranslate"><span class="pre">T</span></code> — one global count-rate threshold, one pass, no background model.</p></td>
+<td><p>The default. Fastest, fully predictable, and hard to beat when bursts
+are bright and uniform.</p></td>
+<td><p>The classical confocal burst search: Fries et al. (1998), <em>J. Phys.
+Chem. A</em> <strong>102</strong>, 6601, <a class="extlink-doi reference external" href="https://doi.org/10.1021/jp980965t">doi:10.1021/jp980965t</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cusum_sprt</span></code></p></td>
+<td><p>Locates burst edges by a cumulative-sum change point, then a sequential
+probability ratio test decides background vs. signal with explicit
+<code class="docutils literal notranslate"><span class="pre">alpha</span></code>/<code class="docutils literal notranslate"><span class="pre">beta</span></code> error rates.</p></td>
+<td><p>You want edges placed by a test rather than a threshold, and can supply
+(or auto-estimate) a background rate.</p></td>
+<td><p>CUSUM: Page (1954), <em>Biometrika</em> <strong>41</strong>, 100. SPRT: Wald (1945), <em>Ann.
+Math. Statist.</em> <strong>16</strong>, 117. Applied to single-molecule photon streams by
+Watkins &amp; Yang (2005), <em>J. Phys. Chem. B</em> <strong>109</strong>, 617,
+<a class="extlink-doi reference external" href="https://doi.org/10.1021/jp0467548">doi:10.1021/jp0467548</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kalman</span></code></p></td>
+<td><p>Tracks the binned count rate with a Kalman filter using Poisson
+measurement noise, and flags bins whose innovation is large relative to
+the filter’s own uncertainty.</p></td>
+<td><p>The background drifts. It responds to a <em>change</em> in rate, so a slow drift
+is tracked and ignored rather than detected.</p></td>
+<td><p>Kalman (1960), <em>J. Basic Eng.</em> <strong>82</strong>, 35, <a class="extlink-doi reference external" href="https://doi.org/10.1115/1.3662552">doi:10.1115/1.3662552</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maxtree</span></code></p></td>
+<td><p>Builds the component tree of the local log rate — every connected
+component at every level — and keeps those that are maximally stable and
+statistically plausible. No level is chosen globally.</p></td>
+<td><p>Dim and bright bursts coexist, or overlapping transits need deblending
+(the tree separates them without a watershed pass).</p></td>
+<td><p>Borrowed from image segmentation. Max-tree: Salembier, Oliveras &amp; Garrido
+(1998), <em>IEEE Trans. Image Process.</em> <strong>7</strong>, 555,
+<a class="extlink-doi reference external" href="https://doi.org/10.1109/83.663500">doi:10.1109/83.663500</a>. Stability criterion (MSER): Matas et al.
+(2004), <em>Image Vis. Comput.</em> <strong>22</strong>, 761,
+<a class="extlink-doi reference external" href="https://doi.org/10.1016/j.imavis.2004.02.006">doi:10.1016/j.imavis.2004.02.006</a>. Rolling-ball baseline: Sternberg
+(1983), <em>Computer</em> <strong>16</strong>, 22, <a class="extlink-doi reference external" href="https://doi.org/10.1109/MC.1983.1654163">doi:10.1109/MC.1983.1654163</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bayesian_blocks</span></code></p></td>
+<td><p>Finds by dynamic programming the single most probable partition of the
+photon stream into constant-rate intervals. No bins, no window duration,
+no phase — the only detection parameter is <code class="docutils literal notranslate"><span class="pre">p0</span></code>, a false-alarm
+probability.</p></td>
+<td><p>Burst <em>extent</em> matters, or bursts sit near the detection limit where a
+misaligned window loses the most. Slowest of the five.</p></td>
+<td><p>Gamma-ray astronomy, where it was built for time-tagged photon events
+from BATSE and Fermi — the same data model as a TTTR file. Scargle
+(1998), <em>ApJ</em> <strong>504</strong>, 405, <a class="extlink-doi reference external" href="https://doi.org/10.1086/306064">doi:10.1086/306064</a>; Scargle et al. (2013),
+<em>ApJ</em> <strong>764</strong>, 167, <a class="extlink-arxiv reference external" href="https://arxiv.org/abs/1304.2818">arXiv:1304.2818</a>. Made affordable by PELT pruning:
+Killick, Fearnhead &amp; Eckley (2012), <em>JASA</em> <strong>107</strong>, 1590,
+<a class="extlink-doi reference external" href="https://doi.org/10.1080/01621459.2012.737745">doi:10.1080/01621459.2012.737745</a>. Two-stage trigger after Fermi GBM:
+Meegan et al. (2009), <em>ApJ</em> <strong>702</strong>, 791,
+<a class="extlink-doi reference external" href="https://doi.org/10.1088/0004-637X/702/1/791">doi:10.1088/0004-637X/702/1/791</a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="choosing-a-detection-statistic">
+<h3><span class="section-number">4.3.1. </span>Choosing a detection statistic<a class="headerlink" href="#choosing-a-detection-statistic" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">maxtree</span></code> and <code class="docutils literal notranslate"><span class="pre">bayesian_blocks</span></code> both test a candidate against the local
+background, and <code class="docutils literal notranslate"><span class="pre">significance_mode</span></code> selects how:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 12.0%" />
+<col style="width: 34.0%" />
+<col style="width: 54.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Statistic</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Gaussian, <span class="math notranslate nohighlight">\((k-\mu)/\sqrt{\mu}\)</span></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">maxtree</span></code> default, kept so earlier results reproduce exactly. It
+assumes the Poisson distribution is already normal, which is false at the
+counts typical here (~20 burst photons over ~2 expected), so a “4 sigma”
+threshold does not deliver the false-positive rate it appears to promise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Exact Poisson upper tail</p></td>
+<td><p>Correct when the background rate is known a priori.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Li &amp; Ma (1983)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">bayesian_blocks</span></code> default. Additionally propagates the uncertainty
+of a background that was <em>measured</em> rather than known, which is always
+the case here. Li &amp; Ma (1983), <em>ApJ</em> <strong>272</strong>, 317, eq. 17,
+<a class="extlink-doi reference external" href="https://doi.org/10.1086/161295">doi:10.1086/161295</a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With the default <code class="docutils literal notranslate"><span class="pre">delta</span></code>, the choice matters more for <code class="docutils literal notranslate"><span class="pre">maxtree</span></code> than it used
+to: Li &amp; Ma reaches purity 0.994 against the Gaussian form’s 0.964 on the
+simulated benchmark, for about 0.02 less completeness.</p>
+<p>Both searches also accept <code class="docutils literal notranslate"><span class="pre">max_false_alarm_rate</span></code>, which replaces the sigma
+threshold with a post-trials one expressed in expected spurious bursts per
+second. Unlike a bare sigma, one such setting means the same thing on a 10 s and
+a 1 h acquisition. The trials correction is approximate — verify it against a
+background-only measurement before relying on the absolute number.</p>
+</section>
+<section id="cost">
+<h3><span class="section-number">4.3.2. </span>Cost<a class="headerlink" href="#cost" title="Link to this heading">#</a></h3>
+<p>Measured on 127k photons (20 s at ~6 kcps, 8 cores), with the burst counts
+agreeing to within about 2% across the photon-resolved methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 14.0%" />
+<col style="width: 14.0%" />
+<col style="width: 46.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Mphotons/s</p></th>
+<th class="head"><p>Parallel</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sliding_window</span></code></p></td>
+<td><p>~1100</p></td>
+<td><p>no</p></td>
+<td><p>One comparison per photon. Nothing will beat it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cusum_sprt</span></code></p></td>
+<td><p>~250</p></td>
+<td><p>no</p></td>
+<td><p>One sequential test per photon.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxtree</span></code></p></td>
+<td><p>~20</p></td>
+<td><p>partly</p></td>
+<td><p>Rate signal and rolling-ball baseline are threaded; the component-tree
+sweep is inherently sequential, which caps the achievable speed-up.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bayesian_blocks</span></code></p></td>
+<td><p>~15</p></td>
+<td><p>yes (~6x)</p></td>
+<td><p>Dominated by the segmentation, which uses PELT pruning to stay
+near-linear. <code class="docutils literal notranslate"><span class="pre">trigger_contrast</span></code> is the main cost knob — see below.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kalman</span></code></p></td>
+<td><p>~10</p></td>
+<td><p>no</p></td>
+<td><p>Cost set by <code class="docutils literal notranslate"><span class="pre">dt</span></code> rather than by the photon count.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The exact searches are one to two orders of magnitude slower than
+<code class="docutils literal notranslate"><span class="pre">sliding_window</span></code>, which is inherent — they do strictly more work per photon —
+so use <code class="docutils literal notranslate"><span class="pre">sliding_window</span></code> for real-time or very large files and the others when
+the detection limit or the burst boundaries matter more than throughput.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">bayesian_blocks</span></code> is still too slow, raise <code class="docutils literal notranslate"><span class="pre">trigger_contrast</span></code> before
+anything else: it controls how much of the stream reaches the expensive stage at
+all. Going from 2.5 to 4 roughly doubles throughput for about 0.006 less
+completeness. Lowering it below ~2 is counterproductive — the trigger then fires
+on so much background that, once regions are padded and merged, the segmentation
+covers essentially the whole stream and the trigger stops filtering anything.</p>
+</section>
+</section>
 <section id="advanced-path">
-<h2><span class="section-number">4.3. </span>Advanced Path<a class="headerlink" href="#advanced-path" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">4.4. </span>Advanced Path<a class="headerlink" href="#advanced-path" title="Link to this heading">#</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">BurstFilter</span></code> when burst selection is an iterative part of the analysis:</p>
 <ul class="simple">
 <li><p>search with an initial count-rate threshold,</p></li>
@@ -1106,7 +1417,7 @@ downstream plots.</p>
 definitions, microtime gates, FRET observables, and serialized parameter sets.</p>
 </section>
 <section id="outputs-and-checks">
-<h2><span class="section-number">4.4. </span>Outputs and Checks<a class="headerlink" href="#outputs-and-checks" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">4.5. </span>Outputs and Checks<a class="headerlink" href="#outputs-and-checks" title="Link to this heading">#</a></h2>
 <p>Every burst example should report:</p>
 <ul class="simple">
 <li><p>number of bursts,</p></li>
@@ -1118,7 +1429,7 @@ definitions, microtime gates, FRET observables, and serialized parameter sets.</
 </ul>
 </section>
 <section id="troubleshooting">
-<h2><span class="section-number">4.5. </span>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">4.6. </span>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
 <dl class="simple">
 <dt>No bursts</dt><dd><p>Check macro-time calibration and lower the photon threshold. A threshold in
 raw macro-time units is a common mistake.</p>
@@ -1132,7 +1443,7 @@ burst observables.</p>
 </dl>
 </section>
 <section id="examples">
-<h2><span class="section-number">4.6. </span>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">4.7. </span>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html"><span class="doc">Burst Analysis Example with BurstFilter</span></a></p></li>
 <li><p><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html"><span class="doc">Burst Analysis with JSON Parameter Support</span></a></p></li>
@@ -1140,6 +1451,60 @@ burst observables.</p>
 <li><p><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html"><span class="doc">Enhanced BurstFilter: Dynamic Parameter Changes Example</span></a></p></li>
 <li><p><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html"><span class="doc">FRET Burst Analysis with BurstFilter Class</span></a></p></li>
 <li><p><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html"><span class="doc">Complete Burst Analysis Pipeline</span></a></p></li>
+</ul>
+</section>
+<section id="references">
+<h2><span class="section-number">4.8. </span>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Primary sources for the algorithms above, in the order the table introduces them.</p>
+<p><strong>Burst searches</strong></p>
+<ul class="simple">
+<li><p>Fries, J. R., Brand, L., Eggeling, C., Köllner, M. &amp; Seidel, C. A. M. (1998).
+Quantitative identification of different single molecules by selective
+time-resolved confocal fluorescence spectroscopy. <em>J. Phys. Chem. A</em> <strong>102</strong>,
+6601–6613. <a class="extlink-doi reference external" href="https://doi.org/10.1021/jp980965t">doi:10.1021/jp980965t</a></p></li>
+<li><p>Page, E. S. (1954). Continuous inspection schemes. <em>Biometrika</em> <strong>41</strong>,
+100–115. <a class="extlink-doi reference external" href="https://doi.org/10.1093/biomet/41.1-2.100">doi:10.1093/biomet/41.1-2.100</a></p></li>
+<li><p>Wald, A. (1945). Sequential tests of statistical hypotheses.
+<em>Ann. Math. Statist.</em> <strong>16</strong>, 117–186. <a class="extlink-doi reference external" href="https://doi.org/10.1214/aoms/1177731118">doi:10.1214/aoms/1177731118</a></p></li>
+<li><p>Watkins, L. P. &amp; Yang, H. (2005). Detection of intensity change points in
+time-resolved single-molecule measurements. <em>J. Phys. Chem. B</em> <strong>109</strong>,
+617–628. <a class="extlink-doi reference external" href="https://doi.org/10.1021/jp0467548">doi:10.1021/jp0467548</a></p></li>
+<li><p>Kalman, R. E. (1960). A new approach to linear filtering and prediction
+problems. <em>J. Basic Eng.</em> <strong>82</strong>, 35–45. <a class="extlink-doi reference external" href="https://doi.org/10.1115/1.3662552">doi:10.1115/1.3662552</a></p></li>
+<li><p>Salembier, P., Oliveras, A. &amp; Garrido, L. (1998). Anti-extensive connected
+operators for image and sequence processing. <em>IEEE Trans. Image Process.</em>
+<strong>7</strong>, 555–570. <a class="extlink-doi reference external" href="https://doi.org/10.1109/83.663500">doi:10.1109/83.663500</a></p></li>
+<li><p>Matas, J., Chum, O., Urban, M. &amp; Pajdla, T. (2004). Robust wide-baseline
+stereo from maximally stable extremal regions. <em>Image Vis. Comput.</em> <strong>22</strong>,
+761–767. <a class="extlink-doi reference external" href="https://doi.org/10.1016/j.imavis.2004.02.006">doi:10.1016/j.imavis.2004.02.006</a></p></li>
+<li><p>Sternberg, S. R. (1983). Biomedical image processing. <em>Computer</em> <strong>16</strong>,
+22–34. <a class="extlink-doi reference external" href="https://doi.org/10.1109/MC.1983.1654163">doi:10.1109/MC.1983.1654163</a></p></li>
+<li><p>Scargle, J. D. (1998). Studies in astronomical time series analysis. V.
+Bayesian blocks, a new method to analyze structure in photon counting data.
+<em>ApJ</em> <strong>504</strong>, 405. <a class="extlink-doi reference external" href="https://doi.org/10.1086/306064">doi:10.1086/306064</a></p></li>
+<li><p>Scargle, J. D., Norris, J. P., Jackson, B. &amp; Chiang, J. (2013). Studies in
+astronomical time series analysis. VI. Bayesian block representations.
+<em>ApJ</em> <strong>764</strong>, 167. <a class="extlink-arxiv reference external" href="https://arxiv.org/abs/1304.2818">arXiv:1304.2818</a></p></li>
+<li><p>Killick, R., Fearnhead, P. &amp; Eckley, I. A. (2012). Optimal detection of
+changepoints with a linear computational cost. <em>J. Am. Stat. Assoc.</em> <strong>107</strong>,
+1590–1598. <a class="extlink-doi reference external" href="https://doi.org/10.1080/01621459.2012.737745">doi:10.1080/01621459.2012.737745</a></p></li>
+<li><p>Meegan, C. et al. (2009). The Fermi gamma-ray burst monitor. <em>ApJ</em> <strong>702</strong>,
+791. <a class="extlink-doi reference external" href="https://doi.org/10.1088/0004-637X/702/1/791">doi:10.1088/0004-637X/702/1/791</a></p></li>
+</ul>
+<p><strong>Detection statistics</strong></p>
+<ul class="simple">
+<li><p>Li, T.-P. &amp; Ma, Y.-Q. (1983). Analysis methods for results in gamma-ray
+astronomy. <em>ApJ</em> <strong>272</strong>, 317. <a class="extlink-doi reference external" href="https://doi.org/10.1086/161295">doi:10.1086/161295</a></p></li>
+<li><p>Ofek, E. O. &amp; Zackay, B. (2018). Optimal matched filter in the low-number
+count Poisson noise regime and implications for X-ray source detection.
+<em>A&amp;A</em> <strong>616</strong>, A170. <a class="extlink-arxiv reference external" href="https://arxiv.org/abs/1709.01524">arXiv:1709.01524</a></p></li>
+</ul>
+<p><strong>Downstream burst analysis</strong></p>
+<ul class="simple">
+<li><p>Torella, J. P., Holden, S. J., Santoso, Y., Hohlbein, J. &amp; Kapanidis, A. N.
+(2011). Identifying molecular dynamics in single-molecule FRET experiments
+with burst variance analysis. <em>Biophys. J.</em> <strong>100</strong>, 1568–1577.
+<a class="extlink-doi reference external" href="https://doi.org/10.1016/j.bpj.2011.01.066">doi:10.1016/j.bpj.2011.01.066</a></p></li>
 </ul>
 </section>
 </section>
@@ -1155,20 +1520,20 @@ burst observables.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="file-formats.html"
+       href="plugins.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><span class="section-number">3. </span>TTTR File Formats and Conversion</p>
+        <p class="prev-next-title">Plugins: adding a format without rebuilding</p>
       </div>
     </a>
     <a class="right-next"
-       href="h2mm-bva.html"
+       href="hmm-bva.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Dynamic FRET: H2MM and BVA</p>
+        <p class="prev-next-title">Dynamic FRET: HMM and BVA</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1193,10 +1558,16 @@ burst observables.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-objects">4.1. Core Objects</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simple-path">4.2. Simple Path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-path">4.3. Advanced Path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs-and-checks">4.4. Outputs and Checks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">4.5. Troubleshooting</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">4.6. Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#burst-search-algorithms">4.3. Burst Search Algorithms</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-a-detection-statistic">4.3.1. Choosing a detection statistic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">4.3.2. Cost</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-path">4.4. Advanced Path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs-and-checks">4.5. Outputs and Checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">4.6. Troubleshooting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">4.7. Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">4.8. References</a></li>
 </ul>
   </nav></div>
 

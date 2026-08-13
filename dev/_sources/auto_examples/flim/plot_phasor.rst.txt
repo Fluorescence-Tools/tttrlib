@@ -39,7 +39,7 @@ are analyzed in FLIM, paving the way for the analysis of large data sets
 and, in general, making the FLIM technique accessible to the nonexpert
 in spectroscopy and data analysis :cite:`DIGMAN2008L14`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 25-35
+.. GENERATED FROM PYTHON SOURCE LINES 25-37
 
 .. code-block:: Python
 
@@ -51,14 +51,16 @@ in spectroscopy and data analysis :cite:`DIGMAN2008L14`.
     import pylab as plt
     import numpy as np
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-37
+.. GENERATED FROM PYTHON SOURCE LINES 38-39
 
 Read data of the CLSM image
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-68
+.. GENERATED FROM PYTHON SOURCE LINES 39-70
 
 .. code-block:: Python
 
@@ -94,12 +96,12 @@ Read data of the CLSM image
     phasor_x_1d_1, phasor_y_1d_1 = phasor_1d.T[0], phasor_1d.T[1]
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-71
+.. GENERATED FROM PYTHON SOURCE LINES 71-73
 
 ssas
 IRF correction
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-86
+.. GENERATED FROM PYTHON SOURCE LINES 73-88
 
 .. code-block:: Python
 
@@ -119,11 +121,11 @@ IRF correction
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-88
+.. GENERATED FROM PYTHON SOURCE LINES 89-90
 
 Plot histogram of pixels phasors
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-121
+.. GENERATED FROM PYTHON SOURCE LINES 90-123
 
 .. code-block:: Python
 
@@ -161,12 +163,12 @@ Plot histogram of pixels phasors
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-124
+.. GENERATED FROM PYTHON SOURCE LINES 124-126
 
 The both phasor values can be inspected by mapping them to
 colors.
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-132
+.. GENERATED FROM PYTHON SOURCE LINES 126-134
 
 .. code-block:: Python
 

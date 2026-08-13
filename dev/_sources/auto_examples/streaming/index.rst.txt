@@ -1,0 +1,134 @@
+
+
+.. _sphx_glr_auto_examples_streaming:
+
+Streaming / Real-Time Analysis Examples
+=======================================
+
+These examples demonstrate tttrlib's streaming consumers, which accept photons
+one at a time and maintain incremental state for real-time analysis.
+
+Files
+-----
+
+- ``plot_streaming_correlation.py`` — Online multi-tau FCS correlation
+- ``plot_streaming_bursts.py`` — Sliding-window burst detection
+- ``plot_streaming_flim.py`` — Incremental TCSPC decay histogram and FLIM phasor
+
+A combined Jupyter notebook tutorial is at ``docs/streaming_tutorial.ipynb``.
+
+All examples use synthetic data and run without test files.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Online burst search on a live photon stream using tttrlib.StreamingBurstDetector.">
+
+.. only:: html
+
+  .. image:: /auto_examples/streaming/images/thumb/sphx_glr_plot_streaming_bursts_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/streaming/plot_streaming_bursts`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Streaming Burst Detection</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Online fluorescence decay histogramming and phasor computation for FLIM using tttrlib.StreamingDecayHistogram and tttrlib.StreamingPhasor.">
+
+.. only:: html
+
+  .. image:: /auto_examples/streaming/images/thumb/sphx_glr_plot_streaming_flim_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/streaming/plot_streaming_flim`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Streaming FLIM Phasor and Decay</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A live measurement usually has to be both recorded and looked at. Reading the file back to analyse it costs a second pass over data that may be larger than RAM, and cannot show anything until the run ends.">
+
+.. only:: html
+
+  .. image:: /auto_examples/streaming/images/thumb/sphx_glr_stream_to_many_consumers_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/streaming/stream_to_many_consumers`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">One photon stream, one file, and live analysis — in a single pass.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Online FCS correlation of a live photon stream using tttrlib.StreamingCorrelator.">
+
+.. only:: html
+
+  .. image:: /auto_examples/streaming/images/thumb/sphx_glr_plot_streaming_correlation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/streaming/plot_streaming_correlation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Streaming FCS Correlation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The same four calls — create, append, checkpoint, close — against each format, so the differences between them are visible in one place. Run it and you get a table of what round-tripped.">
+
+.. only:: html
+
+  .. image:: /auto_examples/streaming/images/thumb/sphx_glr_stream_to_any_format_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/streaming/stream_to_any_format`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Stream a photon measurement into every container that can take one.</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/streaming/plot_streaming_bursts
+   /auto_examples/streaming/plot_streaming_flim
+   /auto_examples/streaming/stream_to_many_consumers
+   /auto_examples/streaming/plot_streaming_correlation
+   /auto_examples/streaming/stream_to_any_format
+

@@ -25,7 +25,7 @@ Computing ICS data by tttrlib
 Demonstrate the use of the tttrlib ICS features and compare to
 numpy ICS implementation use CLSMImage as an input
 
-.. GENERATED FROM PYTHON SOURCE LINES 9-103
+.. GENERATED FROM PYTHON SOURCE LINES 9-105
 
 .. code-block:: Python
 
@@ -36,7 +36,9 @@ numpy ICS implementation use CLSMImage as an input
     import matplotlib.pylab as plt
     import matplotlib.patches
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
     def numpy_fft_ics(

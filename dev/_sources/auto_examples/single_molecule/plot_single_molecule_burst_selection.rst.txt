@@ -57,7 +57,7 @@ For a given TTTR object the functionality is provided by the method
 to select single molecule events confocal single-molecule FRET experiments as
 shown below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-63
+.. GENERATED FROM PYTHON SOURCE LINES 41-65
 
 .. code-block:: Python
 
@@ -69,7 +69,9 @@ shown below.
     import pylab as plt
 
     # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
 
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
@@ -84,13 +86,13 @@ shown below.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-67
+.. GENERATED FROM PYTHON SOURCE LINES 66-69
 
 This selects ranges in the event stream with a length of at least 250 microseconds
 with that with at least 20 events. This selection will select "bright" regions in
 the event stream.
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-75
+.. GENERATED FROM PYTHON SOURCE LINES 69-77
 
 .. code-block:: Python
 
@@ -103,12 +105,12 @@ the event stream.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-78
+.. GENERATED FROM PYTHON SOURCE LINES 78-80
 
 The method returns an array of indices that mark the start and the stop of the
 time window in the TTTR events (start1, stop1, start2, stop2, ...).
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-84
+.. GENERATED FROM PYTHON SOURCE LINES 80-86
 
 .. code-block:: Python
 
@@ -119,12 +121,12 @@ time window in the TTTR events (start1, stop1, start2, stop2, ...).
     sel = np.array(sel)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-87
+.. GENERATED FROM PYTHON SOURCE LINES 87-89
 
 Select the "green" donor and the "red" acceptor events separately for plotting and
 compute intensity traces The selection is plotted in blue.
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-95
+.. GENERATED FROM PYTHON SOURCE LINES 89-97
 
 .. code-block:: Python
 
@@ -137,11 +139,11 @@ compute intensity traces The selection is plotted in blue.
     bursts_selected = data[sel].get_intensity_trace(maximum_window_length)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-97
+.. GENERATED FROM PYTHON SOURCE LINES 98-99
 
 Save the traces to files
 
-.. GENERATED FROM PYTHON SOURCE LINES 97-120
+.. GENERATED FROM PYTHON SOURCE LINES 99-122
 
 .. code-block:: Python
 

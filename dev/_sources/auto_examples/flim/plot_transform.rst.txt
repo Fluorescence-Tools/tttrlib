@@ -32,7 +32,7 @@ Note: Transformations of CLSM images changes the temporal ordering of the photon
 cannot be used for advanced data analyis such as image correlation. Try to plan your experiment optimally 
 and aquire the data as needed (pixel dwell times, laser power, etc.). 
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-27
+.. GENERATED FROM PYTHON SOURCE LINES 18-29
 
 .. code-block:: Python
 
@@ -43,14 +43,16 @@ and aquire the data as needed (pixel dwell times, laser power, etc.).
     import numpy as np
     import pylab as plt
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-29
+.. GENERATED FROM PYTHON SOURCE LINES 30-31
 
 Read data of the CLSM image
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-81
+.. GENERATED FROM PYTHON SOURCE LINES 31-83
 
 .. code-block:: Python
 

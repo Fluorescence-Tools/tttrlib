@@ -46,7 +46,7 @@ First, we import libraries read the data into a new TTTR container.
 We inspect the header information to find header tags that inform
 on the macro time calibration.
 
-.. GENERATED FROM PYTHON SOURCE LINES 30-40
+.. GENERATED FROM PYTHON SOURCE LINES 30-42
 
 .. code-block:: Python
 
@@ -57,27 +57,29 @@ on the macro time calibration.
     import tttrlib
     import numpy as np
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
     data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t2.ptu'))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-43
+.. GENERATED FROM PYTHON SOURCE LINES 43-45
 
 Here, we manually compute the calibration. This may not be
 necessary in many cases.
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-45
+.. GENERATED FROM PYTHON SOURCE LINES 45-47
 
 .. code-block:: Python
 
     time_calibration = data.header.tag('MeasDesc_GlobalResolution')['value']
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-47
+.. GENERATED FROM PYTHON SOURCE LINES 48-49
 
 Next, we split the TTTR data into n_chunks subsets of equal size.
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-50
+.. GENERATED FROM PYTHON SOURCE LINES 49-52
 
 .. code-block:: Python
 
@@ -85,13 +87,13 @@ Next, we split the TTTR data into n_chunks subsets of equal size.
     n_ph = int(len(data) / n_chunks)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-54
+.. GENERATED FROM PYTHON SOURCE LINES 53-56
 
 Before correlating the data, we define the number of bins and the number
 of coarsening steps for the multi-tau correlation algorithm and create
 a new correlator instance.
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-76
+.. GENERATED FROM PYTHON SOURCE LINES 56-78
 
 .. code-block:: Python
 
@@ -118,13 +120,13 @@ a new correlator instance.
     correlations = np.array(correlations)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-80
+.. GENERATED FROM PYTHON SOURCE LINES 79-82
 
 Finally,
 Plot the all correlations
 plot the unsliced correlation
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-105
+.. GENERATED FROM PYTHON SOURCE LINES 82-107
 
 .. code-block:: Python
 
@@ -154,7 +156,7 @@ plot the unsliced correlation
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-108
+.. GENERATED FROM PYTHON SOURCE LINES 108-110
 
 The standard deviation computed over multiple correlation curves can be
 used as an estimate for the noise.

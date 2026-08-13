@@ -10,10 +10,26 @@ Version 0.27
   is a photon-by-photon Hidden Markov Model engine (Baum-Welch EM + Viterbi)
   ported from the ChiSurf numba engine; it reaches the same optimum as the
   reference ``H2MM_C`` library **2.4× faster** with plain EM and **8.2× faster**
-  with SQUAREM acceleration (see :ref:`h2mm_performance`), using sparse
+  with SQUAREM acceleration (see :ref:`hmm_performance`), using sparse
   unique-Δt caches, a deferred ρ contraction, and an allocation-free,
   persistently-threaded (``std::thread``) kernel. Both consume bursts directly
-  from :class:`BurstFilter`. New guide: :ref:`h2mm_bva_guide`.
+  from :class:`BurstFilter`. New guide: :ref:`hmm_bva_guide`.
+* **Becker & Hickl SPC-QC support**: New reader and writer for the ``.spc``
+  files written by the SPC-QC modules, available as the container ``"SPC-QC"``
+  and auto-detected, so ``tttrlib.TTTR("file.spc")`` picks it without help.
+  Both record layouts are handled — QC-x04 (SPC-QC-104/004) and QC-x06
+  (SPC-QC-106/006), which differ in the width of the channel field — including
+  markers, GAP records and the router signal. Their layout shares only its
+  width with the classic SPC-130 one: 12-bit macro time (bits 0-11), 4-bit
+  routing (bits 12-15) and a 12-bit ADC (bits 16-27), with the top bits
+  selecting the event and a macro time overflow written as the bare word
+  ``0x80000000`` for exactly one wrap of 4096 units. The ADC value is **not**
+  inverted, unlike on the classic cards. Because the QC modules run their TAC
+  independently of the macro time clock (2.048 ns macro tick against a 16 ps
+  TAC bin in the reference data), the micro time resolution comes from the
+  ``.set`` sidecar (``SP_TAC_R``/``SP_ADC_RE``) and falls back to SPCM's
+  default TAC range when no sidecar is present. The QC "absolute time" FIFO
+  mode is not supported. See :ref:`file_formats`.
 * **Photonscore LINCam ".photons" (D7) support**: New reader and writer for the
   position-sensitive photon-counting format written by Photonscore LINCam
   systems. ``tttrlib.TTTR("file.photons")`` decodes the paged, protobuf-style D7

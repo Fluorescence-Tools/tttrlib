@@ -1,0 +1,1306 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="BrightEyes-TTM (.ttr)" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="formats/brighteyes-ttm.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Container id, 10( BRIGHTEYES-TTR),, Extension,.ttr,, Read, yes,, Write, yes,, Identified from contents, never – the container has to be named,. What it is: The open-hardware time-tagging module fro..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_formats_brighteyes-ttm_3b958a5e.png" />
+<meta property="og:image:alt" content="Container id, 10( BRIGHTEYES-TTR),, Extension,.ttr,, Read, yes,, Write, yes,, Identified from contents, never – the container has to be named,. What it is: The open-hardware time-tagging module fro..." />
+<meta name="description" content="Container id, 10( BRIGHTEYES-TTR),, Extension,.ttr,, Read, yes,, Write, yes,, Identified from contents, never – the container has to be named,. What it is: The open-hardware time-tagging module fro..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>BrightEyes-TTM (.ttr) &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'formats/brighteyes-ttm';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FLIM LABS time tagger (.bin)" href="flim-labs-stt1.html" />
+    <link rel="prev" title="Photonscore LINCam (.photons)" href="photonscore-lincam.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ptu.html">PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ht3.html">PicoQuant HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="becker-hickl-spc.html">Becker &amp; Hickl SPC (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon-hdf5.html">Photon-HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5,</span> <span class="pre">.hdf5</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zeiss-confocor3.html">Zeiss ConfoCor3 (<code class="docutils literal notranslate"><span class="pre">.raw</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="single-molecule-sm.html">Single-molecule (SM) (<code class="docutils literal notranslate"><span class="pre">.sm</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photonscore-lincam.html">Photonscore LINCam (<code class="docutils literal notranslate"><span class="pre">.photons</span></code>)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flim-labs-stt1.html">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pto.html">PTO — the PhoTon cOntainer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pto-mfdb.html">PTO.MFDB — the MMFDB profile of the photon container</a></li>
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/brighteyes-ttm.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">File formats, one page each</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="brighteyes-ttm-ttr">
+<span id="fmt-brighteyes-ttm"></span><h1>BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)<a class="headerlink" href="#brighteyes-ttm-ttr" title="Link to this heading">#</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Container id<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">10</span></code> (<code class="docutils literal notranslate"><span class="pre">BRIGHTEYES-TTR</span></code>)</p>
+</dd>
+<dt class="field-even">Extension<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">.ttr</span></code></p>
+</dd>
+<dt class="field-odd">Read<span class="colon">:</span></dt>
+<dd class="field-odd"><p>yes</p>
+</dd>
+<dt class="field-even">Write<span class="colon">:</span></dt>
+<dd class="field-even"><p>yes</p>
+</dd>
+<dt class="field-odd">Identified from contents<span class="colon">:</span></dt>
+<dd class="field-odd"><p>never – the container has to be named</p>
+</dd>
+</dl>
+<section id="what-it-is">
+<h2>What it is<a class="headerlink" href="#what-it-is" title="Link to this heading">#</a></h2>
+<p>The open-hardware time-tagging module from the Molecular Microscopy and
+Spectroscopy group (IIT): a Xilinx Kintex-7 TDC with roughly 30 ps resolution,
+built for SPAD arrays of 25 or 49 elements on a scanning microscope.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="c1"># The container must be named -- see &quot;Why it cannot be sniffed&quot; below.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;scan.ttr&quot;</span><span class="p">,</span> <span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">)</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span>
+    <span class="n">tttr_data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+    <span class="n">marker_frame_start</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">marker_line_start</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">marker_line_stop</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">marker_event_type</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_pixel_per_line</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">use_pixel_markers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">marker_pixel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="layout">
+<h2>Layout<a class="headerlink" href="#layout" title="Link to this heading">#</a></h2>
+<p>A bare little-endian <code class="docutils literal notranslate"><span class="pre">uint16</span></code> stream. No header, no magic, no length.</p>
+<p>Each word is <code class="docutils literal notranslate"><span class="pre">valid</span> <span class="pre">&lt;&lt;</span> <span class="pre">15</span> <span class="pre">|</span> <span class="pre">ID</span> <span class="pre">&lt;&lt;</span> <span class="pre">8</span> <span class="pre">|</span> <span class="pre">data</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0..n-1</p></td>
+<td><p>detector element; <code class="docutils literal notranslate"><span class="pre">data</span></code> is its raw TDC code</p></td>
+</tr>
+<tr class="row-odd"><td><p>123</p></td>
+<td><p>dummy</p></td>
+</tr>
+<tr class="row-even"><td><p>124</p></td>
+<td><p>laser sync; <code class="docutils literal notranslate"><span class="pre">data</span></code> is the reference TDC code</p></td>
+</tr>
+<tr class="row-odd"><td><p>125</p></td>
+<td><p>step byte A (low 7 bits) + bit 7 = pixel clock</p></td>
+</tr>
+<tr class="row-even"><td><p>126</p></td>
+<td><p>step byte B (mid 7 bits) + bit 7 = <strong>frame</strong> clock</p></td>
+</tr>
+<tr class="row-odd"><td><p>127</p></td>
+<td><p>step byte C (high 7 bits) + bit 7 = <strong>line</strong> clock; ends the record</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Records are variable length and delimited by <code class="docutils literal notranslate"><span class="pre">ID</span> <span class="pre">==</span> <span class="pre">127</span></code>.</p>
+<p>Three things about this are easy to get wrong, and all three produce a
+plausible-looking result rather than an error:</p>
+<ul class="simple">
+<li><p><strong>ID 126 is the frame clock and 127 the line clock</strong>, not the other way
+round. The field names (<code class="docutils literal notranslate"><span class="pre">scan_enable</span></code>, <code class="docutils literal notranslate"><span class="pre">line_enable</span></code>) invite the opposite
+reading; the vendor decoder does not.</p></li>
+<li><p><strong>The scanner enables are levels, and the markers are edges.</strong> The enable
+stays asserted for as long as the scanner holds it, so emitting a marker for
+every set bit yields one per sample-clock tick instead of one per line.</p></li>
+<li><p><strong>The coarse counter is unwrapped at 65536</strong>, not at the 2<sup>21</sup> the
+three 7-bit step bytes could hold, and <em>any</em> decrease is a wrap. This is the
+vendor’s rule. Unwrapping at 2<sup>21</sup> stretches a 55-second acquisition
+to 1776 seconds.</p></li>
+</ul>
+<p>The valid bit is not decoration: the FPGA emits detector words in aligned
+pairs, exactly one of which has <code class="docutils literal notranslate"><span class="pre">valid</span></code> set. Ignoring it doubles the photon
+count and invents arrivals at TDC code 0.</p>
+</section>
+<section id="why-it-cannot-be-sniffed">
+<h2>Why it cannot be sniffed<a class="headerlink" href="#why-it-cannot-be-sniffed" title="Link to this heading">#</a></h2>
+<p>Any file at all is a valid sequence of 16-bit words, so content detection would
+match everything. <code class="docutils literal notranslate"><span class="pre">.ttr</span></code> takes no part in it, and the container must be named
+or reached by its extension. This is a property of the format, not a gap in the
+reader.</p>
+</section>
+<section id="what-the-file-does-not-contain">
+<h2>What the file does not contain<a class="headerlink" href="#what-the-file-does-not-contain" title="Link to this heading">#</a></h2>
+<p>The sample clock, the laser repetition rate and the number of detector elements
+are properties of the instrument, not of the file. They are supplied as
+<a class="reference internal" href="../file-formats.html#container-parameters"><span class="std std-ref">container parameters</span></a>, and the container declares
+what it accepts so a caller can ask:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">&quot;file_container&quot;</span><span class="p">)[</span><span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">][</span><span class="s2">&quot;params_schema&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_channels</span></code></p></td>
+<td><p>25</p></td>
+<td><p>SPAD elements: 25 (5x5) or 49 (7x7)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sysclk_MHz</span></code></p></td>
+<td><p>240</p></td>
+<td><p>what a macro time tick is</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">laser_MHz</span></code></p></td>
+<td><p>0</p></td>
+<td><p>the period arrival times fold into</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tdc_ps_per_code</span></code></p></td>
+<td><p>0</p></td>
+<td><p>crude linear stand-in for a calibration</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">auto_calibrate_tdc</span></code></p></td>
+<td><p>false</p></td>
+<td><p>measure the delay line from the data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">drop_filler</span></code></p></td>
+<td><p>true</p></td>
+<td><p>discard the <code class="docutils literal notranslate"><span class="pre">0x7FFF</span></code> idle word</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A default is a guess: if the instrument differs, the times come out wrong rather
+than absent, which is the failure mode worth being explicit about. A misspelled
+parameter is refused rather than ignored, for the same reason.</p>
+</section>
+<section id="micro-times-codes-and-then-times">
+<span id="ttr-calibration"></span><h2>Micro times: codes, and then times<a class="headerlink" href="#micro-times-codes-and-then-times" title="Link to this heading">#</a></h2>
+<p>By default a photon’s micro time is its raw TDC code, differenced against the
+laser code of its own record when there is one. That is what the file contains
+and nothing more, and it is <strong>not a duration</strong> – the delay line’s taps are not
+equally wide. The header says so, so downstream can refuse rather than fit
+nonlinear codes that look like micro times:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BrightEyes_MicroTimeCalibrated</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BrightEyes_MicroTimeUnit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tdc_code</span></code> or <code class="docutils literal notranslate"><span class="pre">picoseconds</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Asking for a calibration turns the codes into arrival times:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
+    <span class="s2">&quot;scan.ttr&quot;</span><span class="p">,</span> <span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">,</span>
+    <span class="s1">&#39;{&quot;sysclk_MHz&quot;: 240, &quot;laser_MHz&quot;: 80, &quot;auto_calibrate_tdc&quot;: true}&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is a separate, opt-in, clearly-named step because it is an <strong>estimation</strong>,
+not parsing: the tap widths are measured from the code histogram of the file
+itself – over one clock period the arrival phase is uniform, so a tap that
+collected twice the counts is twice as wide – which means the same file read
+over different subranges gives slightly different times. It also costs a second
+pass over the data.</p>
+<p>Three things change when it runs, and each is a decision the raw path
+deliberately declines to make:</p>
+<ul class="simple">
+<li><p>Codes are converted through a measured per-channel table, not a scale factor.</p></li>
+<li><p>A photon is referenced to the <strong>next</strong> valid laser word, which is usually not
+the one in its own record. In the published 80 MHz sample only 27 % of photons
+have a laser word alongside them, so the same-record difference is not a
+micro time for most of the file.</p></li>
+<li><p>The TDC counts backwards – it measures how long until the next clock edge –
+so the arrival time is the period minus that interval. Without the flip the
+decay comes out mirrored.</p></li>
+</ul>
+<p>Micro times are then in bins of one nominal TDC least-significant bit (the clock
+period over the 8-bit code space, 16.3 ps at 240 MHz), spanning one laser
+period: 768 bins for an 80 MHz laser on a 240 MHz clock.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tdc_ps_per_code</span></code> is the vendor’s crude fallback, a single scale for all
+codes. It goes through the same pairing and the same flip – those are
+properties of the hardware, not of how the codes were scaled – so it is an
+approximate calibration rather than a different kind of answer.</p>
+</section>
+<section id="writing">
+<h2>Writing<a class="headerlink" href="#writing" title="Link to this heading">#</a></h2>
+<p>Macro times survive exactly, including the absolute offset. The counter in the
+file is 16 bits and the reader recovers absolute time by counting decreases, so
+the writer emits empty records – which the hardware itself emits whenever a
+tick passes and nothing happens – to carry the counter across every gap larger
+than one wrap.</p>
+<p>Micro times are saturated to 8 bits, the width of the TDC payload. A photon that
+arrived late reads as late, rather than aliasing back to early.</p>
+<p>A photon on a channel the device does not have, or a marker that is not the
+pixel, line or frame clock, is refused. There is no field for either, and a file
+that quietly lacks them is worse than no file.</p>
+</section>
+<section id="verification">
+<h2>Verification<a class="headerlink" href="#verification" title="Link to this heading">#</a></h2>
+<p>The reader is checked photon-for-photon against the vendor’s own <code class="docutils literal notranslate"><span class="pre">libttp</span></code> on
+the 82 MB Zenodo sample: 3,898,599 photons, with macro times, routing channels
+and micro times all identical. The writer is checked by round trip on the same
+file – all four event arrays bit-identical, markers included – and by
+reconstructing the 512x512 image from the re-read stream.</p>
+<p>The calibration is checked by what it is for: binned into 64 bins of the laser
+period, the calibrated decay is smooth to within 13 %, while the raw code
+histogram deviates by 100 % at the widest tap. That comb is the delay line, not
+the sample.</p>
+</section>
+<section id="reference-data">
+<h2>Reference data<a class="headerlink" href="#reference-data" title="Link to this heading">#</a></h2>
+<p>An 82 MB sample from
+<a class="reference external" href="https://doi.org/10.5281/zenodo.6782161">Zenodo 10.5281/zenodo.6782161</a>,
+together with <code class="docutils literal notranslate"><span class="pre">FORMAT.md</span></code> and the vendor <code class="docutils literal notranslate"><span class="pre">libttp</span></code> reader source:
+<a class="reference external" href="https://gitlab.peulen.xyz/skf/tttr-data/-/tree/main/brighteyes">sample files</a>
+in the <code class="docutils literal notranslate"><span class="pre">tttr-data</span></code> repository.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../file-formats.html"><span class="doc">TTTR File Formats and Conversion</span></a> for the conversion matrix and what survives a
+transcode.</p>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="photonscore-lincam.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Photonscore LINCam (<code class="docutils literal notranslate"><span class="pre">.photons</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="flim-labs-stt1.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-is">What it is</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layout">Layout</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-cannot-be-sniffed">Why it cannot be sniffed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-file-does-not-contain">What the file does not contain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#micro-times-codes-and-then-times">Micro times: codes, and then times</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing">Writing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verification">Verification</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-data">Reference data</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/brighteyes-ttm.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

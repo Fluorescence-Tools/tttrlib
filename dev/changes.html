@@ -210,6 +210,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -231,6 +238,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -238,8 +266,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -261,6 +296,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -529,6 +571,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -550,6 +599,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -557,8 +627,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -580,6 +657,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -853,10 +937,26 @@ per-burst proximity-ratio mean/std against the shot-noise line. <code class="xre
 is a photon-by-photon Hidden Markov Model engine (Baum-Welch EM + Viterbi)
 ported from the ChiSurf numba engine; it reaches the same optimum as the
 reference <code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> library <strong>2.4× faster</strong> with plain EM and <strong>8.2× faster</strong>
-with SQUAREM acceleration (see <a class="reference internal" href="h2mm-bva.html#h2mm-performance"><span class="std std-ref">Why the tttrlib H2MM engine is fast</span></a>), using sparse
+with SQUAREM acceleration (see <a class="reference internal" href="hmm-bva.html#hmm-performance"><span class="std std-ref">Why the tttrlib H2MM engine is fast</span></a>), using sparse
 unique-Δt caches, a deferred ρ contraction, and an allocation-free,
 persistently-threaded (<code class="docutils literal notranslate"><span class="pre">std::thread</span></code>) kernel. Both consume bursts directly
-from <code class="xref py py-class docutils literal notranslate"><span class="pre">BurstFilter</span></code>. New guide: <a class="reference internal" href="h2mm-bva.html#h2mm-bva-guide"><span class="std std-ref">Dynamic FRET: H2MM and BVA</span></a>.</p></li>
+from <code class="xref py py-class docutils literal notranslate"><span class="pre">BurstFilter</span></code>. New guide: <a class="reference internal" href="hmm-bva.html#hmm-bva-guide"><span class="std std-ref">Dynamic FRET: HMM and BVA</span></a>.</p></li>
+<li><p><strong>Becker &amp; Hickl SPC-QC support</strong>: New reader and writer for the <code class="docutils literal notranslate"><span class="pre">.spc</span></code>
+files written by the SPC-QC modules, available as the container <code class="docutils literal notranslate"><span class="pre">&quot;SPC-QC&quot;</span></code>
+and auto-detected, so <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(&quot;file.spc&quot;)</span></code> picks it without help.
+Both record layouts are handled — QC-x04 (SPC-QC-104/004) and QC-x06
+(SPC-QC-106/006), which differ in the width of the channel field — including
+markers, GAP records and the router signal. Their layout shares only its
+width with the classic SPC-130 one: 12-bit macro time (bits 0-11), 4-bit
+routing (bits 12-15) and a 12-bit ADC (bits 16-27), with the top bits
+selecting the event and a macro time overflow written as the bare word
+<code class="docutils literal notranslate"><span class="pre">0x80000000</span></code> for exactly one wrap of 4096 units. The ADC value is <strong>not</strong>
+inverted, unlike on the classic cards. Because the QC modules run their TAC
+independently of the macro time clock (2.048 ns macro tick against a 16 ps
+TAC bin in the reference data), the micro time resolution comes from the
+<code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar (<code class="docutils literal notranslate"><span class="pre">SP_TAC_R</span></code>/<code class="docutils literal notranslate"><span class="pre">SP_ADC_RE</span></code>) and falls back to SPCM’s
+default TAC range when no sidecar is present. The QC “absolute time” FIFO
+mode is not supported. See <a class="reference internal" href="file-formats.html#file-formats"><span class="std std-ref">TTTR File Formats and Conversion</span></a>.</p></li>
 <li><p><strong>Photonscore LINCam “.photons” (D7) support</strong>: New reader and writer for the
 position-sensitive photon-counting format written by Photonscore LINCam
 systems. <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(&quot;file.photons&quot;)</span></code> decodes the paged, protobuf-style D7

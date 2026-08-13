@@ -79,7 +79,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="8. Image Localization" href="localization-guide.html" />
-    <link rel="prev" title="7. CLSM, FLIM, and Image Workflows" href="clsm-flim-guide.html" />
+    <link rel="prev" title="Super-resolution: eSRRF, ISM, SOFISM and s²ISM" href="superres-guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -213,6 +213,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -234,6 +241,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -241,8 +269,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -264,6 +299,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -532,6 +574,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -553,6 +602,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -560,8 +630,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -583,6 +660,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -883,7 +967,12 @@ engine modes.</p>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#performance-knobs" id="id17">Performance knobs</a></p></li>
-<li><p><a class="reference internal" href="#api-reference" id="id18">API reference</a></p></li>
+<li><p><a class="reference internal" href="#flow-and-directed-transport" id="id18">Flow and directed transport</a></p>
+<ul>
+<li><p><a class="reference internal" href="#making-a-flow-simulation-fast" id="id19">Making a flow simulation fast</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#api-reference" id="id20">API reference</a></p></li>
 </ul>
 </nav>
 <section id="the-openmm-analogy">
@@ -1298,8 +1387,239 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 </ul>
 <p>See <code class="docutils literal notranslate"><span class="pre">performance_guide</span></code> for the trade-offs and measured speedups.</p>
 </section>
+<section id="flow-and-directed-transport">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Flow and directed transport</a><a class="headerlink" href="#flow-and-directed-transport" title="Link to this heading">#</a></h2>
+<p>The simulator supports advective transport (flow) and static barriers (occlusion),
+modelled on the Smoluchowski advection–diffusion equation:</p>
+<div class="math notranslate nohighlight">
+\[dr = v(r)\,dt + \sqrt{2D}\,dW\]</div>
+<p>A molecule in a velocity field <span class="math notranslate nohighlight">\(v(r)\)</span> follows the Itô SDE above, integrated with
+Euler–Maruyama for the noise. The <strong>drift</strong> is integrated exactly for a uniform field
+(constant drift needs no scheme) and with an explicit <strong>midpoint</strong> step for any other
+field. That is not a refinement but a correctness requirement: plain Euler applied to a
+rigid rotation has map <span class="math notranslate nohighlight">\(I + \omega\,\Delta t\,A\)</span> with determinant
+<span class="math notranslate nohighlight">\(1 + (\omega\Delta t)^2 &gt; 1\)</span>, so it inflates phase-space volume on every step and
+molecules spiral outward. The error is <span class="math notranslate nohighlight">\(O(\Delta t^2)\)</span> per step but <em>systematic</em>, so
+it accumulates linearly in time rather than averaging away — at
+<span class="math notranslate nohighlight">\(\omega\Delta t = 0.002\)</span> the radius grows by a factor 1.82 over 300 000 windows.
+Midpoint reduces the per-step volume error to <span class="math notranslate nohighlight">\((\omega\Delta t)^4/4\)</span> and costs one
+extra field lookup, which the uniform path never pays. Independently of the scheme, the
+drift is sampled at the step start, so the field should vary slowly over one diffusion
+length <span class="math notranslate nohighlight">\(\sigma = \sqrt{2D\Delta t}\)</span>.</p>
+<p>The three built-in fields are all divergence-free and therefore preserve a uniform
+equilibrium concentration:</p>
+<ul class="simple">
+<li><p><strong>Uniform</strong> — constant <span class="math notranslate nohighlight">\(v = (v_x, v_y, v_z)\)</span>. Evaluated analytically; no grid.</p></li>
+<li><p><strong>Poiseuille</strong> — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section
+<span class="math notranslate nohighlight">\(v_a(\rho) = v_{\max}(1 - \rho^2/R^2)\)</span>, clamped to 0 outside radius <span class="math notranslate nohighlight">\(R\)</span>.</p></li>
+<li><p><strong>Rotation</strong> — rigid-body rotation about an axis, <span class="math notranslate nohighlight">\(v = \omega \times r\)</span>.</p></li>
+</ul>
+<p>Arbitrary fields can be constructed from three same-shaped component arrays via
+<code class="docutils literal notranslate"><span class="pre">from_components</span></code>. A compressible field (one violating <span class="math notranslate nohighlight">\(\nabla\cdot v = 0\)</span>)
+will concentrate molecules — real physics, but it invalidates any homogeneous-sample
+correlation analysis. The user is warned, not prevented.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">v_scale</span></code> attribute on <code class="xref py py-class docutils literal notranslate"><span class="pre">SimSpecies</span></code> controls coupling of each species to the
+flow field (0 = not advected, e.g. a surface-bound dark state).</p>
+<p><strong>Injection must be advection-aware.</strong> The open-volume surface-flux model injects molecules
+across the ellipsoid boundary. Without flow the per-area influx rate is
+<span class="math notranslate nohighlight">\(\sigma/\sqrt{2\pi}\)</span> (step size <span class="math notranslate nohighlight">\(\sigma = \sqrt{2D\Delta t}\)</span>). With flow
+the normal displacement has mean <span class="math notranslate nohighlight">\(\mu = -v_\perp\Delta t\)</span>, giving the generalised
+influx weight <span class="math notranslate nohighlight">\(w = \mu\Phi(\mu/\sigma) + \sigma\phi(\mu/\sigma)\)</span> where
+<span class="math notranslate nohighlight">\(\Phi\)</span> is the standard-normal CDF and <span class="math notranslate nohighlight">\(\phi\)</span> its PDF. Using the old
+<span class="math notranslate nohighlight">\(\sigma/\sqrt{2\pi}\)</span> formula under flow under-injects upstream-facing surfaces
+and the population slowly drains — a silent, cumulative error that the simulator now
+corrects.</p>
+<p><strong>Barriers (occlusion).</strong> An occlusion mask <code class="docutils literal notranslate"><span class="pre">occ(r)</span> <span class="pre">∈</span> <span class="pre">[0,1]</span></code> implements excluded-volume
+rejection: a proposed step to <span class="math notranslate nohighlight">\(r'\)</span> is accepted with probability
+<span class="math notranslate nohighlight">\(1 - \text{occ}(r')\)</span>. When <span class="math notranslate nohighlight">\(v = 0\)</span> this satisfies detailed balance and the
+<strong>equilibrium</strong> concentration inside a region of occlusion <span class="math notranslate nohighlight">\(q\)</span> is <span class="math notranslate nohighlight">\(1 - q\)</span> times
+the outside value (the effective diffusion is reduced by the same factor). So the mask is an
+excluded-volume / partial-accessibility medium — not a membrane with a permeability.</p>
+<p>Three limitations:</p>
+<ul class="simple">
+<li><p>A wall thinner than about <span class="math notranslate nohighlight">\(4\sigma\)</span> may be tunnelled through in a single step
+with no warning. Ensure <code class="docutils literal notranslate"><span class="pre">thickness</span> <span class="pre">≳</span> <span class="pre">4\sqrt{2D\Delta</span> <span class="pre">t}</span></code>.</p></li>
+<li><p>Partial occlusion (<span class="math notranslate nohighlight">\(0 &lt; \text{occ} &lt; 1\)</span>) combined with flow is outside the
+validated regime. Hard walls (<span class="math notranslate nohighlight">\(\text{occ} = 1\)</span>) with flow are fine.</p></li>
+<li><p>The <span class="math notranslate nohighlight">\(1 - q\)</span> law is an <strong>equilibrium</strong> statement, and an open volume is not at
+equilibrium: molecules are injected across the surface and absorbed at it. When the
+turnover time is comparable to the time needed to diffuse across the occluded region the
+measured density ratio lands well above <span class="math notranslate nohighlight">\(1 - q\)</span> — in a box of radius 3 µm with a
+1 µm slab at <span class="math notranslate nohighlight">\(q = 0.5\)</span> and <span class="math notranslate nohighlight">\(D = 3\)</span>, it is 0.66 rather than 0.50, because the
+residence time <span class="math notranslate nohighlight">\(R^2/6D\)</span> is only about three times the crossing time
+<span class="math notranslate nohighlight">\(L^2/2D\)</span>. Nothing is wrong in that run; the equilibrium law simply does not apply
+to it. Seal the region with <span class="math notranslate nohighlight">\(\text{occ} = 1\)</span> walls (no injection, no absorption)
+and the law is recovered to about 1 %, which is how
+<code class="docutils literal notranslate"><span class="pre">test_partial_occlusion_follows_one_minus_occ</span></code> measures it.</p></li>
+</ul>
+<section id="making-a-flow-simulation-fast">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Making a flow simulation fast</a><a class="headerlink" href="#making-a-flow-simulation-fast" title="Link to this heading">#</a></h3>
+<p>They compose, and that is the headline: on a flow-FCS run to a fixed photon budget, the
+default configuration takes 19.0 s and the fully-tuned one 1.8 s – <strong>10.8x</strong> – with the
+physics unchanged. The fitted values move around inside their own scatter and the
+amplitude, which reports the concentration, drifts <em>toward</em> the exact value rather than
+away from it:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 45.7%" />
+<col style="width: 10.9%" />
+<col style="width: 10.9%" />
+<col style="width: 10.9%" />
+<col style="width: 10.9%" />
+<col style="width: 10.9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>configuration</p></th>
+<th class="head"><p>time</p></th>
+<th class="head"><p>G(0)</p></th>
+<th class="head"><p>D</p></th>
+<th class="head"><p>v</p></th>
+<th class="head"><p>speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>default (lattice PSF, nothing enabled)</p></td>
+<td><p>19.0 s</p></td>
+<td><p>0.933</p></td>
+<td><p>0.440</p></td>
+<td><p>9.44</p></td>
+<td><p>1.0x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">&quot;radial&quot;:</span> <span class="pre">true</span></code> on the excitation</p></td>
+<td><p>14.8 s</p></td>
+<td><p>0.935</p></td>
+<td><p>0.426</p></td>
+<td><p>9.50</p></td>
+<td><p>1.3x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">active_margin:</span> <span class="pre">1.0</span></code></p></td>
+<td><p>9.8 s</p></td>
+<td><p>0.985</p></td>
+<td><p>0.530</p></td>
+<td><p>10.08</p></td>
+<td><p>1.9x</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">independent_molecules:</span> <span class="pre">true</span></code></p></td>
+<td><p>1.9 s</p></td>
+<td><p>0.978</p></td>
+<td><p>0.426</p></td>
+<td><p>9.78</p></td>
+<td><p>10.2x</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">per_molecule_skip:</span> <span class="pre">true</span></code></p></td>
+<td><p>1.8 s</p></td>
+<td><p>0.989</p></td>
+<td><p>0.593</p></td>
+<td><p>9.94</p></td>
+<td><p>10.8x</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>simulated truth</em></p></td>
+<td></td>
+<td><p>1.000</p></td>
+<td><p>0.500</p></td>
+<td><p>10.00</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A ready-made fast configuration, for a stationary-focus run with a symmetric PSF:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;independent_molecules&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span> <span class="s2">&quot;per_molecule_skip&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+             <span class="s2">&quot;active_margin&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;max_windows&quot;</span><span class="p">:</span> <span class="mi">3000000</span><span class="p">},</span>
+<span class="s2">&quot;excitation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian3d&quot;</span><span class="p">,</span> <span class="s2">&quot;w0&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">&quot;z0&quot;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>
+               <span class="s2">&quot;extent_xy&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;extent_z&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+               <span class="s2">&quot;radial&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Each knob on its own, in order of what it is worth:</p>
+<p>Measured on a 200-molecule open volume, 8 cores, in order of what they are worth:</p>
+<ul>
+<li><p><strong>``independent_molecules``: 5-6x.</strong> Each molecule’s whole timeline is simulated on its
+own and the photon streams are merged, so there is no per-window barrier and the work is
+embarrassingly parallel. This is by far the largest single win for a stationary-focus
+run, and it is exact: it draws the injection count from a Poisson over the horizon and
+gives each molecule an independent birth time. Needs <code class="docutils literal notranslate"><span class="pre">max_windows</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>.</p></li>
+<li><p><strong>``per_molecule_skip`` (coasting) on top: a further ~1.3x</strong>, so ~7x combined. Uniform
+fields only – a non-uniform field has no closed-form catch-up and an occlusion mask
+would be tunnelled through, so both disable it.</p></li>
+<li><p><strong>``drift_midpoint: false``: 22-26 %</strong> on a grid field, by dropping the second field
+lookup. Safe for shear-like fields such as <code class="docutils literal notranslate"><span class="pre">poiseuille</span></code>; see the discussion above for
+when it is not.</p></li>
+<li><p><strong>A cylindrically symmetric PSF on a ``(rho, z)`` table: up to 2.9x</strong>, and the cost
+stops depending on lateral resolution. Pass <code class="docutils literal notranslate"><span class="pre">&quot;radial&quot;:</span> <span class="pre">true</span></code> on a <code class="docutils literal notranslate"><span class="pre">gaussian3d</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gaussian_lorentzian</span></code> or <code class="docutils literal notranslate"><span class="pre">radial</span></code> field. A confocal focus depends only on distance
+from the optical axis and on z, so an x-y-z lattice stores one number per azimuth that
+is the same number: 81x81x161 (8.5 MB) becomes 41x161 (53 kB), which is the difference
+between streaming from RAM and reading from cache on every lookup, and the interpolation
+drops from trilinear to bilinear. Measured at 400k windows: 4.4 -&gt; 3.9 s at 0.10 um
+spacing, 5.4 -&gt; 3.9 s at 0.05 um, and 11.7 -&gt; 4.0 s at 0.025 um – the radial run is
+flat while the lattice degrades.</p>
+<p>This is <strong>less general, so it is opt-in</strong>: a radial table cannot represent an
+astigmatic focus (different x and y waists), a tilted or comatic PSF, or anything else
+that varies with azimuth. The full lattice remains the default. Note the radial form is
+also the <em>more</em> accurate of the two where it applies, having no azimuthal interpolation
+error – at 0.10 um spacing the two differ by 2.3 % in count rate, and it is the lattice
+that is wrong.</p>
+</li>
+<li><p><strong>``active_margin``: up to 3x, and it is the first thing to reach for.</strong> It shrinks the
+open volume to focus-plus-margin while holding the concentration, so molecules too far
+away to be seen are never stepped at all. Measured on a flow-FCS run: 40.3 s at margin 0
+(94 molecules), 27.6 s at 1.0 um (71), 12.9 s at 0.5 um (25) – with the observables
+intact, <code class="docutils literal notranslate"><span class="pre">G(0)</span></code> 0.948 -&gt; 0.963 and the fitted <code class="docutils literal notranslate"><span class="pre">D</span></code>/<code class="docutils literal notranslate"><span class="pre">v</span></code> moving 0.453/9.67 -&gt;
+0.515/10.07 against true values of 0.5/10.0, i.e. inside the fit scatter. Use a margin of
+a few diffusion lengths; for kinetics use <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">sqrt(2*D/k_min)</span></code> so freshly injected
+molecules reach their stationary state before they can be seen.</p></li>
+<li><p><strong>``rng_kind: pcg``: ~8 %</strong> over the default xoshiro on this machine; philox is ~12 %
+slower. All three are thread-count independent, so this is a free swap.</p></li>
+<li><p><strong>Threads in the default window mode: only above ~2000 molecules.</strong> The per-window
+fork/join dominates below that – at 200 molecules forcing it on is <em>three times slower</em>.
+<code class="docutils literal notranslate"><span class="pre">parallel_threshold</span></code> (default 2048) encodes this; the measured speedup is 1.1x at 2000
+molecules and 1.9-2.3x at 20000. Prefer <code class="docutils literal notranslate"><span class="pre">independent_molecules</span></code>, which has no barrier.</p></li>
+</ul>
+<p>Grid fields cost about 1.7x a uniform one, so if the physics only needs a constant drift,
+use <code class="docutils literal notranslate"><span class="pre">{&quot;type&quot;:</span> <span class="pre">&quot;uniform&quot;}</span></code> rather than a lattice holding a constant.</p>
+<p>What does <strong>not</strong> help, measured so that nobody repeats it:</p>
+<ul>
+<li><p><strong>Weakening the random numbers.</strong> The diffusion step needs three normals per molecule per
+window, and it is tempting to note that diffusion would survive a poorer generator. It
+would – but the ziggurat sampler is already cheaper than the alternatives: replacing it
+with three uniforms of matching variance packed out of two 32-bit draws made the run
+<em>slower</em> (3.9 s -&gt; 4.2 s). Its fast path is one 32-bit draw, a table lookup, a compare and
+a multiply, and it is taken ~98 % of the time.</p></li>
+<li><p><strong>SIMD</strong>, measured rather than argued
+(<code class="docutils literal notranslate"><span class="pre">benchmarks/bench_sim_propagation_simd.cpp</span></code>, primitive in <code class="docutils literal notranslate"><span class="pre">include/SimSimd.h</span></code>).
+Vectorising the arithmetic alone <em>loses</em> – 0.7x over 2 doubles, 0.9x over 4 floats –
+because the arithmetic was never the cost and those versions still draw random numbers one
+lane at a time. A fully vectorised 32-bit generator with a branch-free Box-Muller reaches
+<strong>1.01-1.06x</strong> on 4-wide NEON: parity, slightly ahead.</p>
+<p>The transform turns out to matter more than the vectorisation. A rational approximation of
+the normal quantile is the obvious choice and a trap: its central branch covers only
+<span class="math notranslate nohighlight">\(|z| &lt; 1.97\)</span>, so 4.85 % of lanes need a scalar fix-up that costs more than
+vectorising saves (0.71x), while skipping the fix-up truncates the distribution at
+<span class="math notranslate nohighlight">\(|z| = 3.22\)</span> with
+mean, variance and a KS test all still clean. Box-Muller is exact, table-free and
+branch-free, and has neither problem.</p>
+<p><strong>AVX2 (8 lanes) is where a win should be and is unmeasured</strong>: this machine is arm64, and
+the AVX2 backend is verified for correctness by cross-compiling and running under
+emulation, which says nothing about throughput. Anyone on x86-64 should run the benchmark.
+At 4 lanes, against <code class="docutils literal notranslate"><span class="pre">active_margin</span></code> (3x) and <code class="docutils literal notranslate"><span class="pre">independent_molecules</span></code> (5-7x), parity is
+not a reason to take on a structure-of-arrays molecule pool and the loss of the
+per-molecule RNG keying that makes results thread-count independent.</p>
+</li>
+<li><p><strong>Chasing the field lookup by profile alone.</strong> A sampling profile attributes ~60 % of the
+run to the return from the excitation lookup, which reads as “<code class="docutils literal notranslate"><span class="pre">std::exp</span></code> dominates”. It
+does not: skipping 44 % of the exponentials changes nothing measurable. The cost is memory
+traffic, which is what the radial table above addresses.</p></li>
+</ul>
+<p><strong>Coasting</strong> is disabled for any non-uniform field or for any occlusion mask. A uniform
+field uses a quadratic bound that accounts for both diffusion and drift (the original
+diffusion-only bound would under-estimate the coastable gap). Coasting for a non-uniform
+or masked sample would silently lose molecules that tunnel through a wall or miss the
+focus — the safe answer is to never skip windows.</p>
+</section>
+</section>
 <section id="api-reference">
-<h2><a class="toc-backref" href="#id18" role="doc-backlink">API reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">API reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="tttrlib.SimEngine">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tttrlib.</span></span><span class="sig-name descname"><span class="pre">SimEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine" title="Link to this definition">#</a></dt>
@@ -1420,6 +1740,11 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.n_state_events">
+<span class="sig-name descname"><span class="pre">n_state_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">uint64_t</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.n_state_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.n_state_events" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.photons">
 <span class="sig-name descname"><span class="pre">photons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.photons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.photons" title="Link to this definition">#</a></dt>
 <dd><p>The photon stream as a dict of numpy arrays (no VectorDouble wrapping):</p>
@@ -1445,6 +1770,11 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.run_independent_budgeted">
+<span class="sig-name descname"><span class="pre">run_independent_budgeted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">uint64_t</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.run_independent_budgeted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.run_independent_budgeted" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.run_scan">
@@ -1483,6 +1813,18 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.set_state_log">
+<span class="sig-name descname"><span class="pre">set_state_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.set_state_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.set_state_log" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>on: bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.set_trajectory_reporter">
 <span class="sig-name descname"><span class="pre">set_trajectory_reporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.set_trajectory_reporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.set_trajectory_reporter" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1495,10 +1837,82 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimIntegrator" title="tttrlib.SimIntegrator"><span class="pre">SimIntegrator</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.settings" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_from">
+<span class="sig-name descname"><span class="pre">state_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorInt16</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_from" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_log">
+<span class="sig-name descname"><span class="pre">state_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_log" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_molecule">
+<span class="sig-name descname"><span class="pre">state_molecule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorInt32</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_molecule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_molecule" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.state_numpy">
 <span class="sig-name descname"><span class="pre">state_numpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_numpy" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">get_state()</span></code> as a dict of numpy arrays (window, n_photons, id, species, x, y, z).</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_occupancy">
+<span class="sig-name descname"><span class="pre">state_occupancy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">windows_per_bin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window_stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_occupancy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_occupancy" title="Link to this definition">#</a></dt>
+<dd><p>Fraction of each time bin that each molecule spent in each state.</p>
+<p>Reduces the state trajectory (<code class="docutils literal notranslate"><span class="pre">set_state_log</span></code>) to the quantity most
+analyses actually want: a time-average of a state-dependent observable
+is an average over these fractions. Because the log is event-based the
+fractions are exact — a state entered and left inside one bin still
+contributes its true dwell time, which a strided position/state
+snapshot cannot represent.</p>
+<p>Bins are <code class="docutils literal notranslate"><span class="pre">windows_per_bin</span></code> macro-windows wide, covering
+<code class="docutils literal notranslate"><span class="pre">[window_start,</span> <span class="pre">window_stop)</span></code>; <code class="docutils literal notranslate"><span class="pre">window_stop</span></code> defaults to the end of the
+simulation, not to the last recorded transition — a molecule that stops
+exchanging still occupies its final state for the rest of the run.
+Returns <code class="docutils literal notranslate"><span class="pre">(molecules,</span> <span class="pre">fractions)</span></code> with <code class="docutils literal notranslate"><span class="pre">molecules</span></code> the sorted
+molecule ids and <code class="docutils literal notranslate"><span class="pre">fractions</span></code> of shape
+<code class="docutils literal notranslate"><span class="pre">(n_molecules,</span> <span class="pre">n_bins,</span> <span class="pre">n_species)</span></code>. Rows for a molecule that is not
+alive anywhere in a bin are all zero, so <code class="docutils literal notranslate"><span class="pre">fractions.sum(axis=2)</span></code> also
+tells you what fraction of each bin it was present for.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_time">
+<span class="sig-name descname"><span class="pre">state_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorDouble</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_to">
+<span class="sig-name descname"><span class="pre">state_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorInt16</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_to" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_trajectory">
+<span class="sig-name descname"><span class="pre">state_trajectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_trajectory" title="Link to this definition">#</a></dt>
+<dd><p>The state trajectory as a dict of numpy arrays (see <code class="docutils literal notranslate"><span class="pre">set_state_log</span></code>).</p>
+<p>One row per recorded event, time-ordered: <code class="docutils literal notranslate"><span class="pre">window</span></code> and <code class="docutils literal notranslate"><span class="pre">time</span></code>
+(within-window, macro units) locate it, <code class="docutils literal notranslate"><span class="pre">molecule</span></code> says which emitter,
+and <code class="docutils literal notranslate"><span class="pre">from</span></code>/<code class="docutils literal notranslate"><span class="pre">to</span></code> are the states it left and entered. <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">==</span> <span class="pre">-1</span></code>
+marks a birth (the molecule’s initial state) and <code class="docutils literal notranslate"><span class="pre">to</span> <span class="pre">==</span> <span class="pre">-1</span></code> a death
+(it left the box), so the log is self-contained.</p>
+<p><code class="docutils literal notranslate"><span class="pre">macro_time</span></code> is added for convenience: the absolute time
+<code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">*</span> <span class="pre">dt</span> <span class="pre">+</span> <span class="pre">time</span></code> in macro-time units.</p>
+<p>Rows are sorted by time. The C++ arrays are in recording order, which differs
+when a coasting molecule is caught up on waking and its transitions are appended
+after later events of other molecules.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.state_window">
+<span class="sig-name descname"><span class="pre">state_window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorUint32</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.state_window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.state_window" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.step">
@@ -1512,6 +1926,11 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimEngine.system">
+<span class="sig-name descname"><span class="pre">system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimSystem" title="tttrlib.SimSystem"><span class="pre">SimSystem</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.system"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.system" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.thisown">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">thisown</span></span><a class="headerlink" href="#tttrlib.SimEngine.thisown" title="Link to this definition">#</a></dt>
@@ -1520,17 +1939,14 @@ diffusion; for kinetics use a margin <code class="docutils literal notranslate">
 
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimEngine.to_tttr">
-<span class="sig-name descname"><span class="pre">to_tttr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch_conversion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_microtime_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">microtime_resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.004069</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laser_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13.596</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pulsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SPC-130'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_tac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.to_tttr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.to_tttr" title="Link to this definition">#</a></dt>
-<dd><p>Encode the photon stream and return it as a <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR</span></code> (PRD-007 G7).</p>
+<span class="sig-name descname"><span class="pre">to_tttr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ch_conversion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_microtime_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">microtime_resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laser_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pulsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SPC-130'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_tac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimEngine.to_tttr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimEngine.to_tttr" title="Link to this definition">#</a></dt>
+<dd><p>Encode the photon stream and return it as a <code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR</span></code>.</p>
 <p>One-call export: builds a Becker&amp;Hickl SPC-132 record stream with a
-<code class="docutils literal notranslate"><span class="pre">SimMicrotimeEncoder</span></code> and reads it back as a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>. <code class="docutils literal notranslate"><span class="pre">dt</span></code>/<code class="docutils literal notranslate"><span class="pre">n_channels</span></code>
-must match the simulation. <code class="docutils literal notranslate"><span class="pre">ch_conversion</span></code> maps a routing channel to a hardware
-channel (default: the 6-detector B&amp;H map). <code class="docutils literal notranslate"><span class="pre">pulsed=True</span></code> uses the pulsed TAC path.</p>
-<p><code class="docutils literal notranslate"><span class="pre">reverse_tac=True</span></code> (default) writes the TAC in B&amp;H <em>reverse start-stop</em> order
-(raw ADC = <code class="docutils literal notranslate"><span class="pre">n_microtime_channels</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">micro_time</span></code>); the SPC reader un-reverses
-it, so the read-back <code class="docutils literal notranslate"><span class="pre">micro_time</span></code> matches the simulation. Set <code class="docutils literal notranslate"><span class="pre">reverse_tac=False</span></code>
-only to emit the physical micro-time directly (e.g. for external tools that do not
-reverse) — a <code class="docutils literal notranslate"><span class="pre">to_tttr</span></code> round-trip is then inverted on read-back.</p>
+<code class="docutils literal notranslate"><span class="pre">SimMicrotimeEncoder</span></code> and reads it back as a <code class="docutils literal notranslate"><span class="pre">TTTR</span></code>.</p>
+<p>Parameters that are <code class="docutils literal notranslate"><span class="pre">None</span></code> default to the engine’s own settings
+(<code class="docutils literal notranslate"><span class="pre">self.settings()</span></code>), so a round-trip preserves the simulation’s
+microtime resolution and laser period exactly. Pass explicit values
+only to override (e.g. to transcode to a different format).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1636,6 +2052,21 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.flow_field">
+<span class="sig-name descname"><span class="pre">flow_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimVectorGrid" title="tttrlib.SimVectorGrid"><span class="pre">SimVectorGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.flow_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.flow_field" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.has_flow">
+<span class="sig-name descname"><span class="pre">has_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.has_flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.has_flow" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.has_occlusion">
+<span class="sig-name descname"><span class="pre">has_occlusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.has_occlusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.has_occlusion" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimSystem.k_nrad">
 <span class="sig-name descname"><span class="pre">k_nrad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">VectorDouble</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.k_nrad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.k_nrad" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1648,6 +2079,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimSystem.n_species">
 <span class="sig-name descname"><span class="pre">n_species</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.n_species"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.n_species" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.occlusion">
+<span class="sig-name descname"><span class="pre">occlusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.occlusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.occlusion" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1727,6 +2163,30 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.set_flow_field">
+<span class="sig-name descname"><span class="pre">set_flow_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.set_flow_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.set_flow_field" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f: tttrlib::SimVectorGrid const &amp;</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimSystem.set_occlusion">
+<span class="sig-name descname"><span class="pre">set_occlusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">occ</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.set_occlusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.set_occlusion" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>occ: tttrlib::SimGrid const &amp;</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimSystem.set_population">
 <span class="sig-name descname"><span class="pre">set_population</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_count</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimSystem.set_population"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimSystem.set_population" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1793,6 +2253,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimIntegrator.coast_safety">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coast_safety</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.coast_safety" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimIntegrator.drift_midpoint">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">drift_midpoint</span></span><a class="headerlink" href="#tttrlib.SimIntegrator.drift_midpoint" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -1934,6 +2399,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dd><p>The membership flag</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimSpecies.v_scale">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">v_scale</span></span><a class="headerlink" href="#tttrlib.SimSpecies.v_scale" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -2056,6 +2526,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <dd></dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.dr_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dr_</span></span><a class="headerlink" href="#tttrlib.SimGrid.dr_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimGrid.dx">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dx</span></span><a class="headerlink" href="#tttrlib.SimGrid.dx" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -2070,9 +2545,34 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dz</span></span><a class="headerlink" href="#tttrlib.SimGrid.dz" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.dzr_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dzr_</span></span><a class="headerlink" href="#tttrlib.SimGrid.dzr_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimGrid.from_radial">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_radial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.from_radial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.from_radial" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rz: std::vector&lt; double,std::allocator&lt; double &gt; &gt; const &amp;</strong></dt><dd></dd>
+<dt><strong>nr: int</strong></dt><dd></dd>
+<dt><strong>nz: int</strong></dt><dd></dd>
+<dt><strong>r_step: double</strong></dt><dd></dd>
+<dt><strong>z_step: double</strong></dt><dd></dd>
+<dt><strong>extent_xy: double</strong></dt><dd></dd>
+<dt><strong>extent_z: double</strong></dt><dd></dd>
+<dt><strong>spacing: double</strong></dt><dd></dd>
+<dt><strong>amplitude: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.from_radial_table">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_radial_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.from_radial_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.from_radial_table" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -2108,8 +2608,42 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.gaussian3d_radial">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gaussian3d_radial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.gaussian3d_radial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.gaussian3d_radial" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>w0: double</strong></dt><dd></dd>
+<dt><strong>z0: double</strong></dt><dd></dd>
+<dt><strong>extent_xy: double</strong></dt><dd></dd>
+<dt><strong>extent_z: double</strong></dt><dd></dd>
+<dt><strong>spacing: double</strong></dt><dd></dd>
+<dt><strong>amplitude: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimGrid.gaussian_lorentzian">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gaussian_lorentzian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.gaussian_lorentzian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.gaussian_lorentzian" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>w0: double</strong></dt><dd></dd>
+<dt><strong>zR: double</strong></dt><dd></dd>
+<dt><strong>extent_xy: double</strong></dt><dd></dd>
+<dt><strong>extent_z: double</strong></dt><dd></dd>
+<dt><strong>spacing: double</strong></dt><dd></dd>
+<dt><strong>amplitude: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.gaussian_lorentzian_radial">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gaussian_lorentzian_radial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zR</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimGrid" title="tttrlib.SimGrid"><span class="pre">SimGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.gaussian_lorentzian_radial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.gaussian_lorentzian_radial" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -2143,6 +2677,11 @@ reverse) — a <code class="docutils literal notranslate"><span class="pre">to_t
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.nr_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nr_</span></span><a class="headerlink" href="#tttrlib.SimGrid.nr_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="tttrlib.SimGrid.numeric_from_file">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">numeric_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.numeric_from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.numeric_from_file" title="Link to this definition">#</a></dt>
@@ -2172,6 +2711,34 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimGrid.nz">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nz</span></span><a class="headerlink" href="#tttrlib.SimGrid.nz" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.nzr_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nzr_</span></span><a class="headerlink" href="#tttrlib.SimGrid.nzr_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.radial_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radial_</span></span><a class="headerlink" href="#tttrlib.SimGrid.radial_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.radial_extent">
+<span class="sig-name descname"><span class="pre">radial_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_max</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimGrid.radial_extent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimGrid.radial_extent" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>r_max: double &amp;</strong></dt><dd></dd>
+<dt><strong>z_max: double &amp;</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.rz_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rz_</span></span><a class="headerlink" href="#tttrlib.SimGrid.rz_" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -2224,6 +2791,155 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <dt class="sig sig-object py" id="tttrlib.SimGrid.z0">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">z0</span></span><a class="headerlink" href="#tttrlib.SimGrid.z0" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimGrid.zr0_">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zr0_</span></span><a class="headerlink" href="#tttrlib.SimGrid.zr0_" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tttrlib.</span></span><span class="sig-name descname"><span class="pre">SimVectorGrid</span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Proxy of C++ tttrlib::SimVectorGrid class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.at">
+<span class="sig-name descname"><span class="pre">at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vz</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.at" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: double</strong></dt><dd></dd>
+<dt><strong>y: double</strong></dt><dd></dd>
+<dt><strong>z: double</strong></dt><dd></dd>
+<dt><strong>vx: double &amp;</strong></dt><dd></dd>
+<dt><strong>vy: double &amp;</strong></dt><dd></dd>
+<dt><strong>vz: double &amp;</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.bounds" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x0: double &amp;</strong></dt><dd></dd>
+<dt><strong>y0: double &amp;</strong></dt><dd></dd>
+<dt><strong>z0: double &amp;</strong></dt><dd></dd>
+<dt><strong>x1: double &amp;</strong></dt><dd></dd>
+<dt><strong>y1: double &amp;</strong></dt><dd></dd>
+<dt><strong>z1: double &amp;</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.empty">
+<span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.empty" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.from_components">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimVectorGrid" title="tttrlib.SimVectorGrid"><span class="pre">SimVectorGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.from_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.from_components" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>vx: std::vector&lt; double,std::allocator&lt; double &gt; &gt; const &amp;</strong></dt><dd></dd>
+<dt><strong>vy: std::vector&lt; double,std::allocator&lt; double &gt; &gt; const &amp;</strong></dt><dd></dd>
+<dt><strong>vz: std::vector&lt; double,std::allocator&lt; double &gt; &gt; const &amp;</strong></dt><dd></dd>
+<dt><strong>nx: int</strong></dt><dd></dd>
+<dt><strong>ny: int</strong></dt><dd></dd>
+<dt><strong>nz: int</strong></dt><dd></dd>
+<dt><strong>dx: double</strong></dt><dd></dd>
+<dt><strong>dy: double</strong></dt><dd></dd>
+<dt><strong>dz: double</strong></dt><dd></dd>
+<dt><strong>x0: double</strong></dt><dd></dd>
+<dt><strong>y0: double</strong></dt><dd></dd>
+<dt><strong>z0: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.from_numpy">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.from_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.from_numpy" title="Link to this definition">#</a></dt>
+<dd><p>Build a SimVectorGrid from three same-shaped (nz, ny, nx) numpy arrays (µm per
+macro-time unit). Origins default to centring the lattice on (0, 0, 0).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.is_uniform">
+<span class="sig-name descname"><span class="pre">is_uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.is_uniform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.is_uniform" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.max_speed">
+<span class="sig-name descname"><span class="pre">max_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.max_speed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.max_speed" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.min_spacing">
+<span class="sig-name descname"><span class="pre">min_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.min_spacing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.min_spacing" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.poiseuille">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">poiseuille</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimVectorGrid" title="tttrlib.SimVectorGrid"><span class="pre">SimVectorGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.poiseuille"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.poiseuille" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>v_max: double</strong></dt><dd></dd>
+<dt><strong>radius: double</strong></dt><dd></dd>
+<dt><strong>axis: int</strong></dt><dd></dd>
+<dt><strong>extent_xy: double</strong></dt><dd></dd>
+<dt><strong>extent_z: double</strong></dt><dd></dd>
+<dt><strong>spacing: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.rotation">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimVectorGrid" title="tttrlib.SimVectorGrid"><span class="pre">SimVectorGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.rotation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.rotation" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>omega: double</strong></dt><dd></dd>
+<dt><strong>axis: int</strong></dt><dd></dd>
+<dt><strong>extent_xy: double</strong></dt><dd></dd>
+<dt><strong>extent_z: double</strong></dt><dd></dd>
+<dt><strong>spacing: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.thisown">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">thisown</span></span><a class="headerlink" href="#tttrlib.SimVectorGrid.thisown" title="Link to this definition">#</a></dt>
+<dd><p>The membership flag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimVectorGrid.uniform">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vz</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#tttrlib.SimVectorGrid" title="tttrlib.SimVectorGrid"><span class="pre">SimVectorGrid</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimVectorGrid.uniform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimVectorGrid.uniform" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>vx: double</strong></dt><dd></dd>
+<dt><strong>vy: double</strong></dt><dd></dd>
+<dt><strong>vz: double</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -2337,6 +3053,19 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <dt class="sig sig-object py" id="tttrlib.SimDecay.n_bins">
 <span class="sig-name descname"><span class="pre">n_bins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="reference internal" href="_modules/tttrlib.html#SimDecay.n_bins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimDecay.n_bins" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tttrlib.SimDecay.pdf">
+<span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double</span></span></span><a class="reference internal" href="_modules/tttrlib.html#SimDecay.pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tttrlib.SimDecay.pdf" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bin: int</strong></dt><dd></dd>
+<dt><strong>pdf(self) -&gt; VectorDouble</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="tttrlib.SimDecay.t0">
@@ -2526,12 +3255,12 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="clsm-flim-guide.html"
+       href="superres-guide.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><span class="section-number">7. </span>CLSM, FLIM, and Image Workflows</p>
+        <p class="prev-next-title">Super-resolution: eSRRF, ISM, SOFISM and s²ISM</p>
       </div>
     </a>
     <a class="right-next"
@@ -2581,6 +3310,10 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-knobs">Performance knobs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flow-and-directed-transport">Flow and directed transport</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#making-a-flow-simulation-fast">Making a flow simulation fast</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference">API reference</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine"><code class="docutils literal notranslate"><span class="pre">SimEngine</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.alex_period"><code class="docutils literal notranslate"><span class="pre">SimEngine.alex_period()</span></code></a></li>
@@ -2602,15 +3335,28 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_lasers"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_lasers()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_molecules"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_molecules()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_photons"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_photons()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.n_state_events"><code class="docutils literal notranslate"><span class="pre">SimEngine.n_state_events()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.photons"><code class="docutils literal notranslate"><span class="pre">SimEngine.photons()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.run"><code class="docutils literal notranslate"><span class="pre">SimEngine.run()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.run_independent"><code class="docutils literal notranslate"><span class="pre">SimEngine.run_independent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.run_independent_budgeted"><code class="docutils literal notranslate"><span class="pre">SimEngine.run_independent_budgeted()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.run_scan"><code class="docutils literal notranslate"><span class="pre">SimEngine.run_scan()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.set_num_threads"><code class="docutils literal notranslate"><span class="pre">SimEngine.set_num_threads()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.set_parallel_threshold"><code class="docutils literal notranslate"><span class="pre">SimEngine.set_parallel_threshold()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.set_state_log"><code class="docutils literal notranslate"><span class="pre">SimEngine.set_state_log()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.set_trajectory_reporter"><code class="docutils literal notranslate"><span class="pre">SimEngine.set_trajectory_reporter()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.settings"><code class="docutils literal notranslate"><span class="pre">SimEngine.settings()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_from"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_from()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_log"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_log()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_molecule"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_molecule()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_numpy"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_numpy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_occupancy"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_occupancy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_time"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_to"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_to()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_trajectory"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_trajectory()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.state_window"><code class="docutils literal notranslate"><span class="pre">SimEngine.state_window()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.step"><code class="docutils literal notranslate"><span class="pre">SimEngine.step()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.system"><code class="docutils literal notranslate"><span class="pre">SimEngine.system()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.thisown"><code class="docutils literal notranslate"><span class="pre">SimEngine.thisown</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.to_tttr"><code class="docutils literal notranslate"><span class="pre">SimEngine.to_tttr()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimEngine.trajectory_frame"><code class="docutils literal notranslate"><span class="pre">SimEngine.trajectory_frame()</span></code></a></li>
@@ -2630,15 +3376,21 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.box_xy"><code class="docutils literal notranslate"><span class="pre">SimSystem.box_xy()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.box_z"><code class="docutils literal notranslate"><span class="pre">SimSystem.box_z()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.emitters"><code class="docutils literal notranslate"><span class="pre">SimSystem.emitters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.flow_field"><code class="docutils literal notranslate"><span class="pre">SimSystem.flow_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.has_flow"><code class="docutils literal notranslate"><span class="pre">SimSystem.has_flow()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.has_occlusion"><code class="docutils literal notranslate"><span class="pre">SimSystem.has_occlusion()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.k_nrad"><code class="docutils literal notranslate"><span class="pre">SimSystem.k_nrad()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.k_rad"><code class="docutils literal notranslate"><span class="pre">SimSystem.k_rad()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.n_species"><code class="docutils literal notranslate"><span class="pre">SimSystem.n_species()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.occlusion"><code class="docutils literal notranslate"><span class="pre">SimSystem.occlusion()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.population"><code class="docutils literal notranslate"><span class="pre">SimSystem.population()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_background"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_background()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_background_decay"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_background_decay()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_background_decays"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_background_decays()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_box"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_box()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_emitter_grid"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_emitter_grid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_flow_field"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_flow_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_occlusion"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_occlusion()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_population"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_population()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.set_rate_matrices"><code class="docutils literal notranslate"><span class="pre">SimSystem.set_rate_matrices()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSystem.species"><code class="docutils literal notranslate"><span class="pre">SimSystem.species()</span></code></a></li>
@@ -2651,6 +3403,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.alex_markers"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.alex_markers</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.alex_period"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.alex_period</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.coast_safety"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.coast_safety</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.drift_midpoint"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.drift_midpoint</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.dt"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.dt</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.fast_grid_bbox"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.fast_grid_bbox</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimIntegrator.focus_threshold"><code class="docutils literal notranslate"><span class="pre">SimIntegrator.focus_threshold</span></code></a></li>
@@ -2680,6 +3433,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.q_alex"><code class="docutils literal notranslate"><span class="pre">SimSpecies.q_alex</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.r0"><code class="docutils literal notranslate"><span class="pre">SimSpecies.r0</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.thisown"><code class="docutils literal notranslate"><span class="pre">SimSpecies.thisown</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimSpecies.v_scale"><code class="docutils literal notranslate"><span class="pre">SimSpecies.v_scale</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid"><code class="docutils literal notranslate"><span class="pre">SimGrid</span></code></a><ul class="nav section-nav flex-column">
@@ -2699,25 +3453,51 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.build_bbox"><code class="docutils literal notranslate"><span class="pre">SimGrid.build_bbox()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.clear_bbox"><code class="docutils literal notranslate"><span class="pre">SimGrid.clear_bbox()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.data"><code class="docutils literal notranslate"><span class="pre">SimGrid.data</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.dr_"><code class="docutils literal notranslate"><span class="pre">SimGrid.dr_</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.dx"><code class="docutils literal notranslate"><span class="pre">SimGrid.dx</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.dy"><code class="docutils literal notranslate"><span class="pre">SimGrid.dy</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.dz"><code class="docutils literal notranslate"><span class="pre">SimGrid.dz</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.dzr_"><code class="docutils literal notranslate"><span class="pre">SimGrid.dzr_</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.from_radial"><code class="docutils literal notranslate"><span class="pre">SimGrid.from_radial()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.from_radial_table"><code class="docutils literal notranslate"><span class="pre">SimGrid.from_radial_table()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.gaussian3d"><code class="docutils literal notranslate"><span class="pre">SimGrid.gaussian3d()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.gaussian3d_radial"><code class="docutils literal notranslate"><span class="pre">SimGrid.gaussian3d_radial()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.gaussian_lorentzian"><code class="docutils literal notranslate"><span class="pre">SimGrid.gaussian_lorentzian()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.gaussian_lorentzian_radial"><code class="docutils literal notranslate"><span class="pre">SimGrid.gaussian_lorentzian_radial()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.has_bbox"><code class="docutils literal notranslate"><span class="pre">SimGrid.has_bbox()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.index"><code class="docutils literal notranslate"><span class="pre">SimGrid.index()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.nr_"><code class="docutils literal notranslate"><span class="pre">SimGrid.nr_</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.numeric_from_file"><code class="docutils literal notranslate"><span class="pre">SimGrid.numeric_from_file()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.numeric_from_numpy"><code class="docutils literal notranslate"><span class="pre">SimGrid.numeric_from_numpy()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.nx"><code class="docutils literal notranslate"><span class="pre">SimGrid.nx</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.ny"><code class="docutils literal notranslate"><span class="pre">SimGrid.ny</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.nz"><code class="docutils literal notranslate"><span class="pre">SimGrid.nz</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.nzr_"><code class="docutils literal notranslate"><span class="pre">SimGrid.nzr_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.radial_"><code class="docutils literal notranslate"><span class="pre">SimGrid.radial_</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.radial_extent"><code class="docutils literal notranslate"><span class="pre">SimGrid.radial_extent()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.rz_"><code class="docutils literal notranslate"><span class="pre">SimGrid.rz_</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.set_voxel"><code class="docutils literal notranslate"><span class="pre">SimGrid.set_voxel()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.thisown"><code class="docutils literal notranslate"><span class="pre">SimGrid.thisown</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.uniform"><code class="docutils literal notranslate"><span class="pre">SimGrid.uniform()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.x0"><code class="docutils literal notranslate"><span class="pre">SimGrid.x0</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.y0"><code class="docutils literal notranslate"><span class="pre">SimGrid.y0</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.z0"><code class="docutils literal notranslate"><span class="pre">SimGrid.z0</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimGrid.zr0_"><code class="docutils literal notranslate"><span class="pre">SimGrid.zr0_</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.at"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.at()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.bounds"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.bounds()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.empty"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.empty()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.from_components"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.from_components()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.from_numpy"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.from_numpy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.is_uniform"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.is_uniform()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.max_speed"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.max_speed()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.min_spacing"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.min_spacing()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.poiseuille"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.poiseuille()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.rotation"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.rotation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.thisown"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.thisown</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimVectorGrid.uniform"><code class="docutils literal notranslate"><span class="pre">SimVectorGrid.uniform()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay"><code class="docutils literal notranslate"><span class="pre">SimDecay</span></code></a><ul class="nav section-nav flex-column">
@@ -2730,6 +3510,7 @@ interpolation at <code class="docutils literal notranslate"><span class="pre">(s
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.multi_exponential_pattern"><code class="docutils literal notranslate"><span class="pre">SimDecay.multi_exponential_pattern()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.multi_exponential_with_irf"><code class="docutils literal notranslate"><span class="pre">SimDecay.multi_exponential_with_irf()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.n_bins"><code class="docutils literal notranslate"><span class="pre">SimDecay.n_bins()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.pdf"><code class="docutils literal notranslate"><span class="pre">SimDecay.pdf()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.t0"><code class="docutils literal notranslate"><span class="pre">SimDecay.t0</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tttrlib.SimDecay.thisown"><code class="docutils literal notranslate"><span class="pre">SimDecay.thisown</span></code></a></li>
 </ul>

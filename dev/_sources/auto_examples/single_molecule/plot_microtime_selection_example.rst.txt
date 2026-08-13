@@ -32,38 +32,44 @@ and then performs burst analysis on the filtered data.
 
 Import required libraries
 
-.. GENERATED FROM PYTHON SOURCE LINES 14-18
+.. GENERATED FROM PYTHON SOURCE LINES 14-20
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import tttrlib
     import numpy as np
     import matplotlib.pyplot as plt
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-23
+.. GENERATED FROM PYTHON SOURCE LINES 21-27
 
 Load data
 ---------
 For this example, we'll use a sample file
 Replace with your actual file path
+Make the `examples` package importable when this script is run directly,
+from any working directory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-27
+.. GENERATED FROM PYTHON SOURCE LINES 27-33
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
     data = tttrlib.TTTR(str(get_data_path("bh/bh_spc132.spc")), "SPC-130")
     print(f"Total events: {len(data)}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-31
+.. GENERATED FROM PYTHON SOURCE LINES 34-37
 
 Analyze microtime distribution
 ------------------------------
 First, let's look at the microtime distribution to understand the data
 
-.. GENERATED FROM PYTHON SOURCE LINES 31-45
+.. GENERATED FROM PYTHON SOURCE LINES 37-51
 
 .. code-block:: Python
 
@@ -82,14 +88,14 @@ First, let's look at the microtime distribution to understand the data
     print(f"Most common microtime: {np.argmax(n)} (count: {n.max()})")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-50
+.. GENERATED FROM PYTHON SOURCE LINES 52-56
 
 Define microtime ranges for selection
 -------------------------------------
 Define ranges of interest (min, max) in microtime channels
 For example, select photons within specific time windows
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-60
+.. GENERATED FROM PYTHON SOURCE LINES 56-66
 
 .. code-block:: Python
 
@@ -104,12 +110,12 @@ For example, select photons within specific time windows
         print(f"  Range {i+1}: {min_mt} - {max_mt} channels")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-63
+.. GENERATED FROM PYTHON SOURCE LINES 67-69
 
 Select photons within microtime ranges
 --------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-81
+.. GENERATED FROM PYTHON SOURCE LINES 69-87
 
 .. code-block:: Python
 
@@ -132,13 +138,13 @@ Select photons within microtime ranges
     print(f"\nSelected {len(selected_indices)} photons ({len(selected_indices)/len(data)*100:.2f}% of total)")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 82-85
+.. GENERATED FROM PYTHON SOURCE LINES 88-91
 
 Create filtered TTTR object
 ---------------------------
 Create a new TTTR object containing only the selected photons
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-88
+.. GENERATED FROM PYTHON SOURCE LINES 91-94
 
 .. code-block:: Python
 
@@ -146,13 +152,13 @@ Create a new TTTR object containing only the selected photons
     print(f"Filtered data contains {len(filtered_data)} events")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-92
+.. GENERATED FROM PYTHON SOURCE LINES 95-98
 
 Perform burst analysis on filtered data
 ---------------------------------------
 Create BurstFilter with filtered data
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-111
+.. GENERATED FROM PYTHON SOURCE LINES 98-117
 
 .. code-block:: Python
 
@@ -176,13 +182,13 @@ Create BurstFilter with filtered data
     print(f"\nFound {len(bursts)} bursts in filtered data")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 112-115
+.. GENERATED FROM PYTHON SOURCE LINES 118-121
 
 Compare with full data analysis
 -------------------------------
 For comparison, let's also analyze the full data
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-121
+.. GENERATED FROM PYTHON SOURCE LINES 121-127
 
 .. code-block:: Python
 
@@ -193,13 +199,13 @@ For comparison, let's also analyze the full data
     print(f"Found {len(bursts_full)} bursts in full data")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-125
+.. GENERATED FROM PYTHON SOURCE LINES 128-131
 
 Visualize results
 -----------------
 Compare burst properties between filtered and full data
 
-.. GENERATED FROM PYTHON SOURCE LINES 125-184
+.. GENERATED FROM PYTHON SOURCE LINES 131-190
 
 .. code-block:: Python
 

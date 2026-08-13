@@ -1,0 +1,1592 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="11.4.37. A phasor check on a converged fit" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/single_molecule/plot_hmm_phasor_diagnostic.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="A fit that converges and returns the right E can still be built on the wrong decay model, and nothing in the usual output says so. This example shows a model-free check that does: the phasor of eac..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_hmm_phasor_diagnostic_965d90ce.png" />
+<meta property="og:image:alt" content="A fit that converges and returns the right E can still be built on the wrong decay model, and nothing in the usual output says so. This example shows a model-free check that does: the phasor of eac..." />
+<meta name="description" content="A fit that converges and returns the right E can still be built on the wrong decay model, and nothing in the usual output says so. This example shows a model-free check that does: the phasor of eac..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>11.4.37. A phasor check on a converged fit &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/single_molecule/plot_hmm_phasor_diagnostic';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="11.4.38. ALEX analysis of Shimon Weiss lab .sm files" href="plot_alex_sm.html" />
+    <link rel="prev" title="11.4.36. HMM state decoding: faithful distributions and how to store them" href="plot_hmm_state_channels.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
+
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../single_molecule.html">11. Single-molecule fluorescence</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">11.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../beginner/index.html">Beginner Examples for tttrlib</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../correlation/index.html">Fluorescence correlation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_methods.html">Convolving a decay: the recursion or the transform?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_interface.html">Fitting a decay: one interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">11.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
+</ul>
+</details></li>
+
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/single_molecule/plot_hmm_phasor_diagnostic.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../single_molecule.html" class="nav-link"><span class="section-number">11. </span>Single-molecule fluorescence</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link"><span class="section-number">11.4. </span>Single-molecule</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">11.4.37. </span>A phasor check on a converged fit</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-single-molecule-plot-hmm-phasor-diagnostic-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="a-phasor-check-on-a-converged-fit">
+<span id="sphx-glr-auto-examples-single-molecule-plot-hmm-phasor-diagnostic-py"></span><h1><span class="section-number">11.4.37. </span>A phasor check on a converged fit<a class="headerlink" href="#a-phasor-check-on-a-converged-fit" title="Link to this heading">#</a></h1>
+<p>A fit that converges and returns the right <span class="math notranslate nohighlight">\(E\)</span> can still be built on the
+wrong decay model, and nothing in the usual output says so. This example shows a
+model-free check that does: the <strong>phasor</strong> of each state’s decay, computed from
+the data and from the model and compared.</p>
+<p>The phasor transform reduces a decay to two numbers — the sine and cosine
+moments of the micro-time histogram at one frequency — without fitting anything.
+That is what makes it useful here. The likelihood already knows the model is
+imperfect, but it reports one number for the whole dataset; the phasor localises
+the discrepancy to a <strong>state</strong> and shows it as a distance on a plane.</p>
+<p>The test case is the one that matters in practice. Real donors are
+multi-exponential even unquenched, so a per-state mono-exponential
+parameterisation is misspecified — and it is misspecified in a way the FRET
+efficiency does not reveal, because <span class="math notranslate nohighlight">\(E\)</span> comes from the <em>stream split</em>
+while the error lives in the <em>decay shape</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The IRF phasor is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">0)</span></code> for an ideal (delta) instrument response, not
+<code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0)</span></code>. The correction divides by <span class="math notranslate nohighlight">\(g_{irf}^2 + s_{irf}^2\)</span>, so
+zeros are a division by zero; that used to yield a silent <code class="docutils literal notranslate"><span class="pre">nan</span></code> and now
+raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. It is also the default, so it can simply be omitted.</p>
+</div>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">STATE_COLORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#4e79a7&quot;</span><span class="p">,</span> <span class="s2">&quot;#e15759&quot;</span><span class="p">]</span>
+
+<span class="n">N_BINS</span><span class="p">,</span> <span class="n">DT_NS</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span> <span class="mf">0.25</span>
+<span class="n">FREQ</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">N_BINS</span> <span class="o">*</span> <span class="n">DT_NS</span><span class="p">)</span>          <span class="c1"># one full period across the micro-time window</span>
+<span class="n">TAU_A</span> <span class="o">=</span> <span class="mf">2.5</span>
+<span class="n">E_TRUE</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.70</span><span class="p">]</span>
+
+<span class="c1"># Each state&#39;s donor decay is a two-component mixture -- an intrinsic property of</span>
+<span class="c1"># the dye, not of the FRET.</span>
+<span class="n">TAU_TRUE</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">4.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="n">AMP_TRUE</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">multi_spec</span><span class="p">(</span><span class="n">taus</span><span class="p">,</span> <span class="n">amps</span><span class="p">,</span> <span class="n">efficiencies</span><span class="p">):</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmEmissionSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">efficiencies</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_BINS</span><span class="p">,</span> <span class="n">DT_NS</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">efficiencies</span><span class="p">):</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_stream_probability</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_stream_probability</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span>
+            <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">amps</span><span class="p">[</span><span class="n">k</span><span class="p">])),</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">taus</span><span class="p">[</span><span class="n">k</span><span class="p">]))))</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span><span class="n">TAU_A</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">mono_spec</span><span class="p">(</span><span class="n">efficiencies</span><span class="o">=</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span> <span class="n">tau</span><span class="o">=</span><span class="mf">3.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The misspecified model: one lifetime per state, which cannot represent a</span>
+<span class="sd">    mixture no matter what value it takes.&quot;&quot;&quot;</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmEmissionSpec</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">efficiencies</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_BINS</span><span class="p">,</span> <span class="n">DT_NS</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">efficiencies</span><span class="p">):</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_stream_probability</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_stream_probability</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">set_spectrum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmLifetimeSpectrum</span><span class="p">(</span><span class="n">TAU_A</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">phasor</span><span class="p">(</span><span class="n">hist</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;(g, s) of a micro-time histogram. Ideal IRF -&gt; phasor (1, 0).&quot;&quot;&quot;</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">hist</span><span class="p">])</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayPhasor</span><span class="o">.</span><span class="n">compute_phasor_bincounts</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">FREQ</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="simulate-then-fit-twice">
+<h2><span class="section-number">11.4.37.1. </span>Simulate, then fit twice<a class="headerlink" href="#simulate-then-fit-twice" title="Link to this heading">#</a></h2>
+<p>The same photons are fitted with a mono-exponential spec (wrong) and with the
+generating multi-exponential one (right). Only the decay parameterisation
+differs; the alphabet, the data and the kinetics are identical.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">n_burst</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">n_ph</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+    <span class="n">true</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmModel</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.999</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">],</span>
+                            <span class="n">multi_spec</span><span class="p">(</span><span class="n">TAU_TRUE</span><span class="p">,</span> <span class="n">AMP_TRUE</span><span class="p">,</span> <span class="n">E_TRUE</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">())</span>
+    <span class="n">true</span><span class="o">.</span><span class="n">n_micro_bins</span> <span class="o">=</span> <span class="n">N_BINS</span>
+    <span class="n">rng</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">obs</span><span class="p">,</span> <span class="n">powers</span> <span class="o">=</span> <span class="n">true</span><span class="o">.</span><span class="n">obs_np</span><span class="p">,</span> <span class="p">{}</span>
+    <span class="n">A</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">true</span><span class="o">.</span><span class="n">trans_np</span><span class="p">)</span>
+    <span class="n">times</span><span class="p">,</span> <span class="n">syms</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_burst</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.cumsum.html#numpy.cumsum" title="numpy.cumsum" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span></a><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n_ph</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.int64" title="numpy.int64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-attribute"><span class="n">np</span><span class="o">.</span><span class="n">int64</span></a><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="p">:</span>
+                <span class="n">dt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">dt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">powers</span><span class="p">:</span>
+                    <span class="n">powers</span><span class="p">[</span><span class="n">dt</span><span class="p">]</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_power.html#numpy.linalg.matrix_power" title="numpy.linalg.matrix_power" class="sphx-glr-backref-module-numpy-linalg sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_power</span></a><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">powers</span><span class="p">[</span><span class="n">dt</span><span class="p">][</span><span class="n">state</span><span class="p">])</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="n">obs</span><span class="p">[</span><span class="n">state</span><span class="p">])))</span>
+        <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">syms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
+    <span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_micro</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="p">[[</span><span class="n">y</span> <span class="o">//</span> <span class="n">N_BINS</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">syms</span><span class="p">],</span>
+                         <span class="p">[[</span><span class="n">y</span> <span class="o">%</span> <span class="n">N_BINS</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">syms</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_BINS</span><span class="p">,</span> <span class="n">DT_NS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eng</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fit_and_phasors</span><span class="p">(</span><span class="n">eng</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit, then take each state&#39;s data and model phasor from the SAME E-step.</span>
+
+<span class="sd">    The data histogram is the posterior-weighted one from `HmmEval.gamma_obs`,</span>
+<span class="sd">    so &#39;the data for state k&#39; means what the fitted model believes belongs to</span>
+<span class="sd">    state k -- not a hard Viterbi assignment, which would discard the</span>
+<span class="sd">    uncertainty and make a bad model look self-consistent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">init</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmModel</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">],</span> <span class="n">spec</span><span class="o">.</span><span class="n">build</span><span class="p">())</span>
+    <span class="n">init</span><span class="o">.</span><span class="n">n_micro_bins</span> <span class="o">=</span> <span class="n">N_BINS</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">gamma_obs_np</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">obs_micro_np</span>
+    <span class="n">data_p</span><span class="p">,</span> <span class="n">model_p</span><span class="p">,</span> <span class="n">dist</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">d_hist</span> <span class="o">=</span> <span class="n">gamma</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">N_BINS</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                 <span class="c1"># donor stream</span>
+        <span class="n">m_hist</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">table</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">d_hist</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">gd</span><span class="p">,</span> <span class="n">sd</span> <span class="o">=</span> <span class="n">phasor</span><span class="p">(</span><span class="n">d_hist</span><span class="p">)</span>
+        <span class="n">gm</span><span class="p">,</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">phasor</span><span class="p">(</span><span class="n">m_hist</span><span class="p">)</span>
+        <span class="n">data_p</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gd</span><span class="p">,</span> <span class="n">sd</span><span class="p">))</span>
+        <span class="n">model_p</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gm</span><span class="p">,</span> <span class="n">sm</span><span class="p">))</span>
+        <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.hypot.html#numpy.hypot" title="numpy.hypot" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">hypot</span></a><span class="p">(</span><span class="n">gd</span> <span class="o">-</span> <span class="n">gm</span><span class="p">,</span> <span class="n">sd</span> <span class="o">-</span> <span class="n">sm</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">fit</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">data_p</span><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">model_p</span><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">dist</span><span class="p">),</span> <span class="n">ev</span><span class="o">.</span><span class="n">loglik</span>
+
+
+<span class="n">eng</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">fit_bad</span><span class="p">,</span> <span class="n">data_bad</span><span class="p">,</span> <span class="n">model_bad</span><span class="p">,</span> <span class="n">dist_bad</span><span class="p">,</span> <span class="n">ll_bad</span> <span class="o">=</span> <span class="n">fit_and_phasors</span><span class="p">(</span><span class="n">eng</span><span class="p">,</span> <span class="n">mono_spec</span><span class="p">())</span>
+<span class="n">fit_good</span><span class="p">,</span> <span class="n">data_good</span><span class="p">,</span> <span class="n">model_good</span><span class="p">,</span> <span class="n">dist_good</span><span class="p">,</span> <span class="n">ll_good</span> <span class="o">=</span> <span class="n">fit_and_phasors</span><span class="p">(</span>
+    <span class="n">eng</span><span class="p">,</span> <span class="n">multi_spec</span><span class="p">(</span><span class="n">TAU_TRUE</span><span class="p">,</span> <span class="n">AMP_TRUE</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)))</span>
+
+<span class="n">E_bad</span> <span class="o">=</span> <span class="n">fit_bad</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">E_good</span> <span class="o">=</span> <span class="n">fit_good</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;truth          E = </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">E_TRUE</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mono  (WRONG)  E = </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">E_bad</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">   phasor distance </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">dist_bad</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;multi (RIGHT)  E = </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">E_good</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s2">   phasor distance </span><span class="si">{</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">dist_good</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">both fits recover E to within &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">E_bad</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">E_TRUE</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">E_good</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">E_TRUE</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> -- &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;E does not reveal the misspecification&quot;</span><span class="p">)</span>
+<span class="c1"># The likelihood is not blind to it -- it is just one number for the whole</span>
+<span class="c1"># dataset, and it cannot say which state is at fault or how.</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;log-likelihood   mono </span><span class="si">{</span><span class="n">ll_bad</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">   multi </span><span class="si">{</span><span class="n">ll_good</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">   &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;(difference </span><span class="si">{</span><span class="n">ll_good</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ll_bad</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="replicate-because-one-dataset-is-not-a-measurement">
+<h2><span class="section-number">11.4.37.2. </span>Replicate, because one dataset is not a measurement<a class="headerlink" href="#replicate-because-one-dataset-is-not-a-measurement" title="Link to this heading">#</a></h2>
+<p>The phasor distance carries sampling noise, so a single pair of numbers cannot
+say whether the gap is real.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">SEEDS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="n">bad_all</span><span class="p">,</span> <span class="n">good_all</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">SEEDS</span><span class="p">:</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">bad_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_and_phasors</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">mono_spec</span><span class="p">())[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">good_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fit_and_phasors</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">multi_spec</span><span class="p">(</span><span class="n">TAU_TRUE</span><span class="p">,</span> <span class="n">AMP_TRUE</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)))[</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">bad_all</span><span class="p">,</span> <span class="n">good_all</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">bad_all</span><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">good_all</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">a</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.sqrt.html#numpy.sqrt" title="numpy.sqrt" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span></a><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+
+<span class="n">m_bad</span><span class="p">,</span> <span class="n">e_bad_se</span> <span class="o">=</span> <span class="n">summary</span><span class="p">(</span><span class="n">bad_all</span><span class="p">)</span>
+<span class="n">m_good</span><span class="p">,</span> <span class="n">e_good_se</span> <span class="o">=</span> <span class="n">summary</span><span class="p">(</span><span class="n">good_all</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">over </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">SEEDS</span><span class="p">)</span><span class="si">}</span><span class="s2"> datasets:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  misspecified  </span><span class="si">{</span><span class="n">m_bad</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">e_bad_se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  correct       </span><span class="si">{</span><span class="n">m_good</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">e_good_se</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  separation    </span><span class="si">{</span><span class="n">m_bad</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">m_good</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">x   &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;(worst correct </span><span class="si">{</span><span class="n">good_all</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> &lt; best wrong </span><span class="si">{</span><span class="n">bad_all</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="plot">
+<h2><span class="section-number">11.4.37.3. </span>Plot<a class="headerlink" href="#plot" title="Link to this heading">#</a></h2>
+<p>Left: the phasor plane. Every mono-exponential decay lies on the universal
+semicircle; a mixture lies inside it. Each state contributes a <strong>data</strong> point
+and a <strong>model</strong> point, joined by a line whose length is the diagnostic. Right:
+that length, against the FRET efficiency error, over the replicate datasets.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax_ph</span><span class="p">,</span> <span class="n">ax_cmp</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">10.5</span><span class="p">,</span> <span class="mf">4.2</span><span class="p">))</span>
+
+<span class="n">theta</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.linspace.html#numpy.linspace" title="numpy.linspace" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">linspace</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/constants.html#numpy.pi" title="numpy.pi" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">pi</span></a><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.cos.html#numpy.cos" title="numpy.cos" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">cos</span></a><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="mf">0.5</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.sin.html#numpy.sin" title="numpy.sin" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">sin</span></a><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.55&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.4</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.62</span><span class="p">,</span> <span class="mf">0.44</span><span class="p">,</span> <span class="s2">&quot;universal semicircle</span><span class="se">\n</span><span class="s2">(mono-exponential)&quot;</span><span class="p">,</span>
+           <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.4&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">dp</span><span class="p">,</span> <span class="n">mp</span><span class="p">),</span> <span class="n">lbl</span><span class="p">,</span> <span class="n">mk</span> <span class="ow">in</span> <span class="p">(((</span><span class="n">data_bad</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">model_bad</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="s2">&quot;mono (wrong)&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">),</span>
+                              <span class="p">((</span><span class="n">data_good</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">model_good</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="s2">&quot;multi (right)&quot;</span><span class="p">,</span> <span class="s2">&quot;o&quot;</span><span class="p">)):</span>
+        <span class="n">ax_ph</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">dp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mp</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">dp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mp</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
+                   <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.55</span><span class="p">)</span>
+        <span class="c1"># Label once per marker style, on the first state only, so the legend</span>
+        <span class="c1"># explains the encoding instead of repeating it per state.</span>
+        <span class="n">ax_ph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">mp</span><span class="p">,</span> <span class="n">mk</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">mew</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+                   <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;model, </span><span class="si">{</span><span class="n">lbl</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">ax_ph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">data_bad</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">k</span><span class="p">],</span>
+               <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">ax_ph</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;state </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data_bad</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
+                   <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mf">8.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;g&quot;</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Phasor plane</span><span class="se">\n</span><span class="s2">filled: data   open: model&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span>
+<span class="n">ax_ph</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mf">0.18</span><span class="p">,</span> <span class="p">[</span><span class="n">m_bad</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">E_bad</span><span class="p">)</span> <span class="o">-</span> <span class="n">E_TRUE</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()],</span>
+           <span class="n">width</span><span class="o">=</span><span class="mf">0.34</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#9aa4ad&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;mono (wrong)&quot;</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mf">0.18</span><span class="p">,</span> <span class="p">[</span><span class="n">m_good</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">(</span><span class="n">E_good</span><span class="p">)</span> <span class="o">-</span> <span class="n">E_TRUE</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()],</span>
+           <span class="n">width</span><span class="o">=</span><span class="mf">0.34</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;multi (right)&quot;</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">errorbar</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.18</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.18</span><span class="p">],</span> <span class="p">[</span><span class="n">m_bad</span><span class="p">,</span> <span class="n">m_good</span><span class="p">],</span>
+                <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">e_bad_se</span><span class="p">,</span> <span class="n">e_good_se</span><span class="p">],</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">ecolor</span><span class="o">=</span><span class="s2">&quot;0.2&quot;</span><span class="p">,</span> <span class="n">capsize</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="s2">&quot;phasor distance&quot;</span><span class="p">,</span> <span class="s2">&quot;|E error|&quot;</span><span class="p">])</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;The phasor separates the models</span><span class="se">\n</span><span class="s2">E does not&quot;</span><span class="p">,</span>
+                 <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+<span class="n">ax_cmp</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="what-this-shows">
+<h2><span class="section-number">11.4.37.4. </span>What this shows<a class="headerlink" href="#what-this-shows" title="Link to this heading">#</a></h2>
+<p>Both fits recover <span class="math notranslate nohighlight">\(E\)</span> to within about 0.01 of the truth, so on the
+headline number they are indistinguishable. Their phasor distances differ by
+roughly <strong>4.6x</strong> — 0.044 against 0.010 — with no overlap across the replicate
+datasets. The check sees what the FRET efficiency cannot, because <span class="math notranslate nohighlight">\(E\)</span> is
+set by the stream split while the error lives in the decay shape.</p>
+<p><strong>Read it as a relative diagnostic, not an absolute one.</strong> The correctly
+specified model does not score zero, and it should not be expected to: the
+distance carries sampling noise, and binning and truncation of the micro-time
+window move the data and model points slightly differently. For the same
+reason, distance from the universal semicircle is <em>not</em> a clean test of
+multi-exponentiality here — a binned, truncated mono-exponential does not sit
+exactly on the circle either. Compare candidate parameterisations <strong>on the
+same data</strong>; the smaller distance is the better-specified model.</p>
+<p>The natural companion is the likelihood, and the two answer different
+questions. The likelihood ranks models globally with one number and is what
+should decide a comparison. The phasor says <em>where</em> a model is failing —
+which state, and in which direction on the plane — and it does so without
+fitting anything, so it cannot be talked into agreeing with the model being
+checked.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The data histogram here is the posterior-weighted one from
+<code class="xref py py-func docutils literal notranslate"><span class="pre">HMM.evaluate()</span></code>, not a hard Viterbi assignment. That matters: hard
+assignment discards the fit’s own uncertainty and pulls the data phasor
+toward the model that produced the assignment, which would make a badly
+specified model look self-consistent.</p>
+</div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-single-molecule-plot-hmm-phasor-diagnostic-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/8ae43d50c4bbee720e64da6e69bd0f0d/plot_hmm_phasor_diagnostic.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_hmm_phasor_diagnostic.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c9f091dee1f65952d2451d040d4f00ef/plot_hmm_phasor_diagnostic.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_hmm_phasor_diagnostic.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/28a934239cab13fde47ae660c2d944e0/plot_hmm_phasor_diagnostic.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_hmm_phasor_diagnostic.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_hmm_state_channels.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><span class="section-number">11.4.36. </span>HMM state decoding: faithful distributions and how to store them</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_alex_sm.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><span class="section-number">11.4.38. </span>ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate-then-fit-twice">11.4.37.1. Simulate, then fit twice</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#replicate-because-one-dataset-is-not-a-measurement">11.4.37.2. Replicate, because one dataset is not a measurement</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot">11.4.37.3. Plot</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-this-shows">11.4.37.4. What this shows</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/single_molecule/plot_hmm_phasor_diagnostic.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

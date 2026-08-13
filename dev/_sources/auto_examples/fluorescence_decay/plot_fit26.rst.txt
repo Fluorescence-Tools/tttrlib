@@ -27,9 +27,9 @@ histogram. Use it when the shapes are fixed, for example from calibration or
 reference compounds, and only the mixture fraction is unknown.
 
 The optimized parameter is ``fraction_1``. ``Fit26`` also writes the complement,
-``1 - fraction_1``, to ``result["x"][1]``.
+``1 - fraction_1``, and is therefore computed rather than fitted.
 
-.. GENERATED FROM PYTHON SOURCE LINES 13-55
+.. GENERATED FROM PYTHON SOURCE LINES 13-64
 
 .. code-block:: Python
 
@@ -52,16 +52,24 @@ The optimized parameter is ``fraction_1``. ``Fit26`` also writes the complement,
     )
     data = np.random.default_rng(1).poisson(probability_model * 5_000)
 
-    fit26 = tttrlib.Fit26(pattern_1=pattern_1, pattern_2=pattern_2)
-    result = fit26(
-        data=data.astype(np.int32),
-        initial_values=np.array([0.5, 0.0]),
-        fixed=np.array([0], dtype=np.int16),
-        include_model=True,
-    )
+    # This model *is* a mixture of two fixed reference patterns, which the problem
+    # carries: pattern 1 in ``irf`` and pattern 2 in ``background``.
+    n_bins = len(pattern_1) // 2
+    fit26 = tttrlib.DecayFit2(
+        'fit26', tttrlib.setup_vector('fit26', dt=1.0), pattern_1.tolist())
+
+    problem = tttrlib.DecayFitProblem(2, n_bins, 1.0)
+    problem.irf = tttrlib.VectorDouble(np.asarray(pattern_1, dtype=float).tolist())
+    problem.background = tttrlib.VectorDouble(np.asarray(pattern_2, dtype=float).tolist())
+    problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
+
+    outcome = fit26.fit([0.5], tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0])),
+                        problem)
+    result = {"x": np.asarray(outcome.parameters), "twoIstar": outcome.objective,
+              "model": np.asarray(problem.model)}
 
     plt.plot(data, label="synthetic mixture")
-    plt.plot(result["model"], label="Fit26 model")
+    plt.plot(result["model"], label="fit26 model")
     plt.plot(pattern_1 / pattern_1.max() * data.max(), "--", label="pattern 1")
     plt.plot(pattern_2 / pattern_2.max() * data.max(), "--", label="pattern 2")
     plt.xlabel("channel")
@@ -73,7 +81,8 @@ The optimized parameter is ``fraction_1``. ``Fit26`` also writes the complement,
     print("=====================")
     print(f"true fraction 1: {true_fraction_1:.3f}")
     print(f"fitted fraction 1: {result['x'][0]:.3f}")
-    print(f"fitted fraction 2: {result['x'][1]:.3f}")
+    # The second fraction is not a fitted parameter: it is 1 - x1 by definition.
+    print(f"fitted fraction 2: {1.0 - result['x'][0]:.3f}")
     print(f"twoIstar: {result['twoIstar']:.3f}")
 
 

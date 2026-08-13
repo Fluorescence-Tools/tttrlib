@@ -32,10 +32,12 @@ productive use.
 For any productive applications it is recommended to use the built-in ``tttrlib``
 CLSM functions.
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-42
+.. GENERATED FROM PYTHON SOURCE LINES 18-44
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import tttrlib
     import numpy as np
     import pylab as p
@@ -61,7 +63,7 @@ CLSM functions.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-69
+.. GENERATED FROM PYTHON SOURCE LINES 45-71
 
 In the example above, first the number of frames are counted. Next, the number of
 start line events are counted. In the example, there are overall 41 frames are present
@@ -90,7 +92,7 @@ line the duration for the pixel can be calculated for all the lines of the frame
 With these numbers an image for a certain set of detector channels ``detector_channels``
 can be calculated. Below this is by the function ``make_image``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-136
+.. GENERATED FROM PYTHON SOURCE LINES 71-142
 
 .. code-block:: Python
 
@@ -150,6 +152,10 @@ can be calculated. Below this is by the function ``make_image``.
                         tac = mi // tac_coarsening
                         image[frame, current_line, pixel, tac] += 1
         return image
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
 
 
     from examples._example_data import get_data_path
@@ -162,7 +168,7 @@ can be calculated. Below this is by the function ``make_image``.
     m = events.get_micro_times()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 137-158
+.. GENERATED FROM PYTHON SOURCE LINES 143-164
 
 Before creating an image the channel numbers of the frame and the line markers need
 to be determined. For the example that is shown above the frame, line start, and
@@ -186,7 +192,7 @@ of frame markers as shown below.
     routines are provided.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-180
+.. GENERATED FROM PYTHON SOURCE LINES 164-186
 
 .. code-block:: Python
 
@@ -213,13 +219,13 @@ of frame markers as shown below.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 181-184
+.. GENERATED FROM PYTHON SOURCE LINES 187-190
 
 In the example function ``make_image`` the an 3D array is created that contains in
 every pixel a histogram of the micro times. An histogram of the micro time can be
 displayed by the code shown below:
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-189
+.. GENERATED FROM PYTHON SOURCE LINES 190-195
 
 .. code-block:: Python
 

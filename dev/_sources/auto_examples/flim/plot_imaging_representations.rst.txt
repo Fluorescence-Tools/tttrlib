@@ -40,7 +40,7 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
     4. image of the mean micro times
     5. a fluorescence intensity decay of the micro times
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-50
+.. GENERATED FROM PYTHON SOURCE LINES 26-52
 
 .. code-block:: Python
 
@@ -48,6 +48,8 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
     #%
     from __future__ import print_function
 
+    import sys
+    from pathlib import Path
     import matplotlib.pyplot as plt
     import numpy as np
     import pylab as p
@@ -69,10 +71,17 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-90
+.. GENERATED FROM PYTHON SOURCE LINES 53-55
+
+Make the `examples` package importable when this script is run directly,
+from any working directory.
+
+.. GENERATED FROM PYTHON SOURCE LINES 55-96
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
     # The FLIM dataset consists of a measurement of the sample
@@ -113,7 +122,7 @@ an acceptor, A, fluorophore. Using the data contained in the TTTR file, we:
     }
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-106
+.. GENERATED FROM PYTHON SOURCE LINES 97-112
 
 The FLIM dataset is a Pulsed-Interleaved-Excitation (PIE)
 dataset. In PIE experiments, the sample is sequentially
@@ -131,7 +140,7 @@ spectroscopy) the green and red fluorescence is moreover
 split into P and S. Here, we will only inspect data in F(G|G)
 and F(R|G).
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-146
+.. GENERATED FROM PYTHON SOURCE LINES 112-152
 
 .. code-block:: Python
 
@@ -176,12 +185,12 @@ and F(R|G).
             irfs[ex][ch] = irf_sel
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 147-149
+.. GENERATED FROM PYTHON SOURCE LINES 153-155
 
 Next, we plot the IRFs for the different combinations of
 excitation pulses and detectors.
 
-.. GENERATED FROM PYTHON SOURCE LINES 149-163
+.. GENERATED FROM PYTHON SOURCE LINES 155-169
 
 .. code-block:: Python
 
@@ -200,24 +209,24 @@ excitation pulses and detectors.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-165
+.. GENERATED FROM PYTHON SOURCE LINES 170-171
 
 Create image
 
-.. GENERATED FROM PYTHON SOURCE LINES 165-167
+.. GENERATED FROM PYTHON SOURCE LINES 171-173
 
 .. code-block:: Python
 
     image = tttrlib.CLSMImage(data)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 168-171
+.. GENERATED FROM PYTHON SOURCE LINES 174-177
 
 In case an automated processing of header does not wor
 reads header but does not always work, frame marker, line marker, etc.
 more details (in case it does not work without providing markers)
 
-.. GENERATED FROM PYTHON SOURCE LINES 171-197
+.. GENERATED FROM PYTHON SOURCE LINES 177-203
 
 .. code-block:: Python
 
@@ -248,12 +257,12 @@ more details (in case it does not work without providing markers)
     image_intensity_green_sum = image_intensity_green.sum(axis=0)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 198-200
+.. GENERATED FROM PYTHON SOURCE LINES 204-206
 
 Plot images
 Intensity images
 
-.. GENERATED FROM PYTHON SOURCE LINES 200-246
+.. GENERATED FROM PYTHON SOURCE LINES 206-252
 
 .. code-block:: Python
 
@@ -304,12 +313,12 @@ Intensity images
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 247-249
+.. GENERATED FROM PYTHON SOURCE LINES 253-255
 
 Frames, lines, pixel, micro time channel
 Coarsening micro time resolution / 256
 
-.. GENERATED FROM PYTHON SOURCE LINES 249-253
+.. GENERATED FROM PYTHON SOURCE LINES 255-259
 
 .. code-block:: Python
 
@@ -318,13 +327,13 @@ Coarsening micro time resolution / 256
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 254-257
+.. GENERATED FROM PYTHON SOURCE LINES 260-263
 
 Anisotropy image
 ----------------
 Show how to use intensity images and lifetimes
 
-.. GENERATED FROM PYTHON SOURCE LINES 257-306
+.. GENERATED FROM PYTHON SOURCE LINES 263-312
 
 .. code-block:: Python
 

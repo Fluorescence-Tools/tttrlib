@@ -212,6 +212,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -233,6 +240,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -240,8 +268,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -263,6 +298,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -533,6 +575,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="workflows.html">
     Workflow Index
   </a>
@@ -554,6 +603,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="burst-analysis.html">
     Burst Analysis
   </a>
@@ -561,8 +631,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -584,6 +661,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -823,9 +907,9 @@
 photon data.</p>
 <p><strong>tttrlib</strong> reads, processes, and writes photon streams from PicoQuant,
 Becker &amp; Hickl, and Photon-HDF5 files through one vendor-independent API. The
-core algorithms are written in C++ and exposed to <strong>Python, R, and Java</strong> from a
-single shared interface — plus an <strong>ImageJ/Fiji plugin</strong> for point-and-click FLIM
-reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
+core algorithms are written in C++ and exposed to <strong>Python, R, Java and
+JavaScript</strong> from a single shared interface — plus an <strong>ImageJ/Fiji plugin</strong> for
+point-and-click FLIM reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
 Jupyter-based workflows. See <a class="reference internal" href="languages.html"><span class="doc">tttrlib in your language</span></a> for the same examples in every
 language.</p>
 <section id="quick-links">
@@ -842,25 +926,28 @@ language.</p>
 <tr class="row-even"><td><p>Run small examples</p></td>
 <td><p><a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Use Python, R, or Java</p></td>
+<tr class="row-odd"><td><p>Use Python, R, Java or JavaScript</p></td>
 <td><p><a class="reference internal" href="languages.html"><span class="doc">tttrlib in your language</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Reconstruct FLIM in ImageJ/Fiji</p></td>
 <td><p><a class="reference internal" href="imagej-plugin.html"><span class="doc">tttrlib for Java &amp; the ImageJ/Fiji plugin</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Choose an analysis workflow</p></td>
+<tr class="row-odd"><td><p>Read TTTR files from Node.js</p></td>
+<td><p><a class="reference internal" href="javascript-package.html"><span class="doc">tttrlib for JavaScript (Node.js)</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Choose an analysis workflow</p></td>
 <td><p><a class="reference internal" href="workflows.html"><span class="doc">Workflow Index</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p>Browse executable workflows</p></td>
+<tr class="row-odd"><td><p>Browse executable workflows</p></td>
 <td><p><a class="reference internal" href="auto_examples/index.html"><span class="doc">Example Gallery</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Read the manual</p></td>
+<tr class="row-even"><td><p>Read the manual</p></td>
 <td><p><a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p>Report a problem</p></td>
+<tr class="row-odd"><td><p>Report a problem</p></td>
 <td><p><a class="reference external" href="https://github.com/Fluorescence-Tools/tttrlib/issues">GitHub issues</a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Cite tttrlib</p></td>
+<tr class="row-even"><td><p>Cite tttrlib</p></td>
 <td><p><a class="reference external" href="https://doi.org/10.1093/bioinformatics/btaf025">Bioinformatics paper</a></p></td>
 </tr>
 </tbody>
@@ -917,6 +1004,7 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#first-file">First file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#common-first-operations">Common first operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#example-data">Example data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#example-driven-learning">Example-driven learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#supported-file-families">Supported file families</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#where-to-go-next">Where to go next</a></li>
@@ -952,9 +1040,25 @@ data model.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="imagej-plugin.html">tttrlib for Java &amp; the ImageJ/Fiji plugin</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#commands">Commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#detectors-and-pie-windows-chisurf-compatible">Detectors and PIE windows (chisurf-compatible)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#settings">Settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#using-the-java-api">Using the Java API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#the-imagej-fiji-plugin">The ImageJ/Fiji plugin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#testing-status">Testing status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#build-from-source">Build from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imagej-plugin.html#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="javascript-package.html">tttrlib for JavaScript (Node.js)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#quick-start">Quick start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#five-conventions">Five conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#the-registry-never-hard-code-an-algorithm-list">The registry: never hard-code an algorithm list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#zero-copy-and-when-it-isn-t">Zero copy, and when it isn’t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#example-application">Example application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#known-limitations">Known limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#what-is-still-open">What is still open</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#testing-status">Testing status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="javascript-package.html#see-also">See also</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="workflows.html">1. Workflow Index</a><ul>
@@ -974,40 +1078,98 @@ data model.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="file-formats.html">3. TTTR File Formats and Conversion</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="file-formats.html#supported-file-types">3.1. Supported file types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file-formats.html#support-matrix">3.2. Support matrix</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file-formats.html#metadata-preservation">3.3. Metadata preservation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file-formats.html#conversion-between-formats">3.4. Conversion between formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file-formats.html#becker-hickl-set-sidecar-and-imaging-round-trip">3.5. Becker &amp; Hickl <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar and imaging round-trip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="file-formats.html#tested-conversion-scripts">3.6. Tested conversion scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#containers-that-need-to-be-told-something">3.2. Containers that need to be told something</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#support-matrix">3.3. Support matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#metadata-preservation">3.4. Metadata preservation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#conversion-between-formats">3.5. Conversion between formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#decoding-a-buffer-and-reading-a-container-in-pieces">3.6. Decoding a buffer, and reading a container in pieces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#becker-hickl-set-sidecar-and-imaging-round-trip">3.7. Becker &amp; Hickl <code class="docutils literal notranslate"><span class="pre">.set</span></code> sidecar and imaging round-trip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="file-formats.html#tested-conversion-scripts">3.8. Tested conversion scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="formats/index.html">File formats, one page each</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="formats/picoquant-ptu.html">PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/picoquant-ht3.html">PicoQuant HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/becker-hickl-spc.html">Becker &amp; Hickl SPC (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/photon-hdf5.html">Photon-HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5,</span> <span class="pre">.hdf5</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/zeiss-confocor3.html">Zeiss ConfoCor3 (<code class="docutils literal notranslate"><span class="pre">.raw</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/single-molecule-sm.html">Single-molecule (SM) (<code class="docutils literal notranslate"><span class="pre">.sm</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/photonscore-lincam.html">Photonscore LINCam (<code class="docutils literal notranslate"><span class="pre">.photons</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/brighteyes-ttm.html">BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/flim-labs-stt1.html">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/pto.html">PTO — the PhoTon cOntainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats/pto-mfdb.html">PTO.MFDB — the MMFDB profile of the photon container</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="saving-tables.html">Saving a table</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="saving-tables.html#the-native-file">The native file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="saving-tables.html#what-a-column-knows-about-itself">What a column knows about itself</a></li>
+<li class="toctree-l2"><a class="reference internal" href="saving-tables.html#csv">CSV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="saving-tables.html#the-hdf5-file">The HDF5 file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins: adding a format without rebuilding</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#where-tttrlib-looks">Where tttrlib looks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#controlling-it">Controlling it</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#seeing-what-happened">Seeing what happened</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#writing-one">Writing one</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#the-five-contracts">The five contracts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#what-a-plugin-cannot-do">What a plugin cannot do</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#containment-and-its-limits">Containment, and its limits</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="burst-analysis.html">4. Burst Analysis</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#core-objects">4.1. Core Objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#simple-path">4.2. Simple Path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#advanced-path">4.3. Advanced Path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#outputs-and-checks">4.4. Outputs and Checks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#troubleshooting">4.5. Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#examples">4.6. Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#burst-search-algorithms">4.3. Burst Search Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#advanced-path">4.4. Advanced Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#outputs-and-checks">4.5. Outputs and Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#troubleshooting">4.6. Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#examples">4.7. Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="burst-analysis.html#references">4.8. References</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="h2mm-bva.html">Dynamic FRET: H2MM and BVA</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="h2mm-bva.html#burst-variance-analysis">Burst Variance Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm-bva.html#photon-by-photon-hmm-h2mm">Photon-by-photon HMM (H2MM)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm-bva.html#why-the-tttrlib-h2mm-engine-is-fast">Why the tttrlib H2MM engine is fast</a></li>
-<li class="toctree-l2"><a class="reference internal" href="h2mm-bva.html#reproducing-the-benchmark">Reproducing the benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hmm-bva.html">Dynamic FRET: HMM and BVA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#burst-variance-analysis">Burst Variance Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#photon-by-photon-hmm-h2mm">Photon-by-photon HMM (H2MM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#one-molecule-per-burst-the-assumption-that-matters-most">One molecule per burst — the assumption that matters most</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#why-there-is-no-per-state-brightness-read-out">Why there is no per-state brightness read-out</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#checking-a-converged-fit-with-phasors">Checking a converged fit with phasors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#error-bars-on-the-maximum-likelihood-path">Error bars on the maximum-likelihood path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#photon-rate-is-ignored-and-that-is-deliberate">Photon rate is ignored, and that is deliberate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#background-predictable-dilution">Background: predictable dilution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#adding-the-lifetime-axis">Adding the lifetime axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#a-blinking-acceptor-and-the-limit-of-what-is-separable">A blinking acceptor, and the limit of what is separable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#why-the-tttrlib-h2mm-engine-is-fast">Why the tttrlib H2MM engine is fast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-bva.html#reproducing-the-benchmark">Reproducing the benchmark</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hmm-state-decoding.html">HMM state decoding: distributions, not winner-takes-all</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#two-different-questions">Two different questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#why-winner-takes-all-is-biased">Why winner-takes-all is biased</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#gamma-the-per-photon-posterior">gamma: the per-photon posterior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#when-the-output-must-be-a-hard-label">When the output must be a hard label</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#persisting-a-decode">Persisting a decode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#formats-msgpack-for-large-outputs">Formats: msgpack for large outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#choosing-a-decoder">Choosing a decoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#a-note-on-the-signed-channel-type">A note on the signed channel type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hmm-state-decoding.html#see-also">See also</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pda-guide.html">5. Photon Distribution Analysis (PDA)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pda-guide.html#core-objects">5.1. Core Objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pda-guide.html#concepts">5.2. Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#simple-path">5.3. Simple Path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#what-to-document-in-a-pda-result">5.4. What To Document In a PDA Result</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#advanced-path">5.5. Advanced Path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#experimental-histogram-workflow">5.6. Experimental Histogram Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#optimized-implementation">5.7. Optimized Implementation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#array-shape-checks">5.8. Array Shape Checks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#troubleshooting">5.9. Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#examples">5.10. Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#index-convention">5.3. Index Convention</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#simple-path">5.4. Simple Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#what-to-document-in-a-pda-result">5.5. What To Document In a PDA Result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#advanced-path">5.6. Advanced Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#experimental-histogram-workflow">5.7. Experimental Histogram Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#fitting-species-fractions">5.8. Fitting Species Fractions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#optimized-implementation">5.9. Optimized Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#array-shape-checks">5.10. Array Shape Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#burst-wise-likelihood-any-number-of-channels">5.11. Burst-Wise Likelihood (any number of channels)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#troubleshooting">5.12. Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pda-guide.html#examples">5.13. Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fcs-correlation.html">6. FCS and Correlation</a><ul>
@@ -1036,6 +1198,16 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html#examples">7.11. Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="superres-guide.html">Super-resolution: eSRRF, ISM, SOFISM and s²ISM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#references">References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#photon-level-esrrf">Photon-level eSRRF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#array-detector-reconstructions">Array-detector reconstructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#sofism">SOFISM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#s2ism">s²ISM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#choosing-a-method">Choosing a method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="superres-guide.html#worked-examples">Worked examples</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="simulator-guide.html">Photon-simulation guide (smFRET / MFD)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#the-openmm-analogy">The OpenMM analogy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#quick-start">Quick start</a></li>
@@ -1044,6 +1216,7 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#the-routing-channel-model-read-this-first">The routing-channel model (read this first)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#cookbook">Cookbook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#performance-knobs">Performance knobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#flow-and-directed-transport">Flow and directed transport</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulator-guide.html#api-reference">API reference</a></li>
 </ul>
 </li>
@@ -1054,17 +1227,21 @@ data model.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fit-guide.html">9. Fluorescence Decay Fitting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#which-fit-should-i-use">9.1. Which Fit Should I Use?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#common-failure-modes">9.2. Common Failure Modes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#shared-inputs">9.3. Shared Inputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#result-contract">9.4. Result Contract</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#parameter-arrays">9.5. Parameter Arrays</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#simple-helper-api">9.6. Simple Helper API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#reusable-class-api">9.7. Reusable Class API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#low-level-api">9.8. Low-Level API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#related-decay-tools">9.9. Related Decay Tools</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#troubleshooting">9.10. Troubleshooting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#examples">9.11. Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#the-four-pieces">9.1. The four pieces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#which-fit-should-i-use">9.2. Which fit should I use?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#setup-parameters-and-results">9.3. Setup, parameters and results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#what-a-fit-returns">9.4. What a fit returns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#inspecting-the-registry">9.5. Inspecting the registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#fixing-freeing-and-linking">9.6. Fixing, freeing and linking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#bounds-are-priors">9.7. Bounds are priors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#fitting-many-decays">9.8. Fitting many decays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#fitting-them-together">9.9. Fitting them <em>together</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#simulating-a-decay">9.10. Simulating a decay</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#convolving-the-recursion-or-the-transform">9.11. Convolving: the recursion or the transform?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#common-failure-modes">9.12. Common failure modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#related-decay-tools">9.13. Related decay tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#deprecated-api">9.14. Deprecated API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fit-guide.html#examples">9.15. Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="performance_guide.html">Performance Guide</a><ul>
@@ -1120,7 +1297,7 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">11.1. Burst Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/pda.html">11.3. Photon distribution analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/h2mm_bva.html">Dynamic FRET: H2MM and BVA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/hmm_bva.html">Dynamic FRET: HMM and BVA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/features.html">11.2. Fluorescence intensity analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/ics.html">12.12. Image correlation spectroscopy</a></li>
 </ul>
@@ -1140,6 +1317,10 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#miscellaneous">Miscellaneous</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#release-highlights">Release Highlights</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#single-molecule">Single-molecule</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html#streaming-real-time-analysis-examples">Streaming / Real-Time Analysis Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#files">Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="auto_examples/index.html#working-with-tttr-objects">Working with TTTR objects</a></li>
 </ul>
 </li>

@@ -1,0 +1,1492 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="HMM state decoding: distributions, not winner-takes-all" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="hmm-state-decoding.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Fitting an HMM tells you how many states there are and what they look like. Using it means going one step further and asking which state each photon belongs to. That step is called decoding, and wh..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_hmm-state-decoding_8beac433.png" />
+<meta property="og:image:alt" content="Fitting an HMM tells you how many states there are and what they look like. Using it means going one step further and asking which state each photon belongs to. That step is called decoding, and wh..." />
+<meta name="description" content="Fitting an HMM tells you how many states there are and what they look like. Using it means going one step further and asking which state each photon belongs to. That step is called decoding, and wh..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>HMM state decoding: distributions, not winner-takes-all &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'hmm-state-decoding';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Photon Distribution Analysis (PDA)" href="pda-guide.html" />
+    <link rel="prev" title="Dynamic FRET: HMM and BVA" href="hmm-bva.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/hmm-state-decoding.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">HMM state decoding: distributions, not winner-takes-all</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hmm-state-decoding-distributions-not-winner-takes-all">
+<span id="hmm-state-decoding"></span><h1>HMM state decoding: distributions, not winner-takes-all<a class="headerlink" href="#hmm-state-decoding-distributions-not-winner-takes-all" title="Link to this heading">#</a></h1>
+<p>Fitting an HMM tells you <em>how many</em> states there are and what they look
+like. Using it means going one step further and asking which state each photon
+belongs to. That step is called <strong>decoding</strong>, and which decoder is right depends
+entirely on the question being asked.</p>
+<p>This page is about a bias that is easy to introduce and hard to notice: the
+standard decoder, Viterbi, answers a different question from the one most burst
+analysis actually asks, and the difference systematically inflates
+well-separated states while erasing ambiguous and short-lived ones.</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#two-different-questions" id="id1">Two different questions</a></p></li>
+<li><p><a class="reference internal" href="#why-winner-takes-all-is-biased" id="id2">Why winner-takes-all is biased</a></p></li>
+<li><p><a class="reference internal" href="#gamma-the-per-photon-posterior" id="id3">gamma: the per-photon posterior</a></p></li>
+<li><p><a class="reference internal" href="#when-the-output-must-be-a-hard-label" id="id4">When the output must be a hard label</a></p></li>
+<li><p><a class="reference internal" href="#persisting-a-decode" id="id5">Persisting a decode</a></p></li>
+<li><p><a class="reference internal" href="#formats-msgpack-for-large-outputs" id="id6">Formats: msgpack for large outputs</a></p></li>
+<li><p><a class="reference internal" href="#choosing-a-decoder" id="id7">Choosing a decoder</a></p></li>
+<li><p><a class="reference internal" href="#a-note-on-the-signed-channel-type" id="id8">A note on the signed channel type</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id9">See also</a></p></li>
+</ul>
+</nav>
+<section id="two-different-questions">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Two different questions</a><a class="headerlink" href="#two-different-questions" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>“Most likely sequence”</dt><dd><p>Of all possible state trajectories, which single one has the highest
+probability given the data? This is what <code class="xref py py-meth docutils literal notranslate"><span class="pre">tttrlib.HMM.viterbi()</span></code>
+returns, and it is the right answer when you want <em>the</em> trajectory — for
+plotting one burst, or as a point estimate of the path.</p>
+</dd>
+<dt>“Distribution over states”</dt><dd><p>Across all the photons, what fraction belongs to each state? This is what
+per-state decays, per-state spectra, state populations and occupancy
+fractions are made of — and it is a <em>different</em> question.</p>
+</dd>
+</dl>
+<p>The trap is that the first answer looks like it also answers the second. It does
+not, and the way it fails is one-directional.</p>
+</section>
+<section id="why-winner-takes-all-is-biased">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Why winner-takes-all is biased</a><a class="headerlink" href="#why-winner-takes-all-is-biased" title="Link to this heading">#</a></h2>
+<p>Take a burst where the model is genuinely unsure: every photon has a posterior
+of 0.7 for state 0 and 0.3 for state 1.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>gamma = (0.7, 0.3) for every photon in the burst
+
+Viterbi -&gt;  100 % state 0,   0 % state 1     &lt;- the 30 % is erased
+gamma   -&gt;   70 % state 0,  30 % state 1     &lt;- faithful by construction
+</pre></div>
+</div>
+<p>The argmax is not wrong about the most likely <em>sequence</em>. It is wrong as an
+<em>occupancy estimator</em>, because it discards the 30 % rather than distributing it.
+Every photon in the burst is resolved the same way, so the error does not
+average out — it accumulates in one direction.</p>
+<p>The consequences in practice:</p>
+<ul class="simple">
+<li><p><strong>Well-separated states are inflated.</strong> They win the argmax even in the
+photons where they are only mildly favoured.</p></li>
+<li><p><strong>Ambiguous states are erased.</strong> A state that is never the single most likely
+one anywhere can get zero photons while carrying real posterior mass.</p></li>
+<li><p><strong>Short-lived states vanish.</strong> A dwell too short to dominate its neighbours in
+the maximum-likelihood path disappears entirely.</p></li>
+</ul>
+<p>This is measurable. On simulated data with overlapping emission profiles
+(200 000 photons, three states), the occupancy error against the posterior:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>decoder                     max |occupancy - posterior|
+viterbi                                 0.0246
+marginal gamma draw (jitter)            0.0003
+FFBS path sampling                      0.0017
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">benchmarks/bench_h2mm.py</span></code> reports this number beside the timings, so a
+regression in the decoders shows up as a quality change, not just a speed one.</p>
+</section>
+<section id="gamma-the-per-photon-posterior">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">gamma: the per-photon posterior</a><a class="headerlink" href="#gamma-the-per-photon-posterior" title="Link to this heading">#</a></h2>
+<p>The quantity that answers the distribution question is</p>
+<div class="math notranslate nohighlight">
+\[\gamma_t(i) = P(s_t = i \mid \text{data}, \lambda)
+            = \frac{\alpha_t(i)\,\beta_t(i)}{\sum_j \alpha_t(j)\,\beta_t(j)}\]</div>
+<p>from the scaled forward-backward recursion — the same array the reference
+<code class="docutils literal notranslate"><span class="pre">H2MM_C</span></code> implementation calls <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, so the numbers are directly
+comparable. tttrlib’s E-step has always formed it internally and contracted it
+away; <code class="xref py py-meth docutils literal notranslate"><span class="pre">tttrlib.HMM.posterior()</span></code> now returns it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
+<span class="n">engine</span><span class="o">.</span><span class="n">set_bursts_from_tttr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bursts</span><span class="p">,</span> <span class="p">[</span><span class="n">green</span><span class="p">,</span> <span class="n">red</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">n_states</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">gamma</span><span class="p">,</span> <span class="n">n_underflow</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>   <span class="c1"># (n_photons, n_states) float32</span>
+<span class="n">occupancy</span> <span class="o">=</span> <span class="n">gamma</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>             <span class="c1"># unbiased state occupancy</span>
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code> is <code class="docutils literal notranslate"><span class="pre">float32</span></code>. At 10 M photons and 4 states the array is 160 MB,
+and a probability used for weighting and thresholding does not need more
+precision than that.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_underflow</span></code> counts photons where the forward scale underflowed to zero.
+Those rows carry no information and are returned uniform. A non-zero count
+means the model assigns (near-)zero probability to part of the data — treat
+the whole decode with suspicion rather than just those photons.</p></li>
+<li><p>If fractional weights are acceptable, <strong>weighting by gamma is exact and has
+lower variance than any draw</strong>. Reach for the samplers below only when the
+output has to be one integer per photon.</p></li>
+</ul>
+</section>
+<section id="when-the-output-must-be-a-hard-label">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">When the output must be a hard label</a><a class="headerlink" href="#when-the-output-must-be-a-hard-label" title="Link to this heading">#</a></h2>
+<p>Most of the pipeline downstream of a decode is typed for integers: a photon goes
+into one histogram, one channel, one selection. Once one state per photon is
+mandatory, gamma-weighting is off the table and the real comparison is
+<strong>drawing from gamma versus taking its argmax</strong>.</p>
+<p>Drawing wins, for one reason: it reproduces the marginal by construction. Over
+the photons at <span class="math notranslate nohighlight">\(\gamma = (0.7, 0.3)\)</span>, roughly 70 % land in state 0 and
+30 % in state 1 — which is what gamma said. The argmax cannot reproduce it at
+all.</p>
+<p>tttrlib provides two ways to draw.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 26.0%" />
+<col style="width: 26.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>decoder</p></th>
+<th class="head"><p>draws from</p></th>
+<th class="head"><p>photon distribution</p></th>
+<th class="head"><p>dwell / transition structure</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">viterbi</span></code></p></td>
+<td><p>— (argmax)</p></td>
+<td><p>biased (winner-takes-all)</p></td>
+<td><p>consistent (it <em>is</em> the ML path)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jitter</span></code></p></td>
+<td><p>marginal gamma, per photon</p></td>
+<td><p><strong>faithful</strong></p></td>
+<td><p>fragmented — do not use</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ffbs</span></code></p></td>
+<td><p>joint posterior, whole path</p></td>
+<td><p><strong>faithful</strong></p></td>
+<td><p><strong>valid</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="marginal-draw-jitter">
+<h3>Marginal draw (jitter)<a class="headerlink" href="#marginal-draw-jitter" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tttrlib.HMM.sample_states()</span></code> draws each photon’s state independently from
+its own gamma row:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path</span><span class="p">,</span> <span class="n">n_underflow</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">jitter_path</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Cheap, exact in the marginal, and the right tool for per-photon questions:
+occupancies, per-state decays, per-state micro-time or spectral histograms.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The draws are <strong>independent per photon</strong>, so the sampled path has none of
+gamma’s temporal correlation. A state that is solidly occupied at
+<span class="math notranslate nohighlight">\(\gamma = (0.9, 0.1)\)</span> will still see about one photon in ten flipped,
+scattered at random — turning a single long dwell into a shower of spurious
+one-photon dwells. In the test suite a marginal draw produces more than twice
+as many dwells as the joint draw on identical data.</p>
+<p><strong>Never</strong> compute dwell times, transition counts, or a transition-density
+plot from a marginal draw. Independent draws also give error bars that are
+far too tight, because they ignore the correlation between neighbouring
+photons.</p>
+</div>
+</section>
+<section id="joint-draw-ffbs">
+<h3>Joint draw (FFBS)<a class="headerlink" href="#joint-draw-ffbs" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tttrlib.HMM.sample_paths()</span></code> implements <strong>forward filtering, backward
+sampling</strong>: the same scaled forward pass, then</p>
+<div class="math notranslate nohighlight">
+\[s_N \sim \alpha_N, \qquad
+s_t \sim \alpha_t(i)\,A^{\Delta t}[i,\, s_{t+1}]\]</div>
+<p>sweeping backwards. Each draw is an exact sample from
+<span class="math notranslate nohighlight">\(P(\text{path} \mid \text{data})\)</span>, so it keeps the temporal correlation
+that the marginal draw throws away:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">ffbs_paths</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>   <span class="c1"># (20, n_photons)</span>
+</pre></div>
+</div>
+<p>Averaging a quantity over the draws is <strong>multiple imputation</strong>: the spread
+across draws is the decoding uncertainty, which a single Viterbi path reports as
+zero. Use FFBS whenever dwell times, transition counts or path-level error bars
+matter.</p>
+<p>The forward filter is computed once per burst and shared by every draw, so extra
+draws are close to free — eight FFBS draws over 200 000 photons cost 3.3 ms
+against 1.6 ms for gamma alone.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Coincident photons (zero macro-time gap) share a state by construction:
+the propagator over <span class="math notranslate nohighlight">\(\Delta t = 0\)</span> is the identity, so no decoder can
+place a transition between them.</p>
+</div>
+</section>
+<section id="reproducibility">
+<h3>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading">#</a></h3>
+<p>Both samplers use a <strong>counter-based</strong> random number generator: each draw is a
+pure function of <code class="docutils literal notranslate"><span class="pre">(seed,</span> <span class="pre">draw</span> <span class="pre">index,</span> <span class="pre">photon</span> <span class="pre">index)</span></code> rather than being pulled
+from a shared stream. Bursts therefore decode in any order on any number of
+threads and the result is bit-identical. A single shared generator would have
+made the output depend on thread scheduling.</p>
+</section>
+</section>
+<section id="persisting-a-decode">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Persisting a decode</a><a class="headerlink" href="#persisting-a-decode" title="Link to this heading">#</a></h2>
+<p>A decoded assignment has to outlive the process. tttrlib offers two ways, built
+on the same per-photon state array. They are equivalent photon for photon — a
+test asserts exactly that — and differ only in what the file looks like
+afterwards.</p>
+<section id="path-a-state-encoded-routing-channels">
+<h3>Path A — state-encoded routing channels<a class="headerlink" href="#path-a-state-encoded-routing-channels" title="Link to this heading">#</a></h3>
+<p>Each <code class="docutils literal notranslate"><span class="pre">(stream,</span> <span class="pre">state)</span></code> pair gets its own routing-channel id, and one file is
+written holding every photon:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">viterbi_path</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">build_channel_map</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_states</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">split</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">split_routing_channels</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
+<span class="n">split</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;decoded.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The result is <strong>self-describing</strong>: per-state decays, FCS, burst analyses and
+lifetime fits all become ordinary <code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.Channel</span></code> selections, with no
+new plumbing anywhere downstream and no need for the consuming tool to know
+an HMM was involved.</p>
+<p><strong>Channel allocation — the whole id space is compacted.</strong> A source file’s
+channels are usually sparse: 1, 12 and 30 for three detectors is perfectly
+ordinary, and those gaps are dead weight in a record field only a few bits wide.
+So the split does not merely append new ids, it renumbers everything. The used
+source ids compress to <code class="docutils literal notranslate"><span class="pre">0..k-1</span></code> in ascending order, and the <code class="docutils literal notranslate"><span class="pre">(stream,</span> <span class="pre">state)</span></code>
+pairs are allocated immediately after, <strong>densely, one step apart</strong>, in
+stream-major / state-minor order:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>source 1, 12, 30    -&gt;  0, 1, 2       (compressed, ascending)
+
+stream 0, state 0   -&gt;  3       stream 1, state 0  -&gt;  5
+stream 0, state 1   -&gt;  4       stream 1, state 1  -&gt;  6
+</pre></div>
+</div>
+<p>Every id the split writes then lies in one run from 0 with no holes, and that is
+what decides whether the result still fits a narrow container. Left
+uncompressed, the example above would keep background photons on id 30 and need
+<strong>5 bits</strong> to store a file with all of 7 distinct channels; compressed it needs
+<strong>3</strong>, so the same split that would have required PTU now round-trips through an
+SPC-600/256 record.</p>
+<p>Both directions are recorded, so nothing is lost: <code class="docutils literal notranslate"><span class="pre">cmap.used_channels[i]</span></code> is
+the original id and <code class="docutils literal notranslate"><span class="pre">cmap.compressed_channels[i]</span></code> the id it became, with
+<code class="docutils literal notranslate"><span class="pre">cmap.source_map</span></code> giving the same thing as a dict in Python and
+<code class="docutils literal notranslate"><span class="pre">cmap.highest_channel()</span></code> the largest id that will be written. The map is a
+published lookup table, stored in the state sidecar, not an arithmetic stride a
+reader is expected to reverse-engineer.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>The budget is the target container’s record field, not the in-memory
+type.</strong> tttrlib holds routing channels in a <code class="docutils literal notranslate"><span class="pre">signed</span> <span class="pre">char</span></code>, but what a file
+can store is the record bitfield:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 45.0%" />
+<col style="width: 20.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>container</p></th>
+<th class="head"><p>channel bits</p></th>
+<th class="head"><p>usable ids</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PTU / HydraHarp / TimeHarp260 T2, T3</p></td>
+<td><p>6</p></td>
+<td><p>0..63</p></td>
+</tr>
+<tr class="row-odd"><td><p>PicoHarp T2, T3</p></td>
+<td><p>4</p></td>
+<td><p>0..15</p></td>
+</tr>
+<tr class="row-even"><td><p>Becker &amp; Hickl SPC-130</p></td>
+<td><p>4</p></td>
+<td><p>0..15</p></td>
+</tr>
+<tr class="row-odd"><td><p>Becker &amp; Hickl SPC-600/256</p></td>
+<td><p>3</p></td>
+<td><p>0..7</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A narrower container does <strong>not</strong> fail on an out-of-range id — it drops the
+high bits silently, so an id of 40 written to an SPC-130 file reads back as
+8 and two states quietly merge. This is why <code class="docutils literal notranslate"><span class="pre">build_channel_map</span></code> takes an
+explicit <code class="docutils literal notranslate"><span class="pre">max_channel</span></code> (defaulting to PTU’s 63) rather than inheriting one
+from the source, and why <strong>PTU is the assumed target</strong> for a split. The
+budget needed is <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">+</span> <span class="pre">n_streams</span> <span class="pre">*</span> <span class="pre">n_states</span></code> where <code class="docutils literal notranslate"><span class="pre">k</span></code> is the number of
+source channels; if that does not fit, the call throws, naming the numbers
+and pointing at Path B, which has no budget at all.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Every photon is renumbered, and channel ids do not survive a split.</strong>
+Photons no decoder assigned — outside every burst, or matching no stream —
+move to the <em>compressed</em> form of the channel they were on, so they stay
+distinguishable from each other while the id space stays dense. Two
+consequences:</p>
+<ul class="simple">
+<li><p>The compressed source ids afterwards hold <strong>only</strong> unassigned photons.
+Summing the channel that used to be the donor gives you background, not the
+donor total. That is a useful semantic — background is separated for free —
+and a sharp edge if you were not expecting it.</p></li>
+<li><p>A downstream tool that hard-codes “channel 1 is the donor” will be wrong
+about a split file. Read <code class="docutils literal notranslate"><span class="pre">cmap.source_map</span></code> (or the <code class="docutils literal notranslate"><span class="pre">channel_map</span></code> in the
+sidecar) rather than assuming; that is what it is there for.</p></li>
+</ul>
+</div>
+</section>
+<section id="path-b-the-msgpack-state-sidecar">
+<h3>Path B — the msgpack state sidecar<a class="headerlink" href="#path-b-the-msgpack-state-sidecar" title="Link to this heading">#</a></h3>
+<p>The source file is left untouched and the assignment travels beside it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sidecar</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">state_sidecar</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="s2">&quot;viterbi&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
+<span class="n">sidecar</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;decoded_hmm_states.msgpack&quot;</span><span class="p">)</span>
+
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmStateSidecar</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;decoded_hmm_states.msgpack&quot;</span><span class="p">)</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="n">back</span><span class="o">.</span><span class="n">indices_for_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>          <span class="c1"># source photon indices</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">back</span><span class="o">.</span><span class="n">mask_for_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>            <span class="c1"># a TTTRMask, for the selection API</span>
+</pre></div>
+</div>
+<p>Use this when the raw data must not be altered, or when the state count exceeds
+what the container’s channel field can express. The cost is that only consumers
+that accept a mask or an index array see the states; a tool reading the raw file
+sees nothing.</p>
+<p><strong>What is stored is the per-photon state array, not N masks.</strong> A state
+assignment is a <em>partition</em> — every photon has exactly one state — so N bitmasks
+would store the same information at <code class="docutils literal notranslate"><span class="pre">N/8</span></code> bytes per photon that one <code class="docutils literal notranslate"><span class="pre">uint8</span></code>
+array stores in 1. Masks are the <em>view</em>: <code class="docutils literal notranslate"><span class="pre">mask_for_state(k)</span></code> materialises a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.TTTRMask</span></code> on demand to feed the existing selection machinery.</p>
+<p>The sidecar also carries the model, the decoder name, the seed, and the channel
+map when Path A also ran — so a decode is reproducible from the file alone.</p>
+</section>
+</section>
+<section id="formats-msgpack-for-large-outputs">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Formats: msgpack for large outputs</a><a class="headerlink" href="#formats-msgpack-for-large-outputs" title="Link to this heading">#</a></h2>
+<p><strong>msgpack is the convention for tttrlib outputs that scale with the photon
+count.</strong> It costs no new dependency: nlohmann/json is already vendored and
+provides <code class="docutils literal notranslate"><span class="pre">to_msgpack</span></code> / <code class="docutils literal notranslate"><span class="pre">from_msgpack</span></code> plus a <code class="docutils literal notranslate"><span class="pre">json::binary</span></code> value type,
+which msgpack encodes as a native <code class="docutils literal notranslate"><span class="pre">bin</span></code> field — packed arrays travel as bytes
+rather than as base64 or per-element decimal text. JSON stays the right choice
+for small, human-readable payloads.</p>
+<p>The same change fixed a serialisation defect found while building this feature.
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">tttrlib.TTTRMask.to_json()</span></code> emits one JSON integer <strong>per event</strong>, so a
+10 M-photon mask is roughly 20 MB of text. <code class="xref py py-class docutils literal notranslate"><span class="pre">tttrlib.TTTRMask</span></code> now also
+has:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">()</span>          <span class="c1"># msgpack; the bit-packed words verbatim</span>
+<span class="n">mask</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+<span class="n">mask</span><span class="o">.</span><span class="n">write_msgpack</span><span class="p">(</span><span class="s2">&quot;mask.msgpack&quot;</span><span class="p">)</span>
+<span class="n">mask</span><span class="o">.</span><span class="n">read_msgpack</span><span class="p">(</span><span class="s2">&quot;mask.msgpack&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which is <code class="docutils literal notranslate"><span class="pre">size/8</span></code> bytes plus a small header — over an order of magnitude
+smaller than the JSON form. <code class="docutils literal notranslate"><span class="pre">to_json</span></code> remains for small masks and for
+compatibility with existing payloads.</p>
+</section>
+<section id="choosing-a-decoder">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Choosing a decoder</a><a class="headerlink" href="#choosing-a-decoder" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 45.0%" />
+<col style="width: 55.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>what you want</p></th>
+<th class="head"><p>what to use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>one trajectory, e.g. to plot a burst</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">viterbi</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>state occupancies / populations</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gamma.mean(axis=0)</span></code> — no draw needed</p></td>
+</tr>
+<tr class="row-even"><td><p>a fractional weight per photon</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code> directly (exact, lowest variance)</p></td>
+</tr>
+<tr class="row-odd"><td><p>per-state decays, spectra, micro-time histograms</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">jitter</span></code> (or <code class="docutils literal notranslate"><span class="pre">gamma</span></code> weights if the tool accepts them)</p></td>
+</tr>
+<tr class="row-even"><td><p>dwell times, transition counts, TDP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ffbs</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>error bars on any of the above</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ffbs</span></code> with several draws (multiple imputation)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="a-note-on-the-signed-channel-type">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">A note on the signed channel type</a><a class="headerlink" href="#a-note-on-the-signed-channel-type" title="Link to this heading">#</a></h2>
+<p>Routing channels are stored in memory as <code class="docutils literal notranslate"><span class="pre">signed</span> <span class="pre">char</span></code>. Negative ids are legal
+there, but no reader in tttrlib produces one: markers are flagged through
+<code class="docutils literal notranslate"><span class="pre">event_types</span> <span class="pre">==</span> <span class="pre">RECORD_MARKER</span></code> rather than by a negative channel
+(<code class="docutils literal notranslate"><span class="pre">MARKER_POSITION_X</span></code> and <code class="docutils literal notranslate"><span class="pre">MARKER_POSITION_Y</span></code> are 0 and 1), and every reader
+narrows an <code class="docutils literal notranslate"><span class="pre">int16_t</span></code> into the <code class="docutils literal notranslate"><span class="pre">signed</span> <span class="pre">char</span></code>. Half the range is therefore
+dead, and — as the table above shows — the usable range is set by the container,
+not by the C++ type, so widening the type to <code class="docutils literal notranslate"><span class="pre">uint8_t</span></code> would buy range that no
+supported format can store. The state split allocates from the non-negative
+range only and leaves the type alone.</p>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">See also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="hmm-bva.html#hmm-bva-guide"><span class="std std-ref">Dynamic FRET: HMM and BVA</span></a> — fitting the model in the first place.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">examples/single_molecule/plot_hmm_state_channels.py</span></code> — a complete
+worked example: fit, decode three ways, write both a PTU and a sidecar, read
+them back and show the per-state decays agree.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmarks/bench_h2mm.py</span></code> — decode cost and occupancy error side by side.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="hmm-bva.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Dynamic FRET: HMM and BVA</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pda-guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><span class="section-number">5. </span>Photon Distribution Analysis (PDA)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-different-questions">Two different questions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-winner-takes-all-is-biased">Why winner-takes-all is biased</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-the-per-photon-posterior">gamma: the per-photon posterior</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-the-output-must-be-a-hard-label">When the output must be a hard label</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#marginal-draw-jitter">Marginal draw (jitter)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#joint-draw-ffbs">Joint draw (FFBS)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducibility">Reproducibility</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#persisting-a-decode">Persisting a decode</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#path-a-state-encoded-routing-channels">Path A — state-encoded routing channels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#path-b-the-msgpack-state-sidecar">Path B — the msgpack state sidecar</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#formats-msgpack-for-large-outputs">Formats: msgpack for large outputs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-a-decoder">Choosing a decoder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-note-on-the-signed-channel-type">A note on the signed channel type</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/hmm-state-decoding.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

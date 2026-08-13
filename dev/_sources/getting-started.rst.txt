@@ -120,6 +120,30 @@ Reconstruct a CLSM intensity image:
    clsm.fill(channels=[0, 1], micro_time_ranges=[[0, 16000]])
    intensity = clsm.intensity
 
+Example data
+------------
+
+The example scripts and gallery read from small demonstration TTTR files that
+are distributed separately from the source tree. Download and unpack them with
+``curl`` or ``wget``:
+
+.. code-block:: bash
+
+   curl -O https://www.peulen.xyz/downloads/tttr-data/tttr-data.zip
+   unzip tttr-data.zip
+
+.. code-block:: bash
+
+   wget https://www.peulen.xyz/downloads/tttr-data/tttr-data.zip
+   unzip tttr-data.zip
+
+Then point the examples at the unpacked folder with the ``TTTRLIB_DATA``
+environment variable:
+
+.. code-block:: bash
+
+   export TTTRLIB_DATA=/path/to/tttr-data
+
 Example-driven learning
 -----------------------
 

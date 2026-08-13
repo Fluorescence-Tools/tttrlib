@@ -21,7 +21,9 @@ import tttrlib
 import matplotlib.pylab as plt
 import numpy as np
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 
 #%%
 # First, we read a dataset into a TTTR container. In the example,

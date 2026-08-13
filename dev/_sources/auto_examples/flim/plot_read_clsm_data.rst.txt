@@ -40,11 +40,12 @@ data stream by numbers. There are no default identifier for frames and lines
 for markers are provided, either the default values for a particular setup are used,
 or meta-data contained in the TTTR file is read.
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-37
+.. GENERATED FROM PYTHON SOURCE LINES 27-40
 
 .. code-block:: Python
 
     import os
+    import sys
     from pathlib import Path
     import pylab as plt
     from matplotlib.pyplot import imread
@@ -52,28 +53,30 @@ or meta-data contained in the TTTR file is read.
     import numpy as np
 
     # Determine data root from environment or fall back to repository layout
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-40
+.. GENERATED FROM PYTHON SOURCE LINES 41-43
 
 The first step, when constructing a LSM image from TTTR data is to
 read the data contained in a TTTR file into a TTTR container.
 
-.. GENERATED FROM PYTHON SOURCE LINES 40-42
+.. GENERATED FROM PYTHON SOURCE LINES 43-45
 
 .. code-block:: Python
 
     tttr_data = tttrlib.TTTR(str(DATA_ROOT / 'imaging/pq/ht3/pq_ht3_clsm.ht3'), 'HT3')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-46
+.. GENERATED FROM PYTHON SOURCE LINES 46-49
 
 Next, a LSM image container is constructed. There are multiple options to
 encode markers for frames and lines in TTTR files. The default reading routine
 supports PicoQuant marker encodings and data recorded on Zeiss microscopes.
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-55
+.. GENERATED FROM PYTHON SOURCE LINES 51-58
 
 Default reading routine
 -----------------------
@@ -83,7 +86,7 @@ many files can be opened without explicitly specifying details on frame and line
 markers. LSM images (which are mappings from pixel to ranges in the event stream)
 can be filled with photons after construction.
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-61
+.. GENERATED FROM PYTHON SOURCE LINES 58-64
 
 .. code-block:: Python
 
@@ -94,11 +97,11 @@ can be filled with photons after construction.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-63
+.. GENERATED FROM PYTHON SOURCE LINES 65-66
 
 Alternatively, the images are filled with photons in a single step.
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-67
+.. GENERATED FROM PYTHON SOURCE LINES 66-70
 
 .. code-block:: Python
 
@@ -107,10 +110,17 @@ Alternatively, the images are filled with photons in a single step.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-90
+.. GENERATED FROM PYTHON SOURCE LINES 71-73
+
+Make the `examples` package importable when this script is run directly,
+from any working directory.
+
+.. GENERATED FROM PYTHON SOURCE LINES 73-97
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
     # In cases there are issues with the meta data (there are no official standards),
@@ -134,14 +144,14 @@ Alternatively, the images are filled with photons in a single step.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-95
+.. GENERATED FROM PYTHON SOURCE LINES 98-102
 
 Leica instruments
 -----------------
 Leica instruments use a non-default marker encoding and different
 marker reading routines.
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-117
+.. GENERATED FROM PYTHON SOURCE LINES 102-124
 
 .. code-block:: Python
 

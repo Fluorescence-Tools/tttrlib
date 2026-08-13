@@ -27,7 +27,7 @@ the data in a TTTR stream needs to be inspected manually to decipher the content
 of a custom build confocal microscope equipped with PicoQuant counting electronics and a TTTR stream of a Leica SP8
 instrument is inspected.
 
-.. GENERATED FROM PYTHON SOURCE LINES 13-22
+.. GENERATED FROM PYTHON SOURCE LINES 13-24
 
 .. code-block:: Python
 
@@ -38,10 +38,12 @@ instrument is inspected.
     import numpy as np
     import pylab as plt
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-28
+.. GENERATED FROM PYTHON SOURCE LINES 25-30
 
 Read the TTTR Stream
 --------------------
@@ -49,7 +51,7 @@ First, the data corresponding to the image needs to be saved as TTTR-file. Leica
 uses PicoQuant (PQ) PTU files that can be loaded in ``tttrlib``. The custom setup
 saved the CLSM data to PQ HT3 files.
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-35
+.. GENERATED FROM PYTHON SOURCE LINES 30-37
 
 .. code-block:: Python
 
@@ -61,7 +63,7 @@ saved the CLSM data to PQ HT3 files.
     tttr_leica = tttrlib.TTTR(fn_leica_sp8)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-41
+.. GENERATED FROM PYTHON SOURCE LINES 38-43
 
 CLSM marker (Custom setup)
 --------------------------
@@ -69,7 +71,7 @@ The custom setup used a "standard" encoding for the frame and line markers. The 
 markers are so called "special" events (no photons). Thus, we select all events where the
 event type equals to 1 (photons have an event type of 0).
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-45
+.. GENERATED FROM PYTHON SOURCE LINES 43-47
 
 .. code-block:: Python
 
@@ -78,13 +80,13 @@ event type equals to 1 (photons have an event type of 0).
     special_events = np.where(e == 1)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-49
+.. GENERATED FROM PYTHON SOURCE LINES 48-51
 
 Inspecting the routing channels of the special events, we find that the routing channel numbers
 are 4, 0, and 2. The 4 marks the beginning of a new frame. The 0 the beginning of a new line and
 the 2 the end of a line.
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-56
+.. GENERATED FROM PYTHON SOURCE LINES 51-58
 
 .. code-block:: Python
 
@@ -96,14 +98,14 @@ the 2 the end of a line.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 57-61
+.. GENERATED FROM PYTHON SOURCE LINES 59-63
 
 CLSM marker (Leica)
 -------------------
 Below, an analysis of the frame and line marker is briefly outlined for a Leica SP8
 dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-66
+.. GENERATED FROM PYTHON SOURCE LINES 63-68
 
 .. code-block:: Python
 
@@ -113,14 +115,14 @@ dataset.
     m = tttr_leica.micro_times
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-71
+.. GENERATED FROM PYTHON SOURCE LINES 69-73
 
 The routing channels are inspected to determine the actual channel
 numbers of the detectors. A bincount over the channel numbers determines
 how often a channel occurs in the data stream.
 Look for used channels
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-76
+.. GENERATED FROM PYTHON SOURCE LINES 73-78
 
 .. code-block:: Python
 
@@ -130,7 +132,7 @@ Look for used channels
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-98
+.. GENERATED FROM PYTHON SOURCE LINES 79-100
 
 In the dataset two channels were populated (channel 1 and channel 15).
 For the measurements only a single detector was used. Hence, likely,
@@ -154,7 +156,7 @@ By looking at the macro time one can also finds that there are 93 images in
 the file, as intensity within the image in non-uniform. Hence, the macro time
 fluctuates.
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-101
+.. GENERATED FROM PYTHON SOURCE LINES 100-103
 
 .. code-block:: Python
 
@@ -162,13 +164,13 @@ fluctuates.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-105
+.. GENERATED FROM PYTHON SOURCE LINES 104-107
 
 To make sure that the routing channel 1 is indeed a detection channels,
 one can create (in a time-resolved experiment) a bincount of the associated micro
 times.
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-110
+.. GENERATED FROM PYTHON SOURCE LINES 107-112
 
 .. code-block:: Python
 
@@ -178,14 +180,14 @@ times.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-115
+.. GENERATED FROM PYTHON SOURCE LINES 113-117
 
 Next, to identify if in addition to the channel number 15 the markers are identified
 by non-photon event marker we make a bincount of the channel numbers, where the
 event type is 1 (photon events have the event type 0, non-photon events have the
 event type 1).
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-119
+.. GENERATED FROM PYTHON SOURCE LINES 117-121
 
 .. code-block:: Python
 
@@ -194,7 +196,7 @@ event type 1).
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 120-128
+.. GENERATED FROM PYTHON SOURCE LINES 122-130
 
 To sum up, channel 1 is a routing channels of the detector. Channel 15 is
 the routing channel used to inject the special markers. Next, we inspect
@@ -205,7 +207,7 @@ The plot of the micro times for the events of the routing channel 15 reveals, th
 the micro time is either 1, 2, or 4. A more close inspection reveals that a micro
 time value of 1 is always succeeded by a micro time value of 2.
 
-.. GENERATED FROM PYTHON SOURCE LINES 128-133
+.. GENERATED FROM PYTHON SOURCE LINES 130-135
 
 .. code-block:: Python
 
@@ -215,7 +217,7 @@ time value of 1 is always succeeded by a micro time value of 2.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 134-148
+.. GENERATED FROM PYTHON SOURCE LINES 136-150
 
 A micro time value of 4 is followed by a micro time value of 1. This means, that
 the micro time encodes the frame marker and the line start/stop
@@ -232,7 +234,7 @@ Next, the macro time of the events where the routing channel number equals 15 is
 inspected. As anticipated, the macro time increases on first glance continuously.
 On closer inspection, however, steps in the macro time are visible.
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-152
+.. GENERATED FROM PYTHON SOURCE LINES 150-154
 
 .. code-block:: Python
 
@@ -241,7 +243,7 @@ On closer inspection, however, steps in the macro time are visible.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-165
+.. GENERATED FROM PYTHON SOURCE LINES 155-167
 
 To sum up, in the Leica SP8 PTU files
 
@@ -256,7 +258,7 @@ To sum up, in the Leica SP8 PTU files
     When opening an image in ``tttrlib`` this special case is considered by specifying
     the reading routine.
 
-.. GENERATED FROM PYTHON SOURCE LINES 167-175
+.. GENERATED FROM PYTHON SOURCE LINES 169-177
 
 Conclusion
 ----------

@@ -39,10 +39,12 @@ structures.
     6. Define pixel classes by image segmentation
     7. Apply pixel classes for analysis
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-54
+.. GENERATED FROM PYTHON SOURCE LINES 26-56
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import tttrlib
     import numpy as np
     import matplotlib.pyplot as plt
@@ -72,10 +74,17 @@ structures.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 55-69
+.. GENERATED FROM PYTHON SOURCE LINES 57-59
+
+Make the `examples` package importable when this script is run directly,
+from any working directory.
+
+.. GENERATED FROM PYTHON SOURCE LINES 59-75
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
     # 1. Loading data and creating the intensity images
@@ -91,14 +100,14 @@ structures.
     sum_all = green_ch + red_ch
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-74
+.. GENERATED FROM PYTHON SOURCE LINES 76-80
 
 3. Pulsed interleaved excitation
 --------------------------------
 Split the data into prompt and delay.
 For a more detailed description see plot_pie_flim.py
 
-.. GENERATED FROM PYTHON SOURCE LINES 74-84
+.. GENERATED FROM PYTHON SOURCE LINES 80-90
 
 .. code-block:: Python
 
@@ -113,12 +122,12 @@ For a more detailed description see plot_pie_flim.py
     delay_range = 11000, 25000
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-87
+.. GENERATED FROM PYTHON SOURCE LINES 91-93
 
 2. Create CLSM image container
 -------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-93
+.. GENERATED FROM PYTHON SOURCE LINES 93-99
 
 .. code-block:: Python
 
@@ -129,7 +138,7 @@ For a more detailed description see plot_pie_flim.py
     clsm_red_delay = tttrlib.CLSMImage(tttr_data=tttr_data, channels=red_ch, micro_time_ranges=[delay_range])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-105
+.. GENERATED FROM PYTHON SOURCE LINES 100-111
 
 3. Intensity imaging
 --------------------
@@ -143,7 +152,7 @@ all frames to improve the counting statistics
 Note: image shape is in the order of t-y-x, thus summation of over axis=0
 results in generating the t-projection
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-121
+.. GENERATED FROM PYTHON SOURCE LINES 111-127
 
 .. code-block:: Python
 
@@ -164,12 +173,12 @@ results in generating the t-projection
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 122-124
+.. GENERATED FROM PYTHON SOURCE LINES 128-130
 
 Lifetime analysis
 ^^^^^^^^^^^^^^^^^
 
-.. GENERATED FROM PYTHON SOURCE LINES 124-140
+.. GENERATED FROM PYTHON SOURCE LINES 130-146
 
 .. code-block:: Python
 
@@ -190,12 +199,12 @@ Lifetime analysis
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-143
+.. GENERATED FROM PYTHON SOURCE LINES 147-149
 
 7. Image segmentation
 ---------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-150
+.. GENERATED FROM PYTHON SOURCE LINES 149-156
 
 .. code-block:: Python
 
@@ -207,7 +216,7 @@ Lifetime analysis
     # the region of interest and "0/FALSE" outside.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 151-157
+.. GENERATED FROM PYTHON SOURCE LINES 157-163
 
 7.1 Segmentation of the vesicles
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,7 +225,7 @@ Here, first a Gaussian smoothing with a size of 1 sigma is applied,
 followed by thresholding using the method of Otsu.
 Finally, objects with a size smaller than 5 pixels are removed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 157-179
+.. GENERATED FROM PYTHON SOURCE LINES 163-185
 
 .. code-block:: Python
 
@@ -243,7 +252,7 @@ Finally, objects with a size smaller than 5 pixels are removed.
     vesicle_mask = (np.array(binary_img_vesicles, dtype=np.ubyte))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 180-190
+.. GENERATED FROM PYTHON SOURCE LINES 186-196
 
 7.2 Segmentation of the cytoplasm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,7 +265,7 @@ In the final steps, first small holes inside the cytoplasm area are closed,
 followed by the removal of small detected areas outside the main cell.
 Here, a minimal size threshold of 10'000 pixel is applied.
 
-.. GENERATED FROM PYTHON SOURCE LINES 190-211
+.. GENERATED FROM PYTHON SOURCE LINES 196-217
 
 .. code-block:: Python
 
@@ -282,7 +291,7 @@ Here, a minimal size threshold of 10'000 pixel is applied.
     cytoplasm_mask = (np.array(binary_img_cytoplasm, dtype=np.ubyte))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 212-227
+.. GENERATED FROM PYTHON SOURCE LINES 218-233
 
 7.3 Segmentation of nucleus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -300,7 +309,7 @@ Finally, as the nucleus is characterized by being outside the way of the diffusi
 vesicles, we average the such obtained nucleus and generate an average nucleus by
 summing over all 400 frames and threshold this projection using the method of Otsu.
 
-.. GENERATED FROM PYTHON SOURCE LINES 227-266
+.. GENERATED FROM PYTHON SOURCE LINES 233-272
 
 .. code-block:: Python
 
@@ -344,14 +353,14 @@ summing over all 400 frames and threshold this projection using the method of Ot
     nucleus_mask_avg = ski.morphology.remove_small_objects(thresholded_img, min_size=minimal_nucleus_size)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 267-271
+.. GENERATED FROM PYTHON SOURCE LINES 273-277
 
 In the next two steps, we clean up the cytoplasm and vesicles masks.
 First, we remove the nucleus and vesicles from the cytoplasm, and second
 we remove the vesicles inside the nucleus region - if any- and the vesicles
 beloging to the neighboring cell from the vesicles mask.
 
-.. GENERATED FROM PYTHON SOURCE LINES 273-280
+.. GENERATED FROM PYTHON SOURCE LINES 279-286
 
 7.4 Remove nucleus and vesicles from cytoplasm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -361,7 +370,7 @@ Remember that all masks are filled with 0 and 1, thus 0*0 or 0*1 = 0,
 only those regions, where both, in the cytoplasm mask and the inverted mask,
 the value 1 is given, stay 1.
 
-.. GENERATED FROM PYTHON SOURCE LINES 280-302
+.. GENERATED FROM PYTHON SOURCE LINES 286-308
 
 .. code-block:: Python
 
@@ -388,7 +397,7 @@ the value 1 is given, stay 1.
     mask_cytoplasm = (np.array(cytoplasm_wo_nucleus_vesicles, dtype=np.ubyte))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 303-308
+.. GENERATED FROM PYTHON SOURCE LINES 309-314
 
 7.5 Remove vesicles in nucleus regions and outside cell of interest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -396,7 +405,7 @@ Here, the same strategy as for the cleaned up cytoplasm is used.
 First vesicles inside the nucleus are removed, followed by those outside the 
 main cell by multiplying with inverted masks.
 
-.. GENERATED FROM PYTHON SOURCE LINES 308-335
+.. GENERATED FROM PYTHON SOURCE LINES 314-341
 
 .. code-block:: Python
 
@@ -428,7 +437,7 @@ main cell by multiplying with inverted masks.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 336-347
+.. GENERATED FROM PYTHON SOURCE LINES 342-353
 
 8. Apply pixel classes for analysis
 -----------------------------------
@@ -442,7 +451,7 @@ image summed over all frames.
 Next, the summed decays for all pixel and the three pixel classes are
 generated.
 
-.. GENERATED FROM PYTHON SOURCE LINES 347-411
+.. GENERATED FROM PYTHON SOURCE LINES 353-417
 
 .. code-block:: Python
 

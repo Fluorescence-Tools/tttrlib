@@ -13,7 +13,9 @@ import tttrlib
 import numpy as np
 import pylab as plt
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 
 # %%
 # The fit operates on a parallel and a perpendicular detection
@@ -52,24 +54,24 @@ irf = np.hstack([irf_p, irf_s])
 
 # %%
 # Settings for MLE
-settings = {
-    'dt': data.header.micro_time_resolution * 1e9 * binning_factor,
-    'g_factor': 1.0, 'l1': 0.05, 'l2': 0.05,
-    'convolution_stop': -1,
-    'irf': irf,
-    'period': 32.0,
-    'background': np.zeros_like(irf)
-}
+dt = data.header.micro_time_resolution * 1e9 * binning_factor
+setup = tttrlib.setup_vector(
+    'fit23', dt=dt, period=32.0, g_factor=1.0, l1=0.05, l2=0.05,
+    convolution_stop=-1)
 
 # %%
-# The settings are used to initialize an instance of the class ``Fit23``. A dataset
-# is fitted by calling an instance of ``Fit23`` using the data, an array of the initial
-# values of the fitting parameters, and an array that specifies which parameters are
-# fixed.
-fit23 = tttrlib.Fit23(**settings)
+# The setup and the IRF build the model once. It is immutable, so the same
+# instance fits every pixel; only the per-pixel measurement changes.
+fit23 = tttrlib.DecayFit2('fit23', setup, irf.tolist())
+
+problem = tttrlib.DecayFitProblem(2, len(irf) // 2, dt)
+problem.irf = tttrlib.VectorDouble(np.asarray(irf, dtype=float).tolist())
+problem.background = tttrlib.VectorDouble(np.zeros_like(irf, dtype=float).tolist())
+
 tau, gamma, r0, rho = 3.2, 0.05, 0.38, 10.0
-x0 = np.array([tau, gamma, r0, rho])
-fixed = np.array([0, 0, 1, 0])
+x0 = [tau, gamma, r0, rho]
+# 0 = free, -1 = held: lifetime, scatter and rotation fitted, r0 held.
+constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, -1, 0]))
 
 # %%
 # We iterate over all pixels in the image and apply the fit to
@@ -99,8 +101,9 @@ for i in range(n_frames):
                     np.bincount(micro_times[idx_s], minlength=n_channels)
                 ]
             )
-            r = fit23(hist, x0, fixed)
-            tau[i, j, k] = r['x'][0]
+            problem.data = tttrlib.VectorDouble(
+                np.asarray(hist, dtype=float).tolist())
+            tau[i, j, k] = fit23.fit(x0, constraints, problem).parameters[0]
 time_stop = time.time()
 print("Elapsed time:", time_stop - time_start)
 

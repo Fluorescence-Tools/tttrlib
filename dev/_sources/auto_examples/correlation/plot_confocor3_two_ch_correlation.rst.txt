@@ -32,10 +32,12 @@ In this example two raw files of a Confocor3 are read and merged into
 a single photon stream. Next, the merged photon stream is used to compute
 the cross-correlation between the two channels.
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-23
+.. GENERATED FROM PYTHON SOURCE LINES 17-25
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import pathlib
     import numpy as np
 
@@ -43,16 +45,20 @@ the cross-correlation between the two channels.
     import tttrlib
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-27
+.. GENERATED FROM PYTHON SOURCE LINES 26-31
 
 Reading data
 ------------
 The photon data registered by different detectors are saved in separate files.
+Make the `examples` package importable when this script is run directly,
+from any working directory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-33
+.. GENERATED FROM PYTHON SOURCE LINES 31-39
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_root
     # Read the data of all channels that should be correlated into separate containers.
     fns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])
@@ -60,12 +66,12 @@ The photon data registered by different detectors are saved in separate files.
     tttr_data = [tttrlib.TTTR(fn, 'CZ-RAW') for fn in fns]
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-36
+.. GENERATED FROM PYTHON SOURCE LINES 40-42
 
 We combine the data in different files into a single TTTR container using the header
 of first file as template.
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-40
+.. GENERATED FROM PYTHON SOURCE LINES 42-46
 
 .. code-block:: Python
 
@@ -74,12 +80,12 @@ of first file as template.
     print("Used channels:", channels)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-43
+.. GENERATED FROM PYTHON SOURCE LINES 47-49
 
 You can check the count rates of the channels using the macro time resolution contained
 in the header
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-47
+.. GENERATED FROM PYTHON SOURCE LINES 49-53
 
 .. code-block:: Python
 
@@ -88,12 +94,12 @@ in the header
     print("Count rates:", count_rates)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-50
+.. GENERATED FROM PYTHON SOURCE LINES 54-56
 
 Now we merge the data of the two detectors in a single container. The
 marco times need to be sorted first.
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-55
+.. GENERATED FROM PYTHON SOURCE LINES 56-61
 
 .. code-block:: Python
 
@@ -103,12 +109,12 @@ marco times need to be sorted first.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 56-58
+.. GENERATED FROM PYTHON SOURCE LINES 62-64
 
 Using the sorted macro times we sort the routing channel numbers
 and the macro times.
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-61
+.. GENERATED FROM PYTHON SOURCE LINES 64-67
 
 .. code-block:: Python
 
@@ -116,12 +122,12 @@ and the macro times.
     macro_times = macro_times[sorted_indices]
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-64
+.. GENERATED FROM PYTHON SOURCE LINES 68-70
 
 Note: no micro time and no event type in the raw Confocor3 format.
 Thus, we use ones for the micro time and the event type.
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-67
+.. GENERATED FROM PYTHON SOURCE LINES 70-73
 
 .. code-block:: Python
 
@@ -129,12 +135,12 @@ Thus, we use ones for the micro time and the event type.
     event_types = np.ones_like(macro_times, dtype=np.int8)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-70
+.. GENERATED FROM PYTHON SOURCE LINES 74-76
 
 Using the merged marcro times and channel numbers, we create a new
 TTTR container.
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-79
+.. GENERATED FROM PYTHON SOURCE LINES 76-85
 
 .. code-block:: Python
 
@@ -148,11 +154,11 @@ TTTR container.
     )
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-81
+.. GENERATED FROM PYTHON SOURCE LINES 86-87
 
 The container can be used for standard analysis, e.g., correlations.
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-125
+.. GENERATED FROM PYTHON SOURCE LINES 87-131
 
 .. code-block:: Python
 

@@ -39,13 +39,18 @@ tau, gamma, r0, rho = 2.0, 0.01, 0.38, 1.2
 
 model = np.zeros(n_channels * 2)  # For parallel and perpendicualr
 bg = np.zeros_like(model)
-tttrlib.DecayFit23.modelf(
-    np.array([tau, gamma, r0, rho]),
-    np.hstack([irf_p, irf_s]),
-    bg, dt,
-    np.array([period, g, l1, l2, conv_stop]),
-    model
-)
+_irf = np.hstack([irf_p, irf_s])
+_fit = tttrlib.DecayFit2(
+    'fit23',
+    tttrlib.setup_vector('fit23', dt=dt, period=period, g_factor=g, l1=l1, l2=l2,
+                         convolution_stop=int(conv_stop)),
+    _irf.tolist())
+_problem = tttrlib.DecayFitProblem(2, n_channels, dt)
+_problem.irf = tttrlib.VectorDouble(_irf.tolist())
+_problem.background = tttrlib.VectorDouble(bg.tolist())
+# model_curve is the decay the model predicts, independent of any data — which is
+# what generating a synthetic measurement needs.
+model = np.asarray(_fit.model_curve([tau, gamma, r0, rho], _problem))
 
 """
 The number the model is scaled to a number of photons typically recorded in a eTCSPC 

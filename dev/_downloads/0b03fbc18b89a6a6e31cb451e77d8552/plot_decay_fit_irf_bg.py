@@ -4,6 +4,8 @@ Fluorescence decay analysis - 3
 ===============================
 
 """
+import sys
+from pathlib import Path
 import pylab as p
 import scipy.optimize
 import scipy.stats
@@ -24,6 +26,10 @@ def objective_function(
     w[np.where(irf > max_irf)[0]] = 1
     chi2 = (((irf[x_min:x_max] - x[0])/w)**2).sum(axis=0)
     return chi2
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 
 from examples._example_data import get_data_path
 

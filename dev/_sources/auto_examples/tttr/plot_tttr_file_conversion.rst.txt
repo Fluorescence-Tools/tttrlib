@@ -34,20 +34,28 @@ conversion-fidelity table in the :ref:`file format guide <file_formats>`.
 The conversions below are also covered by the unit tests in
 ``test/python/tttr/test_TTTR_roundtrip.py``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-36
+.. GENERATED FROM PYTHON SOURCE LINES 20-44
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import numpy as np
     import pylab as plt
     import tttrlib
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
 
     from examples._example_data import get_data_path, get_output_path
 
     # Container type identifiers (see TTTRHeaderTypes.h)
     PTU, HT3, SPC130, SPC600_256, SPC600_4096, PHOTON_HDF5, CZ_RAW, SM = range(8)
+    SPCQC = 9
     # Record type identifiers used below
     HHT2v2, HHT3v2, RECORD_SPC130, RECORD_SM = 1, 4, 7, 11
+    RECORD_SPCQC_X04 = 15
 
     source = get_data_path("pq/ptu/pq_ptu_hh_t3.ptu")
     data = tttrlib.TTTR(str(source), "PTU")
@@ -55,7 +63,7 @@ The conversions below are also covered by the unit tests in
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-53
+.. GENERATED FROM PYTHON SOURCE LINES 45-61
 
 Choosing the output format
 ---------------------------------------------------------------------------
@@ -74,7 +82,7 @@ for unusual extensions:
 The ``convert`` helper below instead edits the header's record type as well,
 so it can also select the record encoding (e.g. T2 vs T3) within a container.
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-66
+.. GENERATED FROM PYTHON SOURCE LINES 61-74
 
 .. code-block:: Python
 
@@ -92,12 +100,12 @@ so it can also select the record encoding (e.g. T2 vs T3) within a container.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 67-69
+.. GENERATED FROM PYTHON SOURCE LINES 75-77
 
 PTU (T3) → Photon-HDF5 — the open interchange format; lossless
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-75
+.. GENERATED FROM PYTHON SOURCE LINES 77-83
 
 .. code-block:: Python
 
@@ -108,12 +116,12 @@ PTU (T3) → Photon-HDF5 — the open interchange format; lossless
     print("→ Photon-HDF5: macro, micro and channels preserved exactly")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-78
+.. GENERATED FROM PYTHON SOURCE LINES 84-86
 
 PTU (T3) → Becker & Hickl SPC-130 — micro times clip to 12 bit
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-86
+.. GENERATED FROM PYTHON SOURCE LINES 86-94
 
 .. code-block:: Python
 
@@ -126,12 +134,12 @@ PTU (T3) → Becker & Hickl SPC-130 — micro times clip to 12 bit
     print("→ SPC-130: micro times clipped to 12 bit, macro times preserved")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-89
+.. GENERATED FROM PYTHON SOURCE LINES 95-97
 
 PTU (T3) → HT3 — the legacy HydraHarp container
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-94
+.. GENERATED FROM PYTHON SOURCE LINES 97-102
 
 .. code-block:: Python
 
@@ -141,12 +149,12 @@ PTU (T3) → HT3 — the legacy HydraHarp container
     print("→ HT3: lossless for HydraHarp T3 payloads")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-97
+.. GENERATED FROM PYTHON SOURCE LINES 103-105
 
 PTU T3 → PTU T2 — drops the micro times
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 97-102
+.. GENERATED FROM PYTHON SOURCE LINES 105-110
 
 .. code-block:: Python
 
@@ -156,12 +164,35 @@ PTU T3 → PTU T2 — drops the micro times
     print("→ PTU T2: micro times dropped, time tags and channels preserved")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-105
+.. GENERATED FROM PYTHON SOURCE LINES 111-121
+
+PTU (T3) → Becker & Hickl SPC-QC — the QC generation of SPC modules
+---------------------------------------------------------------------------
+The QC record has 12 micro time bits like SPC-130, but splits the detector
+into a 4-bit router signal and a 2-bit module input (3 bits on QC-x06), so
+channels up to 63 survive — wider than SPC-130's 4-bit routing field.
+
+One thing to expect: the QC macro time overflow record carries no count, so
+one word is emitted per 4096 macro time units of idle time. Sparse, long
+measurements therefore produce large files — exactly as they do on the
+instrument.
+
+.. GENERATED FROM PYTHON SOURCE LINES 121-126
+
+.. code-block:: Python
+
+    as_qc = convert(data, SPCQC, RECORD_SPCQC_X04, "converted_qc.spc", "SPC-QC")
+    assert np.array_equal(data.macro_times, as_qc.macro_times)
+    assert np.array_equal(data.routing_channels, as_qc.routing_channels)
+    print("→ SPC-QC: macro times and channels preserved, micro times clipped to 12 bit")
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 127-129
 
 PTU (T3) → SM — macro times and channels only
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-110
+.. GENERATED FROM PYTHON SOURCE LINES 129-134
 
 .. code-block:: Python
 
@@ -171,12 +202,12 @@ PTU (T3) → SM — macro times and channels only
     print("→ SM: macro times and channels preserved, micro times dropped")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-113
+.. GENERATED FROM PYTHON SOURCE LINES 135-137
 
 Visual check: the micro time histogram survives the SPC-130 trip
 ---------------------------------------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-123
+.. GENERATED FROM PYTHON SOURCE LINES 137-147
 
 .. code-block:: Python
 

@@ -1,0 +1,1569 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Fitting a decay: one interface" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="auto_examples/fluorescence_decay/plot_decay_fit_interface.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Every decay fit in tttrlib is reached the same way — you name the model, hand it the measurement, and read the answer back. This example walks through that once, end to end, and then shows the two ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_fluorescence_decay_plot_decay_fit_interface_7fdf2b65.png" />
+<meta property="og:image:alt" content="Every decay fit in tttrlib is reached the same way — you name the model, hand it the measurement, and read the answer back. This example walks through that once, end to end, and then shows the two ..." />
+<meta name="description" content="Every decay fit in tttrlib is reached the same way — you name the model, hand it the measurement, and read the answer back. This example walks through that once, end to end, and then shows the two ..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Fitting a decay: one interface &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'auto_examples/fluorescence_decay/plot_decay_fit_interface';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="MLE fit23: Benchmark" href="plot_fit23_benchmark_1.html" />
+    <link rel="prev" title="Convolving a decay: the recursion or the transform?" href="plot_convolution_methods.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
+
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../single_molecule.html">11. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">11.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">11.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">12.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">13. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../beginner/index.html">Beginner Examples for tttrlib</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../correlation/index.html">Fluorescence correlation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Fluorescence decays</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_convolution_methods.html">Convolving a decay: the recursion or the transform?</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Fitting a decay: one interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../single_molecule/index.html">11.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_lifetime_posterior.html">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../single_molecule/plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
+</ul>
+</details></li>
+
+
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_decay_fit_interface.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Example Gallery</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Fluorescence decays</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fitting a decay: one interface</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-fluorescence-decay-plot-decay-fit-interface-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="fitting-a-decay-one-interface">
+<span id="sphx-glr-auto-examples-fluorescence-decay-plot-decay-fit-interface-py"></span><h1>Fitting a decay: one interface<a class="headerlink" href="#fitting-a-decay-one-interface" title="Link to this heading">#</a></h1>
+<p>Every decay fit in tttrlib is reached the same way — you name the model, hand it
+the measurement, and read the answer back. This example walks through that once,
+end to end, and then shows the two things the interface gives you that a
+per-model API could not: swapping models without changing your code, and fitting
+thousands of decays in one call.</p>
+<p>The four ingredients are always the same:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">DecayFit2</span></code></dt><dd><p>The model, built by name (<code class="docutils literal notranslate"><span class="pre">&quot;fit23&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit24&quot;</span></code>, …). It is immutable and
+caches what it derives from the IRF, so build it once and reuse it.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">DecayFitProblem</span></code></dt><dd><p>The measurement: the data, the instrument response, the background.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">DecayFitConstraints</span></code></dt><dd><p>Which parameters are fitted, held, or tied together.</p>
+</dd>
+<dt>The outcome</dt><dd><p>The fitted parameters, and a vector of results whose columns the registry
+names for you.</p>
+</dd>
+</dl>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+</pre></div>
+</div>
+<section id="what-can-i-fit">
+<h2>What can I fit?<a class="headerlink" href="#what-can-i-fit" title="Link to this heading">#</a></h2>
+<p>The registry lists the models, so you never have to remember them. It also
+describes each one — parameters, defaults, units, ranges — which is how the
+helpers below know what your numbers mean.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;available fits:&quot;</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">fit_names</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="setting-up">
+<h2>Setting up<a class="headerlink" href="#setting-up" title="Link to this heading">#</a></h2>
+<p>A fit needs an instrument description: the channel width, the excitation
+period, the polarisation corrections. These travel as one flat vector, but you
+never build that vector by hand — <code class="docutils literal notranslate"><span class="pre">setup_vector</span></code> fills every slot from the
+registry’s documented defaults and applies only what you name.</p>
+<p>One value deserves attention. The <strong>excitation period bounds the lifetime
+search</strong>: the decay is convolved over one period, so a lifetime longer than
+the period cannot be measured. Here the period is 32 ns, comfortably above the
+2 ns lifetime we are about to simulate.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_bins</span> <span class="o">=</span> <span class="mi">128</span>          <span class="c1"># micro-time channels per polarisation</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">0.032</span>            <span class="c1"># ns per channel</span>
+<span class="n">period</span> <span class="o">=</span> <span class="mf">32.0</span>         <span class="c1"># ns between excitation pulses</span>
+<span class="n">true_tau</span> <span class="o">=</span> <span class="mf">2.0</span>        <span class="c1"># ns, the lifetime we will try to recover</span>
+
+<span class="n">setup</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">setup_vector</span><span class="p">(</span>
+    <span class="s2">&quot;fit23&quot;</span><span class="p">,</span>
+    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+    <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+    <span class="n">g_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">soft_bifl_scatter_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setup slots:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">decay_fit_setup_names</span><span class="p">(</span><span class="s2">&quot;fit23&quot;</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;setup values:&quot;</span><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.round.html#numpy.round" title="numpy.round" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">round</span></a><span class="p">(</span><span class="n">setup</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>A narrow, clean instrument response, given twice: parallel then perpendicular.
+This “Jordi” layout — one channel after the other in a single array — is what
+the polarisation-resolved models expect.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">channel</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="n">n_bins</span><span class="p">)</span>
+<span class="n">irf_half</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.exp.html#numpy.exp" title="numpy.exp" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-data"><span class="n">np</span><span class="o">.</span><span class="n">exp</span></a><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">channel</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">irf_half</span> <span class="o">/=</span> <span class="n">irf_half</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">irf</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html#numpy.concatenate" title="numpy.concatenate" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span></a><span class="p">([</span><span class="n">irf_half</span><span class="p">,</span> <span class="n">irf_half</span><span class="p">])</span>
+<span class="n">background</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="numpy.zeros" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">zeros</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="building-the-fit-and-the-problem">
+<h2>Building the fit and the problem<a class="headerlink" href="#building-the-fit-and-the-problem" title="Link to this heading">#</a></h2>
+<p>The model is built once from the setup and the IRF. The problem holds the
+measurement; <code class="docutils literal notranslate"><span class="pre">n_channels=2</span></code> says this is polarisation-resolved.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit2</span><span class="p">(</span><span class="s2">&quot;fit23&quot;</span><span class="p">,</span> <span class="n">setup</span><span class="p">,</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="n">problem</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitProblem</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="simulating-a-measurement">
+<h2>Simulating a measurement<a class="headerlink" href="#simulating-a-measurement" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">model_curve</span></code> gives the decay the model predicts for a set of parameters,
+with no reference to any data — which is exactly what simulating needs. (Its
+sibling <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> scores parameters <em>against</em> data and scales the curve to
+the observed counts, so it cannot be used before the data exist.)</p>
+<p>We take that curve, scale it to a realistic photon budget, and draw Poisson
+counts from it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">curve</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">model_curve</span><span class="p">([</span><span class="n">true_tau</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">problem</span><span class="p">))</span>
+<span class="n">expected</span> <span class="o">=</span> <span class="n">curve</span> <span class="o">/</span> <span class="n">curve</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">30000</span>
+<span class="n">data</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="fitting">
+<h2>Fitting<a class="headerlink" href="#fitting" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DecayFitConstraints</span></code> says what the optimiser may move. The codes are:
+<code class="docutils literal notranslate"><span class="pre">0</span></code> free, <code class="docutils literal notranslate"><span class="pre">-1</span></code> held, and any positive number ties every slot carrying it
+to one shared value.</p>
+<p>Here only the lifetime is free. <code class="docutils literal notranslate"><span class="pre">default_links</span></code> would give you the same
+thing from the registry, because scatter and anisotropy are not identifiable
+from a short decay and are marked as held by default.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">constraints</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitConstraints</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;registry defaults:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">default_links</span><span class="p">(</span><span class="s2">&quot;fit23&quot;</span><span class="p">)))</span>
+
+<span class="n">start</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>          <span class="c1"># a deliberately poor starting lifetime</span>
+<span class="n">outcome</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">constraints</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;true lifetime      </span><span class="si">{</span><span class="n">true_tau</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;recovered lifetime </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="reading-the-answer">
+<h2>Reading the answer<a class="headerlink" href="#reading-the-answer" title="Link to this heading">#</a></h2>
+<p>The results are a flat vector, and the registry names its columns — so you ask
+for a value by name instead of counting positions.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">named</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">results_as_dict</span><span class="p">(</span><span class="s2">&quot;fit23&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">results</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">named</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">:</span><span class="s2">&gt;16</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">twoIstar</span></code> is the fit quality: it compares the model against a hypothetical
+perfectly-fitting one, so a good fit to counting data sits near 1. A large
+value means the model cannot describe the decay.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">converged</span></code> reports that the optimiser met its tolerance — not that the
+answer is meaningful. A lifetime longer than the excitation period converges
+onto that bound and still reports <code class="docutils literal notranslate"><span class="pre">True</span></code>. If a fitted lifetime sits
+exactly on the period, lengthen the period rather than believe the number.</p>
+</div>
+<p>Let us look at the fit.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">channel</span> <span class="o">*</span> <span class="n">dt</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax_p</span><span class="p">,</span> <span class="n">ax_s</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="p">((</span><span class="n">ax_p</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;parallel&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">ax_s</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="s2">&quot;perpendicular&quot;</span><span class="p">)):</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span> <span class="o">+</span> <span class="n">n_bins</span><span class="p">],</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.6&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span> <span class="o">+</span> <span class="n">n_bins</span><span class="p">],</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C3&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;fit&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;counts</span><span class="se">\n</span><span class="s2">(</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax_s</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;time (ns)&quot;</span><span class="p">)</span>
+<span class="n">ax_p</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;fit23: recovered $</span><span class="se">\\</span><span class="s2">tau$ = </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns &quot;</span>
+    <span class="sa">f</span><span class="s2">&quot;(true </span><span class="si">{</span><span class="n">true_tau</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns), 2I* = </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">objective</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="swapping-the-model">
+<h2>Swapping the model<a class="headerlink" href="#swapping-the-model" title="Link to this heading">#</a></h2>
+<p>Because every fit is reached the same way, changing the model is a change of
+<em>name</em>. Nothing else about the call moves — which is the whole point of the
+interface, and what previously required a different class, a different
+parameter layout and a different result convention per estimator.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fit24</span></code> is bi-exponential, so it has five parameters rather than four. The
+registry says which, so you can build the call without reading the source.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;fit23&quot;</span><span class="p">,</span> <span class="s2">&quot;fit24&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: parameters = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">decay_fit_parameter_names</span><span class="p">(</span><span class="n">name</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># fit24 needs a background pattern with some weight in it: its likelihood</span>
+<span class="c1"># includes a background term, and against an all-zero background that term is</span>
+<span class="c1"># undefined, so the fit returns NaN without moving off the start values. A small</span>
+<span class="c1"># flat background is the usual choice.</span>
+<span class="n">problem24</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitProblem</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span>
+    <span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ones.html#numpy.ones" title="numpy.ones" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ones</span></a><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="n">fit24</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit2</span><span class="p">(</span>
+    <span class="s2">&quot;fit24&quot;</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">setup_vector</span><span class="p">(</span><span class="s2">&quot;fit24&quot;</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">),</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">out24</span> <span class="o">=</span> <span class="n">fit24</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitConstraints</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])),</span>
+    <span class="n">problem24</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fit24 lifetimes: </span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns and &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns, 2I* = </span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">objective</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A bi-exponential model fitted to single-exponential data is not
+identifiable — the two lifetimes are free to trade against each other, and
+one of them will wander. The point here is that the <em>call</em> is the same, not
+that the answer is meaningful. Choose the model that matches the
+photophysics, and treat a second lifetime that moves freely as a sign the
+data do not support it.</p>
+</div>
+</section>
+<section id="fitting-many-decays">
+<h2>Fitting many decays<a class="headerlink" href="#fitting-many-decays" title="Link to this heading">#</a></h2>
+<p>Batch fitting is part of the interface rather than something each model has to
+provide, so it works for every fit. Rows are spread across worker threads with
+the GIL released; the model is shared because it is immutable, and only the
+per-row working state is copied.</p>
+<p>This is the path a burst analysis or a FLIM image takes: thousands of decays,
+one call.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">n_rows</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">rng</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.tile.html#numpy.tile" title="numpy.tile" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">tile</span></a><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="p">(</span><span class="n">n_rows</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="n">batch</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fit_many</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">,</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_rows</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">constraints</span><span class="p">)</span>
+
+<span class="n">taus</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_rows</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_rows</span><span class="si">}</span><span class="s2"> decays fitted: tau = </span><span class="si">{</span><span class="n">taus</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">taus</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The spread across repeats is the statistical uncertainty of the estimator at
+this photon count — which is what you should quote, rather than the optimiser’s
+own error estimate from a single fit.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">taus</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C0&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">true_tau</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;C3&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;true $</span><span class="se">\\</span><span class="s2">tau$ = </span><span class="si">{</span><span class="n">true_tau</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">taus</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+           <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;mean = </span><span class="si">{</span><span class="n">taus</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;recovered lifetime (ns)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;decays (of </span><span class="si">{</span><span class="n">n_rows</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Estimator spread at 30 000 photons&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-fluorescence-decay-plot-decay-fit-interface-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/bafd8252a567f1169fe8f6fc499f5d05/plot_decay_fit_interface.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">plot_decay_fit_interface.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c0c7aa947d58a63afa639086d6bcf6cf/plot_decay_fit_interface.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">plot_decay_fit_interface.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/1ef58ce1662ca4691ee16a4f84635082/plot_decay_fit_interface.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">plot_decay_fit_interface.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="plot_convolution_methods.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Convolving a decay: the recursion or the transform?</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="plot_fit23_benchmark_1.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">MLE fit23: Benchmark</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-can-i-fit">What can I fit?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up">Setting up</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-the-fit-and-the-problem">Building the fit and the problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulating-a-measurement">Simulating a measurement</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fitting">Fitting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-answer">Reading the answer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#swapping-the-model">Swapping the model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fitting-many-decays">Fitting many decays</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/auto_examples/fluorescence_decay/plot_decay_fit_interface.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

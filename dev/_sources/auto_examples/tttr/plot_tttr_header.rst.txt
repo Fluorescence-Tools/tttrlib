@@ -41,7 +41,7 @@ Most TTTR container contain meta-data that can be accessed through ``tttrlib``.
 For that, a ``TTTR`` object provides a header attribute. The header attribute is
 of the type :class:`.Header`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 25-38
+.. GENERATED FROM PYTHON SOURCE LINES 25-40
 
 .. code-block:: Python
 
@@ -51,7 +51,9 @@ of the type :class:`.Header`.
     import tttrlib
 
     # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
 
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
     # the header can be accesses by the method get_header or as an property
@@ -59,7 +61,7 @@ of the type :class:`.Header`.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-47
+.. GENERATED FROM PYTHON SOURCE LINES 41-49
 
 The most important attributes of the header are the :py:attr:`micro_time_resolution`
 and :py:attr:`macro_time_resolution`. Becker&Hickl Spc132 files files contain
@@ -70,7 +72,7 @@ that can be accessed via the :py:attr:`json` attribute of a header object. The
 :py:attr:`json` attribute of a header object is a JSON string. Setting the :py:attr:`json`
 attribute modifies the header / meta data of a TTTR object.
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-51
+.. GENERATED FROM PYTHON SOURCE LINES 49-53
 
 .. code-block:: Python
 
@@ -79,11 +81,11 @@ attribute modifies the header / meta data of a TTTR object.
     data = tttrlib.TTTR(str(DATA_ROOT / 'pq/ptu/pq_ptu_hh_t3.ptu'), 'PTU')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-53
+.. GENERATED FROM PYTHON SOURCE LINES 54-55
 
 the header can be accesses by the method get_header or as a property
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-59
+.. GENERATED FROM PYTHON SOURCE LINES 55-61
 
 .. code-block:: Python
 
@@ -94,7 +96,7 @@ the header can be accesses by the method get_header or as a property
     print(header_dict)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-69
+.. GENERATED FROM PYTHON SOURCE LINES 62-71
 
 Time calibration data
 =====================
@@ -106,7 +108,7 @@ handled, meaning there is no need to worry. The ``macro_time`` and the
 
 The macro and micro time resolution is accessed as follows.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-73
+.. GENERATED FROM PYTHON SOURCE LINES 71-75
 
 .. code-block:: Python
 
@@ -115,12 +117,12 @@ The macro and micro time resolution is accessed as follows.
     micro_time_resolution = data.header.micro_time_resolution
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 74-76
+.. GENERATED FROM PYTHON SOURCE LINES 76-78
 
 The number of micro time channels can be accessed as displayed below.
 The header can be accesses by the method get_header or as an property.
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-88
+.. GENERATED FROM PYTHON SOURCE LINES 78-90
 
 .. code-block:: Python
 
@@ -137,7 +139,7 @@ The header can be accesses by the method get_header or as an property.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-100
+.. GENERATED FROM PYTHON SOURCE LINES 91-102
 
 Note, the effective number of micro time channels, i.e., the number of micro time
 channels can be smaller than the actual number of micro time channels. For
@@ -151,7 +153,7 @@ Each TTTR object has an attribute that is an instance of the TTTRHeader class.
 This instance makes the meta-data contained in the TTTR file accessible.
 TTTRHeader objects can also be created independently of TTTR objects.
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-104
+.. GENERATED FROM PYTHON SOURCE LINES 102-106
 
 .. code-block:: Python
 
@@ -160,14 +162,14 @@ TTTRHeader objects can also be created independently of TTTR objects.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 105-109
+.. GENERATED FROM PYTHON SOURCE LINES 107-111
 
 Modifying meta-data
 ===================
 The data containted in a TTTRHeader instance can be accesses as JSON string. The
 `JSON <https://www.json.org>`_ string.
 
-.. GENERATED FROM PYTHON SOURCE LINES 109-112
+.. GENERATED FROM PYTHON SOURCE LINES 111-114
 
 .. code-block:: Python
 
@@ -175,12 +177,12 @@ The data containted in a TTTRHeader instance can be accesses as JSON string. The
     header = tttrlib.TTTRHeader()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-115
+.. GENERATED FROM PYTHON SOURCE LINES 115-117
 
 The JSON string must contain a ``tags`` list. The ``tags`` list is a list of dictionarys
 in which each dictionary corresponds to a meta-data field in the header. For instance,
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-118
+.. GENERATED FROM PYTHON SOURCE LINES 117-120
 
 .. code-block:: Python
 
@@ -188,7 +190,7 @@ in which each dictionary corresponds to a meta-data field in the header. For ins
     print(header.json) # '{\n "tags": []\n}'
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 119-121
+.. GENERATED FROM PYTHON SOURCE LINES 121-123
 
 Different meta data fields are listed in
 `Header tags sheet <https://docs.google.com/spreadsheets/d/1_xt3Yx3ucWLXfb14qbOEgX27CjcKeVyClbu7GdgSF8I/edit?usp=sharingL>`_.

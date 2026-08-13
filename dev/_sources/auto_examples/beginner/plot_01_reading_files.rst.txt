@@ -32,7 +32,7 @@ Notes
   will render figures with a non-interactive backend during doc builds.
 - If the demo file cannot be located, a clear error is raised with a helpful hint.
 
-.. GENERATED FROM PYTHON SOURCE LINES 16-25
+.. GENERATED FROM PYTHON SOURCE LINES 16-31
 
 .. code-block:: Python
 
@@ -40,19 +40,25 @@ Notes
 
     from __future__ import annotations
 
+    import sys
+    from pathlib import Path
     import numpy as np
     import matplotlib.pyplot as plt
     import tttrlib
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-30
+.. GENERATED FROM PYTHON SOURCE LINES 33-36
 
 Open a TTTR data set ---------------------------------------------------------
 The helper below returns the path to the demo PTU file. In real experiments
 you would read a file instead, e.g. ``tttrlib.TTTR('measurement.ptu')``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 30-40
+.. GENERATED FROM PYTHON SOURCE LINES 36-46
 
 .. code-block:: Python
 
@@ -67,14 +73,14 @@ you would read a file instead, e.g. ``tttrlib.TTTR('measurement.ptu')``.
     tttr = tttrlib.TTTR(str(data_path), "PTU")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-45
+.. GENERATED FROM PYTHON SOURCE LINES 47-51
 
 Inspect the TTTR data --------------------------------------------------------
 Macro times give the coarse arrival time (laser repetition periods).
 Micro times resolve the fine delay within the current laser period.
 Routing channels record which detector/input registered the event.
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-58
+.. GENERATED FROM PYTHON SOURCE LINES 51-64
 
 .. code-block:: Python
 
@@ -92,12 +98,12 @@ Routing channels record which detector/input registered the event.
         raise SystemExit("The selected TTTR file contains no events.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-61
+.. GENERATED FROM PYTHON SOURCE LINES 65-67
 
 Routing-channel histogram ----------------------------------------------------
 Ensure the example produces plot output so Sphinx-Gallery keeps it.
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-74
+.. GENERATED FROM PYTHON SOURCE LINES 67-80
 
 .. code-block:: Python
 
@@ -115,13 +121,13 @@ Ensure the example produces plot output so Sphinx-Gallery keeps it.
     fig.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-78
+.. GENERATED FROM PYTHON SOURCE LINES 81-84
 
 First 100 micro-times (illustrative) -----------------------------------------
 The macro time typically increases ~linearly with the event index. For readability,
 plot a short slice of the micro-time sequence.
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-86
+.. GENERATED FROM PYTHON SOURCE LINES 84-92
 
 .. code-block:: Python
 
@@ -134,12 +140,12 @@ plot a short slice of the micro-time sequence.
     fig_sample.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-89
+.. GENERATED FROM PYTHON SOURCE LINES 93-95
 
 Micro-time distributions per routing channel --------------------------------
 This reveals fluorescence decay characteristics recorded by each detector channel.
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-111
+.. GENERATED FROM PYTHON SOURCE LINES 95-117
 
 .. code-block:: Python
 

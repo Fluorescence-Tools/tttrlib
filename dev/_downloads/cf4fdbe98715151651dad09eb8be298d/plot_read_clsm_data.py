@@ -25,6 +25,7 @@ or meta-data contained in the TTTR file is read.
 
 #%%
 import os
+import sys
 from pathlib import Path
 import pylab as plt
 from matplotlib.pyplot import imread
@@ -32,7 +33,9 @@ import tttrlib
 import numpy as np
 
 # Determine data root from environment or fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")).resolve()
 
 #%%
 # The first step, when constructing a LSM image from TTTR data is to
@@ -65,6 +68,10 @@ plt.imshow(clsm_image.intensity.sum(axis=0))
 plt.show()
 
 #%%
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_path
 
 # In cases there are issues with the meta data (there are no official standards),

@@ -11,12 +11,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="modules/decay.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="This notebook is the notebook-style entry point for tttrlib fluorescence-decay workflows. It explains how decay histograms, instrument response functions (IRFs), background patterns, phasor summari..." />
+<meta property="og:description" content="Every decay fit in tttrlib is reached the same way: name the model, hand it the measurement, read the answer back. There is one interface rather than one per estimator, and what a model’s parameter..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_modules_decay_44af2822.png" />
-<meta property="og:image:alt" content="This notebook is the notebook-style entry point for tttrlib fluorescence-decay workflows. It explains how decay histograms, instrument response functions (IRFs), background patterns, phasor summari..." />
-<meta name="description" content="This notebook is the notebook-style entry point for tttrlib fluorescence-decay workflows. It explains how decay histograms, instrument response functions (IRFs), background patterns, phasor summari..." />
+<meta property="og:image" content="_images/social_previews/summary_modules_decay_e5420898.png" />
+<meta property="og:image:alt" content="Every decay fit in tttrlib is reached the same way: name the model, hand it the measurement, read the answer back. There is one interface rather than one per estimator, and what a model’s parameter..." />
+<meta name="description" content="Every decay fit in tttrlib is reached the same way: name the model, hand it the measurement, read the answer back. There is one interface rather than one per estimator, and what a model’s parameter..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Fluorescence decay and lifetime analysis &#8212; tttrlib v0.27.0</title>
@@ -79,7 +79,7 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Dynamic FRET: H2MM and BVA" href="h2mm_bva.html" />
+    <link rel="next" title="Dynamic FRET: HMM and BVA" href="hmm_bva.html" />
     <link rel="prev" title="Fluorescence correlation spectroscopy" href="fcs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -214,6 +214,13 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
     Workflow Index
   </a>
@@ -235,6 +242,27 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
     Burst Analysis
   </a>
@@ -242,8 +270,15 @@
 
 
 <li class=" ">
-  <a class="nav-link dropdown-item nav-internal" href="../h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -265,6 +300,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -533,6 +575,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../workflows.html">
     Workflow Index
   </a>
@@ -554,6 +603,27 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="../formats/index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../burst-analysis.html">
     Burst Analysis
   </a>
@@ -561,8 +631,15 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../h2mm-bva.html">
-    Dynamic FRET: H2MM and BVA
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
   </a>
 </li>
 
@@ -584,6 +661,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
     CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
   </a>
 </li>
 
@@ -806,7 +890,7 @@
 <li class="toctree-l1"><a class="reference internal" href="imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="single-molecule.html">11.1. Burst Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pda.html">11.3. Photon distribution analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="h2mm_bva.html">Dynamic FRET: H2MM and BVA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hmm_bva.html">Dynamic FRET: HMM and BVA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">11.2. Fluorescence intensity analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ics.html">12.12. Image correlation spectroscopy</a></li>
 </ul>
@@ -879,87 +963,36 @@
                   
   <section id="Fluorescence-decay-and-lifetime-analysis">
 <h1>Fluorescence decay and lifetime analysis<a class="headerlink" href="#Fluorescence-decay-and-lifetime-analysis" title="Link to this heading">#</a></h1>
-<p>This notebook is the notebook-style entry point for tttrlib fluorescence-decay workflows. It explains how decay histograms, instrument response functions (IRFs), background patterns, phasor summaries, and the <code class="docutils literal notranslate"><span class="pre">Fit23</span></code>-<code class="docutils literal notranslate"><span class="pre">Fit26</span></code> model family fit together.</p>
-<p>Use the higher-level helper or class APIs for normal analysis. Use <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> and <code class="docutils literal notranslate"><span class="pre">DecayFitXX.fit</span></code> only when you need exact control over the arrays passed to the C++ layer or when you are testing a low-level integration.</p>
-<section id="Core-data-model">
-<h2>Core data model<a class="headerlink" href="#Core-data-model" title="Link to this heading">#</a></h2>
-<p>A decay fit uses a binned microtime histogram rather than raw photon timestamps.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: measured decay counts.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">irf</span></code>: instrument response function with the same binning as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">background</span></code>: background or scatter pattern with the same shape as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dt</span></code>: width of one microtime bin.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">period</span></code>: excitation period, in the same units as lifetimes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code>: integer mask where <code class="docutils literal notranslate"><span class="pre">0</span></code> means optimized and <code class="docutils literal notranslate"><span class="pre">1</span></code> means fixed.</p></li>
-</ul>
-<p>Polarization-resolved fits use <strong>Jordi format</strong>: the parallel decay followed by the perpendicular decay in one one-dimensional array. <code class="docutils literal notranslate"><span class="pre">irf</span></code> and <code class="docutils literal notranslate"><span class="pre">background</span></code> must use the same stacked order.</p>
-</section>
-<section id="Which-fit-should-I-use?">
-<h2>Which fit should I use?<a class="headerlink" href="#Which-fit-should-I-use?" title="Link to this heading">#</a></h2>
+<p>Every decay fit in tttrlib is reached the same way: <strong>name the model, hand it the measurement, read the answer back</strong>. There is one interface rather than one per estimator, and what a model’s parameters, setup values and results <em>mean</em> comes from the registry rather than from a per-model convention you have to memorise.</p>
+<p>The narrative guide is <a class="reference internal" href="../fit-guide.html"><span class="doc">Fluorescence Decay Fitting</span></a>; the plotted walk-through is the <code class="docutils literal notranslate"><span class="pre">plot_decay_fit_interface</span></code> gallery example.</p>
+<section id="The-four-pieces">
+<h2>The four pieces<a class="headerlink" href="#The-four-pieces" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Goal</p></th>
-<th class="head"><p>Helper</p></th>
-<th class="head"><p>Class</p></th>
-<th class="head"><p>Low-level function</p></th>
-<th class="head"><p>Parameter vector</p></th>
-<th class="head"><p>Typical fixed mask</p></th>
-<th class="head"><p>Main example</p></th>
+<tr class="row-odd"><th class="head"><p>Piece</p></th>
+<th class="head"><p>What it is</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Single lifetime with polarization-resolved decay and
-anisotropy/rotation output</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fit23</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Fit23</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DecayFit23.fit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[tau,</span> <span class="pre">gamma,</span> <span class="pre">r0,</span> <span class="pre">rho]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">0]</span></code> when fitting lifetime and rotation time</p></td>
-<td><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/fluorescence_decay/plot_fit23</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DecayFit2</span></code></p></td>
+<td><p>The model, built by registry name. Immutable, so build once and reuse.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Bi-exponential lifetime model without anisotropy</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fit24</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Fit24</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DecayFit24.fit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[tau1,</span> <span class="pre">gamma,</span> <span class="pre">tau2,</span> <span class="pre">A2,</span> <span class="pre">offset]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code> for a full synthetic fit; fix offset when known</p></td>
-<td><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/fluorescence_decay/plot_fit24</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DecayFitProblem</span></code></p></td>
+<td><p>The measurement: data, IRF, background, reference patterns.</p></td>
 </tr>
-<tr class="row-even"><td><p>Choose the best lifetime from four fixed candidates</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fit25</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Fit25</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DecayFit25.fit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[tau1,</span> <span class="pre">tau2,</span> <span class="pre">tau3,</span> <span class="pre">tau4,</span> <span class="pre">gamma,</span> <span class="pre">r0]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> for candidate selection only</p></td>
-<td><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/fluorescence_decay/plot_fit25</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DecayFitConstraints</span></code></p></td>
+<td><p>What the optimiser may move: free, fixed, or linked.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Fit a mixture fraction of two known reference patterns</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fit26</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Fit26</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DecayFit26.fit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[fraction_1]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[0]</span></code></p></td>
-<td><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/fluorescence_decay/plot_fit26</span></code></p></td>
+<tr class="row-odd"><td><p>the outcome</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">results</span></code>, <code class="docutils literal notranslate"><span class="pre">objective</span></code>. The fitted curve stays on <code class="docutils literal notranslate"><span class="pre">problem.model</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The combined helper overview is available at :doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/fluorescence_decay/plot_fit_helpers</span></code>.</p>
 </section>
-<section id="Result-dictionary-contract">
-<h2>Result dictionary contract<a class="headerlink" href="#Result-dictionary-contract" title="Link to this heading">#</a></h2>
-<p>The high-level helpers and classes return a dictionary:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code>: fit-specific parameter/result array. Some slots are outputs written by the low-level routine, so interpret it with the fit-specific table above.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code>: the fixed/free mask used for the fit.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">twoIstar</span></code>: MLE quality value. Smaller values indicate a better model for the same data and assumptions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: fitted model decay, present only when <code class="docutils literal notranslate"><span class="pre">include_model=True</span></code>.</p></li>
-</ul>
-<p>Always plot <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">irf</span></code>, <code class="docutils literal notranslate"><span class="pre">background</span></code>, and <code class="docutils literal notranslate"><span class="pre">model</span></code> together when validating a new fit setup.</p>
-</section>
-<section id="Minimal-synthetic-setup">
-<h2>Minimal synthetic setup<a class="headerlink" href="#Minimal-synthetic-setup" title="Link to this heading">#</a></h2>
-<p>The following cells create a small deterministic Jordi-format IRF and low-count decay. They are intentionally tiny so the notebook can be downloaded and run without external TTTR data.</p>
+<section id="What-can-I-fit?">
+<h2>What can I fit?<a class="headerlink" href="#What-can-I-fit?" title="Link to this heading">#</a></h2>
+<p>The registry lists the models and describes each one, so nothing here has to be remembered or kept in sync by hand.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -967,126 +1000,315 @@ anisotropy/rotation output</p></td>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="n">n_channels</span> <span class="o">=</span> <span class="mi">32</span>
-<span class="n">period</span> <span class="o">=</span> <span class="mf">32.0</span>
-<span class="n">time_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">n_channels</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">irf</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">time_axis</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">time_axis</span> <span class="o">-</span> <span class="mf">18.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-<span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-<span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">irf</span><span class="p">)</span>
-<span class="n">dt</span> <span class="o">=</span> <span class="n">time_axis</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time_axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-<span class="n">low_count_decay</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-    <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
-<span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-</pre></div>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">fit_names</span><span class="p">()</span>
+<br/></pre></div>
 </div>
 </div>
-</section>
-<section id="One-call-helper-path">
-<h2>One-call helper path<a class="headerlink" href="#One-call-helper-path" title="Link to this heading">#</a></h2>
-<p>Use helpers when one decay is being fitted in a notebook or script and the shared instrument settings do not need to be reused many times.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit23_result</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">fit23</span><span class="p">(</span>
-    <span class="n">data</span><span class="o">=</span><span class="n">low_count_decay</span><span class="p">,</span>
-    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
-    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
-    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
-    <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
-    <span class="n">tau</span><span class="o">=</span><span class="mf">2.2</span><span class="p">,</span>
-    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
-    <span class="n">r0</span><span class="o">=</span><span class="mf">0.38</span><span class="p">,</span>
-    <span class="n">rho</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span>
-    <span class="n">include_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fit23 tau = </span><span class="si">{</span><span class="n">fit23_result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fit23 twoIstar = </span><span class="si">{</span><span class="n">fit23_result</span><span class="p">[</span><span class="s1">&#39;twoIstar&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Everything a caller needs in order to *offer* fit23 to a user.</span>
+<span class="n">entry</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s1">&#39;fit&#39;</span><span class="p">)[</span><span class="s1">&#39;fit23&#39;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="s1">&#39;params_schema&#39;</span><span class="p">][</span><span class="s1">&#39;properties&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">held</span> <span class="o">=</span> <span class="s1">&#39; (held by default)&#39;</span> <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fixed_default&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2"> default </span><span class="si">{</span><span class="n">prop</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;6</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unit</span><span class="si">}{</span><span class="n">held</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<br/></pre></div>
 </div>
 </div>
 </section>
-<section id="Reusable-class-path">
-<h2>Reusable class path<a class="headerlink" href="#Reusable-class-path" title="Link to this heading">#</a></h2>
-<p>Use a class when many decays share the same IRF, background, bin width, and excitation period. This is common for FLIM pixels and burst-level decay batches.</p>
+<section id="A-synthetic-measurement">
+<h2>A synthetic measurement<a class="headerlink" href="#A-synthetic-measurement" title="Link to this heading">#</a></h2>
+<p>A narrow instrument response, given twice — parallel then perpendicular in one array, the layout the polarisation-resolved models expect.</p>
+<p>One setup value deserves attention: the <strong>excitation period bounds the lifetime search</strong>, because the decay is convolved over one period. A lifetime longer than the period cannot be measured.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit23</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Fit23</span><span class="p">(</span>
-    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
-    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
-    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
-    <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
-    <span class="n">g_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">l1</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">l2</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-    <span class="n">convolution_stop</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">irf</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">class_result</span> <span class="o">=</span> <span class="n">fit23</span><span class="p">(</span>
-    <span class="n">data</span><span class="o">=</span><span class="n">low_count_decay</span><span class="p">,</span>
-    <span class="n">initial_values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">]),</span>
-    <span class="n">fixed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">),</span>
-    <span class="n">include_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;class tau = </span><span class="si">{</span><span class="n">class_result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">true_tau</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span> <span class="mf">0.032</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">,</span> <span class="mf">2.0</span>
+
+<span class="n">channel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_bins</span><span class="p">)</span>
+<span class="n">irf_half</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">channel</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1.2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">irf_half</span> <span class="o">/=</span> <span class="n">irf_half</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">irf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">irf_half</span><span class="p">,</span> <span class="n">irf_half</span><span class="p">])</span>
+<span class="n">background</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">)</span>
+
+<span class="c1"># Built from the registry&#39;s documented defaults; only what we name is applied.</span>
+<span class="n">setup</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">setup_vector</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span>
+                             <span class="n">soft_bifl_scatter_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">decay_fit_setup_names</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">),</span> <span class="n">setup</span><span class="p">))</span>
+<br/></pre></div>
 </div>
 </div>
 </section>
-<section id="Low-level-DecayFitData-path">
-<h2>Low-level <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> path<a class="headerlink" href="#Low-level-DecayFitData-path" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> is the shared container used by the low-level <code class="docutils literal notranslate"><span class="pre">DecayFit23</span></code>-<code class="docutils literal notranslate"><span class="pre">DecayFit26</span></code> routines. Prefer helpers or classes for normal user-facing notebooks; low-level calls are mainly useful for exact integration tests, migration from legacy wrappers, and advanced custom pipelines.</p>
+<section id="Build-the-fit-and-the-problem">
+<h2>Build the fit and the problem<a class="headerlink" href="#Build-the-fit-and-the-problem" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitData</span><span class="p">(</span>
-    <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
-    <span class="n">corrections</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">period</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">irf</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span>
-    <span class="n">irf</span><span class="o">=</span><span class="n">irf</span><span class="p">,</span>
-    <span class="n">background</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
-    <span class="n">data</span><span class="o">=</span><span class="n">low_count_decay</span><span class="p">,</span>
-<span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit2</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">,</span> <span class="n">setup</span><span class="p">,</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-<span class="n">x</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">]</span>
-<span class="n">fixed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
-<span class="n">two_istar</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit23</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fixed</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;low-level tau = </span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;low-level twoIstar = </span><span class="si">{</span><span class="n">two_istar</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitProblem</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>   <span class="c1"># 2 detection channels</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">background</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;parameters:&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">decay_fit_parameter_names</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;results   :&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">decay_fit_result_names</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">)))</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Simulate-a-decay">
+<h2>Simulate a decay<a class="headerlink" href="#Simulate-a-decay" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">model_curve</span></code> gives the curve the model predicts, <strong>independent of any data</strong> — which is what simulating needs. Its sibling <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> scores parameters <em>against</em> data and scales the curve to the observed counts, so it returns zeros before any data exist.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">model_curve</span><span class="p">([</span><span class="n">true_tau</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">problem</span><span class="p">))</span>
+<span class="n">expected</span> <span class="o">=</span> <span class="n">curve</span> <span class="o">/</span> <span class="n">curve</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">30000</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s1">.0f</span><span class="si">}</span><span class="s1"> photons over </span><span class="si">{</span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n_bins</span><span class="si">}</span><span class="s1"> channels&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Fit">
+<h2>Fit<a class="headerlink" href="#Fit" title="Link to this heading">#</a></h2>
+<p>The link vector says what may move: <code class="docutils literal notranslate"><span class="pre">0</span></code> free, <code class="docutils literal notranslate"><span class="pre">-1</span></code> held, and any positive value ties every slot carrying it to one shared value. <code class="docutils literal notranslate"><span class="pre">default_links</span></code> takes the registry’s advice — scatter and anisotropy are barely identifiable from a short decay, so they are held unless a measured IRF and background make them meaningful.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">constraints</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitConstraints</span><span class="p">(</span>
+    <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">default_links</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">)))</span>
+
+<span class="n">outcome</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">constraints</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>  <span class="c1"># poor start on purpose</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;true      </span><span class="si">{</span><span class="n">true_tau</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> ns&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;recovered </span><span class="si">{</span><span class="n">outcome</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> ns&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Read-the-answer-by-name">
+<h2>Read the answer by name<a class="headerlink" href="#Read-the-answer-by-name" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">twoIstar</span></code> compares the model against a hypothetical perfectly-fitting one, so a good fit to counting data sits near 1.</p>
+<blockquote>
+<div><p><strong>``converged`` is not ``correct``.</strong> It reports that the optimiser met its tolerance. A lifetime longer than the excitation period converges onto that bound and still reports <code class="docutils literal notranslate"><span class="pre">True</span></code> — if a fitted lifetime sits exactly on the period, lengthen the period rather than believe the number.</p>
+</div></blockquote>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">results_as_dict</span><span class="p">(</span><span class="s1">&#39;fit23&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">outcome</span><span class="o">.</span><span class="n">results</span><span class="p">))</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Swapping-the-model-is-a-change-of-name">
+<h2>Swapping the model is a change of name<a class="headerlink" href="#Swapping-the-model-is-a-change-of-name" title="Link to this heading">#</a></h2>
+<p>Nothing else about the call moves. This is the point of the interface: previously each estimator was a different class with a different parameter layout and a different result convention.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fit24</span></code> needs a background with some weight in it — its likelihood carries a background term that is undefined against an all-zero pattern, in which case the fit returns NaN without moving.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem24</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitProblem</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">))</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">problem24</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="n">fit24</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit2</span><span class="p">(</span><span class="s1">&#39;fit24&#39;</span><span class="p">,</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">setup_vector</span><span class="p">(</span><span class="s1">&#39;fit24&#39;</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">),</span>
+                          <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="n">out24</span> <span class="o">=</span> <span class="n">fit24</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                  <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitConstraints</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])),</span>
+                  <span class="n">problem24</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tau1 </span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> ns, tau2 </span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> ns, 2I* </span><span class="si">{</span><span class="n">out24</span><span class="o">.</span><span class="n">objective</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>A bi-exponential model fitted to single-exponential data is not identifiable — the two lifetimes trade against each other. The <em>call</em> is the same; the answer is only meaningful if the photophysics calls for two components.</p>
+</section>
+<section id="Fitting-many-decays">
+<h2>Fitting many decays<a class="headerlink" href="#Fitting-many-decays" title="Link to this heading">#</a></h2>
+<p>Batching belongs to the interface rather than to each model, so it works for every fit. Rows are spread across workers with the GIL released; the model is shared because it is immutable, and only per-row state is copied. This is the path a burst analysis or a FLIM image takes.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_rows</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="p">(</span><span class="n">n_rows</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="n">batch</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fit_many</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">matrix</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_rows</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">,</span>
+                     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">constraints</span><span class="p">)</span>
+<span class="n">taus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_rows</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tau = </span><span class="si">{</span><span class="n">taus</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> +/- </span><span class="si">{</span><span class="n">taus</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> ns over </span><span class="si">{</span><span class="n">n_rows</span><span class="si">}</span><span class="s1"> decays&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<p>The spread across repeats is the statistical uncertainty of the estimator at this photon count — which is what to quote, rather than an error estimate from a single fit.</p>
+</section>
+<section id="Bounds-are-priors">
+<h2>Bounds are priors<a class="headerlink" href="#Bounds-are-priors" title="Link to this heading">#</a></h2>
+<p>A hard box is the degenerate case of a prior: uniform inside, impossible outside. So a parameter needs one concept, not two. Priors serialise as JSON in the same form ChiSurf uses, so they cross between the two losslessly.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitConstraints</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorInt32</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_prior_json</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;{&quot;kind&quot;: &quot;lognormal&quot;, &quot;mu&quot;: 0.7, &quot;sigma&quot;: 0.3}&#39;</span><span class="p">)</span>
+
+<span class="n">out</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;with a lognormal prior on tau: </span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> ns&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Convolving:-the-recursion-or-the-transform?">
+<h2>Convolving: the recursion or the transform?<a class="headerlink" href="#Convolving:-the-recursion-or-the-transform?" title="Link to this heading">#</a></h2>
+<p>A model decay is compared against data only after it has been convolved with the instrument response, and there are two ways to do that. The received wisdom — “convolution is a multiplication in frequency space, so use an FFT” — is sound for convolving a response with an arbitrary signal, and <strong>wrong</strong> for a decay made of exponentials.</p>
+<p>Both paths cost <code class="docutils literal notranslate"><span class="pre">O(n_bins</span> <span class="pre">x</span> <span class="pre">n_rates)</span></code>. The recursion does one multiply-add per rate and bin; the closed-form periodic spectrum does one complex <em>division</em> per rate and frequency. The transform is not what dominates — evaluating the closed form is — so the frequency domain buys no better scaling, only worse constants, and the recursion is SIMD-optimised on top of that.</p>
+<p>Start by checking the two give the same answer.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+
+<span class="n">RECURSIVE</span><span class="p">,</span> <span class="n">SPECTRAL</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+
+<span class="n">n_bins</span> <span class="o">=</span> <span class="mi">1024</span>
+<span class="n">rates</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">50.0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]</span>
+<span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_bins</span><span class="p">)</span>
+<span class="n">irf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">i</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_convolve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_bins</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">RECURSIVE</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_convolve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_bins</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">SPECTRAL</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;largest relative difference: </span><span class="si">%.2e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+<p>Machine precision — which took a correction rather than a tolerance.</p>
+<p>The recursion applies the trapezoid rule to the convolution integral, and the kernel that leaves is <code class="docutils literal notranslate"><span class="pre">exp(-k</span> <span class="pre">L)</span></code> at every lag except <code class="docutils literal notranslate"><span class="pre">L</span> <span class="pre">=</span> <span class="pre">0</span></code>, where it leaves one half. Halving one sample is subtracting half a delta, and a delta has a flat spectrum, so the entire difference is a constant <code class="docutils literal notranslate"><span class="pre">1/2</span></code> subtracted from the periodic spectrum.</p>
+<p>Skip it and the two differ by <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">+</span> <span class="pre">exp(-k))</span> <span class="pre">/</span> <span class="pre">2</span></code> — a factor that depends on the <strong>rate</strong>, so it does not divide out of a rate spectrum but reweights it. In a model built to measure the relative weights of a FRET-rate distribution, that is an error in the answer, not in the last digit.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;k = </span><span class="si">%5.3f</span><span class="s2"> per bin -&gt; uncorrected discrepancy would be </span><span class="si">%5.2f%%</span><span class="s2">&quot;</span>
+          <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<section id="Which-is-faster,-and-by-how-much">
+<h3>Which is faster, and by how much<a class="headerlink" href="#Which-is-faster,-and-by-how-much" title="Link to this heading">#</a></h3>
+<p>Measured by <code class="docutils literal notranslate"><span class="pre">benchmarks/bench_convolution.py</span></code> on an M1 Pro:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>bins</p></th>
+<th class="head"><p>rates</p></th>
+<th class="head"><p>recursion</p></th>
+<th class="head"><p>spectral</p></th>
+<th class="head"><p>spectral is</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1024</p></td>
+<td><p>1</p></td>
+<td><p>28 us</p></td>
+<td><p>47 us</p></td>
+<td><p>1.7x slower</p></td>
+</tr>
+<tr class="row-odd"><td><p>1024</p></td>
+<td><p>16</p></td>
+<td><p>55 us</p></td>
+<td><p>253 us</p></td>
+<td><p>4.6x slower</p></td>
+</tr>
+<tr class="row-even"><td><p>1024</p></td>
+<td><p>64</p></td>
+<td><p>147 us</p></td>
+<td><p>911 us</p></td>
+<td><p>6.2x slower</p></td>
+</tr>
+<tr class="row-odd"><td><p>4096</p></td>
+<td><p>64</p></td>
+<td><p>581 us</p></td>
+<td><p>3569 us</p></td>
+<td><p>6.1x slower</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The gap <strong>widens</strong> with the rate count — exactly the regime a donor x FRET x anisotropy outer product lives in, so the frequency domain is at its worst where a rate-spectrum model would most want it.</p>
+<p><strong>Use the recursion.</strong> It is the default, so that is also the “do nothing” answer. Reach for the spectral path for the three things the recursion cannot do: an arbitrary measured pattern (an autofluorescence reference is not a sum of exponentials), an independent cross-check, and a response broad enough to wrap around the period — the recursion starts at bin 0 as though nothing preceded it, so it cannot see the wrapped part.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">broad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">i</span> <span class="o">-</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">300.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">wide_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_convolve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">broad</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_bins</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">RECURSIVE</span><span class="p">))</span>
+<span class="n">wide_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_convolve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">broad</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_bins</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">SPECTRAL</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;compact response: </span><span class="si">%.1e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">a</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;broad (wrapping): </span><span class="si">%.1e</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">wide_a</span> <span class="o">-</span> <span class="n">wide_b</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">wide_a</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
 </pre></div>
 </div>
 </div>
 </section>
-<section id="Phasor-and-mean-lifetime-summaries">
-<h2>Phasor and mean-lifetime summaries<a class="headerlink" href="#Phasor-and-mean-lifetime-summaries" title="Link to this heading">#</a></h2>
-<p>Phasor and moment-based lifetime summaries are useful before fitting because they show whether a pixel or selection behaves like one population, a mixture, or poor signal. Use the FLIM examples for image-level workflows:</p>
-<ul class="simple">
-<li><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/flim/plot_phasor</span></code></p></li>
-<li><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/flim/plot_mean_lifetime</span></code></p></li>
-<li><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/flim/plot_lifetime_moments</span></code></p></li>
-<li><p>:doc:<code class="docutils literal notranslate"><span class="pre">../auto_examples/flim/plot_mle_lifetime</span></code></p></li>
-</ul>
-<p>For fit model details, see :doc:<code class="docutils literal notranslate"><span class="pre">../fit-guide</span></code>.</p>
+<section id="A-sub-bin-timeshift-needs-neither-choice">
+<h3>A sub-bin timeshift needs neither choice<a class="headerlink" href="#A-sub-bin-timeshift-needs-neither-choice" title="Link to this heading">#</a></h3>
+<p>A whole-bin shift is a roll; a fractional one is not, and rounding it to the nearest bin biases the fitted lifetime when bins are coarse. Pass a fractional <code class="docutils literal notranslate"><span class="pre">shift_bins</span></code> and the recursion borrows one transform of the <em>response</em>, at a cost independent of the number of rates.</p>
+<p>The shift goes on the response and never on the decay. A phase ramp is band-limited interpolation, so it rings at a step — and the decay has one, where the next pulse arrives. Shift the decay and its tail oscillates and goes <strong>negative</strong>, which a Poisson likelihood cannot take the logarithm of. The response is a compact pulse near zero at both ends, so it shifts cleanly.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">half</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_convolve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">irf</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">n_bins</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">RECURSIVE</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;model stays positive under a half-bin shift:&quot;</span><span class="p">,</span> <span class="n">half</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="n">decay</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">dfa_periodic_decay</span><span class="p">([</span><span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">decay</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">rung</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">decay</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">/</span> <span class="mi">64</span><span class="p">),</span> <span class="mi">64</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shifting the *decay* instead goes negative:&quot;</span><span class="p">,</span> <span class="n">rung</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </section>
-<section id="Troubleshooting-checklist">
-<h2>Troubleshooting checklist<a class="headerlink" href="#Troubleshooting-checklist" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>If fitted lifetimes use the wrong units, check that <code class="docutils literal notranslate"><span class="pre">dt</span></code>, <code class="docutils literal notranslate"><span class="pre">period</span></code>, and initial lifetime values are in the same units.</p></li>
-<li><p>If the model is shifted relative to the data, inspect IRF alignment and <code class="docutils literal notranslate"><span class="pre">convolution_stop</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">Fit24</span></code> swaps lifetimes or drives <code class="docutils literal notranslate"><span class="pre">A2</span></code> to a boundary, the two-component model may not be identifiable from the photon counts.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">Fit25</span></code> always chooses the same candidate, check that the four candidate lifetimes cover the observed decay.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">Fit26</span></code> returns an implausible mixture fraction, normalize and compare the two reference patterns before fitting.</p></li>
-<li><p>If low-level calls behave differently from helper calls, compare <code class="docutils literal notranslate"><span class="pre">DecayFitData.corrections</span></code>, Jordi ordering, and <code class="docutils literal notranslate"><span class="pre">fixed</span></code> arrays.</p></li>
-</ul>
+<section id="The-response-must-be-sized-for-the-channels-you-declared">
+<h3>The response must be sized for the channels you declared<a class="headerlink" href="#The-response-must-be-sized-for-the-channels-you-declared" title="Link to this heading">#</a></h3>
+<p>A shared instrument response is only shared when there is <em>one</em> channel to share it with. A polarisation-resolved model reads <code class="docutils literal notranslate"><span class="pre">n_channels</span> <span class="pre">*</span> <span class="pre">n_bins</span></code> samples straight out of the array, so handing it a response sized for one channel is an out-of-bounds read — not a shorthand. Both <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">model_curve</span></code> refuse it.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bad</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFitProblem</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+<span class="n">bad</span><span class="o">.</span><span class="n">irf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">irf</span><span class="p">[:</span><span class="n">n_bins</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>          <span class="c1"># one channel...</span>
+<span class="n">bad</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">VectorDouble</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_bins</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;validation_error():&quot;</span><span class="p">,</span> <span class="n">bad</span><span class="o">.</span><span class="n">validation_error</span><span class="p">())</span>           <span class="c1"># ...for a 2-channel problem</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">fit</span><span class="o">.</span><span class="n">model_curve</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="n">bad</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;refused:&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>It is worth saying why this is an error rather than a tolerated shorthand: it used to be accepted. The curve came back with plausible numbers, the read ran past the end of the heap buffer, and the process died later in unrelated code — which is a very expensive way to find out.</p>
+</section>
+</section>
+<section id="Deprecated-API">
+<h2>Deprecated API<a class="headerlink" href="#Deprecated-API" title="Link to this heading">#</a></h2>
+<p>The former per-estimator classes (<code class="docutils literal notranslate"><span class="pre">Fit23</span></code>/<code class="docutils literal notranslate"><span class="pre">Fit24</span></code>/<code class="docutils literal notranslate"><span class="pre">Fit25</span></code>/<code class="docutils literal notranslate"><span class="pre">Fit26</span></code>, the <code class="docutils literal notranslate"><span class="pre">fit23</span></code>-style helpers, <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code>) still work from Python, warn on use, and are <strong>removed in 0.29</strong>. They are rebuilt on top of the interface above and return the same numbers. Port to <code class="docutils literal notranslate"><span class="pre">DecayFit2</span></code>: the layouts then come from the registry, and the same code works for every model.</p>
 </section>
 </section>
 
@@ -1110,11 +1332,11 @@ anisotropy/rotation output</p></td>
       </div>
     </a>
     <a class="right-next"
-       href="h2mm_bva.html"
+       href="hmm_bva.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Dynamic FRET: H2MM and BVA</p>
+        <p class="prev-next-title">Dynamic FRET: HMM and BVA</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1137,15 +1359,23 @@ anisotropy/rotation output</p></td>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Core-data-model">Core data model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Which-fit-should-I-use?">Which fit should I use?</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Result-dictionary-contract">Result dictionary contract</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Minimal-synthetic-setup">Minimal synthetic setup</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#One-call-helper-path">One-call helper path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reusable-class-path">Reusable class path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Low-level-DecayFitData-path">Low-level <code class="docutils literal notranslate"><span class="pre">DecayFitData</span></code> path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Phasor-and-mean-lifetime-summaries">Phasor and mean-lifetime summaries</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Troubleshooting-checklist">Troubleshooting checklist</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-four-pieces">The four pieces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#What-can-I-fit?">What can I fit?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#A-synthetic-measurement">A synthetic measurement</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Build-the-fit-and-the-problem">Build the fit and the problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Simulate-a-decay">Simulate a decay</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Fit">Fit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Read-the-answer-by-name">Read the answer by name</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Swapping-the-model-is-a-change-of-name">Swapping the model is a change of name</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Fitting-many-decays">Fitting many decays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Bounds-are-priors">Bounds are priors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Convolving:-the-recursion-or-the-transform?">Convolving: the recursion or the transform?</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Which-is-faster,-and-by-how-much">Which is faster, and by how much</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#A-sub-bin-timeshift-needs-neither-choice">A sub-bin timeshift needs neither choice</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#The-response-must-be-sized-for-the-channels-you-declared">The response must be sized for the channels you declared</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Deprecated-API">Deprecated API</a></li>
 </ul>
   </nav></div>
 

@@ -4,6 +4,8 @@ Fitting ICS data by a RICS model
 ================================
 
 """
+import sys
+from pathlib import Path
 import tttrlib
 import numpy as np
 import scipy.optimize
@@ -136,6 +138,10 @@ def chi2(
         print("y_model", y_model)
         print(chi2_s)
     return chi2_s
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 
 
 from examples._example_data import get_data_path

@@ -11,7 +11,9 @@ import tttrlib
 import numpy as np
 import pylab as plt
 
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), "."))
 filename = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/eGFP_bad_background.ptu')
 filename_irf = str(DATA_ROOT / 'imaging/zeiss/eGFP_bad_background/IRF.ptu')
 

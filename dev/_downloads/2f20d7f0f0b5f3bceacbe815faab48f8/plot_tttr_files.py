@@ -11,7 +11,9 @@ from pathlib import Path
 import tttrlib
 
 # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")).resolve()
 
 data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
@@ -63,7 +65,7 @@ A detailed description on the meta data in :class:`TTTRHeader`is given in :ref:`
 
     +----------------+----------------------------------------------------------------------------------+
     | Name           | Description                                                                      |
-    +================+========+=========================================================================+
+    +================+==================================================================================+
     |Macro time      | Number of macro time clock cycles since the start of the recording               |
     +----------------+----------------------------------------------------------------------------------+
     |Micro time      | Number of micro time channels since last macro time (unused in PicoQuant T2 mode)|
@@ -86,9 +88,9 @@ events. Currently the following events are considered.
 .. table:: Table of event type identifiers
     :widths: auto
 
-    +--------------------------+--------+----------------+
+    +--------------------------+-------------------------+
     | Event type               | Event type number       |
-    +==========================+========+================+
+    +==========================+=========================+
     |Photon event              |0                        |
     +--------------------------+-------------------------+
     |Special event             |1                        |

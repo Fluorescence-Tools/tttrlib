@@ -33,7 +33,7 @@ pulsed excitation experiment. However, the same procedure can be applied to cw d
 This example illustrates a normal correlation and demonstrates two approaches
 how to compute full correlations with ``tttrlib``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-26
+.. GENERATED FROM PYTHON SOURCE LINES 18-28
 
 .. code-block:: Python
 
@@ -43,10 +43,12 @@ how to compute full correlations with ``tttrlib``.
     import matplotlib.pylab as plt
     import numpy as np
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 27-33
+.. GENERATED FROM PYTHON SOURCE LINES 29-35
 
 First, we read a dataset into a TTTR container. In the example,
 we use a small part of a single-molecule multiparameter fluorescence detection
@@ -55,14 +57,14 @@ We use a small dataset due to practical reasons to illustrate methods how to
 correlate fluorescence data in ``tttrlib``. For productive analysis of
 a real experiment usually more data would be processed.
 
-.. GENERATED FROM PYTHON SOURCE LINES 33-35
+.. GENERATED FROM PYTHON SOURCE LINES 35-37
 
 .. code-block:: Python
 
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-41
+.. GENERATED FROM PYTHON SOURCE LINES 38-43
 
 After reading the data, we create two new TTTR containers for the two
 correlation channels. Here, we cross-correlate photons in the channels
@@ -70,7 +72,7 @@ correlation channels. Here, we cross-correlate photons in the channels
 the channels. A new TTTR object can be created with an existing object
 by providing a list of indices.
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-44
+.. GENERATED FROM PYTHON SOURCE LINES 43-46
 
 .. code-block:: Python
 
@@ -78,24 +80,24 @@ by providing a list of indices.
     tttr_ch1 = tttrlib.TTTR(data, ch1_indices)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-47
+.. GENERATED FROM PYTHON SOURCE LINES 47-49
 
 Alternatively, there is a method that creates new TTTR objects for a
 list of channels:
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-49
+.. GENERATED FROM PYTHON SOURCE LINES 49-51
 
 .. code-block:: Python
 
     tttr_ch2 = data.get_tttr_by_channel([0, 9])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-52
+.. GENERATED FROM PYTHON SOURCE LINES 52-54
 
 The two TTTR objects can be directly cross-correlated. Here, by default the micro times
 are not considered in the correlation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-60
+.. GENERATED FROM PYTHON SOURCE LINES 54-62
 
 .. code-block:: Python
 
@@ -108,13 +110,13 @@ are not considered in the correlation.
     y_normal = correlator_ref.correlation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-64
+.. GENERATED FROM PYTHON SOURCE LINES 63-66
 
 To compute a full correlation, i.e., a correlation that uses the micro
 times as time information, the default value of parameters ``make_fine``
 when creating a new Correlator needs to by modified:
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-77
+.. GENERATED FROM PYTHON SOURCE LINES 66-79
 
 .. code-block:: Python
 
@@ -132,7 +134,7 @@ when creating a new Correlator needs to by modified:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-83
+.. GENERATED FROM PYTHON SOURCE LINES 80-85
 
 In case there is need for a finer control the input for the correlator
 can be computed manually by first obtaining the macro times, the micro
@@ -140,7 +142,7 @@ times, computing weights for the photons and setting the macro times,
 the weights and the micro times manually before obtaining a correlation
 curve from the correlator.
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-97
+.. GENERATED FROM PYTHON SOURCE LINES 85-99
 
 .. code-block:: Python
 
@@ -159,13 +161,13 @@ curve from the correlator.
     x_ref *= data.header.micro_time_resolution
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-101
+.. GENERATED FROM PYTHON SOURCE LINES 100-103
 
 When the macro and the micro times are combined, the correlation
 curves can be computed for shorter correlation times as illustrated
 below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 101-112
+.. GENERATED FROM PYTHON SOURCE LINES 103-114
 
 .. code-block:: Python
 

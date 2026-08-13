@@ -44,18 +44,21 @@ irf_np = np.array([0, 0, 0, 260, 1582, 155, 0, 0, 0, 0,
 
 bg = np.zeros_like(irf_np)
 
-fit23 = tttrlib.Fit23(
-    dt=dt,
-    irf=irf_np,
-    background=bg,
-    period=period,
-    g_factor=g_factor,
-    l1=l1, l2=l2
-)
+fit23 = tttrlib.DecayFit2(
+    'fit23',
+    tttrlib.setup_vector('fit23', dt=dt, period=period, g_factor=g_factor,
+                         l1=l1, l2=l2),
+    irf_np.tolist())
+
+problem = tttrlib.DecayFitProblem(2, len(irf_np) // 2, dt)
+problem.irf = tttrlib.VectorDouble(irf_np.tolist())
+problem.background = tttrlib.VectorDouble(np.asarray(bg, dtype=float).tolist())
 
 tau, gamma, r0, rho = 2.0, 0.01, 0.38, 1.22
 x0 = np.array([tau, gamma, r0, rho])
-fixed = np.array([0, 1, 1, 0])
+# 0 = free, -1 = held. This benchmark fits the lifetime and the rotational
+# correlation time, holding the scatter fraction and r0 — the same mask as before.
+constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, -1, -1, 0]))
 
 """
 In this loop the fluorescence decays are simulated and the simulated decays are 
@@ -74,14 +77,13 @@ for n_photons in range(n_photons_min, n_photons_max, n_photon_step):
         corrections = np.array([period, g_factor, l1, l2, conv_stop])
         model = np.zeros_like(irf_np)
         bg = np.zeros_like(irf_np)
-        tttrlib.DecayFit23.modelf(param, irf_np, bg, dt, corrections, model)
+        model = np.asarray(fit23.model_curve(param, problem))
         model *= n_photons / np.sum(model)
         data = np.random.poisson(model)
-        # This performs a with on the data
-        r = fit23(data=data, initial_values=x0, fixed=fixed)
-        # print("tau_sim: %.2f, tau_recov: %s" % (tau, r['x'][0]))
+        problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
+        outcome = fit23.fit(list(x0), constraints, problem)
         tau_sim.append(tau)
-        tau_recov.append(r['x'][0])
+        tau_recov.append(outcome.parameters[0])
         n_photon_dict[n_photons] = {
                 'tau_simulated': np.array(tau_sim),
                 'tau_recovered': np.array(tau_recov)
@@ -108,9 +110,9 @@ number of simulated photons.
 fig, ax = plt.subplots(nrows=1, ncols=3, squeeze=True)
 fig.set_size_inches(12, 4)
 fig.subplots_adjust(bottom=0.2, left=0.125, right=0.9, wspace=0.3)
-ax[0].semilogy([x for x in fit23.data], label='Data')
-ax[0].semilogy([x for x in fit23.irf], label='IRF')
-ax[0].semilogy([x for x in fit23.model], label='Model')
+ax[0].semilogy(np.asarray(problem.data), label='Data')
+ax[0].semilogy(np.asarray(problem.irf), label='IRF')
+ax[0].semilogy(np.asarray(problem.model), label='Model')
 ax[0].set_ylim((0.1, 10000))
 ax[0].title.set_text(r'Example decay')
 ax[0].set_ylabel(r'Counts')

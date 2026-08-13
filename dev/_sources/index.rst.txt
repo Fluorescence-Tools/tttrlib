@@ -8,9 +8,9 @@ photon data.
 
 **tttrlib** reads, processes, and writes photon streams from PicoQuant,
 Becker & Hickl, and Photon-HDF5 files through one vendor-independent API. The
-core algorithms are written in C++ and exposed to **Python, R, and Java** from a
-single shared interface — plus an **ImageJ/Fiji plugin** for point-and-click FLIM
-reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
+core algorithms are written in C++ and exposed to **Python, R, Java and
+JavaScript** from a single shared interface — plus an **ImageJ/Fiji plugin** for
+point-and-click FLIM reconstruction. The Python binding integrates with NumPy, SciPy, Matplotlib, and
 Jupyter-based workflows. See :doc:`languages` for the same examples in every
 language.
 
@@ -25,10 +25,12 @@ Quick links
      - :doc:`getting-started`
    * - Run small examples
      - :doc:`quickstart`
-   * - Use Python, R, or Java
+   * - Use Python, R, Java or JavaScript
      - :doc:`languages`
    * - Reconstruct FLIM in ImageJ/Fiji
      - :doc:`imagej-plugin`
+   * - Read TTTR files from Node.js
+     - :doc:`javascript-package`
    * - Choose an analysis workflow
      - :doc:`workflows`
    * - Browse executable workflows
@@ -101,14 +103,20 @@ Documentation
    languages
    r-package
    imagej-plugin
+   javascript-package
    workflows
    tttr-core
    file-formats
+   formats/index
+   saving-tables
+   plugins
    burst-analysis
-   h2mm-bva
+   hmm-bva
+   hmm-state-decoding
    pda-guide
    fcs-correlation
    clsm-flim-guide
+   superres-guide
    simulator-guide
    localization-guide
    fit-guide

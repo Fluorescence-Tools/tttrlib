@@ -33,10 +33,12 @@ multiple Confocor3 channels into a single photon stream for cross-correlation
 analysis. The merge method automatically handles time sorting and is more
 efficient than manual concatenation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-24
+.. GENERATED FROM PYTHON SOURCE LINES 18-26
 
 .. code-block:: Python
 
+    import sys
+    from pathlib import Path
     import pathlib
     import numpy as np
 
@@ -44,16 +46,20 @@ efficient than manual concatenation.
     import tttrlib
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 25-28
+.. GENERATED FROM PYTHON SOURCE LINES 27-32
 
 Reading data
 ------------
 The photon data registered by different detectors are saved in separate files.
+Make the `examples` package importable when this script is run directly,
+from any working directory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-44
+.. GENERATED FROM PYTHON SOURCE LINES 33-50
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_root
     # Read the data of all channels that should be correlated into separate containers.
     fns = sorted([str(p) for p in (get_data_root() / 'cz/fcs').glob('5a6ce6a348a08e3da9f7c0ab4ee0ce94_R1_P1_K1_Ch*.raw')])
@@ -70,14 +76,14 @@ The photon data registered by different detectors are saved in separate files.
         print(f"  Channel {i+1}: {tttr.size()} events")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-49
+.. GENERATED FROM PYTHON SOURCE LINES 51-55
 
 Check count rates
 -----------------
 You can check the count rates of the channels using the macro time resolution 
 contained in the header
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-55
+.. GENERATED FROM PYTHON SOURCE LINES 56-61
 
 .. code-block:: Python
 
@@ -87,14 +93,14 @@ contained in the header
     print("Count rates:", count_rates)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 56-60
+.. GENERATED FROM PYTHON SOURCE LINES 62-66
 
 Merge channels using TTTR merge method
 --------------------------------------
 Use the new merge method to combine channels automatically
 The merge method with strategy=1 (interleave) automatically sorts by time
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-83
+.. GENERATED FROM PYTHON SOURCE LINES 67-89
 
 .. code-block:: Python
 
@@ -121,13 +127,13 @@ The merge method with strategy=1 (interleave) automatically sorts by time
     print(f"Merged channels: {merged_channels}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-87
+.. GENERATED FROM PYTHON SOURCE LINES 90-93
 
 Verify chronological order
 --------------------------
 The interleave merge strategy ensures events are sorted by time
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-94
+.. GENERATED FROM PYTHON SOURCE LINES 94-100
 
 .. code-block:: Python
 
@@ -138,13 +144,13 @@ The interleave merge strategy ensures events are sorted by time
         print("Events are NOT in chronological order")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-98
+.. GENERATED FROM PYTHON SOURCE LINES 101-104
 
 Cross-correlation analysis
 --------------------------
 The merged container can be used for standard analysis, e.g., correlations.
 
-.. GENERATED FROM PYTHON SOURCE LINES 99-149
+.. GENERATED FROM PYTHON SOURCE LINES 105-155
 
 .. code-block:: Python
 
@@ -199,13 +205,13 @@ The merged container can be used for standard analysis, e.g., correlations.
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 150-153
+.. GENERATED FROM PYTHON SOURCE LINES 156-159
 
 Performance comparison (optional)
 ---------------------------------
 Compare the new merge method with the old manual approach
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-198
+.. GENERATED FROM PYTHON SOURCE LINES 160-204
 
 .. code-block:: Python
 

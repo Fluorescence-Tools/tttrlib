@@ -50,33 +50,35 @@ conv_stop = min(len(time_axis), conv_stop)
 param = np.array([tau, gamma, r0, rho])
 corrections = np.array([period, g, l1, l2, conv_stop])
 
-# compute a model function that is later used as "data"
-model = np.zeros_like(time_axis)
+# Build the fit once from the instrument description and the IRF.
 bg = np.zeros_like(time_axis)
-tttrlib.DecayFit23.modelf(param, irf_np, bg, dt, corrections, model)
-# add poisson noise to model and use as data
+fit23 = tttrlib.DecayFit2(
+    'fit23',
+    tttrlib.setup_vector('fit23', dt=dt, period=period, g_factor=g, l1=l1, l2=l2,
+                         convolution_stop=int(conv_stop)),
+    irf_np.tolist())
+
+problem = tttrlib.DecayFitProblem(2, len(irf_np) // 2, dt)
+problem.irf = tttrlib.VectorDouble(irf_np.tolist())
+problem.background = tttrlib.VectorDouble(bg.tolist())
+
+# model_curve gives the decay independent of any data, which is what generating
+# a synthetic measurement needs.
+model = np.asarray(fit23.model_curve(param, problem))
 data = np.random.poisson(model * n_photons)
+problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
 
-# create DecayFitData container that contains all parameters for fitting
-m_param = tttrlib.DecayFitData(
-    irf=irf_np,
-    background=bg,
-    data=data.astype(np.int32),
-    corrections=corrections,
-    dt=dt
-)
-
+# Fit from a deliberately wrong start, with only the lifetime free
+# (0 = free, -1 = held).
 tau, gamma, r0, rho = 4., 0.01, 0.38, 1.5
-bifl_scatter = -1
-p_2s = 0
-x = np.zeros(8, dtype=np.float64)
-x[:6] = [tau, gamma, r0, rho, bifl_scatter, p_2s]
+outcome = fit23.fit(
+    [tau, gamma, r0, rho],
+    tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, -1, -1, -1])),
+    problem)
+chi2 = outcome.objective
+x = np.asarray(outcome.parameters)
 
-# test fitting
-fixed = np.array([0, 1, 1, 1], dtype=np.int16)
-chi2 = tttrlib.DecayFit23.fit(x, fixed, m_param)
-
-m = np.array([m for m in m_param.get_model()])
+m = np.asarray(problem.model)
 p.plot(m)
 p.plot(data)
 p.plot(irf_np / max(irf_np) * max(data))

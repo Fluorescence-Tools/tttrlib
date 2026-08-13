@@ -35,7 +35,7 @@ one excitation period,
 the repetition-rate information (effective count of 0) the full TAC range is used
 instead, so the call is always safe.
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-27
+.. GENERATED FROM PYTHON SOURCE LINES 19-29
 
 .. code-block:: Python
 
@@ -45,17 +45,19 @@ instead, so the call is always safe.
     import pylab as p
 
     # Use TTTRLIB_DATA if set, otherwise fall back to repository layout
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", ".")).resolve()
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")).resolve()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-32
+.. GENERATED FROM PYTHON SOURCE LINES 30-34
 
 Effect of micro time coarsening
 -------------------------------
 ``micro_time_coarsening`` divides the micro times before binning, trading
 resolution for counts per bin.
 
-.. GENERATED FROM PYTHON SOURCE LINES 32-41
+.. GENERATED FROM PYTHON SOURCE LINES 34-43
 
 .. code-block:: Python
 
@@ -69,14 +71,14 @@ resolution for counts per bin.
     p.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-46
+.. GENERATED FROM PYTHON SOURCE LINES 44-48
 
 Limiting the histogram to one excitation period
 -----------------------------------------------
 Use a pulsed (T3) file where the TAC range is much wider than one excitation
 period. ``minlength=-2`` drops the empty/noise tail beyond ``1 / rep_rate``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-70
+.. GENERATED FROM PYTHON SOURCE LINES 48-72
 
 .. code-block:: Python
 

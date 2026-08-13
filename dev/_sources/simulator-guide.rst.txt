@@ -454,6 +454,238 @@ default off (exact):
 See ``performance_guide`` for the trade-offs and measured speedups.
 
 
+Flow and directed transport
+===========================
+
+The simulator supports advective transport (flow) and static barriers (occlusion),
+modelled on the Smoluchowski advection–diffusion equation:
+
+.. math::
+
+    dr = v(r)\,dt + \sqrt{2D}\,dW
+
+A molecule in a velocity field :math:`v(r)` follows the Itô SDE above, integrated with
+Euler–Maruyama for the noise. The **drift** is integrated exactly for a uniform field
+(constant drift needs no scheme) and with an explicit **midpoint** step for any other
+field. That is not a refinement but a correctness requirement: plain Euler applied to a
+rigid rotation has map :math:`I + \omega\,\Delta t\,A` with determinant
+:math:`1 + (\omega\Delta t)^2 > 1`, so it inflates phase-space volume on every step and
+molecules spiral outward. The error is :math:`O(\Delta t^2)` per step but *systematic*, so
+it accumulates linearly in time rather than averaging away — at
+:math:`\omega\Delta t = 0.002` the radius grows by a factor 1.82 over 300 000 windows.
+Midpoint reduces the per-step volume error to :math:`(\omega\Delta t)^4/4` and costs one
+extra field lookup, which the uniform path never pays. Independently of the scheme, the
+drift is sampled at the step start, so the field should vary slowly over one diffusion
+length :math:`\sigma = \sqrt{2D\Delta t}`.
+
+The three built-in fields are all divergence-free and therefore preserve a uniform
+equilibrium concentration:
+
+* **Uniform** — constant :math:`v = (v_x, v_y, v_z)`. Evaluated analytically; no grid.
+* **Poiseuille** — Hagen–Poiseuille pipe flow along an axis with a parabolic cross-section
+  :math:`v_a(\rho) = v_{\max}(1 - \rho^2/R^2)`, clamped to 0 outside radius :math:`R`.
+* **Rotation** — rigid-body rotation about an axis, :math:`v = \omega \times r`.
+
+Arbitrary fields can be constructed from three same-shaped component arrays via
+``from_components``. A compressible field (one violating :math:`\nabla\cdot v = 0`)
+will concentrate molecules — real physics, but it invalidates any homogeneous-sample
+correlation analysis. The user is warned, not prevented.
+
+The ``v_scale`` attribute on :class:`SimSpecies` controls coupling of each species to the
+flow field (0 = not advected, e.g. a surface-bound dark state).
+
+**Injection must be advection-aware.** The open-volume surface-flux model injects molecules
+across the ellipsoid boundary. Without flow the per-area influx rate is
+:math:`\sigma/\sqrt{2\pi}` (step size :math:`\sigma = \sqrt{2D\Delta t}`). With flow
+the normal displacement has mean :math:`\mu = -v_\perp\Delta t`, giving the generalised
+influx weight :math:`w = \mu\Phi(\mu/\sigma) + \sigma\phi(\mu/\sigma)` where
+:math:`\Phi` is the standard-normal CDF and :math:`\phi` its PDF. Using the old
+:math:`\sigma/\sqrt{2\pi}` formula under flow under-injects upstream-facing surfaces
+and the population slowly drains — a silent, cumulative error that the simulator now
+corrects.
+
+**Barriers (occlusion).** An occlusion mask ``occ(r) ∈ [0,1]`` implements excluded-volume
+rejection: a proposed step to :math:`r'` is accepted with probability
+:math:`1 - \text{occ}(r')`. When :math:`v = 0` this satisfies detailed balance and the
+**equilibrium** concentration inside a region of occlusion :math:`q` is :math:`1 - q` times
+the outside value (the effective diffusion is reduced by the same factor). So the mask is an
+excluded-volume / partial-accessibility medium — not a membrane with a permeability.
+
+Three limitations:
+
+* A wall thinner than about :math:`4\sigma` may be tunnelled through in a single step
+  with no warning. Ensure ``thickness ≳ 4\sqrt{2D\Delta t}``.
+* Partial occlusion (:math:`0 < \text{occ} < 1`) combined with flow is outside the
+  validated regime. Hard walls (:math:`\text{occ} = 1`) with flow are fine.
+* The :math:`1 - q` law is an **equilibrium** statement, and an open volume is not at
+  equilibrium: molecules are injected across the surface and absorbed at it. When the
+  turnover time is comparable to the time needed to diffuse across the occluded region the
+  measured density ratio lands well above :math:`1 - q` — in a box of radius 3 µm with a
+  1 µm slab at :math:`q = 0.5` and :math:`D = 3`, it is 0.66 rather than 0.50, because the
+  residence time :math:`R^2/6D` is only about three times the crossing time
+  :math:`L^2/2D`. Nothing is wrong in that run; the equilibrium law simply does not apply
+  to it. Seal the region with :math:`\text{occ} = 1` walls (no injection, no absorption)
+  and the law is recovered to about 1 %, which is how
+  ``test_partial_occlusion_follows_one_minus_occ`` measures it.
+
+Making a flow simulation fast
+-----------------------------
+
+They compose, and that is the headline: on a flow-FCS run to a fixed photon budget, the
+default configuration takes 19.0 s and the fully-tuned one 1.8 s -- **10.8x** -- with the
+physics unchanged. The fitted values move around inside their own scatter and the
+amplitude, which reports the concentration, drifts *toward* the exact value rather than
+away from it:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 10 10 10 10 10
+
+   * - configuration
+     - time
+     - G(0)
+     - D
+     - v
+     - speedup
+   * - default (lattice PSF, nothing enabled)
+     - 19.0 s
+     - 0.933
+     - 0.440
+     - 9.44
+     - 1.0x
+   * - ``+ "radial": true`` on the excitation
+     - 14.8 s
+     - 0.935
+     - 0.426
+     - 9.50
+     - 1.3x
+   * - ``+ active_margin: 1.0``
+     - 9.8 s
+     - 0.985
+     - 0.530
+     - 10.08
+     - 1.9x
+   * - ``+ independent_molecules: true``
+     - 1.9 s
+     - 0.978
+     - 0.426
+     - 9.78
+     - 10.2x
+   * - ``+ per_molecule_skip: true``
+     - 1.8 s
+     - 0.989
+     - 0.593
+     - 9.94
+     - 10.8x
+   * - *simulated truth*
+     -
+     - 1.000
+     - 0.500
+     - 10.00
+     -
+
+A ready-made fast configuration, for a stationary-focus run with a symmetric PSF::
+
+    "settings": {"independent_molecules": true, "per_molecule_skip": true,
+                 "active_margin": 1.0, "max_windows": 3000000},
+    "excitation": {"type": "gaussian3d", "w0": 0.3, "z0": 1.5,
+                   "extent_xy": 2.0, "extent_z": 4.0, "spacing": 0.05,
+                   "radial": true}
+
+Each knob on its own, in order of what it is worth:
+
+
+Measured on a 200-molecule open volume, 8 cores, in order of what they are worth:
+
+* **``independent_molecules``: 5-6x.** Each molecule's whole timeline is simulated on its
+  own and the photon streams are merged, so there is no per-window barrier and the work is
+  embarrassingly parallel. This is by far the largest single win for a stationary-focus
+  run, and it is exact: it draws the injection count from a Poisson over the horizon and
+  gives each molecule an independent birth time. Needs ``max_windows > 0``.
+* **``per_molecule_skip`` (coasting) on top: a further ~1.3x**, so ~7x combined. Uniform
+  fields only -- a non-uniform field has no closed-form catch-up and an occlusion mask
+  would be tunnelled through, so both disable it.
+* **``drift_midpoint: false``: 22-26 %** on a grid field, by dropping the second field
+  lookup. Safe for shear-like fields such as ``poiseuille``; see the discussion above for
+  when it is not.
+* **A cylindrically symmetric PSF on a ``(rho, z)`` table: up to 2.9x**, and the cost
+  stops depending on lateral resolution. Pass ``"radial": true`` on a ``gaussian3d``,
+  ``gaussian_lorentzian`` or ``radial`` field. A confocal focus depends only on distance
+  from the optical axis and on z, so an x-y-z lattice stores one number per azimuth that
+  is the same number: 81x81x161 (8.5 MB) becomes 41x161 (53 kB), which is the difference
+  between streaming from RAM and reading from cache on every lookup, and the interpolation
+  drops from trilinear to bilinear. Measured at 400k windows: 4.4 -> 3.9 s at 0.10 um
+  spacing, 5.4 -> 3.9 s at 0.05 um, and 11.7 -> 4.0 s at 0.025 um -- the radial run is
+  flat while the lattice degrades.
+
+  This is **less general, so it is opt-in**: a radial table cannot represent an
+  astigmatic focus (different x and y waists), a tilted or comatic PSF, or anything else
+  that varies with azimuth. The full lattice remains the default. Note the radial form is
+  also the *more* accurate of the two where it applies, having no azimuthal interpolation
+  error -- at 0.10 um spacing the two differ by 2.3 % in count rate, and it is the lattice
+  that is wrong.
+
+* **``active_margin``: up to 3x, and it is the first thing to reach for.** It shrinks the
+  open volume to focus-plus-margin while holding the concentration, so molecules too far
+  away to be seen are never stepped at all. Measured on a flow-FCS run: 40.3 s at margin 0
+  (94 molecules), 27.6 s at 1.0 um (71), 12.9 s at 0.5 um (25) -- with the observables
+  intact, ``G(0)`` 0.948 -> 0.963 and the fitted ``D``/``v`` moving 0.453/9.67 ->
+  0.515/10.07 against true values of 0.5/10.0, i.e. inside the fit scatter. Use a margin of
+  a few diffusion lengths; for kinetics use ``>= sqrt(2*D/k_min)`` so freshly injected
+  molecules reach their stationary state before they can be seen.
+* **``rng_kind: pcg``: ~8 %** over the default xoshiro on this machine; philox is ~12 %
+  slower. All three are thread-count independent, so this is a free swap.
+
+* **Threads in the default window mode: only above ~2000 molecules.** The per-window
+  fork/join dominates below that -- at 200 molecules forcing it on is *three times slower*.
+  ``parallel_threshold`` (default 2048) encodes this; the measured speedup is 1.1x at 2000
+  molecules and 1.9-2.3x at 20000. Prefer ``independent_molecules``, which has no barrier.
+
+Grid fields cost about 1.7x a uniform one, so if the physics only needs a constant drift,
+use ``{"type": "uniform"}`` rather than a lattice holding a constant.
+
+What does **not** help, measured so that nobody repeats it:
+
+* **Weakening the random numbers.** The diffusion step needs three normals per molecule per
+  window, and it is tempting to note that diffusion would survive a poorer generator. It
+  would -- but the ziggurat sampler is already cheaper than the alternatives: replacing it
+  with three uniforms of matching variance packed out of two 32-bit draws made the run
+  *slower* (3.9 s -> 4.2 s). Its fast path is one 32-bit draw, a table lookup, a compare and
+  a multiply, and it is taken ~98 % of the time.
+* **SIMD**, measured rather than argued
+  (``benchmarks/bench_sim_propagation_simd.cpp``, primitive in ``include/SimSimd.h``).
+  Vectorising the arithmetic alone *loses* -- 0.7x over 2 doubles, 0.9x over 4 floats --
+  because the arithmetic was never the cost and those versions still draw random numbers one
+  lane at a time. A fully vectorised 32-bit generator with a branch-free Box-Muller reaches
+  **1.01-1.06x** on 4-wide NEON: parity, slightly ahead.
+
+  The transform turns out to matter more than the vectorisation. A rational approximation of
+  the normal quantile is the obvious choice and a trap: its central branch covers only
+  :math:`|z| < 1.97`, so 4.85 % of lanes need a scalar fix-up that costs more than
+  vectorising saves (0.71x), while skipping the fix-up truncates the distribution at
+  :math:`|z| = 3.22` with
+  mean, variance and a KS test all still clean. Box-Muller is exact, table-free and
+  branch-free, and has neither problem.
+
+  **AVX2 (8 lanes) is where a win should be and is unmeasured**: this machine is arm64, and
+  the AVX2 backend is verified for correctness by cross-compiling and running under
+  emulation, which says nothing about throughput. Anyone on x86-64 should run the benchmark.
+  At 4 lanes, against ``active_margin`` (3x) and ``independent_molecules`` (5-7x), parity is
+  not a reason to take on a structure-of-arrays molecule pool and the loss of the
+  per-molecule RNG keying that makes results thread-count independent.
+
+* **Chasing the field lookup by profile alone.** A sampling profile attributes ~60 % of the
+  run to the return from the excitation lookup, which reads as "``std::exp`` dominates". It
+  does not: skipping 44 % of the exponentials changes nothing measurable. The cost is memory
+  traffic, which is what the radial table above addresses.
+
+**Coasting** is disabled for any non-uniform field or for any occlusion mask. A uniform
+field uses a quadratic bound that accounts for both diffusion and drift (the original
+diffusion-only bound would under-estimate the coastable gap). Coasting for a non-uniform
+or masked sample would silently lose molecules that tunnel through a wall or miss the
+focus — the safe answer is to never skip windows.
+
+
 API reference
 =============
 
@@ -473,6 +705,9 @@ API reference
    :members:
 
 .. autoclass:: SimGrid
+   :members:
+
+.. autoclass:: SimVectorGrid
    :members:
 
 .. autoclass:: SimDecay

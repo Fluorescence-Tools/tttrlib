@@ -40,7 +40,7 @@ donor in a FRET experiment) and the delay range (a red laser excites the accepto
 
 Import all required libraries
 
-.. GENERATED FROM PYTHON SOURCE LINES 24-50
+.. GENERATED FROM PYTHON SOURCE LINES 24-51
 
 .. code-block:: Python
 
@@ -54,6 +54,7 @@ Import all required libraries
     import scipy
     import scipy.ndimage
     import os
+    import sys
     from pathlib import Path
 
     def plot_images(images, titles, cmaps=None, **kwargs):
@@ -71,18 +72,22 @@ Import all required libraries
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-56
+.. GENERATED FROM PYTHON SOURCE LINES 52-59
 
 Loading data
 ------------
 First, we read the TTTR data, create CLSM image container, and define used channels.
 We create a CLSM container for the green photons and the red photons. Moreover, we create
 containers for red photons in the prompt and the delay time window.
+Make the `examples` package importable when this script is run directly,
+from any working directory.
 
-.. GENERATED FROM PYTHON SOURCE LINES 56-71
+.. GENERATED FROM PYTHON SOURCE LINES 59-76
 
 .. code-block:: Python
 
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
     from examples._example_data import get_data_path
 
     filename_data = get_data_path('imaging/pq/ht3/mGBP_DA.ht3')
@@ -99,7 +104,7 @@ containers for red photons in the prompt and the delay time window.
     sum_all = green_ch + red_ch
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-77
+.. GENERATED FROM PYTHON SOURCE LINES 77-82
 
 Define PIE windows
 ------------------
@@ -107,7 +112,7 @@ In PIE two light sources excite the sample. Here, we load the instrument respons
 the IRFs of the two separate the fluorescence of the first (prompt) and the second (delay) excitation pulse.
 The two excitation pulses define two micro time detection windows for the prompt and the delay pulse.
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-107
+.. GENERATED FROM PYTHON SOURCE LINES 82-112
 
 .. code-block:: Python
 
@@ -142,12 +147,12 @@ The two excitation pulses define two micro time detection windows for the prompt
     plt.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 108-110
+.. GENERATED FROM PYTHON SOURCE LINES 113-115
 
 Create a mask to select photons in certain channel and in micro time range to
 split the photons in prompt and delay.
 
-.. GENERATED FROM PYTHON SOURCE LINES 110-132
+.. GENERATED FROM PYTHON SOURCE LINES 115-137
 
 .. code-block:: Python
 
@@ -174,7 +179,7 @@ split the photons in prompt and delay.
     fig.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 133-138
+.. GENERATED FROM PYTHON SOURCE LINES 138-143
 
 Intensity imaging
 -----------------
@@ -182,30 +187,30 @@ Fills the CLSM image container with intensities. The green CLSM container gets f
 with all photons (independent of the excitation pulse), as the red laser does not excite
 the sample.
 
-.. GENERATED FROM PYTHON SOURCE LINES 138-140
+.. GENERATED FROM PYTHON SOURCE LINES 143-145
 
 .. code-block:: Python
 
     clsm_green.fill(tttr_data, channels=green_ch)  # green channels
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 141-143
+.. GENERATED FROM PYTHON SOURCE LINES 146-148
 
 If not specified the red channel includes the photons in the prompt and the delay.
 Red intensity is total intensity, ie, prompt + delayed excitation
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-145
+.. GENERATED FROM PYTHON SOURCE LINES 148-150
 
 .. code-block:: Python
 
     clsm_red.fill(tttr_data, channels=red_ch)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 146-147
+.. GENERATED FROM PYTHON SOURCE LINES 151-152
 
 To separate the photons by the micro time specify the micro time range.
 
-.. GENERATED FROM PYTHON SOURCE LINES 147-169
+.. GENERATED FROM PYTHON SOURCE LINES 152-174
 
 .. code-block:: Python
 
@@ -232,12 +237,12 @@ To separate the photons by the micro time specify the micro time range.
     fig.show()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 170-172
+.. GENERATED FROM PYTHON SOURCE LINES 175-177
 
 Intensity imaging
 -----------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 172-204
+.. GENERATED FROM PYTHON SOURCE LINES 177-209
 
 .. code-block:: Python
 

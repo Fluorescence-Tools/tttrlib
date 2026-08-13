@@ -34,7 +34,7 @@ The input parameter vector is:
    and ``r0`` is the fundamental anisotropy. The selected lifetime is returned
    in ``result["x"][0]``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-76
+.. GENERATED FROM PYTHON SOURCE LINES 18-82
 
 .. code-block:: Python
 
@@ -68,24 +68,26 @@ The input parameter vector is:
         dtype=np.int32,
     )
 
-    fit25 = tttrlib.Fit25(
-        dt=dt,
-        irf=irf,
-        background=background,
-        period=32.0,
-        g_factor=1.0,
-        l1=0.1,
-        l2=0.1,
-        convolution_stop=len(irf) // 2 - 1,
-    )
+    fit25 = tttrlib.DecayFit2(
+        'fit25',
+        tttrlib.setup_vector('fit25', dt=dt, period=32.0, g_factor=1.0, l1=0.1, l2=0.1,
+                             convolution_stop=len(irf) // 2 - 1),
+        irf.tolist())
+
+    problem = tttrlib.DecayFitProblem(2, len(irf) // 2, dt)
+    problem.irf = tttrlib.VectorDouble(np.asarray(irf, dtype=float).tolist())
+    problem.background = tttrlib.VectorDouble(np.asarray(background, dtype=float).tolist())
+    problem.data = tttrlib.VectorDouble(np.asarray(data, dtype=float).tolist())
 
     candidate_lifetimes = np.array([0.5, 1.0, 2.0, 4.0])
-    initial = np.array([*candidate_lifetimes, 0.02, 0.38])
-    fixed = np.array([0, 0, 0, 0, 1, 1], dtype=np.int16)
-    result = fit25(data=data, initial_values=initial, fixed=fixed, include_model=True)
+    initial = [*candidate_lifetimes, 0.02, 0.38]
+    # The four candidates and the scatter fraction are scored; r0 is held.
+    constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, 0, 0, -1, -1]))
+    outcome = fit25.fit(initial, constraints, problem)
+    result = {"x": np.asarray(outcome.parameters), "twoIstar": outcome.objective}
 
     plt.plot(data, label="data")
-    plt.plot(result["model"], label="best Fit25 model")
+    plt.plot(np.asarray(problem.model), label="best fit25 model")
     plt.xlabel("microtime channel")
     plt.ylabel("counts")
     plt.legend()
@@ -96,6 +98,10 @@ The input parameter vector is:
     print(f"candidates: {candidate_lifetimes}")
     print(f"selected tau: {result['x'][0]:.1f} ns")
     print(f"twoIstar: {result['twoIstar']:.3f}")
+    # This model classifies rather than measures, so which candidate won is the
+    # answer — and the registry reports it directly.
+    named = tttrlib.results_as_dict('fit25', list(outcome.results))
+    print(f"winning candidate: index {named['selected_index']}")
 
 
 .. _sphx_glr_download_auto_examples_fluorescence_decay_plot_fit25.py:

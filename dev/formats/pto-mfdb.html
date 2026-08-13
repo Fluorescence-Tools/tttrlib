@@ -1,0 +1,1503 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="PTO.MFDB — the MMFDB profile of the photon container" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="formats/pto-mfdb.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Profile version 1.1. Profiles PTO 1.0 ( DocType &quot;pto&quot;). Read version 1. Purpose: PTO is a container and deliberately knows nothing about photons: it binds opaque payloads, gives each a UI..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_formats_pto-mfdb_91baaf7f.png" />
+<meta property="og:image:alt" content="Profile version 1.1. Profiles PTO 1.0 ( DocType &quot;pto&quot;). Read version 1. Purpose: PTO is a container and deliberately knows nothing about photons: it binds opaque payloads, gives each a UI..." />
+<meta name="description" content="Profile version 1.1. Profiles PTO 1.0 ( DocType &quot;pto&quot;). Read version 1. Purpose: PTO is a container and deliberately knows nothing about photons: it binds opaque payloads, gives each a UI..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>PTO.MFDB — the MMFDB profile of the photon container &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'formats/pto-mfdb';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Saving a table" href="../saving-tables.html" />
+    <link rel="prev" title="PTO — the PhoTon cOntainer" href="pto.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ptu.html">PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ht3.html">PicoQuant HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="becker-hickl-spc.html">Becker &amp; Hickl SPC (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon-hdf5.html">Photon-HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5,</span> <span class="pre">.hdf5</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zeiss-confocor3.html">Zeiss ConfoCor3 (<code class="docutils literal notranslate"><span class="pre">.raw</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="single-molecule-sm.html">Single-molecule (SM) (<code class="docutils literal notranslate"><span class="pre">.sm</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photonscore-lincam.html">Photonscore LINCam (<code class="docutils literal notranslate"><span class="pre">.photons</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="brighteyes-ttm.html">BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flim-labs-stt1.html">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pto.html">PTO — the PhoTon cOntainer</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">PTO.MFDB — the MMFDB profile of the photon container</a></li>
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/pto-mfdb.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">File formats, one page each</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">PTO.MFDB — the MMFDB profile of the photon container</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="pto-mfdb-the-mmfdb-profile-of-the-photon-container">
+<span id="pto-mfdb-format"></span><h1>PTO.MFDB — the MMFDB profile of the photon container<a class="headerlink" href="#pto-mfdb-the-mmfdb-profile-of-the-photon-container" title="Link to this heading">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The target for analysis output: <strong>one measurement is one file</strong>, decomposable
+back into the original data with a guarantee. Current state lives in
+<em>data IO</em> and <em>burst companions</em>;
+the gap is in the <em>assessment</em>.</p>
+</div>
+<p><strong>Profile version 1.1.</strong> Profiles PTO 1.0 (<code class="docutils literal notranslate"><span class="pre">DocType</span> <span class="pre">&quot;pto&quot;</span></code>). Read version 1.</p>
+<section id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading">#</a></h2>
+<p>PTO is a container and deliberately knows nothing about photons: it binds
+opaque payloads, gives each a UID, and lets typed metadata reference them.
+PTO.MFDB is the layer that says what goes in one — which kinds, which
+encodings, which names, and what a reader may rely on.</p>
+<p>It is named for the vocabulary, not for a program. Every controlled term comes
+from the <em>MMFDB</em> dictionaries, so a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> and a row in
+the database say the same thing in the same words, and any tool that speaks that
+vocabulary can write a conforming file. A profile named after one application
+would have contradicted the tool-agnostic claim the vocabulary exists to make.</p>
+<p>Its responsibility ends at the file. It does not define analysis. Where the
+container and the profile disagree, the container wins — PTO.MFDB constrains
+PTO, it never contradicts it.</p>
+</section>
+<section id="what-to-call-the-file">
+<h2>What to call the file<a class="headerlink" href="#what-to-call-the-file" title="Link to this heading">#</a></h2>
+<p>Two names, because there are two things:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>name</p></th>
+<th class="head"><p>what it claims</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>the container</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.pto</span></code></p></td>
+<td><p>an EBML document with <code class="docutils literal notranslate"><span class="pre">DocType</span> <span class="pre">&quot;pto&quot;</span></code>. Says nothing about what is inside.</p></td>
+</tr>
+<tr class="row-odd"><td><p>this profile</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.mmfdb.pto</span></code></p></td>
+<td><p>a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> that <strong>also</strong> conforms to PTO.MFDB: the container-level profile tags are present and every kind, encoding, grain and relation in it is a term from the MMFDB dictionaries.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code>, not <code class="docutils literal notranslate"><span class="pre">.pto.mmfdb</span></code>. The last suffix has to stay <code class="docutils literal notranslate"><span class="pre">.pto</span></code> or the file
+stops being recognised as a container by everything that dispatches on one —
+readers, file dialogs, <code class="docutils literal notranslate"><span class="pre">file(1)</span></code> magic tables, MIME databases. A profile that
+made its files unopenable by generic PTO tooling would have contradicted the
+point of being a profile. <code class="docutils literal notranslate"><span class="pre">.mmfdb</span></code> is therefore a <em>tag on the stem</em>, in the way
+<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> and <code class="docutils literal notranslate"><span class="pre">.d.ts</span></code> are, and everything about <code class="docutils literal notranslate"><span class="pre">.pto</span></code> continues to apply to a
+<code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code>.</p>
+<p>The suffix is a <strong>courtesy, not the authority</strong>. Conformance is stated <em>inside</em>
+the file, by the container-level tags:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_mmfdb_container</span><span class="o">.</span><span class="n">profile</span>               <span class="n">PTO</span><span class="o">.</span><span class="n">MFDB</span>
+<span class="n">_mmfdb_container</span><span class="o">.</span><span class="n">profile_version</span>       <span class="mf">1.1</span>
+<span class="n">_mmfdb_container</span><span class="o">.</span><span class="n">profile_read_version</span>  <span class="mi">1</span>
+</pre></div>
+</div>
+<p>A reader decides by reading those, never by the name — a renamed file is still
+conformant and a <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code> that lacks them is not. What the suffix is for is
+the human and the file listing: a directory holding an instrument container, a
+generic payload container and an analysis container should not need three
+<code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">-l</span></code> guesses.</p>
+<p>Writers SHOULD use <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code> for a container they write the profile tags
+into, and MUST accept plain <code class="docutils literal notranslate"><span class="pre">.pto</span></code> on read.</p>
+</section>
+<section id="design-principles">
+<h2>Design principles<a class="headerlink" href="#design-principles" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>The container is not ours.</strong> PTO 1.0 is frozen. This profile adds no element
+ID, no framing, and no requirement a generic EBML parser could not skip.</p></li>
+<li><p><strong>No term is invented here.</strong> A kind, an encoding, a step, a relation and a
+grain are all values of dictionary enumerations. Where upstream flrCIF has no
+term — it has none for photon files, detectors, anisotropy, bursts or typed
+analysis parameters — the term is defined in the MMFDB extension dictionary
+and cited from there. A writer needing a word it cannot find does not coin
+one; it adds one to the dictionary first.</p></li>
+<li><p><strong>The instrument file is the truth.</strong> It goes in verbatim, is never decoded
+into a second copy beside itself, and comes back out byte-for-byte.</p></li>
+<li><p><strong>A file says what it counts.</strong> Every table declares its grain, and relations
+between tables are declared keys. Nothing is joined by position.</p></li>
+<li><p><strong>Provenance is a serialised MMFDB subgraph</strong>, not a second, parallel model.</p></li>
+<li><p><strong>Drift is detectable.</strong> A file records the dictionary revision its terms came
+from, so a later reader can tell a renamed term from a typo.</p></li>
+</ul>
+</section>
+<section id="what-chisurf-writes-and-what-it-only-reads">
+<h2>What ChiSurf writes, and what it only reads<a class="headerlink" href="#what-chisurf-writes-and-what-it-only-reads" title="Link to this heading">#</a></h2>
+<p>The problem this profile closes is not that ChiSurf reads many formats — it must,
+because instruments and other programs write many, and a reader is an import
+path that costs nothing. It is that ChiSurf <strong>wrote</strong> many, for things that are
+one thing.</p>
+<p>The split is by direction, not by count:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>what</p></th>
+<th class="head"><p>ChiSurf writes</p></th>
+<th class="head"><p>why not a file of its own</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>a measurement — photons and everything derived from them</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.pto</span></code></p></td>
+<td><p>the pieces are related, and a filename convention cannot say so</p></td>
+</tr>
+<tr class="row-odd"><td><p>a curve — decay, correlation, anisotropy, IRF, model, residual</p></td>
+<td><p>a <code class="docutils literal notranslate"><span class="pre">curve_point</span></code> artifact</p></td>
+<td><p>five arrays and two units; the differences between curve types are what the <em>units</em> and the <em>kind</em> say</p></td>
+</tr>
+<tr class="row-even"><td><p>a table — bursts, dwells, pixels, molecules, tracks, states</p></td>
+<td><p>an artifact at its grain</p></td>
+<td><p>the grain is the difference; the storage is not</p></td>
+</tr>
+<tr class="row-odd"><td><p>a raster</p></td>
+<td><p>TIFF, carried inside the container</p></td>
+<td><p>a scientific raster stays readable by every other tool</p></td>
+</tr>
+<tr class="row-even"><td><p>a project — datasets, fits, a session</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.csp</span></code></p></td>
+<td><p>a different scope: many measurements</p></td>
+</tr>
+<tr class="row-odd"><td><p>metadata for deposition</p></td>
+<td><p>mmCIF</p></td>
+<td><p>an export, in the vocabulary this profile already uses</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Everything else — the <code class="docutils literal notranslate"><span class="pre">…4</span></code> companion family, <code class="docutils literal notranslate"><span class="pre">&lt;source&gt;.imaging.h5</span></code>, <code class="docutils literal notranslate"><span class="pre">kristine</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pycorrfit</span></code>, Photon-HDF5, CSV, the vv/vh stack — is an <strong>import source</strong> or an
+<strong>export the user asks for by name</strong>. Both are fine and both stay. What is not
+fine is a <em>new</em> way for ChiSurf to write something that already has a home.</p>
+<p>Before this, a curve could be saved as CSV, as YAML, through <code class="docutils literal notranslate"><span class="pre">save_xy</span></code>, through
+the vv/vh stack, or through one of the FCS writers: five ChiSurf-authored ways
+to write the same five arrays, <strong>none of which could say what the x axis was
+in</strong>. An FCS lag axis is milliseconds and a TCSPC axis is nanoseconds; nothing
+about the numbers says which, and reading one for the other is a mistake that
+surfaces as a diffusion time wrong by a factor of a million rather than as an
+error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">test/test_formats_are_consolidated.py</span></code> holds a <strong>shrinking</strong> allow-list of the
+modules still permitted to write a curve in a format of their own.</p>
+</section>
+<section id="target-architecture">
+<h2>Target architecture<a class="headerlink" href="#target-architecture" title="Link to this heading">#</a></h2>
+<section id="layering">
+<h3>Layering<a class="headerlink" href="#layering" title="Link to this heading">#</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>flrCIF     upstream community vocabulary (samples, probes, distances, lifetimes)
+   │       — has no term for a photon file, a detector, a burst, or a grain
+MMFDB      the extension dictionary: artifact kinds, formats, operation types,
+   │       relations, grains, integrity — every term this profile uses
+PTO.MFDB   this profile: which of those a container carries, and where
+   │
+PTO 1.0    EBML/RFC 8794, Matroska element ids — frozen
+</pre></div>
+</div>
+</section>
+<section id="file-layout">
+<h3>File layout<a class="headerlink" href="#file-layout" title="Link to this heading">#</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>EBML                DocType &quot;pto&quot;
+Segment
+  SeekHead ×2       the atomic commit
+  Info              Title, WritingApp, SegmentUUID
+  Attachments
+    AttachedFile    THE README — first object, ASCII, how to read this file
+  Attachments
+    AttachedFile    THE INSTRUMENT FILE — verbatim, immutable
+  Attachments       the measurement&#39;s mmCIF metadata, when it has any
+  Attachments       every derived artifact, appended, each with its own reserve
+  Tags              artifacts, operations, edges, version stamps
+  PtoAnnotations    notes for people
+</pre></div>
+</div>
+<p>The instrument payload is the <strong>first</strong> object and is never rewritten, so its
+offset is stable for the life of the file and no recomputation can disturb it.
+Reserve belongs to the derived objects, which are the ones that change.</p>
+</section>
+<section id="the-file-explains-itself">
+<h3>The file explains itself<a class="headerlink" href="#the-file-explains-itself" title="Link to this heading">#</a></h3>
+<p>The <strong>first object is a plain-ASCII README</strong>, <code class="docutils literal notranslate"><span class="pre">artifact_kind</span> <span class="pre">=</span> <span class="pre">readme</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data_format</span> <span class="pre">=</span> <span class="pre">text</span></code>. It is not documentation <em>about</em> the format; it is the
+format telling a reader what it is, in the file, in compact language:</p>
+<ul class="simple">
+<li><p>that this is EBML (RFC 8794), and how an element is framed, so the bytes can
+be walked by hand;</p></li>
+<li><p>which element IDs matter, by number, so no table is needed elsewhere;</p></li>
+<li><p>what the kinds and encodings mean, and that <code class="docutils literal notranslate"><span class="pre">dstore</span></code> is a columnar table with
+a described header;</p></li>
+<li><p><strong>how to get the original instrument file back</strong> — find the
+<code class="docutils literal notranslate"><span class="pre">tttr_photon_stream</span></code> object, write its <code class="docutils literal notranslate"><span class="pre">FileData</span></code> to a file, check it against
+the recorded SHA-256;</p></li>
+<li><p>that nothing is compressed, encrypted, or stored outside the file.</p></li>
+</ul>
+<p>The reason is not tidiness. A container outlives the software that wrote it, and
+the person who needs it most is the one for whom the library will not install.
+A specification in another repository is no use to them; a paragraph at the
+front of the file is.</p>
+<p>It is the first <em>object</em>, not the first byte — the container reserves space for
+its two indexes ahead of everything, so the text begins some kilobytes in and is
+found with <code class="docutils literal notranslate"><span class="pre">strings</span></code> rather than <code class="docutils literal notranslate"><span class="pre">head</span> <span class="pre">-c</span> <span class="pre">4096</span></code>. Nothing can precede it without
+changing the container format, which this profile does not do.</p>
+</section>
+<section id="what-the-measurement-is">
+<h3>What the measurement is<a class="headerlink" href="#what-the-measurement-is" title="Link to this heading">#</a></h3>
+<p>Provenance says a burst table came from a photon stream by a burst search. It
+does not say which sample, which dyes, which buffer, which instrument — and a
+file that cannot answer those is a record of a <em>computation</em>, not of a
+<em>measurement</em>.</p>
+<p>So a container may carry an object of <code class="docutils literal notranslate"><span class="pre">artifact_kind</span> <span class="pre">=</span> <span class="pre">sample_metadata</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data_format</span> <span class="pre">=</span> <span class="pre">cif</span></code>: an mmCIF block in the same vocabulary as everything else —
+flrCIF for samples, probes and conditions, PDBx where it applies, <code class="docutils literal notranslate"><span class="pre">mmfdb_*</span></code> for
+what neither covers. It is carried <strong>whole</strong>, as a block, rather than flattened
+into tags, because a category with several rows (two probes, three detector
+channels) is a loop and a tag is a name/value pair.</p>
+<p>Two rules:</p>
+<ul class="simple">
+<li><p><strong>Every name is checked against the dictionaries before it is written.</strong> Prose
+in a field that looks structured is worse than an absent field, because a
+later reader cannot tell the two apart.</p></li>
+<li><p><strong>A measurement with nothing to say says nothing.</strong> No empty block is written.
+An empty one would claim the measurement was described when it was not.</p></li>
+</ul>
+</section>
+<section id="an-object-is-an-artifact">
+<h3>An object is an artifact<a class="headerlink" href="#an-object-is-an-artifact" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>PTO</p></th>
+<th class="head"><p>PTO.MFDB</p></th>
+<th class="head"><p>Term source</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code></p></td>
+<td><p>one artifact</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoKind</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">artifact_kind</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.artifact_kind</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data_format</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.data_format</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoRowCount</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">row_count</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.row_count</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FileMediaType</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mime_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.mime_type</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FileName</span></code></p></td>
+<td><p>a label, not an identity</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FileUID</span></code></p></td>
+<td><p>container-local handle only</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">FileUID</span></code> is local to the file; the identity that survives export is
+<code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.artifact_id</span></code>, carried as a tag. Tag names <strong>are</strong> mmCIF item
+names, so an object’s tags read as the artifact row they are.</p>
+</section>
+<section id="grain-and-why-position-is-never-used">
+<h3>Grain, and why position is never used<a class="headerlink" href="#grain-and-why-position-is-never-used" title="Link to this heading">#</a></h3>
+<p>A table declares <code class="docutils literal notranslate"><span class="pre">_mmfdb_artifact.row_grain</span></code> — what one row <em>is</em>: a <code class="docutils literal notranslate"><span class="pre">photon</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">burst</span></code>, a <code class="docutils literal notranslate"><span class="pre">dwell</span></code>, a <code class="docutils literal notranslate"><span class="pre">pixel</span></code>, a <code class="docutils literal notranslate"><span class="pre">molecule</span></code>, a <code class="docutils literal notranslate"><span class="pre">track</span></code>, a <code class="docutils literal notranslate"><span class="pre">frame</span></code>.</p>
+<p>This is the fact a positional companion format cannot state, and the cost of not
+stating it is concrete. A dwell subdivides a burst, so a dwell table is <em>finer</em>
+than a burst table; a fused burst is made of several source bursts, so a fused
+table is <em>coarser</em>. A format that can only carry one row per burst has nowhere
+to put either, and both end up outside it — as extra files, or as a write into
+another analysis’s directory.</p>
+<p>So relations are declared, not counted:</p>
+<ul class="simple">
+<li><p>an edge names its join columns with <code class="docutils literal notranslate"><span class="pre">_mmfdb_edge.source_row_column</span></code> and
+<code class="docutils literal notranslate"><span class="pre">_mmfdb_edge.target_row_column</span></code>;</p></li>
+<li><p>a many-to-many or many-to-one relation is its own artifact,
+<code class="docutils literal notranslate"><span class="pre">artifact_kind</span> <span class="pre">=</span> <span class="pre">row_mapping</span></code>, linked with <code class="docutils literal notranslate"><span class="pre">relationship_type</span> <span class="pre">=</span> <span class="pre">maps_rows_of</span></code>;</p></li>
+<li><p>an artifact may have <strong>several</strong> parents. <code class="docutils literal notranslate"><span class="pre">PtoTagUIDs</span></code> carries a list, and an
+edge is one row per parent, so a fused burst naming two sources is ordinary.</p></li>
+</ul>
+<p>A row an analysis skipped is <strong>absent</strong>, not a sentinel. Absence is information;
+a placeholder row destroys it.</p>
+</section>
+<section id="what-a-column-is-and-what-it-is-in">
+<h3>What a column is, and what it is in<a class="headerlink" href="#what-a-column-is-and-what-it-is-in" title="Link to this heading">#</a></h3>
+<p>A column carries a name and a dtype, which is enough to read a table and not
+enough to understand one. A burst duration is milliseconds; a lifetime is
+nanoseconds; a TAC channel is picoseconds. Historically that was recorded only
+in the column <em>name</em>, when whoever wrote it remembered — <code class="docutils literal notranslate"><span class="pre">Duration</span> <span class="pre">(ms)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Tau</span></code> sit in the same table, and <code class="docutils literal notranslate"><span class="pre">Count</span> <span class="pre">Rate</span> <span class="pre">(KHz)</span></code> capitalises the kilo.</p>
+<p>So a column carries <strong>one extensible description</strong> rather than a growing list of
+fields, and the name is an attribute of it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Duration&quot;</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;milliseconds&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="s2">&quot;_mmfdb_burst.duration&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The keys are <code class="docutils literal notranslate"><span class="pre">_mmfdb_column.*</span></code> items — <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">item</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code> —
+and <code class="docutils literal notranslate"><span class="pre">units</span></code> takes a <code class="docutils literal notranslate"><span class="pre">_mmfdb_column.units</span></code> term. Spellings follow mmCIF’s
+<code class="docutils literal notranslate"><span class="pre">ITEM_UNITS_LIST</span></code> wherever it has the unit — 15 of the 28 are already its own,
+including <code class="docutils literal notranslate"><span class="pre">nanoseconds</span></code> and <code class="docutils literal notranslate"><span class="pre">counts</span></code>. Its 78 codes have an odd gap: it carries
+<code class="docutils literal notranslate"><span class="pre">nanoseconds</span></code> and <code class="docutils literal notranslate"><span class="pre">femtoseconds</span></code> but neither <code class="docutils literal notranslate"><span class="pre">milliseconds</span></code> nor <code class="docutils literal notranslate"><span class="pre">picoseconds</span></code>,
+and no concentration, rate multiple or count of photons. Those 13 are defined in
+the MMFDB dictionary rather than invented per call site.</p>
+<p>The symbol a person reads — <code class="docutils literal notranslate"><span class="pre">ns</span></code>, <code class="docutils literal notranslate"><span class="pre">kHz</span></code> — is <code class="docutils literal notranslate"><span class="pre">_mmfdb_units.symbol</span></code>, in the same
+table, with the SI factor beside it. Nothing else may carry an abbreviation: a
+display that invents one is how <code class="docutils literal notranslate"><span class="pre">Count</span> <span class="pre">Rate</span> <span class="pre">(KHz)</span></code> came to capitalise the kilo.</p>
+<p>Two rules that matter more than they look:</p>
+<ul class="simple">
+<li><p><strong>The description travels with the column, not with the file.</strong> A
+column-subset read gets the units too, which is the whole point — a caller
+reading two columns out of a four-gigabyte table still learns what they are.</p></li>
+<li><p><strong>No unit means the unit is unknown.</strong> It does not mean dimensionless.
+<code class="docutils literal notranslate"><span class="pre">dimensionless</span></code> is a positive claim, for a ratio that genuinely has none — an
+efficiency, an anisotropy — and a writer that is unsure says nothing instead.</p></li>
+</ul>
+<p>Units are not parsed back out of column names. That convention is what this
+replaces: it is inconsistent, it is missing on exactly the columns that need it
+most, and a regular expression over it would be the same convention with more
+machinery on top and the same blind spots.</p>
+</section>
+<section id="provenance">
+<h3>Provenance<a class="headerlink" href="#provenance" title="Link to this heading">#</a></h3>
+<p>One operation per analysis, written as file-level tags using <code class="docutils literal notranslate"><span class="pre">_mmfdb_operation.*</span></code>
+item names: <code class="docutils literal notranslate"><span class="pre">operation_type</span></code>, <code class="docutils literal notranslate"><span class="pre">settings_json</span></code>, <code class="docutils literal notranslate"><span class="pre">settings_hash</span></code>,
+<code class="docutils literal notranslate"><span class="pre">software_package</span></code>, <code class="docutils literal notranslate"><span class="pre">software_version</span></code>, <code class="docutils literal notranslate"><span class="pre">started_at</span></code>, <code class="docutils literal notranslate"><span class="pre">ended_at</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">dictionary_version</span></code>, <code class="docutils literal notranslate"><span class="pre">dictionary_hash</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">settings_hash</span></code> is the identity of a run. Re-running an analysis with the same
+settings <strong>replaces</strong> its artifact in place; changing a setting produces a new
+one. This is what keeps one file from accumulating, and it removes the need to
+encode parameters in a folder name.</p>
+<section id="the-path-must-be-reconstructible">
+<h4>The path must be reconstructible<a class="headerlink" href="#the-path-must-be-reconstructible" title="Link to this heading">#</a></h4>
+<p>Provenance here is not a label saying which tool ran. It is enough to answer
+<em>where did this number come from</em>, which means three things have to be present
+on every derived object:</p>
+<ol class="arabic simple">
+<li><p><strong>What it came from</strong> — <code class="docutils literal notranslate"><span class="pre">_mmfdb_edge.source_node_id</span></code>, one tag per parent.
+Several is normal; a fused burst has more than one source.</p></li>
+<li><p><strong>How it relates to it</strong> — <code class="docutils literal notranslate"><span class="pre">_mmfdb_edge.relationship_type</span></code>, a dictionary
+term (<code class="docutils literal notranslate"><span class="pre">derived_from</span></code>, <code class="docutils literal notranslate"><span class="pre">calibrated_by</span></code>, <code class="docutils literal notranslate"><span class="pre">maps_rows_of</span></code>…), plus the join
+columns when the grains differ.</p></li>
+<li><p><strong>What was done, with what</strong> — <code class="docutils literal notranslate"><span class="pre">operation_type</span></code> and the <strong>complete</strong>
+<code class="docutils literal notranslate"><span class="pre">settings_json</span></code>, not a summary of it. A partial settings record is worse
+than none: it looks reproducible and is not.</p></li>
+</ol>
+<p>These are three facts and are stored as three tags. They were briefly two: the
+parent’s UID was written <em>under</em> <code class="docutils literal notranslate"><span class="pre">relationship_type</span></code>, because
+<code class="docutils literal notranslate"><span class="pre">source_node_id</span></code> — a column that has existed in the database schema since the
+table was first created — was never declared in the dictionary. Asking a file
+how a result related to what it came from therefore returned an integer, and
+the relation itself was never recorded at all. Declared in
+<code class="docutils literal notranslate"><span class="pre">mmfdb_flr_ext.dic</span></code> 1.7.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Measurement.lineage(ref)</span></code> walks it, breadth-first from an object to the
+instrument file; <code class="docutils literal notranslate"><span class="pre">describe_lineage</span></code> renders that as text. A container in which
+some derived object cannot reach the primary data is malformed, and
+<code class="docutils literal notranslate"><span class="pre">test/fio/test_pto.py</span></code> checks every object in a real container rather than a
+synthesised one.</p>
+</section>
+</section>
+<section id="versions-a-file-carries">
+<h3>Versions a file carries<a class="headerlink" href="#versions-a-file-carries" title="Link to this heading">#</a></h3>
+<p>Four, as file-level tags, because four things drift independently: the PTO
+container version, the PTO.MFDB profile version, the MMFDB dictionary version and
+hash, and the writing application’s version. A reader finding a profile <em>read</em>
+version above its own refuses the file; a higher <em>write</em> version is accepted and
+unknown tags are skipped, exactly as EBML already treats unknown elements.</p>
+</section>
+</section>
+<section id="rules">
+<h2>Rules<a class="headerlink" href="#rules" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>The first object is a plain-ASCII README describing the container and how to
+recover the instrument file from it.</p></li>
+</ol>
+<ol class="arabic simple" start="11">
+<li><p>The instrument file is the first <em>payload</em> object, is stored verbatim, and is</p></li>
+</ol>
+<blockquote>
+<div><p>never updated or removed.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Every object carries <code class="docutils literal notranslate"><span class="pre">artifact_id</span></code>, <code class="docutils literal notranslate"><span class="pre">checksum</span></code> and <code class="docutils literal notranslate"><span class="pre">checksum_algorithm</span></code>.
+Extraction verifies the checksum and fails on mismatch.</p></li>
+<li><p>Opening a file never hashes a payload. Verification is explicit.</p></li>
+<li><p>Every controlled value resolves to an enumeration in the loaded dictionaries.</p></li>
+<li><p>Every tabular object declares <code class="docutils literal notranslate"><span class="pre">row_grain</span></code>.</p></li>
+<li><p>No relation is expressed by row position; an edge joining rows names its key
+columns.</p></li>
+<li><p>A skipped row is absent. Sentinel rows and interleaving are not part of this
+profile.</p></li>
+<li><p>Tag names are mmCIF item names. The <code class="docutils literal notranslate"><span class="pre">pto.</span></code> prefix is reserved by the
+container; the profile does not use it.</p></li>
+<li><p>A file records the container version, profile version, dictionary version and
+hash, and the writing application.</p></li>
+<li><p>One writer at a time. Nothing is visible before commit.</p></li>
+</ol>
+</section>
+<section id="steering-notes">
+<h2>Steering notes<a class="headerlink" href="#steering-notes" title="Link to this heading">#</a></h2>
+<p>Today’s output is three rival containers and about thirty writers; the
+<em>assessment</em> tracks the specifics. The direction of travel is:
+the seam first, then the single-molecule writers, then the imaging writers, with
+the legacy <code class="docutils literal notranslate"><span class="pre">…4</span></code> layout kept <strong>readable</strong> and produced only by an explicit export.</p>
+<p>That export is lossy by construction for anything not at burst grain — it is a
+compatibility shim, not the model — and it must say so rather than flatten
+silently. Reproducing the interleave, the sentinel rows or the fixed grid inside
+a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> would import the workaround and lose the information a second time.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="pto.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">PTO — the PhoTon cOntainer</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../saving-tables.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Saving a table</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purpose">Purpose</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-call-the-file">What to call the file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-principles">Design principles</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-chisurf-writes-and-what-it-only-reads">What ChiSurf writes, and what it only reads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-architecture">Target architecture</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layering">Layering</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#file-layout">File layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-file-explains-itself">The file explains itself</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-measurement-is">What the measurement is</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#an-object-is-an-artifact">An object is an artifact</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grain-and-why-position-is-never-used">Grain, and why position is never used</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-column-is-and-what-it-is-in">What a column is, and what it is in</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance">Provenance</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#the-path-must-be-reconstructible">The path must be reconstructible</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#versions-a-file-carries">Versions a file carries</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rules">Rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steering-notes">Steering notes</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/pto-mfdb.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

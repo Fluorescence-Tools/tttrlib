@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 9 files **from auto_examples/tttr**:
+**00:00.000** total execution time for 11 files **from auto_examples/tttr**:
 
 .. container::
 
@@ -35,6 +35,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_tttr_compression_example.py` (``compression_example.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_tttr_plot_pto_bundle_files.py` (``plot_pto_bundle_files.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_file_conversion.py` (``plot_tttr_file_conversion.py``)
      - 00:00.000
      - 0.0
@@ -48,6 +51,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_read_benchmark.py` (``plot_tttr_read_benchmark.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_spcqc.py` (``plot_tttr_spcqc.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_transcode.py` (``plot_tttr_transcode.py``)

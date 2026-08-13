@@ -34,29 +34,35 @@ Notes
 - Figures are rendered with a non-interactive backend during documentation
   builds. The script never calls :func:`matplotlib.pyplot.show`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-29
+.. GENERATED FROM PYTHON SOURCE LINES 18-35
 
 .. code-block:: Python
 
 
     from __future__ import annotations
 
+    import sys
+    from pathlib import Path
     import numpy as np
     import matplotlib.pyplot as plt
     import tttrlib
+    # Make the `examples` package importable when this script is run directly,
+    # from any working directory.
+    sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                    if (_p / "examples" / "_example_data.py").is_file()][:1]
 
     from examples._example_data import get_data_path
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 31-34
+.. GENERATED FROM PYTHON SOURCE LINES 37-40
 
 Load the Zeiss LSM 980 demo data --------------------------------------------
 ``get_data_path`` resolves the same file locations used by the unit tests. When
 the data bundle is not installed an informative error is raised.
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-64
+.. GENERATED FROM PYTHON SOURCE LINES 40-70
 
 .. code-block:: Python
 
@@ -91,14 +97,14 @@ the data bundle is not installed an informative error is raised.
     print(f"Intensity volume shape (frames, lines, pixels): {intensity.shape}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-69
+.. GENERATED FROM PYTHON SOURCE LINES 71-75
 
 Frame projection (sum over time) --------------------------------------------
 Project the 3-D intensity stack along the frame axis to approximate a
 wide-field view of the acquisition. ``np.log1p`` improves the contrast when the
 dynamic range is high.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-80
+.. GENERATED FROM PYTHON SOURCE LINES 75-86
 
 .. code-block:: Python
 
@@ -114,7 +120,7 @@ dynamic range is high.
     fig_proj.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-86
+.. GENERATED FROM PYTHON SOURCE LINES 87-92
 
 Mean micro-time map for the first frame -------------------------------------
 The unit tests validate ``get_mean_micro_time`` by comparing it to reference
@@ -122,7 +128,7 @@ arrays. Here we reuse the same helper to derive a pseudo-lifetime image. The
 result is provided in seconds; multiply by ``1e9`` to obtain nanoseconds. Only
 pixels with at least three photons contribute to the estimate.
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-106
+.. GENERATED FROM PYTHON SOURCE LINES 92-112
 
 .. code-block:: Python
 
@@ -147,7 +153,7 @@ pixels with at least three photons contribute to the estimate.
     fig_micro.tight_layout()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 107-114
+.. GENERATED FROM PYTHON SOURCE LINES 113-120
 
 Summary
 -------

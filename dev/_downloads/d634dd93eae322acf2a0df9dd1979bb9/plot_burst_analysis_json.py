@@ -21,7 +21,9 @@ import os
 from pathlib import Path
 
 # Read the files from the tttrlib-data repository
-data_root = os.environ.get('TTTRLIB_DATA')
+data_root = os.environ.get("TTTRLIB_DATA") or next(
+    (p / "tttr-data" for p in Path(__file__).resolve().parents
+     if (p / "tttr-data").is_dir()), ".")
 sm_folder = Path(data_root) / 'bh' / 'bh_spc132_sm_dna'
 spc_files = sorted(sm_folder.glob('*.spc'))
 file_path = str(spc_files[0])

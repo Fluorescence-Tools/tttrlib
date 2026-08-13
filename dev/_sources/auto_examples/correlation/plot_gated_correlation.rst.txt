@@ -32,7 +32,7 @@ away the scattered light fraction in a single-molecule experiment can be easily
 modified to correlate the prompt and the delayed excitation in a pulsed
 interleaved excitation experiment.
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-25
+.. GENERATED FROM PYTHON SOURCE LINES 17-27
 
 .. code-block:: Python
 
@@ -42,31 +42,33 @@ interleaved excitation experiment.
     import tttrlib
     import numpy as np
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-30
+.. GENERATED FROM PYTHON SOURCE LINES 28-32
 
 First, the TTTR data is read into a new container. The TTTR data
 in the example is a multiparameter fluorescence detection data
 with two green and two red detectors for polarization resolved
 fluorescence detection.
 
-.. GENERATED FROM PYTHON SOURCE LINES 30-32
+.. GENERATED FROM PYTHON SOURCE LINES 32-34
 
 .. code-block:: Python
 
     data = tttrlib.TTTR(str(DATA_ROOT / 'bh/bh_spc132.spc'), 'SPC-130')
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 33-37
+.. GENERATED FROM PYTHON SOURCE LINES 35-39
 
 Here, we compute the cross correlation function between the parallel (P)
 and the perpendicular (S) green detection channels. We first find
 the indices of the respective channels. In the example the channel
 numbers of the green parallel and perpendicular detection are 0 and 8.
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-40
+.. GENERATED FROM PYTHON SOURCE LINES 39-42
 
 .. code-block:: Python
 
@@ -74,14 +76,14 @@ numbers of the green parallel and perpendicular detection are 0 and 8.
     ch2_indices = data.get_selection_by_channel([8])
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-45
+.. GENERATED FROM PYTHON SOURCE LINES 43-47
 
 For illustrating the scattered light, we create histogram of micro times
 and define a lower bound to mask photons.
 Here, ``n_lower`` is set based on the micro time histograms, i.e. only bins with
 significant amount of fluorescence photons are used.
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-51
+.. GENERATED FROM PYTHON SOURCE LINES 47-53
 
 .. code-block:: Python
 
@@ -92,7 +94,7 @@ significant amount of fluorescence photons are used.
     n_lower = 1200  # n_lower will be used below in the actual correlation calculation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-59
+.. GENERATED FROM PYTHON SOURCE LINES 54-61
 
 Next, we create a new correlator and set the numbers of bin and correlation
 cascades of the multi-tau correlation algorithm. The parameters
@@ -102,7 +104,7 @@ computed. Setting these parameters is optional. If they are not defined a
 set of default parameters is used.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-65
+.. GENERATED FROM PYTHON SOURCE LINES 61-67
 
 .. code-block:: Python
 
@@ -113,7 +115,7 @@ set of default parameters is used.
     correlator.n_casc = n_casc
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 66-72
+.. GENERATED FROM PYTHON SOURCE LINES 68-74
 
 The correlator contains a correlation curve that is updated when the correlator
 content is marked as invalid, e.g., when the inputs are changed. The curve has
@@ -122,21 +124,21 @@ resolution (used to calibrate the correlation curve). Here, we use a more "manua
 approach to compute correlations. Hence, we provide the resolution by hand. In most
 cases, the resolution is read from the TTTR container.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-74
+.. GENERATED FROM PYTHON SOURCE LINES 74-76
 
 .. code-block:: Python
 
     correlator.curve.settings.macro_time_duration = data.header.macro_time_resolution
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-79
+.. GENERATED FROM PYTHON SOURCE LINES 77-81
 
 Next, we assign the macro times to the correlator with their respective
 weights. In a normal correlation all photons have equal weights.
 We get the macrotimes and set the weights, the weights will = 1, i.e.
 no weighting will be used
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-89
+.. GENERATED FROM PYTHON SOURCE LINES 81-91
 
 .. code-block:: Python
 
@@ -151,13 +153,13 @@ no weighting will be used
     y_raw = correlator.correlation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 90-93
+.. GENERATED FROM PYTHON SOURCE LINES 92-95
 
 Now, we compute a correlation function where we want to discriminate
 photons that have a small micro time. For that, we set the weight of
 photons with a micro time is smaller than n_lower to zero.
 
-.. GENERATED FROM PYTHON SOURCE LINES 93-100
+.. GENERATED FROM PYTHON SOURCE LINES 95-102
 
 .. code-block:: Python
 
@@ -169,7 +171,7 @@ photons with a micro time is smaller than n_lower to zero.
     w1[np.where(mt1 < n_lower)] *= 0.0
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 101-106
+.. GENERATED FROM PYTHON SOURCE LINES 103-108
 
 Mask also the data for ch2 using the microtime information. We mask values by
 setting the weights where the micro time is smaller than 1500
@@ -177,7 +179,7 @@ to zero and masks the photons, i.e. this corresponds to only taking
 the green photon emitted in the "delay" tine window of the PIE experiment
 into account for the correlation
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-115
+.. GENERATED FROM PYTHON SOURCE LINES 108-117
 
 .. code-block:: Python
 
@@ -191,13 +193,13 @@ into account for the correlation
     y_gated = correlator.correlation
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 116-119
+.. GENERATED FROM PYTHON SOURCE LINES 118-121
 
 The correlation amplitude of the correlation curve computed for all
 photons is lower than the correlation amplitude computed for photons
 with a larger micro time.
 
-.. GENERATED FROM PYTHON SOURCE LINES 119-137
+.. GENERATED FROM PYTHON SOURCE LINES 121-139
 
 .. code-block:: Python
 

@@ -22,7 +22,7 @@
 Image rebinning
 ===============
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-17
+.. GENERATED FROM PYTHON SOURCE LINES 8-19
 
 .. code-block:: Python
 
@@ -33,14 +33,16 @@ Image rebinning
     import numpy as np
     import pylab as plt
 
-    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA", "."))
+    DATA_ROOT = Path(os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), "."))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-19
+.. GENERATED FROM PYTHON SOURCE LINES 20-21
 
 Read data of the CLSM image
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-51
+.. GENERATED FROM PYTHON SOURCE LINES 21-53
 
 .. code-block:: Python
 

@@ -1,0 +1,2410 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="PTO — the PhoTon cOntainer" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="formats/pto.html" />
+<meta property="og:site_name" content="tttrlib" />
+<meta property="og:description" content="Name, Pho ton c O ntainer — PTO,, Version, 1.0,, Status, Specification. Normative.,, Extension,.pto(a profile tags the stem:.mmfdb.pto, see below),, Media type, application/x-pto,, Built on, EBML (..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="_images/social_previews/summary_formats_pto_927e5d16.png" />
+<meta property="og:image:alt" content="Name, Pho ton c O ntainer — PTO,, Version, 1.0,, Status, Specification. Normative.,, Extension,.pto(a profile tags the stem:.mmfdb.pto, see below),, Media type, application/x-pto,, Built on, EBML (..." />
+<meta name="description" content="Name, Pho ton c O ntainer — PTO,, Version, 1.0,, Status, Specification. Normative.,, Extension,.pto(a profile tags the stem:.mmfdb.pto, see below),, Media type, application/x-pto,, Built on, EBML (..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>PTO — the PhoTon cOntainer &#8212; tttrlib v0.27.0</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=3b7790a3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/sg-tags.js?v=d80f6fa4"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'formats/pto';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://fluorescence-tools.github.io/tttrlib/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PTO.MFDB — the MMFDB profile of the photon container" href="pto-mfdb.html" />
+    <link rel="prev" title="FLIM LABS time tagger (.bin)" href="flim-labs-stt1.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.27.0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-light" alt="tttrlib v0.27.0 - Home"/>
+    <img src="../_static/tttrlib-logo-small.png" class="logo__image only-dark pst-js-only" alt="tttrlib v0.27.0 - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting-started.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../quickstart.html">
+    Quickstart
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../languages.html">
+    tttrlib in your language
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../r-package.html">
+    tttrlib for R (r-tttrlib)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../imagej-plugin.html">
+    tttrlib for Java & the ImageJ/Fiji plugin
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../javascript-package.html">
+    tttrlib for JavaScript (Node.js)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../workflows.html">
+    Workflow Index
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tttr-core.html">
+    TTTR Core, Selections, Masks, and I/O
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../file-formats.html">
+    TTTR File Formats and Conversion
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    File formats, one page each
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../saving-tables.html">
+    Saving a table
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../plugins.html">
+    Plugins: adding a format without rebuilding
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../burst-analysis.html">
+    Burst Analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-bva.html">
+    Dynamic FRET: HMM and BVA
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../hmm-state-decoding.html">
+    HMM state decoding: distributions, not winner-takes-all
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../pda-guide.html">
+    Photon Distribution Analysis (PDA)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fcs-correlation.html">
+    FCS and Correlation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../clsm-flim-guide.html">
+    CLSM, FLIM, and Image Workflows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../superres-guide.html">
+    Super-resolution: eSRRF, ISM, SOFISM and s²ISM
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../simulator-guide.html">
+    Photon-simulation guide (smFRET / MFD)
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../localization-guide.html">
+    Image Localization
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../fit-guide.html">
+    Fluorescence Decay Fitting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../performance_guide.html">
+    Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../modules/index.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Example Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../troubleshooting.html">
+    Troubleshooting
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../docs-warning-burndown.html">
+    Documentation Warning Burn-Down
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../faq.html">
+    Frequently Asked Questions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../support.html">
+    Support
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../whats_new.html">
+    Release History
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../configuration.html">
+    Configuration
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../contents.html">
+    Table Of Contents
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../roadmap.html">
+    Roadmap
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    Version 0.27
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ptu.html">PicoQuant PTU (<code class="docutils literal notranslate"><span class="pre">.ptu</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="picoquant-ht3.html">PicoQuant HT3 (<code class="docutils literal notranslate"><span class="pre">.ht3</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="becker-hickl-spc.html">Becker &amp; Hickl SPC (<code class="docutils literal notranslate"><span class="pre">.spc</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon-hdf5.html">Photon-HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5,</span> <span class="pre">.hdf5</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zeiss-confocor3.html">Zeiss ConfoCor3 (<code class="docutils literal notranslate"><span class="pre">.raw</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="single-molecule-sm.html">Single-molecule (SM) (<code class="docutils literal notranslate"><span class="pre">.sm</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photonscore-lincam.html">Photonscore LINCam (<code class="docutils literal notranslate"><span class="pre">.photons</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="brighteyes-ttm.html">BrightEyes-TTM (<code class="docutils literal notranslate"><span class="pre">.ttr</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flim-labs-stt1.html">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">PTO — the PhoTon cOntainer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pto-mfdb.html">PTO.MFDB — the MMFDB profile of the photon container</a></li>
+</ul>
+</div>
+</nav></div>
+        <div class="sidebar-primary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/pto.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">File formats, one page each</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">PTO — the PhoTon cOntainer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="pto-the-photon-container">
+<span id="pto-format"></span><h1>PTO — the PhoTon cOntainer<a class="headerlink" href="#pto-the-photon-container" title="Link to this heading">#</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Name<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Pho</strong>ton c<strong>O</strong>ntainer — PTO</p>
+</dd>
+<dt class="field-even">Version<span class="colon">:</span></dt>
+<dd class="field-even"><p>1.0</p>
+</dd>
+<dt class="field-odd">Status<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Specification. Normative.</p>
+</dd>
+<dt class="field-even">Extension<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">.pto</span></code> (a profile tags the stem: <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code>, see below)</p>
+</dd>
+<dt class="field-odd">Media type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">application/x-pto</span></code></p>
+</dd>
+<dt class="field-even">Built on<span class="colon">:</span></dt>
+<dd class="field-even"><p>EBML (<span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a>), DocType <code class="docutils literal notranslate"><span class="pre">pto</span></code></p>
+</dd>
+</dl>
+<p>PTO is a <strong>container and nothing else</strong>. It binds a set of opaque payloads
+together in one file, gives each one an identity, and lets typed metadata be
+attached to any of them. It does not define what a photon stream is, what a
+spectrum is, or what it means for one table to be derived from another. Those
+are the application’s business; PTO’s business is that they can be <em>said</em>, found
+again, and updated without rewriting the file.</p>
+<p><strong>PTO invents no framing.</strong> It is an EBML document, exactly as Matroska is, with
+<code class="docutils literal notranslate"><span class="pre">DocType</span> <span class="pre">=</span> <span class="pre">&quot;pto&quot;</span></code>. Element headers, the variable-size integers, the value
+types, <code class="docutils literal notranslate"><span class="pre">Void</span></code>, <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> and the rules for skipping what you do not recognise
+are all <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a> and are not restated here except where PTO constrains them.
+Where Matroska already has an element that means what PTO needs, <strong>PTO uses
+Matroska’s element, with Matroska’s ID</strong>. Only what is genuinely new gets a new
+ID.</p>
+<p>That is deliberate. An existing EBML parser walks a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> file today; a
+generic dumper prints most of it with the right names; <code class="docutils literal notranslate"><span class="pre">libebml</span></code> reads it
+without modification. The parts an implementer has to write are the parts that
+are actually about photons.</p>
+<nav class="contents local" id="on-this-page">
+<p class="topic-title">On this page</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#what-pto-is-for" id="id1">What PTO is for</a></p>
+<ul>
+<li><p><a class="reference internal" href="#naming-pto-and-mmfdb-pto" id="id2">Naming: <code class="docutils literal notranslate"><span class="pre">.pto</span></code> and <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code></a></p></li>
+<li><p><a class="reference internal" href="#non-goals" id="id3">Non-goals</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#relationship-to-ebml-and-matroska" id="id4">Relationship to EBML and Matroska</a></p>
+<ul>
+<li><p><a class="reference internal" href="#elements-borrowed-from-matroska" id="id5">Elements borrowed from Matroska</a></p></li>
+<li><p><a class="reference internal" href="#elements-pto-adds" id="id6">Elements PTO adds</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#the-ebml-header" id="id7">The EBML Header</a></p></li>
+<li><p><a class="reference internal" href="#file-shape" id="id8">File shape</a></p></li>
+<li><p><a class="reference internal" href="#objects" id="id9">Objects</a></p>
+<ul>
+<li><p><a class="reference internal" href="#kinds" id="id10">Kinds</a></p></li>
+<li><p><a class="reference internal" href="#encodings" id="id11">Encodings</a></p></li>
+<li><p><a class="reference internal" href="#photon-streams-natively" id="id12">Photon streams, natively</a></p></li>
+<li><p><a class="reference internal" href="#bundling-files" id="id13">Bundling files</a></p></li>
+<li><p><a class="reference internal" href="#an-object-name-is-a-relative-path-and-only-that" id="id14">An object name is a relative path, and only that</a></p></li>
+<li><p><a class="reference internal" href="#a-name-is-a-label-not-an-identity" id="id15">A name is a label, not an identity</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tags" id="id16">Tags</a></p></li>
+<li><p><a class="reference internal" href="#provenance" id="id17">Provenance</a></p></li>
+<li><p><a class="reference internal" href="#updating-in-place" id="id18">Updating in place</a></p></li>
+<li><p><a class="reference internal" href="#committing-and-what-a-crash-leaves-behind" id="id19">Committing, and what a crash leaves behind</a></p>
+<ul>
+<li><p><a class="reference internal" href="#the-index" id="id20">The index</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#alignment-and-reading-a-payload-in-place" id="id21">Alignment, and reading a payload in place</a></p></li>
+<li><p><a class="reference internal" href="#implementing-pto" id="id22">Implementing PTO</a></p>
+<ul>
+<li><p><a class="reference internal" href="#the-fileuid" id="id23">The FileUID</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#reading-part-of-one" id="id24">Reading part of one</a></p></li>
+<li><p><a class="reference internal" href="#cues" id="id25">Cues</a></p></li>
+<li><p><a class="reference internal" href="#why-not-tar-zip-or-hdf5" id="id26">Why not tar, zip, or HDF5</a></p></li>
+<li><p><a class="reference internal" href="#reserved-for-later" id="id27">Reserved for later</a></p></li>
+</ul>
+</nav>
+<section id="what-pto-is-for">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">What PTO is for</a><a class="headerlink" href="#what-pto-is-for" title="Link to this heading">#</a></h2>
+<p>One measurement produces a photon stream, then a burst search over it, then a
+selection of those bursts, then a spectrum from the same sample, and a note
+about why half of it was discarded. Today those live in as many files, related
+by filename convention, and the relationship dies the moment somebody renames
+one.</p>
+<p>PTO puts them in one file, each with a stable UID, so an application can record
+how they relate. <strong>PTO does not record the relationship itself</strong> — it provides
+UIDs and typed tags that can reference them, and stops. See
+<a class="reference internal" href="#pto-provenance"><span class="std std-ref">Provenance</span></a>.</p>
+<section id="naming-pto-and-mmfdb-pto">
+<span id="pto-naming"></span><h3><a class="toc-backref" href="#id2" role="doc-backlink">Naming: <code class="docutils literal notranslate"><span class="pre">.pto</span></code> and <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code></a><a class="headerlink" href="#naming-pto-and-mmfdb-pto" title="Link to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">.pto</span></code> is <strong>a container and no more</strong> — an EBML document with
+<code class="docutils literal notranslate"><span class="pre">DocType</span> <span class="pre">&quot;pto&quot;</span></code>, holding payloads whose meaning is the application’s business.
+The extension makes exactly that claim, which is why it is safe to put on a file
+holding anything.</p>
+<p>A <strong>profile</strong> constrains what goes inside one, and says so by tagging the <em>stem</em>:
+<a class="reference internal" href="pto-mfdb.html#pto-mfdb-format"><span class="std std-ref">PTO.MFDB</span></a>, the profile that carries a
+single-molecule measurement and its analyses, uses</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>measurement.mmfdb.pto
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code>, not <code class="docutils literal notranslate"><span class="pre">.pto.mmfdb</span></code>: the final suffix stays <code class="docutils literal notranslate"><span class="pre">.pto</span></code> so every
+reader, file dialog and MIME table that dispatches on it still recognises the
+file, and everything in this specification continues to apply. Read it the way
+<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> is read — one format, an inner tag on the name.</p>
+<p>The suffix is a convenience for people and directory listings. A reader decides
+what a file conforms to by reading the container-level tags inside it, never by
+its name; a conforming file that was renamed is still conforming, and a
+<code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code> written without those tags is not.</p>
+</section>
+<section id="non-goals">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Non-goals</a><a class="headerlink" href="#non-goals" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>A data model.</strong> PTO does not know what a column is. Tabular payloads are
+normally <a class="reference internal" href="#pto-encodings"><span class="std std-ref">dstore</span></a> files; PTO neither parses nor validates
+them.</p></li>
+<li><p><strong>Compression.</strong> Payloads may be compressed by their own encoding; the
+container does not compress. Photon data compresses poorly and the cost is
+paid on every read.</p></li>
+<li><p><strong>Concurrent writers.</strong> One writer at a time. Readers may read a file being
+written, because a commit is atomic; see <a class="reference internal" href="#pto-commit"><span class="std std-ref">Committing, and what a crash leaves behind</span></a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="relationship-to-ebml-and-matroska">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Relationship to EBML and Matroska</a><a class="headerlink" href="#relationship-to-ebml-and-matroska" title="Link to this heading">#</a></h2>
+<p>A PTO file is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>          <span class="p">(</span><span class="mh">0x1A45DFA3</span><span class="p">)</span>   <span class="n">the</span> <span class="n">standard</span> <span class="n">EBML</span> <span class="n">Header</span><span class="p">,</span> <span class="n">DocType</span> <span class="s2">&quot;pto&quot;</span>
+<span class="n">Segment</span>       <span class="p">(</span><span class="mh">0x18538067</span><span class="p">)</span>   <span class="n">everything</span> <span class="k">else</span>
+</pre></div>
+</div>
+<p>Read <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a> for the framing. The parts that matter most here:</p>
+<ul class="simple">
+<li><p>An element is a <strong>VINT Element ID</strong>, a <strong>VINT Element Data Size</strong>, and the
+data. Unknown IDs are skipped by their size — that is the whole
+forward-compatibility story, and it needs no version negotiation.</p></li>
+<li><p>Element Data Size <strong>may be written in a longer VINT than strictly necessary</strong>,
+precisely so it can be overwritten later with a bigger number. PTO leans on
+this; see <a class="reference internal" href="#pto-inplace"><span class="std std-ref">Updating in place</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Void</span></code> (<code class="docutils literal notranslate"><span class="pre">0xEC</span></code>) reserves or reclaims space, anywhere.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> (<code class="docutils literal notranslate"><span class="pre">0xBF</span></code>) covers its siblings and must be first in its parent.
+<strong>All</strong> of them: the <code class="docutils literal notranslate"><span class="pre">Void</span></code> that pads an element out is a sibling and is
+covered. Checksumming only the part that carries information is
+self-consistent and unverifiable by anything else.</p></li>
+<li><p>Value types are Unsigned Integer, Signed Integer, Float, String (ASCII),
+UTF-8, Date, Master and Binary. <strong>Date is nanoseconds from 2001-01-01T00:00:00
+UTC</strong>, not the Unix epoch.</p></li>
+</ul>
+<section id="elements-borrowed-from-matroska">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Elements borrowed from Matroska</a><a class="headerlink" href="#elements-borrowed-from-matroska" title="Link to this heading">#</a></h3>
+<p>Used with Matroska’s IDs and Matroska’s meaning:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 26.0%" />
+<col style="width: 16.0%" />
+<col style="width: 12.0%" />
+<col style="width: 46.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Element</p></th>
+<th class="head"><p>ID</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Used in PTO for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Segment</span></code></p></td>
+<td><p>0x18538067</p></td>
+<td><p>master</p></td>
+<td><p>The root. Everything is inside it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SeekHead</span></code></p></td>
+<td><p>0x114D9B74</p></td>
+<td><p>master</p></td>
+<td><p>The index. Two of them; see <a class="reference internal" href="#pto-commit"><span class="std std-ref">Committing, and what a crash leaves behind</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Seek</span></code></p></td>
+<td><p>0x4DBB</p></td>
+<td><p>master</p></td>
+<td><p>One index entry.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SeekID</span></code></p></td>
+<td><p>0x53AB</p></td>
+<td><p>binary</p></td>
+<td><p>The ID of the element pointed at.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SeekPosition</span></code></p></td>
+<td><p>0x53AC</p></td>
+<td><p>uint</p></td>
+<td><p>Its position, relative to the start of <code class="docutils literal notranslate"><span class="pre">Segment</span></code>’s data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Info</span></code></p></td>
+<td><p>0x1549A966</p></td>
+<td><p>master</p></td>
+<td><p>Facts about the file as a whole.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SegmentUUID</span></code></p></td>
+<td><p>0x73A4</p></td>
+<td><p>binary</p></td>
+<td><p>16 random bytes identifying this file across copies and renames.
+(Formerly <code class="docutils literal notranslate"><span class="pre">SegmentUID</span></code>.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Title</span></code></p></td>
+<td><p>0x7BA9</p></td>
+<td><p>utf-8</p></td>
+<td><p>A human title.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MuxingApp</span></code></p></td>
+<td><p>0x4D80</p></td>
+<td><p>utf-8</p></td>
+<td><p>The library that wrote the container: <code class="docutils literal notranslate"><span class="pre">&quot;tttrlib</span> <span class="pre">0.27.0&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WritingApp</span></code></p></td>
+<td><p>0x5741</p></td>
+<td><p>utf-8</p></td>
+<td><p>The application: <code class="docutils literal notranslate"><span class="pre">&quot;chisurf</span> <span class="pre">26.x&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DateUTC</span></code></p></td>
+<td><p>0x4461</p></td>
+<td><p>date</p></td>
+<td><p>When the file was created.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Attachments</span></code></p></td>
+<td><p>0x1941A469</p></td>
+<td><p>master</p></td>
+<td><p><strong>The objects.</strong> See below.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code></p></td>
+<td><p>0x61A7</p></td>
+<td><p>master</p></td>
+<td><p><strong>One object.</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FileUID</span></code></p></td>
+<td><p>0x46AE</p></td>
+<td><p>uint</p></td>
+<td><p>Its identity. Required, non-zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FileName</span></code></p></td>
+<td><p>0x466E</p></td>
+<td><p>utf-8</p></td>
+<td><p>A label. Not unique, not a path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FileDescription</span></code></p></td>
+<td><p>0x467E</p></td>
+<td><p>utf-8</p></td>
+<td><p>Prose about it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FileMediaType</span></code></p></td>
+<td><p>0x4660</p></td>
+<td><p>string</p></td>
+<td><p>RFC 6838 media type. (Formerly <code class="docutils literal notranslate"><span class="pre">FileMimeType</span></code>.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FileData</span></code></p></td>
+<td><p>0x465C</p></td>
+<td><p>binary</p></td>
+<td><p>The payload. Possibly gigabytes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Tags</span></code></p></td>
+<td><p>0x1254C367</p></td>
+<td><p>master</p></td>
+<td><p>Typed metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Tag</span></code></p></td>
+<td><p>0x7373</p></td>
+<td><p>master</p></td>
+<td><p>One tag with its targets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Targets</span></code></p></td>
+<td><p>0x63C0</p></td>
+<td><p>master</p></td>
+<td><p>What the tag is about.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TagAttachmentUID</span></code></p></td>
+<td><p>0x63C6</p></td>
+<td><p>uint</p></td>
+<td><p><strong>The object targeted.</strong> Absent ⇒ the file as a whole.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TargetTypeValue</span></code></p></td>
+<td><p>0x68CA</p></td>
+<td><p>uint</p></td>
+<td><p>Informational scope level.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code></p></td>
+<td><p>0x67C8</p></td>
+<td><p>master</p></td>
+<td><p>One name/value pair. Nestable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TagName</span></code></p></td>
+<td><p>0x45A3</p></td>
+<td><p>utf-8</p></td>
+<td><p>The name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TagString</span></code></p></td>
+<td><p>0x4487</p></td>
+<td><p>utf-8</p></td>
+<td><p>A text value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TagBinary</span></code></p></td>
+<td><p>0x4485</p></td>
+<td><p>binary</p></td>
+<td><p>An opaque value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TagLanguage</span></code></p></td>
+<td><p>0x447A</p></td>
+<td><p>string</p></td>
+<td><p>As Matroska. Default <code class="docutils literal notranslate"><span class="pre">&quot;und&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Cues</span></code></p></td>
+<td><p>0x1C53BB6B</p></td>
+<td><p>master</p></td>
+<td><p>Top-level. An index <em>into</em> payloads. <a class="reference internal" href="#pto-cues"><span class="std std-ref">Cues</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CuePoint</span></code></p></td>
+<td><p>0xBB</p></td>
+<td><p>master</p></td>
+<td><p>One entry of it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Void</span></code></p></td>
+<td><p>0xEC</p></td>
+<td><p>binary</p></td>
+<td><p>Free space and padding.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CRC-32</span></code></p></td>
+<td><p>0xBF</p></td>
+<td><p>binary</p></td>
+<td><p>Integrity of a master’s children.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>An object is a Matroska ``AttachedFile``.</strong> That is the single biggest reuse
+here and it is not a stretch: an attachment is already a blob with a UID, a
+name, a media type and a description, which is exactly what a photon stream
+needs to be to a container that does not understand photons. Reusing it means
+provenance targeting reuses <code class="docutils literal notranslate"><span class="pre">TagAttachmentUID</span></code> too, so the whole
+tag-targets-object mechanism is Matroska’s, unmodified.</p>
+</section>
+<section id="elements-pto-adds">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Elements PTO adds</a><a class="headerlink" href="#elements-pto-adds" title="Link to this heading">#</a></h3>
+<p>PTO-specific elements take four-octet IDs in the block <code class="docutils literal notranslate"><span class="pre">0x1E54xxxx</span></code>. Matroska
+assigns nothing beginning <code class="docutils literal notranslate"><span class="pre">0x1E</span></code>, so there is no collision, and the <code class="docutils literal notranslate"><span class="pre">0x1E</span></code>
+prefix makes a PTO extension obvious in a hex dump.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 14.0%" />
+<col style="width: 10.0%" />
+<col style="width: 46.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Element</p></th>
+<th class="head"><p>ID</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoKind</span></code></p></td>
+<td><p>0x1E54F001</p></td>
+<td><p>utf-8</p></td>
+<td><p>What the object is for. <a class="reference internal" href="#pto-kinds"><span class="std std-ref">Kinds</span></a>. Required in <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code></p></td>
+<td><p>0x1E54F002</p></td>
+<td><p>string</p></td>
+<td><p>How <code class="docutils literal notranslate"><span class="pre">FileData</span></code> is encoded. <a class="reference internal" href="#pto-encodings"><span class="std std-ref">Encodings</span></a>. Required.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoRowCount</span></code></p></td>
+<td><p>0x1E54F003</p></td>
+<td><p>uint</p></td>
+<td><p>Rows or events in the payload, so a listing need not decode it.
+Advisory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoGeneration</span></code></p></td>
+<td><p>0x1E54F010</p></td>
+<td><p>uint</p></td>
+<td><p>In <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>: which of the two is live. <a class="reference internal" href="#pto-commit"><span class="std std-ref">Committing, and what a crash leaves behind</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoSeekUID</span></code></p></td>
+<td><p>0x1E54F011</p></td>
+<td><p>uint</p></td>
+<td><p>In <code class="docutils literal notranslate"><span class="pre">Seek</span></code>: the <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> this entry points at, when it points at an
+<code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code> rather than a top-level element.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagIndex</span></code></p></td>
+<td><p>0x1E54F020</p></td>
+<td><p>int</p></td>
+<td><p>In <code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code>: position within an array; <code class="docutils literal notranslate"><span class="pre">-1</span></code> (default) for a
+scalar. Exists so a PicoQuant header, which repeats a name once per
+element, survives verbatim.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagSourceType</span></code></p></td>
+<td><p>0x1E54F021</p></td>
+<td><p>uint</p></td>
+<td><p>The type code this tag had in the format it came from, so a PTU header
+can be written back bit-exact. Informational.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagUInt</span></code></p></td>
+<td><p>0x1E54F022</p></td>
+<td><p>uint</p></td>
+<td><p>A tag value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagInt</span></code></p></td>
+<td><p>0x1E54F023</p></td>
+<td><p>int</p></td>
+<td><p>A tag value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagFloat</span></code></p></td>
+<td><p>0x1E54F024</p></td>
+<td><p>float</p></td>
+<td><p>A tag value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagDate</span></code></p></td>
+<td><p>0x1E54F025</p></td>
+<td><p>date</p></td>
+<td><p>A tag value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagUID</span></code></p></td>
+<td><p>0x1E54F026</p></td>
+<td><p>uint</p></td>
+<td><p><strong>A tag value that references an object.</strong> The primitive provenance is
+built from.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagUIDs</span></code></p></td>
+<td><p>0x1E54F027</p></td>
+<td><p>binary</p></td>
+<td><p>Several, as big-endian <code class="docutils literal notranslate"><span class="pre">u64</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagFloats</span></code></p></td>
+<td><p>0x1E54F028</p></td>
+<td><p>binary</p></td>
+<td><p>An array, as IEEE-754 binary64, big-endian.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoTagInts</span></code></p></td>
+<td><p>0x1E54F029</p></td>
+<td><p>binary</p></td>
+<td><p>An array, as two’s-complement <code class="docutils literal notranslate"><span class="pre">i64</span></code>, big-endian.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoCueUID</span></code></p></td>
+<td><p>0x1E54F030</p></td>
+<td><p>uint</p></td>
+<td><p>In <code class="docutils literal notranslate"><span class="pre">CuePoint</span></code>: the <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> of the object this entry indexes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoCueEvent</span></code></p></td>
+<td><p>0x1E54F031</p></td>
+<td><p>uint</p></td>
+<td><p>The event ordinal, counted from 0 within that payload.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoCueOffset</span></code></p></td>
+<td><p>0x1E54F032</p></td>
+<td><p>uint</p></td>
+<td><p>Where that event starts, in bytes from the start of <code class="docutils literal notranslate"><span class="pre">FileData</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoCueTime</span></code></p></td>
+<td><p>0x1E54F033</p></td>
+<td><p>uint</p></td>
+<td><p>The macro time at that event. Optional, and absent means 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotations</span></code></p></td>
+<td><p>0x1E54F100</p></td>
+<td><p>master</p></td>
+<td><p>Top-level. Notes written by people.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotation</span></code></p></td>
+<td><p>0x1E54F101</p></td>
+<td><p>master</p></td>
+<td><p>One note.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationTarget</span></code></p></td>
+<td><p>0x1E54F102</p></td>
+<td><p>uint</p></td>
+<td><p>A <code class="docutils literal notranslate"><span class="pre">FileUID</span></code>. May repeat. Absent ⇒ the file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationFirstRow</span></code></p></td>
+<td><p>0x1E54F103</p></td>
+<td><p>uint</p></td>
+<td><p>First row the note concerns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationLastRow</span></code></p></td>
+<td><p>0x1E54F104</p></td>
+<td><p>uint</p></td>
+<td><p>One past the last. Both absent ⇒ the whole object.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationText</span></code></p></td>
+<td><p>0x1E54F105</p></td>
+<td><p>utf-8</p></td>
+<td><p>The note.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationAuthor</span></code></p></td>
+<td><p>0x1E54F106</p></td>
+<td><p>utf-8</p></td>
+<td><p>Who or what wrote it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PtoAnnotationDate</span></code></p></td>
+<td><p>0x1E54F107</p></td>
+<td><p>date</p></td>
+<td><p>When.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Annotations are separate from tags because they are prose for people, not values
+for programs, and a reader listing metadata usually wants one and not the other.</p>
+</section>
+</section>
+<section id="the-ebml-header">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">The EBML Header</a><a class="headerlink" href="#the-ebml-header" title="Link to this heading">#</a></h2>
+<p>Standard, with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DocType</span>            <span class="o">=</span> <span class="s2">&quot;pto&quot;</span>
+<span class="n">DocTypeVersion</span>     <span class="o">=</span> <span class="mi">2</span>
+<span class="n">DocTypeReadVersion</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">EBMLMaxIDLength</span>    <span class="o">=</span> <span class="mi">4</span>
+<span class="n">EBMLMaxSizeLength</span>  <span class="o">=</span> <span class="mi">8</span>
+</pre></div>
+</div>
+<p>A reader must refuse a file whose <code class="docutils literal notranslate"><span class="pre">DocTypeReadVersion</span></code> exceeds what it
+implements, and must accept a higher <code class="docutils literal notranslate"><span class="pre">DocTypeVersion</span></code>, skipping what it does
+not know.</p>
+<p><code class="docutils literal notranslate"><span class="pre">DocTypeVersion</span></code> is 2 because <a class="reference internal" href="#pto-cues"><span class="std std-ref">Cues</span></a> exist. The read version stays 1,
+which is the whole point of the distinction: cues are a new element ID inside a
+new master, a 1.0 reader skips both by size, and the file it gets is the file it
+would have got anyway – one it has to decode from the start.</p>
+</section>
+<section id="file-shape">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">File shape</a><a class="headerlink" href="#file-shape" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>                      <span class="n">DocType</span> <span class="s2">&quot;pto&quot;</span>
+<span class="n">Segment</span>                   <span class="n">Data</span> <span class="n">Size</span> <span class="ow">in</span> <span class="n">eight</span> <span class="n">octets</span><span class="p">,</span> <span class="n">rewritten</span> <span class="k">as</span> <span class="n">it</span> <span class="n">grows</span>
+  <span class="n">SeekHead</span>                <span class="n">index</span> <span class="n">A</span>   <span class="p">[</span><span class="n">CRC</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="n">PtoGeneration</span><span class="p">,</span> <span class="n">Seek</span><span class="o">...</span><span class="p">,</span> <span class="n">Void</span><span class="p">]</span>
+  <span class="n">SeekHead</span>                <span class="n">index</span> <span class="n">B</span>
+  <span class="n">Info</span>
+  <span class="n">Attachments</span>
+    <span class="n">AttachedFile</span>          <span class="n">photon</span> <span class="n">stream</span><span class="p">,</span> <span class="n">FileData</span> <span class="mi">8</span> <span class="n">GiB</span>
+  <span class="n">Void</span>                    <span class="n">slack</span><span class="p">,</span> <span class="n">so</span> <span class="n">that</span> <span class="n">FileData</span> <span class="n">can</span> <span class="n">grow</span>
+  <span class="n">Attachments</span>
+    <span class="n">AttachedFile</span>          <span class="n">burst</span> <span class="n">table</span>
+  <span class="n">Tags</span>
+  <span class="n">PtoAnnotations</span>
+  <span class="n">Void</span>                    <span class="n">reclaimed</span> <span class="n">space</span> <span class="kn">from</span><span class="w"> </span><span class="nn">an</span> <span class="n">earlier</span> <span class="n">rewrite</span>
+</pre></div>
+</div>
+<p>Order is not fixed and a reader must not depend on it; the two <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>s
+come first only so that opening a file is two short reads.</p>
+<p>Three consequences of the layout, each of which an implementer will otherwise
+have to rediscover:</p>
+<ul class="simple">
+<li><p><strong>A ``Segment`` has a known size, written in eight octets and rewritten as the
+file grows.</strong> Not an unknown-size Master: a known size is what lets a reader
+tell a complete file from a truncated one, and eight octets is what lets the
+number be raised without moving anything after it.</p></li>
+<li><p><strong>``Attachments`` may appear many times, once per object.</strong> Matroska permits
+one; PTO permits any number, and a reader concatenates them. Adding an object
+is then appending an element rather than growing one, and an object that
+outgrows its space can be moved on its own.</p></li>
+<li><p><strong>Each ``SeekHead`` is padded to a fixed reserve with a trailing ``Void``</strong>
+(8 KiB in the reference implementation), because the commit protocol depends
+on being able to rewrite one where it lies. A writer whose index outgrows the
+reserve must compact rather than move it.</p></li>
+</ul>
+<p>Bytes after the end of the <code class="docutils literal notranslate"><span class="pre">Segment</span></code> are not part of the file: they are an
+abandoned write, from a session that extended the file and died before the
+commit that would have claimed them. A writer opening such a file <strong>should</strong>
+turn them into a <code class="docutils literal notranslate"><span class="pre">Void</span></code> and take them into the <code class="docutils literal notranslate"><span class="pre">Segment</span></code>, which is the only
+thing that stops a repeatedly-interrupted file growing forever.</p>
+</section>
+<section id="objects">
+<span id="pto-objects"></span><h2><a class="toc-backref" href="#id9" role="doc-backlink">Objects</a><a class="headerlink" href="#objects" title="Link to this heading">#</a></h2>
+<p>An <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code> with <code class="docutils literal notranslate"><span class="pre">PtoKind</span></code> and <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> added:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AttachedFile</span>
+  <span class="n">FileUID</span>        <span class="mh">0x9F2C7A0155E3C104</span>      <span class="n">required</span><span class="p">,</span> <span class="n">non</span><span class="o">-</span><span class="n">zero</span><span class="p">,</span> <span class="n">unique</span>
+  <span class="n">PtoKind</span>        <span class="s2">&quot;photons&quot;</span>               <span class="n">required</span>
+  <span class="n">PtoEncoding</span>    <span class="s2">&quot;dstore&quot;</span>                <span class="n">required</span>
+  <span class="n">FileName</span>       <span class="s2">&quot;channel 0-3&quot;</span>
+  <span class="n">FileMediaType</span>  <span class="s2">&quot;application/x-dstore&quot;</span>
+  <span class="n">PtoRowCount</span>    <span class="mi">1013994218</span>
+  <span class="n">FileData</span>       <span class="o">&lt;</span><span class="mf">8.1</span> <span class="n">GiB</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>An object with no <code class="docutils literal notranslate"><span class="pre">FileData</span></code> is legal: a placeholder that tags and annotations
+can still reference.</p>
+<p><code class="docutils literal notranslate"><span class="pre">FileData</span></code> <strong>should be the last child written</strong>, so a multi-gigabyte payload
+can be streamed straight into the file. Write the ID, then an eight-octet Data
+Size VINT holding a placeholder, then stream; when the length is known, seek
+back eight bytes and write it. <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a> permits the over-wide VINT expressly
+for this. No temporary file, no size known in advance, no second pass.</p>
+<section id="kinds">
+<span id="pto-kinds"></span><h3><a class="toc-backref" href="#id10" role="doc-backlink">Kinds</a><a class="headerlink" href="#kinds" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">PtoKind</span></code> says what an object is <em>for</em>. The list is open.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">photons</span></code></dt><dd><p>A photon stream: per-event macro time, micro time, channel, event type.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">table</span></code></dt><dd><p>Any other tabular data — bursts, localisations, fit results.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">spectrum</span></code></dt><dd><p>Intensity against wavelength or energy.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">image</span></code></dt><dd><p>A raster.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">attachment</span></code></dt><dd><p>Something carried along that PTO says nothing about: the original vendor
+file, a protocol PDF, a screenshot.</p>
+</dd>
+</dl>
+<p>Kind is a hint about meaning; <strong>encoding is the instruction</strong>. A reader that
+does not recognise a kind can still read the object.</p>
+</section>
+<section id="encodings">
+<span id="pto-encodings"></span><h3><a class="toc-backref" href="#id11" role="doc-backlink">Encodings</a><a class="headerlink" href="#encodings" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> says how to decode <code class="docutils literal notranslate"><span class="pre">FileData</span></code>. The list is open; an
+unrecognised encoding is an object the reader skips, not a file it rejects.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">dstore</span></code></dt><dd><p>A tttrlib native store file. <strong>The default for anything tabular</strong>, and the
+reason PTO needs no table format of its own: dstore already carries columns
+with their dtypes, dictionary-encoded text, validity masks, a row selection
+and a group tree. See <a class="reference internal" href="../saving-tables.html"><span class="doc">Saving a table</span></a>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ptu</span></code>, <code class="docutils literal notranslate"><span class="pre">ht3</span></code>, <code class="docutils literal notranslate"><span class="pre">spc</span></code>, <code class="docutils literal notranslate"><span class="pre">sm</span></code>, <code class="docutils literal notranslate"><span class="pre">photons</span></code>, <code class="docutils literal notranslate"><span class="pre">ttr</span></code>, <code class="docutils literal notranslate"><span class="pre">bin</span></code></dt><dd><p>A vendor container, byte for byte. Embedding the original beside the decoded
+stream is the point: the decode can be redone, checked or corrected later.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">hdf5</span></code></dt><dd><p>An entire HDF5 file as a blob. <strong>This is the only way HDF5 appears in a PTO
+file</strong> — as cargo, never as the container.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">photon-hdf5</span></code></dt><dd><p>The same, where the HDF5 file is known to be Photon-HDF5.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tiff</span></code>, <code class="docutils literal notranslate"><span class="pre">png</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">npy</span></code></dt><dd><p>What they say.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">raw</span></code></dt><dd><p>Undifferentiated bytes; tags say what they are.</p>
+</dd>
+</dl>
+<p>Nothing stops an object’s payload being another <code class="docutils literal notranslate"><span class="pre">.pto</span></code>. It is a blob like any
+other.</p>
+</section>
+<section id="photon-streams-natively">
+<span id="pto-photons"></span><h3><a class="toc-backref" href="#id12" role="doc-backlink">Photon streams, natively</a><a class="headerlink" href="#photon-streams-natively" title="Link to this heading">#</a></h3>
+<dl class="field-list simple">
+<dt class="field-odd">Status<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Normative. Specified here; see <a class="reference internal" href="#pto-photons-status"><span class="std std-ref">Conformance and status</span></a> for what is
+built.</p>
+</dd>
+</dl>
+<p><code class="docutils literal notranslate"><span class="pre">PtoKind</span> <span class="pre">&quot;photons&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span> <span class="pre">&quot;dstore&quot;</span></code> is a <strong>native photon
+stream</strong>: the decoded events as columns, with no vendor container inside. It is
+what makes a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> a <em>sink</em> rather than a wrapper. The alternative — a vendor
+file embedded whole and reached as <code class="docutils literal notranslate"><span class="pre">run.pto|m001.ptu</span></code> — remains legal and
+remains the fidelity anchor; the two are complementary, not competing. A file
+may carry both, and should when the original exists.</p>
+<section id="columns">
+<h4>Columns<a class="headerlink" href="#columns" title="Link to this heading">#</a></h4>
+<p>Exactly four columns, and these names are <strong>normative</strong>. They are pinned to
+tttrlib’s in-memory event arrays, so a read is a copy and not a conversion:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 12.0%" />
+<col style="width: 66.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>dtype</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macro_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">u64</span></code></p></td>
+<td><p>Absolute event time in macro-time clock periods. <strong>Absolute, never a
+delta</strong>, and never interrupted by overflow markers — see below.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">micro_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">u16</span></code></p></td>
+<td><p>TCSPC bin index within the excitation period.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">routing_channel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">i8</span></code></p></td>
+<td><p>Detector/routing channel as the instrument reported it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">event_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">i8</span></code></p></td>
+<td><p>0 for a photon, non-zero for a marker.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Signedness is part of the contract. <code class="docutils literal notranslate"><span class="pre">routing_channel</span></code> and <code class="docutils literal notranslate"><span class="pre">event_type</span></code> are
+<em>signed</em> because tttrlib stores them as <code class="docutils literal notranslate"><span class="pre">signed</span> <span class="pre">char</span></code>; a reader that treats
+them as unsigned will disagree with every other reader about a negative channel.</p>
+<p><strong>No overflow events, and no bit-packing.</strong> Every vendor record stream encodes
+macro time as a rollover counter plus periodic overflow records, so decoding is
+mandatory before an event can be located. A native table has already paid that
+cost: <code class="docutils literal notranslate"><span class="pre">macro_time</span></code> is absolute, one row is one event, and row <em>i</em> is event
+<em>i</em>. That is the whole advantage, and it is why <span class="xref std std-ref">ranges</span> over
+a native table need no cue index — the row number <strong>is</strong> the seek position.
+Re-introducing a packed record layout here would forfeit it.</p>
+</section>
+<section id="required-header-tags">
+<h4>Required header tags<a class="headerlink" href="#required-header-tags" title="Link to this heading">#</a></h4>
+<p>A photon stream without its clocks is not data — it is a column of integers with
+no unit. The following tags <strong>must</strong> be attached to the photons object’s
+<code class="docutils literal notranslate"><span class="pre">FileUID</span></code>, and a reader <strong>must</strong> reject a photons object that lacks them
+rather than inventing a default:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 12.0%" />
+<col style="width: 48.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Tag</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.macro_time_resolution</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Float</span></code></p></td>
+<td><p>Macro-time clock period, <strong>in seconds</strong>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.micro_time_resolution</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Float</span></code></p></td>
+<td><p>TCSPC bin width, <strong>in seconds</strong>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_pto_photons.number_of_micro_time_channels</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Int</span></code></p></td>
+<td><p>Number of distinct <code class="docutils literal notranslate"><span class="pre">micro_time</span></code> values the instrument can produce.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Everything else is <strong>open fidelity</strong>: every row the source header carried is
+preserved verbatim as a tag on the same UID, in the closest <code class="docutils literal notranslate"><span class="pre">PtoType</span></code>,
+including binary blobs as <code class="docutils literal notranslate"><span class="pre">Bytes</span></code>. Imaging tags (<code class="docutils literal notranslate"><span class="pre">ImgHdr_PixX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ImgHdr_LineStart</span></code>, …) are ordinary tags under this rule and reach the CLSM
+auto-configuration unchanged — losing them turns an imaging measurement into an
+unreconstructable list of photons, which is why “preserve everything” is the
+default rather than a curated subset.</p>
+</section>
+<section id="why-two-namespaces">
+<span id="pto-photons-vocabulary"></span><h4>Why two namespaces<a class="headerlink" href="#why-two-namespaces" title="Link to this heading">#</a></h4>
+<p>The two clock tags are <strong>not</strong> invented here. They are MMFDB dictionary terms
+(<code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.macro_time_resolution</span></code>, <code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.micro_time_resolution</span></code>)
+and are spelled exactly as the dictionary spells them, because MMFDB is the
+vocabulary authority and a term that exists must not be re-coined.</p>
+<p>The third has no MMFDB term, and the near-miss is a trap worth naming.
+<code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.n_bins</span></code> exists, and it means <em>correlator bins for an FCS channel
+setup</em> — nothing to do with TCSPC. <code class="docutils literal notranslate"><span class="pre">_mmfdb_setup.micro_time_binning</span></code> exists
+too and is a binning <strong>factor</strong> (1, 2, 4, 8), not a count. Reusing either would
+be a silent semantic collision: files would validate, and every consumer would
+read the wrong quantity. So the bin count is specified in PTO’s own
+<code class="docutils literal notranslate"><span class="pre">_pto_photons.</span></code> namespace until MMFDB defines a term, at which point this
+specification adopts it and the PTO-namespaced name becomes a deprecated alias.</p>
+<p>The rule generalises: <strong>a tag whose meaning MMFDB already defines uses MMFDB’s
+name; a tag it does not define is namespaced to whoever does define it.</strong> A bare,
+unnamespaced tag name in a photons object is a defect — it claims an authority
+nobody holds.</p>
+</section>
+<section id="selecting-a-stream">
+<h4>Selecting a stream<a class="headerlink" href="#selecting-a-stream" title="Link to this heading">#</a></h4>
+<p>A container with exactly one photons object opens without a selector. A
+container with more than one <strong>must</strong> be opened with the <code class="docutils literal notranslate"><span class="pre">|</span></code> selector, and the
+error for a bare open must list the candidates — a reader that silently picks
+the first has made a measurement-level choice on the user’s behalf.</p>
+</section>
+<section id="conformance-and-status">
+<span id="pto-photons-status"></span><h4>Conformance and status<a class="headerlink" href="#conformance-and-status" title="Link to this heading">#</a></h4>
+<p>This section is normative for the <em>format</em>. Implementation in tttrlib is
+tracked by PRD-034 and remains partial; what works today is the write-once
+round trip:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.ptu&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>     <span class="c1"># a native photons object</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>                       <span class="c1"># events and clocks back</span>
+</pre></div>
+</div>
+<p>The reader applies the three required tags, and the writer emits them. A second
+write <strong>appends</strong> — <code class="docutils literal notranslate"><span class="pre">write(&quot;run.pto|green&quot;)</span></code> names the object, so one
+container holds several measurements, one object each.</p>
+<p>Not yet implemented, and a file relying on any of it is still <em>conforming</em> —
+reading it is a bug to fix here, never a licence to change the format:</p>
+<ul class="simple">
+<li><p><strong>Full header fidelity.</strong> Only the three required tags are written. Every
+other source header tag, imaging <code class="docutils literal notranslate"><span class="pre">ImgHdr_*</span></code> and <code class="docutils literal notranslate"><span class="pre">Bytes</span></code> blobs included,
+is specified above but not yet carried, so a CLSM image does not currently
+reconstruct from a native table.</p></li>
+<li><p><strong>Checkpointing.</strong> The writer is write-once; an object that is still being
+measured into cannot yet be committed incrementally.</p></li>
+<li><p><strong>Selection.</strong> A container with several photons objects is required above to
+demand a selector; tttrlib currently stacks them in name order instead,
+matching its behaviour for embedded vendor objects.</p></li>
+</ul>
+</section>
+</section>
+<section id="bundling-files">
+<span id="pto-bundling"></span><h3><a class="toc-backref" href="#id13" role="doc-backlink">Bundling files</a><a class="headerlink" href="#bundling-files" title="Link to this heading">#</a></h3>
+<p>A measurement is rarely one file. The instrument file, the settings sidecar it
+cannot be read without, a table computed from it and the protocol somebody wrote
+travel as a folder — and arrive with the sidecar missing. Putting that folder in
+one container is what the format is for, and tttrlib’s writer decides each
+object’s <code class="docutils literal notranslate"><span class="pre">PtoKind</span></code>, <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> and <code class="docutils literal notranslate"><span class="pre">FileMediaType</span></code> from the file rather
+than asking the caller to:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tttr<span class="w"> </span>pto<span class="w"> </span>pack<span class="w"> </span>-o<span class="w"> </span>run.pto<span class="w"> </span>measurement/<span class="w">     </span><span class="c1"># a folder becomes one file</span>
+tttr<span class="w"> </span>pto<span class="w"> </span>add<span class="w"> </span>run.pto<span class="w"> </span>late-note.md<span class="w">         </span><span class="c1"># bundle more into an existing one</span>
+tttr<span class="w"> </span>pto<span class="w"> </span>extract-all<span class="w"> </span>run.pto<span class="w"> </span>out/<span class="w">         </span><span class="c1"># the folder back again</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">PtoFile</span><span class="p">()</span>
+<span class="n">f</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">,</span> <span class="s2">&quot;DNA ruler, run 4&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_bundle</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;measurement/&quot;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Three rules make the folder survive the trip, none of them normative — a
+conforming writer may do otherwise, and a reader is told everything it needs by
+the elements themselves:</p>
+<ul class="simple">
+<li><p><strong>The name proposes and the bytes dispose.</strong> A file some photon format claims
+by extension is offered to the content sniffers, and the <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> it
+gets is that format’s own name — <code class="docutils literal notranslate"><span class="pre">spc-130</span></code> rather than <code class="docutils literal notranslate"><span class="pre">spc</span></code>, which four
+formats claim. A file no photon format claims is never sniffed: several
+formats recognise a container by little more than its record size dividing
+evenly, and would take a small <code class="docutils literal notranslate"><span class="pre">.png</span></code> for a photon stream. Everything else
+is named by extension, and anything unrecognised is an <code class="docutils literal notranslate"><span class="pre">attachment</span></code> encoded
+<code class="docutils literal notranslate"><span class="pre">raw</span></code> — carried, named, and left alone.</p></li>
+<li><p><strong>A directory means everything under it</strong>, each object named by its path
+relative to that directory (<code class="docutils literal notranslate"><span class="pre">raw/m001.ptu</span></code>), so two files of the same name
+in different folders stay two files and the directory comes back as it was.</p></li>
+<li><p><strong>A ``.set`` is tied to the ``.spc`` beside it</strong> with <code class="docutils literal notranslate"><span class="pre">pto.sidecar_of</span></code>
+(see <a class="reference internal" href="#pto-provenance"><span class="std std-ref">Provenance</span></a>), which is what makes the pair readable
+afterwards: a Becker &amp; Hickl reader handed the <code class="docutils literal notranslate"><span class="pre">.spc</span></code> alone silently reads
+half a header.</p></li>
+</ul>
+</section>
+<section id="an-object-name-is-a-relative-path-and-only-that">
+<span id="pto-object-names"></span><h3><a class="toc-backref" href="#id14" role="doc-backlink">An object name is a relative path, and only that</a><a class="headerlink" href="#an-object-name-is-a-relative-path-and-only-that" title="Link to this heading">#</a></h3>
+<p>Because a name carries the layout, unpacking a container writes to the path the
+name spells. That makes a name an instruction to write somewhere, so the
+following is <strong>normative</strong> for both a writer and a reader:</p>
+<p>An object name <strong>MUST</strong> be a relative path that stays under the directory it is
+unpacked into. A name <strong>MUST NOT</strong></p>
+<ul class="simple">
+<li><p>begin with <code class="docutils literal notranslate"><span class="pre">/</span></code>,</p></li>
+<li><p>contain a <code class="docutils literal notranslate"><span class="pre">..</span></code> component that takes it above the target directory, or</p></li>
+<li><p>carry a drive letter (<code class="docutils literal notranslate"><span class="pre">C:</span></code>) or UNC prefix.</p></li>
+</ul>
+<p>Both <code class="docutils literal notranslate"><span class="pre">/</span></code> and <code class="docutils literal notranslate"><span class="pre">\</span></code> <strong>MUST</strong> be treated as separators when this is checked,
+whatever the host platform. A container written on one system is unpacked on
+another, and <code class="docutils literal notranslate"><span class="pre">\</span></code> is an ordinary filename character on POSIX — a reader that
+checks only its own platform’s separator has no check at all on the files that
+actually travel.</p>
+<p>A writer <strong>MUST</strong> refuse to store an object under such a name. A reader
+unpacking a container <strong>MUST</strong> verify every name <strong>before writing anything</strong>
+and refuse the whole operation if any one fails; it <strong>MUST NOT</strong> unpack the
+acceptable objects and skip the rest, which leaves a directory that looks
+complete and is not. A reader <strong>MUST NOT</strong> silently rewrite an offending name
+to a safe one: that puts the object somewhere the container did not ask for
+and the caller cannot predict.</p>
+<p>Both halves are required, and neither substitutes for the other. The writer’s
+rule keeps this specification from describing containers nobody can safely
+unpack; the reader’s rule is what stands between a hostile file and the
+filesystem, and a <code class="docutils literal notranslate"><span class="pre">.pto</span></code> is an interchange format — being passed between
+people is the point of it.</p>
+</section>
+<section id="a-name-is-a-label-not-an-identity">
+<span id="pto-object-identity"></span><h3><a class="toc-backref" href="#id15" role="doc-backlink">A name is a label, not an identity</a><a class="headerlink" href="#a-name-is-a-label-not-an-identity" title="Link to this heading">#</a></h3>
+<p>Several objects <strong>MAY</strong> share one <code class="docutils literal notranslate"><span class="pre">(kind,</span> <span class="pre">name)</span></code>, and this is ordinary rather
+than exceptional: re-running an analysis with a changed setting writes a second
+object under the same name, and the earlier result deliberately stays
+reachable.</p>
+<p>A reader therefore needs an order, and the container gives one: <strong>objects are
+enumerated in the order they were written</strong>, and this ordering is normative. A
+writer appends; it <strong>MUST NOT</strong> reorder existing objects when adding one.</p>
+<p>Where a reader must resolve a name to a single object, <strong>the most recently
+written one wins</strong>. That is what a caller asking for “the” object means, and
+fixing it here is the point of stating it at all — without a rule in the
+specification each reader invents its own, they disagree, and a reader that
+guesses differently shows old numbers with nothing on screen to say so.</p>
+</section>
+</section>
+<section id="tags">
+<span id="pto-tags"></span><h2><a class="toc-backref" href="#id16" role="doc-backlink">Tags</a><a class="headerlink" href="#tags" title="Link to this heading">#</a></h2>
+<p>Matroska’s <code class="docutils literal notranslate"><span class="pre">Tags</span></code> structure, with typed values added. A <code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code> carries
+<code class="docutils literal notranslate"><span class="pre">TagName</span></code> and <strong>exactly one</strong> value element, which may be Matroska’s
+<code class="docutils literal notranslate"><span class="pre">TagString</span></code> or <code class="docutils literal notranslate"><span class="pre">TagBinary</span></code>, or one of PTO’s typed ones. A <code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code> with
+no value element is a flag: its presence is the information.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Tag</span>
+  <span class="n">Targets</span>
+    <span class="n">TagAttachmentUID</span>   <span class="mh">0x3A71</span><span class="o">...</span>        <span class="n">the</span> <span class="n">burst</span> <span class="n">table</span>
+  <span class="n">SimpleTag</span>
+    <span class="n">TagName</span>            <span class="s2">&quot;MeasDesc_Resolution&quot;</span>
+    <span class="n">PtoTagFloat</span>        <span class="mf">8.0e-11</span>
+    <span class="n">PtoTagSourceType</span>   <span class="mh">0x20000008</span>       <span class="n">PTU</span> <span class="n">tyFloat8</span><span class="p">,</span> <span class="n">so</span> <span class="n">it</span> <span class="nb">round</span><span class="o">-</span><span class="n">trips</span>
+</pre></div>
+</div>
+<p>The typed values cover PicoQuant’s twelve header types, so a PTU header converts
+without loss and, with <code class="docutils literal notranslate"><span class="pre">PtoTagSourceType</span></code>, converts back:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>PTU type</p></th>
+<th class="head"><p>PTO value element</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tyEmpty8</span></code></p></td>
+<td><p>none — the <code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code> carries only a name</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tyBool8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagUInt</span></code> (0 or 1)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tyInt8</span></code>, <code class="docutils literal notranslate"><span class="pre">tyBitSet64</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagInt</span></code> / <code class="docutils literal notranslate"><span class="pre">PtoTagUInt</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tyColor8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagUInt</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tyFloat8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagFloat</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tyTDateTime</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagDate</span></code> (converted; the raw OLE double is recoverable from
+<code class="docutils literal notranslate"><span class="pre">PtoTagSourceType</span></code> plus the date)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tyFloat8Array</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PtoTagFloats</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tyAnsiString</span></code>, <code class="docutils literal notranslate"><span class="pre">tyWideString</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TagString</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tyBinaryBlob</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TagBinary</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">TagName</span></code> is opaque to the container. Dotted names are conventional and mean
+nothing to PTO. <strong>The prefix ``pto.`` is reserved by this specification</strong>;
+applications should use their own.</p>
+</section>
+<section id="provenance">
+<span id="pto-provenance"></span><h2><a class="toc-backref" href="#id17" role="doc-backlink">Provenance</a><a class="headerlink" href="#provenance" title="Link to this heading">#</a></h2>
+<p><strong>PTO provides the mechanism and defines none of the meaning.</strong> This is the part
+an implementer is most likely to get wrong by trying to be helpful.</p>
+<p>What the container guarantees:</p>
+<ol class="arabic simple">
+<li><p>Every object has a <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> that is stable for the life of the file —
+across in-place updates, appends and compaction.</p></li>
+<li><p>A tag can name one or more objects as its target, via <code class="docutils literal notranslate"><span class="pre">TagAttachmentUID</span></code>.</p></li>
+<li><p>A tag’s <em>value</em> can be an object reference, <code class="docutils literal notranslate"><span class="pre">PtoTagUID</span></code>, or a list of them.</p></li>
+</ol>
+<p>That is enough to express any relation as a labelled edge: the target is the
+subject, <code class="docutils literal notranslate"><span class="pre">TagName</span></code> is the predicate, <code class="docutils literal notranslate"><span class="pre">PtoTagUID</span></code> is the object. PTO stops
+there. It does not define <code class="docutils literal notranslate"><span class="pre">derived_from</span></code>. It does not check that a referenced
+UID exists. It does not detect cycles, and it will not stop an application
+recording that a spectrum was derived from a burst selection.</p>
+<p>The reason is that applications disagree, and a container that picks a winner
+becomes wrong for everyone else. chisurf owns its provenance model and writes it
+in its own tag namespace; another tool writes another; both files stay readable
+by both.</p>
+<p>A conventional shape, offered and not required:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Tag</span>
+  <span class="n">Targets</span>
+    <span class="n">TagAttachmentUID</span>   <span class="mh">0x3A71</span><span class="o">...</span>              <span class="n">the</span> <span class="n">bursts</span>
+  <span class="n">SimpleTag</span>
+    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.derived_from&quot;</span>
+    <span class="n">PtoTagUID</span>          <span class="mh">0x9F2C</span><span class="o">...</span>              <span class="n">the</span> <span class="n">photons</span>
+  <span class="n">SimpleTag</span>
+    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.step&quot;</span>
+    <span class="n">TagString</span>          <span class="s2">&quot;burst search&quot;</span>
+  <span class="n">SimpleTag</span>
+    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.parameters&quot;</span>
+    <span class="n">TagString</span>          <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">m</span><span class="se">\&quot;</span><span class="s2">: 10, </span><span class="se">\&quot;</span><span class="s2">T</span><span class="se">\&quot;</span><span class="s2">: 500e-6}&quot;</span>
+</pre></div>
+</div>
+<p>“Everything that mentions this object” is one pass over the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> element,
+looking for the UID as a target or as a value. That is a few kilobytes.</p>
+</section>
+<section id="updating-in-place">
+<span id="pto-inplace"></span><h2><a class="toc-backref" href="#id18" role="doc-backlink">Updating in place</a><a class="headerlink" href="#updating-in-place" title="Link to this heading">#</a></h2>
+<p>The requirement is a multi-gigabyte photon stream in the same file as a burst
+table that gets recomputed, without rewriting gigabytes. Two EBML features do
+it, and neither is a PTO invention.</p>
+<p><strong>An over-wide Data Size VINT.</strong> <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a> allows an Element Data Size to be
+written in more octets than the value needs, so it can later be overwritten with
+a larger value without moving anything. A writer that expects a payload to grow
+writes its size in eight octets from the start.</p>
+<p><strong>``Void``.</strong> Space is reserved by putting a <code class="docutils literal notranslate"><span class="pre">Void</span></code> after the element, and
+reclaimed by turning a dead element into one. Adjacent <code class="docutils literal notranslate"><span class="pre">Void</span></code>s may be
+coalesced; a <code class="docutils literal notranslate"><span class="pre">Void</span></code> may be split, as long as each part is at least two octets
+— one for the ID, one for a zero size. <strong>Never leave exactly one spare octet</strong>,
+because no element fits in it.</p>
+<p>So, to rewrite an object’s payload:</p>
+<p><em>If the new payload fits in ``FileData``’s data size plus the following
+``Void``:</em> write the bytes, write the new size into <code class="docutils literal notranslate"><span class="pre">FileData</span></code>’s size VINT,
+resize the <code class="docutils literal notranslate"><span class="pre">Void</span></code> to what is left, rewrite the index, commit. Nothing moves,
+and no other object is touched.</p>
+<p><em>If it does not:</em> write a new <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code> — same <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> — into a large
+enough <code class="docutils literal notranslate"><span class="pre">Void</span></code> or at the end of the <code class="docutils literal notranslate"><span class="pre">Segment</span></code>, turn the old one into
+<code class="docutils literal notranslate"><span class="pre">Void</span></code>, rewrite the index, commit. <strong>The UID survives; the offset does not</strong>,
+which is why nothing except the index may hold offsets.</p>
+<p>Note what does <strong>not</strong> happen: nothing is reshuffled. The object being rewritten
+is the only one that can move, and it moves only when it no longer fits. Every
+other object stays exactly where it is, whatever its size — which is the whole
+point, because the object that does not fit is the burst table and the object
+beside it is eight gigabytes of photons. An object that is never updated is
+never moved, so a photon stream added once keeps its offset for the life of the
+file, and the <a class="reference internal" href="#pto-cues"><span class="std std-ref">cues</span></a> over it stay valid for the life of the file
+too. A relocated object’s cues do not: they index bytes that are no longer
+there, so a writer <strong>must</strong> drop them, and this one does.</p>
+<p>Space left behind is reused by the next object that fits in it, so a file does
+not grow on every update — only when nothing already free is big enough.
+Repeated growth still fragments, and <code class="docutils literal notranslate"><span class="pre">compact</span></code> is the answer.</p>
+<p>Deleting is turning the <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code> into <code class="docutils literal notranslate"><span class="pre">Void</span></code> and dropping its index
+entry. Tags targeting it become dangling, which is allowed — an application may
+want to remember that something was there. A writer may remove them; it must not
+be assumed to have done so.</p>
+<p>Compacting is copying every live element to a new file, dropping the <code class="docutils literal notranslate"><span class="pre">Void</span></code>s,
+and renaming over the original. UIDs are preserved, offsets are not. It is the
+only way space comes back, and it is the same bargain HDF5 makes with
+<code class="docutils literal notranslate"><span class="pre">h5repack</span></code>.</p>
+<p>A compacted file is not necessarily free of <code class="docutils literal notranslate"><span class="pre">Void</span></code>: the padding that puts each
+payload on a boundary is structural, not a hole, and it stays. A writer that
+wants none at all — for an archive, or a copy about to be sent somewhere — may
+drop the padding too, at the cost of <a class="reference internal" href="#pto-align"><span class="std std-ref">unaligned payloads</span></a>, and
+a writer that expects the file to keep being edited may do the opposite and
+reserve room after every object so the next few updates rewrite in place.
+tttrlib spells these <code class="docutils literal notranslate"><span class="pre">compact(to,</span> <span class="pre">tight=True)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">compact(to,</span> <span class="pre">reserve=0.25)</span></code>.</p>
+</section>
+<section id="committing-and-what-a-crash-leaves-behind">
+<span id="pto-commit"></span><h2><a class="toc-backref" href="#id19" role="doc-backlink">Committing, and what a crash leaves behind</a><a class="headerlink" href="#committing-and-what-a-crash-leaves-behind" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Segment</span></code> contains <strong>two</strong> <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> elements, each carrying a
+<code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> and a <code class="docutils literal notranslate"><span class="pre">PtoGeneration</span></code>.</p>
+<blockquote>
+<div><p><strong>The live index is the ``SeekHead`` with the greater ``PtoGeneration`` whose
+``CRC-32`` verifies.</strong></p>
+</div></blockquote>
+<p>To commit:</p>
+<ol class="arabic simple">
+<li><p>Write payloads and elements. Flush.</p></li>
+<li><p>Rewrite the <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> that is <strong>not</strong> live — in place, into its reserved
+<code class="docutils literal notranslate"><span class="pre">Void</span></code> — with the new entries, a correct <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">PtoGeneration</span></code> one greater than the live one. Flush.</p></li>
+</ol>
+<p>A crash before step 2 leaves the old index live and the file exactly as it was;
+anything half-written is unreferenced and will be reclaimed as <code class="docutils literal notranslate"><span class="pre">Void</span></code>. A crash
+<em>during</em> step 2 leaves a <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> whose <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> fails, and the reader
+falls back to the other, which is intact. There is no window in which a reader
+sees a file that never existed.</p>
+<p>This is shadow paging, and in EBML it costs one extra <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>s must be given enough reserved <code class="docutils literal notranslate"><span class="pre">Void</span></code> at creation to hold
+the largest index the file will need, since growing one in place is what the
+scheme depends on. A writer that runs out must fall back to compaction.</p>
+<p>Two consequences worth stating:</p>
+<ul class="simple">
+<li><p><strong>Step 2 must not touch the live ``SeekHead``.</strong> A writer that rewrites the
+live one has removed its own fallback.</p></li>
+<li><p>Neither <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> is the truth. Every element carries its own size, so a
+reader can rebuild the index by walking the <code class="docutils literal notranslate"><span class="pre">Segment</span></code> from its first child.
+A reader <strong>should</strong> do that when neither <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> verifies.</p></li>
+</ul>
+<section id="the-index">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">The index</a><a class="headerlink" href="#the-index" title="Link to this heading">#</a></h3>
+<p>Matroska’s <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>, used as Matroska uses it — one <code class="docutils literal notranslate"><span class="pre">Seek</span></code> per top-level
+element (<code class="docutils literal notranslate"><span class="pre">Info</span></code>, <code class="docutils literal notranslate"><span class="pre">Attachments</span></code>, <code class="docutils literal notranslate"><span class="pre">Tags</span></code>, <code class="docutils literal notranslate"><span class="pre">PtoAnnotations</span></code>) — plus, for
+PTO, optionally one <code class="docutils literal notranslate"><span class="pre">Seek</span></code> per <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code>, distinguished by
+<code class="docutils literal notranslate"><span class="pre">PtoSeekUID</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SeekHead</span>
+  <span class="n">CRC</span><span class="o">-</span><span class="mi">32</span>
+  <span class="n">PtoGeneration</span>   <span class="mi">7</span>
+  <span class="n">Seek</span>  <span class="p">{</span> <span class="n">SeekID</span> <span class="mh">0x1549A966</span><span class="p">,</span>  <span class="n">SeekPosition</span> <span class="mi">4096</span> <span class="p">}</span>              <span class="n">Info</span>
+  <span class="n">Seek</span>  <span class="p">{</span> <span class="n">SeekID</span> <span class="mh">0x1941A469</span><span class="p">,</span>  <span class="n">SeekPosition</span> <span class="mi">4600</span> <span class="p">}</span>              <span class="n">Attachments</span>
+  <span class="n">Seek</span>  <span class="p">{</span> <span class="n">SeekID</span> <span class="mh">0x61A7</span><span class="p">,</span> <span class="n">PtoSeekUID</span> <span class="mh">0x9F2C</span><span class="o">...</span><span class="p">,</span> <span class="n">SeekPosition</span> <span class="mi">4700</span> <span class="p">}</span>
+  <span class="n">Seek</span>  <span class="p">{</span> <span class="n">SeekID</span> <span class="mh">0x61A7</span><span class="p">,</span> <span class="n">PtoSeekUID</span> <span class="mh">0x3A71</span><span class="o">...</span><span class="p">,</span> <span class="n">SeekPosition</span> <span class="mi">8700000000</span> <span class="p">}</span>
+  <span class="n">Seek</span>  <span class="p">{</span> <span class="n">SeekID</span> <span class="mh">0x1254C367</span><span class="p">,</span> <span class="n">SeekPosition</span> <span class="mi">8712000000</span> <span class="p">}</span>         <span class="n">Tags</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SeekPosition</span></code> is relative to the first byte of <code class="docutils literal notranslate"><span class="pre">Segment</span></code>’s <em>data</em>, as in
+Matroska.</p>
+<p>Without the per-object entries a reader can still find every object by walking
+<code class="docutils literal notranslate"><span class="pre">Attachments</span></code> and skipping each <code class="docutils literal notranslate"><span class="pre">FileData</span></code> by its size — seeks, not reads.
+With a dozen objects that is a dozen seeks, which is why the per-object entries
+are optional.</p>
+</section>
+</section>
+<section id="alignment-and-reading-a-payload-in-place">
+<span id="pto-align"></span><h2><a class="toc-backref" href="#id21" role="doc-backlink">Alignment, and reading a payload in place</a><a class="headerlink" href="#alignment-and-reading-a-payload-in-place" title="Link to this heading">#</a></h2>
+<p>EBML guarantees no alignment: an element header is a variable number of octets,
+so <code class="docutils literal notranslate"><span class="pre">FileData</span></code> lands wherever the object’s name and encoding strings happen to
+leave it. That is fine for bytes and wrong for what a payload actually is here —
+a PTU record stream is <code class="docutils literal notranslate"><span class="pre">uint32</span></code>, a <code class="docutils literal notranslate"><span class="pre">.dstore</span></code> column is <code class="docutils literal notranslate"><span class="pre">double</span></code> — and a
+caller that wants to <code class="docutils literal notranslate"><span class="pre">mmap</span></code> the file and point at one without copying needs
+the first byte on a boundary.</p>
+<p>So a writer <strong>should</strong> insert a <code class="docutils literal notranslate"><span class="pre">Void</span></code> immediately before the <code class="docutils literal notranslate"><span class="pre">Attachments</span></code>
+element, sized so that <code class="docutils literal notranslate"><span class="pre">FileData</span></code>’s data begins on an 8-byte boundary, and
+<strong>should</strong> record nothing about having done so. Eight rather than four costs
+nothing to say and covers the 32-bit case as well; it is also the alignment
+<code class="docutils literal notranslate"><span class="pre">.dstore</span></code> uses for its own blobs, and those offsets are relative to the store,
+so an embedded store is only aligned inside if it begins aligned outside.</p>
+<p>tttrlib does this, on every path that lays an object down — including the one an
+object takes when it outgrows its room and is relocated, which is a fresh
+lay-down and not a move. The padding is the reason a compacted file still
+carries a little <code class="docutils literal notranslate"><span class="pre">Void</span></code>: at most a boundary’s worth per object.</p>
+<p>A reader <strong>must not assume it</strong>. Check the offset; map it if it is aligned, copy
+it if it is not. An alignment guarantee that a conformant writer may omit is not
+a guarantee, and pretending otherwise is how a reader acquires a rare crash on
+somebody else’s file.</p>
+</section>
+<section id="implementing-pto">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Implementing PTO</a><a class="headerlink" href="#implementing-pto" title="Link to this heading">#</a></h2>
+<p>A conformant <strong>reader</strong> must:</p>
+<ul class="simple">
+<li><p>parse EBML per <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8794.html"><strong>RFC 8794</strong></a>, refusing an unknown <code class="docutils literal notranslate"><span class="pre">DocTypeReadVersion</span></code>;</p></li>
+<li><p>pick the live <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> by <code class="docutils literal notranslate"><span class="pre">PtoGeneration</span></code> and <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code>, and fall back
+to walking the <code class="docutils literal notranslate"><span class="pre">Segment</span></code> if neither verifies;</p></li>
+<li><p>skip unknown element IDs by their Data Size, at every level;</p></li>
+<li><p>treat a <code class="docutils literal notranslate"><span class="pre">SimpleTag</span></code> with an unrecognised value element as a tag whose value
+it cannot represent, not as a broken file;</p></li>
+<li><p>bound every allocation by what the file can actually contain before believing
+a Data Size, since that number comes out of the file;</p></li>
+<li><p>treat a <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> as a full <code class="docutils literal notranslate"><span class="pre">uinteger</span></code>, whatever range the writer used;</p></li>
+<li><p>treat payload alignment and <a class="reference internal" href="#pto-cues"><span class="std std-ref">cues</span></a> as advisory — both are
+writer SHOULDs, so check the offset and seek to the nearest cue <em>at or
+before</em> the target rather than trusting either.</p></li>
+</ul>
+<p>It does <strong>not</strong> need to understand <code class="docutils literal notranslate"><span class="pre">dstore</span></code>, or any encoding at all, to list a
+file’s objects and read its tags. That is deliberate: everything the container
+says about itself is EBML, so a listing tool is an EBML parser plus a table of
+twenty-odd IDs.</p>
+<p>A conformant <strong>writer</strong> must:</p>
+<ul class="simple">
+<li><p>give every object a <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> that is non-zero and <strong>unique in the file</strong>;</p></li>
+<li><p>write every <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> in <strong>eight octets</strong>, whatever its value;</p></li>
+<li><p>write the <code class="docutils literal notranslate"><span class="pre">Segment</span></code> Data Size in eight octets and keep it current;</p></li>
+<li><p>write <code class="docutils literal notranslate"><span class="pre">PtoKind</span></code> and <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> on every object;</p></li>
+<li><p>follow the two-<code class="docutils literal notranslate"><span class="pre">SeekHead</span></code> commit, including the flushes;</p></li>
+<li><p>leave <code class="docutils literal notranslate"><span class="pre">Void</span></code> of zero or at least two octets, never one;</p></li>
+<li><p>never rewrite the live <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>.</p></li>
+</ul>
+<p>It <strong>should</strong> write <code class="docutils literal notranslate"><span class="pre">FileData</span></code> last with an over-wide size VINT, pad so the
+payload starts 8-byte aligned, reserve <code class="docutils literal notranslate"><span class="pre">Void</span></code> after payloads it expects to
+grow, and write <code class="docutils literal notranslate"><span class="pre">MuxingApp</span></code> and <code class="docutils literal notranslate"><span class="pre">DateUTC</span></code> so a file can be traced to what
+made it.</p>
+<section id="the-fileuid">
+<span id="pto-fileuid"></span><h3><a class="toc-backref" href="#id23" role="doc-backlink">The FileUID</a><a class="headerlink" href="#the-fileuid" title="Link to this heading">#</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">uinteger</span></code>, non-zero, and unique within the file — the same contract
+Matroska gives <code class="docutils literal notranslate"><span class="pre">TrackUID</span></code>. Random is the obvious way to get it and random is
+<strong>not</strong> unique: a writer has to check a fresh uid against the objects already
+there, which costs a scan of a list that is tens of entries long.</p>
+<p>The <strong>eight-octet width is a real requirement</strong>, not a style. <code class="docutils literal notranslate"><span class="pre">FileUID</span></code> is the
+one element ever rewritten where it lies: when an object outgrows its room it is
+written afresh with a new uid, and the old uid is then written back over it to
+keep the identity. Packed to the smallest width that held it, a replacement can
+be <em>shorter</em> — and every sibling after it, <code class="docutils literal notranslate"><span class="pre">PtoKind</span></code> and <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code>
+among them, is then read from the wrong offset. Nothing fails at the time of
+writing; the object simply comes back later with an empty encoding.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>tttrlib mints uids below 2</strong><sup>53</sup>. That is a writer’s choice the
+format permits, not a rule: the element is a full <code class="docutils literal notranslate"><span class="pre">uinteger</span></code>, a reader must
+treat it as one, and a container from another writer may use the whole range
+and is read correctly here.</p>
+<p>The bound was introduced because a 64-bit integer did not reach every
+binding: a JavaScript <code class="docutils literal notranslate"><span class="pre">Number</span></code> and an R <code class="docutils literal notranslate"><span class="pre">numeric</span></code> are both IEEE doubles,
+so a wider uid came back a <em>nearby value</em> naming no object. Both are now
+fixed where the fix belonged — in the binding. JavaScript routes 64-bit
+scalars through <code class="docutils literal notranslate"><span class="pre">BigInt</span></code>; R carries a uid as a character string, the only
+thing base R holds exactly. <strong>A container using the whole range is read
+correctly everywhere.</strong></p>
+<p>The bound stays because it costs nothing observable — 9×10<sup>15</sup>
+identities, with uniqueness enforced rather than left to chance — and a uid
+that fits a double is one fewer thing for the next binding to get wrong.</p>
+</div>
+</section>
+</section>
+<section id="reading-part-of-one">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Reading part of one</a><a class="headerlink" href="#reading-part-of-one" title="Link to this heading">#</a></h2>
+<p>The container exists so a multi-gigabyte payload is cheap to keep beside a table
+that gets recomputed, and that has to hold on the read side too. Every entry
+point below reads its part and not the whole:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">PtoFile</span><span class="p">()</span>
+<span class="n">f</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>
+
+<span class="c1"># what is in the embedded table, without decoding a single column</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store_columns</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+
+<span class="c1"># two columns of a four-gigabyte table: two seeks</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;n_photons&quot;</span><span class="p">])</span>
+
+<span class="c1"># rows 500 000-500 050 of it, which is what a table viewer asks for</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">first_row</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+<span class="c1"># 4 KiB of any payload, at any offset -- short at the end, like a file read</span>
+<span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">20</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+
+<span class="c1"># events 10^6 .. 10^6+1000 of an embedded photon stream, via its cues</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_events</span><span class="p">(</span><span class="s2">&quot;run.pto|m001.ptu&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and reclaiming space, once a file has been edited enough to be worth it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-lean.pto&quot;</span><span class="p">)</span>                 <span class="c1"># holes gone, payloads aligned</span>
+<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-archive.pto&quot;</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># no Void at all; unaligned</span>
+<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-work.pto&quot;</span><span class="p">,</span> <span class="n">reserve</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>   <span class="c1"># room to keep editing in place</span>
+</pre></div>
+</div>
+<p>and on the way in, <code class="docutils literal notranslate"><span class="pre">add_file</span></code> embeds a file without holding it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span><span class="s2">&quot;photons&quot;</span><span class="p">,</span> <span class="s2">&quot;ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;m001.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;/data/m001.ptu&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same range is reachable through the reader-parameter mechanism, which is
+what makes it work from every binding and from anything that opens a file by
+name alone:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.pto|m001.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTO&quot;</span><span class="p">,</span> <span class="s1">&#39;{&quot;first_event&quot;: 1000, &quot;n_events&quot;: 500}&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="cues">
+<span id="pto-cues"></span><h2><a class="toc-backref" href="#id25" role="doc-backlink">Cues</a><a class="headerlink" href="#cues" title="Link to this heading">#</a></h2>
+<p>An index <em>into</em> a payload: “event 10<sup>9</sup> starts at byte X”. Without one,
+reaching the middle of an embedded photon stream means decoding everything
+before it, which is the read-side version of the all-or-nothing the container
+exists to avoid.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Cues</span></code> is a top-level child of <code class="docutils literal notranslate"><span class="pre">Segment</span></code>, uses Matroska’s ID for the same
+reason everything else here does — the job is Matroska’s, an index that says
+where in a stream something is — and holds <code class="docutils literal notranslate"><span class="pre">CuePoint</span></code> masters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Cues</span>                  <span class="mh">0x1C53BB6B</span>   <span class="n">master</span><span class="p">,</span> <span class="n">top</span> <span class="n">level</span>
+  <span class="n">CuePoint</span>            <span class="mh">0xBB</span>         <span class="n">master</span>
+    <span class="n">PtoCueUID</span>         <span class="mh">0x1E54F030</span>   <span class="n">uint</span>   <span class="n">which</span> <span class="nb">object</span> <span class="n">this</span> <span class="n">indexes</span>
+    <span class="n">PtoCueEvent</span>       <span class="mh">0x1E54F031</span>   <span class="n">uint</span>   <span class="n">event</span> <span class="n">ordinal</span>
+    <span class="n">PtoCueOffset</span>      <span class="mh">0x1E54F032</span>   <span class="n">uint</span>   <span class="n">byte</span> <span class="n">offset</span> <span class="n">into</span> <span class="n">FileData</span>
+    <span class="n">PtoCueTime</span>        <span class="mh">0x1E54F033</span>   <span class="n">uint</span>   <span class="n">macro</span> <span class="n">time</span> <span class="n">there</span><span class="p">,</span> <span class="n">optional</span>
+</pre></div>
+</div>
+<p>What sits inside a <code class="docutils literal notranslate"><span class="pre">CuePoint</span></code> is PTO’s, because Matroska’s cues address a
+timecode in a track and these address an event ordinal in a payload.</p>
+<p>Four rules, and the first is the one that matters:</p>
+<p><strong>A cue is advisory.</strong> A reader seeks to the nearest cue <em>at or before</em> the
+event it wants and decodes forward from there. A cue that is wrong then costs a
+slower decode and can never cost a wrong answer. Nothing may be returned on the
+strength of a cue alone.</p>
+<p><strong>Cues are written on demand, never automatically.</strong> Building them is a pass
+over a payload, so it is a thing a caller asks for
+(<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">tttrlib::io::PtoFile::build_cues()</span></code>) when the payload is going to be
+read in pieces often enough to be worth it. A container with no <code class="docutils literal notranslate"><span class="pre">Cues</span></code>
+element is fully valid.</p>
+<p><strong>Spacing is the writer’s choice.</strong> One cue per 10<sup>6</sup> events on a
+10<sup>9</sup>-event stream is a thousand cues — a few tens of kilobytes — and
+bounds any subsequent decode to 10<sup>6</sup> records.</p>
+<p><strong>A cue dies with the bytes it indexes.</strong> Removing an object or replacing its
+payload drops its cues. Compaction does not: it moves a payload without
+changing a byte inside one, so an offset into it is still an offset into it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">PtoCueTime</span></code> is what makes a decode from a cue produce the same macro times as
+a decode from the start. The overflow count at a byte offset is not recoverable
+from the records there — it is the sum of every overflow record before it — so a
+reader that starts at a cue gets macro times short by exactly that. The cue’s
+own macro time closes the gap: the first event decoded is the cue’s event, and
+the difference between what it should be and what it came out as applies to
+every event after it.</p>
+</section>
+<section id="why-not-tar-zip-or-hdf5">
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Why not tar, zip, or HDF5</a><a class="headerlink" href="#why-not-tar-zip-or-hdf5" title="Link to this heading">#</a></h2>
+<p><strong>tar</strong> was the first thing considered, and it is genuinely attractive:
+<code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">xf</span></code> works everywhere, so “others can implement it” becomes “others
+already have”. It fails on one requirement. A tar member’s size is written
+before its payload and members are laid end to end with no slack, so growing one
+by a byte means rewriting every byte after it. With a multi-gigabyte photon
+stream in the file, changing a burst selection would rewrite gigabytes. The same
+objection retires <strong>zip</strong>, which additionally does not align payloads and needs
+zip64 past 4 GiB.</p>
+<p><strong>HDF5</strong> solves all of this and is a container in its own right. It is not used
+as one because it is a large dependency to require of anything that wants to
+read the file, because its own free-space handling has the same
+<code class="docutils literal notranslate"><span class="pre">h5repack</span></code>-shaped hole, and because the point of PTO is to bind together
+payloads it does not understand — including HDF5 files. HDF5 appears in a PTO
+file as an object with <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span> <span class="pre">=</span> <span class="pre">&quot;hdf5&quot;</span></code>, which is the relationship that
+was wanted.</p>
+<p><strong>EBML</strong>, meanwhile, was designed for exactly this and has been carrying
+multi-gigabyte files with in-place metadata edits for twenty years.</p>
+</section>
+<section id="reserved-for-later">
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Reserved for later</a><a class="headerlink" href="#reserved-for-later" title="Link to this heading">#</a></h2>
+<p>Anticipated and deliberately unspecified in 1.0, so that adding them is a
+<code class="docutils literal notranslate"><span class="pre">DocTypeVersion</span></code> bump rather than a format break:</p>
+<ul class="simple">
+<li><p><strong>Per-object checksums.</strong> <code class="docutils literal notranslate"><span class="pre">CRC-32</span></code> already applies to a master’s children,
+but a CRC over eight gigabytes of <code class="docutils literal notranslate"><span class="pre">FileData</span></code> costs more on every open than
+the container saves. It belongs behind an explicit verify, with its own
+element.</p></li>
+<li><p><strong>External payloads.</strong> An object whose <code class="docutils literal notranslate"><span class="pre">FileData</span></code> is replaced by a URI, for
+data too large to embed.</p></li>
+<li><p><strong>Signing.</strong> A signature over the live <code class="docutils literal notranslate"><span class="pre">SeekHead</span></code>, which covers the file
+transitively once per-object checksums exist.</p></li>
+</ul>
+<p>An implementation of 1.0 will read a 1.x file, because all of these are new
+element IDs and unknown IDs are skipped by size.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="flim-labs-stt1.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">FLIM LABS time tagger (<code class="docutils literal notranslate"><span class="pre">.bin</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pto-mfdb.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">PTO.MFDB — the MMFDB profile of the photon container</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-pto-is-for">What PTO is for</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#naming-pto-and-mmfdb-pto">Naming: <code class="docutils literal notranslate"><span class="pre">.pto</span></code> and <code class="docutils literal notranslate"><span class="pre">.mmfdb.pto</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-goals">Non-goals</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#relationship-to-ebml-and-matroska">Relationship to EBML and Matroska</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#elements-borrowed-from-matroska">Elements borrowed from Matroska</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#elements-pto-adds">Elements PTO adds</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ebml-header">The EBML Header</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-shape">File shape</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#objects">Objects</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kinds">Kinds</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encodings">Encodings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#photon-streams-natively">Photon streams, natively</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#columns">Columns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#required-header-tags">Required header tags</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#why-two-namespaces">Why two namespaces</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#selecting-a-stream">Selecting a stream</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#conformance-and-status">Conformance and status</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bundling-files">Bundling files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#an-object-name-is-a-relative-path-and-only-that">An object name is a relative path, and only that</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-name-is-a-label-not-an-identity">A name is a label, not an identity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tags">Tags</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance">Provenance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#updating-in-place">Updating in place</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#committing-and-what-a-crash-leaves-behind">Committing, and what a crash leaves behind</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-index">The index</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#alignment-and-reading-a-payload-in-place">Alignment, and reading a payload in place</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-pto">Implementing PTO</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-fileuid">The FileUID</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-part-of-one">Reading part of one</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cues">Cues</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-not-tar-zip-or-hdf5">Why not tar, zip, or HDF5</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reserved-for-later">Reserved for later</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/formats/pto.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021 - 2026, tttrlib developers (BSD).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

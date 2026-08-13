@@ -45,7 +45,7 @@ Import required libraries
 Load data
 ---------
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-33
+.. GENERATED FROM PYTHON SOURCE LINES 20-35
 
 .. code-block:: Python
 
@@ -53,7 +53,9 @@ Load data
     from pathlib import Path
 
     # Read the files from the tttrlib-data repository
-    data_root = os.environ.get('TTTRLIB_DATA')
+    data_root = os.environ.get("TTTRLIB_DATA") or next(
+        (p / "tttr-data" for p in Path(__file__).resolve().parents
+         if (p / "tttr-data").is_dir()), ".")
     sm_folder = Path(data_root) / 'bh' / 'bh_spc132_sm_dna'
     spc_files = sorted(sm_folder.glob('*.spc'))
     file_path = str(spc_files[0])
@@ -63,25 +65,25 @@ Load data
     print(f"Total events: {len(data)}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 34-36
+.. GENERATED FROM PYTHON SOURCE LINES 36-38
 
 Create BurstFilter instance
 ---------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-38
+.. GENERATED FROM PYTHON SOURCE LINES 38-40
 
 .. code-block:: Python
 
     bf = tttrlib.BurstFilter(data)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 39-42
+.. GENERATED FROM PYTHON SOURCE LINES 41-44
 
 Set and save burst parameters to JSON
 -------------------------------------
 Configure burst search parameters
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-58
+.. GENERATED FROM PYTHON SOURCE LINES 44-60
 
 .. code-block:: Python
 
@@ -102,13 +104,13 @@ Configure burst search parameters
     print("Burst parameters saved to burst_parameters.json")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-62
+.. GENERATED FROM PYTHON SOURCE LINES 61-64
 
 Load parameters from JSON
 -------------------------
 Create a new BurstFilter instance
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-68
+.. GENERATED FROM PYTHON SOURCE LINES 64-70
 
 .. code-block:: Python
 
@@ -119,13 +121,13 @@ Create a new BurstFilter instance
     print("Burst parameters loaded from burst_parameters.json")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-72
+.. GENERATED FROM PYTHON SOURCE LINES 71-74
 
 Verify parameters
 -----------------
 Convert to dict and print for verification
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-76
+.. GENERATED FROM PYTHON SOURCE LINES 74-78
 
 .. code-block:: Python
 
@@ -134,12 +136,12 @@ Convert to dict and print for verification
     print(json.dumps(params_dict, indent=2))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-79
+.. GENERATED FROM PYTHON SOURCE LINES 79-81
 
 Perform burst search with loaded parameters
 -------------------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-82
+.. GENERATED FROM PYTHON SOURCE LINES 81-84
 
 .. code-block:: Python
 
@@ -147,12 +149,12 @@ Perform burst search with loaded parameters
     print(f"\nFound {len(bursts_np)} bursts using loaded parameters")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-85
+.. GENERATED FROM PYTHON SOURCE LINES 85-87
 
 Estimate background rates
 -------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-88
+.. GENERATED FROM PYTHON SOURCE LINES 87-90
 
 .. code-block:: Python
 
@@ -160,13 +162,13 @@ Estimate background rates
     print(f"Estimated background rates in {len(background_rates)} time periods")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-92
+.. GENERATED FROM PYTHON SOURCE LINES 91-94
 
 Filter bursts
 -------------
 Filter by size
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-103
+.. GENERATED FROM PYTHON SOURCE LINES 94-105
 
 .. code-block:: Python
 
@@ -182,12 +184,12 @@ Filter by size
     print(f"Filtered to {len(bg_filtered_np)} bursts by background ratio (≤5.0)")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 104-106
+.. GENERATED FROM PYTHON SOURCE LINES 106-108
 
 Merge bursts
 ------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-109
+.. GENERATED FROM PYTHON SOURCE LINES 108-111
 
 .. code-block:: Python
 
@@ -195,13 +197,13 @@ Merge bursts
     print(f"Merged to {len(merged_bursts_np)} bursts")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 110-113
+.. GENERATED FROM PYTHON SOURCE LINES 112-115
 
 Get burst properties
 --------------------
 Legacy: raw list of lists (from C++), converted to matrix below for convenience
 
-.. GENERATED FROM PYTHON SOURCE LINES 113-152
+.. GENERATED FROM PYTHON SOURCE LINES 115-154
 
 .. code-block:: Python
 
@@ -245,13 +247,13 @@ Legacy: raw list of lists (from C++), converted to matrix below for convenience
         print("No bursts detected with current parameters.")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-156
+.. GENERATED FROM PYTHON SOURCE LINES 155-158
 
 Export burst data to JSON
 -------------------------
 Create a dictionary with burst analysis results
 
-.. GENERATED FROM PYTHON SOURCE LINES 156-174
+.. GENERATED FROM PYTHON SOURCE LINES 158-176
 
 .. code-block:: Python
 

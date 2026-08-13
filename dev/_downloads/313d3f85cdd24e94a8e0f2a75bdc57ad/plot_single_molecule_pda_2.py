@@ -7,6 +7,8 @@ Photon distribution analysis as described in https://pubs.acs.org/doi/abs/10.102
 
 
 """
+import sys
+from pathlib import Path
 import glob
 import numpy as np
 import scipy.optimize
@@ -17,6 +19,10 @@ import tttrlib
 The experimental data is saved in separate files. The files are joined and the
 resulting TTTR object is processed.
 """
+# Make the `examples` package importable when this script is run directly,
+# from any working directory.
+sys.path[:0] = [str(_p) for _p in Path(__file__).resolve().parents
+                if (_p / "examples" / "_example_data.py").is_file()][:1]
 from examples._example_data import get_data_root
 # open a set of files and stack them in a single TTTR object
 files = sorted([str(p) for p in (get_data_root() / 'bh').glob('bh_spc132.spc')])
