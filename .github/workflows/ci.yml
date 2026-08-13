@@ -522,6 +522,21 @@ jobs:
             Start-Sleep -Seconds 90
           }
           $root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          # See build_pip_win: vcpkg's status database is inside installed/, so
+          # a partially restored cache reports "already installed", the install
+          # above short-circuits, and the failure surfaces much later as a DLL
+          # load error with nothing pointing back here.
+          foreach ($f in @("bin\hdf5.dll", "lib\hdf5.lib", "include\hdf5.h")) {
+            if (-not (Test-Path "$root\$f")) {
+              Write-Host "::error::vcpkg reported success but $root\$f is missing."
+              Write-Host "The cached vcpkg tree is incomplete. Bump the key suffix"
+              Write-Host "(vcpkg-hdf5-...-v1) to force a clean rebuild."
+              exit 1
+            }
+          }
+          $mb = [math]::Round((Get-ChildItem "$root" -Recurse -File |
+                Measure-Object Length -Sum).Sum / 1MB, 1)
+          Write-Host "HDF5 tree at $root -- $mb MB"
           echo "HDF5_ROOT=$root" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
           echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
@@ -901,6 +916,21 @@ jobs:
             Start-Sleep -Seconds 90
           }
           $root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          # See build_pip_win: vcpkg's status database is inside installed/, so
+          # a partially restored cache reports "already installed", the install
+          # above short-circuits, and the failure surfaces much later as a DLL
+          # load error with nothing pointing back here.
+          foreach ($f in @("bin\hdf5.dll", "lib\hdf5.lib", "include\hdf5.h")) {
+            if (-not (Test-Path "$root\$f")) {
+              Write-Host "::error::vcpkg reported success but $root\$f is missing."
+              Write-Host "The cached vcpkg tree is incomplete. Bump the key suffix"
+              Write-Host "(vcpkg-hdf5-...-v1) to force a clean rebuild."
+              exit 1
+            }
+          }
+          $mb = [math]::Round((Get-ChildItem "$root" -Recurse -File |
+                Measure-Object Length -Sum).Sum / 1MB, 1)
+          Write-Host "HDF5 tree at $root -- $mb MB"
           echo "HDF5_ROOT=$root" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
           echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
@@ -1208,6 +1238,23 @@ jobs:
             Start-Sleep -Seconds 90
           }
           $hdf5root = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          # vcpkg's status database lives inside installed/, so it is restored
+          # from the cache along with everything else. A tree that restored
+          # partially therefore reports "already installed" and the step above
+          # short-circuits -- the build then fails much later, as a DLL load
+          # error at import time, with nothing pointing back here. Check that
+          # what the cache handed back is actually usable.
+          foreach ($f in @("bin\hdf5.dll", "lib\hdf5.lib", "include\hdf5.h")) {
+            if (-not (Test-Path "$hdf5root\$f")) {
+              Write-Host "::error::vcpkg reported success but $hdf5root\$f is missing."
+              Write-Host "The cached vcpkg tree is incomplete. Bump the key suffix"
+              Write-Host "(vcpkg-hdf5-...-v1) to force a clean rebuild."
+              exit 1
+            }
+          }
+          $mb = [math]::Round((Get-ChildItem "$hdf5root" -Recurse -File |
+                Measure-Object Length -Sum).Sum / 1MB, 1)
+          Write-Host "HDF5 tree at $hdf5root -- $mb MB"
           echo "HDF5_ROOT=$hdf5root" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$hdf5root" >> $env:GITHUB_ENV
           echo "PATH=$hdf5root\bin;$env:PATH" >> $env:GITHUB_ENV
