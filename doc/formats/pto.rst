@@ -660,9 +660,8 @@ the first has made a measurement-level choice on the user's behalf.
 Conformance and status
 ^^^^^^^^^^^^^^^^^^^^^^
 
-This section is normative for the *format*. Implementation in tttrlib is
-tracked by PRD-034 and remains partial; what works today is the write-once
-round trip:
+This section is normative for the *format*. Implementation in tttrlib remains
+partial; what works today is the write-once round trip:
 
 .. code-block:: python
 

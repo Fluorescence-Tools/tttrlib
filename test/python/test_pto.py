@@ -1018,7 +1018,7 @@ def container(tmp_path):
         pytest.skip("no tttr-data")
     path = str(tmp_path / "run.pto")
     f = tttrlib.PtoFile()
-    assert f.create(path, "prd-020"), f.error()
+    assert f.create(path, "targeted reads"), f.error()
     uid_raw = f.add_file("tttr_photon_stream", "ptu", SMALL_PTU.name, str(SMALL_PTU))
     uid_tab = tttrlib.pto_add_store(f, "burst_table", "bursts", _table(), 1 << 16)
     assert f.commit(), f.error()

@@ -21,7 +21,7 @@ exercised end-to-end** because of an environment shadowing issue (see §4).
   **`test/python/plugin/test_plugins.py`** (`run_in_subprocess`) — set
   `PYTHONPATH` to `build/ext` for subprocesses that don't inherit the
   conftest's `sys.path`.
-- **`test/python/test_pto_prd25.py`** — `PTO_BIN` path moved from
+- **`test/python/test_pto_executable_containers.py`** — `PTO_BIN` path moved from
   `build/tools/pto` to `build/modules/io/pto/pto` (module restructuring).
 - **`test/python/misc/test_cli.py`** — rewritten for the native C++ `tttr`
   binary (the old Python/click `bin/tttrlib` was deleted). Prefers the build

@@ -28,14 +28,14 @@ PTO_BIN = _find_pto()
 needs_pto = unittest.skipUnless(PTO_BIN, "the pto tool is neither built nor installed")
 
 
-class TestPtoPRD25(unittest.TestCase):
+class TestPtoExecutableContainers(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.pto_path = os.path.join(self.temp_dir.name, "test_container.pto")
         
         # Create a container with objects and tags
         f = tttrlib.PtoFile()
-        self.assertTrue(f.create(self.pto_path, "PRD-25 Test Container"))
+        self.assertTrue(f.create(self.pto_path, "Executable Container Test"))
         
         # Add payload objects
         self.payload1 = b"Photon stream data block 1234567890"
@@ -91,7 +91,7 @@ class TestPtoPRD25(unittest.TestCase):
         """CLI ls command and --json output"""
         res = subprocess.run([PTO_BIN, "ls", self.pto_path], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
-        self.assertIn("PRD-25 Test Container", res.stdout)
+        self.assertIn("Executable Container Test", res.stdout)
         self.assertIn("stream1", res.stdout)
         self.assertIn("bursts1", res.stdout)
 
@@ -99,7 +99,7 @@ class TestPtoPRD25(unittest.TestCase):
         res_json = subprocess.run([PTO_BIN, "--json", "ls", self.pto_path], capture_output=True, text=True)
         self.assertEqual(res_json.returncode, 0)
         data = json.loads(res_json.stdout)
-        self.assertEqual(data["title"], "PRD-25 Test Container")
+        self.assertEqual(data["title"], "Executable Container Test")
         self.assertEqual(len(data["objects"]), 2)
         self.assertEqual(data["objects"][0]["name"], "stream1")
 
@@ -166,7 +166,7 @@ class TestPtoPRD25(unittest.TestCase):
         env["PTO_READER"] = PTO_BIN
         res_exec = subprocess.run(["/bin/sh", bundle_path], capture_output=True, text=True, env=env)
         self.assertEqual(res_exec.returncode, 0)
-        self.assertIn("PRD-25 Test Container", res_exec.stdout)
+        self.assertIn("Executable Container Test", res_exec.stdout)
         self.assertIn("stream1", res_exec.stdout)
 
         # Run bundled executable extract command
@@ -181,7 +181,7 @@ class TestPtoPRD25(unittest.TestCase):
         self.assertTrue(tttrlib.is_pto_file(bundle_path))
         f_bundle = tttrlib.PtoFile()
         self.assertTrue(f_bundle.open(bundle_path, False))
-        self.assertEqual(f_bundle.title(), "PRD-25 Test Container")
+        self.assertEqual(f_bundle.title(), "Executable Container Test")
         f_bundle.close()
 
     def test_add_inspection_data(self):
