@@ -685,8 +685,13 @@ jobs:
   imagej_assemble:
     name: Assemble ImageJ plugin JAR (all platforms)
     needs: [setup, imagej_native]
+    # dev too: the four natives are built there, and a native nothing assembles
+    # is half a signal -- this is the step that stages them into the Maven tree
+    # and runs the headless Command tests. One minute. The two publishing steps
+    # inside are already release-gated, so dev assembles and tests and stops.
     if: >-
       needs.setup.outputs.is_main == 'true' ||
+      needs.setup.outputs.is_dev == 'true' ||
       github.event_name == 'release' ||
       startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
