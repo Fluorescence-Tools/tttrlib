@@ -1182,13 +1182,11 @@ jobs:
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *-musllinux_* cp314-* cp314t-* cp313t-*"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_BUILD_FRONTEND: "build[uv]"
+          # SCCACHE_GHA_ENABLED and the launchers are set in pyproject.toml's
+          # [tool.cibuildwheel.windows.environment]; setting CIBW_ENVIRONMENT_WINDOWS
+          # here would replace that table wholesale. The sccache action's
+          # ACTIONS_CACHE_URL and ACTIONS_RUNTIME_TOKEN are inherited from the job.
           SCCACHE_GHA_ENABLED: "true"
-          # cibuildwheel runs the build in a subprocess of this job on Windows --
-          # no container -- so the environment is inherited and these reach CMake.
-          CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_C_COMPILER_LAUNCHER=sccache
-            CMAKE_CXX_COMPILER_LAUNCHER=sccache
-            SCCACHE_GHA_ENABLED=true
       - uses: actions/upload-artifact@v4
         with:
           name: pip-wheels-windows-latest-py${{ matrix.python }}

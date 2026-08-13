@@ -190,6 +190,15 @@ repair-wheel-command = "delvewheel repair --ignore-existing --no-mangle \"tttrli
 CMAKE_GENERATOR = "Ninja"
 CMAKE_C_COMPILER = "cl"
 CMAKE_CXX_COMPILER = "cl"
+# sccache, and it has to live here rather than in the workflow: setting
+# CIBW_ENVIRONMENT_WINDOWS as a job environment variable REPLACES this whole
+# table instead of adding to it, which silently dropped CMAKE_GENERATOR and
+# put the build back on the Visual Studio generator -- where
+# CMAKE_<LANG>_COMPILER_LAUNCHER is ignored outright, so sccache reported
+# zero compile requests while appearing to be configured.
+CMAKE_C_COMPILER_LAUNCHER = "sccache"
+CMAKE_CXX_COMPILER_LAUNCHER = "sccache"
+SCCACHE_GHA_ENABLED = "true"
 Python3_EXECUTABLE = "$PYTHON"
 Python3_ROOT_DIR = "$PYTHON_PREFIX"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
