@@ -186,16 +186,21 @@ jobs:
         # jsonlite reads the conformance case list. It is the only new R
         # dependency the suite needs; hand-rolling a JSON parser in R is worse.
         run: Rscript -e 'install.packages("jsonlite", repos="https://cloud.r-project.org")'
+      # Retries and -f, because this is a plain web server and a blip fails the
+      # job: `Build & test R interface` died here on a run where the host was
+      # answering fine a minute later. -f matters as much as the retries -- without
+      # it curl writes the HTTP error body into the data file and the job fails
+      # later, somewhere else, on a file that is not what it claims to be.
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
-          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
-          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc630_256.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
-          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
-          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       - name: Run R tests
         env:
@@ -266,13 +271,13 @@ jobs:
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
-          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
-          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc630_256.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
-          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
-          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       - name: Run Java tests (JUnit 5)
         env:
@@ -320,13 +325,13 @@ jobs:
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
-          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
-          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc630_256.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
-          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
-          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       # test/js/conformance.test.mjs reads the same case list the Python, R and
       # Java runners read, so the canonical values are shared rather than copied.
@@ -406,13 +411,13 @@ jobs:
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/bh tttr-data/imaging/pq/ht3 tttr-data/pq/ptu
-          curl -sSL -o tttr-data/bh/bh_spc132.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc132.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc132.spc
-          curl -sSL -o tttr-data/bh/bh_spc630_256.spc \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/bh/bh_spc630_256.spc \
             https://www.peulen.xyz/downloads/tttr-data/bh/bh_spc630_256.spc
-          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
-          curl -sSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/pq/ptu/pq_ptu_hh_t3.ptu \
             https://www.peulen.xyz/downloads/tttr-data/pq/ptu/pq_ptu_hh_t3.ptu
       # LD_PRELOAD is required: node is not instrumented, so the ASAN runtime has
       # to be first in the link order or the interceptors never install.
@@ -724,7 +729,7 @@ jobs:
       - name: Download reference test data
         run: |
           mkdir -p tttr-data/imaging/pq/ht3
-          curl -sSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3 \
             https://www.peulen.xyz/downloads/tttr-data/imaging/pq/ht3/pq_ht3_clsm.ht3
       - name: Build plugin JAR (runs the headless Command tests)
         env:
@@ -772,7 +777,7 @@ jobs:
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
           mkdir -p "$SITE"
 
-          curl -sSL -o fiji.zip https://downloads.imagej.net/fiji/latest/fiji-linux64.zip
+          curl --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 20 -fsSL -o fiji.zip https://downloads.imagej.net/fiji/latest/fiji-linux64.zip
           unzip -q fiji.zip && rm fiji.zip
           cp tttrlib_imagej-*.jar Fiji.app/plugins/tttrlib_imagej.jar
 
