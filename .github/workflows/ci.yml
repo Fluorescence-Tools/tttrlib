@@ -287,6 +287,15 @@ jobs:
         with:
           name: conformance-r
           path: conformance-r.json
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── Build & test the Java interface (FindJNI + jarrays.i + JNI) ───────────
 
@@ -356,6 +365,15 @@ jobs:
         with:
           name: conformance-java
           path: conformance-java.json
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── Build & test the JavaScript interface (Node-API + jsarrays.i) ─────────
 
@@ -440,6 +458,15 @@ jobs:
                   if (!(r.nEvents > 0)) { console.error('no events:', s.slice(0,200)); process.exit(1); }
                   console.log('opened', r.nEvents, 'events');
                 });"
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── AddressSanitizer over the JS binding ──────────────────────────────────
   #
@@ -515,6 +542,15 @@ jobs:
         run: |
           export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
           node --expose-gc --test test/js/
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── npm prebuilds and release ─────────────────────────────────────────────
   #
@@ -637,6 +673,15 @@ jobs:
           name: npm-prebuild-${{ matrix.triple }}
           path: ext/js/pkg/prebuilds/${{ matrix.triple }}/
           if-no-files-found: error
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # Merge the five prebuilds into one publishable package and prove it loads.
   # `npm pack` output is uploaded on every qualifying run, so the exact tarball
@@ -804,6 +849,15 @@ jobs:
         with:
           name: imagej-${{ matrix.dir }}
           path: stage
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   imagej_assemble:
     name: Assemble ImageJ plugin JAR (all platforms)
@@ -1083,6 +1137,15 @@ jobs:
           name: conformance-python
           path: conformance-python.json
           if-no-files-found: ignore
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── Publish the conformance coverage matrix ───────────────────────────────
   #
@@ -2127,6 +2190,15 @@ jobs:
           publish_dir: ./doc/_build/pages-root
           keep_files: true
           destination_dir: .
+      # Hit rate, not wall clock: a job whose build time did not move needs
+      # to say whether it missed the cache or is simply not compile-bound.
+      - name: Compiler cache statistics
+        if: always()
+        # Diagnostic only. Without this a job that failed before the sccache
+        # action ran would report `sccache: command not found` as a second,
+        # misleading failure on top of the real one.
+        continue-on-error: true
+        run: sccache --show-stats
 
   # ── Publish to PyPI ─────────────────────────────────────────────────────────
   # Downloads pre-built cibuildwheel artifacts from all platforms, builds an
