@@ -214,7 +214,13 @@ jobs:
       # from scratch every time. CMake reads these as the initial value of the
       # CMAKE_<LANG>_COMPILER_LAUNCHER cache variables, and the IF in
       # CMakeLists.txt defers to an already-set launcher rather than overriding.
+      #
+      # SCCACHE_IDLE_TIMEOUT=0 keeps the server alive for the whole job. It
+      # otherwise exits after 600s idle, taking the counters with it -- a job
+      # that builds and then tests for 14 minutes reported "0 compile requests"
+      # while its cache was in fact hitting 100%.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -306,6 +312,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -384,6 +391,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -484,6 +492,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -586,6 +595,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -772,6 +782,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -985,6 +996,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
@@ -2052,6 +2064,7 @@ jobs:
     env:
       # Compiler cache; see build_test_r_lnx for why this is set here.
       SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IDLE_TIMEOUT: "0"
       CMAKE_C_COMPILER_LAUNCHER: sccache
       CMAKE_CXX_COMPILER_LAUNCHER: sccache
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
