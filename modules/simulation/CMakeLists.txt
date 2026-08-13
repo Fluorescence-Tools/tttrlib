@@ -9,7 +9,7 @@
 # The edge runs the other way, and it is recorded debt: HMMEmission.h includes
 # SimDecay.h and NeuralNet.cpp includes SimPcgRandom.h, so `hmm` and `nn` -- both
 # still inside `legacy` -- depend on the simulator. That is why `legacy` names
-# `sim` in DEPENDS rather than the reverse. See modules/MODULE-DEBT.md.
+# `sim` in DEPENDS rather than the reverse.
 tttrlib_add_module(
     NAME     simulation
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/SimEngine.cpp"

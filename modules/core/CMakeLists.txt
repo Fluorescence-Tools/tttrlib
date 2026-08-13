@@ -10,7 +10,7 @@
 # It had to come out before anything else in the tangled middle. `burst`, `nn`
 # and the rest all sit on both ends of an edge with the residual `legacy` module
 # while core is inside it, and CMake rejects a link cycle between shared
-# libraries outright. See modules/MODULE-DEBT.md.
+# libraries outright.
 #
 # Two things here are core's only by accident of ownership, and both are
 # recorded debt:

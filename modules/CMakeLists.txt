@@ -28,7 +28,8 @@
 #   io/{pq,bh,cz,sm,ps,be,hdf5,hdf5_table,store,pto,image,csv}, pda
 #
 # The order in which they were EXTRACTED is not this order and is not the one
-# originally planned; see modules/MODULE-DEBT.md for why core had to come first.
+# originally planned: core had to come first, because everything else sits on
+# both ends of an edge with the residual `legacy` module until it moves out.
 add_subdirectory(algorithm)  # the algorithm descriptor + register_algorithm; depends on nothing
 add_subdirectory(util)
 add_subdirectory(math)   # Mat.h, NeuralNet, i_lbfgs, RNGs — depends on util

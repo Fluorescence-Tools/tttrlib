@@ -2,7 +2,7 @@
 #
 # algorithm -- the algorithm descriptor and the one registration path.
 #
-# PRD-027 Part 1. Deliberately at the bottom of the dependency graph, depending
+# Deliberately at the bottom of the dependency graph, depending
 # on nothing but a JSON writer: `registry` already depends on `burst` (it calls
 # burst_search_algorithms_json), so an algorithm module that wanted to register
 # itself could not depend on `registry` without closing a cycle. Putting the
