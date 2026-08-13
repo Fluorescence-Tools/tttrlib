@@ -18,7 +18,7 @@ from pathlib import Path
 
 # Import the prototype modules
 from .esrrf_reference import rgc_map
-from .simulate import (
+from simulate import (
     crossing_filaments,
     ring_phantom,
     render_frame,

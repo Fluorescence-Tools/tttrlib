@@ -21,7 +21,7 @@ from esrrf.esrrf_photon import (
     reassign_photons_multichannel,
     _categorical_sample,
 )
-from esrrf.simulate import (
+from simulate import (
     Emitter,
     CLSMScanParameters,
     two_colour_filaments,
