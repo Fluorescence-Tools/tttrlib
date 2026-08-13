@@ -1,6 +1,6 @@
 """An object name is a path, and a name is not an identity.
 
-Two defects filed in ``BUGS.md`` and fixed together, because they are the same
+Two defects fixed together, because they are the same
 question asked twice: *what does a container's object name mean?*
 
 * **It means a relative path** — `disassemble` puts the container back as a
@@ -177,8 +177,11 @@ class TestTheCommandLineUnpacksThroughTheSameGate:
     def _tttr():
         import shutil
         from pathlib import Path
-        for c in (Path(__file__).resolve().parents[2] / "build_new" / "bin" / "tttr",
-                  Path(shutil.which("tttr") or "/nonexistent")):
+        # Every build tree is under build/ -- see the placement check at the top
+        # of CMakeLists.txt -- so glob it rather than naming one.
+        root = Path(__file__).resolve().parents[2]
+        for c in sorted(root.glob("build/*/bin/tttr")) + [
+                Path(shutil.which("tttr") or "/nonexistent")]:
             if c.is_file():
                 return str(c)
         pytest.skip("the tttr CLI is not built")

@@ -156,6 +156,28 @@ IF(BUILD_PYTHON_INTERFACE)
     # times per configure.
     tttrlib_link_all_modules(${MODULE_NAME})
 
+    # -Wfree-nonheap-object, on the generated wrapper only.
+    #
+    # GCC 14 warns on every SWIG wrapper whose function takes a defaulted
+    # container by const reference -- CLSMImage::fill, fida_pch, DecayFit2 and
+    # one TTTR constructor. SWIG puts the default in a stack temporary
+    # (`arg5_defvalue`), points `arg5` at it, and ends the wrapper with
+    # `if (SWIG_IsNewObj(res5)) delete arg5;`. GCC cannot see that the guard and
+    # the pointer are correlated, so it reports the delete as freeing a stack
+    # object.
+    #
+    # It cannot fire. `res5` starts as `SWIG_OLDOBJ`, which is `SWIG_OK`, and
+    # `SWIG_IsNewObj(r)` is `SWIG_IsOK(r) && (r & SWIG_NEWOBJMASK)` -- false
+    # without the mask bit. `res5` only gains that bit from `swig::asptr` on the
+    # path where an argument was supplied, and there `arg5` is the heap pointer.
+    #
+    # Scoped to this target and never to ours: the same warning on a file we
+    # wrote would be a real double-free, and four false sites per Python version
+    # are enough to bury it.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(${MODULE_NAME} PRIVATE -Wno-free-nonheap-object)
+    endif()
+
     # The wrapper itself still needs the OpenMP include dirs and flags: it
     # includes the project headers, and info.h reaches for <omp.h>.
     if(WITH_OPENMP AND OpenMP_CXX_FOUND)

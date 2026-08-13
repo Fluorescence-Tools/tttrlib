@@ -46,17 +46,21 @@ def _find_tttr():
     """The binary under test, with the directory its shared library sits in.
 
     The newest of the build trees rather than the first one that exists: a
-    checkout commonly carries more than one (`build`, `build_new`), and taking
-    whichever comes first alphabetically silently tests a stale binary — which
-    shows up as "Option ... does not exist" for a flag that was added minutes
-    ago. `TTTRLIB_CLI` overrides.
+    checkout commonly carries more than one (`build/dev`, `build/release`), and
+    taking whichever comes first alphabetically silently tests a stale binary —
+    which shows up as "Option ... does not exist" for a flag that was added
+    minutes ago. `TTTRLIB_CLI` overrides.
+
+    Every build tree is under `build/` (see the placement check at the top of
+    CMakeLists.txt), so that is the only directory worth walking.
     """
     override = os.environ.get("TTTRLIB_CLI")
     if override and os.access(override, os.X_OK):
         return override, os.path.dirname(os.path.dirname(os.path.abspath(override)))
     found = []
-    for entry in sorted(os.listdir(_REPO_ROOT)):
-        candidate = os.path.join(_REPO_ROOT, entry, "bin", "tttr")
+    build_root = os.path.join(_REPO_ROOT, "build")
+    for entry in sorted(os.listdir(build_root) if os.path.isdir(build_root) else []):
+        candidate = os.path.join(build_root, entry, "bin", "tttr")
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             found.append(candidate)
     if found:
@@ -696,7 +700,7 @@ def test_the_simulated_populations_come_out_separated(two_detector):
     assert np.median(high) - np.median(low) > 0.4
 
 
-# ---------------------------------------------------------------- PRD-026 R2
+# ------------------------------------------------------------------- stdin
 
 def _run_piped(stdin_path, *args):
     """`tttr` with a file on stdin, which is what `-` reads."""
@@ -714,7 +718,7 @@ def _run_piped(stdin_path, *args):
 
 
 def test_sm_reads_a_piped_stream(sim_file, tmp_path, two_detector):
-    """PRD-026 acceptance criterion 2: `tttr sm -` reads stdin, so one command
+    """`tttr sm -` reads stdin, so one command
     feeds the next without the user managing an intermediate file.
 
     The bursts must be the ones the same input produces from a path — the only
@@ -763,7 +767,7 @@ def test_the_stdin_spool_file_is_cleaned_up(sim_file, tmp_path):
     assert after <= before, f"left behind: {sorted(after - before)}"
 
 
-# ------------------------------------------------------- PRD-026 column order
+# -------------------------------------------------------------- column order
 
 def test_window_columns_come_out_in_file_order(sim_file, tmp_path):
     """A setup's windows are ordered by the file, not alphabetically.

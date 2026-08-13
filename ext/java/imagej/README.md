@@ -30,13 +30,13 @@ in before packaging** — both are gitignored; never commit them.
 
 ```sh
 # from the repository root
-cmake -S . -B build-java -G Ninja \
+cmake -S . -B build/java -G Ninja \
   -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_JAVA_INTERFACE=ON \
   -DBUILD_LIBRARY=OFF -DBUILD_PHOTON_HDF=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build build-java --target tttrlibJava
 
 DST=ext/java/imagej/src/main/java/io/github/fluorescencetools/tttrlib
-cp build-java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java $DST/
+cp build/java/java-pkg/src/main/java/io/github/fluorescencetools/tttrlib/*.java $DST/
 cp ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.java $DST/
 
 # Name the native as System.mapLibraryName expects for the target platform:
@@ -44,7 +44,7 @@ cp ext/java/pkg/src/main/java/io/github/fluorescencetools/tttrlib/NativeLoader.j
 #   darwin-x86-64/, darwin-aarch64/libtttrlibjni.dylib   (.dylib, not .jnilib)
 #   win32-x86-64/tttrlibjni.dll
 mkdir -p ext/java/imagej/src/main/resources/native/darwin-aarch64
-cp build-java/java-pkg/native/libtttrlibjni.* \
+cp build/java/java-pkg/native/libtttrlibjni.* \
    ext/java/imagej/src/main/resources/native/darwin-aarch64/libtttrlibjni.dylib
 
 cd ext/java/imagej && mvn package

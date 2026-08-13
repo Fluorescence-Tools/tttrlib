@@ -10,7 +10,7 @@ interface fragments in `ext/python/`). Two routes:
 ### Via CMake (developer build)
 
 ```sh
-cmake -S . -B build-r -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_R_INTERFACE=ON
+cmake -S . -B build/r -DBUILD_PYTHON_INTERFACE=OFF -DBUILD_R_INTERFACE=ON
 cmake --build build-r --target tttrlibR
 ```
 

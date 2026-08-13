@@ -44,7 +44,7 @@ const REPO_ROOT = path.resolve(PKG_DIR, '..', '..', '..');
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
   const opts = {
-    build: path.join(REPO_ROOT, 'build-js-prebuild'),
+    build: path.join(REPO_ROOT, 'build', 'js-prebuild'),
     out: path.join(PKG_DIR, 'prebuilds'),
     jobs: String(os.availableParallelism ? os.availableParallelism() : os.cpus().length),
     configure: true,

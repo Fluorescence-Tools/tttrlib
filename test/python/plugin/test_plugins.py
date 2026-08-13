@@ -30,10 +30,11 @@ MAGIC = b"EXMPL001"
 def _plugin_binary():
     """The example plugin, as built by -DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON.
 
-    Searched for in any build directory, not only the scikit-build `build/<tag>/`
-    layout: a developer configuring into `build_new/` or `cmake-build-debug/`
-    otherwise sees this whole file skip with a message telling them to enable an
-    option they already enabled.
+    Searched for under `build/` at any depth, not only the scikit-build
+    `build/<tag>/` layout: a developer configuring into `build/dev` otherwise
+    sees this whole file skip with a message telling them to enable an option
+    they already enabled. Every build tree is under `build/` -- see the
+    placement check at the top of CMakeLists.txt.
     """
     override = os.environ.get("TTTRLIB_EXAMPLE_PLUGIN")
     if override:
@@ -41,8 +42,9 @@ def _plugin_binary():
         return p if p.exists() else None
     root = Path(__file__).resolve().parents[3]
     suffix = {"darwin": ".dylib", "win32": ".dll"}.get(sys.platform, ".so")
-    hits = sorted(root.glob(f"build*/examples/plugin/tttrlib_example{suffix}"))
-    hits += sorted(root.glob(f"build*/*/examples/plugin/tttrlib_example{suffix}"))
+    hits = sorted(root.glob(f"build/examples/plugin/tttrlib_example{suffix}"))
+    hits += sorted(root.glob(f"build/*/examples/plugin/tttrlib_example{suffix}"))
+    hits += sorted(root.glob(f"build/*/*/examples/plugin/tttrlib_example{suffix}"))
     return hits[-1] if hits else None
 
 
@@ -485,7 +487,7 @@ def test_a_plugin_burst_search_runs_by_name(plugin_dir):
 
 
 def test_a_plugin_burst_search_is_reachable_through_burst_search(plugin_dir):
-    """PRD-032 criterion 4: a search a plugin contributed is callable through
+    """A search a plugin contributed is callable through
     ``TTTR.burst_search(name, ...)``, the same door every built-in uses.
 
     Before the dispatch table this was not merely unsupported — it was silently

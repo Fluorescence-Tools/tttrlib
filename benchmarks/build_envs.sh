@@ -25,12 +25,16 @@ build flimlib 3.10 flimlib numpy scipy matplotlib
 # 2. reading — ptufile (Gohlke) PTU reader
 build read 3.10 ptufile numpy tifffile matplotlib
 
+# Competitors come from upstream, not from a clone in junk/: that directory is
+# disposable by design, and a benchmark that silently depends on whichever
+# working copy happens to be sitting there is not reproducible.
+
 # 3. PyBroMo — Brownian-motion single-molecule simulator
-build pybromo 3.10 "$ROOT/../junk/PyBroMo" numpy scipy tables matplotlib pandas numba
+build pybromo 3.10 "git+https://github.com/OpenSMFS/PyBroMo.git" numpy scipy tables matplotlib pandas numba
 
 # 4. FRETBursts — burst analysis (has Cython ext)
 build fretbursts 3.10 numpy scipy matplotlib pandas lmfit numba seaborn tables phconvert
-VIRTUAL_ENV="$VENVS/fretbursts" uv pip install "$ROOT/../junk/FRETBursts" >>"$LOGS/fretbursts.log" 2>&1
+VIRTUAL_ENV="$VENVS/fretbursts" uv pip install "git+https://github.com/OpenSMFS/FRETBursts.git" >>"$LOGS/fretbursts.log" 2>&1
 echo "=== [fretbursts] repo install rc=$? ==="
 
 # 5. FLIMKit — needs py>=3.12; FLIM/phasor fitting deps + MLX for the GPU backend
