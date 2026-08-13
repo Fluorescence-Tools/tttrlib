@@ -50,7 +50,57 @@ jobs:
       src_matrix: ${{ steps.check.outputs.src_matrix }}
       has_src: ${{ steps.check.outputs.has_src }}
       lane: ${{ steps.check.outputs.lane }}
+      docs_changed: ${{ steps.docs.outputs.docs_changed }}
     steps:
+      # Rebuilding and redeploying the site for a change that cannot alter a
+      # rendered page is pure cost -- three consecutive commits touching only
+      # ci.yml each rebuilt and redeployed a byte-identical site. Ask the API
+      # which files moved instead of cloning to find out: setup gates every
+      # other job, so it has to stay cheap, and a blobless full-history
+      # checkout here would put ~1 min in front of the entire run.
+      #
+      # Anything unexpected -- a release, a force push, a first push, an API
+      # error -- answers "rebuild". A stale published site is a worse failure
+      # than a wasted run, so the fallback is never "skip".
+      - id: docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          if [[ "${{ github.event_name }}" != "push" ]]; then
+            echo "docs_changed=true" >> $GITHUB_OUTPUT
+            echo "not a push (${{ github.event_name }}) -- building docs"; exit 0
+          fi
+          BEFORE="${{ github.event.before }}"
+          if [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]]; then
+            echo "docs_changed=true" >> $GITHUB_OUTPUT
+            echo "no usable base commit -- building docs"; exit 0
+          fi
+          if ! FILES=$(gh api --paginate \
+                 "repos/${{ github.repository }}/compare/$BEFORE...${{ github.sha }}" \
+                 --jq '.files[].filename'); then
+            echo "docs_changed=true" >> $GITHUB_OUTPUT
+            echo "compare API failed -- building docs"; exit 0
+          fi
+          if [[ -z "$FILES" ]]; then
+            echo "docs_changed=true" >> $GITHUB_OUTPUT
+            echo "compare returned no files -- building docs"; exit 0
+          fi
+          # doc/ and examples/ are rendered directly; modules/ and ext/python/
+          # carry the docstrings Doxygen and autodoc read; the two build files
+          # decide what the autodoc import gets; ci.yml is here so a change to
+          # the docs job itself is actually exercised rather than deferred to
+          # whenever someone next edits a source file.
+          PATTERN='^(doc/|examples/|modules/|ext/python/|pyproject\.toml|CMakeLists\.txt|README\.md|CHANGELOG\.md|\.github/workflows/ci\.yml)'
+          if echo "$FILES" | grep -qE "$PATTERN"; then
+            echo "docs_changed=true" >> $GITHUB_OUTPUT
+            echo "docs-affecting files changed:"
+            echo "$FILES" | grep -E "$PATTERN" | sed 's/^/  /'
+          else
+            echo "docs_changed=false" >> $GITHUB_OUTPUT
+            echo "no docs-affecting files in $(echo "$FILES" | wc -l) changed:"
+            echo "$FILES" | sed 's/^/  /'
+          fi
       - id: check
         run: |
           BRANCH="${{ github.ref }}"
@@ -1910,8 +1960,8 @@ jobs:
   # build_and_test to `needs` and to the branch clause below.
   build_docs:
     name: Build Documentation
-    needs: [test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx, test_conda_win,
-            build_and_test]
+    needs: [setup, test_pip_lnx, test_pip_osx, test_pip_win, test_conda_lnx, test_conda_osx,
+            test_conda_win, build_and_test]
     # Two gates, because the two branches prove the code different ways: main
     # runs the packaging tests, dev runs the source build. Each waits for the one
     # it actually has -- a skipped job's result is 'skipped', never 'success', so
@@ -1922,7 +1972,8 @@ jobs:
         github.event_name == 'release' ||
         (
           github.ref == 'refs/heads/dev' &&
-          needs.build_and_test.result == 'success'
+          needs.build_and_test.result == 'success' &&
+          needs.setup.outputs.docs_changed == 'true'
         ) ||
         (
           github.ref == 'refs/heads/main' &&
