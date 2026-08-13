@@ -156,7 +156,19 @@ jobs:
     name: Build & test R interface (lnx)
     needs: swig_multilang
     runs-on: ubuntu-latest
+    env:
+      # sccache, via the same GitHub Actions cache backend the Windows wheel
+      # build uses. CMakeLists.txt has looked for a compiler launcher since the
+      # ccache option was added, but nothing on Linux or macOS ever put one on
+      # PATH, so the wiring never fired -- ~74 min of C++ per run was recompiled
+      # from scratch every time. CMake reads these as the initial value of the
+      # CMAKE_<LANG>_COMPILER_LAUNCHER cache variables, and the IF in
+      # CMakeLists.txt defers to an already-set launcher rather than overriding.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       # Pin R to a version compatible with the SWIG release on the runner.
       # SWIG's R runtime lags new R internals (e.g. R 4.6 made CHARACTER_POINTER
@@ -232,7 +244,13 @@ jobs:
     name: Build & test Java interface (lnx)
     needs: swig_multilang
     runs-on: ubuntu-latest
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
@@ -295,7 +313,13 @@ jobs:
     name: Build & test JavaScript interface (lnx)
     needs: swig_multilang
     runs-on: ubuntu-latest
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -380,7 +404,13 @@ jobs:
     name: ASAN over the JavaScript binding (lnx)
     needs: build_test_js_lnx
     runs-on: ubuntu-latest
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -467,7 +497,13 @@ jobs:
           - { os: macos-15,         triple: darwin-arm64 }
           - { os: windows-2022,     triple: win32-x64 }
     runs-on: ${{ matrix.os }}
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -638,7 +674,13 @@ jobs:
           - { os: macos-15,       dir: darwin-aarch64 }
           - { os: windows-2022,   dir: win32-x86-64 }
     runs-on: ${{ matrix.os }}
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
@@ -836,7 +878,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.src_matrix) }}
+    env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       # fetch-depth: 0 because setuptools_scm reads the tags (pyproject.toml,
       # `version.provider`). blob:none because the pack is 1.45 GB of test data
       # deleted long ago -- the filter keeps every commit and tag and fetches
@@ -882,8 +930,6 @@ jobs:
         if: runner.os == 'Windows'
         with:
           arch: x64
-      - uses: mozilla-actions/sccache-action@v0.0.9
-        if: runner.os == 'Windows'
       # actions/cache's `path` is evaluated from the `env` context, which holds
       # only what a workflow, job or step declared -- not the runner image's own
       # environment. VCPKG_INSTALLATION_ROOT is the latter, so
@@ -934,10 +980,9 @@ jobs:
           echo "HDF5_ROOT=$root" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$root" >> $env:GITHUB_ENV
           echo "PATH=$root\bin;$env:PATH" >> $env:GITHUB_ENV
+          # The sccache launcher and SCCACHE_GHA_ENABLED are job-level env now,
+          # for every OS. Only the generator is Windows-specific.
           echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-          echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $env:GITHUB_ENV
-          echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $env:GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $env:GITHUB_ENV
       - name: Cache test data
         id: cache
         uses: actions/cache@v4
@@ -1891,10 +1936,15 @@ jobs:
       )
     runs-on: ubuntu-latest
     env:
+      # Compiler cache; see build_test_r_lnx for why this is set here.
+      SCCACHE_GHA_ENABLED: "true"
+      CMAKE_C_COMPILER_LAUNCHER: sccache
+      CMAKE_CXX_COMPILER_LAUNCHER: sccache
       TTTRLIB_DATA: ${{ github.workspace }}/tttr-data
       BUILD_TIER: 4
       TTTRLIB_DOCS_EXECUTE_EXAMPLES: "0"
     steps:
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
