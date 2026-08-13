@@ -78,8 +78,8 @@ BrightEyes `.ttr` (a bare word stream with no header), FLIM LABS (read-only).
         if control == 0:
             # Not a writer defect and not a streaming one: the bytes are right and
             # detection cannot identify them, so opening by name gives an empty
-            # TTTR. Filed in BUGS.md; TTTR(path, container) reads these back whole.
-            return "not re-detected by name (see BUGS.md)"
+            # TTTR. TTTR(path, container) reads these back whole.
+            return "not re-detected by name"
         if streamed != control:
             return "STREAMING LOST EVENTS"
         if macro_ok and micro_ok:
@@ -199,7 +199,7 @@ BrightEyes `.ttr` (a bare word stream with no header), FLIM LABS (read-only).
         print("\n'not re-detected by name' is neither: those files are written")
         print("correctly and read back whole with TTTR(path, container_type). What")
         print("fails is identifying them from the path, and TTTR(path) then returns")
-        print("an EMPTY object instead of raising. Filed in BUGS.md.")
+        print("an EMPTY object instead of raising.")
 
 
     if __name__ == "__main__":

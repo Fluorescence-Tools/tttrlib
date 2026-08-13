@@ -31533,7 +31533,14 @@
 
 <span class="sd">        CLSMFrame::get_lines</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMFrame_get_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMFrame_get_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">val</span> <span class="ow">or</span> <span class="p">()):</span>
+            <span class="n">_e</span><span class="o">.</span><span class="n">_keepalive_owner</span> <span class="o">=</span> <span class="bp">self</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_tttr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -32125,7 +32132,14 @@
 <span class="sd">        Get the frames in the CLSMImage.  </span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMImage_get_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMImage_get_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">val</span> <span class="ow">or</span> <span class="p">()):</span>
+            <span class="n">_e</span><span class="o">.</span><span class="n">_keepalive_owner</span> <span class="o">=</span> <span class="bp">self</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -32467,7 +32481,14 @@
 <span class="sd">        frame: int</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMImage_get_frame_for_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">_tttrlib</span><span class="o">.</span><span class="n">CLSMImage_get_frame_for_channel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span><span class="o">.</span><span class="n">_keepalive_owner</span> <span class="o">=</span> <span class="bp">self</span>
+
+
+        <span class="k">return</span> <span class="n">val</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>

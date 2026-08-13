@@ -1245,8 +1245,8 @@ BrightEyes <code class="xref any docutils literal notranslate"><span class="pre"
     <span class="k">if</span> <span class="n">control</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="c1"># Not a writer defect and not a streaming one: the bytes are right and</span>
         <span class="c1"># detection cannot identify them, so opening by name gives an empty</span>
-        <span class="c1"># TTTR. Filed in BUGS.md; TTTR(path, container) reads these back whole.</span>
-        <span class="k">return</span> <span class="s2">&quot;not re-detected by name (see BUGS.md)&quot;</span>
+        <span class="c1"># TTTR. TTTR(path, container) reads these back whole.</span>
+        <span class="k">return</span> <span class="s2">&quot;not re-detected by name&quot;</span>
     <span class="k">if</span> <span class="n">streamed</span> <span class="o">!=</span> <span class="n">control</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;STREAMING LOST EVENTS&quot;</span>
     <span class="k">if</span> <span class="n">macro_ok</span> <span class="ow">and</span> <span class="n">micro_ok</span><span class="p">:</span>
@@ -1366,7 +1366,7 @@ BrightEyes <code class="xref any docutils literal notranslate"><span class="pre"
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&#39;not re-detected by name&#39; is neither: those files are written&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;correctly and read back whole with TTTR(path, container_type). What&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fails is identifying them from the path, and TTTR(path) then returns&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;an EMPTY object instead of raising. Filed in BUGS.md.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;an EMPTY object instead of raising.&quot;</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

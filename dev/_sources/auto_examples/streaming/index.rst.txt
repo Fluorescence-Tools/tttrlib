@@ -15,7 +15,7 @@ Files
 - ``plot_streaming_bursts.py`` — Sliding-window burst detection
 - ``plot_streaming_flim.py`` — Incremental TCSPC decay histogram and FLIM phasor
 
-A combined Jupyter notebook tutorial is at ``docs/streaming_tutorial.ipynb``.
+A combined Jupyter notebook tutorial is at ``doc/streaming_tutorial.ipynb``.
 
 All examples use synthetic data and run without test files.
 
