@@ -168,7 +168,10 @@ nobody asked for that path. Same trailing-param pattern applies if wanted.
   100-point R grid, target 1.0 — converges to chisq 1.0000 in 157 QP steps
   (~4 s in C++); recovery mean 44.2 Å / sd 5.1 Å against truth 45/4, with
   bands wide enough to catch both classic MEM failure modes (spiky collapse,
-  over-regularised smear).
+  over-regularised smear). The same fixture drives the gallery example
+  `examples/fluorescence_decay/plot_maxent_fret_recovery.py` (fixed seeds),
+  which generates `doc/img/maxent_fret_distance_recovery.png` — the figure
+  showing all three regularisation regimes side by side.
 - **Monotonicity of chisq(nu)** asserted empirically through both public
   surfaces (`tcspc_run_mem` sweep; `decay_pattern_fit` kMaxEnt sweep).
 - **Both impossible-target directions degrade gracefully** (low → floor fit,

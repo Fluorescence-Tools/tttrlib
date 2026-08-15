@@ -28,7 +28,10 @@
   classic MEM failure modes), and `mem_dgrad`/`mem_entropy` were extracted
   as shared helpers so `run_mem` and the controller cannot drift on what
   the TEST quantity and S mean. Figure regenerated with the converged
-  solver: `doc/img/maxent_fret_distance_recovery.png`.
+  solver: `doc/img/maxent_fret_distance_recovery.png`; its permanent
+  generator is the gallery example
+  `examples/fluorescence_decay/plot_maxent_fret_recovery.py` (fixed seeds,
+  ~50 s end to end, prints the converged nu/chisq).
 
 ## 2026-08-13 (25th entry)
 
