@@ -10,6 +10,7 @@ test on data whose answer is known by construction.
 import unittest
 
 import numpy as np
+import pytest
 import tttrlib
 
 
@@ -349,6 +350,463 @@ class TestTcspcMemFret(unittest.TestCase):
         # and concentrated, not smeared over the grid
         near = (np.abs(R - R_true) <= 5.0)
         self.assertGreater(p[near].sum() / p.sum(), 0.8)
+
+    @pytest.mark.slow
+    def test_target_chisq_converges_on_a_steep_fret_case(self):
+        """The regression test for why the search is a joint controller.
+
+        A Gaussian distance distribution simulated at 1e6 photons over a
+        100-point grid makes the chisq(nu) transition steep, and the FIRST
+        design of this search -- an outer bisection cold-starting run_mem
+        once per nu probe -- failed exactly here: 500 cold MEM solves,
+        ~143 s, stuck at chisq 0.98 against a target of 1.0, converged=False
+        (replicated over two runs). The joint (p, nu) controller converges to
+        chisq 1.0000 in 157 warm-started QP steps, ~4 s, all in C++. This
+        test exists so a regression back to an outer root-find (or anything
+        that stalls the controller) fails loudly instead of quietly returning
+        a best-effort fit.
+        """
+        import json as _json
+        n_bins, period = 1024, 25.6
+        dt = period / n_bins
+        t = np.arange(n_bins) * dt
+        irf = np.exp(-0.5 * ((t - 2.0) / 0.3) ** 2)
+        irf /= irf.sum()
+
+        tau0, R0, r_mean_true, r_sd_true = 4.0, 50.0, 45.0, 4.0
+        R_sim = np.linspace(28.0, 72.0, 45)
+        w_sim = np.exp(-0.5 * ((R_sim - r_mean_true) / r_sd_true) ** 2)
+        w_sim /= w_sim.sum()
+        tau_sim = 1.0 / (1.0 / tau0 + (1.0 / tau0) * (R0 / R_sim) ** 6)
+
+        cfg = _json.loads(tttrlib.SimEngine.default_json())
+        cfg["settings"].update(
+            n_ph_max=1000000, max_windows=10 ** 8,
+            n_microtime_channels=n_bins, microtime_resolution=dt,
+            laser_period=period, seed_diffusion=7, seed_emission=8)
+        cfg["background"] = [0.0, 0.0]
+        cfg["species"][0]["decay"] = {
+            "lifetimes": tau_sim.tolist(), "amplitudes": w_sim.tolist(),
+            "dt": dt, "n_bins": n_bins, "irf": irf.tolist()}
+        eng = tttrlib.SimEngine.from_dict(cfg)
+        eng.run()
+        hist = np.bincount(np.asarray(eng.photons()["micro_time"]),
+                           minlength=n_bins).astype(float)[:n_bins]
+
+        R = np.arange(25.0, 75.01, 0.5)
+        res = tttrlib.solve_tcspc_mem_fret(
+            hist.tolist(), irf.tolist(), dt, R.tolist(), tau0, R0,
+            [1.0, tau0], 0.0, 0.0, 0.0, 0.0, 5, n_bins - 1, 0.0,
+            irf_background=0.0, nu=1e-5, max_iter=200, target_chisq=1.0)
+
+        self.assertTrue(res.success)
+        self.assertTrue(res.target_chisq_converged)
+        self.assertAlmostEqual(res.chisq, 1.0, delta=0.01)
+        self.assertGreater(res.nu_used, 0.0)
+
+        p = np.asarray(res.p)
+        p = p / p.sum()
+        r_mean = float((p * R).sum())
+        r_sd = float(np.sqrt((p * (R - r_mean) ** 2).sum()))
+        # measured on this deterministic fixture (fixed seeds): mean 44.15,
+        # sd 5.05. Spiky collapse lands near sd~1, over-regularised smearing
+        # near sd~8+, so these bands catch both classic MEM failure modes.
+        self.assertAlmostEqual(r_mean, r_mean_true, delta=2.0)
+        self.assertAlmostEqual(r_sd, r_sd_true, delta=2.0)
+
+
+# ---------------------------------------------------------------------------
+# Historic MaxEnt: find nu such that chisq(nu) lands at a target.
+#
+# The reference implementation below is the statement of what the C++
+# `run_mem_target_chisq` is supposed to compute -- same role as
+# `_fconv_reference` above for the convolution kernel. It is a JOINT (p, nu)
+# controller, Gull-Skilling style: one bound-QP Newton step on the amplitudes
+# at the current nu, then a secant move of log(nu) in (log nu, log chisq)
+# space toward the target, warm-started throughout. The first design here was
+# an outer bisection that cold-started run_mem once per nu probe, and it
+# FAILED on real problems -- on a 1e6-photon simulated FRET decay over a
+# 100-point distance grid it burned 500 cold MEM solves (~143 s, replicated)
+# stuck at chisq 0.98 against a target of 1.0, while the joint controller
+# lands at chisq 1.0000 in 157 warm-started QP steps (~4 s, all in C++).
+# Two measured facts the design encodes (found prototyping, worth not
+# rediscovering):
+#
+#  * There is NO nu=0 floor precheck. run_mem at exactly nu=0 lands ABOVE the
+#    truly reachable chi-square floor (measured: 1.679 vs 0.919 at nu=1e-8 on
+#    the fixture below), because the unregularised QP on the near-singular
+#    lifetime-grid H is ill-conditioned, while a tiny nu>0 acts as an
+#    interior-point regulariser. The floor is discovered by the controller
+#    driving nu down to its clamp, never asserted analytically.
+#  * The nu->infinity ceiling IS analytic: p -> m, so the ceiling is the
+#    quadratic form evaluated at the prior, no solve needed.
+# ---------------------------------------------------------------------------
+
+def _mem_quadratic(H, g0, const_chi2, p):
+    """chisq = 1/2 p^T H p - g0^T p + const -- run_mem's own objective."""
+    p = np.asarray(p, dtype=float)
+    n = p.size
+    return 0.5 * p @ np.asarray(H, float).reshape(n, n) @ p \
+        - np.asarray(g0, float) @ p + const_chi2
+
+
+def _log_clip(v):
+    return np.where(v > 1e-300, np.log(np.maximum(v, 1e-300)), -1e300)
+
+
+def _mem_dgrad(H, g0, p, m, min_prob):
+    """The Skilling-Bryan TEST quantity, as mem_dgrad in MaxEntQp.cpp computes
+    it: 0.5 * the norm of the difference of the normalised chi^2 / entropy
+    gradients, over coordinates not clamped to the floor."""
+    Hm = np.asarray(H, float).reshape(p.size, p.size)
+    p = np.asarray(p, float)
+    grad_chi2 = Hm @ p - np.asarray(g0, float)
+    grad_S = -_log_clip(p / np.asarray(m, float))
+    mask = p > -1.1 * min_prob
+    gc = np.where(mask, grad_chi2, 0.0)
+    gs = np.where(mask, grad_S, 0.0)
+    nc, ns = np.linalg.norm(gc), np.linalg.norm(gs)
+    if nc == 0.0 or ns == 0.0:
+        return 0.0
+    return 0.5 * float(np.linalg.norm(gc / nc - gs / ns))
+
+
+def _mem_target_chisq_reference(H, g0, m, const_chi2, target,
+                                nu0=1e-5, max_iter=1000, chisq_tol=1e-2,
+                                dgrad_tol=1e-4, min_prob=1e-12):
+    """Reference joint (p, nu) controller with best-observe tracking.
+
+    Returns (result, nu, converged, niter). `result` is the MemTcspcResult of
+    the returned iterate; on the nu->inf endpoint it is None and the caller
+    reads the ceiling from `_mem_quadratic(..., m)`.
+    """
+    import math
+    H = np.asarray(H, float)
+    Hm = H.reshape(m.size, m.size)
+    Hm = 0.5 * (Hm + Hm.T)
+    H = Hm.ravel()
+    m = np.asarray(m, dtype=float)
+    n = m.size
+    tol_abs = chisq_tol * max(target, 1.0)
+
+    ceiling = _mem_quadratic(H, g0, const_chi2, m)
+    if target >= ceiling:
+        return None, math.inf, abs(ceiling - target) <= tol_abs, 0
+
+    p = m.copy()
+    nu = nu0
+    l1 = c1 = l2 = c2 = None
+    best = {"r": None, "nu": 0.0, "err": math.inf}
+    niter_out = 0
+    for it in range(1, max_iter + 1):
+        niter_out = it
+        Delta = 0.5 / np.maximum(p, min_prob)
+        C_eff = Hm + np.diag(nu * Delta)
+        d_eff = -np.asarray(g0, float) + 0.5 * nu * (_log_clip(p / m) - 1.0)
+        p = np.asarray(tttrlib.tcspc_quadpr_bound(
+            C_eff.ravel(), d_eff, min_prob))
+        chisq = _mem_quadratic(H, g0, const_chi2, p)
+        dgrad = _mem_dgrad(H, g0, p, m, min_prob)
+        err = abs(chisq - target)
+
+        if err < best["err"]:
+            best.update(r=p, nu=nu, err=err, chisq=chisq, it=it)
+        if err <= tol_abs and dgrad <= dgrad_tol:
+            from types import SimpleNamespace
+            return (SimpleNamespace(p=p, chisq=chisq, niter=it),
+                    nu, True, it)
+
+        l1, c1, l2, c2 = l2, c2, math.log(nu), chisq
+        new_log_nu = None
+        if (c1 is not None and c1 > 0.0 and c2 > 0.0
+                and abs(l2 - l1) > 1e-14
+                and abs(math.log(c2) - math.log(c1)) > 1e-12):
+            slope = (math.log(c2) - math.log(c1)) / (l2 - l1)
+            if slope > 1e-6:
+                new_log_nu = l2 + (math.log(target) - math.log(c2)) / slope
+        if new_log_nu is None:
+            new_log_nu = math.log(nu) + 0.7 * math.log(
+                max(target, 1e-300) / max(chisq, 1e-300))
+        step = min(max(new_log_nu - math.log(nu), -math.log(30.0)),
+                   math.log(30.0))
+        nu_before = nu
+        nu = min(max(math.exp(math.log(nu) + step), 1e-30), 1e30)
+
+        # floor clamp: nu pinned AND amplitudes stationary -> nothing changes
+        if nu == nu_before and dgrad <= dgrad_tol:
+            break
+
+    b = best
+    from types import SimpleNamespace
+    return (SimpleNamespace(p=(b["r"] if b["r"] is not None else m),
+                            chisq=b.get("chisq", ceiling),
+                            niter=b.get("it", 0)),
+            b["nu"], b["err"] <= tol_abs, niter_out)
+
+
+def _assemble_mean_chi2(decay, irf, dt, tau_grid, fitstart=5):
+    """H, g0, const in run_mem_from_design's mean-chi^2 convention.
+
+    `tcspc_build_fi_lifetimes` returns Fi ALREADY divided by sigma -- do not
+    weight it again (doing so was measured to shift the floor from 0.92 to 43).
+    """
+    n = len(decay)
+    Fi, y, sigma, add = tttrlib.tcspc_build_fi_lifetimes(
+        np.asarray(decay, float), np.asarray(irf, float), dt,
+        np.asarray(tau_grid, float), 0.0, 0.0, 0.0, fitstart, n - 1, 0.0)
+    M = y.size
+    y_w = (y - add) / sigma
+    H = (2.0 / M) * (Fi.T @ Fi)
+    g0 = (2.0 / M) * (Fi.T @ y_w)
+    const_chi2 = float(y_w @ y_w) / M
+    return H, g0, const_chi2
+
+
+class TestMemTargetChisq(unittest.TestCase):
+    """The target-chi^2 search: monotonicity it rests on, hit, and both misses."""
+
+    @classmethod
+    def setUpClass(cls):
+        np.random.seed(1)
+        n, dt = 512, 0.05
+        t = np.arange(n) * dt
+        irf = np.exp(-0.5 * ((t - 1.0) / 0.15) ** 2)
+        irf /= irf.sum()
+        model = np.asarray(tttrlib.tcspc_fconv_single_shot(
+            irf.tolist(), dt, [1.0], [2.5], n - 1))
+        decay = np.random.poisson(model / model.sum() * 200000).astype(float)
+        cls.tau_grid = np.linspace(1.0, 4.0, 60)
+        cls.H, cls.g0, cls.const_chi2 = _assemble_mean_chi2(
+            decay, irf, dt, cls.tau_grid)
+        cls.m = np.full(cls.tau_grid.size, 1.0 / cls.tau_grid.size)
+
+    def test_chisq_is_monotone_in_nu(self):
+        """The property the nu search rests on, checked, not assumed."""
+        chis = []
+        for nu in np.geomspace(1e-8, 1e3, 15):
+            r = tttrlib.tcspc_run_mem(self.H.ravel(), self.g0, self.m,
+                                      self.const_chi2, nu, 200, 1e-4, 1e-12)
+            chis.append(r.chisq)
+        self.assertTrue(np.all(np.diff(chis) >= -1e-9))
+
+    def test_the_ceiling_is_the_quadratic_at_the_prior(self):
+        """chisq(nu) saturates at exactly _mem_quadratic(m) -- the analytic
+        limit the unreachable-high branch relies on."""
+        ceiling = _mem_quadratic(self.H, self.g0, self.const_chi2, self.m)
+        r = tttrlib.tcspc_run_mem(self.H.ravel(), self.g0, self.m,
+                                  self.const_chi2, 1e3, 200, 1e-4, 1e-12)
+        self.assertAlmostEqual(r.chisq, ceiling, delta=1e-3 * ceiling)
+
+    def test_hits_a_reachable_target(self):
+        r, nu, converged, _ = _mem_target_chisq_reference(
+            self.H, self.g0, self.m, self.const_chi2, 1.0)
+        self.assertTrue(converged)
+        self.assertGreater(nu, 0.0)
+        self.assertAlmostEqual(r.chisq, 1.0, delta=0.01)
+        # the target-chisq solution must still be the right answer
+        p = np.asarray(r.p)
+        tau_mean = float((p * self.tau_grid).sum() / p.sum())
+        self.assertAlmostEqual(tau_mean, 2.5, delta=0.2)
+
+    def test_an_unreachably_low_target_degrades_gracefully(self):
+        r, nu, converged, _ = _mem_target_chisq_reference(
+            self.H, self.g0, self.m, self.const_chi2, 1e-12)
+        self.assertFalse(converged)
+        self.assertIsNotNone(r)          # best-observed floor result, no crash
+        self.assertGreater(r.chisq, 0.0)
+
+    def test_an_unreachably_high_target_degrades_gracefully(self):
+        r, nu, converged, _ = _mem_target_chisq_reference(
+            self.H, self.g0, self.m, self.const_chi2, 1e12)
+        self.assertFalse(converged)
+        self.assertEqual(nu, float("inf"))
+
+
+class TestSolveLifetimeTargetChisq(unittest.TestCase):
+    """The C++ auto-nu path (`solve_tcspc_mem_lifetime(target_chisq=...)`)
+    against the Python reference above, on the same decay. The caller's `nu`
+    seeds the joint controller on both sides (1e-5 here)."""
+
+    @classmethod
+    def setUpClass(cls):
+        np.random.seed(1)
+        n, dt = 512, 0.05
+        t = np.arange(n) * dt
+        cls.irf = np.exp(-0.5 * ((t - 1.0) / 0.15) ** 2)
+        cls.irf /= cls.irf.sum()
+        model = np.asarray(tttrlib.tcspc_fconv_single_shot(
+            cls.irf.tolist(), dt, [1.0], [2.5], n - 1))
+        cls.decay = np.random.poisson(
+            model / model.sum() * 200000).astype(float)
+        cls.n, cls.dt = n, dt
+        cls.tau_grid = np.linspace(1.0, 4.0, 60)
+
+    def _solve_cpp(self, target):
+        return tttrlib.solve_tcspc_mem_lifetime(
+            self.decay.tolist(), self.irf.tolist(), self.dt,
+            self.tau_grid.tolist(), 0.0, 0.0, 0.0, 5, self.n - 1, 0.0,
+            nu=1e-5, max_iter=200, target_chisq=target)
+
+    @pytest.mark.slow
+    def test_agrees_with_the_reference_implementation(self):
+        res = self._solve_cpp(1.0)
+        self.assertTrue(res.success)
+        self.assertTrue(res.target_chisq_converged)
+        self.assertAlmostEqual(res.chisq, 1.0, delta=0.01)
+
+        H, g0, c = _assemble_mean_chi2(self.decay, self.irf, self.dt,
+                                       self.tau_grid)
+        m = np.full(self.tau_grid.size, 1.0 / self.tau_grid.size)
+        ref, ref_nu, ref_conv, _ = _mem_target_chisq_reference(H, g0, m, c, 1.0)
+        self.assertTrue(ref_conv)
+        # Same algorithm on the same problem: the found nu and chi-square must
+        # agree to well below the search tolerance.
+        self.assertAlmostEqual(res.chisq, ref.chisq, delta=1e-6)
+        self.assertAlmostEqual(res.nu_used / ref_nu, 1.0, delta=1e-6)
+        np.testing.assert_allclose(np.asarray(res.p), np.asarray(ref.p),
+                                   atol=1e-9)
+
+    def test_the_recovered_lifetime_is_still_right(self):
+        res = self._solve_cpp(1.0)
+        p = np.asarray(res.p)
+        tau_mean = float((p * self.tau_grid).sum() / p.sum())
+        self.assertAlmostEqual(tau_mean, 2.5, delta=0.2)
+
+    def test_disabled_by_default_and_backward_compatible(self):
+        """target_chisq <= 0 must be the untouched fixed-nu path."""
+        res_default = tttrlib.solve_tcspc_mem_lifetime(
+            self.decay.tolist(), self.irf.tolist(), self.dt,
+            self.tau_grid.tolist(), 0.0, 0.0, 0.0, 5, self.n - 1, 0.0,
+            nu=1e-5, max_iter=200)
+        res_disabled = self._solve_cpp(-1.0)
+        self.assertEqual(res_default.chisq, res_disabled.chisq)
+        np.testing.assert_array_equal(np.asarray(res_default.p),
+                                      np.asarray(res_disabled.p))
+        self.assertEqual(res_disabled.nu_used, 1e-5)
+        self.assertTrue(res_disabled.target_chisq_converged)
+
+    def test_an_impossible_target_reports_not_converged(self):
+        res = self._solve_cpp(1e6)
+        self.assertTrue(res.success)
+        self.assertFalse(res.target_chisq_converged)
+
+
+def _simulate_decay_histogram(lifetimes, amplitudes, n_ph, n_bins=1024,
+                               seed=7):
+    """A micro-time histogram from tttrlib's own photon simulator.
+
+    Ground truth is the config, not an analytic curve. Two constraints are
+    load-bearing:
+      * `background` is zeroed -- the simulator's unconfigured background is
+        a delta spike at micro-time 0, not a flat floor, and would bias any
+        lifetime recovery (okf: sim-background-microtime-zero).
+      * the IRF pattern's dt must equal laser_period / n_microtime_channels
+        exactly, or the pattern is mis-binned (okf/design/sim-irf-convolution).
+    A 0.3 ns IRF at 1024 bins keeps the simulator's discrete pattern sampling
+    and the fitter's trapezoidal fconv recursion consistent to below the
+    Poisson noise at 2e5 photons (measured: floor mean-chi^2 0.92; a 0.1 ns
+    IRF at 512 bins leaves a visible model mismatch, floor 1.38).
+    """
+    import json as _json
+    cfg = _json.loads(tttrlib.SimEngine.default_json())
+    period = 25.6
+    dt = period / n_bins
+    t = np.arange(n_bins) * dt
+    irf = np.exp(-0.5 * ((t - 2.0) / 0.3) ** 2)
+    irf /= irf.sum()
+    cfg["settings"].update(
+        n_ph_max=n_ph, max_windows=10 ** 7,
+        n_microtime_channels=n_bins, microtime_resolution=dt,
+        laser_period=period, seed_diffusion=seed, seed_emission=seed + 1)
+    cfg["background"] = [0.0, 0.0]
+    cfg["species"][0]["decay"] = {
+        "lifetimes": list(lifetimes), "amplitudes": list(amplitudes),
+        "dt": dt, "n_bins": n_bins, "irf": irf.tolist()}
+    eng = tttrlib.SimEngine.from_dict(cfg)
+    eng.run()
+    micro = np.asarray(eng.photons()["micro_time"])
+    hist = np.bincount(micro, minlength=n_bins).astype(float)[:n_bins]
+    return hist, irf, dt
+
+
+class TestTcspcMemOnSimulatedPhotons(unittest.TestCase):
+    """The solver against data the photon simulator generated.
+
+    Every other recovery test in this file draws Poisson noise on an analytic
+    convolution -- the same forward model the fitter uses, so a shared error
+    would cancel. The simulator samples photons by a separate mechanism
+    (pattern-based micro-time draws per emission event), so agreement here is
+    evidence about the solver, not about one formula agreeing with itself.
+    """
+
+    @pytest.mark.slow
+    def test_recovers_a_simulated_lifetime_at_fixed_nu(self):
+        hist, irf, dt = _simulate_decay_histogram([2.5], [1.0], 200000)
+        tau_grid = np.linspace(0.5, 6.0, 56)
+        H, g0, c = _assemble_mean_chi2(hist, irf, dt, tau_grid)
+        m = np.full(tau_grid.size, 1.0 / tau_grid.size)
+        r = tttrlib.tcspc_run_mem(H.ravel(), g0, m, c, 1e-5, 200, 1e-4, 1e-12)
+        self.assertTrue(r.success)
+        p = np.asarray(r.p)
+        tau_mean = float((p * tau_grid).sum() / p.sum())
+        self.assertAlmostEqual(tau_mean, 2.5, delta=0.25)
+
+    @pytest.mark.slow
+    def test_target_chisq_search_recovers_the_simulated_lifetime(self):
+        hist, irf, dt = _simulate_decay_histogram([2.5], [1.0], 200000)
+        tau_grid = np.linspace(0.5, 6.0, 56)
+        n = hist.size
+
+        res = tttrlib.solve_tcspc_mem_lifetime(
+            hist.tolist(), irf.tolist(), dt, tau_grid.tolist(),
+            0.0, 0.0, 0.0, 5, n - 1, 0.0,
+            nu=1e-5, max_iter=200, target_chisq=1.0)
+        self.assertTrue(res.success)
+        self.assertTrue(res.target_chisq_converged)
+        self.assertGreater(res.nu_used, 0.0)
+        self.assertAlmostEqual(res.chisq, 1.0, delta=0.01)
+        p = np.asarray(res.p)
+        p = p / p.sum()
+        tau_mean = float((p * tau_grid).sum())
+        self.assertAlmostEqual(tau_mean, 2.5, delta=0.25)
+        near = (tau_grid > 2.0) & (tau_grid < 3.0)
+        self.assertGreater(p[near].sum(), 0.7)
+
+        # and the C++ search agrees with the Python reference on sim data too
+        H, g0, c = _assemble_mean_chi2(hist, irf, dt, tau_grid)
+        m = np.full(tau_grid.size, 1.0 / tau_grid.size)
+        ref, ref_nu, ref_conv, _ = _mem_target_chisq_reference(H, g0, m, c, 1.0)
+        self.assertTrue(ref_conv)
+        self.assertAlmostEqual(res.chisq, ref.chisq, delta=1e-6)
+        self.assertAlmostEqual(res.nu_used / ref_nu, 1.0, delta=1e-6)
+
+    @pytest.mark.slow
+    def test_two_simulated_lifetimes_come_out_as_two_groups(self):
+        hist, irf, dt = _simulate_decay_histogram([1.0, 4.0], [0.5, 0.5],
+                                                   200000, seed=11)
+        tau_grid = np.linspace(0.5, 6.0, 56)
+        H, g0, c = _assemble_mean_chi2(hist, irf, dt, tau_grid)
+        m = np.full(tau_grid.size, 1.0 / tau_grid.size)
+
+        # Probe the floor first: the systematic sim-vs-fconv discretisation
+        # residual scales with photon count, so a fixed target of exactly 1.0
+        # can sit just below the floor. Targeting floor*1.2 tests the search
+        # mechanism itself without betting on the mismatch's size.
+        floor = tttrlib.tcspc_run_mem(H.ravel(), g0, m, c, 1e-10,
+                                      200, 1e-4, 1e-12).chisq
+        target = max(1.0, floor * 1.2)
+        res = tttrlib.solve_tcspc_mem_lifetime(
+            hist.tolist(), irf.tolist(), dt, tau_grid.tolist(),
+            0.0, 0.0, 0.0, 5, hist.size - 1, 0.0,
+            nu=1e-5, max_iter=200, target_chisq=target)
+        self.assertTrue(res.target_chisq_converged)
+        p = np.asarray(res.p)
+        p = p / p.sum()
+        mass_short = float(p[(tau_grid > 0.5) & (tau_grid < 2.0)].sum())
+        mass_long = float(p[(tau_grid > 3.0) & (tau_grid < 5.5)].sum())
+        self.assertGreater(mass_short, 0.15)
+        self.assertGreater(mass_long, 0.3)
+        self.assertGreater(mass_short + mass_long, 0.6)
 
 
 if __name__ == '__main__':

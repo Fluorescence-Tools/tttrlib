@@ -86,6 +86,24 @@ PatternFitResult decay_pattern_fit(
             const MaxEntResult r = run_mem(H, g0, m, const_term, reg_strength,
                                             max_iter, tol > 0.0 ? tol : 1e-4, 1e-12);
             res.amplitudes = r.p;
+            res.nu_used = reg_strength;
+            break;
+        }
+        case PatternFitMode::kMaxEntTargetChisq: {
+            std::vector<double> H, g0;
+            double const_term = 0.0;
+            build_normal_equations(A, data, {}, n_bins, n_patterns, H, g0, const_term);
+            std::vector<double> m = prior;
+            if (m.empty()) m.assign(n_patterns, 1.0);
+            else if (static_cast<int>(m.size()) != n_patterns)
+                throw std::invalid_argument("decay_pattern_fit: prior.size() must equal patterns.size()");
+            const MemTargetChisqResult r = run_mem_target_chisq(
+                H, g0, m, const_term, /*target_chisq=*/reg_strength,
+                /*nu0=*/1e-5, /*max_iter=*/std::max(max_iter, 1000),
+                /*chisq_tol=*/1e-2, tol > 0.0 ? tol : 1e-4, 1e-12);
+            res.amplitudes = r.result.p;
+            res.nu_used = r.nu;
+            res.target_converged = r.converged;
             break;
         }
     }

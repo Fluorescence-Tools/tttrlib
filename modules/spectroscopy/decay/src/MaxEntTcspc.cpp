@@ -144,6 +144,7 @@ MemTcspcResult tcspc_run_mem(
     res.Q_esm = r.Q_esm;
     res.niter = r.niter;
     res.success = r.success;
+    res.nu_used = nu;
     return res;
 }
 
@@ -197,7 +198,8 @@ static MemTcspcResult run_mem_from_design(
     const std::vector<double>& Fi, const std::vector<double>& y,
     const std::vector<double>& sigma, const std::vector<double>& fit_additive,
     int n, double nu, int max_iter, double tol, double min_prob,
-    const std::vector<double>& prior
+    const std::vector<double>& prior,
+    double target_chisq = -1.0
 ) {
     MemTcspcResult res;
     int M = static_cast<int>(y.size());
@@ -237,7 +239,38 @@ static MemTcspcResult run_mem_from_design(
     double msum = std::accumulate(m.begin(), m.end(), 0.0);
     for (auto& v : m) v /= msum;
 
-    return tcspc_run_mem(H, g0, m, const_chi2, nu, max_iter, tol, min_prob);
+    if (target_chisq <= 0.0) {
+        MemTcspcResult r = tcspc_run_mem(H, g0, m, const_chi2, nu,
+                                         max_iter, tol, min_prob);
+        r.nu_used = nu;
+        return r;
+    }
+
+    // Historic-MaxEnt auto-nu: the caller's `nu` seeds the joint controller
+    // (MaxEntQp.h), which finds the nu whose chi-square lands at target_chisq.
+    // The controller cap is floored: max_iter is sized for ONE fixed-nu MEM
+    // solve (~20 converged iterations on real fixtures), while the joint
+    // interleaving of nu moves needs several hundred (measured 647 on the
+    // lifetime fixture), so a fixed-nu-appropriate cap would silently
+    // under-run the search.
+    const MemTargetChisqResult tr = run_mem_target_chisq(
+        H, g0, m, const_chi2, target_chisq,
+        /*nu0=*/nu, /*max_iter=*/std::max(max_iter, 1000),
+        /*chisq_tol=*/1e-2, tol, min_prob);
+    MemTcspcResult r;
+    r.p = tr.result.p;
+    r.chisq = tr.result.chisq;
+    r.S = tr.result.S;
+    r.Q = tr.result.Q;
+    r.p_esm = tr.result.p_esm;
+    r.chisq_esm = tr.result.chisq_esm;
+    r.S_esm = tr.result.S_esm;
+    r.Q_esm = tr.result.Q_esm;
+    r.niter = tr.result.niter;
+    r.success = tr.result.success;
+    r.nu_used = tr.nu;
+    r.target_chisq_converged = tr.converged;
+    return r;
 }
 
 MemTcspcResult solve_tcspc_mem_lifetime(
@@ -246,7 +279,8 @@ MemTcspcResult solve_tcspc_mem_lifetime(
     double timeshift, double background, double lamp_scatter,
     int fitstart, int fitstop, double period,
     double nu, int max_iter, double tol, double min_prob,
-    const std::vector<double>& prior
+    const std::vector<double>& prior,
+    double target_chisq
 ) {
     MemTcspcResult res;
     int n_tau = static_cast<int>(tau.size());
@@ -257,7 +291,8 @@ MemTcspcResult solve_tcspc_mem_lifetime(
                              lamp_scatter, fitstart, fitstop, period,
                              Fi, y, sigma, fit_additive);
     return run_mem_from_design(Fi, y, sigma, fit_additive, n_tau,
-                               nu, max_iter, tol, min_prob, prior);
+                               nu, max_iter, tol, min_prob, prior,
+                               target_chisq);
 }
 
 // gfit e1te2.m: all pairwise products of two [c,tau,...] sets, lifetimes
@@ -359,7 +394,8 @@ MemTcspcResult solve_tcspc_mem_fret(
     int fitstart, int fitstop, double period,
     double irf_background,
     double nu, int max_iter, double tol, double min_prob,
-    const std::vector<double>& prior
+    const std::vector<double>& prior,
+    double target_chisq
 ) {
     MemTcspcResult res;
     int n_R = static_cast<int>(R.size());
@@ -371,7 +407,8 @@ MemTcspcResult solve_tcspc_mem_fret(
                              fitstart, fitstop, period, irf_background,
                              Fi, y, sigma, fit_additive);
     return run_mem_from_design(Fi, y, sigma, fit_additive, n_R,
-                               nu, max_iter, tol, min_prob, prior);
+                               nu, max_iter, tol, min_prob, prior,
+                               target_chisq);
 }
 
 } // namespace tttrlib

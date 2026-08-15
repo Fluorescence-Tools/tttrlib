@@ -175,8 +175,15 @@ class TestTheCommandLineUnpacksThroughTheSameGate:
 
     @staticmethod
     def _tttr():
+        import os
         import shutil
         from pathlib import Path
+        # An explicit override wins (same env var as the CLI tests in
+        # test/misc): a build tree outside build/ -- or a PATH tttr that is
+        # stale or broken -- must not decide which binary is tested.
+        override = os.environ.get("TTTRLIB_CLI")
+        if override:
+            return override
         # Every build tree is under build/ -- see the placement check at the top
         # of CMakeLists.txt -- so glob it rather than naming one.
         root = Path(__file__).resolve().parents[2]

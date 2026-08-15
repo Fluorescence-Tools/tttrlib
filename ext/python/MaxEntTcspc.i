@@ -248,13 +248,15 @@ tttrlib::MemTcspcResult my_solve_tcspc_mem_lifetime(
         int fitstart, int fitstop, double period,
         double nu = 1e-5,
         int max_iter = 200, double tol = 1e-4, double min_prob = 1e-12,
-        double* prior = nullptr, int n_prior = 0
+        double* prior = nullptr, int n_prior = 0,
+        double target_chisq = -1.0
 ){
     return tttrlib::solve_tcspc_mem_lifetime(
         mem_in(decay, n_decay), mem_in(lamp, n_lamp), dt, mem_in(tau, n_tau),
         timeshift, background, lamp_scatter,
         fitstart, fitstop, period,
-        nu, max_iter, tol, min_prob, mem_in(prior, n_prior)
+        nu, max_iter, tol, min_prob, mem_in(prior, n_prior),
+        target_chisq
     );
 }
 
@@ -271,14 +273,16 @@ tttrlib::MemTcspcResult my_solve_tcspc_mem_fret(
         double irf_background = 0.0,
         double nu = 1e-5,
         int max_iter = 200, double tol = 1e-4, double min_prob = 1e-12,
-        double* prior = nullptr, int n_prior = 0
+        double* prior = nullptr, int n_prior = 0,
+        double target_chisq = -1.0
 ){
     return tttrlib::solve_tcspc_mem_fret(
         mem_in(decay, n_decay), mem_in(lamp, n_lamp), dt, mem_in(R, n_R),
         tau0, R0, mem_in(donly, n_donly), x_donly,
         timeshift, background, lamp_scatter,
         fitstart, fitstop, period, irf_background,
-        nu, max_iter, tol, min_prob, mem_in(prior, n_prior)
+        nu, max_iter, tol, min_prob, mem_in(prior, n_prior),
+        target_chisq
     );
 }
 

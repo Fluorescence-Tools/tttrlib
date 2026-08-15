@@ -36,6 +36,11 @@ struct MemTcspcResult {
     double Q_esm = 0.0;
     int niter = 0;
     bool success = false;
+    double nu_used = 0.0;         ///< the nu the fit ran at: the given nu on the
+                                  ///< fixed-nu path, the nu found by the search
+                                  ///< when target_chisq > 0 was requested
+    bool target_chisq_converged = true; ///< only meaningful when target_chisq > 0
+                                        ///< was requested; always true otherwise
 };
 
 /*!
@@ -128,7 +133,14 @@ void tcspc_build_fi_lifetimes(
  * \param nu entropy regularisation
  * \param max_iter, tol, min_prob MEM settings
  * \param prior optional prior amplitudes (length n_tau); empty = uniform
- */
+  * \param target_chisq opt-in historic-MaxEnt mode: <= 0 (the default)
+  *        disables it and the fixed `nu` above is used unchanged; > 0 finds
+  *        nu automatically via `run_mem_target_chisq` so the fit's chi-square
+  *        lands at this value, and `nu` instead SEEDS that search. Units:
+  *        this solver's chi-square is a MEAN over the fit bins, so the
+  *        classic target here is ~1.0, NOT the number of bins. Watch
+  *        `MemTcspcResult::target_chisq_converged`.
+  */
 MemTcspcResult solve_tcspc_mem_lifetime(
     const std::vector<double>& decay,
     const std::vector<double>& lamp,
@@ -138,7 +150,8 @@ MemTcspcResult solve_tcspc_mem_lifetime(
     int fitstart, int fitstop, double period,
     double nu = 1e-5,
     int max_iter = 200, double tol = 1e-4, double min_prob = 1e-12,
-    const std::vector<double>& prior = {}
+    const std::vector<double>& prior = {},
+    double target_chisq = -1.0
 );
 
 /*!
@@ -205,7 +218,10 @@ void tcspc_build_fi_distances(
  * \param nu entropy regularisation
  * \param max_iter, tol, min_prob MEM settings
  * \param prior optional prior amplitudes (length n_R); empty = uniform
- */
+  * \param target_chisq opt-in historic-MaxEnt auto-nu, exactly as on
+  *        \ref solve_tcspc_mem_lifetime (mean-chi^2 units, so a classic
+  *        target is ~1.0; <= 0 disables, and `nu` then applies unchanged).
+  */
 MemTcspcResult solve_tcspc_mem_fret(
     const std::vector<double>& decay,
     const std::vector<double>& lamp,
@@ -218,7 +234,8 @@ MemTcspcResult solve_tcspc_mem_fret(
     double irf_background = 0.0,
     double nu = 1e-5,
     int max_iter = 200, double tol = 1e-4, double min_prob = 1e-12,
-    const std::vector<double>& prior = {}
+    const std::vector<double>& prior = {},
+    double target_chisq = -1.0
 );
 
 } // namespace tttrlib
