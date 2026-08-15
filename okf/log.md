@@ -1,5 +1,24 @@
 # Bundle update log
 
+## 2026-08-15 (27th entry)
+
+* **PRD-003 (docs deploy via rattler) closed as superseded, and a
+  `Superseded` status marker added to the PRD lifecycle.** Checking it
+  against ground truth before starting work found its foundation deleted:
+  the 2026-08-13 CI cost rework removed the `build_conda_docs` rattler job
+  (`db7daa710`, `d48521f3f`), leaving a comment where it sat explaining why
+  the M1 wiring was deliberately *not* finished — the job's `docs-html`
+  artifact had never been downloaded by anything, and `build_docs` compiles
+  the library for autodoc regardless, that compile being the expensive part
+  rather than the Sphinx render, so an artifact round-trip would have added
+  cost instead of removing the duplicate. The PRD's underlying goal (one doc
+  build path in CI, not two) is true by construction now; `recipes/docs/`
+  stays as the documented reproducible offline build (`BUILDING.md`), just
+  without a CI consumer. Closed honestly rather than implemented against a
+  deleted foundation; new `🚫 Superseded` lifecycle state ("overtaken by
+  events; do not implement; kept for the record") since ⚫ Deferred means
+  valid-but-parked, which this is not.
+
 ## 2026-08-15 (26th entry)
 
 * **Historic-MaxEnt search redesigned after the bisection failed on a steep

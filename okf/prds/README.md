@@ -14,6 +14,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | 🟡 `In Progress` | Implementation started. |
 | 🟢 `Done` | Shipped and verified. |
 | ⚫ `Deferred` | Valid but parked. |
+| 🚫 `Superseded` | Overtaken by events; do not implement. Kept for the record. |
 
 ## Index
 
@@ -21,7 +22,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 |---|---|---|
 | [001](PRD-001-cross-language-test-parity.md) | Cross-language test parity (Python ⇄ R ⇄ Java) | 🟢 Done |
 | [002](PRD-002-java-nd-output-array-marshalling.md) | Java N-dimensional / generic output-array marshalling | 🟢 Done |
-| [003](PRD-003-docs-deploy-via-rattler.md) | Documentation deploy via rattler | 🟡 In Progress |
+| [003](PRD-003-docs-deploy-via-rattler.md) | Documentation deploy via rattler | 🚫 Superseded |
 | [004](PRD-004-single-frame-flim-ptu-clsm.md) | Single-frame FLIM PTU CLSM reconstruction | 🟢 Done |
 | [005](PRD-005-photon-simulator.md) | Photon simulator (+ [RNG benchmark](PRD-005-rng-benchmark.md)) | ⚪ Draft |
 | [006](PRD-006-tttr-file-roundtrip-io.md) | TTTR file round-trip I/O for all supported containers | 🟢 Done |
@@ -65,6 +66,13 @@ landed once R and Java wrapped `DataStore` and the eleven `datastore.*` cases
 went in. There is also a third piece the PRD did not ask for: a native
 `.dstore` file, because the PRD's premise that HDF5 is the only way to
 serialise a store is what made it slow. See `doc/saving-tables.rst`.
+
+**003** is superseded, not done: the 2026-08-13 CI cost rework deleted the
+rattler docs job instead of wiring its artifact into the deploy — the
+measured reason (the library compile for autodoc is the expensive part, not
+the Sphinx render) is in the PRD's resolution note and where the job used to
+sit in `ci.yml`. Its underlying goal — one doc build path, not two — is true
+by construction now.
 
 **036** is yellow because only the tttrlib half is done: the kernels, bindings
 and tests landed, and ChiSurf's `flc_2d` still calls its own numba (board ticket

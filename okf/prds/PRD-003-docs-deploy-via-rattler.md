@@ -1,8 +1,28 @@
 # PRD-003 — Documentation deploy via rattler
 
-> **PRD #:** 003 · **Status:** In Progress · **Created:** 2026-07-03 · **Owner:** tpeulen
+> **PRD #:** 003 · **Status:** 🚫 Superseded (2026-08-15) · **Created:** 2026-07-03 · **Owner:** tpeulen
 
-## Summary
+## Resolution (why this is closed, not done)
+
+The 2026-08-13 CI cost rework (see `ci(docs): stop rebuilding and redeploying
+an identical site`, `db7daa710`, and the dev-branch rework `d48521f3f`)
+resolved this PRD's problem in the opposite direction: it **deleted** the
+`build_conda_docs` rattler job instead of wiring its artifact into
+`build_docs`. The rationale, measured from real runs, is recorded in
+`.github/workflows/ci.yml` where the job used to sit: the rattler job's
+`docs-html` artifact was never downloaded by anything, and finishing the M1
+wiring would not have paid for itself — `build_docs` compiles the library
+for autodoc regardless, and that compile, not the Sphinx render, is what
+makes the doc build expensive. A second artifact round-trip would have added
+cost, not removed the duplicate.
+
+What survives of this PRD's goal, and is now true by construction: there is
+exactly **one** doc build path in CI (`build_docs`), so the duplicate-build
+problem that motivated this PRD is gone. `recipes/docs/` remains a working,
+documented recipe (`BUILDING.md`) for reproducible offline doc builds; it
+just has no CI consumer anymore.
+
+## Summary (original text)
 
 Make the gh-pages documentation deployment consume the docs artifact produced by
 the rattler `recipes/docs` build, so the docs are *built once* (reproducibly, via
