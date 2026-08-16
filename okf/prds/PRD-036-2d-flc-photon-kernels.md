@@ -152,15 +152,26 @@ because it is invisible until an import order changes.
 
 ## Definition of Done
 
-- [ ] Kernels in C++ with no fast-math assumptions about the accumulation.
-- [ ] NumPy-typemap bindings; keyword names fixed at the outset.
-- [ ] The seven tests above, all driven by a simulated stream with known
+- [x] Kernels in C++ with no fast-math assumptions about the accumulation.
+      (`Fdc2D.cpp`, int64 accumulators throughout.)
+- [x] NumPy-typemap bindings; keyword names fixed at the outset.
+      (`Fdc2D.i`, `IN_ARRAY` typemaps — and, unusually for this library,
+      all four languages, not just Python.)
+- [x] The seven tests above, all driven by a simulated stream with known
       ground truth, including the single-state negative control.
-- [ ] Benchmarked against ChiSurf's numba kernel at a realistic photon count
+      (`test_fdc2d.py` 10 deterministic cases + `test_fdc2d_simulation.py`
+      6 method cases. Test 1 is deliberately replaced by the
+      separability property that makes the inversion possible — the
+      inversions stay in ChiSurf — see *What the simulation actually
+      showed*.)
+- [x] Benchmarked against ChiSurf's numba kernel at a realistic photon count
       (1e6–1e7 photons, 100 log bins, ~20 lags); matching is success.
+      (1.14x at 1M photons, interleaved A/B best-of-4 — the sequential
+      number is a thermal artefact, see below.)
 - [ ] ChiSurf `flc_2d/core.py` delegates, its five kernels and `import numba`
       are deleted, and `chisurf/test/numba_import_allowlist.txt` loses the line.
-- [ ] The `junk/2D-FLC-code` markers point at this PRD (already done).
+      (Not started — ChiSurf session's, board ticket `T-20260811-14`.)
+- [x] The `junk/2D-FLC-code` markers point at this PRD (already done).
 
 
 ## What the simulation actually showed (2026-08-11)
