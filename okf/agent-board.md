@@ -424,6 +424,39 @@ retired so nobody works the same thing twice.)*
 
 ## Active
 
+- **T-20260816-01 · [tttrlib+chisurf] 2D-FDC log-axis quantization proven vs the
+  original MATLAB and fixed; method papers cited in both repos**
+  - Status: ✅ done (2026-08-16)
+  - Owner: `opencode/glm-5.3`
+  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-16
+  - Why: user demanded proof of PRD-036's parity ("need proof!") and paper
+    references in both repos' docs. Running `TK_Create2DFDC_04.m` itself
+    (Octave) against the library found a real deviation: the .m's log edges
+    are real-valued, so the effective integer edge is the floor, and the
+    kernels quantized to nearest — ~0.5% of pairs in wrong bins, invisible to
+    every prior check (all binned on the kernel's own ticks or a
+    round-recorded fixture).
+  - Resolution: `build_log_ticks` floors (prototype-first: Python dry-run
+    6/6, then one-line C++ port, then production path 9/9 identical to the
+    .m). Fixture recorded from the .m's own output committed as
+    `test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`, pinned by
+    `TestAgainstTheOriginalMatlab`. Round-pinned tests rewritten; chisurf
+    `flc_2d_fdc.npz` re-recorded through the delegated path, parity 7/7.
+    Citations (Crossref-verified DOIs: Ishii & Tahara JPCB 2013 ×2,
+    Kondo et al. PNAS 2019) in `Fdc2D.h`, fcs README, chisurf
+    `flc_2d/{__init__,api,core}.py`. Details in PRD-036's closing section and
+    okf/log.md 28th entry. Uncommitted, awaiting user review.
+  - Touching: **[tttrlib]** `modules/spectroscopy/fcs/{src/Fdc2D.cpp,
+    include/Fdc2D.h, README.md}`, `test/python/fcs/test_fdc2d.py`,
+    `test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`, `CHANGELOG.md`,
+    `okf/prds/PRD-036-*.md`, `okf/log.md`. **[chisurf]**
+    `chisurf/plugins/fcs/flc_2d/{__init__,api,core}.py`,
+    `chisurf/plugins/fcs/flc_2d/test/test_fdc_parity.py`,
+    `test/data/numba_parity/flc_2d_fdc.npz`.
+  - Note: T-20260811-14 (flc_2d delegation) is effectively done — chisurf
+    `f1290e84b` removed numba and `core.py` delegates; the ticket can be
+    closed with that resolution.
+
 - **T-20260815-01 · [chimol] Fold fps_json_editor into chimol as a native labelling subsystem**
   - Status: 🔄 in-progress
   - Owner: `opencode/deepseek-v4-flash-free`
@@ -483,6 +516,18 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 18 (2026-08-16, round 18): shipped example landed
+    (chimol 4350cd9): examples/labeling_network.fps.json -- complete
+    5-position/10-distance FRET network on 148l -- plus the pml that
+    loads it. Portability fixes: @-script file resolution against the
+    script dir (BaseCmd._script_dirs) and fps_load doc-relative pdb_path.
+    chisurf 2d2c4685c pins the shape (alien-cwd tempdir test) and
+    hardens the probe (emit leading newline -- the PDB reader's stdout
+    WARNING eats the first result line; parser takes identifier keys
+    only). WARNING for whoever runs the plugin suite: 31 failed + 22
+    errors are the demos/menus/internal_gui stream's uncommitted chimol
+    rework (chrome_cache, colour_revision, fov, tours, mouse_bindings
+    fetch-factory) -- not the fps/examples stream; its files are green.
   - Progress update 17 (2026-08-16, round 17): `load *.fps.json`
     wiring landed (chimol c974c6b + chisurf): document pdb_path loads the
     structure on an empty scene, positions become AVs, distances drawn,
