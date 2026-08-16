@@ -424,6 +424,28 @@ retired so nobody works the same thing twice.)*
 
 ## Active
 
+- **T-20260816-02 · [tttrlib] PRD-037 B1: `hdbscan_labels` — single-linkage +
+  condense + stability-label, one call over the existing MST**
+  - Status: 🙋 picked
+  - Owner: `opencode/glm-5.3`
+  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: —
+  - Why: the largest measured item of PRD-037 Part B — the four post-MST
+    kernels (`_single_linkage`, `_bfs_nodes`, `_condense`, `_label_points`)
+    are 43% of a chisurf HDBSCAN run (condense+label 65 ms at n=100k) and are
+    pointer-chasing, not NumPy-expressible. `core_distances` and
+    `mutual_reachability_mst` already exist here, so the MST arrives done.
+    Unblocks `chisurf/core/ml/cluster/_hdbscan.py` (T-20260811-20's B1).
+  - Done when: `hdbscan_labels(mst_edges, min_cluster_size)` in
+    `modules/...` (placement per registry conventions), four-language SWIG or
+    Python-only as the PRD's cross-cutting rules demand, parity against
+    chisurf's numba kernels on recorded fixtures AND against the hdbscan
+    library's labels on clustered synthetic data (known ground truth, not
+    just the code being replaced), benchmarked A/B vs the numba path at
+    n=20k and n=100k. Prototype-first: Python/numba oracle before C++.
+  - Progress: picked 2026-08-16, not started.
+  - Touching: `modules/` (new kernel + tests), `ext/python/`, chisurf
+    `_hdbscan.py` (delegation, after the tttrlib side lands).
+
 - **T-20260816-01 · [tttrlib+chisurf] 2D-FDC log-axis quantization proven vs the
   original MATLAB and fixed; method papers cited in both repos**
   - Status: ✅ done (2026-08-16)
@@ -455,7 +477,14 @@ retired so nobody works the same thing twice.)*
     µs extension on request: `plot_fdc_2d_microsecond_fret.py` — T3 clock
     (25 ns laser period), immobilized FRET molecule E=0.2/0.8 at 500 kcps —
     recovers 200 ns–10 µs within 25% (3 seeds, ±3% spread, −15…−22%
-    estimator bias; floor = 75 ns window span). One caller-side unit trap
+    estimator bias; floor = 75 ns window span). Diffusing follow-up:
+    `plot_fdc_2d_microsecond_fret_diffusion.py` — open volume, τ_diff=2 ms,
+    ~0.15 occupancy — 200 ns–10 µs within 0.7–27%, 5 ms gated by diffusion
+    (ceiling = τ_diff); TV statistic's √(K/4N) noise pedestal found and
+    documented (covariance from the same matrix replaces it); coarse engine
+    windows + T3 tick reconstruction cut runtime 25×; plot_lifetime_fcs.py
+    unit comments mislabel engine units (recorded, left for its owner).
+    One caller-side unit trap
     found and documented at the source: SimIntegrator.dt/rates in SECONDS vs
     microtime_resolution/laser_period in NS (SimIntegrator.h comment added).
     Details in PRD-036's closing sections and okf/log.md 28th entry.
@@ -463,7 +492,7 @@ retired so nobody works the same thing twice.)*
   - Touching: **[tttrlib]** `modules/spectroscopy/fcs/{src/Fdc2D.cpp,
     include/Fdc2D.h, README.md}`, `test/python/fcs/test_fdc2d.py`,
     `test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`,
-    `examples/correlation/plot_fdc_2d{,_dynamics_resolution,_microsecond_fret}.py`,
+    `examples/correlation/plot_fdc_2d{,_dynamics_resolution,_microsecond_fret,_microsecond_fret_diffusion}.py`,
     `modules/simulation/include/SimIntegrator.h` (comment only),
     `CHANGELOG.md`, `okf/prds/PRD-036-*.md`, `okf/log.md`. **[chisurf]**
     `chisurf/plugins/fcs/flc_2d/{__init__,api,core}.py`,
@@ -534,6 +563,14 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 22 (2026-08-16, round 22): the 'dead' scrollbar
+    drag was a FROZEN CHROME CACHE -- chrome_fingerprint never covered
+    window bodies, so every dialog change kept the cached quads (chimol
+    87e674d: GuiWindow.body_revision, bumped by the dialog's every
+    mutator). Asserted at the quad-array level now; model-level tests
+    cannot see this class. OTHER dynamic bodies (density panel!) may
+    have the same latent freeze -- check whether density_window bumps
+    anything; its sliders might be frozen the same way.
   - Progress update 21 (2026-08-16, round 21): the dialog's first-week
     fixes (chimol e674089): keys now navigate in BOTH modes (the dialog
     holds the focus; Enter Chooses even after clicking the name line --
