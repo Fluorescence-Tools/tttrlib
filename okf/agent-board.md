@@ -426,25 +426,32 @@ retired so nobody works the same thing twice.)*
 
 - **T-20260816-02 · [tttrlib] PRD-037 B1: `hdbscan_labels` — single-linkage +
   condense + stability-label, one call over the existing MST**
-  - Status: 🙋 picked
+  - Status: ✅ done (validated)
   - Owner: `opencode/glm-5.3`
-  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: —
+  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-16
   - Why: the largest measured item of PRD-037 Part B — the four post-MST
     kernels (`_single_linkage`, `_bfs_nodes`, `_condense`, `_label_points`)
     are 43% of a chisurf HDBSCAN run (condense+label 65 ms at n=100k) and are
     pointer-chasing, not NumPy-expressible. `core_distances` and
     `mutual_reachability_mst` already exist here, so the MST arrives done.
     Unblocks `chisurf/core/ml/cluster/_hdbscan.py` (T-20260811-20's B1).
-  - Done when: `hdbscan_labels(mst_edges, min_cluster_size)` in
-    `modules/...` (placement per registry conventions), four-language SWIG or
-    Python-only as the PRD's cross-cutting rules demand, parity against
-    chisurf's numba kernels on recorded fixtures AND against the hdbscan
-    library's labels on clustered synthetic data (known ground truth, not
-    just the code being replaced), benchmarked A/B vs the numba path at
-    n=20k and n=100k. Prototype-first: Python/numba oracle before C++.
-  - Progress: picked 2026-08-16, not started.
-  - Touching: `modules/` (new kernel + tests), `ext/python/`, chisurf
-    `_hdbscan.py` (delegation, after the tttrlib side lands).
+  - Resolution: found already landed (`9e55b6b22`, two calls
+    `hdbscan_condensed_tree`/`hdbscan_label_points`, split at the selection
+    policy boundary) and **validated** rather than rewritten: 12/12 in-tree
+    tests; parity vs chisurf's implementation bit-identical on 12 dataset ×
+    min_cluster_size configs (same normalized-edge MST input; note the input
+    contract — endpoints must be (low, high)-normalized exactly as chisurf's
+    `single_linkage_tree` does, raw endpoints give an equivalent but
+    differently-numbered tree); end-to-end labels identical to chisurf's
+    estimator on 6 ground-truth sets; sklearn cross-check 4/6 exact, rest
+    ≥ 0.996 purity (independent-EOM boundary choices, expected). Benchmark:
+    post-MST 1.4 ms @ 20k / 9.1 ms @ 100k vs 72/380 ms Python (42–51×; ~10×
+    over the old numba). CHANGELOG entry added (the landing commit had
+    none). PRD-037 B1 ticked as validated.
+  - Still open (chisurf side, folded into T-20260811-20): `_hdbscan.py`
+    delegating its post-MST path to these kernels.
+  - Touching: `okf/prds/PRD-037-*.md`, `CHANGELOG.md`, this board (validation
+    only — the kernels and their tests were `9e55b6b22`, untouched).
 
 - **T-20260816-01 · [tttrlib+chisurf] 2D-FDC log-axis quantization proven vs the
   original MATLAB and fixed; method papers cited in both repos**
@@ -563,6 +570,15 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 23 (2026-08-16, round 23): the invalidation moved
+    into the FRAMEWORK (chimol 71ef843): every input routed to a window
+    body bumps body_revision before the body hears about it, so the
+    frozen-picture class is closed for any interactive panel by
+    construction. Guardrail test proves it with a panel that bumps
+    nothing itself. Panel duty remains only for input-less changes
+    (async compute / programmatic) -- density's on_change is the
+    example; rule in chimol AGENTS.md. Round 22's 'check density' note:
+    density already had its own coalesced route, no latent freeze.
   - Progress update 22 (2026-08-16, round 22): the 'dead' scrollbar
     drag was a FROZEN CHROME CACHE -- chrome_fingerprint never covered
     window bodies, so every dialog change kept the cached quads (chimol
