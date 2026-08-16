@@ -444,15 +444,33 @@ retired so nobody works the same thing twice.)*
     `flc_2d_fdc.npz` re-recorded through the delegated path, parity 7/7.
     Citations (Crossref-verified DOIs: Ishii & Tahara JPCB 2013 ×2,
     Kondo et al. PNAS 2019) in `Fdc2D.h`, fcs README, chisurf
-    `flc_2d/{__init__,api,core}.py`. Details in PRD-036's closing section and
-    okf/log.md 28th entry. Uncommitted, awaiting user review.
+    `flc_2d/{__init__,api,core}.py`, plugin README/gui help, chisurf
+    bibliography (kondo2019 added; generated Literature page regenerated,
+    with a concurrent agent's hand-added entries back-ported to the yaml
+    first). Full 46-file MATLAB-corpus audit table in PRD-036 (2 items
+    honestly unported: reproduct, split-data bootstrap). Gallery:
+    `plot_fdc_2d.py` walkthrough + `plot_fdc_2d_dynamics_resolution.py`
+    benchmark (two-state resolved 50 ms–10 s, floor = lag-window width;
+    3-state two-timescale 0.86/7.9 s vs 1/10 s on seed-averaged curve).
+    µs extension on request: `plot_fdc_2d_microsecond_fret.py` — T3 clock
+    (25 ns laser period), immobilized FRET molecule E=0.2/0.8 at 500 kcps —
+    recovers 200 ns–10 µs within 25% (3 seeds, ±3% spread, −15…−22%
+    estimator bias; floor = 75 ns window span). One caller-side unit trap
+    found and documented at the source: SimIntegrator.dt/rates in SECONDS vs
+    microtime_resolution/laser_period in NS (SimIntegrator.h comment added).
+    Details in PRD-036's closing sections and okf/log.md 28th entry.
+    Uncommitted, awaiting user review.
   - Touching: **[tttrlib]** `modules/spectroscopy/fcs/{src/Fdc2D.cpp,
     include/Fdc2D.h, README.md}`, `test/python/fcs/test_fdc2d.py`,
-    `test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`, `CHANGELOG.md`,
-    `okf/prds/PRD-036-*.md`, `okf/log.md`. **[chisurf]**
+    `test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`,
+    `examples/correlation/plot_fdc_2d{,_dynamics_resolution,_microsecond_fret}.py`,
+    `modules/simulation/include/SimIntegrator.h` (comment only),
+    `CHANGELOG.md`, `okf/prds/PRD-036-*.md`, `okf/log.md`. **[chisurf]**
     `chisurf/plugins/fcs/flc_2d/{__init__,api,core}.py`,
+    `chisurf/plugins/fcs/flc_2d/{README.md,gui/help.md}`,
     `chisurf/plugins/fcs/flc_2d/test/test_fdc_parity.py`,
-    `test/data/numba_parity/flc_2d_fdc.npz`.
+    `test/data/numba_parity/flc_2d_fdc.npz`,
+    `docs/references/{bibliography.yaml,index.md}`, `CHANGELOG.md`.
   - Note: T-20260811-14 (flc_2d delegation) is effectively done — chisurf
     `f1290e84b` removed numba and `core.py` delegates; the ticket can be
     closed with that resolution.
@@ -516,6 +534,19 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 20 (2026-08-16, round 20): the file dialog moved
+    INTO the viewport (chimol ae3e921 + chisurf b6285f895) -- a port of
+    L2DFileDialog's interaction model as a floating GuiWindow body, one
+    code path for Qt-free host AND browser (round 19's osascript/zenity
+    system dialogs removed: a page cannot spawn a process, so it was the
+    one host left without a chooser). GuiWindow.on_wheel + wheel_window
+    added (notches over scrolling bodies). Quote bug fixed: png/save/edit
+    wrote files named with the quotes. Tests assert the render pixel-wise
+    (buttons 157,157,255 / dark panes / title 41,74,122) with Qt
+    unimportable. NOTE for verification: this session's model has no
+    image input, so screenshot checks were pixel-sampled at
+    layout-derived coordinates; the next session with image support
+    should eyeball build/file_dialog_open.png once.
   - Progress update 18 (2026-08-16, round 18): shipped example landed
     (chimol 4350cd9): examples/labeling_network.fps.json -- complete
     5-position/10-distance FRET network on 148l -- plus the pml that
