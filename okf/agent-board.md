@@ -534,6 +534,13 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 21 (2026-08-16, round 21): the dialog's first-week
+    fixes (chimol e674089): keys now navigate in BOTH modes (the dialog
+    holds the focus; Enter Chooses even after clicking the name line --
+    the bare TextField swallowed it before), both panes have real
+    draggable scrollbars with wheel-per-pane routing, and '..' reselects
+    the folder you came from. Pinned through real input paths, Qt
+    unimportable.
   - Progress update 20 (2026-08-16, round 20): the file dialog moved
     INTO the viewport (chimol ae3e921 + chisurf b6285f895) -- a port of
     L2DFileDialog's interaction model as a floating GuiWindow body, one
