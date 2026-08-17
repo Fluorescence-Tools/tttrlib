@@ -41,6 +41,11 @@
 #ifndef TTTRLIB_HMMRESTRAINTS_H
 #define TTTRLIB_HMMRESTRAINTS_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- pseudo-counts add and do not cancel, sticky prior slows the
+//   dynamics, restraint is scored where a constraint is not, round trips.
+//   test/python/hmm/test_constraints.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <limits>
 #include <map>

@@ -3,6 +3,12 @@
 #ifndef TTTRLIB_PDA_H
 #define TTTRLIB_PDA_H
 
+// Validation: A/B-TESTED 2026-08-17 -- s1s2 vs PAM's PDA_histogram.cpp compiled from source (1e-15;
+//   single species, mixtures, non-Poisson P(F), backgrounds) and vs the NumPy transcription
+//   of Antonik et al. 2006 (1e-14). test/python/pda/test_ab_pda_reference.py,
+//   test/python/pda/test_pda_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <iostream>
 #include <cmath>

@@ -86,6 +86,24 @@ TTTRLIB_NOGIL(tttrlib::HMM::sample_paths)
 
 // VB needs HMM.h (for HmmModel) included first.
 TTTRLIB_NOGIL(tttrlib::fit_vb)
+// dirichlet_kl(a, b, n) shares one length between two arrays; wrap it so each
+// array carries its own length and a mismatch is an error, not a read past
+// the end (raw-pointer form unreachable from Python until 2026-08-17).
+%ignore tttrlib::dirichlet_kl;
+%apply (double* IN_ARRAY1, int DIM1) {
+    (const double* dir_a, int n_dir_a),
+    (const double* dir_b, int n_dir_b)
+}
+%inline %{
+double dirichlet_kl(const double* dir_a, int n_dir_a,
+                    const double* dir_b, int n_dir_b) {
+    if (n_dir_a != n_dir_b)
+        throw std::invalid_argument("dirichlet_kl: a and b must have the same length");
+    return tttrlib::dirichlet_kl(dir_a, dir_b, n_dir_a);
+}
+%}
+%clear (const double* dir_a, int n_dir_a);
+%clear (const double* dir_b, int n_dir_b);
 %include "HMMVB.h"
 
 // Return the HMM decoded photon/state offsets only where 64-bit containers

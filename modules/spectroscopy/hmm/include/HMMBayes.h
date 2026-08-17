@@ -28,6 +28,11 @@
 #ifndef TTTRLIB_HMMBAYES_H
 #define TTTRLIB_HMMBAYES_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- blocked Gibbs started at the truth stays there, an EM seed
+//   converges and covers the truth, draws are valid simplices, relabelling invariance.
+//   test/python/hmm/test_gibbs.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <cstdint>
 #include <limits>

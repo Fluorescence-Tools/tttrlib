@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_HMM_H
 #define TTTRLIB_HMM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs H2MM_C 2.2.1 (recorded fixture; same model, same bursts): total and
+//   per-burst log-likelihood 1e-9 rel, gamma 2e-7 (float32), Viterbi paths identical, one
+//   Baum-Welch step 1e-13; ICL term = exact complete-data path log-likelihood (NumPy).
+//   test/python/hmm/test_ab_hmm_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <cstdint>
 #include <cmath>

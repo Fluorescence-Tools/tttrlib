@@ -26,6 +26,10 @@
 #ifndef TTTRLIB_HMMEMISSION_H
 #define TTTRLIB_HMMEMISSION_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- product alphabet with a lifetime spectrum recovers planted
+//   lifetimes/populations. test/python/hmm/test_micro_alphabet.py, test_gibbs.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <algorithm>
 #include <cmath>
 #include <limits>

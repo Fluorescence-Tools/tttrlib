@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_HMMSURROGATE_H
 #define TTTRLIB_HMMSURROGATE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- feature extractor vs the NumPy transcription and ChiSurf's
+//   burst_h2mm/core/surrogate.py (exact). test/python/hmm/test_surrogate.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <string>
 #include <vector>
 

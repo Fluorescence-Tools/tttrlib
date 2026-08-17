@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_PDABURSTLIKELIHOOD_H
 #define TTTRLIB_PDABURSTLIKELIHOOD_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs the defining nested sum over background counts in
+//   NumPy (multinomial x Poisson), exact and box paths, K channels.
+//   test/python/pda/test_pda_burst_likelihood.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <cstdlib>
 

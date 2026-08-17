@@ -11,6 +11,11 @@
 #ifndef TTTRLIB_PDA3CCORE_H
 #define TTTRLIB_PDA3CCORE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- transfer matrix vs the competing-acceptor cascade formula (1e-12)
+//   and ChiSurf pda3c.physics; channel probabilities, Gauss-Hermite grid and species forward
+//   model vs ChiSurf (1e-10). test/python/pda/test_ab_pda_reference.py, test_pda3c_core.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 
 namespace tttrlib {

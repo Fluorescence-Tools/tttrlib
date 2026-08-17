@@ -29,6 +29,10 @@
 #ifndef TTTRLIB_HMMCONSTRAINTS_H
 #define TTTRLIB_HMMCONSTRAINTS_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- unconstrained path bit-identical to the plain fit, fixed
+//   emission stays exact, a constraint is never scored. test/python/hmm/test_constraints.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <limits>
 #include <stdexcept>

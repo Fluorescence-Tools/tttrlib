@@ -16,6 +16,11 @@
 #ifndef TTTRLIB_CTMCKINETICS_H
 #define TTTRLIB_CTMCKINETICS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- generator vs the column-sum-zero transcription (1e-14),
+//   equilibrium vs scipy.linalg.null_space and expm(Q t) p0 (1e-9), flat-rate round trip exact.
+//   test/python/kinetics/test_ab_kinetics_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <cmath>
 
