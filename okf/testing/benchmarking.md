@@ -57,11 +57,22 @@ python bench_h2mm.py                               # tttrlib H2MM
 python bench_localization.py                       # 2D Gaussian PSF
 .venvs/flimlib/bin/python competitors/bench_flimlib.py
 .venvs/read/bin/python competitors/bench_ptufile.py
+.venvs/read/bin/python competitors/bench_phconvert.py   # phconvert PTU/HT3/SPC-130 readers
+python check_reading.py                            # photon-for-photon identity
 .venvs/fretbursts/bin/python competitors/bench_fretbursts.py
 .venvs/pybromo/bin/python competitors/bench_pybromo.py
 .venvs/flimkit/bin/python competitors/bench_flimkit.py
 .venvs/h2mm_c/bin/python competitors/bench_h2mm_c.py
 .venvs/h2mm_numba/bin/python competitors/bench_h2mm_numba.py
+python bench_vicidomini.py                         # tttrlib blind IRF / APR / focus-ISM / s2ISM
+KMP_DUPLICATE_LIB_OK=TRUE .venvs/vicidomini/bin/python competitors/bench_vicidomini.py   # birfi / BrightEyes-ISM / s2ISM
+python check_vicidomini.py                         # output identity of those pairs
+python bench_sciref.py                             # tttrlib watershed / marching squares / RL / k-means / HDBSCAN / Kalman / HMM / phasor
+.venvs/sciref/bin/python competitors/bench_sciref.py   # scikit-image / scikit-learn / filterpy / hmmlearn / phasorpy
+python check_sciref.py                             # output identity of those pairs
+python bench_fret.py                               # tttrlib PDA / BurstML / 2CDE / 2D-FDC / CUSUM
+python competitors/bench_fret.py                   # PAM + FRET_burstML (native), FRETBursts venv, Octave -- base env
+python check_fret.py                               # output identity of those pairs
 python make_plots.py                               # -> plots/*.png
 ```
 

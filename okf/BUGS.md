@@ -2700,3 +2700,179 @@ Suggested default `None` (unchanged), so no existing file changes.
 It is solved downstream, and the fix is a full copy of the table per write. The
 information needed — "this float is NaN" — is already in the writer's hands as
 it formats each value.
+
+## FIXED — The `felekyan` correlator's blocks cover half of each labelled lag range, so τ is mislabelled by up to 25 %
+
+**Fixed 2026-08-17, same day.** The method now has its own contiguous lag axis in `CorrelatorCurve::update_axis` (block 0 at spacing 1, block k ≥ 1 at 2^(k−1) — the structure `ccf_felekyan` counts and `normalize_ccf_felekyan` divides by), selected by `set_correlation_method`. Both `test_felekyan_*` tests assert; wahl and felekyan agree as functions of τ on the SPC-130 sample file (`test_Correlator.py::test_correlation`, rewritten from a Hausdorff distance on raw (y, x) points that only worked while the axes were identical).
+
+The entry as filed follows.
+
+**2026-08-17.** Found by the library-wide A/B (`okf/testing/algorithm-validation.md`).
+`Correlator::ccf_felekyan` (`modules/spectroscopy/fcs/src/Correlator.cpp`)
+counts block `k ≥ 1` at coarse-lag spacing `pw = 2^(k−1)` while the shared
+multi-tau axis (`CorrelatorCurve::update_axis`) steps `2^k` per bin in that
+block. Bin values are right for the lag they actually count, but the axis
+label is not: on a simulated blinking emitter with the closed-form G(τ) the
+curve reads 1.228 where the truth at the labelled τ = 2040 is 1.13–1.15, and
+inter-block lags are never counted. `wahl` and `laurence` on the same axis are
+correct. Pinned as an expected failure:
+`test/python/correlator/test_ab_correlator_reference.py::…::test_felekyan_autocorrelation`
+(the unnormalised block structure itself is pinned exact in
+`test_felekyan_equals_its_block_structure`). Fix is a decision, not a token:
+either the method gets its own axis (`x[k·nc + j] = x[k·nc] + j·pw`) or the
+block spacing follows the shared axis (`pw = 2^k`); the legacy code this ports
+used the former.
+
+## `HmmVB`'s ELBO data term is not the one its header derives — ~1 nat, and the ELBO is the model-selection number
+
+**2026-08-17.** `modules/spectroscopy/hmm/include/HMMVB.h` derives the VB
+E-step as forward-backward under the geometric-mean parameters Ã, which are
+sub-stochastic, so a tick of duration Δt marginalises to Ã^Δt. The engine's
+A^Δt cache row-normalises first, so `vb.loglik` equals a forward pass with
+Ã's rows normalised (agrees to 1e-5) and is ~1 nat *higher* than the header's
+derivation on a 3600-photon / ~90k-tick case (Σ_ticks log(row mass) ≈ −1e-5
+each). The KL terms and the fixed point are exact
+(`test/python/hmm/test_ab_hmm_reference.py::TestVariationalBayes`). Because
+the offset scales with tick count and posterior width — both state-count
+dependent — it can bias selection between state counts. Pinned:
+`…::test_elbo_data_term_against_the_header_derivation`. Header not marked
+validated. Which side is right is a modelling decision (the derivation is the
+standard VB bound; the normalised form is a different, tighter-looking
+quantity), so it is filed rather than changed.
+
+## FIXED — `blind_irf_estimate` recovers where the IRF is, not what it looks like
+
+**Fixed 2026-08-17, same day — and checked against the reference implementation, VicidominiLab's `birfi` (github.com/VicidominiLab/birfi, now in `../chisurf/junk/birfi`; ChiSurf's `irf_estimation.py` is a port of it).** Working the pipeline step by step against birfi and a NumPy replica: the port's own defects were (1) the Savitzky-Golay derivative built its normal equations on `(i−half)·dt` but its weight vector on `(i−half)` — not a derivative filter (birfi uses scipy's `savgol_filter`); its minimum sat on the *rising* edge, so the tail window was 7 bins and the lifetime came out 0.2 ns for a 2.5 ns decay; (2) the lifetime was the centroid birfi uses only as the *initial guess* of its fit. Fixed: consistent abscissa; a Poisson-weighted log-linear fit of the tail (k = 0.400/ns on the fixture; birfi's own Adam MSE fit gives 0.4225 — it does not converge in 1000 steps, RL forgives it). Two things I first called defects were the reference's model and are kept: the forward convolution is **circular** (BIRFI is periodic — a full-period TCSPC histogram wraps); the C++ transform is now exactly circular for any n (the former `next_pow2(n)` padding was circular only for power-of-two n). The RL back-projection is the exact adjoint (birfi convolves with the time-reversed kernel, one bin off; measured to move nothing visible). birfi's `ifftshift` rolls its output by n/2 — pinned in the A/B, not copied. Result vs birfi (four configurations, 30 and 500 iterations): aligned IRFs correlate 0.978–0.999, peaks within 0.15 ns, tttrlib never worse against the truth; 99.5 % of the mass within ±0.5 ns on the known answer. `test_blind_irf.py` still green.
+
+The entry as filed follows.
+
+**2026-08-17.** On a noiseless mono-exponential known-answer simulation
+(`test/python/decayfit/test_ab_decay_reference.py::TestBlindIrfKnownAnswer`)
+`BlindIRF.h`'s estimate puts the peak within ±0.15 ns of the truth but only
+~25 % of its mass within ±0.5 ns of the true peak (correlation with the true
+IRF 0.3–0.5); the rest is an exponential tail. Pinned as an expected failure;
+header not marked. No independent implementation exists to compare against —
+the known answer is the reference.
+
+## FIXED — The simulator's rotational diffusion is one Gaussian kick, so r(t) sits above r0·exp(−t/ρ) beyond ~ρ
+
+**Fixed 2026-08-17, same day.** The excited-state rotation is now sub-stepped: kicks of per-axis variance ≤ 0.02 rad² (≤ 256 steps), each renormalised, so the Gaussian-kick approximation stays in its first-order regime. `test_ab_simulation_reference.py::…::test_time_resolved_anisotropy_is_exponential_out_to_two_rotational_times` asserts r(1.5–2.5 ρ) within 0.02 of r0·e^{−t/ρ}; the whole simulation suite (146 tests) is green. `rot_step_` remains computed and unused (harmless).
+
+The entry as filed follows.
+
+**2026-08-17.** `SimEngine.h`'s emission block rotates the dipole by a single
+N(0, 2·D_rot·delay) kick per axis and renormalises. That is exact to first
+order only: for delay ≳ ρ it decorrelates slower than isotropic rotational
+diffusion, so the time-resolved anisotropy reads r(2ρ) ≈ 0.10–0.12 against
+the expected 0.054 and the steady-state r at τ/ρ = 2 is 0.156 vs Perrin's
+0.133. `test_anisotropy.py`'s 0.04 tolerance hides it; r(0) and the initial
+slope are right. `rot_step_` is computed and never used. Pinned:
+`test/python/simulation/test_ab_simulation_reference.py::…::test_time_resolved_anisotropy_is_exponential_out_to_two_rotational_times`.
+Fix: compound small rotations within the delay, or the exact rotational
+propagator.
+
+## FIXED — The PTU writer's header has three defects an independent reader trips on
+
+**Fixed 2026-08-17, same day.** `write_ptu_header` now writes `Header_End` last, always, as a zero-filled `tyEmpty8` tag (a caller-supplied one is skipped in the loop and re-emitted at the end); `TTTR::write` patches `TTResult_NumberOfRecords` to `(file_size − header_size) / 4` after the record stream is written, rewriting the fixed-width header in place (`r+b`). `test_ab_simulation_reference.py::TestRecordsRoundTripThroughPtufile` now asserts the header bytes and that ptufile sees every record (workaround removed); `test_TTTR_roundtrip.py::test_ptu_gets_minimal_mandatory_tags` pinned the event count and was corrected.
+
+The entry as filed follows.
+
+**2026-08-17.** Found while round-tripping simulated HHT3v2 records through
+`ptufile` (`test/python/simulation/test_ab_simulation_reference.py::TestRecordsRoundTripThroughPtufile`,
+which works around all three in-file so the *records* could be compared —
+they are identical). In `modules/io/pq`'s from-scratch header writer:
+(a) the auto-added `Header_End` tag has an uninitialised type/ident tail —
+ptufile rejects the file ("invalid tag type … typecode=0"); (b) if the caller
+supplies `Header_End`, the mandatory tags are written *after* it and even
+tttrlib then misreads its own file; (c) `TTResult_NumberOfRecords` is the
+number of events, not records, so overflow records are uncounted and a strict
+reader truncates. tttrlib's own reader is lenient on all three, which is why
+the existing round-trip tests pass.
+
+## Smaller findings from the same A/B, filed together
+
+**2026-08-17.** Each is pinned in the named test; none changes a result by
+more than the stated amount.
+
+* `add_pile_up_to_model` subtracts the *inclusive* cumulative count (channel i
+  included) where Coates 1968 eq. 2 uses Σ_{j<i}; 1.4e-4 relative
+  (`test_ab_decay_reference.py::TestPileUpAgainstCoates`).
+* FIDA with the default 256-bin brightness profile is an unconverged
+  quadrature: `N` comes out ~6.8× the converged (65536-bin) value while the
+  histogram shape agrees to 3e-3
+  (`test_ab_pch_reference.py::TestFidaEqualsPchUnderTheConventionMap`).
+* Not reachable from Python although exposed (**all bound 2026-08-17**, each
+  with an A/B now: `fconv_cs_time_axis` (missing `%apply`),
+  `DecayPhasor.compute_phasor(unsigned short*)` (+ `compute_phasor_selection`
+  for the index form), `ProductPrior` (`VectorDecayFitPrior` template),
+  `bincount1D` (array in / inplace out), `SimRandom.init_by_array` (uint32
+  array), `dirichlet_kl` (two arrays, length mismatch raises).
+  `TTTR.set_mt_linearizer(lin)` used to adopt the raw pointer while the SWIG
+  proxy kept its own — double free at teardown; it **copies** now.
+* Doc/code mismatches (**all corrected in the headers 2026-08-17**): `CLSMImage::get_mean_micro_time` said discriminated
+  pixels are "filled with zeros" — the code writes −1 and keeps `m0 == minimum`;
+  `get_intensity_trace`/`get_selection_by_count_rate` document the window in
+  ms — it is seconds; `TTTRHeader::get_macro_time_resolution` says ns —
+  returns seconds; `BurstSearchBOCPD.h` says Negative-Binomial predictive —
+  the code (and the ChiSurf numba it ports) is plug-in Poisson;
+  `compute_intensity_trace` describes an `overlapping==1` mode it does not
+  have; `rescale_w_bg`'s third argument is the inverse error e (weight
+  e²+1e-12), header says 1/w²; Fit23's result slot `r_scatter` carries `r()` (scatter-corrected) and
+  `r_experimental` carries `rs()` (raw) — legacy fit2x names, now documented in DecayFit23.h.
+* `benchmarks/competitors/bench_pybromo.py` sets PyBroMo's `GaussianPSF(sx =
+  w0/2)`; PyBroMo squares its PSF, so matching tttrlib's exp(−2r²/w0²) needs
+  `sx = w0/√2`. Timing-only workload, but 2^1.5 smaller volume and 2× shorter
+  τ_D than the tttrlib side. **Corrected 2026-08-17** (`sx = w0/√2`); the
+  PyBroMo timings in PERF.md predate the change and should be re-run
+  (`benchmarks/.venvs/pybromo/bin/python competitors/bench_pybromo.py`).
+* `wahl`'s axis label is the upper end of the coarse bin by ≤ one coarse step
+  (`x[c·n] mod 2^c` dropped) — documented in `test_ab_correlator_reference.py`,
+  not pinned as a failure.
+
+
+## API friction the example writers hit (2026-08-17)
+
+Recorded while writing the simulated-data examples for the day's kernels; none
+is a wrong result, each costs a user a detour.
+
+* `TTTR.burst_search_kalman` reported one or two "bursts" at t ≈ 0 — **fixed
+  the same day**: the cause is `x0 = 0` making the first update's measurement
+  noise `R ∝ x` vanish, so the filter believes rate 0 exactly and the next
+  non-empty bin is a huge innovation; a `warmup_bins` setting (default 0 =
+  the legacy, ChiSurf-identical start) seeds x0/P0 from the first bins and
+  reports nothing inside them (`TestKalmanBurstSearchWarmUp`).
+* `kmeans` uniform sizing — **fixed the same day**: `kmeans_n_uniforms(k,
+  n_init)` and `kmeans_uniforms(k, n_init, seed)` (Python).
+* `hmm_backward_posteriors_xi` accumulates `xi_sum` in place (`+=`) — in the
+  header, easy to miss; the example zeroes it explicitly.
+* `estimate_background_rate(…, bin_size_ms, …)`: `bin_size_ms` is unused
+  (signature stability) and confuses a reader.
+* `watershed` required an explicit `uint8` mask and `int64` markers — **fixed
+  the same day**: the Python name is `watershed(image, markers, mask=None,
+  connectivity=1)` and casts for the caller (`TestPythonSignature`).
+* `richardson_lucy_2d(blurred, psf, n_iter, clip, filter_epsilon, accelerate)`
+  — three positional booleans read poorly at the call site.
+* `blind_irf_estimate` took a flat list only — **fixed the same day** with
+  `blind_irf_estimate_array` (NumPy in/out).
+* `phasor` frequency argument is "cycles per bin" (`1/n_bins` for the first
+  harmonic), not obvious from the name; documented in the phasor stack example.
+* `BurstML` brightness/diffusion time are weakly determined on the toy
+  simulator in `test_burstml.py` (it moves the molecule one radial bin per
+  photon); E and background recover well. A Nelder-Mead fit takes ~10 s at
+  jmax 15 / 70 bursts.
+
+
+## FIXED — `kalman_filter` one-channel path read past its buffers (the "flaky" Kalman A/B)
+
+**Fixed 2026-08-17.** The intermittent failure of
+`test_math_ab_probabilistic.py::TestKalmanAgainstTheTextbook::test_one_two_and_three_channels`
+(seen once in the first full run, then again in a 16-minute regression run) was
+not a flake: `Kalman.cpp`'s general `K = P_pred·S⁻¹` branch — everything but
+dim 2 and 3 — was written for dim = 4 (strides of 4, four terms). For dim = 1
+it read past the 1-element `P_pred`/`S_inv` vectors; the heap slack was usually
+zero, so the result was usually right, and now and then held whatever an
+earlier different-shaped call left, so it was not. Repeating the same case
+never showed it; interleaving dims did. The branch is now general (dim = 4
+unchanged, the `dim ≤ 4` cap removed), pinned by
+`test_one_channel_is_deterministic_and_dims_beyond_four_work`. Lesson: a flake
+in a deterministic A/B is a defect until proven otherwise.

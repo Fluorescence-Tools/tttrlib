@@ -1,5 +1,216 @@
 # Bundle update log
 
+## 2026-08-17 (37th entry)
+
+* **The "flaky" Kalman A/B was a real defect.** Its second appearance in a
+  16-minute regression run prompted the look: `kalman_filter`'s general
+  `K = P_pred·S⁻¹` branch was written for dim = 4 and read past its buffers
+  for dim = 1 — UB that surfaced only when other shapes had run first (the
+  same case repeated 60× never showed it; interleaved dims did within 30
+  reps). Fixed (branch general, `dim ≤ 4` cap dropped, dims 1–6 at ~1e-15
+  vs the textbook), regression test added, CHANGELOG/BUGS/register updated.
+  Also added `doc/validation.rst` (linked from the doc index) pointing users
+  at the registers and the identity checks. Uncommitted.
+
+## 2026-08-17 (36th entry)
+
+* **Reading vs phconvert in the suite.** `phconvert` added to the `read`
+  venv; `competitors/bench_phconvert.py` + `check_reading.py`: PTU 5.8×,
+  HT3 25×, SPC-130 4.4× faster, photon-for-photon identical (photons,
+  markers, resolutions); ptufile stays the PTU parity reference. PERF.md,
+  README, recipes, register updated. Uncommitted.
+
+## 2026-08-17 (35th entry)
+
+* **Standing rule applied: examples as `.py` + executed `.ipynb` on simulated
+  data for every algorithm worked on today, and the code documented.** Ten
+  new sphinx-gallery scripts (blind IRF, phasor of a decay stack, watershed +
+  marching squares, Richardson–Lucy, burst-feature clustering with k-means
+  and the HDBSCAN pipeline, Kalman burst detection, HMM lattice, BurstML
+  profiles + fit, 2CDE, background rate) each with an executed notebook next
+  to it, plus executed notebooks for the existing ISM/PDA/2D-FDC/burst-search
+  examples (three ISM scripts made notebook-safe). `BurstML.h` class Doxygen
+  written, `TwoCDE.h` usage paragraph, module READMEs gained "Examples"
+  lines. One binding added from the writers' friction list:
+  `blind_irf_estimate_array` (NumPy in/out, pinned equal to the flat form);
+  three more friction items closed the same day — `burst_search_kalman(...,
+  warmup_bins)` (the t≈0 artefact is `x0 = 0` making R vanish on the first
+  update; default 0 stays ChiSurf-identical), `kmeans_n_uniforms` /
+  `kmeans_uniforms`, and the scikit-image-shaped Python `watershed(image,
+  markers, mask=None, connectivity=1)` — the rest is filed in BUGS.md.
+  Uncommitted.
+
+## 2026-08-17 (34th entry)
+
+* **Third benchmark set: the FRET / burst kernels against their upstream
+  code — identical, faster on all five.** `bench_fret.py` /
+  `competitors/bench_fret.py` / `check_fret.py`, five plot categories,
+  PERF.md rows + identity checklist. References are the code itself: PAM's
+  `PDA_histogram.cpp` and the original FRET_burstML MEX compiled natively
+  through the test shims (new timing drivers in
+  `benchmarks/competitors/native/`, clock inside the process), FRETBursts'
+  cython KDE in its venv, and Toru Kondo's `TK_Create2DFDC_04.m` and PAM's
+  `CUSUM_burstsearch` in Octave with `tic`/`toc` around the call. Results:
+  PDA 4.7× (2e-18), BurstML 8.3× (3e-13), FRET-2CDE 4.2× (6e-15), 2D-FDC
+  ~4700× (0 of 389 185 pair counts differ), CUSUM ~1400× (behavioural,
+  Jaccard ≥ 0.87 — PAM discretises the same search differently by
+  construction). No kernel needed changing. Uncommitted.
+
+## 2026-08-17 (33rd entry)
+
+* **Next set in the benchmark suite: the scientific-Python kernels —
+  identical outputs, faster on all eight.** New `sciref` venv (scikit-image
+  0.25.2, scikit-learn 1.7.2, filterpy, hmmlearn, phasorpy),
+  `bench_sciref.py` / `competitors/bench_sciref.py` / `check_sciref.py`,
+  eight plot categories, PERF.md rows + identity checklist. Findings on the
+  way: (1) **skimage 0.25.1 reverted 0.25.0's `-inf` watershed marker seed**
+  (PR 7702) — the very divergence the port had settled in 0.25.0's favour
+  over ChiSurf; on the 1024² benchmark image 13 % of pixels change basin
+  between the two. Followed upstream: markers enter at their image value
+  (ChiSurf's original), fixture re-recorded from 0.25.2, live sweeps skip on
+  < 0.25.1 with the reason. (2) k-means was slower than sklearn's Lloyd: the
+  sweep now assigns points in parallel with every sum serial and in point
+  order (bit-exact with ChiSurf, pins green), and the greedy k-means++
+  seeding — 40 full passes over X, bandwidth-bound, 70 % of the run — drops
+  its per-trial linear scans for a prefix array + binary search (same
+  numbers): 59 → 30 ms; sklearn's same job (its own k-means++) is 176 ms,
+  its Lloyd alone 24 ms. (3) Richardson–Lucy threads pocketfft (264 → 203
+  ms). (4) A batched phasor binding (`compute_phasor_bincounts_batch`),
+  digit-for-digit the per-decay one, so a stack is one call. Uncommitted.
+
+## 2026-08-17 (32nd entry)
+
+* **VicidominiLab kernels in the benchmark suite — identical outputs, faster
+  on all four.** New `vicidomini` venv (birfi, BrightEyes-ISM, s2ISM from
+  upstream + torch CPU), `bench_vicidomini.py` / `competitors/bench_vicidomini.py`
+  / `check_vicidomini.py`, four plot categories, PERF.md rows and a section
+  with the identity checklist. APR was *slower* than BrightEyes (282 vs
+  146 ms) and only matched it away from the edges: registration on a canvas
+  padded to twice the frame (4× the FFT work) and serial per-element work.
+  `apr_reconstruction` now uses the reference's circular Fourier shift
+  (identical, 3e-16, on any image), the reference spectrum once, and OpenMP:
+  40 ms, 3.8×. `blind_irf_estimate` now solves the reference model (shared
+  k, per-channel A, C — variable projection + golden section) instead of a
+  log-linear tail fit with `C = min(y)`, which had left a Poisson-floor
+  pedestal for RL to smear (IRF–truth corr 0.945 → 0.996 on a 1024-bin
+  decay; birfi 0.993): 3.9×. focus-ISM 291× (its registration keeps a small zero-padded margin, matching focusISM's zero-filled `interp`), s2ISM 3.6× identical.
+  Documentation obligations done: PERF.md, CHANGELOG, superres/decay
+  READMEs, plots regenerated, header marks, this log, and the register's
+  checked list. Uncommitted.
+
+## 2026-08-17 (31st entry)
+
+* **The rest of the library A/B-validated — decay, FCS/PCH, burst search,
+  HMM/kinetics/PDA, core/corrections/util/streaming, imaging, simulation —
+  register created, four more defects fixed, the open ones filed.** Same
+  contract as the math round below, applied everywhere an algorithm lives:
+  an independent reference first (FRETBursts, pycorrelate, multipletau,
+  H2MM_C, astropy `bayesian_blocks`, phasorpy, ptufile, phconvert, PyBroMo,
+  hmmlearn/filterpy fixtures; the **original FRET_burstML MEX** and **PAM's
+  `PDA_histogram.cpp`** compiled natively from `junk/` and `../chisurf/junk/`
+  through small `mex.h` shims; PAM's CUSUM in Octave; NumPy/scipy
+  transcriptions of Coates 1968, Li & Ma 1983, Zhang & Yang 2005, Adams &
+  MacKay 2007, Scargle 2013, Gopich & Szabo 2009 (via `expm`), Antonik 2006,
+  Hellenkamp 2018, Chen 1999 PCH, Torella BVA, Tomov 2CDE, Isenberg 1973,
+  Marsaglia & Tsang 2000, mt19937ar.c, xoshiro256++), ChiSurf's Python as the
+  second check where the kernel is a port. Fifteen new permanent suites
+  (`test_ab_*_reference.py` per area, ~200 tests, four compiled harnesses,
+  five recorded fixtures with inputs stored beside outputs); 100+ headers
+  carry the `// Validation:` block. Results by area, with metric and verdict,
+  in [`testing/algorithm-validation.md`](testing/algorithm-validation.md).
+  **Fixed the same day** (each with the test that found it now asserting):
+  `estimate_background_rate` divided by Σt instead of Σ(t − t_thr) — 0.59×
+  the true rate at the default tail fraction (and returned Hz where the
+  header said kHz — now kHz, typical background 0.2–3 kHz);
+  the histogram 'search' axis never filled bin 0 or the last bin; the
+  Laurence cross-correlation formed `t2 − t1` unsigned and returned zeros
+  whenever the second stream started first; the `fconv_ref` Python wrapper
+  dropped `dt`. **Filed in BUGS.md**, pinned by tests, headers left
+  unmarked: `felekyan` block lags vs the shared axis (τ mislabelled ≤ 25 %);
+  `HmmVB`'s ELBO data term ≠ its own header derivation (~1 nat, model
+  selection); `blind_irf_estimate` recovers position not shape; the
+  simulator's rotational diffusion is a single Gaussian kick (r(t) above the
+  exponential beyond ~ρ); three PTU-writer header defects an independent
+  reader trips on; plus a list of unbound-from-Python surfaces and doc/code
+  mismatches. Reference libraries never entered the project env — scratch
+  venvs and `benchmarks/.venvs/`; `multipletau` was added to the pycorrelate
+  reference venv (`build_envs.sh`). **Follow-up the same day** worked the
+  open list down: `estimate_background_rate` returns kHz (user: typical
+  background 0.2–3 kHz — the header's original contract; the code multiplied
+  to Hz), tests at 0.2/1/3 kHz; the `felekyan` correlator got its own
+  contiguous lag axis (block k at 2^(k−1)) and wahl/felekyan now agree as
+  functions of τ; the PTU writer's three header defects fixed (`Header_End`
+  last and typed, record count patched after the stream) and ptufile now
+  decodes every record; the simulator's excited-state rotation sub-stepped
+  (r(2ρ) within 0.02 of the exponential); `fconv_cs_time_axis` bound to
+  NumPy; eight doc/code mismatches corrected in the headers; the PyBroMo
+  benchmark PSF width corrected (PERF re-run pending). A last pass bound the
+  six exposed-but-uncallable surfaces (`DecayPhasor.compute_phasor` +
+  `compute_phasor_selection`, `ProductPrior` via `VectorDecayFitPrior`,
+  `bincount1D`, `SimRandom.init_by_array`, `dirichlet_kl`) with array
+  typemaps and A/Bs, made `TTTR.set_mt_linearizer` copy instead of adopt
+  (double free), and fixed `blind_irf_estimate` — three defects (SG
+  derivative abscissa mismatch, circular FFT at n, RL back-projection off by
+  one per iteration) plus a weighted log-linear tail fit; the IRF shape now
+  comes back (99.5 % of the mass in place, was 25 %). On the user's
+  direction the reference for it is **VicidominiLab's `birfi`** (cloned into
+  `../chisurf/junk/birfi`, registered in its `clone.sh`; ChiSurf's
+  `irf_estimation.py` is a port of it): run in a subprocess over four
+  configurations × 30/500 iterations, aligned IRFs correlate 0.978–0.999 —
+  after undoing birfi's n/2 `ifftshift` roll, which the A/B pins; birfi's own
+  Adam lifetime fit is 5–38 % off and forgiven by RL. That check also
+  corrected the record: the circular forward model is birfi's periodic
+  model, not a defect (kept, made exact for any n); the port's own defects
+  were the SG derivative and the centroid lifetime. The same direction applied
+  to the other VicidominiLab-derived kernels: live A/Bs against BrightEyes-ISM
+  `APR_lib.ShiftVectors` (bit-identical), `APR_lib.APR(mode='fourier')`
+  (1e-9), `FocusISM_lib.focusISM` (corr > 0.98, bg fractions within 0.02) and
+  the torch `s2ISM` package (1e-6, after pinning that its `max_iter=n` runs
+  n+1 updates and that it crops even sizes) — where the suite had used
+  transcriptions. Final run: **279 passed, 0 xfailed** (+ the birfi, ChiSurf,
+  BrightEyes-ISM and s2ISM A/Bs since). The only finding left is the HmmVB ELBO question,
+  filed as a modelling decision. Everything uncommitted.
+
+## 2026-08-17 (30th entry)
+
+* **`modules/math` A/B-validated end to end against independent references;
+  register created; one RNG defect found and fixed.** Every kernel in the
+  module — 19 headers — now has an A/B test against a library the code was
+  not ported from (sklearn NearestNeighbors / KMeans / HDBSCAN, scipy
+  minimum_spanning_tree / nnls / L-BFGS-B / Nelder-Mead / logsumexp /
+  signal, scikit-image watershed / find_contours / richardson_lucy,
+  numpy.linalg solve / inv / lstsq / eig / matrix_power, hmmlearn and filterpy
+  through a recorded fixture, Random123 known-answer vectors, O'Neill's pcg32
+  and the canonical SplitMix64), with ChiSurf's Python as the *second* check
+  where the kernel is a port of it. Four permanent suites,
+  `test/python/misc/test_math_ab_{clustering,imaging,probabilistic,numerics}.py`
+  (72 tests, 209 subtests, ~17 s; reference libraries optional and skipped
+  visibly), plus `test/cpp/ab_numerics_harness.cpp` for the unbound C++
+  (NelderMead, i_lbfgs, Mat, QREigen, Random, Sampling, SimPcgRandom, Nnls)
+  compiled once by the pytest. Results are in
+  [`testing/math-kernel-validation.md`](testing/math-kernel-validation.md),
+  and each header carries a `// Validation: A/B-TESTED 2026-08-17 -- ...`
+  block after its include guard naming reference, metric and test. Headline
+  numbers: core distances to 4e-16, MST weight multiset bit-identical to
+  scipy, HDBSCAN partitions identical to sklearn from either side's tree
+  (36/36; end-to-end differs only where sklearn's unstable argsort orders
+  tied edges), k-means to 1e-14 of sklearn's Lloyd from the same seed,
+  Kalman to 1e-14 of filterpy and a textbook filter, HMM forward/backward/
+  Viterbi bit-identical to hmmlearn, watershed and marching squares exact vs
+  skimage over > 1400 cases, Richardson-Lucy to 1e-15 of skimage across every
+  PSF parity, Philox bit-exact to Random123, SimPcgRandom bit-exact to
+  O'Neill. **Found:** `Random.h`'s PCG engine wrote the XSH-RR xorshift as
+  `(state >> 18) ^ (state >> 27)` instead of `(state >> 18) ^ state` — a
+  19-live-bit word, per-bit P(1) 0.22–0.37; fixed (one token), the two tests
+  that pinned it as expected failures now assert. Reach was
+  `TTTR_RNG_ENGINE=pcg` and the non-deterministic default, never the Philox
+  default. Also recorded: `mt19937` is a name that falls through to Philox
+  (pinned, unchanged); `skimage.restoration.wiener` and ChiSurf's `mem.py`
+  are not valid references for `wiener_deconvolve` / `run_mem` (different
+  estimator; value/gradient of two objectives) — documented rather than
+  compared loosely; `quadpr_bound`'s non-KKT caveat pinned in shape. All
+  uncommitted, like the rest of the bundle.
+
 ## 2026-08-16 (29th entry)
 
 * **PRD-037 B2 `kmeans` — kernel, binding, tests, benchmarks, validated —

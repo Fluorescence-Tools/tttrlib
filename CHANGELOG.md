@@ -3,6 +3,107 @@
 ## [Unreleased]
 
 ### Fixed
+- **`kalman_filter` for one channel read past its buffers.** The general
+  `K = P_pred·S⁻¹` branch (every dim other than 2 and 3) was written for
+  dim = 4 — strides of 4, four terms — so for dim = 1 it read past its
+  1-element vectors: undefined behaviour that usually met zeroed heap slack
+  and now and then did not, an intermittent one-channel failure of the A/B
+  against the textbook filter (seen twice in long runs before it was
+  understood). The branch is now general, dim = 4 is unchanged, and the
+  arbitrary `dim ≤ 4` cap is gone; dims 1–6 agree with the textbook filter to
+  ~1e-15 over interleaved repetitions. dim = 2 (the ChiSurf bit-exact path)
+  is untouched.
+- **`estimate_background_rate` tail estimate is now the tail MLE.** The
+  largest `tail_fraction` of the sorted inter-photon times are
+  `t_thr + Exp(rate)`, so the estimator is `N / Σ(t_i − t_thr)`; the code
+  divided by `Σ t_i` and was biased low by exactly `1/(1 − ln f)` — 0.59× the
+  true rate at the default `f = 0.5`, 0.30× at 0.1. Found by the A/B against
+  FRETBursts' `expon_fit`; `tail_fraction >= 1` is the untruncated
+  whole-sample MLE. **The return value is now in kHz**, as the header always
+  promised (inter-photon times are in ms, so `N / Σ(t − t_thr)` is 1/ms;
+  the code multiplied by 1e3 and returned Hz) — typical single-molecule
+  background is 0.2–3 kHz. A caller that divided by 1000 must stop.
+- **The histogram 'search' axis fills its first and last bin.** Any
+  `axis_type` other than `lin`/`log10` (arbitrary edges by binary search)
+  never filled bin 0 (`idx > 0` in `bin_of`) or the last bin
+  (`search_bin_idx` rejected values above `bin_edges[n − 2]`). Bins are now
+  `[e_i, e_{i+1})` with numpy's closed right edge; nothing inside the library
+  used this axis type, so only direct Python callers were affected.
+- **`Correlator` `laurence` cross-correlation no longer returns zeros when
+  the second stream starts before the first.** `ccf_laurence` formed
+  `t2 − t1` in unsigned arithmetic; an earlier partner photon wrapped to
+  ~2^64 and stopped the skip loop, giving all-zero bins (or, with the second
+  stream starting later, the cumulative count in the first populated bin).
+  Bin edges are now moved onto the partner's axis. Autocorrelation was
+  unaffected.
+- **Simulated time-resolved anisotropy decays exponentially out to several
+  rotational times.** The excited-state rotation of the emission dipole was
+  one Gaussian kick of variance `2 D_rot·delay` per axis — exact to first
+  order only, so r(t) sat above `r0·exp(−t/ρ)` once `t ≳ ρ` (r(2ρ) 0.10–0.12
+  vs 0.054; steady-state r at τ/ρ = 2 0.156 vs Perrin's 0.133). The rotation
+  is now sub-stepped (per-axis variance ≤ 0.02 rad² per kick). Anisotropy
+  photon streams from a given seed change; r(0) and the initial slope were
+  already right.
+- **PTU files tttrlib writes are accepted by strict readers.** Three header
+  defects of the from-scratch PTU writer, found by round-tripping through
+  `ptufile`: the auto-added `Header_End` tag had an uninitialised type/ident
+  tail (ptufile: "invalid tag type … typecode=0"); a caller-supplied
+  `Header_End` was written before the mandatory tags the writer appends, so
+  even tttrlib misread the file; and `TTResult_NumberOfRecords` was the
+  number of events, not records — overflow records uncounted, so a reader
+  honouring the count truncated the stream. `Header_End` is now always the
+  last tag, zero-filled and typed `tyEmpty8`, and the record count is
+  patched to `(file size − header size) / 4` after the stream is written.
+- **`Correlator` `felekyan` has its own lag axis.** The method's blocks count
+  lags at spacing 2^(k−1) (block 0 at 1) — the structure `ccf_felekyan` and
+  `normalize_ccf_felekyan` always assumed — but the curve was labelled with
+  the wahl multi-tau axis (spacing 2^k), so every block-k value sat at up to
+  twice its true lag (25 % off at the end of a block, inter-block lags never
+  counted). `CorrelatorCurve::update_axis` now builds the felekyan axis when
+  that method is selected; wahl and felekyan agree as functions of τ. The
+  `x_axis` of a felekyan correlator therefore changes (its last lag is half
+  of the wahl axis' for the same `n_casc`); the values were always right for
+  the lag they counted.
+- **`blind_irf_estimate` recovers the IRF shape, not only its position** — and
+  is now A/B-tested against the reference implementation, VicidominiLab's
+  `birfi` (Gomez-Sanchez et al. 2024): aligned IRF estimates correlate
+  0.978–0.999 over four configurations at 30 and 500 RL iterations, peaks
+  within 0.15 ns. Two defects of the port: the Savitzky-Golay derivative
+  mixed a `dt`-scaled abscissa with an unscaled weight vector (its minimum
+  sat on the rising edge, so the tail window was a few bins and the lifetime
+  came out 0.2 ns for a 2.5 ns decay), and the lifetime was the centroid the
+  reference uses only as an initial guess — it is now a Poisson-weighted
+  log-linear fit of the tail. The reference's periodic (circular) forward
+  model is kept and is now exact for any histogram length (the transform was
+  circular only for power-of-two lengths); the RL back-projection is the
+  exact adjoint. On the known-answer fixture 99.5 % of the estimated IRF's
+  mass is within ±0.5 ns of the true peak (was 25 %).
+- **`TTTR.set_mt_linearizer` copies the linearizer instead of adopting the
+  pointer.** Adopting it double-freed at teardown whenever the caller's own
+  handle (a SWIG proxy, always) was released too.
+- **Six exposed-but-uncallable surfaces are now bound with array
+  typemaps**: `DecayPhasor.compute_phasor(microtimes, ...)` plus a
+  `compute_phasor_selection(microtimes, indices, ...)` for the index form,
+  `ProductPrior([priors])` (`VectorDecayFitPrior`), `bincount1D(data, out)`,
+  `SimRandom.init_by_array(key)`, `dirichlet_kl(a, b)` (a length mismatch
+  raises), and `fconv_cs_time_axis` below.
+- **`fconv_cs_time_axis` is callable from Python.** Its IRF parameter name was
+  missing from the NumPy `%apply` list, so SWIG exposed a bare `double*` that
+  no array could be passed to.
+- **`fconv_ref` (Python) honours its `dt` argument.** The wrapper forwarded
+  everything but `dt`, so the C++ default 0.05 was used regardless; it now
+  passes `dt` through with the same default (1.0) as its sibling wrappers.
+- **`Random.h` PCG engine now emits PCG.** `pcg_deterministic_u32` wrote the
+  XSH-RR xorshift as `((state >> 18) ^ (state >> 27)) >> 27`; the canonical
+  output function is `((state >> 18) ^ state) >> 27`. The pre-rotation word
+  had only 19 live bits, so every draw had 13 zero bits in a rotating window
+  and per-bit P(1) was 0.22–0.37. Found by the A/B against the canonical
+  pcg32 output (`test_math_ab_numerics.py`); the engine is now bit-exact to
+  it. Only `TTTR_RNG_ENGINE=pcg` and the engine chosen when
+  `TTTR_RNG_DETERMINISTIC` is off were affected — never the Philox default —
+  so no recorded fixture depended on the old stream; a run that did select
+  PCG will now draw a different (correct) stream.
+
 - **2D-FDC log axis: the tick quantization now follows the reference MATLAB.**
   `TK_Create2DFDC_04.m` keeps its log bin edges real-valued
   (`t_Imax^(j/L) - 1`) and compares the integer micro-time tick against them
@@ -19,7 +120,128 @@
   doi:10.1021/jp406861u / jp406864e; Kondo et al. PNAS 2019,
   doi:10.1073/pnas.1821207116).
 
+### Changed
+- **`watershed` follows current scikit-image (≥ 0.25.1): markers enter the
+  flood at their own image value.** The port had pinned 0.25.0, whose `-inf`
+  marker seeding upstream reverted in 0.25.1 (PR 7702: "not actually a bug");
+  on a 1024² basin image with 200 markers 13 % of the pixels change basin
+  between the two conventions. The recorded fixture's watershed arrays were
+  re-recorded from 0.25.2 (inputs unchanged); the live sweeps skip on
+  skimage < 0.25.1 with the reason. Marching squares is unaffected.
+
+### Performance
+- **The FRET / burst kernels are benchmarked against their upstream code —
+  the MEX sources, the MATLAB file and FRETBursts — with identical outputs**
+  (`benchmarks/bench_fret.py`, `competitors/bench_fret.py`, `check_fret.py`;
+  PERF.md): PDA 4.7× vs PAM's `PDA_histogram.cpp` compiled natively (2e-18),
+  BurstML 8.3× vs the original FRET_burstML MEX compiled natively with GSL
+  (3e-13), FRET-2CDE 4.2× vs FRETBursts' cython KDE + Tomov's formula
+  (6e-15), 2D-FDC ~4700× vs `TK_Create2DFDC_04.m` in Octave (0 of 389 185
+  pair counts differ), CUSUM/SPRT ~1400× vs PAM's `CUSUM_burstsearch` in
+  Octave (behavioural: Jaccard ≥ 0.87 per burst, as the search's
+  discretisation differs by construction). Native timing drivers under
+  `benchmarks/competitors/native/` clock the MEX code inside the process.
+- **Record decoding is benchmarked against phconvert** (PTU, HT3, SPC-130 in
+  the `read` venv; `competitors/bench_phconvert.py`, `check_reading.py`):
+  5.8× / 25× / 4.4× faster, photon-for-photon identical (photons, markers,
+  resolutions).
+- **The general kernels are benchmarked against their scientific-Python
+  references with identical outputs** (`benchmarks/bench_sciref.py`,
+  `competitors/bench_sciref.py` in the new `sciref` venv, `check_sciref.py`;
+  PERF.md): watershed 1.4× (skimage), marching squares 3.5×,
+  Richardson–Lucy 1.8×, k-means 5.9× on the same job (k-means++ + Lloyd) and
+  2.9× on Lloyd alone (scikit-learn), HDBSCAN 21×, Kalman 510× (filterpy),
+  HMM lattice 1.8× (hmmlearn), phasor 3.4× (phasorpy). Three kernels got
+  faster on the way, all bit-identical to before: k-means assigns points in
+  parallel while every sum stays serial and in point order (the ChiSurf
+  bit-exactness contract), and its k-means++ seeding replaces `2+ln k` linear
+  scans per centre with one prefix array and a binary search on it (59 → 30
+  ms); Richardson–Lucy threads its pocketfft transforms (264 → 203 ms).
+- **`DecayPhasor.compute_phasor_bincounts_batch(counts2d, ...)`**: the phasor
+  of every row of an (n_decays × n_bins) stack in one call, cos/sin table
+  shared, rows in parallel — digit-for-digit the per-decay method
+  (`phasor_of_bincounts`), 3.4× phasorpy on 100 k decays; a per-decay Python
+  loop measures the binding, not the kernel.
+- **The VicidominiLab kernels are benchmarked against the upstream packages
+  and are faster on every one** (`benchmarks/bench_vicidomini.py`,
+  `competitors/bench_vicidomini.py` in the new `vicidomini` venv,
+  `check_vicidomini.py` for output identity; PERF.md): blind IRF 3.9× vs
+  birfi, ISM pixel reassignment 3.8× vs BrightEyes-ISM `APR` (5.0× vs its
+  default `interp` mode) with bit-identical shift vectors and an identical
+  image, focus-ISM 291× vs `focusISM`, s2ISM 3.6× vs the torch package with
+  an identical reconstruction. APR had been *slower* (282 ms vs 146 ms): its
+  registration ran on a canvas zero-padded to twice the frame — 4× the FFT
+  work — and everything was serial. `apr_reconstruction` now registers with
+  the reference's own circular Fourier shift (its output therefore equals
+  `APR_lib.Reassignment(mode='fourier')` on any image, edge content
+  included, where it previously matched only away from the edges), the
+  reference-image spectrum is computed once, and the per-element work runs
+  in OpenMP: 282 → 40 ms. Focus-ISM keeps a zero-padded (no-wrap) margin —
+  now a few times the shift rather than half the frame — because `focusISM`
+  reassigns with the zero-filled `interp` mode before its per-pixel fits; the
+  half-frame padded shift stays for the eSRRF/SOFISM paths, where wrapped
+  tails would be read as structure.
+- **`blind_irf_estimate` fits the reference model exactly.** The shared decay
+  rate with per-channel amplitude and background is now solved (variable
+  projection: per-k linear (A, C), golden-section over k) instead of
+  estimated from a centroid or a log-linear tail fit; the fitted background,
+  not `min(y)`, is subtracted before Richardson–Lucy. On a 25-channel
+  1024-bin benchmark decay the IRF–truth correlation went from 0.945 to
+  0.996 per channel (birfi: 0.993).
+
 ### Added
+- **Examples, as `.py` and executed `.ipynb`, on simulated data, for every
+  algorithm validated today**: `fluorescence_decay/plot_blind_irf_estimation`,
+  `flim/plot_phasor_decay_stack`, `miscellaneous/plot_watershed_marching_squares`,
+  `miscellaneous/plot_richardson_lucy_deconvolution`,
+  `single_molecule/plot_burst_feature_clustering` (k-means + HDBSCAN),
+  `plot_kalman_burst_detection`, `plot_hmm_lattice_two_state`,
+  `plot_burstml_two_state`, `plot_two_cde`, `plot_background_rate`,
+  `tttr/plot_write_read_roundtrip_simulated` (PTU/HT3/SPC-130 written from a
+  simulated stream and read back record-for-record); and
+  executed notebooks for the existing ISM (APR / focus-ISM / s2ISM / SOFISM /
+  eSRRF), PDA, 2D-FDC and burst-search examples (three ISM scripts made
+  notebook-safe: no `__file__`). Module READMEs point to them.
+- **`TTTR.burst_search_kalman(..., warmup_bins=0)`**: seed the filter from the
+  mean rate of the first `warmup_bins` bins and report no burst inside them.
+  The legacy start (`x0 = 0`) makes the first update's measurement noise
+  `R ∝ x` vanish, so the filter believes rate 0 exactly and the next
+  non-empty bin is a huge innovation — one or two spurious bursts at t ≈ 0
+  on every trace. Default 0 keeps the legacy behaviour (ChiSurf-identical).
+- **`kmeans_n_uniforms(k, n_init)` / `kmeans_uniforms(k, n_init, seed)`**
+  (Python): the size of the caller-owned uniform stream `kmeans` consumes,
+  and a stream of that size from `numpy.random.default_rng(seed)`.
+- **`watershed(image, markers, mask=None, connectivity=1)`** (Python): the
+  scikit-image call shape — `mask=None` is all pixels, markers/mask are cast;
+  a non-integer or out-of-range connectivity raises.
+- **`blind_irf_estimate_array(data2d, dt, ...)`**: the blind IRF kernel on an
+  `(n_bins, n_channels)` NumPy array, IRF stack of the same shape out — the
+  flat-list form stays for the other bindings.
+- **Library-wide algorithm validation register and A/B suites.** Every
+  algorithm — decay convolution and fits, correlators, PCH/FIDA, BVA/2CDE/
+  recurrence, every burst search, BurstML, HMM/VB, kinetics, PDA (2- and
+  3-colour), CLSM reconstruction, localization, super-resolution, the
+  simulator, histograms, record decoding, corrections, util, streaming — is
+  A/B-tested against an independent reference (FRETBursts, pycorrelate,
+  multipletau, H2MM_C, astropy, phasorpy, ptufile, phconvert, PyBroMo, the
+  original FRET_burstML MEX and PAM's PDA compiled natively, and NumPy/scipy
+  transcriptions of the source papers) or a known answer, in permanent
+  `test_ab_*_reference.py` suites per area with recorded fixtures whose
+  inputs are stored beside their outputs. Validated headers carry a
+  `// Validation:` block; the register is
+  `okf/testing/algorithm-validation.md`, open findings are in
+  `okf/BUGS.md`.
+- **`modules/math` validation register and A/B suites.** Every math kernel is
+  now A/B-tested against an independent reference — sklearn, scipy,
+  scikit-image, numpy.linalg, hmmlearn and filterpy (recorded fixture),
+  Random123 / O'Neill pcg32 / SplitMix64 known answers, ChiSurf's Python where
+  the kernel is a port — in four permanent suites
+  `test/python/misc/test_math_ab_{clustering,imaging,probabilistic,numerics}.py`
+  (72 tests, 209 subtests; reference libraries optional) plus
+  `test/cpp/ab_numerics_harness.cpp` for the unbound C++ (NelderMead, i_lbfgs,
+  Mat, QREigen, Random, Sampling, SimPcgRandom, Nnls). Each header carries a
+  `// Validation: A/B-TESTED ...` block; the register with metrics is
+  `okf/testing/math-kernel-validation.md`.
 - **Region segmentation in one compiled call each: `watershed(image, markers,
   mask, connectivity)` → label image, and `marching_squares(image, level,
   vertex_connect_high)` → `(n, 4)` contour segments**

@@ -344,4 +344,12 @@ Five of the thirteen ChiSurf files are ChiSurf's own work and need nothing here:
       2026-08-17 — the decision block above is the answer.]*
 - [ ] Every item: NumPy typemaps, one call per analysis, a simulation test with
       a known answer, and the four-language guard.
+      *(Requirement 6 — a check against something other than what the port
+      replaces — is now met for every Part B kernel and the rest of
+      `modules/math` besides, 2026-08-17: HDBSCAN vs sklearn.cluster.HDBSCAN
+      and scipy's MST, k-means vs sklearn's Lloyd from the same seed, Kalman
+      vs filterpy and a textbook filter, watershed/marching squares vs skimage
+      live over > 1400 cases. Register with metrics and test names:
+      `okf/testing/math-kernel-validation.md`; suites
+      `test/python/misc/test_math_ab_*.py`.)*
 - [ ] ChiSurf's allow-list drops to **5** (the *Not in scope* files).
