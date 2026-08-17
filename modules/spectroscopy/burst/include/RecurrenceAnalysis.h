@@ -11,6 +11,13 @@
 #ifndef TTTRLIB_RECURRENCEANALYSIS_H
 #define TTTRLIB_RECURRENCEANALYSIS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- pair_statistics vs NumPy pair counting and the Poisson expectation
+//   with edge correction (exact); same_molecule_probability layout; known answers: Poisson
+//   bursts give G = 1, planted recurrences give P_same = N_rec/(N_rec + E_random) (2%);
+//   recurrence_efficiencies vs a NumPy pairing (exact).
+//   test/python/bva/test_ab_bva_2cde_recurrence_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <tuple>
 

@@ -35,6 +35,10 @@
 #ifndef TTTRLIB_BURSTCONFIDENCE_H
 #define TTTRLIB_BURSTCONFIDENCE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs a NumPy transcription of the documented statistic (background from the
+//   +-window/2 flanks, burst excluded; Li & Ma / Poisson / Gaussian modes), 1e-9. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 

@@ -32,6 +32,12 @@
 #ifndef TTTRLIB_BURSTML_H
 #define TTTRLIB_BURSTML_H
 
+// Validation: A/B-TESTED 2026-08-17 -- neg_log_likelihood vs the original FRET_burstML MEX (mlhDiffNTRbkg_MT.cpp
+//   from junk/FRET_burstML/burstMLProject.zip, compiled natively with GSL via
+//   test/cpp/burstml_mex_shim): identical to 1e-12 rel for 2 and 3 states, 2 and 3
+//   colours, jmax 12-20. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <complex>
 #include <cstdint>
 #include <string>
@@ -50,10 +56,31 @@ struct BurstMLFitResult {
 };
 
 /*!
- * \brief Maximum-likelihood FRET burst analysis with diffusion modelling.
+ * \brief Maximum-likelihood analysis of single-molecule FRET bursts from freely
+ *        diffusing molecules (FRET_burstML, Hoffmann et al.).
  *
- * Set burst photon data, configure the spatial/analysis grid, then call
- * fit() to recover kinetic and photophysical parameters.
+ * The likelihood of every burst's photon sequence is evaluated under a joint
+ * model of (i) diffusion through the 3D-Gaussian focus on a discretised radial
+ * coordinate q (jmax bins up to qmax, detection profile exp(-2 q^2)),
+ * (ii) first-order conformational kinetics between n_states FRET states, and
+ * (iii) Poisson photon counting in n_colours detection channels with per-colour
+ * background. The combined operator L = D + K - N is eigendecomposed once per
+ * parameter set (Francis QR, QREigen.h), so a photon's propagation is a diagonal
+ * scaling in the eigenbasis; the burst likelihood is the product over photons.
+ * No binning of the bursts, no fixed transit time.
+ *
+ * Usage: `set_burst_data(times_ms, colours, offsets)` (times in **ms**, colours
+ * 0 = acceptor, 1 = donor [, 2 = third colour], `offsets` the burst
+ * boundaries), then either `fit(init, lb, ub, n_states, ...)` (Nelder-Mead on
+ * the negative log-likelihood, returns fitted parameters, Hessian errors, BIC)
+ * or `neg_log_likelihood(params)` after `set_n_states/set_n_colours/set_jmax/
+ * set_qmax/set_t_th/set_n_th` for a manual optimiser or a profile. Parameter
+ * layout: see the file header. `t_th` (ms) is the inter-photon time that ends a
+ * burst and `n_th` the minimum photon count, both part of the likelihood.
+ *
+ * Bit-identical (1e-12) to the original GSL-based MEX `mlhDiffNTRbkg_MT.cpp`,
+ * 8x faster on the benchmark set (PERF.md). Example:
+ * `examples/single_molecule/plot_burstml_two_state.py`.
  */
 class BurstML {
 public:

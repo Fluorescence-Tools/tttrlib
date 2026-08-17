@@ -11,8 +11,12 @@
  * contains enough photons.
  *
  * The conjugate prior for the per-bin photon count is Gamma-Poisson: each
- * channel's rate \f$\lambda\f$ has a Gamma(\f$\alpha, \beta\f$) prior, and the
- * predictive is Negative-Binomial. After observing a count \f$k\f$ in a bin,
+ * channel's rate \f$\lambda\f$ has a Gamma(\f$\alpha, \beta\f$) prior. The
+ * predictive used for a bin is the *plug-in* Poisson at the posterior mean
+ * \f$\alpha/\beta\f$ (the same choice as the ChiSurf implementation this
+ * ports and the A/B pins), not the marginal Negative-Binomial -- cheaper, and
+ * indistinguishable once a segment holds more than a few bins. After
+ * observing a count \f$k\f$ in a bin,
  * \f$\alpha \mathrel{+}= k\f$, \f$\beta \mathrel{+}= 1\f$, so the posterior
  * keeps updating as long as the segment continues, and resets at a changepoint.
  *
@@ -29,6 +33,12 @@
  */
 #ifndef TTTRLIB_BURSTSEARCHBOCPD_H
 #define TTTRLIB_BURSTSEARCHBOCPD_H
+
+// Validation: A/B-TESTED 2026-08-17 -- vs Adams & MacKay 2007 in NumPy with the plug-in Poisson predictive
+//   (transcribed from the pre-delegation ChiSurf numba code, chisurf fffe299c3): bursts
+//   identical, 1 and 2 channels, priors, run cap. NB the predictive is the plug-in
+//   Poisson at alpha/beta, not the Negative-Binomial the file comment names. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
 #include <vector>

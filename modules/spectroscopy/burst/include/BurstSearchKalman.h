@@ -31,6 +31,11 @@
 #ifndef TTTRLIB_BURSTSEARCHKALMAN_H
 #define TTTRLIB_BURSTSEARCHKALMAN_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs ChiSurf's KalmanBurstDetector.detect (independent numpy filter, run
+//   extraction, gap merge) on the kernel's bins: bursts identical, 1 and 2 channels,
+//   several thresholds. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 
@@ -73,6 +78,16 @@ struct KalmanBurstSettings {
     /// Cap on state dimensions, so a file with many routing channels cannot turn
     /// the per-bin matrix inverse into the dominant cost.
     int max_channels = 8;
+    /// Warm-up: seed the filter's rate from the mean of the first `warmup_bins`
+    /// bins (and its covariance from that rate's Poisson variance) instead of
+    /// from zero, and report no burst inside those bins. With the legacy start
+    /// (x0 = 0, P0 = 1e6·I) the first bin's measurement noise R ∝ x is ~0, the
+    /// filter then believes rate 0 exactly, and the next non-empty bin is a
+    /// huge innovation -- one or two spurious "bursts" at t ≈ 0 on every trace
+    /// (found writing examples/single_molecule/plot_kalman_burst_detection.py).
+    /// 0 keeps the legacy start, which is what ChiSurf's `KalmanBurstDetector`
+    /// does and what the A/B test pins; ~50-200 bins is a sensible warm-up.
+    int warmup_bins = 0;
 };
 
 /*!

@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_TWOCDE_H
 #define TTTRLIB_TWOCDE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs FRETBursts' own kde_laplace / kde_gaussian run live in
+//   benchmarks/.venvs/fretbursts on the same timestamps, assembled with Tomov's FRET-2CDE and
+//   ALEX-2CDE burst formulas (1e-9); the NumPy transcription is pinned in test_twocde.py.
+//   test/python/bva/test_ab_bva_2cde_recurrence_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <memory>
 #include <utility>
@@ -35,6 +41,13 @@ namespace tttrlib {
  * with an ascending-index two-pointer sliding window (@f$ 5\tau @f$ Laplace,
  * @f$ 3\tau @f$ Gaussian), then sliced per burst.  Both the global KDE and the
  * per-burst reduction are parallelised (see tttrlib::BurstFeature).
+ *
+ * Usage: `TwoCDE(tttr)`, `set_donor(channels)` + `set_acceptor(channels)` (or
+ * `set_donor_excitation` + `set_acceptor_excitation` for ALEX-2CDE), then
+ * `compute(bursts, tau_seconds, variant, kernel)` with `bursts` an (n, 2) array
+ * of inclusive photon-index pairs; `get_two_cde()` returns one value per burst
+ * (NaN where a required stream is empty). Example:
+ * `examples/single_molecule/plot_two_cde.py`.
  */
 class TwoCDE : public BurstFeature {
 public:

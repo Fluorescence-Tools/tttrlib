@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_BVA_H
 #define TTTRLIB_BVA_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs a NumPy slice-proximity-ratio reference written from Torella's
+//   definition (photon slices, time windows, 1e-12; conventions pinned: slices over all burst
+//   photons, remainder slice kept, population std) and the binomial static line; static species
+//   sits on sqrt(p(1-p)/n). test/python/bva/test_ab_bva_2cde_recurrence_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <memory>
 #include <utility>

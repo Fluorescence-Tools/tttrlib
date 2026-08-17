@@ -2,6 +2,13 @@
 #ifndef TTTRLIB_BURST_SEARCH_DISPATCH_H
 #define TTTRLIB_BURST_SEARCH_DISPATCH_H
 
+// Validation: A/B-TESTED 2026-08-17 -- the dispatched sliding window vs FRETBursts bsearch (compiled and
+//   pure Python, live, bit-identical) and a NumPy transcription; the dual-channel
+//   composition burst_search_coincident vs FRETBursts Bursts.and_gate (identical after
+//   merging overlapping gate output); CUSUM/SPRT vs Zhang & Yang 2005 in NumPy (exact)
+//   and PAM's discretised search in Octave (every burst matched, Jaccard >= 0.85). test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <functional>
 #include <string>
 #include <vector>

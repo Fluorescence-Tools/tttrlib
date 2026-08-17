@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// Validation: A/B-TESTED 2026-08-17 -- per-channel photon counts and E = A/(D+A) vs NumPy on the index pairs. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
 #pragma once
 #include <vector>
 #include <map>

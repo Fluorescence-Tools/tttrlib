@@ -99,6 +99,11 @@
 #ifndef TTTRLIB_BURSTSEARCHBAYESIANBLOCKS_H
 #define TTTRLIB_BURSTSEARCHBAYESIANBLOCKS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- bayesian_blocks_events vs astropy.stats.bayesian_blocks(fitness='events')
+//   on 7 recorded photon sets (change points identical), ncp_prior_from_p0 vs Scargle
+//   2013 eq. 21 (1e-12); the two-stage search known-answer on injected bursts. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 

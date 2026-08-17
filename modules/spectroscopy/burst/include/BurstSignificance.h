@@ -59,6 +59,12 @@
 #ifndef TTTRLIB_BURSTSIGNIFICANCE_H
 #define TTTRLIB_BURSTSIGNIFICANCE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- li_ma_significance vs Li & Ma 1983 eq. 17 (1e-10, 300 random triples);
+//   log_poisson_upper_tail / poisson_significance / log_p_to_sigma vs scipy.stats
+//   (also test_burst_significance.py); estimate_n_trials and sigma_for_false_alarm_rate
+//   vs their formulas. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <cstdint>
 #include <limits>

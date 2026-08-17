@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_BURSTFILTER_H
 #define TTTRLIB_BURSTFILTER_H
 
+// Validation: A/B-TESTED 2026-08-17 -- find_bursts == sliding window; properties (size, duration, rate) vs NumPy
+//   on the index pairs and vs FRETBursts burst size/width; size/duration filters vs
+//   NumPy masks. test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <memory>
 #include <string>

@@ -58,6 +58,11 @@
 #ifndef TTTRLIB_BURSTSEARCHMAXTREE_H
 #define TTTRLIB_BURSTSEARCHMAXTREE_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- no independent implementation of a photon-stream max-tree burst search
+//   exists; injected bursts recovered, significance filters, dispatch, degenerate inputs
+//   in test/python/test_burst_search_maxtree.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 

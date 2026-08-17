@@ -16,6 +16,13 @@ Algorithms for identifying photon bursts and computing burst metrics in single-m
 - **`TwoCDE.h` / `TwoCDE.cpp`**: Two-Channel Kernel Density Estimator (2CDE) analysis.
 - **`BurstML.h` / `BurstML.cpp`**: Maximum-likelihood burst analysis with a combined diffusion-kinetics-photon observation model (port of FRET_burstML, `mlhDiffNTRbkg_MT`). The combined evolution operator is eigendecomposed once per parameter set and the log-likelihood of all bursts is maximised via Nelder-Mead. Uses std-only QR eigendecomposition (`modules/math/QREigen.h`) and Nelder-Mead (`modules/math/NelderMead.h`) — no GSL dependency. Verified to recover FRET efficiency on simulated 2-state bursts. See the `BurstML.h` file header for the `5n`/`(4+n)n` parameter layout.
 
+## Examples
+
+- `examples/single_molecule/plot_burstml_two_state.py` (+ `.ipynb`): `BurstML` on simulated two-state diffusing FRET bursts -- likelihood profiles around the truth and the Nelder-Mead `fit`.
+- `examples/single_molecule/plot_two_cde.py` (+ `.ipynb`): `TwoCDE` FRET-2CDE (Laplace/Gaussian) on static vs switching bursts, and ALEX-2CDE on acceptor blinking.
+- `examples/single_molecule/plot_kalman_burst_detection.py` (+ `.ipynb`): `TTTR.burst_search_kalman` and the underlying `kalman_filter` on a simulated two-channel trace.
+- `examples/single_molecule/plot_background_rate.py` (+ `.ipynb`): `estimate_background_rate` (corrections module) -- the tail MLE vs the naive 1/mean on a bursty stream, tail-fraction bias/variance.
+
 ## Dependencies
 
 - Depends on `core`, `util`, `math` (BurstML uses `QREigen` and `NelderMead`).

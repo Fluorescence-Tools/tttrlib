@@ -106,6 +106,18 @@ std::vector<long long> burst_search_kalman(
     // two heap round-trips per bin.
     std::vector<double> S_inv(dim2), inv_scratch(dim2);
     for (int i = 0; i < dim; ++i) P[static_cast<size_t>(i) * dim + i] = 1e6;
+    // Optional warm-up (see the settings doc): x0 = mean rate of the first bins,
+    // P0 = its Poisson variance, so R is right from the first update.
+    const int64_t warm = std::min<int64_t>(std::max(0, settings.warmup_bins), n_bins);
+    if (warm > 0) {
+        for (int i = 0; i < dim; ++i) {
+            double s = 0.0;
+            for (int64_t b = 0; b < warm; ++b) s += counts[static_cast<size_t>(b) * dim + i];
+            const double rate = s / (static_cast<double>(warm) * settings.dt);
+            x[static_cast<size_t>(i)] = rate;
+            P[static_cast<size_t>(i) * dim + i] = std::max(rate, 1e-12) / settings.dt;
+        }
+    }
 
     std::vector<double> mahalanobis(static_cast<size_t>(n_bins), 0.0);
 
@@ -170,7 +182,7 @@ std::vector<long long> burst_search_kalman(
             Sv[static_cast<size_t>(i)] = sum;
             quad += v[static_cast<size_t>(i)] * sum;
         }
-        mahalanobis[static_cast<size_t>(b)] = quad > 0.0 ? std::sqrt(quad) : 0.0;
+        mahalanobis[static_cast<size_t>(b)] = (b < warm) ? 0.0 : (quad > 0.0 ? std::sqrt(quad) : 0.0);
     }
 
     // --- runs over threshold, length filter, gap merge -----------------------------
@@ -220,7 +232,7 @@ std::vector<long long> burst_search_kalman(
 // TTTR lives at global scope, so this definition sits outside `tttrlib`.
 std::vector<long long> TTTR::burst_search_kalman(
     int L, double dt, double q, double r_scale,
-    double z_thresh, int min_len, int merge_gap, bool per_channel
+    double z_thresh, int min_len, int merge_gap, bool per_channel, int warmup_bins
 ) {
     const int64_t n = static_cast<int64_t>(size());
     std::vector<int64_t> times(static_cast<size_t>(n));
@@ -244,6 +256,7 @@ std::vector<long long> TTTR::burst_search_kalman(
     s.min_len = min_len;
     s.merge_gap = merge_gap;
     s.per_channel = per_channel;
+    s.warmup_bins = warmup_bins;
     return tttrlib::burst_search_kalman(
         times, channels, header->get_macro_time_resolution(), s);
 }
