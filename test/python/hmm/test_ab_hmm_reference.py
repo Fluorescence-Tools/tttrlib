@@ -235,5 +235,78 @@ class TestVariationalBayes(unittest.TestCase):
         self.assertLess(sub_stochastic, vb.loglik - 0.5)
 
 
+class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
+    """Independent reference for the VB machinery: ``hmmlearn.vhmm.
+    VariationalCategoricalHMM`` (fixture recorded by
+    ``gen_ab_hmm_vb_hmmlearn_reference.py`` under the sciref venv). On a stream
+    with a photon at every tick (dt == 1) the photon-stream VB-HMM *is* a
+    categorical VB-HMM with Dirichlet factors, so posterior parameters and the
+    lower bound are directly comparable.
+
+    What this pins: the engine's fixed point is hmmlearn's (posterior Dirichlet
+    parameters to ~1e-3 relative -- the engine iterates on the row-normalised
+    geometric-mean A, hmmlearn on the sub-stochastic one), the sub-stochastic
+    forward pass at the engine's posterior *is* hmmlearn's bound, and the
+    engine's reported ``elbo`` sits K(K-1)/2 nat above that bound (E - H:
+    okf/design/hmmvb-elbo-decision.md)."""
+
+    FIX = os.path.join(HERE, "..", "..", "data", "reference", "hmm_vb_hmmlearn_reference.npz")
+
+    def _case(self, d, name):
+        from scipy.special import digamma, gammaln
+        g = lambda k: d[f"{name}/{k}"]
+        X, lengths = g("X"), g("lengths")
+        off = np.concatenate([[0], np.cumsum(lengths)])
+        streams = [X[off[i]:off[i + 1]].tolist() for i in range(len(lengths))]
+        times = [list(range(int(L))) for L in lengths]                # dense: dt == 1
+        K, P = g("B").shape
+        eng = tttrlib.HMM()
+        eng.set_bursts(times, streams, P)
+        init = tttrlib.HmmModel(list(g("seed_pi")), list(g("seed_A").ravel()), list(g("seed_B").ravel()))
+        vb = tttrlib.fit_vb(eng, init, None, 5000, 1e-12)
+        self.assertTrue(vb.converged)
+        ap = np.asarray(vb.alpha_prior); at = np.asarray(vb.alpha_trans).reshape(K, K); ao = np.asarray(vb.alpha_obs).reshape(K, P)
+        # sub-stochastic forward pass at the engine's posterior (Beal's bound at q)
+        tp = np.exp(digamma(ap) - digamma(ap.sum()))
+        ta = np.exp(digamma(at) - digamma(at.sum(1, keepdims=True)))
+        to = np.exp(digamma(ao) - digamma(ao.sum(1, keepdims=True)))
+        tot = 0.0
+        for s in streams:
+            a = tp * to[:, s[0]]; c = a.sum(); tot += np.log(c); a = a / c
+            for k in range(1, len(s)):
+                a = (a @ ta) * to[:, s[k]]; c = a.sum(); tot += np.log(c); a = a / c
+
+        def kl(a, b):
+            return (gammaln(a.sum()) - gammaln(a).sum() - gammaln(b.sum()) + gammaln(b).sum()
+                    + ((a - b) * (digamma(a) - digamma(a.sum()))).sum())
+        H = tot - kl(ap, np.ones(K)) - sum(kl(at[i], np.ones(K)) for i in range(K)) - sum(kl(ao[i], np.ones(P)) for i in range(K))
+        return g, vb, (ap, at, ao), H, K
+
+    def test_posterior_matches_hmmlearn(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("hmm_vb_hmmlearn_reference.npz not present")
+        d = np.load(self.FIX)
+        for name in d["cases"]:
+            with self.subTest(case=str(name)):
+                g, vb, (ap, at, ao), H, K = self._case(d, name)
+                np.testing.assert_allclose(ap, g("alpha_prior"), rtol=2e-3, atol=5e-3)
+                np.testing.assert_allclose(at, g("alpha_trans"), rtol=2e-3, atol=2e-2)
+                np.testing.assert_allclose(ao, g("alpha_obs"), rtol=2e-3, atol=2e-2)
+
+    def test_bound_matches_hmmlearn_and_elbo_is_K_choose_2_above_it(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("hmm_vb_hmmlearn_reference.npz not present")
+        d = np.load(self.FIX)
+        for name in d["cases"]:
+            with self.subTest(case=str(name)):
+                g, vb, _, H, K = self._case(d, name)
+                lb = float(g("lower_bound"))
+                # Beal's bound at the engine's posterior vs hmmlearn's at its own optimum
+                self.assertAlmostEqual(H, lb, delta=1e-3)
+                self.assertLessEqual(H, lb + 1e-6)                # hmmlearn maximises the bound
+                # the engine's reported elbo is not the bound: K(K-1)/2 nat above it
+                self.assertAlmostEqual(vb.elbo - lb, K * (K - 1) / 2, delta=0.05)
+
+
 if __name__ == "__main__":
     unittest.main()

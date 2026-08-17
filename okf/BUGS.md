@@ -2740,6 +2740,27 @@ validated. Which side is right is a modelling decision (the derivation is the
 standard VB bound; the normalised form is a different, tighter-looking
 quantity), so it is filed rather than changed.
 
+**Decision brief 2026-08-17:** [`okf/design/hmmvb-elbo-decision.md`](design/hmmvb-elbo-decision.md)
+(theory + numbers, scripts under `okf/design/scripts/`). Findings: the gap is
+not data-dependent — it is exactly K(K−1)/2 nat (½ nat per free transition
+parameter; measured within 0.07 nat over 100 fits), so the "scales with tick
+count and posterior width" worry above is withdrawn; H is Beal's bound and a
+valid ELBO at the engine's own posterior, E is a bound of nothing but stayed
+below the importance-sampled exact evidence in every fit; E and H picked the
+same K on 24/24 simulated seeds and on the fixture (both conservative vs the
+evidence, H by K nat more per step). Recommendation in the brief: report H as
+`elbo`, keep the iteration, keep E's data term as `loglik`. Awaiting the call.
+
+**Independent reference 2026-08-17 (later the same day):** the brief's H is not
+our own transcription any more — on dense streams (dt = 1, where the model is a
+categorical VB-HMM) `hmmlearn.vhmm.VariationalCategoricalHMM` 0.3.3 evaluates its
+lower bound at tttrlib's converged posterior to H within 2e-10, its converged
+posterior matches the engine's to 1e-4, and E − hmmlearn's bound = 0.998 / 2.999
+nat at K = 2 / 3. Fixture `test/data/reference/hmm_vb_hmmlearn_reference.npz`
+(`gen_ab_hmm_vb_hmmlearn_reference.py`, sciref venv), tests
+`TestVariationalBayesAgainstHmmlearn`, benchmark pair `hmm_vb` in the sciref set
+(13× faster, `check_sciref.py`).
+
 ## FIXED — `blind_irf_estimate` recovers where the IRF is, not what it looks like
 
 **Fixed 2026-08-17, same day — and checked against the reference implementation, VicidominiLab's `birfi` (github.com/VicidominiLab/birfi, now in `../chisurf/junk/birfi`; ChiSurf's `irf_estimation.py` is a port of it).** Working the pipeline step by step against birfi and a NumPy replica: the port's own defects were (1) the Savitzky-Golay derivative built its normal equations on `(i−half)·dt` but its weight vector on `(i−half)` — not a derivative filter (birfi uses scipy's `savgol_filter`); its minimum sat on the *rising* edge, so the tail window was 7 bins and the lifetime came out 0.2 ns for a 2.5 ns decay; (2) the lifetime was the centroid birfi uses only as the *initial guess* of its fit. Fixed: consistent abscissa; a Poisson-weighted log-linear fit of the tail (k = 0.400/ns on the fixture; birfi's own Adam MSE fit gives 0.4225 — it does not converge in 1000 steps, RL forgives it). Two things I first called defects were the reference's model and are kept: the forward convolution is **circular** (BIRFI is periodic — a full-period TCSPC histogram wraps); the C++ transform is now exactly circular for any n (the former `next_pow2(n)` padding was circular only for power-of-two n). The RL back-projection is the exact adjoint (birfi convolves with the time-reversed kernel, one bin off; measured to move nothing visible). birfi's `ifftshift` rolls its output by n/2 — pinned in the A/B, not copied. Result vs birfi (four configurations, 30 and 500 iterations): aligned IRFs correlate 0.978–0.999, peaks within 0.15 ns, tttrlib never worse against the truth; 99.5 % of the mass within ±0.5 ns on the known answer. `test_blind_irf.py` still green.

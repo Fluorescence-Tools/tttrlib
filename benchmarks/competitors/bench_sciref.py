@@ -134,6 +134,40 @@ def bench_hmmlearn():
           run, repeat=5, warmup=1, n_items=T, unit="step", dataset="simulated")
 
 
+def bench_hmmlearn_vb():
+    from hmmlearn.vhmm import VariationalCategoricalHMM
+    d = np.load(os.path.join(SHARED, "hmm_vb.npz"))
+    X, lengths = d["X"].reshape(-1, 1), d["lengths"]
+    K, P = d["seed_B"].shape
+
+    def make():
+        m = VariationalCategoricalHMM(n_components=K, n_features=P, n_iter=5000, tol=1e-12,
+                                      init_params="", params="ste", implementation="log")
+        m.startprob_prior_, m.transmat_prior_, m.emissionprob_prior_ = np.ones(K), np.ones((K, K)), np.ones((K, P))
+        return m
+
+    def run():
+        m = make()
+        # same seed as tttrlib's: prior + pseudo-counts of the seed model
+        m.startprob_posterior_ = 1 + 20 * d["seed_pi"]
+        m.transmat_posterior_ = 1 + 100 * d["seed_A"]
+        m.emissionprob_posterior_ = 1 + 100 * d["seed_B"]
+        m.fit(X, lengths)
+        return m
+
+    m = run()
+    OUT["hmm_vb_alpha_prior"], OUT["hmm_vb_alpha_trans"], OUT["hmm_vb_alpha_obs"] = m.startprob_posterior_, m.transmat_posterior_, m.emissionprob_posterior_
+    OUT["hmm_vb_lower_bound"] = np.array(m.monitor_.history[-1])
+    # hmmlearn's bound evaluated at tttrlib's converged posterior (one E-step, no update used)
+    m1 = make(); m1.n_iter = 1
+    m1.startprob_posterior_, m1.transmat_posterior_, m1.emissionprob_posterior_ = d["alpha_prior"].copy(), d["alpha_trans"].copy(), d["alpha_obs"].copy()
+    m1.fit(X, lengths)
+    OUT["hmm_vb_lower_bound_at_tttrlib_posterior"] = np.array(m1.monitor_.history[0])
+    bench("hmm_vb", "hmmlearn VariationalCategoricalHMM",
+          f"VB-HMM (Dirichlet mean-field) on {len(lengths)} dense chains, {int(lengths.sum())} ticks, K={K}, to convergence",
+          run, repeat=3, warmup=1, n_items=int(lengths.sum()), unit="tick", dataset="simulated")
+
+
 def bench_phasorpy():
     from phasorpy.phasor import phasor_from_signal
     d = np.load(os.path.join(SHARED, "phasor.npz"))
@@ -150,7 +184,7 @@ def bench_phasorpy():
 
 def main():
     for name, fn in (("skimage", bench_skimage), ("sklearn", bench_sklearn), ("filterpy", bench_filterpy),
-                     ("hmmlearn", bench_hmmlearn), ("phasorpy", bench_phasorpy)):
+                     ("hmmlearn", bench_hmmlearn), ("hmmlearn_vb", bench_hmmlearn_vb), ("phasorpy", bench_phasorpy)):
         try:
             fn()
         except Exception as e:

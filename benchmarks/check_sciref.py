@@ -97,6 +97,30 @@ def main():
     v["hmm_lattice"]["identical"] = bool(v["hmm_lattice"]["logprob_diff"] < 1e-8 and v["hmm_lattice"]["posteriors_max_abs_diff"] < 1e-10
                                          and v["hmm_lattice"]["xi_max_rel_diff"] < 1e-9 and v["hmm_lattice"]["viterbi_paths_identical"])
 
+    d = np.load(os.path.join(SHARED, "hmm_vb.npz"))
+    K = d["seed_B"].shape[0]
+    lb_at_ours = float(ref["hmm_vb_lower_bound_at_tttrlib_posterior"]); lb = float(ref["hmm_vb_lower_bound"])
+    from scipy.special import digamma, gammaln
+    ap, at, ao = d["alpha_prior"], d["alpha_trans"], d["alpha_obs"]
+    tp = np.exp(digamma(ap) - digamma(ap.sum())); ta = np.exp(digamma(at) - digamma(at.sum(1, keepdims=True))); to = np.exp(digamma(ao) - digamma(ao.sum(1, keepdims=True)))
+    off = np.concatenate([[0], np.cumsum(d["lengths"])]); X = d["X"]; tot = 0.0
+    for i in range(len(d["lengths"])):
+        s_ = X[off[i]:off[i + 1]]
+        a = tp * to[:, s_[0]]; c = a.sum(); tot += np.log(c); a = a / c
+        for k in range(1, len(s_)):
+            a = (a @ ta) * to[:, s_[k]]; c = a.sum(); tot += np.log(c); a = a / c
+    kl = lambda a, b: (gammaln(a.sum()) - gammaln(a).sum() - gammaln(b.sum()) + gammaln(b).sum() + ((a - b) * (digamma(a) - digamma(a.sum()))).sum())
+    H = tot - kl(ap, np.ones(K)) - sum(kl(at[i], np.ones(K)) for i in range(K)) - sum(kl(ao[i], np.ones(ao.shape[1])) for i in range(K))
+    v["hmm_vb"] = {"alpha_prior_max_rel_diff": rel(ap, ref["hmm_vb_alpha_prior"]), "alpha_trans_max_rel_diff": rel(at, ref["hmm_vb_alpha_trans"]),
+                   "alpha_obs_max_rel_diff": rel(ao, ref["hmm_vb_alpha_obs"]),
+                   "beal_bound_at_tttrlib_posterior_vs_hmmlearn": abs(H - lb_at_ours),
+                   "hmmlearn_bound_at_its_optimum_minus_at_ours": lb - lb_at_ours,
+                   "tttrlib_elbo_minus_hmmlearn_bound": float(d["elbo"]) - lb, "K(K-1)/2": K * (K - 1) / 2}
+    v["hmm_vb"]["identical"] = bool(v["hmm_vb"]["beal_bound_at_tttrlib_posterior_vs_hmmlearn"] < 1e-8
+                                     and max(v["hmm_vb"]["alpha_prior_max_rel_diff"], v["hmm_vb"]["alpha_trans_max_rel_diff"], v["hmm_vb"]["alpha_obs_max_rel_diff"]) < 2e-3
+                                     and abs(v["hmm_vb"]["tttrlib_elbo_minus_hmmlearn_bound"] - K * (K - 1) / 2) < 0.05)
+    v["hmm_vb"]["note"] = "Beal's bound at tttrlib's posterior == hmmlearn's to rounding; posteriors agree to ~1e-3 (engine iterates on row-normalised A~); tttrlib's elbo is K(K-1)/2 nat above the bound (okf/design/hmmvb-elbo-decision.md)"
+
     d = np.load(os.path.join(SHARED, "phasor.npz"))
     gs = np.asarray(tttrlib.DecayPhasor.compute_phasor_bincounts_batch(d["counts"], float(d["frequency"]), 1, 1.0, 0.0))
     rg, rs = rel(gs[:, 0], ref["phasor_g"]), rel(gs[:, 1], ref["phasor_s"])

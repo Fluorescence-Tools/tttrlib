@@ -8,12 +8,14 @@
   hdbscan          core_distances + MST + condensed tree + labels <- sklearn.cluster.HDBSCAN
   kalman           kalman_filter                 <- filterpy.kalman.KalmanFilter
   hmm_lattice      hmm_forward_log / posteriors / viterbi <- hmmlearn._hmmc
+  hmm_vb           fit_vb (dense stream, dt == 1)  <- hmmlearn.vhmm.VariationalCategoricalHMM
   phasor           DecayPhasor.compute_phasor_bincounts_batch <- phasorpy.phasor.phasor_from_signal
 
 Run in the base env; writes the exact inputs to results/shared/sciref/ for
 competitors/bench_sciref.py (``sciref`` venv). check_sciref.py compares outputs.
 Every pair is also a permanent A/B test (test/python/misc/test_math_ab_*.py,
-test/python/clsm/test_ab_phasor_reference.py); this file measures speed.
+test/python/clsm/test_ab_phasor_reference.py, test/python/hmm/test_ab_hmm_reference.py);
+this file measures speed.
 """
 import json
 import os
@@ -96,6 +98,26 @@ def make_hmm(T=200_000, K=4, seed=SEED):
     trans = rng.dirichlet(np.ones(K) * 5, K)
     log_frame = np.log(rng.dirichlet(np.ones(K), T))
     return np.log(start), np.log(trans), np.ascontiguousarray(log_frame)
+
+
+def make_hmm_vb(n_bursts=200, K=3, P=3, seed=SEED):
+    """Dense tick chains (a photon at every tick) -- there the photon-stream VB-HMM
+    is exactly a categorical VB-HMM, which hmmlearn implements."""
+    rng = np.random.default_rng(seed)
+    A = np.array([[0.96, 0.03, 0.01], [0.02, 0.95, 0.03], [0.02, 0.04, 0.94]])
+    B = np.array([[0.7, 0.2, 0.1], [0.2, 0.6, 0.2], [0.1, 0.2, 0.7]])
+    pi = np.array([0.5, 0.3, 0.2])
+    X, lengths = [], []
+    for _ in range(n_bursts):
+        L = int(rng.integers(150, 350))
+        z = np.empty(L, int); z[0] = rng.choice(K, p=pi)
+        for t in range(1, L):
+            z[t] = rng.choice(K, p=A[z[t - 1]])
+        X.append(np.array([rng.choice(P, p=B[k]) for k in z])); lengths.append(L)
+    seed_pi = np.full(K, 1.0 / K)
+    seed_A = np.full((K, K), 0.1) + np.eye(K) * 0.7
+    seed_B = np.array([[0.5, 0.3, 0.2], [0.3, 0.4, 0.3], [0.2, 0.3, 0.5]])
+    return np.concatenate(X), np.array(lengths), seed_pi, seed_A, seed_B
 
 
 def make_phasor(n_decays=100_000, n_bins=256, seed=SEED):
@@ -266,6 +288,25 @@ def main():
 
     bench("hmm_lattice", "tttrlib", f"HMM lattice T={T} K={K}: forward + posteriors/xi + Viterbi",
           run_hmm, repeat=5, warmup=1, n_items=T, unit="step", dataset="simulated")
+
+    # HMM VB (dense stream) -- posterior + elbo saved so the competitor can evaluate its bound at our posterior
+    X, lengths, seed_pi, seed_A, seed_B = make_hmm_vb()
+    off = np.concatenate([[0], np.cumsum(lengths)])
+    streams = [X[off[i]:off[i + 1]].tolist() for i in range(len(lengths))]
+    times = [list(range(int(L))) for L in lengths]
+    Kv, Pv = seed_B.shape
+    eng_vb = tttrlib.HMM(); eng_vb.set_bursts(times, streams, Pv)
+    init_vb = tttrlib.HmmModel(list(seed_pi), list(seed_A.ravel()), list(seed_B.ravel()))
+
+    def run_vb():
+        return tttrlib.fit_vb(eng_vb, init_vb, None, 5000, 1e-12)
+
+    vb = run_vb()
+    np.savez(os.path.join(SHARED, "hmm_vb.npz"), X=X, lengths=lengths, seed_pi=seed_pi, seed_A=seed_A, seed_B=seed_B,
+             alpha_prior=np.asarray(vb.alpha_prior), alpha_trans=np.asarray(vb.alpha_trans).reshape(Kv, Kv),
+             alpha_obs=np.asarray(vb.alpha_obs).reshape(Kv, Pv), elbo=vb.elbo, n_iter=vb.n_iter)
+    bench("hmm_vb", "tttrlib", f"VB-HMM (Dirichlet mean-field) on {len(lengths)} dense chains, {int(lengths.sum())} ticks, K={Kv}, to convergence",
+          run_vb, repeat=3, warmup=1, n_items=int(lengths.sum()), unit="tick", dataset="simulated")
 
     # phasor
     counts = make_phasor()

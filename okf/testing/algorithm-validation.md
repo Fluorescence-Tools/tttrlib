@@ -147,7 +147,8 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | HMM.h | one Baum-Welch step | H2MM_C `EM_H2MM_C(max_iter=1)` | prior/trans/obs ≤ 1e-13 | PASS |
 | HMM.h | ICL term | exact NumPy path log-likelihood | 1e-8 (H2MM_C's per-burst "path ll" is a different quantity) | PASS (bounded) |
 | HMMVB.h | `digamma`; `fit_vb` fixed point + KL terms | scipy.special; closed-form Dirichlet KL | 1e-11; 2e-4 / 1e-8 | PASS |
-| HMMVB.h | ELBO data term | NumPy forward pass under the geometric-mean parameters | **engine row-normalises Ã before the tick power; the header's derivation (sub-stochastic Ã^Δt) is ~1 nat lower** — model-selection-relevant | FINDING (pinned, not marked, BUGS.md) |
+| HMMVB.h | `fit_vb` posterior + Beal bound | **hmmlearn 0.3.3 `VariationalCategoricalHMM`** (upstream VB-HMM; recorded fixture, dense dt = 1 streams, K = 2 and 3) | posterior α ≤ 2e-3 rel (1e-4 on the bench); hmmlearn's bound at our posterior = sub-stochastic forward − ΣKL to 2e-10 | PASS |
+| HMMVB.h | reported `elbo` | hmmlearn's lower bound | **`elbo` = Beal bound + K(K−1)/2 nat exactly** (1 / 3 nat at K = 2 / 3; the engine row-normalises Ã before the tick power) — the header's derivation is the upstream bound, the engine's number is not | FINDING (pinned by `TestVariationalBayesAgainstHmmlearn`; decision: okf/design/hmmvb-elbo-decision.md) |
 | HMMSurrogate.h | features | NumPy + ChiSurf `surrogate.py` live | exact (pre-existing) | PASS |
 | HMMBayes/Constraints/Restraints/Emission.h | Gibbs, constraints, restraints, product alphabet | — | existing known-answer suites | KNOWN-ANSWER |
 | CtmcKinetics.h | generator, equilibrium, round trips | NumPy, `scipy.linalg.null_space`, `expm` | 1e-14 / 1e-9 | PASS |
@@ -244,6 +245,7 @@ filterpy / hmmlearn / phasorpy (`benchmarks/check_sciref.py`,
 | HDBSCAN pipeline | sklearn `HDBSCAN` | same partition, ARI 1.0 | 21× | ✅ |
 | `kalman_filter` | filterpy | ≤ 5e-16 | 510× | ✅ |
 | HMM lattice | hmmlearn `_hmmc` | log-prob 0, posteriors 4e-16, paths equal | 1.8× | ✅ |
+| `fit_vb` (dense stream) | hmmlearn `VariationalCategoricalHMM` | Beal bound at our posterior 2e-10; α 1e-4; `elbo` = bound + K(K−1)/2 | 13× | ✅ posterior/bound (`elbo` value pending decision) |
 | `compute_phasor_bincounts_batch` (new) | phasorpy `phasor_from_signal` | 0.0 | 3.4× | ✅ |
 
 ## FRET / burst kernels — identity and speed, checked (2026-08-17)

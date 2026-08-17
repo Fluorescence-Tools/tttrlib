@@ -1,5 +1,40 @@
 # Bundle update log
 
+## 2026-08-17 (39th entry)
+
+* **HmmVB: an independent reference at last — hmmlearn's VB-HMM.** The brief's
+  numbers had all been checked against our own transcription. On dense streams
+  (dt = 1, where the photon-stream VB-HMM *is* a categorical VB-HMM)
+  `hmmlearn.vhmm.VariationalCategoricalHMM` 0.3.3 gives: its lower bound at
+  tttrlib's converged posterior = the sub-stochastic (Beal) bound to 2e-10,
+  converged posteriors equal to 1e-4, and tttrlib's reported `elbo` sits
+  0.998 / 2.999 nat above the upstream bound at K = 2 / 3 — the K(K−1)/2
+  prediction, now against an outside implementation. Fixture + generator
+  (sciref venv), `TestVariationalBayesAgainstHmmlearn`, `hmm_vb` benchmark pair
+  (13× faster, identical). Register/PERF/BUGS updated; brief gained a §5
+  "Sources" separating literature (MacKay 1997, Beal 2003, Bishop 2006,
+  vbFRET/ebFRET, H2MM, Beal & Ghahramani 2003) from what is ours (the tick-chain
+  extension, the engine's E, the closed-form gap). Decision on the reported
+  value still the user's.
+
+## 2026-08-17 (38th entry)
+
+* **HmmVB ELBO: decision brief with numbers, no kernel change.**
+  [`design/hmmvb-elbo-decision.md`](design/hmmvb-elbo-decision.md) settles what
+  the E (engine, rows normalised) vs H (header, sub-stochastic Ã^Δt = Beal's
+  bound) difference *is*: exactly K(K−1)/2 nat — ½ nat per free transition
+  parameter, data-independent (within 0.07 nat over 100 fits), derived from
+  the Dirichlet row mass 1 − (K−1)/(2α_i) times the ticks spent in each state.
+  Against an importance-sampled exact log evidence (VB-posterior proposal,
+  engine forward pass) on the H2MM_C fixture and 24 simulated K_true = 2/3
+  datasets, K = 1..4: H is a valid bound, E is not licensed by anything but
+  never exceeded logZ either; both trail the evidence by 2–16 nat growing
+  with K (ln K! + mean-field losses), both pick the same K on every seed and
+  agree with BIC (ICL always under-counts at K_true = 3). Recommendation:
+  report H as `elbo`, keep the iteration (posterior differs at 1e-4
+  relative), keep E's data term as `loglik`. Scripts + raw output under
+  `design/scripts/`; BUGS.md entry points at the brief. Uncommitted.
+
 ## 2026-08-17 (37th entry)
 
 * **The "flaky" Kalman A/B was a real defect.** Its second appearance in a
