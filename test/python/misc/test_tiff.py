@@ -243,3 +243,61 @@ def test_squeeze_false_keeps_single_page_3d(tmp_path):
     path = str(tmp_path / "one.tif")
     tttrlib.imwrite(path, _sample(np.uint16, (8, 9)))
     assert tttrlib.imread(path, squeeze=False).shape == (1, 8, 9)
+
+
+# ---------------------------------------------------------------------------
+# A/B against tifffile (Christoph Gohlke): the reader every Python user of TIFF
+# stacks trusts. Both directions -- what we write, tifffile must read back with
+# the same pixels, dtype, page order and ImageJ axes; what tifffile writes,
+# we must read back identically. Compressions included.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("dtype", SUPPORTED_DTYPES)
+@pytest.mark.parametrize("compression", COMPRESSIONS)
+def test_tifffile_reads_what_we_write(tmp_path, dtype, compression):
+    tifffile = pytest.importorskip("tifffile")
+    path = str(tmp_path / "ours.tif")
+    arr = _sample(dtype, (3, 17, 23))
+    tttrlib.imwrite(path, arr, compression=compression)
+    back = tifffile.imread(path)
+    assert back.dtype == np.dtype(dtype)
+    np.testing.assert_array_equal(back, arr)
+
+
+@pytest.mark.parametrize("dtype", SUPPORTED_DTYPES)
+def test_we_read_what_tifffile_writes(tmp_path, dtype):
+    tifffile = pytest.importorskip("tifffile")
+    path = str(tmp_path / "theirs.tif")
+    arr = _sample(dtype, (5, 13, 19))
+    # a leading axis of 2..4 makes tifffile guess "samples per pixel" (RGB
+    # planes); say what it is
+    tifffile.imwrite(path, arr, photometric="minisblack")
+    back = tttrlib.imread(path)
+    assert back.dtype == np.dtype(dtype)
+    np.testing.assert_array_equal(back, arr)
+
+
+@pytest.mark.parametrize("axes,shape", [("TCYX", (2, 3, 8, 9)), ("ZCYX", (3, 2, 8, 9)), ("TZCYX", (2, 3, 2, 6, 7))])
+def test_tifffile_sees_the_imagej_hyperstack_we_write(tmp_path, axes, shape):
+    """tifffile decodes the ImageJ description into series axes and reshapes;
+    the pixels must land in the same (t, z, c) cells."""
+    tifffile = pytest.importorskip("tifffile")
+    path = str(tmp_path / "hs.tif")
+    arr = _sample(np.float32, shape)
+    tttrlib.imwrite(path, arr, axes=axes)
+    with tifffile.TiffFile(path) as tf:
+        assert tf.is_imagej
+        s = tf.series[0]
+        assert s.axes == axes
+        np.testing.assert_array_equal(s.asarray(), arr)
+
+
+def test_we_read_tifffiles_imagej_hyperstack(tmp_path):
+    tifffile = pytest.importorskip("tifffile")
+    path = str(tmp_path / "hs_theirs.tif")
+    arr = _sample(np.uint16, (2, 3, 4, 8, 9))       # TZCYX
+    tifffile.imwrite(path, arr, imagej=True, metadata={"axes": "TZCYX"})
+    meta = tttrlib.tiff_metadata(path)
+    assert meta["axes"] == "TZCYX"
+    assert tuple(meta["shape"]) == arr.shape
+    np.testing.assert_array_equal(tttrlib.imread(path), arr)

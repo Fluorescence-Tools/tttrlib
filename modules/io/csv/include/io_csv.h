@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_IO_CSV_H
 #define TTTRLIB_IO_CSV_H
+// Validation: A/B-TESTED 2026-08-17 -- values and inferred types equal pyarrow.csv on a tricky and a
+//   large file (quoted delimiters, doubled quotes, missing values, booleans; threads and block size
+//   change nothing). test/python/test_csv_reader.py.
+//   Register: okf/testing/algorithm-validation.md
 
 /*!
  * \file io_csv.h

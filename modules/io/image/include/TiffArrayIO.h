@@ -18,6 +18,10 @@
 // symbols still exist but throw "built without TIFF support".
 #ifndef TTTRLIB_TIFFARRAYIO_H
 #define TTTRLIB_TIFFARRAYIO_H
+// Validation: A/B-TESTED 2026-08-17 -- vs tifffile: what imwrite writes (6 dtypes x none/lzw/packbits,
+//   ImageJ hyperstacks TCYX/ZCYX/TZCYX) tifffile reads back pixel-identical with the same axes; what
+//   tifffile writes (grayscale stacks, ImageJ TZCYX) imread returns identically. test/python/misc/test_tiff.py.
+//   Register: okf/testing/algorithm-validation.md
 
 #include <string>
 #include <cstdint>

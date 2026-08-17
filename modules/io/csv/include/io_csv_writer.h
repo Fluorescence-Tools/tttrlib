@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_IO_CSV_WRITER_H
 #define TTTRLIB_IO_CSV_WRITER_H
+// Validation: A/B-TESTED 2026-08-17 -- round trip through pyarrow.csv where available; every double
+//   lands on the same double (shortest round-trip spelling incl. the hard cases), float32 written
+//   short, booleans/nulls/quoting. test/python/test_csv_writer.py.
+//   Register: okf/testing/algorithm-validation.md
 
 /*!
  * \file io_csv_writer.h

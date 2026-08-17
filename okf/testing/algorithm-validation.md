@@ -189,6 +189,8 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | MaxEnt.h | `maxent_invert` | scipy L-BFGS-B | round 1 | PASS |
 | Sha256.h / BitOps.h / ByteOrder.h / string_encoding.h | hashes, bit ops, byte swaps, latin1↔utf8 | hashlib, Python ints, `int.to_bytes`, codecs | exact | PASS |
 | StreamingIntensityTrace.h / StreamingDecayHistogram.h / StreamingCLSMImage.h | streaming | numpy bincount at random cuts; batch CLSMImage on real HT3 | exact | EQUIVALENCE |
+| io_csv.h / io_csv_writer.h | CSV read (type inference, dictionary text, masks) and write (shortest round-trip doubles) | **pyarrow.csv** (live) | values and inferred types equal; every double round-trips to the same double | PASS |
+| TiffArrayIO.h | `imread` / `imwrite` (2-D, stacks, ImageJ hyperstacks; none/lzw/packbits) | **tifffile** (live, both directions) | pixel-identical, same dtype/axes/page order | PASS |
 | TTTRRange/Selection/Mask, DataStore | containers/plumbing | — | — | NO-REF, not marked |
 
 ### Imaging — `test/python/clsm/test_ab_clsm_reference.py`, `clsm/test_ab_localization_superres_reference.py`
