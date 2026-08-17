@@ -420,45 +420,33 @@ retired so nobody works the same thing twice.)*
     `okf/subsystems/gui-autoform.md`, `okf/log.md`,
     `chisurf/gui/chiplot/backends/__init__.py`.
 
+- **T-20260817-01 · [tttrlib] PRD-037 B4: `watershed` + `marching_squares` —
+  region segmentation, skimage-exact**
+  - Status: 🚧 picked 2026-08-17
+  - Owner: `opencode/deepseek-v4-flash-free`
+  - Opened: 2026-08-17 · Picked: 2026-08-17
+  - Why: the last open kernel of PRD-037 Part B (B5 was declared out of scope).
+    ChiSurf's `core/roi/segmentation.py` runs five pure-Python kernels since
+    the numba removal — `_flood` (watershed flood from markers with a priority
+    queue), `_grow` (per-pixel step), `_marching_squares` (iso-contour
+    extraction), `_fraction`, `_emit` (contour helpers). PRD requires the port
+    to match **scikit-image exactly**: ChiSurf's `core/roi` is documented as
+    skimage-exact `regionprops` and its tests compare against skimage.
+  - Suggested surface: `watershed(image, markers, mask)` and
+    `marching_squares(image, level, vertex_connect_high)` — the three helpers
+    are internals and stay unexposed.
+  - Done when: C++ kernels in `modules/math` (own header, Cluster family
+    conventions), NumPy-typemap binding with the SWIGPYTHON guard, tests on
+    known-answer simulation + bit-for-bit determinism against skimage + committed
+    fixture recorded from chisurf, parity numbers vs skimage recorded, A/B
+    benchmark vs the Python path, four-language guard, PRD-037 B4 checkbox.
+  - Touching: `modules/math/{include,src}` watershed/marching_squares,
+    `ext/python/<i-file>`, test in `test/python/misc/`, PRD-037, CHANGELOG,
+    board.
+
 ---
 
 ## Active
-
-- **T-20260816-04 · [tttrlib] PRD-037 B3: `kalman_filter` — the filter
-  recursion over a count-rate trace, one whole-trace call**
-  - Status: ✅ done (kernel, binding, tests, benchmark) — validating the
-    four-language guard and hooking ChiSurf's delegation is what remains
-  - Owner: `opencode/glm-5.3`
-  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-17
-  - Why: chisurf's `kalman_burst_detection(_multi)` (fcs plugin's advanced
-    mode) runs the pure-Python `_kalman_filter_loop` per trace since numba
-    removal. tttrlib's existing `BurstSearchKalman` is a *different* surface
-    (TTTR burst start/stop with general GE inverse, no trace out) and does not
-    cover B3's kernels. PRD-037 B3: `kalman_filter(Y, x0, P0, Q, dt,
-    r_scale)` → `(x_filt, P_filt, D_mahal)` in one call, with chisurf's
-    closed-form `_inv2x2` (dim==2) ported as-is.
-  - Done when: C++ kernel in `modules/math` (own header, Cluster family
-    conventions), NumPy-typemap binding with the SWIGPYTHON guard, tests on
-    known-answer simulation + bit-for-bit determinism + committed fixture
-    recorded from chisurf's implementation, parity numbers vs chisurf
-    recorded, A/B benchmark vs the Python path. Then mark validated.
-  - Progress: picked 2026-08-16. Scope confirmed: `_inv2x2`/`_kalman_filter_loop`
-    used only inside kalman.py; fcs plugin calls `kalman_burst_detection_multi`
-    (pure loop), GUI wizard uses the existing `tttr.burst_search_kalman`.
-    Forked 2026-08-17 per dim==2 BLAS discovery: numpy's `@` (numpy 1.26.4 +
-    Accelerate) forms 2×2 inner products with the SECOND product fused
-    (`std::fma(a1,b1,a0*b0)`); plain left-to-right `a0*b0+a1*b1` disagreed
-    ~44% over 2e5 random pairs, the fma form matched 0/200k. Ported that way;
-    bit-identical to chisurf's loop on 50 randomised traces AND the committed
-    fixture across -O0/-O1/-O2/-O3. Kernel: `modules/math/{include/Kalman.h,
-    src/Kalman.cpp}`; binding `ext/{python,r,js}/Kalman.i` (+ Java parity
-    exception in tools/binding_parity_exceptions.txt); tests
-    `test/python/misc/test_kalman.py` + fixture
-    `test/data/reference/kalman_chisurf_reference.npz`. Benchmark 195×
-    (0.19 ms @ T=5k → 2.0 ms @ T=50k vs 37.6/372.6 ms Python).
-  - Touching: `modules/math/{include/Kalman.h,src/Kalman.cpp,CMakeLists.txt}`,
-    `ext/python/<i-file>`, `test/python/misc/test_kalman.py`, PRD-037,
-    CHANGELOG, board.
 
 - **T-20260816-03 · [tttrlib] PRD-037 B2: `kmeans` — k-means++ seeding (caller
   uniforms) + Lloyd, the whole fit in one call**
@@ -632,6 +620,32 @@ retired so nobody works the same thing twice.)*
     bundle repacked via `python -m chimol.web.serve --pack-only`. Trap for
     the next session: the zip is a build artifact nothing rebuilds — after
     touching chimol engine code, repack before trying the browser.
+  - Progress update 24 (2026-08-17, AV strip round): the strip is now the
+    FPS convention expressed in real selection syntax, A/B-verified against
+    real PyMOL on 148L. chimol `sele_parser`: open ranges at parity
+    (`100:`, `:100`, `10-`, and leading `-20` == `:20`); space-separated
+    value lists stay REJECTED exactly like PyMOL (`Invalid selection
+    name`), so every fps document was rewritten to `+` lists (olga_t4l 33
+    masks, imp.bff examples 43). Strip semantics (chimol `labelling/av.py`
+    `_stripped_pdb_for` + `evaluate_selection_mask` on the viewer's own
+    parser; imp.bff `_av_imp_bff` via a strict fps-dialect parser that
+    raises on anything else): default = attachment residue's side chain
+    minus the attachment atom, backbone kept; attachment atom survives any
+    mask. ESCALATION LADDER REMOVED (user direction: silent failure) --
+    empty AV at the declared clearance is the honest answer plus a warning
+    log. Measured consequence: olga screening's `allowed_sphere_radius: 1`
+    (calibrated for FPS's whole-residue reduction) cannot compute under
+    the side-chain convention (bonded backbone CA has d-r = -0.15 A, walls
+    any 1 A sphere); documents updated to 3 -- all three sites compute
+    (3303/3274/3560 pts). Drive-by fixes landed in the fret plugin:
+    `av._LABELLIB_BACKEND`/`_HAS_LABELLIB` attr rot (router.py, cli ->
+    import probe + `_active_backend_name`), test paths repointed to the
+    vendored olga examples, project-save pin updated to `.csp`. chimol
+    commit: sele_parser.py only -- the labelling/ subsystem stays
+    uncommitted because its renderer half (add_av etc.) lives inside the
+    chrome agent's uncommitted view.py diff; land it once that lands.
+    Known non-mine gap left alone: `backbone` flag classifies DAL as
+    polymer where PyMOL does not (class-flag logic, not masks).
   - Progress update 23 (2026-08-16, round 23): the invalidation moved
     into the FRAMEWORK (chimol 71ef843): every input routed to a window
     body bumps body_revision before the body hears about it, so the
@@ -3179,6 +3193,44 @@ one supersedes.
 ---
 
 ## Resolved (recent)
+
+- **T-20260816-04 · [tttrlib] PRD-037 B3: `kalman_filter` — the filter
+  recursion over a count-rate trace, one whole-trace call**
+  - Status: ✅ done (validated)
+   - Owner: `opencode/glm-5.3`
+   - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-17
+   - Why: chisurf's `kalman_burst_detection(_multi)` (fcs plugin's advanced
+     mode) runs the pure-Python `_kalman_filter_loop` per trace since numba
+     removal. tttrlib's existing `BurstSearchKalman` is a *different* surface
+     (TTTR burst start/stop with general GE inverse, no trace out) and does not
+     cover B3's kernels. PRD-037 B3: `kalman_filter(Y, x0, P0, Q, dt,
+     r_scale)` → `(x_filt, P_filt, D_mahal)` in one call, with chisurf's
+     closed-form `_inv2x2` (dim==2) ported as-is.
+   - Done when: C++ kernel in `modules/math` (own header, Cluster family
+     conventions), NumPy-typemap binding with the SWIGPYTHON guard, tests on
+     known-answer simulation + bit-for-bit determinism + committed fixture
+     recorded from chisurf's implementation, parity numbers vs chisurf
+     recorded, A/B benchmark vs the Python path. Then mark validated.
+   - Progress: picked 2026-08-16. Scope confirmed: `_inv2x2`/`_kalman_filter_loop`
+     used only inside kalman.py; fcs plugin calls `kalman_burst_detection_multi`
+     (pure loop), GUI wizard uses the existing `tttr.burst_search_kalman`.
+     Forked 2026-08-17 per dim==2 BLAS discovery: numpy's `@` (numpy 1.26.4 +
+     Accelerate) forms 2×2 inner products with the SECOND product fused
+     (`std::fma(a1,b1,a0*b0)`); plain left-to-right `a0*b0+a1*b1` disagreed
+     ~44% over 2e5 random pairs, the fma form matched 0/200k. Ported that way;
+     bit-identical to chisurf's loop on 50 randomised traces AND the committed
+     fixture across -O0/-O1/-O2/-O3. Kernel: `modules/math/{include/Kalman.h,
+     src/Kalman.cpp}`; binding `ext/{python,r,js}/Kalman.i` (+ Java parity
+     exception in tools/binding_parity_exceptions.txt); tests
+     `test/python/misc/test_kalman.py` + fixture
+     `test/data/reference/kalman_chisurf_reference.npz`. Benchmark 195×
+     (0.19 ms @ T=5k → 2.0 ms @ T=50k vs 37.6/372.6 ms Python). Committed
+     `2b2830652`; four-language guard green (`tools/check_swig_multilang.sh`).
+     What remains is ChiSurf's delegation, not the kernel.
+   - Touching: `modules/math/{include/Kalman.h,src/Kalman.cpp,CMakeLists.txt}`,
+     `ext/python/<i-file>`, `test/python/misc/test_kalman.py`, PRD-037,
+     CHANGELOG, board.
+
 
 - **T-20260815-02 · [tttrlib] PRD-038/039 (consolidated MaxEnt engine, NNLS/
   Tikhonov/MaxEnt pattern fit, historic-MaxEnt auto-nu) incl. the joint-(p,nu)
