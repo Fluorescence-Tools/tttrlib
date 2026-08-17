@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Fixed
+- **`objective = neyman_lsq` / `gehrels_lsq` now fit what they say.** Both
+  were in the registry and in `setup_vector`, but every fit2x kernel scored the
+  Poisson likelihood regardless. The objective now reaches the kernels
+  (`DecayFitContext.objective`); least-squares fits report the reduced
+  chi-square, likelihood fits 2I* as before; the exact-gradient and the
+  tau-only closed-form paths remain Poisson-only. `p2s_mle` and the default are
+  unchanged.
 - **Becker & Hickl `.set` sidecar: the micro-time channel width now applies to
   every BH container and honours the TAC gain** (`SP_TAC_TC`, or
   `SP_TAC_R / (SP_TAC_G * SP_ADC_RE)`). SPC-130 files had kept the header

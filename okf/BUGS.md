@@ -3,6 +3,22 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## FIXED — `neyman_lsq` / `gehrels_lsq` were advertised objectives that every fit2x kernel ignored
+
+**Fixed 2026-08-17.** The registry's `objective` category (and `setup_vector(...,
+objective=...)`) listed four statistics; the Fit2x adapter turned the choice into
+a p2s flag and nothing else, so `neyman_lsq` and `gehrels_lsq` silently ran the
+Poisson likelihood — the fit, the reported score and `evaluate` all pretended.
+Now `DecayFitContext.objective` carries the code into the four kernels
+(`decay_objective_score`: Wcm / Wcm_p2s / Neyman χ² with weight max(1, C) /
+Gehrels χ² with (1 + √(C + 0.75))²), the AD gradient and the tau-only closed
+form stay Poisson-only, and the reported statistic is 2I* for the likelihoods
+and the reduced χ²/(2n) for least squares. A/B: `evaluate` equals the NumPy
+statistic on the reference model to 1e-9, the optimum equals scipy's optimum of
+the same statistic, and the three objectives give three different lifetimes on
+sparse data (`TestFit2xLeastSquaresObjectives`). Also: `statistics::pearson`
+(unbound, exported) summed (m − d)/m instead of (m − d)²/m — fixed.
+
 ## FIXED — SPC-130 micro-time resolution ignored the .set sidecar (and every BH path ignored the TAC gain)
 
 **Fixed 2026-08-17, same day — found by comparing tttrlib's header against

@@ -77,6 +77,7 @@ protected:
     std::vector<double> corrections_;   // as the kernels expect them
     double bifl_flag_;                  // -1 discounts background photons, else 0
     double p2s_flag_;                   // 1 scores the P+2S sum
+    int objective_ = kPoissonMle;       // registry objective, handed to the kernels via the context
 
 public:
 
@@ -94,6 +95,8 @@ public:
         // parameter vector; the interface carries them as named setup instead.
         bifl_flag_ = setup_at(setup_, kSoftBifl, 1.0) != 0.0 ? -1.0 : 0.0;
         p2s_flag_ = (static_cast<int>(objective) == kP2sMle) ? 1.0 : 0.0;
+        objective_ = static_cast<int>(objective);
+        if (objective_ < kPoissonMle || objective_ > kGehrelsLsq) objective_ = kPoissonMle;
     }
 
     /*!
@@ -107,6 +110,7 @@ public:
     void bind(DecayFitProblem &problem, std::vector<int> &counts,
               std::vector<double> &corrections, DecayFitContext &ctx) const {
         problem.require_valid();
+        ctx.objective = objective_;   // 0 poisson, 1 p2s, 2 neyman, 3 gehrels
         init_fact();   // idempotent (call_once); wcm_p2s needs the table
         const std::size_t n = problem.data.size();
         counts.resize(n);

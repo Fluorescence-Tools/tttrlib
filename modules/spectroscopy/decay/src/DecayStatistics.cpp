@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
+#include <algorithm>
 #include "DecayStatistics.h"
 #include "Verbose.h"
 
@@ -193,6 +194,39 @@ double twoIstar(const int* C, double* M, int Nchannels)
     if (C[i] > 0) W += C[i]*log(M[i]/(double)C[i]);
 
   return -W/(double)Nchannels;
+}
+
+double chi2_neyman(const int* C, double* M, int Nchannels)
+{
+  double chi2 = 0.;
+  for (int i = 0; i < 2 * Nchannels; i++) {
+    const double c = std::max(1.0, (double) C[i]);
+    const double d = M[i] - (double) C[i];
+    chi2 += d * d / c;
+  }
+  return chi2;
+}
+
+double chi2_gehrels(const int* C, double* M, int Nchannels)
+{
+  double chi2 = 0.;
+  for (int i = 0; i < 2 * Nchannels; i++) {
+    const double sigma = 1.0 + std::sqrt((double) C[i] + 0.75);
+    const double d = M[i] - (double) C[i];
+    chi2 += d * d / (sigma * sigma);
+  }
+  return chi2;
+}
+
+double decay_objective_score(int objective, const int* C, double* M, int Nchannels, bool report)
+{
+  switch (objective) {
+    case kObjP2sMle:     return report ? twoIstar_p2s(C, M, Nchannels) : Wcm_p2s(C, M, Nchannels);
+    case kObjNeymanLsq:  return chi2_neyman(C, M, Nchannels) / (report ? (double) (2 * Nchannels) : 1.0);
+    case kObjGehrelsLsq: return chi2_gehrels(C, M, Nchannels) / (report ? (double) (2 * Nchannels) : 1.0);
+    case kObjPoissonMle:
+    default:             return report ? twoIstar(C, M, Nchannels) : Wcm(C, M, Nchannels);
+  }
 }
 
 double Wcm(const int* C, double* M, int Nchannels)

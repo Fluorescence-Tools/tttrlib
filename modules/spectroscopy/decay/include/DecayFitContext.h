@@ -87,6 +87,16 @@ struct DecayFitContext {
      */
     int iterations = 0;
 
+    /*!
+     * \brief Which statistic the kernel minimises (DecayObjective code:
+     *        0 poisson_mle, 1 p2s_mle, 2 neyman_lsq, 3 gehrels_lsq).
+     *
+     * Set by the Fit2x model adapter from the setup's `objective`; the packed
+     * parameter vector's legacy p2s flag still selects 1 for direct kernel
+     * callers.
+     */
+    int objective = 0;
+
     /*! Optimiser status of the last fit; model-specific, 0 when unset. */
     int info = 0;
 

@@ -523,6 +523,64 @@ class TestFit26AgainstNumpyAndScipy(unittest.TestCase):
         self.assertAlmostEqual(out.parameters[0], 0.3, delta=0.02)
 
 
+class TestFit2xLeastSquaresObjectives(unittest.TestCase):
+    """``objective = neyman_lsq`` / ``gehrels_lsq`` in the fit23 setup: the
+    registry advertised both since the objective category existed, but every
+    kernel scored the Poisson likelihood (only p2s_mle was honoured) until
+    2026-08-17. Now the evaluated statistic is the NumPy chi-square on the same
+    model -- Neyman weight max(1, C), Gehrels weight (1 + sqrt(C + 0.75))^2.
+    ``evaluate`` returns chi2 / n like the kernels' w / Nchannels, the fit
+    outcome reports the reduced chi2 / (2n) -- and the optimum is scipy's
+    optimum of that statistic; the three objectives give three different optima."""
+
+    def setUp(self):
+        self.P = _PolarisedProblem(seed=3)
+        self.r0, self.rho = 0.38, 1.5
+        truth = self.P.model23(2.7, 0.15, self.r0, self.rho)
+        self.data = self.P.rng.poisson(truth * 3000).astype(float)      # sparse enough to separate them
+        self.problem = self.P.problem(self.data)
+
+    def _fit(self, objective):
+        setup = tttrlib.setup_vector(
+            "fit23", dt=self.P.dt, period=self.P.period, g_factor=self.P.g, l1=self.P.l1, l2=self.P.l2,
+            convolution_stop=self.P.cs, soft_bifl_scatter_flag=False, objective=objective)
+        return tttrlib.DecayFit2("fit23", setup, self.P.irf.tolist())
+
+    def _chi2(self, objective, tau, gamma):
+        m = self.data.sum() * self.P.model23(tau, gamma, self.r0, self.rho)
+        if objective == "neyman_lsq":
+            w = np.maximum(1.0, self.data)
+        else:
+            w = (1.0 + np.sqrt(self.data + 0.75)) ** 2
+        return np.sum((m - self.data) ** 2 / w)
+
+    def test_evaluate_is_the_reduced_chi_square_of_the_reference_model(self):
+        for objective in ("neyman_lsq", "gehrels_lsq"):
+            fit = self._fit(objective)
+            for tau, gamma in ((2.0, 0.1), (3.5, 0.3), (2.7, 0.15)):
+                with self.subTest(objective=objective, tau=tau, gamma=gamma):
+                    got = fit.evaluate([tau, gamma, self.r0, self.rho], self.problem)
+                    ref = self._chi2(objective, tau, gamma) / self.P.n
+                    self.assertAlmostEqual(got, ref, delta=1e-9 * abs(ref))
+
+    def test_the_optimum_is_scipys_optimum_of_the_same_statistic(self):
+        constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0, 0, -1, -1]))
+        optima = {}
+        for objective in ("neyman_lsq", "gehrels_lsq"):
+            with self.subTest(objective=objective):
+                out = self._fit(objective).fit([2.0, 0.1, self.r0, self.rho], constraints, self.problem)
+                res = scipy.optimize.minimize(
+                    lambda x: self._chi2(objective, x[0], x[1]), [2.0, 0.1],
+                    method="Nelder-Mead", options=dict(xatol=1e-9, fatol=1e-13, maxiter=5000))
+                np.testing.assert_allclose(list(out.parameters)[:2], res.x, rtol=1e-4, atol=1e-5)
+                self.assertAlmostEqual(out.objective, res.fun / (2 * self.P.n), delta=1e-6 * abs(res.fun))
+                optima[objective] = out.parameters[0]
+        poisson = self._fit("poisson_mle").fit([2.0, 0.1, self.r0, self.rho], constraints, self.problem).parameters[0]
+        self.assertNotAlmostEqual(optima["neyman_lsq"], poisson, delta=1e-4)
+        self.assertNotAlmostEqual(optima["gehrels_lsq"], poisson, delta=1e-4)
+        self.assertNotAlmostEqual(optima["neyman_lsq"], optima["gehrels_lsq"], delta=1e-4)
+
+
 class TestFitNExpAgainstScipyMle(unittest.TestCase):
     """FitNExp profiles amplitudes by EM and searches lifetimes by Brent; scipy
     minimises the same Poisson NLL over (tau1, tau2, w) directly."""

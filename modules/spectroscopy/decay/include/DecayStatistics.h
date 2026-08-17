@@ -195,6 +195,36 @@ double twoIstar(const int* C, double* M, int Nchannels);
  */
 double Wcm(const int* C, double* M, int Nchannels);
 
+/*!
+ * \brief Objective codes shared by the Fit2x kernels and DecayFitContext.
+ *
+ * In the declared order of the registry's `objective` category:
+ * 0 poisson_mle (Wcm / 2I*), 1 p2s_mle (Wcm_p2s on P + 2S), 2 neyman_lsq,
+ * 3 gehrels_lsq. Until 2026-08-17 the two least-squares objectives were
+ * advertised in the registry but every kernel scored the Poisson likelihood.
+ */
+enum DecayObjective { kObjPoissonMle = 0, kObjP2sMle = 1, kObjNeymanLsq = 2, kObjGehrelsLsq = 3 };
+
+/*!
+ * \brief Neyman chi-square over the two channels: sum (M - C)^2 / max(1, C),
+ *        2 * Nchannels bins like Wcm.
+ */
+double chi2_neyman(const int* C, double* M, int Nchannels);
+
+/*!
+ * \brief Gehrels-weighted chi-square: variance (1 + sqrt(C + 0.75))^2
+ *        (Gehrels 1986, upper 1-sigma limit), 2 * Nchannels bins like Wcm.
+ */
+double chi2_gehrels(const int* C, double* M, int Nchannels);
+
+/*!
+ * \brief The statistic a Fit2x kernel minimises for \p objective, and the one
+ *        it reports (`report = true`: 2I* for the likelihoods, the reduced
+ *        chi-square chi2 / (2 Nchannels) for least squares). The kernels' own
+ *        target value is the unreported form divided by Nchannels, as for Wcm.
+ */
+double decay_objective_score(int objective, const int* C, double* M, int Nchannels, bool report);
+
 
 namespace statistics{
 
@@ -224,8 +254,10 @@ namespace statistics{
         for(int i = start; i < stop; i++){
             double m = model[i];
             double d = data[i];
+            // (m - d)^2 / m: the residual was not squared until 2026-08-17
+            // (unreachable from any binding, but exported C++)
             if (m > 0) {
-                chi2 += (m-d) / m;
+                chi2 += (m-d) * (m-d) / m;
             }
         }
         return chi2;

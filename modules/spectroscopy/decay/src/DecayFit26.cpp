@@ -55,7 +55,7 @@ double DecayFit26::targetf(double* x, void* pv)
     for(i=0; i<Nchannels; i++) M[i] *= s;
 
     // divide here Nchannels / 2, because Wcm multiplies Nchannels by two
-    w = Wcm(expdata, M, Nchannels / 2);
+    w = decay_objective_score(p->objective, expdata, M, Nchannels / 2, false);
 
     return w/Nchannels;
 
@@ -132,7 +132,7 @@ double DecayFit26::fit(double* x, short* fixed, DecayFitContext* p)
     for(i=0; i<Nchannels; i++) M[i] *= s;
 
     // divide here Nchannels / 2, because twoIstar multiplies Nchannels by two
-    tIstar = twoIstar(expdata, M, Nchannels / 2);
+    tIstar = decay_objective_score(p->objective, expdata, M, Nchannels / 2, true);
     if (info==5) x[0] = -1.;		// for report
     x[1]=1.-x[0];
     return tIstar;

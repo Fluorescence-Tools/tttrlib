@@ -74,10 +74,9 @@ double DecayFit25::targetf(double* x, void* pv)
     DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM(M, Nchannels);
 
-    if (p2s_twoIstar)
-        w = Wcm_p2s(expdata, M, Nchannels);
-    else
-        w = Wcm(expdata, M, Nchannels);
+    w = decay_objective_score(p->objective >= kObjNeymanLsq ? p->objective
+                              : (p2s_twoIstar ? kObjP2sMle : kObjPoissonMle),
+                              expdata, M, Nchannels, false);
 
     if (softbifl & (fit_signals.Bexpected > 0.)) {
         Bgamma = xm[1]*(fit_signals.Sp+fit_signals.Ss);
@@ -173,8 +172,9 @@ double DecayFit25::fit (double* x, short* fixed, DecayFitContext* p)
         correct_input(xtmp, xm, corrections, 1);
         DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
         fit_signals.normM(M, Nchannels);
-        if (p2s_twoIstar) tIstar = twoIstar_p2s(expdata, M, Nchannels);
-        else tIstar = twoIstar(expdata, M, Nchannels);
+        tIstar = decay_objective_score(p->objective >= kObjNeymanLsq ? p->objective
+                                       : (p2s_twoIstar ? kObjP2sMle : kObjPoissonMle),
+                                       expdata, M, Nchannels, true);
 if (is_verbose()) {
         std::cout<< x[i] << "\t" << tIstar << "\t"  << std::endl;
 }

@@ -85,6 +85,7 @@ BUGS.md entry. **NO-REF / not marked** — plumbing, or nothing to compare.
 | DecayConvolution.h | `add_pile_up_to_model` | Coates 1968 | exact with the *inclusive* cumsum; Coates' Σ_{j<i} differs 1.4e-4 rel | PASS (bounded) |
 | DecayFit23.h, DecayStatistics.h, DecayFit.h | objective, optimum, r/rs | NumPy Poisson likelihood on an independent convolution; scipy Nelder-Mead; closed anisotropy formulas | 1e-13 rel objective, 1e-7 optimum, 1e-10 r/rs; 2.7 ns recovered | PASS |
 | DecayFit24.h | objective, optimum | same | 1e-13 / 1e-7 | PASS |
+| DecayFit23.h + DecayStatistics.h | `neyman_lsq` / `gehrels_lsq` objectives | NumPy χ² on the reference model; scipy Nelder–Mead on the same statistic | **advertised but ignored until 2026-08-17 (Poisson ran regardless)**; now evaluate 1e-9, optimum = scipy's, three objectives → three optima | PASS (after fix) |
 | DecayFit25.h | `selected_index` | argmin of the NumPy Fit23 likelihood over candidates | 3/3 | PASS |
 | DecayFit26.h | objective, optimum | NumPy mixture likelihood, scipy bounded Brent | 1e-13 / 1e-8 | PASS |
 | DecayFitNExp.h | `FitNExp` | scipy Nelder-Mead on the same Poisson-mixture NLL | lifetimes 1e-7, NLL identical, model 4e-17; 0.7/3.5 ns 60/40 recovered | PASS |

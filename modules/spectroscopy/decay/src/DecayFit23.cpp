@@ -500,10 +500,11 @@ double DecayFit23::targetf(double *x, void *pv) {
 
     DecayFit23::modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM(M, 1., Nchannels);
-    if (fit_settings.p2s_twoIstar)
-        w = Wcm_p2s(expdata, M, Nchannels);
-    else
-        w = Wcm(expdata, M, Nchannels);
+    // p->objective carries the registry objective (0 poisson, 1 p2s, 2 neyman,
+    // 3 gehrels); the legacy p2s flag in x[5] maps onto 1 for direct callers.
+    const int objective = (p->objective != kObjPoissonMle) ? p->objective
+                          : (fit_settings.p2s_twoIstar ? kObjP2sMle : kObjPoissonMle);
+    w = decay_objective_score(objective, expdata, M, Nchannels, false);
 
     if (fit_settings.softbifl && (fit_signals.Bexpected > 0.)) {
         w -= fit_signals.Bexpected * log(fit_signals.Bexpected) - loggammaf(fit_signals.Bexpected + 1.);
@@ -607,7 +608,7 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitContext *p) {
         // differences' 2N=8 objective evaluations (PRD-010). decay23_gradient
         // does not cover the Wcm_p2s branch (its series expansion is not
         // templated), so central differences stay the fallback there.
-        if (!fit_settings.p2s_twoIstar) {
+        if (!fit_settings.p2s_twoIstar && p->objective == kObjPoissonMle) {
             bfgs_o.set_gradient(decay23_gradient);
         }
 
@@ -667,10 +668,11 @@ double DecayFit23::fit(double *x, short *fixed, DecayFitContext *p) {
 
     // use return_r to get the anisotropy in x
     correct_input(x, xm, corrections, 1);
-    if (fit_settings.p2s_twoIstar)
-        tIstar = twoIstar_p2s(expdata, M, Nchannels);
-    else
-        tIstar = twoIstar(expdata, M, Nchannels);
+    {
+        const int objective = (p->objective != kObjPoissonMle) ? p->objective
+                              : (fit_settings.p2s_twoIstar ? kObjP2sMle : kObjPoissonMle);
+        tIstar = decay_objective_score(objective, expdata, M, Nchannels, true);
+    }
 
     if (info == 5 || x[0] < 0.) x[0] = -1.;        // for report
     x[1] = xm[1];
@@ -710,7 +712,8 @@ bool DecayFit23::fit_tau_only_unpolarized_row(
         out == nullptr || n_x0 < 4 || n_fixed < 4 || n_out_cols < 5 ||
         n_cols <= 0 || (n_cols & 1) != 0 ||
         fixed[0] || !fixed[1] || !fixed[2] || !fixed[3] ||
-        p2s_flag > 0.0 || !std::isfinite(x0[1]) || x0[1] > 0.0 ||
+        p2s_flag > 0.0 || p->objective != kObjPoissonMle ||   // the closed form is the Poisson score
+        !std::isfinite(x0[1]) || x0[1] > 0.0 ||
         !std::isfinite(x0[2]) || x0[2] != 0.0 ||
         p->problem == nullptr ||
         static_cast<int>(p->problem->irf.size()) != n_cols ||

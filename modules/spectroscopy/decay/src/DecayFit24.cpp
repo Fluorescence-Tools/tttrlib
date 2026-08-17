@@ -136,7 +136,7 @@ double DecayFit24::targetf(double *x, void *pv) {
     modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM_p2s(M, Nchannels);
 
-    w = Wcm(expdata, M, Nchannels);
+    w = decay_objective_score(p->objective, expdata, M, Nchannels, false);
 
     if (fit_settings.softbifl & (fit_signals.Bexpected > 0.)) {
         Bgamma = xm[1] * (fit_signals.Sp + fit_signals.Ss);
@@ -235,7 +235,7 @@ double DecayFit24::fit(double *x, short *fixed, DecayFitContext *p) {
     modelf(xm, irf, bg, Nchannels, p->dt, corrections, M);
     fit_signals.normM_p2s(M, Nchannels);
 
-    tIstar = twoIstar(expdata, M, Nchannels);
+    tIstar = decay_objective_score(p->objective, expdata, M, Nchannels, true);
 
     if (info == 5 || x[0] < 0.) x[0] = -1.;        // for report
     if (info == 5 || x[2] < 0.) x[2] = -1.;
