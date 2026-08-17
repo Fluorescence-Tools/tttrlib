@@ -135,7 +135,8 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | BurstConfidence.h | `burst_confidence` (3 modes) | NumPy transcription | 1e-9 | PASS |
 | BurstFilter.h / BurstFeatureExtractor.h | `find_bursts`, properties, filters, E | NumPy; FRETBursts size/width | exact / 1e-12 | PASS |
 | BurstML.h | `neg_log_likelihood` | **the original FRET_burstML MEX compiled natively** (GSL, shims in `test/cpp/burstml_mex_shim/`) | ratio 1 ± 1e-12; 2–3 states, 2–3 colours | PASS |
-| BurstSearchMaxTree.h | `burst_search_maxtree` | — | injected-burst recovery (`test_burst_search_maxtree.py`) | KNOWN-ANSWER |
+| BurstSearchMaxTree.h | `build_max_tree_1d` (`max_tree_1d` binding) | **skimage 0.25.2 `morphology.max_tree`** (recorded, 6 signals; live on the 2 M-sample bench signal) | component set (level, lo, hi, parent) identical, 1.9 M components; 11× | PASS |
+| BurstSearchMaxTree.h | `burst_search_maxtree` (attribute filter + MSER) | — | injected-burst recovery (`test_burst_search_maxtree.py`) | KNOWN-ANSWER |
 | StreamingBurstDetector.h | streaming search | batch / FRETBursts rule | identical | EQUIVALENCE |
 | BurstFeature.h | KDE stream builder | — | — | NO-REF, not marked |
 
@@ -150,7 +151,10 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | HMMVB.h | `fit_vb` posterior + Beal bound | **hmmlearn 0.3.3 `VariationalCategoricalHMM`** (upstream VB-HMM; recorded fixture, dense dt = 1 streams, K = 2 and 3) | posterior α ≤ 2e-3 rel (1e-4 on the bench); hmmlearn's bound at our posterior = sub-stochastic forward − ΣKL to 2e-10 | PASS |
 | HMMVB.h | reported `elbo` | hmmlearn's lower bound | **fixed 2026-08-17**: `elbo` is now the sub-stochastic (Beal) bound at the returned posterior = hmmlearn's to 2e-10; the iteration's value is `elbo_normalised` = `elbo` + K(K−1)/2 nat (pinned at K = 2, 3) | PASS (`TestVariationalBayesAgainstHmmlearn`; brief: okf/design/hmmvb-elbo-decision.md) |
 | HMMSurrogate.h | features | NumPy + ChiSurf `surrogate.py` live | exact (pre-existing) | PASS |
-| HMMBayes/Constraints/Restraints/Emission.h | Gibbs, constraints, restraints, product alphabet | — | existing known-answer suites | KNOWN-ANSWER |
+| HMMBayes.h | `HmmPosterior::rhat`, `ess` | **ArviZ 0.23.4** `rhat(method="split")`, `ess(method="mean")` (recorded synthetic chains: agreeing, offset, single) | R-hat 1e-10; **ESS ignored between-chain disagreement (reported ~N where ArviZ says 38) — replaced by the split-chain Vehtari 2021 estimator 2026-08-17**, now = ArviZ to 1e-9 | PASS (after fix) |
+| HMMBayes.h | `HMM::sample` blocked Gibbs | hmmlearn VB posterior (dense fixture) | means within 3 combined sd; sd 1.2–1.5× VB's (mean-field under-dispersion, expected direction); R-hat < 1.05 | PASS (statistical) |
+| HMMBayes.h | `gamma_variate`, `dirichlet` (batch bindings `gamma_variates` / `dirichlet_variates` — the scalar forms were uncallable: counter by reference) | scipy.stats gamma / beta marginals, KS on 20 000 | p > 1e-3, shapes 0.4–30 | PASS |
+| HMMConstraints/Restraints/Emission.h | constraints, restraints, product alphabet | — | existing known-answer suites | KNOWN-ANSWER |
 | CtmcKinetics.h | generator, equilibrium, round trips | NumPy, `scipy.linalg.null_space`, `expm` | 1e-14 / 1e-9 | PASS |
 | GopichSzabo.h | `log_likelihood`, `viterbi`, `relaxation_times`, `emission_from_efficiencies` | direct `scipy.linalg.expm` evaluation of GS-2009 eq. 3; NumPy max-product; `eig(Q)`; ChiSurf wiring | 1e-9 rel on 4 schemes; 100 % path; 1e-8 | PASS |
 | Pda.h | `s1s2` | **PAM `PDA_histogram.cpp` compiled from `../chisurf/junk/PAM`** (mex.h shim); Antonik 2006 NumPy (pre-existing) | ≤ 7e-18; 1e-14 | PASS |
@@ -245,6 +249,7 @@ filterpy / hmmlearn / phasorpy (`benchmarks/check_sciref.py`,
 | HDBSCAN pipeline | sklearn `HDBSCAN` | same partition, ARI 1.0 | 21× | ✅ |
 | `kalman_filter` | filterpy | ≤ 5e-16 | 510× | ✅ |
 | HMM lattice | hmmlearn `_hmmc` | log-prob 0, posteriors 4e-16, paths equal | 1.8× | ✅ |
+| `max_tree_1d` | skimage `morphology.max_tree` | component set identical (1.9 M components) | 11× | ✅ |
 | `fit_vb` (dense stream) | hmmlearn `VariationalCategoricalHMM` | `elbo` = hmmlearn's bound at our posterior to 2e-10; α 1e-4; `elbo_normalised` = `elbo` + K(K−1)/2 | 13× | ✅ |
 | `compute_phasor_bincounts_batch` (new) | phasorpy `phasor_from_signal` | 0.0 | 3.4× | ✅ |
 

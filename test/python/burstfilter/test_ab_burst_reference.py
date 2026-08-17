@@ -58,6 +58,7 @@ HAVE_FRETBURSTS = os.path.exists(FRETBURSTS_PY)
 OCTAVE = shutil.which("octave")
 PAM_M = os.path.abspath(os.path.join(ROOT, "..", "chisurf", "junk", "PAM", "PAM.m"))
 HAVE_PAM = OCTAVE is not None and os.path.exists(PAM_M)
+MT_FIXTURE = os.path.join(ROOT, "test", "data", "reference", "maxtree_skimage_reference.npz")
 BB_FIXTURE = os.path.join(ROOT, "test", "data", "reference",
                           "bayesian_blocks_astropy_reference.npz")
 
@@ -963,6 +964,38 @@ class TestBurstMLAgainstTheOriginalMex(unittest.TestCase):
         for p, o, r in zip(params, ours, ref):
             with self.subTest(params=p):
                 self.assertAlmostEqual(o / r, 1.0, delta=1e-12, msg=(o, r))
+
+
+class TestMaxTreeAgainstSkimage(unittest.TestCase):
+    """``build_max_tree_1d`` (the component tree the max-tree burst search
+    filters) vs ``skimage.morphology.max_tree`` on the same 1-D signals
+    (fixture from ``gen_ab_maxtree_skimage_reference.py``, sciref venv). The
+    component set -- (level, lo, hi, parent level, parent lo) -- must be
+    identical; a canonical node per (interval, top level) on both sides."""
+
+    def setUp(self):
+        if not os.path.exists(MT_FIXTURE):
+            self.skipTest("fixture missing: run gen_ab_maxtree_skimage_reference.py")
+        self.fx = np.load(MT_FIXTURE)
+
+    def test_component_tree_identical(self):
+        for name in self.fx["cases"]:
+            x = self.fx[f"{name}/signal"]
+            ref = self.fx[f"{name}/components"]
+            with self.subTest(case=str(name), n=int(x.size)):
+                nodes = np.asarray(tttrlib.max_tree_1d(x.astype(np.int32)), dtype=np.int64)
+                if _burst_harness() is not None:      # the C++ entry point gives the same nodes
+                    toks = _harness_run("mt", f"{x.size} " + " ".join(map(str, x.tolist())))
+                    np.testing.assert_array_equal(np.array(toks[1:], dtype=np.int64).reshape(int(toks[0]), 4), nodes)
+                rows = []
+                for level, lo, hi, parent in nodes:
+                    if parent < 0:
+                        rows.append((level, lo, hi, -1, -1))
+                    else:
+                        rows.append((level, lo, hi, nodes[parent, 0], nodes[parent, 1]))
+                got = np.array(sorted(rows), dtype=np.int64)
+                self.assertEqual(got.shape, ref.shape)
+                np.testing.assert_array_equal(got, ref)
 
 
 if __name__ == "__main__":

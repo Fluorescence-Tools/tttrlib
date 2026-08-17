@@ -44,6 +44,40 @@ def bench_skimage():
           repeat=5, warmup=1, n_items=blurred.size, unit="pixel", dataset="simulated", extra={"iterations": n_iter})
 
 
+def bench_skimage_max_tree():
+    from skimage.morphology import max_tree
+    d = np.load(os.path.join(SHARED, "max_tree.npz"))
+    x = d["levels"].astype(np.int64)
+
+    def run():
+        return max_tree(x, connectivity=1)
+
+    P, T = run()
+    # component set derived from the parent array (canonical pixel = parent has a lower value)
+    n = x.size
+    canon = np.empty(n, dtype=np.int64)
+    for p in range(n):
+        q = p
+        while not (P[q] == q or x[P[q]] < x[q]):
+            q = P[q]
+        canon[p] = q
+    lo = np.full(n, n, dtype=np.int64); hi = np.full(n, -1, dtype=np.int64)
+    for p in range(n):
+        c = canon[p]
+        while True:
+            lo[c] = min(lo[c], p); hi[c] = max(hi[c], p)
+            if P[c] == c:
+                break
+            c = canon[P[c]]
+    canon_ids = np.flatnonzero(hi >= 0)
+    parent_lo = np.array([-1 if P[c] == c else lo[canon[P[c]]] for c in canon_ids])
+    parent_level = np.array([-1 if P[c] == c else x[canon[P[c]]] for c in canon_ids])
+    comps = np.stack([x[canon_ids], lo[canon_ids], hi[canon_ids], parent_level, parent_lo], axis=1)
+    OUT["max_tree_components"] = comps[np.lexsort(comps.T[::-1])]
+    bench("max_tree", "scikit-image max_tree", f"1-D max-tree (component tree), {x.size} samples, 1024 levels",
+          run, repeat=3, warmup=1, n_items=x.size, unit="sample", dataset="simulated")
+
+
 def bench_sklearn():
     import warnings
     from sklearn.cluster import KMeans, HDBSCAN
@@ -183,7 +217,7 @@ def bench_phasorpy():
 
 
 def main():
-    for name, fn in (("skimage", bench_skimage), ("sklearn", bench_sklearn), ("filterpy", bench_filterpy),
+    for name, fn in (("skimage", bench_skimage), ("skimage_max_tree", bench_skimage_max_tree), ("sklearn", bench_sklearn), ("filterpy", bench_filterpy),
                      ("hmmlearn", bench_hmmlearn), ("hmmlearn_vb", bench_hmmlearn_vb), ("phasorpy", bench_phasorpy)):
         try:
             fn()

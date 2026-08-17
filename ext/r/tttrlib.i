@@ -126,6 +126,7 @@ TTTRLIB_R_UINT64_TYPEMAPS
 %include "TTTRMask.i"
 %include "Channel.i"
 %include "BurstSignificance.i"
+%include "BurstSearchMaxTree.i"
 %include "BurstFilter.i"
 %include "BurstFeatureExtractor.i"
 /* Burst features: BVA and 2CDE. BurstFeature.i first -- BVA and TwoCDE derive

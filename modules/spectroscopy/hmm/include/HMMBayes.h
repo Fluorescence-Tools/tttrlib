@@ -28,9 +28,12 @@
 #ifndef TTTRLIB_HMMBAYES_H
 #define TTTRLIB_HMMBAYES_H
 
-// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- blocked Gibbs started at the truth stays there, an EM seed
-//   converges and covers the truth, draws are valid simplices, relabelling invariance.
-//   test/python/hmm/test_gibbs.py.
+// Validation: A/B-TESTED 2026-08-17 -- HmmPosterior::rhat / ess = ArviZ 0.23 rhat(method="split") /
+//   ess(method="mean") to rounding (recorded chains, incl. disagreeing chains); Gibbs posterior mean
+//   within 3 sd of hmmlearn's VB posterior on dense streams (sd 1.2-1.5x VB's, the mean-field
+//   direction); gamma / Dirichlet variates KS vs scipy.stats. test/python/hmm/test_ab_hmm_reference.py.
+//   Known-answer: started at the truth stays there, EM seed covers the truth, valid simplices,
+//   relabelling invariance (test_gibbs.py).
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cmath>
@@ -89,7 +92,7 @@ struct HmmPosterior {
     std::vector<double> quantile(double q) const;
 
     /*!
-     * \brief Split-@f$\hat R@f$ per parameter, on the raw draws.
+     * \brief Split-@f$\hat R@f$ per parameter (relabelled draws; ArviZ `rhat(method="split")`).
      *
      * Each chain is halved first, so a single chain still yields a comparison
      * and a slowly drifting one is caught — plain between-chain R-hat cannot
@@ -99,13 +102,15 @@ struct HmmPosterior {
     std::vector<double> rhat() const;
 
     /*!
-     * \brief Effective sample size per parameter, on the raw draws.
+     * \brief Split-chain effective sample size per parameter (relabelled draws).
      *
-     * Autocorrelation-corrected, summing the autocorrelations until a pair of
-     * successive lags sums negative (Geyer's initial-positive-sequence rule).
-     * Report this, not the draw count: 2000 draws at ESS 40 carry the
-     * information of 40, and a credible interval quoted from the former is
-     * about five times narrower than the data support.
+     * Vehtari et al. 2021 as Stan / ArviZ (`ess(method="mean")`) compute it:
+     * chains halved, autocorrelation against the pooled variance
+     * (n−1)/n·W + B/n so disagreeing chains give a small ESS, Geyer's initial
+     * positive then monotone truncation. Report this, not the draw count: 2000
+     * draws at ESS 40 carry the information of 40, and a credible interval
+     * quoted from the former is about five times narrower than the data
+     * support.
      */
     std::vector<double> ess() const;
 

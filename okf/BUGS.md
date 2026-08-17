@@ -3,6 +3,21 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## FIXED — `HmmPosterior::ess` ignored between-chain disagreement (reported ~N where ArviZ reports ~40)
+
+**Fixed 2026-08-17, same day.** Found by the ArviZ A/B: on two chains offset by
+half a posterior sd (each internally near-independent) tttrlib's `ess` returned
+1862 of 2000 draws, ArviZ's `ess(method="mean")` 38 — the old form pooled
+within-chain autocorrelations and never saw the chains' means differ, so a
+non-mixed run could show a healthy ESS beside an R-hat of 1.05. Replaced by the
+split-chain estimator of Vehtari, Gelman, Simpson, Carpenter & Bürkner (2021) —
+autocorrelation against (n−1)/n·W + B/n, Geyer's initial positive then monotone
+truncation, the 1/log10(N) floor — now equal to ArviZ to 1e-9 on agreeing,
+offset and single chains (`TestPosteriorDiagnosticsAgainstArviz`, recorded
+fixture). `rhat` was already ArviZ's split R-hat to 1e-10. Also found:
+`gamma_variate` / `dirichlet` take the counter by reference and were uncallable
+from Python — batch bindings added; KS vs scipy passes.
+
 ## FIXED — The published conformance table has no Python column, and Python is the one binding it is measured against
 
 **Fixed 2026-08-12.** `test_pip_lnx` now sets `TTTRLIB_CONFORMANCE_REPORT` on

@@ -225,48 +225,93 @@ std::vector<double> HmmPosterior::rhat() const {
 }
 
 std::vector<double> HmmPosterior::ess() const {
+    // Split-chain ESS of Vehtari, Gelman, Simpson, Carpenter & Bürkner (2021),
+    // as Stan and ArviZ (`ess(method="mean")`) compute it: every chain is
+    // halved, the lag-t autocovariance is averaged over the halves, and the
+    // autocorrelation is taken against the *pooled* variance
+    //   var+ = (n-1)/n W + B/n
+    // so two chains that sit at different means get a small ESS even when each
+    // is internally uncorrelated (the previous version pooled within-chain
+    // autocorrelations only and reported ~N in that case).  Truncation is
+    // Geyer's initial positive sequence, then his initial monotone sequence.
+    // Matches ArviZ to rounding (test_ab_hmm_reference.py).
     const int nd = n_draws();
     std::vector<double> out(n_par, 0.0);
     if (nd < 4) return out;
-    const double total = double(n_chains) * nd;
+    const int n = nd / 2;                     // draws per half-chain
+    const int m = n_chains * 2;               // half-chains
     const std::vector<double> r = relabelled(*this);
     auto at = [&](int c, int d) { return r.data() + (size_t(c) * nd + d) * n_par; };
 
-    std::vector<double> x(nd);
+    std::vector<double> x(size_t(m) * n), acov(n), rho(n);
     for (int k = 0; k < n_par; ++k) {
-        // Autocorrelations are pooled over chains at each lag, which is what
-        // makes this usable with a single chain as well as many.
-        double var = 0.0;
-        std::vector<double> rho_sum(size_t(nd / 2), 0.0);
-        int used = 0;
-        for (int c = 0; c < n_chains; ++c) {
-            double mu = 0.0;
-            for (int d = 0; d < nd; ++d) { x[d] = at(c, d)[k]; mu += x[d]; }
-            mu /= nd;
-            double v = 0.0;
-            for (int d = 0; d < nd; ++d) { x[d] -= mu; v += x[d] * x[d]; }
-            if (v <= 0.0) continue;
-            var += v / nd;
-            for (size_t lag = 1; lag < rho_sum.size(); ++lag) {
-                double s = 0.0;
-                for (int d = 0; d + int(lag) < nd; ++d) s += x[d] * x[d + lag];
-                rho_sum[lag] += (s / nd);
+        // Gather the half-chains and check for a constant parameter.
+        double lo = std::numeric_limits<double>::infinity(), hi = -lo;
+        for (int c = 0; c < n_chains; ++c)
+            for (int h = 0; h < 2; ++h) {
+                const int start = h == 0 ? 0 : nd - n;
+                for (int d = 0; d < n; ++d) {
+                    const double v = at(c, start + d)[k];
+                    x[size_t(c * 2 + h) * n + d] = v;
+                    lo = std::min(lo, v); hi = std::max(hi, v);
+                }
             }
-            ++used;
+        const double total = double(m) * n;
+        if (hi - lo < std::numeric_limits<double>::epsilon()) { out[k] = total; continue; }
+
+        // Mean autocovariance over half-chains at every lag (biased, /n), and
+        // the between-half-chain variance of the means.
+        std::fill(acov.begin(), acov.end(), 0.0);
+        std::vector<double> means(m);
+        for (int c = 0; c < m; ++c) {
+            double* xc = x.data() + size_t(c) * n;
+            double mu = 0.0;
+            for (int d = 0; d < n; ++d) mu += xc[d];
+            mu /= n; means[c] = mu;
+            for (int d = 0; d < n; ++d) xc[d] -= mu;
+            for (int lag = 0; lag < n; ++lag) {
+                double sacc = 0.0;
+                for (int d = 0; d + lag < n; ++d) sacc += xc[d] * xc[d + lag];
+                acov[lag] += sacc / n;
+            }
         }
-        if (!used || var <= 0.0) { out[k] = total; continue; }
-        var /= used;
-        // Geyer's initial positive sequence: sum consecutive *pairs* of
-        // autocorrelations and stop at the first non-positive pair.  Truncating
-        // on individual lags instead stops early on noise and inflates ESS.
-        double sum = 0.0;
-        for (size_t lag = 1; lag + 1 < rho_sum.size(); lag += 2) {
-            const double pair = (rho_sum[lag] + rho_sum[lag + 1]) / (used * var);
-            if (pair <= 0.0) break;
-            sum += pair;
+        for (int lag = 0; lag < n; ++lag) acov[lag] /= m;
+        const double mean_var = acov[0] * double(n) / double(n - 1);          // W
+        double var_plus = mean_var * double(n - 1) / double(n);
+        if (m > 1) {
+            double gm = 0.0;
+            for (double v : means) gm += v;
+            gm /= m;
+            double b = 0.0;
+            for (double v : means) b += (v - gm) * (v - gm);
+            var_plus += b / double(m - 1);
         }
-        const double tau = 1.0 + 2.0 * sum;
-        out[k] = tau > 0.0 ? total / tau : total;
+
+        std::fill(rho.begin(), rho.end(), 0.0);
+        double rho_even = 1.0, rho_odd = 1.0 - (mean_var - acov[1]) / var_plus;
+        rho[0] = rho_even; rho[1] = rho_odd;
+        // Geyer's initial positive sequence
+        int t = 1;
+        while (t < n - 3 && (rho_even + rho_odd) > 0.0) {
+            rho_even = 1.0 - (mean_var - acov[t + 1]) / var_plus;
+            rho_odd = 1.0 - (mean_var - acov[t + 2]) / var_plus;
+            if (rho_even + rho_odd >= 0.0) { rho[t + 1] = rho_even; rho[t + 2] = rho_odd; }
+            t += 2;
+        }
+        const int max_t = t - 2;
+        if (rho_even > 0.0) rho[max_t + 1] = rho_even;
+        // Geyer's initial monotone sequence
+        for (t = 1; t <= max_t - 2; t += 2) {
+            if (rho[t + 1] + rho[t + 2] > rho[t - 1] + rho[t]) {
+                rho[t + 1] = (rho[t - 1] + rho[t]) / 2.0;
+                rho[t + 2] = rho[t + 1];
+            }
+        }
+        double tau = -1.0;
+        for (int i = 0; i <= max_t && i < n; ++i) tau += 2.0 * rho[i];
+        if (max_t + 1 < n) tau += rho[max_t + 1];
+        tau = std::max(tau, 1.0 / std::log10(total));
+        out[k] = total / tau;
     }
     return out;
 }

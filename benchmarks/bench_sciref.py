@@ -9,6 +9,7 @@
   kalman           kalman_filter                 <- filterpy.kalman.KalmanFilter
   hmm_lattice      hmm_forward_log / posteriors / viterbi <- hmmlearn._hmmc
   hmm_vb           fit_vb (dense stream, dt == 1)  <- hmmlearn.vhmm.VariationalCategoricalHMM
+  max_tree         max_tree_1d (component tree of a 1-D signal) <- skimage.morphology.max_tree
   phasor           DecayPhasor.compute_phasor_bincounts_batch <- phasorpy.phasor.phasor_from_signal
 
 Run in the base env; writes the exact inputs to results/shared/sciref/ for
@@ -118,6 +119,19 @@ def make_hmm_vb(n_bursts=200, K=3, P=3, seed=SEED):
     seed_A = np.full((K, K), 0.1) + np.eye(K) * 0.7
     seed_B = np.array([[0.5, 0.3, 0.2], [0.3, 0.4, 0.3], [0.2, 0.3, 0.5]])
     return np.concatenate(X), np.array(lengths), seed_pi, seed_A, seed_B
+
+
+def make_max_tree(n=2_000_000, seed=SEED):
+    """A bursty log-rate-like signal quantised to 1024 levels (what the max-tree
+    burst search builds its tree on)."""
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+    centres = rng.uniform(0, n, 4000)
+    x = rng.normal(300, 20, n)
+    for c in centres:
+        lo, hi = int(max(c - 100, 0)), int(min(c + 100, n))
+        x[lo:hi] += 400 * np.exp(-((t[lo:hi] - c) ** 2) / (2 * 15.0 ** 2))
+    return np.clip(np.round(x), 0, 1023).astype(np.int32)
 
 
 def make_phasor(n_decays=100_000, n_bins=256, seed=SEED):
@@ -307,6 +321,12 @@ def main():
              alpha_obs=np.asarray(vb.alpha_obs).reshape(Kv, Pv), elbo=vb.elbo, elbo_normalised=vb.elbo_normalised, n_iter=vb.n_iter)
     bench("hmm_vb", "tttrlib", f"VB-HMM (Dirichlet mean-field) on {len(lengths)} dense chains, {int(lengths.sum())} ticks, K={Kv}, to convergence",
           run_vb, repeat=3, warmup=1, n_items=int(lengths.sum()), unit="tick", dataset="simulated")
+
+    # max-tree of a 1-D signal
+    lv = make_max_tree()
+    np.savez(os.path.join(SHARED, "max_tree.npz"), levels=lv)
+    bench("max_tree", "tttrlib", f"1-D max-tree (component tree), {lv.size} samples, 1024 levels",
+          lambda: tttrlib.max_tree_1d(lv), repeat=5, warmup=1, n_items=lv.size, unit="sample", dataset="simulated")
 
     # phasor
     counts = make_phasor()

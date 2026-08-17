@@ -55,6 +55,17 @@ def main():
     v["marching_squares"] = {"n_segments": int(seg.shape[0]), "identical": bool(same),
                              "note": "segments and raster order equal skimage's _get_contour_segments"}
 
+    d = np.load(os.path.join(SHARED, "max_tree.npz"))
+    nodes = np.asarray(tttrlib.max_tree_1d(d["levels"]), dtype=np.int64)
+    par = nodes[:, 3]
+    comps = np.stack([nodes[:, 0], nodes[:, 1], nodes[:, 2],
+                      np.where(par >= 0, nodes[np.maximum(par, 0), 0], -1),
+                      np.where(par >= 0, nodes[np.maximum(par, 0), 1], -1)], axis=1)
+    comps = comps[np.lexsort(comps.T[::-1])]
+    same = comps.shape == ref["max_tree_components"].shape and np.array_equal(comps, ref["max_tree_components"])
+    v["max_tree"] = {"n_components": int(comps.shape[0]), "identical": bool(same),
+                     "note": "component set (level, lo, hi, parent level, parent lo) equals skimage's max_tree"}
+
     d = np.load(os.path.join(SHARED, "richardson_lucy.npz"))
     got = tttrlib.richardson_lucy_2d(d["blurred"], d["psf"], int(d["n_iter"]), False, 0.0, False)
     r = rel(got, ref["richardson_lucy"])

@@ -58,8 +58,9 @@ build vicidomini 3.10 numpy scipy matplotlib scikit-image scikit-learn joblib tq
 
 # 10. sciref — the scientific-Python references of the general kernels: scikit-image
 #     (watershed, marching squares, Richardson-Lucy), scikit-learn (k-means, HDBSCAN),
-#     filterpy (Kalman), hmmlearn (HMM lattice), phasorpy (phasor), astropy (Bayesian blocks).
-build sciref 3.10 numpy scipy scikit-image scikit-learn filterpy hmmlearn phasorpy astropy
+#     filterpy (Kalman), hmmlearn (HMM lattice, VB-HMM), phasorpy (phasor), astropy (Bayesian blocks),
+#     arviz (split R-hat, ESS of the Gibbs posterior).
+build sciref 3.10 numpy scipy scikit-image scikit-learn filterpy hmmlearn phasorpy astropy arviz
 
 # --- Cross-version tracking (bench_versions.py) -----------------------------
 # One env per *released* tttrlib version to compare against the working-tree

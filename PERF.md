@@ -59,6 +59,7 @@ directly comparable.
 | **HMM lattice** (T=200 k, K=4: forward + posteriors + Viterbi) | **60.9 ms** | hmmlearn `_hmmc` 113 ms | **1.8×** — identical (log-prob, posteriors 4e-16, paths) |
 | **VB-HMM** to convergence (200 dense chains, 49 780 ticks, K=3) | **128 ms** | hmmlearn `VariationalCategoricalHMM` 1698 ms | **13×** — `elbo` = hmmlearn's bound at tttrlib's posterior (2e-10); posteriors 1e-4 |
 | **Phasor** (100 k decays × 256 bins) | **7.3 ms** | phasorpy 25.2 ms | **3.4×** — identical (0.0) |
+| **1-D max-tree** (component tree, 2 M samples, 1024 levels) | **38.5 ms** | scikit-image `max_tree` 428 ms | **11×** — identical component set (1.9 M components) |
 | **PDA** S1/S2 histogram (nmax 180, 3 species) | **0.31 ms** | PAM `PDA_histogram.cpp` (native build) 1.43 ms | **4.7×** — identical (2e-18) |
 | **BurstML** likelihood (187 bursts × 20 param. sets) | **265 ms** | original FRET_burstML MEX (native, GSL) 2194 ms | **8.3×** — identical (3e-13) |
 | **FRET-2CDE** (Laplace KDE, 200 bursts × 120 ph.) | **2.15 ms** | FRETBursts `kde_laplace` + Tomov formula 9.0 ms | **4.2×** — identical (6e-15) |
@@ -170,6 +171,7 @@ against phconvert 0.10.1 in the `read` venv (the A/B in
 | `kalman_filter` | `filterpy.kalman.KalmanFilter` (Joseph-form update) | x/P/D ≤ 5e-16 | ✅ |
 | `hmm_forward_log` / `hmm_backward_posteriors_xi` / `hmm_viterbi_log` | `hmmlearn._hmmc` | log-prob 0.0, posteriors 4e-16, xi 5e-12, Viterbi paths equal | ✅ |
 | `compute_phasor_bincounts_batch` | `phasorpy.phasor.phasor_from_signal` | g, s 0.0 | ✅ |
+| `max_tree_1d` | `skimage.morphology.max_tree` (component set derived from its parent array) | (level, lo, hi, parent level, parent lo) identical, 1 913 790 components | ✅ |
 | `fit_vb` (dense stream, dt = 1 → categorical VB-HMM) | `hmmlearn.vhmm.VariationalCategoricalHMM` 0.3.3, Dir(1) priors, same posterior seed | hmmlearn's lower bound at tttrlib's converged posterior = the sub-stochastic (Beal) bound to 2e-10; posterior α to 1.1e-4 rel (engine iterates on the row-normalised Ã, hmmlearn on Ã; hmmlearn's own optimum bound is 1e-5 nat higher); the iteration's `elbo_normalised` − hmmlearn bound = 2.99906 = K(K−1)/2; `elbo` is the bound | ✅ |
 
 ### The FRET / burst kernels — identity checklist

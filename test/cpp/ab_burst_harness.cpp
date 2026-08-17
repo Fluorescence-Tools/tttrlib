@@ -9,6 +9,8 @@
 //
 //   bb   <tick_seconds> <ncp_prior> <n> t0 .. t_{n-1}     -> change-point indices
 //   ncp  <p0> <n>                                          -> ncp_prior
+//   mt   <n> l0 .. l_{n-1}                                 -> max-tree nodes: n_nodes, then
+//                                                            level lo hi parent per node
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -16,6 +18,7 @@
 #include <vector>
 
 #include "BurstSearchBayesianBlocks.h"
+#include "BurstSearchMaxTree.h"
 
 int main(int argc, char** argv) {
     if (argc < 2) return 2;
@@ -29,6 +32,17 @@ int main(int argc, char** argv) {
         for (long long i = 0; i < n; ++i) std::cin >> t[static_cast<size_t>(i)];
         std::vector<int64_t> cp = tttrlib::bayesian_blocks_events(t.data(), n, tick, ncp);
         for (size_t i = 0; i < cp.size(); ++i) std::cout << cp[i] << (i + 1 < cp.size() ? ' ' : '\n');
+        return 0;
+    }
+    if (cmd == "mt") {
+        long long n = 0;
+        std::cin >> n;
+        std::vector<int> levels(static_cast<size_t>(n));
+        for (long long i = 0; i < n; ++i) std::cin >> levels[static_cast<size_t>(i)];
+        const std::vector<tttrlib::MaxTreeNode> nodes = tttrlib::build_max_tree_1d(levels);
+        std::cout << nodes.size() << '\n';
+        for (const auto& nd : nodes)
+            std::cout << nd.level << ' ' << nd.lo << ' ' << nd.hi << ' ' << nd.parent << '\n';
         return 0;
     }
     if (cmd == "ncp") {

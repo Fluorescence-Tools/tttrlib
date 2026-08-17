@@ -104,6 +104,38 @@ double dirichlet_kl(const double* dir_a, int n_dir_a,
 %}
 %clear (const double* dir_a, int n_dir_a);
 %clear (const double* dir_b, int n_dir_b);
+
+// gamma_variate / dirichlet advance a counter passed by reference, which SWIG
+// cannot bind from Python (argument 'uint64_t &' rejected). Batch forms that
+// start at `counter` and return the draws -- what the A/B against scipy needs
+// (test_ab_hmm_reference.py). Python only: numpy typemaps.
+#ifdef SWIGPYTHON
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** out_gamma, int* n_out_gamma)}
+%apply (double* IN_ARRAY1, int DIM1) {(const double* dir_alpha, int n_dir_alpha)}
+%apply (double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** out_dir, int* out_dir_rows, int* out_dir_cols)}
+%inline %{
+void gamma_variates(double shape, unsigned long long key, unsigned long long counter, int n,
+                    double** out_gamma, int* n_out_gamma) {
+    if (n < 0) throw std::invalid_argument("gamma_variates: n must be >= 0");
+    double* out = (double*) malloc(sizeof(double) * (size_t) (n > 0 ? n : 1));
+    uint64_t c = counter;
+    for (int i = 0; i < n; ++i) out[i] = tttrlib::hmm_rand::gamma_variate(shape, key, c);
+    *out_gamma = out; *n_out_gamma = n;
+}
+void dirichlet_variates(const double* dir_alpha, int n_dir_alpha, unsigned long long key,
+                        unsigned long long counter, int n,
+                        double** out_dir, int* out_dir_rows, int* out_dir_cols) {
+    if (n < 0 || n_dir_alpha < 1) throw std::invalid_argument("dirichlet_variates: n >= 0, len(alpha) >= 1");
+    double* out = (double*) malloc(sizeof(double) * (size_t) (n > 0 ? n : 1) * n_dir_alpha);
+    uint64_t c = counter;
+    for (int i = 0; i < n; ++i) tttrlib::hmm_rand::dirichlet(dir_alpha, n_dir_alpha, out + (size_t) i * n_dir_alpha, key, c);
+    *out_dir = out; *out_dir_rows = n; *out_dir_cols = n_dir_alpha;
+}
+%}
+%clear (double** out_gamma, int* n_out_gamma);
+%clear (const double* dir_alpha, int n_dir_alpha);
+%clear (double** out_dir, int* out_dir_rows, int* out_dir_cols);
+#endif
 %include "HMMVB.h"
 
 // Return the HMM decoded photon/state offsets only where 64-bit containers

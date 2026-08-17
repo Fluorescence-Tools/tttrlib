@@ -312,5 +312,124 @@ class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
                 self.assertAlmostEqual(vb.elbo_normalised - vb.elbo, K * (K - 1) / 2, delta=0.05)
 
 
+class TestPosteriorDiagnosticsAgainstArviz(unittest.TestCase):
+    """``HmmPosterior.rhat`` / ``ess`` vs ArviZ ``rhat(method="split")`` /
+    ``ess(method="mean")`` on recorded synthetic chains
+    (``gen_ab_hmm_diagnostics_arviz_reference.py``, sciref venv). Same
+    estimators to rounding, including the case where two chains disagree in
+    mean -- there the previous ESS (within-chain autocorrelation only) reported
+    ~N against ArviZ's ~40; the split-chain Vehtari 2021 form is used since
+    2026-08-17."""
+
+    FIX = os.path.join(HERE, "..", "..", "data", "reference", "hmm_diagnostics_arviz_reference.npz")
+
+    @staticmethod
+    def _posterior(x):
+        post = tttrlib.HmmPosterior()
+        post.n_states, post.n_symbols = 2, 2
+        post.n_chains, post.n_par = int(x.shape[0]), int(x.shape[2])
+        post.draws = tttrlib.VectorDouble(np.ascontiguousarray(x).ravel().tolist())
+        return post
+
+    def test_rhat_and_ess_match_arviz(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("hmm_diagnostics_arviz_reference.npz not present")
+        d = np.load(self.FIX)
+        for name in d["cases"]:
+            with self.subTest(case=str(name)):
+                x = d[f"{name}/draws"]
+                post = self._posterior(x)
+                self.assertEqual(post.n_draws(), x.shape[1])
+                ess = np.asarray(post.ess())
+                np.testing.assert_allclose(ess, d[f"{name}/ess_mean"], rtol=1e-9, atol=1e-6)
+                if x.shape[0] > 1:
+                    np.testing.assert_allclose(np.asarray(post.rhat()), d[f"{name}/rhat_split"], rtol=1e-10, atol=1e-12)
+
+    def test_ess_sees_disagreeing_chains(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("hmm_diagnostics_arviz_reference.npz not present")
+        d = np.load(self.FIX)
+        agree = np.asarray(self._posterior(d["agreeing/draws"]).ess())
+        offset = np.asarray(self._posterior(d["offset/draws"]).ess())
+        # phi = 0 parameter: ~N when chains agree, tens when they sit half an sd apart
+        self.assertGreater(agree[0], 1500)
+        self.assertLess(offset[0], 100)
+
+
+class TestGibbsAgainstHmmlearnPosterior(unittest.TestCase):
+    """The blocked-Gibbs sampler (``HMM.sample``) against hmmlearn's variational
+    posterior on the dense-stream fixture: same data, same Dir(1) priors. Two
+    approximations of one posterior -- MCMC and mean-field VB -- so the check
+    is statistical: every posterior mean within 3 combined standard deviations,
+    R-hat under 1.05, and the Gibbs sd never below 0.9x nor above 2x the VB sd
+    -- measured 1.2-1.5x here, the known direction: mean-field VB ignores the
+    correlation between the parameters and the hidden path and under-disperses."""
+
+    FIX = TestVariationalBayesAgainstHmmlearn.FIX
+
+    def test_posterior_mean_and_sd(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("hmm_vb_hmmlearn_reference.npz not present")
+        d = np.load(self.FIX)
+        g = lambda k: d[f"two_state_2det/{k}"]
+        X, lengths = g("X"), g("lengths")
+        off = np.concatenate([[0], np.cumsum(lengths)])
+        streams = [X[off[i]:off[i + 1]].tolist() for i in range(len(lengths))]
+        times = [list(range(int(L))) for L in lengths]
+        K, P = g("B").shape
+        eng = tttrlib.HMM()
+        eng.set_bursts(times, streams, P)
+        init = tttrlib.HmmModel(list(g("seed_pi")), list(g("seed_A").ravel()), list(g("seed_B").ravel()))
+        post = eng.sample(init, 1500, 300, 2, 12345)
+        self.assertLess(float(np.max(post.rhat())), 1.05)
+        mean = np.asarray(post.mean()); sd = np.asarray(post.sd())
+        # hmmlearn's Dirichlet posterior: mean a_i / a0, sd sqrt(a_i (a0 - a_i) / (a0^2 (a0 + 1)))
+        blocks = []
+        for a in (g("alpha_prior")[None, :], g("alpha_trans"), g("alpha_obs")):
+            a0 = a.sum(1, keepdims=True)
+            blocks.append((a / a0, np.sqrt(a * (a0 - a) / (a0 ** 2 * (a0 + 1)))))
+        ref_mean = np.concatenate([b[0].ravel() for b in blocks])
+        ref_sd = np.concatenate([b[1].ravel() for b in blocks])
+        # relabel the reference to tttrlib's canonical order (sorted by emission of symbol 0)
+        order = np.argsort(-g("alpha_obs")[:, 0] / g("alpha_obs").sum(1))
+        canon = np.argsort(-mean[K + K * K::P][:K])
+        if not np.array_equal(order, canon):
+            perm = np.empty(K, int); perm[canon] = order
+            def relabel(v):
+                pr, tr, ob = v[:K], v[K:K + K * K].reshape(K, K), v[K + K * K:].reshape(K, P)
+                return np.concatenate([pr[perm], tr[perm][:, perm].ravel(), ob[perm].ravel()])
+            ref_mean, ref_sd = relabel(ref_mean), relabel(ref_sd)
+        z = np.abs(mean - ref_mean) / np.sqrt(sd ** 2 + ref_sd ** 2)
+        self.assertLess(float(z.max()), 3.0, (mean, ref_mean, z))
+        ratio = sd / ref_sd
+        self.assertTrue(np.all((ratio > 0.9) & (ratio < 2.0)), ratio)
+        self.assertGreater(float(np.median(ratio)), 1.0, ratio)      # MCMC wider than mean-field VB
+
+
+class TestGibbsVariatesAgainstScipy(unittest.TestCase):
+    """The sampler's Marsaglia-Tsang gamma and stick-free Dirichlet draws
+    (``gamma_variates`` / ``dirichlet_variates``, batch bindings 2026-08-17 --
+    the scalar forms take a counter by reference and were uncallable from
+    Python) vs scipy.stats: Kolmogorov-Smirnov on 20 000 draws, shape below and
+    above 1 (the two branches of Marsaglia-Tsang), Dirichlet marginals = Beta."""
+
+    def test_gamma_ks(self):
+        from scipy import stats
+        for shape in (0.4, 1.0, 2.5, 30.0):
+            with self.subTest(shape=shape):
+                g = np.asarray(tttrlib.gamma_variates(shape, 7, 0, 20000))
+                self.assertGreater(stats.kstest(g, stats.gamma(shape).cdf).pvalue, 1e-3)
+
+    def test_dirichlet_marginals_are_beta(self):
+        from scipy import stats
+        alpha = np.array([1.0, 3.0, 0.5])
+        d = np.asarray(tttrlib.dirichlet_variates(alpha, 7, 0, 20000))
+        np.testing.assert_allclose(d.sum(1), 1.0, atol=1e-12)
+        for i in range(3):
+            with self.subTest(component=i):
+                p = stats.kstest(d[:, i], stats.beta(alpha[i], alpha.sum() - alpha[i]).cdf).pvalue
+                self.assertGreater(p, 1e-3)
+
+
 if __name__ == "__main__":
     unittest.main()

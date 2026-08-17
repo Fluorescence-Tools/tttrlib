@@ -3,6 +3,20 @@
 ## [Unreleased]
 
 ### Fixed
+- **`HmmPosterior.ess` is the split-chain estimator of Vehtari et al. 2021**
+  (Stan / ArviZ `ess(method="mean")`), bit-identical to ArviZ. The previous
+  form pooled within-chain autocorrelations only, so two chains sitting at
+  different means reported an ESS near the draw count (ArviZ: ~40); the new
+  one measures autocorrelation against the pooled variance and truncates by
+  Geyer's positive-then-monotone rule. `rhat` was already ArviZ's split R-hat.
+- **`gamma_variate` / `dirichlet` were uncallable from Python** (counter by
+  reference); batch forms `gamma_variates(shape, key, counter, n)` and
+  `dirichlet_variates(alpha, key, counter, n)` return the draws.
+
+### Added
+- **`max_tree_1d(levels)`** -- the 1-D component tree the max-tree burst
+  search filters, as an `(n_nodes, 4)` array `[level, lo, hi, parent]`;
+  identical to scikit-image's `max_tree` component set and 11x faster.
 - **`HmmVB.elbo` is now Beal's bound.** `fit_vb` reported the iteration's
   own objective -- the forward pass with the geometric-mean transition matrix
   row-normalised inside the engine's `A^dt` cache -- which is not an evidence

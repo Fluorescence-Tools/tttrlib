@@ -1,5 +1,19 @@
 # Bundle update log
 
+## 2026-08-17 (41st entry)
+
+* **Two more kernels off the KNOWN-ANSWER list.** (1) The 1-D max-tree behind
+  `burst_search_maxtree` vs scikit-image's `max_tree`: component set identical
+  on six signals and on a 2 M-sample bench signal (1.9 M components), 11×
+  faster; new `max_tree_1d` binding, `max_tree` pair in the sciref set. (2)
+  `HMMBayes.h`: `rhat`/`ess` vs ArviZ — R-hat identical, **ESS was not** (it
+  ignored chains disagreeing in mean; replaced by the Vehtari 2021 split-chain
+  estimator, now bit-identical to ArviZ; BUGS FIXED entry); the blocked Gibbs
+  posterior vs hmmlearn's VB posterior on the dense fixture (means within 3 sd,
+  Gibbs sd 1.2–1.5× VB's — the mean-field direction); gamma/Dirichlet variates
+  KS vs scipy (batch bindings, the scalar forms were uncallable). arviz added to
+  the sciref venv. Register/PERF/CHANGELOG/headers updated.
+
 ## 2026-08-17 (40th entry)
 
 * **HmmVB: `elbo` is Beal's bound now.** The recommended option of

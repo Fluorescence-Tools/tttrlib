@@ -142,6 +142,7 @@ def experimental(cls):
 %include "TTTRMask.i"
 %include "Channel.i"
 %include "BurstSignificance.i"
+%include "BurstSearchMaxTree.i"
 %include "BurstFilter.i"
 %include "BurstFeatureExtractor.i"
 %include "BurstFeature.i"

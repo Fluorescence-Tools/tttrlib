@@ -58,9 +58,11 @@
 #ifndef TTTRLIB_BURSTSEARCHMAXTREE_H
 #define TTTRLIB_BURSTSEARCHMAXTREE_H
 
-// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- no independent implementation of a photon-stream max-tree burst search
-//   exists; injected bursts recovered, significance filters, dispatch, degenerate inputs
-//   in test/python/test_burst_search_maxtree.py.
+// Validation: A/B-TESTED 2026-08-17 -- build_max_tree_1d vs skimage.morphology.max_tree: component
+//   set (level, lo, hi, parent) identical on 6 signals incl. 1.9 M components (11x faster,
+//   benchmarks/check_sciref.py); test/python/burstfilter/test_ab_burst_reference.py. The full
+//   search (attribute filter + MSER selection) has no independent implementation: injected bursts
+//   recovered, significance filters, dispatch in test/python/test_burst_search_maxtree.py.
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
