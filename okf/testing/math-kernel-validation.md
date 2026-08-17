@@ -91,7 +91,7 @@ Verdicts: **PASS** = agrees with the reference to the stated metric.
 | `Random.h` | Philox4x32-10 stream, `seek`, `deterministic` | from-the-paper Python Philox and Random123 KAT vectors | bit-exact | PASS | `…::TestRandomAgainstCanonicalGenerators::test_philox_*` |
 | `Random.h` | PCG engine (`deterministic`) | canonical pcg32 XSH-RR output of the same state; per-bit balance | bit-exact — **after the 2026-08-17 fix** (see below) | PASS | `…::test_pcg_engine_output_function_is_pcg32_xsh_rr`, `…::test_pcg_engine_bits_are_unbiased` |
 | `Random.h` | SplitMix64 engine | canonical SplitMix64 finaliser | bit-exact (low 32 bits); seed→state mixing is tttrlib-specific | PASS | `…::test_splitmix64_mixer_is_canonical` |
-| `Random.h` | MT19937 engine | — | not implemented: `deterministic` falls through to Philox as documented; pinned so an implementation flips the test | NO-REF (n/a) | `…::test_mt19937_engine_is_not_implemented_and_falls_through_to_philox` |
+| `Random.h` | MT19937 streaming engine (`TTTR_RNG_ENGINE=mt19937`) | numpy `RandomState(int)` raw u32 stream (legacy `init_genrand` seeding = std::mt19937) | **the name ran Philox until 2026-08-17**; now bit-exact, seek() by discard; `deterministic` under it still Philox (not counter-based, documented) | PASS (after fix) | `…::test_mt19937_streaming_engine_is_numpys_mersenne_twister`, `…_deterministic_falls_through_to_philox` |
 | `Random.h` | `normal()` | N(0,1) moments + scipy KS on 2e5 draws | pass | PASS (statistical) | `…::test_normal_is_standard_normal` |
 | `SimPcgRandom.h` | PCG32 | O'Neill `pcg32_srandom_r` + `pcg32_random_r`, seeding included | bit-exact | PASS | `…::test_simpcgrandom_is_bit_exact_pcg32` |
 | `NeuralNet.h` | forward pass | sklearn `MLPRegressor` weights imported via JSON | 1e-10 | PASS | `test/python/test_neural_net.py::test_matches_sklearn_forward_pass` |
@@ -108,8 +108,9 @@ Verdicts: **PASS** = agrees with the reference to the stated metric.
   engine `selected_engine()` picks when `TTTR_RNG_DETERMINISTIC` is off with no
   engine named — never the Philox default, so no recorded fixture depended on
   the old stream. The Python binding needs a rebuild to pick the header change up.
-* **`Random.h` `mt19937` is a name without an engine** — `deterministic` falls
-  through to Philox, as the header says. Pinned, not changed.
+* **`Random.h` `mt19937` was a name without an engine** — every streaming draw
+  was Philox whatever the env said. Implemented 2026-08-17 (std::mt19937, numpy
+  RandomState-identical); `deterministic` keeps its documented Philox fallback.
 * **HDBSCAN vs sklearn end to end differs only on MST ties** — sklearn sorts
   its MST with unstable `np.argsort`, so equal-weight edges merge in an
   irreproducible order; feeding either side's tree to the other's downstream is

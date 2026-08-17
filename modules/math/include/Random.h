@@ -10,8 +10,10 @@
  *                      thread-safe for deterministic parallel draws.
  *   - "pcg"        — PCG-XSH-RR-64-32 (permuted). Counter-based, thread-safe.
  *   - "splitmix64" — SplitMix64. Counter-based, thread-safe.
- *   - "mt19937"   — Mersenne Twister 19937. NOT counter-based; sequential
- *                      use only via global_rng(). Counter-based deterministic()
+ *   - "mt19937"   — Mersenne Twister 19937 (std::mt19937 = mt19937ar
+ *                      init_genrand = numpy RandomState(int)). NOT counter-based:
+ *                      the streaming Random draws use it, seek() discards
+ *                      (O(n)); counter-based deterministic()
  *                      calls fall through to Philox when this is selected.
  *
  * Two interfaces:
@@ -41,8 +43,10 @@
 
 // Validation: A/B-TESTED 2026-08-17 -- Philox4x32-10 vs the Random123 known-answer vectors (bit-exact); PCG vs the
 //   canonical pcg32 XSH-RR output (bit-exact -- the A/B found and fixed the
-//   xorshift on 2026-08-17); SplitMix64 mixer canonical; MT19937 engine is not
-//   implemented (falls through to Philox, pinned). test/python/misc/test_math_ab_numerics.py.
+//   xorshift on 2026-08-17); SplitMix64 mixer canonical; MT19937 streaming engine == numpy
+//   RandomState(seed) raw stream (implemented 2026-08-17; before, the name ran Philox);
+//   deterministic() under mt19937 still falls through to Philox (not counter-based, pinned).
+//   test/python/misc/test_math_ab_numerics.py.
 //   Register: okf/testing/math-kernel-validation.md
 
 #include <cstdint>
@@ -51,6 +55,7 @@
 #include <cstring>
 #include <ctime>
 #include <string>
+#include <random>
 #include <algorithm>
 #include <cctype>
 #include "info.h"  // cpu_features::safe_getenv, is_false_value
@@ -99,6 +104,14 @@ public:
         key_[1] = stream_id;
         ctr_[0] = 0; ctr_[1] = 0; ctr_[2] = 0; ctr_[3] = 0;
         idx_ = 4;  // force refill on first draw
+        // TTTR_RNG_ENGINE=mt19937 makes the *streaming* draws a Mersenne
+        // Twister (std::mt19937 == mt19937ar init_genrand == numpy's legacy
+        // RandomState(int) seeding), stream 0 seeded with base_seed itself so
+        // it reproduces those; stream k > 0 folds k in. Until 2026-08-17 the
+        // name was accepted and silently ran Philox.
+        use_mt_ = (selected_engine() == RNGEngine::MT19937);
+        if (use_mt_) mt_.seed(stream_id == 0 ? base_seed : (base_seed ^ (stream_id * 0x9E3779B9u)));
+        mt_pos_ = 0;
     }
 
     /*!
@@ -123,6 +136,13 @@ public:
      * one past it.
      */
     void seek(uint64_t draw_index) {
+        if (use_mt_) {
+            // Not counter-based: reach the position by discarding. Exact, O(n).
+            if (draw_index < mt_pos_) { seed(key_[0], key_[1]); }
+            mt_.discard(static_cast<unsigned long long>(draw_index - mt_pos_));
+            mt_pos_ = draw_index;
+            return;
+        }
         const uint64_t block = draw_index / 4;
         const int rem = static_cast<int>(draw_index % 4);
         ctr_[0] = static_cast<uint32_t>(block);
@@ -140,6 +160,7 @@ public:
 
     /// Next raw 32-bit value (Philox streaming).
     inline uint32_t next_u32() {
+        if (use_mt_) { ++mt_pos_; return static_cast<uint32_t>(mt_()); }
         if (idx_ >= 4) {
             philox_refill();
             ++ctr_[0];
@@ -272,6 +293,10 @@ private:
     uint32_t ctr_[4]{};
     uint32_t buf_[4]{};
     int idx_ = 4;
+    // Streaming state (MT19937, only when TTTR_RNG_ENGINE=mt19937)
+    bool use_mt_ = false;
+    std::mt19937 mt_;
+    uint64_t mt_pos_ = 0;
 
     static inline void mulhilo(uint32_t a, uint32_t b, uint32_t& hi, uint32_t& lo) {
         uint64_t p = uint64_t(a) * b;

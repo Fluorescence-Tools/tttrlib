@@ -26,8 +26,9 @@ What each block establishes:
   included); SplitMix64's mixer is the canonical one; the ``pcg`` engine of
   ``Random::deterministic`` reproduces PCG's XSH-RR output function bit for bit
   (this A/B caught it writing ``(state >> 18) ^ (state >> 27)`` on 2026-08-17,
-  fixed the same day). ``mt19937`` is not implemented (falls through to
-  Philox) and is pinned so an implementation flips a test.
+  fixed the same day). ``mt19937`` streams are numpy's Mersenne Twister
+  (RandomState(int) raw words, bit for bit); ``deterministic`` under it falls
+  through to Philox, as documented.
 * Sampling: same uniforms -> same indices as ``np.searchsorted`` on the
   cumulative weights / CDF.
 * NeuralNet: trained head-to-head with sklearn's ``MLPRegressor`` on one
@@ -545,9 +546,9 @@ class TestRandomAgainstCanonicalGenerators(unittest.TestCase):
         ref = [_philox4x32_10((i & _M32, i >> 32, 0, 0), (s, 0))[0] for s, i in pairs]
         self.assertEqual(got, ref)
 
-    def test_mt19937_engine_is_not_implemented_and_falls_through_to_philox(self):
-        """Documented in Random.h: MT19937 is not counter-based, so deterministic()
-        uses Philox for it. Pinned so an implementation flips this test."""
+    def test_mt19937_deterministic_falls_through_to_philox(self):
+        """Documented in Random.h: MT19937 is not counter-based, so the static
+        deterministic() uses Philox for it."""
         pairs = [(3, 0), (3, 1), (77, 123456)]
         flat = [len(pairs)]
         for s, i in pairs:
@@ -555,6 +556,25 @@ class TestRandomAgainstCanonicalGenerators(unittest.TestCase):
         mt = _run("det", flat, env={"TTTR_RNG_ENGINE": "mt19937"})
         ph = _run("det", flat, env={"TTTR_RNG_ENGINE": "philox"})
         self.assertEqual(mt, ph)
+
+    def test_mt19937_streaming_engine_is_numpys_mersenne_twister(self):
+        """TTTR_RNG_ENGINE=mt19937 turns the streaming Random into a Mersenne
+        Twister: std::mt19937(seed) is mt19937ar's init_genrand(seed), which is
+        numpy's legacy RandomState(int) seeding, so the raw u32 stream must be
+        RandomState(seed).randint(0, 2**32) draw for draw (legacy randint on
+        the full 32-bit range consumes exactly one raw word). Until 2026-08-17
+        the engine name was accepted and Philox ran instead. seek() discards
+        to the position, so seek(k) then draw == draw k of the stream."""
+        for seed in (0, 5489, 123456789):
+            with self.subTest(seed=seed):
+                got = [int(x) for x in _run("philox_stream", [seed, 0, 12], env={"TTTR_RNG_ENGINE": "mt19937"})]
+                rs = np.random.RandomState(seed)
+                ref = [int(v) for v in rs.randint(0, 2 ** 32, size=12, dtype=np.uint64)]
+                self.assertEqual(got, ref)
+                ph = [int(x) for x in _run("philox_stream", [seed, 0, 12], env={"TTTR_RNG_ENGINE": "philox"})]
+                self.assertNotEqual(got, ph)
+                after = [int(x) for x in _run("philox_seek", [seed, 0, 7, 3], env={"TTTR_RNG_ENGINE": "mt19937"})]
+                self.assertEqual(after, ref[7:10])
 
     def test_splitmix64_mixer_is_canonical(self):
         """The (seed, index) -> state mixing is tttrlib's own; the SplitMix64

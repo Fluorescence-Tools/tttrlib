@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Fixed
+- **`TTTR_RNG_ENGINE=mt19937` now runs a Mersenne Twister.** The engine name
+  was accepted and every streaming draw silently used Philox. `Random` now
+  streams `std::mt19937` (mt19937ar `init_genrand`, i.e. numpy's legacy
+  `RandomState(int)` raw stream, bit for bit; stream id 0 = the seed itself);
+  `seek()` reaches a position by discarding (exact, O(n)); the counter-based
+  `deterministic()` keeps its documented Philox fallback. No default changed.
 - **PicoHarp T3 (PT3 / every Leica SP8 PTU) decoding follows the format.**
   Channel 15 is the special record (dtime 0 = overflow, else a marker with
   its bits in dtime); everything else is a photon, dtime 0 included. The
