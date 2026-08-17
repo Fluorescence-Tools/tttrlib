@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_PHOTONSCORED7_H
 #define TTTRLIB_PHOTONSCORED7_H
+// Validation: A/B-TESTED 2026-08-17 -- the public reference decoder photonsfile (Python port of
+//   Photonscore's Apache-2.0 d7 library) reads the Python- and the C++-written .photons identically to
+//   this reader (x, y, dt, ms datasets, attributes). No proprietary sample exists in the test data:
+//   the reference runs on our bytes. test/python/tttr/test_photonscore.py.
+//   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
 #include <map>

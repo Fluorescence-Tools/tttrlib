@@ -101,6 +101,36 @@ class TestPhotonscore(unittest.TestCase):
         self.assertEqual(tags["MeasDesc_NumberMicrotimes"], 4096)
         self.assertEqual(tags["Photons_PositionRange"], 4096.0)
 
+    def test_photonsfile_reads_ours(self):
+        """The public reference decoder (photonsfile, alex1075/photonsfile --
+        the Python port of Photonscore's Apache-2.0 d7 library) must read the
+        Python-written and the C++-written .photons identically to tttrlib:
+        every dataset (x, y, dt, ms) and the attributes. No proprietary sample
+        exists in the test data; the reference runs on our bytes."""
+        try:
+            import photonsfile
+        except ImportError:
+            self.skipTest("photonsfile not installed")
+        out = os.path.join(self.tmp, "written.photons")
+        tttrlib.TTTR(self.path).write(out)
+        for path in (self.path, out):
+            with self.subTest(file=os.path.basename(path)):
+                with photonsfile.PhotonsFile(path) as pf:
+                    ph = pf.photons(("x", "y", "dt", "ms"))
+                    self.assertEqual(pf.position_bits, 12)
+                    self.assertEqual(pf.tac_bits, 12)
+                    self.assertAlmostEqual(float(pf.tac_channel), 27.0)
+                np.testing.assert_array_equal(np.asarray(ph["x"]), self.x)
+                np.testing.assert_array_equal(np.asarray(ph["y"]), self.y)
+                np.testing.assert_array_equal(np.asarray(ph["dt"]), self.dt)
+                np.testing.assert_array_equal(np.asarray(ph["ms"]), self.ms)
+                # and tttrlib on the same file agrees with the reference field for field
+                t = tttrlib.TTTR(path)
+                et = np.asarray(t.event_types); rc = np.asarray(t.routing_channels); mi = np.asarray(t.micro_times)
+                np.testing.assert_array_equal(mi[et == RECORD_PHOTON], np.asarray(ph["dt"]))
+                np.testing.assert_array_equal(mi[(et == RECORD_MARKER) & (rc == MARKER_POSITION_X)], np.asarray(ph["x"]))
+                np.testing.assert_array_equal(mi[(et == RECORD_MARKER) & (rc == MARKER_POSITION_Y)], np.asarray(ph["y"]))
+
     def test_cpp_writer_roundtrip(self):
         # Read, then write a new .photons file with the C++ writer, then read
         # it back. Exercises photonscore::write_photons via TTTR.write.
