@@ -44,9 +44,8 @@ class TestBackgroundEstimation(unittest.TestCase):
         rate_hz = 5000
         ipt_ms = np.random.exponential(1000.0 / rate_hz, 100000)
         bg = tttrlib.estimate_background_rate(ipt_ms.tolist(), 0.1, 1.0)
-        # MoM on inter-photon times in ms -> rate in Hz
-        # 1/mean(ipt_ms) * 1000 = Hz
-        self.assertAlmostEqual(bg / 1000, 5.0, delta=0.5)  # ~5 kHz
+        # MLE on inter-photon times in ms -> rate in 1/ms = kHz
+        self.assertAlmostEqual(bg, 5.0, delta=0.5)  # ~5 kHz
 
     def test_empty_input(self):
         bg = tttrlib.estimate_background_rate([], 0.1, 0.5)

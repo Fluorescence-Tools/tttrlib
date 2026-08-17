@@ -11,6 +11,12 @@
 #ifndef TTTRLIB_MAXENT_H
 #define TTTRLIB_MAXENT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- maxent_invert vs scipy L-BFGS-B on the
+//   documented objective ||Ax-b||^2 - nu^2 S (KKT + objective 1e-7, incl. the
+//   H = 2 A^T A, nu_run = 2 nu^2 translation into MaxEntQp).
+//   test/python/misc/test_math_ab_probabilistic.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 
 namespace tttrlib {

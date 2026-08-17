@@ -9,6 +9,12 @@
 #ifndef TTTRLIB_SPECTRALCROSSTALK_H
 #define TTTRLIB_SPECTRALCROSSTALK_H
 
+// Validation: A/B-TESTED 2026-08-17 -- correct_three_cube(_batch) vs the Hellenkamp 2018 formulas (1e-12) and
+//   FRETBursts fretmath.correct_E_gamma_leak_dir (1e-10, gamma + leakage);
+//   invert_mixing_ridge vs np.linalg.lstsq (ridge 0), the closed-form ridge
+//   solution and sklearn Ridge(fit_intercept=False) (1e-8..1e-10). test/python/corrections/test_ab_corrections_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 
 namespace tttrlib {
