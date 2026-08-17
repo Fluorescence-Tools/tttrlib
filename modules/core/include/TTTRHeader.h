@@ -163,7 +163,7 @@ public:
      */
      unsigned int get_number_of_micro_time_channels();
 
-    /// Resolution for the macro time in nanoseconds
+    /// Resolution for the macro time in seconds (e.g. 2.5e-8 for a 40 MHz sync)
     double get_macro_time_resolution();
 
     /// Resolution for the micro time in nanoseconds

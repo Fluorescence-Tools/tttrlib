@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_MICROTIME_LINEARIZATION_H
 #define TTTRLIB_MICROTIME_LINEARIZATION_H
 
+// Validation: A/B-TESTED 2026-08-17 -- LUT lookup (nearest, no dithering) + shift vs a numpy transcription:
+//   floor(lut[m] + 0.5) + shift mod size, out-of-LUT micro times only shifted;
+//   exact on 3 channels x 20k photons. Dithered path is seeded MT19937 and
+//   not reproduced. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <cmath>
 #include <cstring>

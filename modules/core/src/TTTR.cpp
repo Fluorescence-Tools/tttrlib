@@ -3226,6 +3226,9 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
         std::cerr << "ERROR: Cannot write to file: " << filename << std::endl;
         return false;
     }
+    // Where the record stream starts; used below to count what was written.
+    fseek64(fp, 0, SEEK_END);
+    const int64_t header_bytes = ftell64(fp);
     // append records
     switch (record_type) {
         case BH_RECORD_TYPE_SPC130:
@@ -3277,7 +3280,21 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
             fclose(fp);
             return false;
     }
+    fseek64(fp, 0, SEEK_END);
+    const int64_t end_bytes = ftell64(fp);
     fclose(fp);
+    // PTU: TTResult_NumberOfRecords must be the number of 4-byte RECORDS in
+    // the stream -- events plus the overflow records the writers above
+    // insert -- not the event count ensure_minimal_tags seeded it with. A
+    // strict reader (ptufile) truncates at the header's count. The tag is a
+    // fixed-width tyInt8 already present in the header, so rewriting the
+    // header in place ("r+b") keeps every byte offset. Found by the ptufile
+    // round trip, 2026-08-17.
+    if(container_type == PQ_PTU_CONTAINER && end_bytes >= header_bytes){
+        const int64_t n_rec = (end_bytes - header_bytes) / 4;
+        TTTRHeader::add_tag(header->json_data(), TTTRTagNumRecords, (int) n_rec, tyInt8);
+        TTTRHeader::write_ptu_header(filename, header, "r+b");
+    }
     // For Becker & Hickl SPC files, write the companion .set sidecar carrying
     // the CLSM imaging geometry that the .spc record stream cannot hold, so a
     // PTU -> SPC conversion of imaging data stays reconstructable (the reader
@@ -4104,10 +4121,16 @@ MicrotimeLinearization* TTTR::get_mt_linearizer() {
 }
 
 void TTTR::set_mt_linearizer(MicrotimeLinearization* mt_linearizer) {
+    // Copy, do not adopt: the caller's object stays the caller's (a SWIG
+    // proxy deletes it at teardown -- adopting the pointer double-freed it,
+    // found by the A/B 2026-08-17). A null resets to a fresh, empty one.
+    MicrotimeLinearization* fresh = mt_linearizer != nullptr
+        ? new MicrotimeLinearization(*mt_linearizer)
+        : new MicrotimeLinearization();
     if (this->mt_linearizer != nullptr) {
         delete this->mt_linearizer;
     }
-    this->mt_linearizer = mt_linearizer;
+    this->mt_linearizer = fresh;
 }
 
 void TTTR::set_channel_luts(const float* luts, int n_channels, int lut_size) {

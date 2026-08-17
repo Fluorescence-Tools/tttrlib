@@ -4,6 +4,22 @@
 #ifndef TTTRLIB_TTTR_H
 #define TTTRLIB_TTTR_H
 
+// Validation: A/B-TESTED 2026-08-17 -- compute_intensity_trace, selection_by_count_rate, ranges_by_time_window vs
+//   numpy transcriptions of their definitions (exact, bursty streams, all
+//   option combinations); count rate, mean micro time, micro-time histogram
+//   (coarsening, channel filter) vs numpy; moment lifetime vs Isenberg's
+//   first-moment formula and a known-answer decay; T3 PTU decoding vs ptufile
+//   (macro/micro/channel/marker exact), SPC-130 and HT3 decoding vs phconvert
+//   (exact incl. markers). T2 PTU vs ptufile: tttr/test_t2_ptufile_reference.py.
+//   NOTE: get_intensity_trace / get_selection_by_count_rate take the window in
+//   SECONDS (header resolution is seconds; examples pass 0.001 for 1 ms) --
+//   the Doxygen says milliseconds. test/python/test_ab_core_reference.py.
+//   The burst searches declared here (sliding window, CUSUM/SPRT, coincident,
+//   Kalman, BOCPD, max-tree, Bayesian Blocks) are A/B-tested against
+//   FRETBursts, PAM, ChiSurf, Adams & MacKay and astropy in
+//   test/python/burstfilter/test_ab_burst_reference.py; see the burst headers.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <string>
 #include <cmath>
@@ -103,30 +119,21 @@ void ranges_by_time_window(
 
 
 /**
- * Compute an intensity trace from sorted timestamps.
+ * Compute an intensity trace from sorted timestamps: non-overlapping bins of
+ * `time_window` seconds, i.e. `np.bincount(t // clocks_per_bin)` with
+ * `clocks_per_bin = floor(time_window / macro_time_resolution)` (at least 1).
  *
  * Parameters:
- *   output                 - pointer to the returned array of counts
- *   n_output               - pointer to the number of bins returned
- *   input                  - sorted array of timestamps (same units as time_window)
+ *   output                 - pointer to the returned array of counts (allocated here)
+ *   n_output               - number of bins, `t_max / clocks_per_bin + 1`
+ *   input                  - sorted macro times in clock ticks
  *   n_input                - number of timestamps in `input[]`
- *   time_window            - if overlapping==1: length of each sliding window;
- *                            if overlapping==0: total time to cover (will be compared with t_max)
- *   macro_time_resolution  - if overlapping==1: step size between successive window starts;
- *                            if overlapping==0: non‐overlapping bin width
- *   overlapping            - 1 ⇒ compute a sliding (overlapping) intensity trace;
- *                            0 ⇒ compute non‐overlapping histogram bins
+ *   time_window            - bin width in seconds
+ *   macro_time_resolution  - seconds per clock tick
  *
- * Behavior when overlapping==1 (“sliding‐window”):
- *   - Each window j spans [j·res, j·res + time_window), for j = 0..floor(t_max/res).
- *   - n_output = floor(t_max / res) + 1.
- *   - At each j, count how many timestamps fall into that window.
- *
- * Behavior when overlapping==0 (“non‐overlapping bins”):
- *   - We cover up to max(t_max, time_window).  Define
- *       total_span = fmax((double)t_max, time_window).
- *   - n_output = ceil(total_span / macro_time_resolution).
- *   - Bin j spans [j·res, (j+1)·res).  Count how many timestamps fall into each bin.
+ * There is no sliding-window mode (an earlier version of this comment described
+ * one that was never implemented; the A/B against np.bincount pins the plain
+ * binned trace).
  */
 void compute_intensity_trace(
         int **output, int *n_output,
@@ -1309,6 +1316,10 @@ public:
      *     min_len (int): minimum consecutive bins over threshold.
      *     merge_gap (int): merge bursts separated by at most this many bins.
      *     per_channel (bool): track one rate per routing channel.
+     *     warmup_bins (int): seed the filter from the mean rate of this many
+     *         leading bins and report no burst inside them; 0 (default) is the
+     *         legacy zero start, which produces one or two spurious bursts at
+     *         t ~ 0 (see KalmanBurstSettings::warmup_bins).
      *
      * Returns:
      *     vector<long long>: interleaved, non-overlapping start and stop indices.
@@ -1321,7 +1332,8 @@ public:
         double z_thresh = 3.0,
         int min_len = 2,
         int merge_gap = 5,
-        bool per_channel = true
+        bool per_channel = true,
+        int warmup_bins = 0
     );
 
     /**
@@ -2082,7 +2094,8 @@ public:
       *
       * @param output [out] Array containing the selected indices
       * @param n_output [out] Number of elements in the output array
-      * @param time_window [in] Length of the time window in milliseconds
+      * @param time_window [in] Length of the time window in seconds (macro
+      *        times are converted with the header's macro time resolution)
       * @param n_ph_max [in] Maximum number of photons within a time window
       * @param invert [in] If set to true, the selection criteria are inverted
       * @param make_mask [in] If set to true, the output array will be a boolean mask
@@ -2099,7 +2112,7 @@ public:
       *
       * This method returns a TTTR object filtered based on count rate criteria.
       *
-      * @param time_window [in] Length of the time window in milliseconds
+      * @param time_window [in] Length of the time window in seconds
       * @param n_ph_max [in] Maximum number of photons within a time window
       * @param invert [in] If set to true, the count rate criteria are inverted
       * @param make_mask [in] If set to true, the output array will be a boolean mask
@@ -2631,9 +2644,11 @@ public:
     MicrotimeLinearization* get_mt_linearizer();
 
     /*!
-     * \brief Set the MicrotimeLinearization instance
+     * \brief Set the MicrotimeLinearization instance (copied; the caller keeps
+     *        ownership of the object passed in, so a binding's proxy may delete
+     *        it freely). Null resets to an empty linearizer.
      *
-     * \param mt_linearizer Pointer to the MicrotimeLinearization instance to set
+     * \param mt_linearizer Pointer to the MicrotimeLinearization instance to copy
      */
     void set_mt_linearizer(MicrotimeLinearization* mt_linearizer);
 

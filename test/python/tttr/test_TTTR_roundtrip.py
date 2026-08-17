@@ -514,11 +514,18 @@ class WriteMetadataFidelityTests(unittest.TestCase):
                 "MeasDesc_GlobalResolution",
             ):
                 self.assertIn(mandatory, names)
-            # The record count tag must match the number of events written.
+            # The record count tag is the number of 4-byte RECORDS in the
+            # stream -- events plus the overflow records the writer inserts --
+            # which is what a strict reader (ptufile) reads up to. Until
+            # 2026-08-17 it was the event count and ptufile truncated.
             tags = json.loads(d2.header.json)["tags"]
             n_records = next(t["value"] for t in tags
                              if t["name"] == "TTResult_NumberOfRecords")
-            self.assertEqual(n_records, len(d.macro_times))
+            with open(fn_out, "rb") as fh:
+                raw = fh.read()
+            header_len = raw.find(b"Header_End") + 48
+            self.assertEqual(n_records, (len(raw) - header_len) // 4)
+            self.assertGreaterEqual(n_records, len(d.macro_times))
             self.assertEqual(len(d2.macro_times), len(d.macro_times))
         finally:
             if os.path.isfile(fn_out):

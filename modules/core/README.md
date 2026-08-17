@@ -12,3 +12,7 @@ This module provides the central `TTTR` photon container class, channel routing,
 ## Dependencies
 
 - Depends on `util`, `io/base`.
+
+## Examples
+
+- `examples/tttr/plot_write_read_roundtrip_simulated.py` (+ `.ipynb`): a simulated photon stream written as PTU / HT3 / SPC-130 with `TTTR.write` and read back record-for-record — no instrument file needed. The decoders are photon-for-photon identical to phconvert and ptufile (`benchmarks/check_reading.py`).

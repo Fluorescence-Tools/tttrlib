@@ -2,6 +2,14 @@
 #ifndef TTTRLIB_HISTOGRAM_H
 #define TTTRLIB_HISTOGRAM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- histogram1D_double/int lin and log10 axes vs np.histogram (exact away from
+//   edges, on-edge FP round-off <= 1 count), range forms vs make_bin_edges +
+//   numpy, bincount1D vs np.bincount (harness; no usable Python binding); the
+//   2-D functions bin for bin vs np.histogram2d in test/python/test_histogram2d.py.
+//   KNOWN DEFECT pinned as expectedFailure: the 'search' axis (any axis_type
+//   other than lin/log10) never fills its first and last bin. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <algorithm>
 #include <vector>   
 #include <cstdio>

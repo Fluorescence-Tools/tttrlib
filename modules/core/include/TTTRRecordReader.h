@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_PQ_H
 #define TTTRLIB_PQ_H
 
+// Validation: A/B-TESTED 2026-08-17 -- HydraHarp T2/T3 record decoding vs ptufile (Gohlke), SPC-130 and HT3 vs
+//   phconvert (Ingargiola) -- macro time, micro time, channel and markers
+//   identical on the tttr-data files. test/python/test_ab_core_reference.py,
+//   test/python/tttr/test_t2_ptufile_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <iostream>
 #include <cstdint>
 #include <cstring>

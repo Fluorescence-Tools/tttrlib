@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_HISTOGRAMAXIS_H
 #define TTTRLIB_HISTOGRAMAXIS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- make_bin_edges vs np.linspace / np.geomspace (1e-12); HistogramBinning
+//   lin/log10 through histogram1D vs np.histogram; the search path's dropped
+//   first/last bin is pinned as a known defect. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <algorithm>
 #include <vector>
 #include <cstdio>
@@ -34,33 +39,32 @@ inline void logspace(double start, double stop, T *bin_edges, int n_bins){
  * adapts the edge for the upper and lower range depending if the target
  * value is bigger or smaller than the bin in the middle.
 
+ * Bin i is `[bin_edges[i], bin_edges[i+1])`; the last bin is closed on the
+ * right, as numpy.histogram's is. (Until 2026-08-17 the search rejected the
+ * last bin and the caller rejected index 0, so the first and last bin were
+ * never filled -- found by the A/B against np.histogram.)
+ *
  * @tparam T
  * @param value
  * @param bin_edges
- * @param n_bins
+ * @param n_bins number of EDGES in `bin_edges` (bins = n_bins - 1)
  * @return negative value if the search value is out of the bounds. Otherwise the bin number
  * is returned.
  */
 template <typename T>
 inline int search_bin_idx(T value, T *bin_edges, int n_bins){
-    int b, e, m;
-
-    // ignore values outside of the bounds
-    if ((value < bin_edges[0]) || (value > bin_edges[n_bins - 2])) {
+    const int last = n_bins - 1;
+    if (n_bins < 2 || !(value >= bin_edges[0]) || !(value <= bin_edges[last])) {
         return -1;
     }
-
-    b = 0;
-    e = n_bins;
-    do {
-        m = (e - b) / 2 + b;
-        if (value > bin_edges[m]) {
-            b = m;
-        } else {
-            e = m;
-        }
-    } while ((value < bin_edges[m]) || (value >= bin_edges[m + 1]));
-    return m;
+    if (value == bin_edges[last]) return last - 1;
+    // invariant: bin_edges[b] <= value < bin_edges[e]
+    int b = 0, e = last;
+    while (e - b > 1) {
+        const int m = b + (e - b) / 2;
+        if (value >= bin_edges[m]) b = m; else e = m;
+    }
+    return b;
 }
 
 
@@ -180,7 +184,7 @@ public:
     inline int bin_of(T value) const {
         if (search_) {
             const int idx = search_bin_idx(value, const_cast<T*>(edges_), n_bins_);
-            return (idx > 0 && idx < n_bins_) ? idx : -1;
+            return (idx >= 0 && idx < n_bins_) ? idx : -1;
         }
         if (degenerate_) return -1;
         double v = static_cast<double>(value);

@@ -2,6 +2,13 @@
 #ifndef TTTRLIB_HISTOGRAMND_H
 #define TTTRLIB_HISTOGRAMND_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs boost-histogram for every axis kind (regular, log, sqrt, pow, variable,
+//   integer, category, boolean, circular), flow bins, weights + variance,
+//   projections, rebin, mean/weighted-mean profiles, NaN/inf handling
+//   (test/python/test_histogram_nd.py) and vs np.histogram/2d/dd
+//   (test/python/test_histogram_numpy_api.py).
+//   Register: okf/testing/algorithm-validation.md
+
 /*!
  * \file HistogramNd.h
  * \brief A general N-dimensional histogram: axis kinds, flow bins, variances.
