@@ -6,7 +6,9 @@
 //   masked decays, mean micro-time and moment-lifetime images vs an independent NumPy
 //   marker reconstruction (default routine on the HT3 sample and the SP5 routine on
 //   LSM_1.ptu: exact counts, means to 1e-12); crop/rebin vs slices/block sums;
-//   compute_ics vs a NumPy FFT correlation. test/python/clsm/test_ab_clsm_reference.py,
+//   compute_ics vs a NumPy FFT correlation, vs pysimfcs autocorr2d (0.0) and vs Kolin & Wiseman's
+//   stics.m / corrfunc.m in Octave (STICS lags 0-3 and the normalised ACF bit-identical;
+//   test_clsm_ics.py). test/python/clsm/test_ab_clsm_reference.py,
 //   test/python/clsm/test_clsm_ics.py.
 //   Register: okf/testing/algorithm-validation.md
 

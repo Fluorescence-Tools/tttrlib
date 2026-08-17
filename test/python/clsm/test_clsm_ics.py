@@ -228,5 +228,36 @@ class TestAgainstPysimfcs(unittest.TestCase):
                 np.testing.assert_allclose(np.fft.fftshift(ours), au.autocorr2d(a), rtol=0, atol=1e-12)
 
 
+class TestAgainstKolinWisemanOctave(unittest.TestCase):
+    """David Kolin's ``stics.m`` / ``corrfunc.m`` (2003, the code behind
+    Hebert, Costantino & Wiseman 2005), recorded from Octave by
+    ``gen_ab_stics_kolin_reference.py``: the raw time-lag correlation averaged
+    over frame pairs and the per-frame normalised spatial ACF. ``compute_ics``
+    with ``frames_index_pairs = [(i, i + tau)]`` averaged over the pairs is
+    STICS at lag tau; both agree with the MATLAB code bit for bit."""
+
+    FIX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "reference",
+                       "stics_kolin_octave_reference.npz")
+
+    def test_stics_and_normalised_acf_identical(self):
+        if not os.path.exists(self.FIX):
+            self.skipTest("stics_kolin_octave_reference.npz not present")
+        d = np.load(self.FIX)
+        ser = np.ascontiguousarray(d["imgser"])
+        T = ser.shape[0]
+        for tau in range(int(d["n_tau"])):
+            with self.subTest(tau=tau):
+                pairs = [(i, i + tau) for i in range(T - tau)]
+                ours = np.asarray(tttrlib.CLSMImage.compute_ics(
+                    images=ser, x_range=[0, -1], y_range=[0, -1], subtract_average="",
+                    frames_index_pairs=pairs))
+                np.testing.assert_allclose(np.fft.fftshift(ours.mean(0)), d["timecorr"][tau], rtol=0, atol=1e-6)
+        for z in range(T):
+            with self.subTest(frame=z):
+                a = ser[z]
+                np.testing.assert_allclose(np.fft.fftshift(_raw_ics(a) / (a.size * a.mean() ** 2) - 1.0),
+                                           d["G"][z], rtol=0, atol=1e-12)
+
+
 if __name__ == '__main__':
     unittest.main()
