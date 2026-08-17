@@ -59,8 +59,12 @@ def _find_tttr():
         return override, os.path.dirname(os.path.dirname(os.path.abspath(override)))
     found = []
     build_root = os.path.join(_REPO_ROOT, "build")
-    for entry in sorted(os.listdir(build_root) if os.path.isdir(build_root) else []):
-        candidate = os.path.join(build_root, entry, "bin", "tttr")
+    # the top-level tree (`build/bin/tttr`, what test_cli.py uses) and every
+    # sub-tree (`build/<name>/bin/tttr`)
+    candidates = [os.path.join(build_root, "bin", "tttr")]
+    candidates += [os.path.join(build_root, entry, "bin", "tttr")
+                   for entry in sorted(os.listdir(build_root) if os.path.isdir(build_root) else [])]
+    for candidate in candidates:
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             found.append(candidate)
     if found:
