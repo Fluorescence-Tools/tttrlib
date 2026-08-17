@@ -304,7 +304,7 @@ def main():
     vb = run_vb()
     np.savez(os.path.join(SHARED, "hmm_vb.npz"), X=X, lengths=lengths, seed_pi=seed_pi, seed_A=seed_A, seed_B=seed_B,
              alpha_prior=np.asarray(vb.alpha_prior), alpha_trans=np.asarray(vb.alpha_trans).reshape(Kv, Kv),
-             alpha_obs=np.asarray(vb.alpha_obs).reshape(Kv, Pv), elbo=vb.elbo, n_iter=vb.n_iter)
+             alpha_obs=np.asarray(vb.alpha_obs).reshape(Kv, Pv), elbo=vb.elbo, elbo_normalised=vb.elbo_normalised, n_iter=vb.n_iter)
     bench("hmm_vb", "tttrlib", f"VB-HMM (Dirichlet mean-field) on {len(lengths)} dense chains, {int(lengths.sum())} ticks, K={Kv}, to convergence",
           run_vb, repeat=3, warmup=1, n_items=int(lengths.sum()), unit="tick", dataset="simulated")
 

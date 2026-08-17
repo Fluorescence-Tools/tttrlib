@@ -115,11 +115,13 @@ def main():
                    "alpha_obs_max_rel_diff": rel(ao, ref["hmm_vb_alpha_obs"]),
                    "beal_bound_at_tttrlib_posterior_vs_hmmlearn": abs(H - lb_at_ours),
                    "hmmlearn_bound_at_its_optimum_minus_at_ours": lb - lb_at_ours,
-                   "tttrlib_elbo_minus_hmmlearn_bound": float(d["elbo"]) - lb, "K(K-1)/2": K * (K - 1) / 2}
+                   "tttrlib_elbo_vs_hmmlearn_bound_at_our_posterior": abs(float(d["elbo"]) - lb_at_ours),
+                   "elbo_normalised_minus_hmmlearn_bound": float(d["elbo_normalised"]) - lb, "K(K-1)/2": K * (K - 1) / 2}
     v["hmm_vb"]["identical"] = bool(v["hmm_vb"]["beal_bound_at_tttrlib_posterior_vs_hmmlearn"] < 1e-8
                                      and max(v["hmm_vb"]["alpha_prior_max_rel_diff"], v["hmm_vb"]["alpha_trans_max_rel_diff"], v["hmm_vb"]["alpha_obs_max_rel_diff"]) < 2e-3
-                                     and abs(v["hmm_vb"]["tttrlib_elbo_minus_hmmlearn_bound"] - K * (K - 1) / 2) < 0.05)
-    v["hmm_vb"]["note"] = "Beal's bound at tttrlib's posterior == hmmlearn's to rounding; posteriors agree to ~1e-3 (engine iterates on row-normalised A~); tttrlib's elbo is K(K-1)/2 nat above the bound (okf/design/hmmvb-elbo-decision.md)"
+                                     and v["hmm_vb"]["tttrlib_elbo_vs_hmmlearn_bound_at_our_posterior"] < 1e-8
+                                     and abs(v["hmm_vb"]["elbo_normalised_minus_hmmlearn_bound"] - K * (K - 1) / 2) < 0.05)
+    v["hmm_vb"]["note"] = "elbo == hmmlearn's lower bound at tttrlib's posterior to rounding; posteriors agree to ~1e-3 (engine iterates on row-normalised A~); the iteration's elbo_normalised is K(K-1)/2 nat above the bound (okf/design/hmmvb-elbo-decision.md)"
 
     d = np.load(os.path.join(SHARED, "phasor.npz"))
     gs = np.asarray(tttrlib.DecayPhasor.compute_phasor_bincounts_batch(d["counts"], float(d["frequency"]), 1, 1.0, 0.0))

@@ -3,6 +3,17 @@
 ## [Unreleased]
 
 ### Fixed
+- **`HmmVB.elbo` is now Beal's bound.** `fit_vb` reported the iteration's
+  own objective -- the forward pass with the geometric-mean transition matrix
+  row-normalised inside the engine's `A^dt` cache -- which is not an evidence
+  bound and sits exactly K(K-1)/2 nat above one. `elbo` is now the
+  sub-stochastic forward pass at the returned posterior minus the Dirichlet
+  KL terms (one extra pass; the iteration and its fixed point are unchanged),
+  A/B-identical to hmmlearn's `VariationalCategoricalHMM` (2e-10 on dense
+  streams, posterior 1e-4, 13x faster). The old value is kept as
+  `elbo_normalised` (with `history`), and the two data terms as `loglik` /
+  `loglik_beal`. Model rankings do not change except within K nat of a tie.
+  Example: `examples/single_molecule/plot_hmm_variational_bayes.py`.
 - **`kalman_filter` for one channel read past its buffers.** The general
   `K = P_pred·S⁻¹` branch (every dim other than 2 and 3) was written for
   dim = 4 — strides of 4, four terms — so for dim = 1 it read past its

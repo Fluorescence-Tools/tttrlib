@@ -2723,7 +2723,9 @@ either the method gets its own axis (`x[k·nc + j] = x[k·nc] + j·pw`) or the
 block spacing follows the shared axis (`pw = 2^k`); the legacy code this ports
 used the former.
 
-## `HmmVB`'s ELBO data term is not the one its header derives — ~1 nat, and the ELBO is the model-selection number
+## FIXED — `HmmVB`'s ELBO data term is not the one its header derives — ~1 nat, and the ELBO is the model-selection number
+
+**Fixed 2026-08-17 (same day).** `HmmVB::elbo` is now Beal's bound at the returned posterior — one extra sub-stochastic forward pass in `HMMVB.cpp` (`log_z_sub_stochastic`), the iteration and its fixed point untouched; hmmlearn's `VariationalCategoricalHMM` gives the same bound to 2e-10. The old value stays as `elbo_normalised` (+ `history`), the data terms are `loglik` (engine) and `loglik_beal`. Header carries the `// Validation:` block. Example `plot_hmm_variational_bayes.py`. The entry as filed follows.
 
 **2026-08-17.** `modules/spectroscopy/hmm/include/HMMVB.h` derives the VB
 E-step as forward-backward under the geometric-mean parameters Ã, which are

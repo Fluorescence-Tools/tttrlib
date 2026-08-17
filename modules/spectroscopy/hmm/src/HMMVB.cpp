@@ -124,6 +124,79 @@ std::vector<double> HmmVB::std() const {
     return result;
 }
 
+// -- Beal's bound: the forward pass under the *sub-stochastic* weights ---------
+
+/// log Z~ of the tick chain weighted by the geometric-mean parameters, with the
+/// unobserved ticks of a gap dt marginalised as A~^dt *without* row
+/// normalisation. HMM::evaluate row-normalises A~ inside its power cache, so it
+/// cannot return this; one scaled forward pass here costs about one E-step.
+double log_z_sub_stochastic(
+    const HMM& hmm, const std::vector<double>& pi_t,
+    const std::vector<double>& A_t, const std::vector<double>& B_t, int n, int p
+) {
+    const std::vector<long long> unique_dt = hmm.get_unique_dt();
+    const int n2 = n * n;
+    // A~^dt for every distinct gap: plain binary exponentiation in double.
+    std::vector<double> pow_cache(unique_dt.size() * static_cast<size_t>(n2));
+    std::vector<double> base(n2), res(n2), tmp(n2);
+    for (size_t s_ = 0; s_ < unique_dt.size(); ++s_) {
+        std::fill(res.begin(), res.end(), 0.0);
+        for (int i = 0; i < n; ++i) res[i * n + i] = 1.0;
+        base = A_t;
+        long long e = unique_dt[s_];
+        while (e > 0) {
+            if (e & 1) {
+                for (int i = 0; i < n; ++i)
+                    for (int j = 0; j < n; ++j) {
+                        double acc = 0.0;
+                        for (int k = 0; k < n; ++k) acc += res[i * n + k] * base[k * n + j];
+                        tmp[i * n + j] = acc;
+                    }
+                res.swap(tmp);
+            }
+            e >>= 1;
+            if (e > 0) {
+                for (int i = 0; i < n; ++i)
+                    for (int j = 0; j < n; ++j) {
+                        double acc = 0.0;
+                        for (int k = 0; k < n; ++k) acc += base[i * n + k] * base[k * n + j];
+                        tmp[i * n + j] = acc;
+                    }
+                base.swap(tmp);
+            }
+        }
+        std::copy(res.begin(), res.end(), pow_cache.begin() + s_ * n2);
+    }
+    const std::vector<int32_t>& sym = hmm.get_streams();
+    const std::vector<int32_t>& slot = hmm.get_gap_slot();
+    const std::vector<int64_t>& off = hmm.get_offsets();
+    std::vector<double> a(n), b(n);
+    double total = 0.0;
+    for (size_t bi = 0; bi + 1 < off.size(); ++bi) {
+        const int64_t s0 = off[bi], s1 = off[bi + 1];
+        if (s1 <= s0) continue;
+        double c = 0.0;
+        for (int i = 0; i < n; ++i) { a[i] = pi_t[i] * B_t[i * p + sym[s0]]; c += a[i]; }
+        if (!(c > 0.0)) return -std::numeric_limits<double>::infinity();
+        total += std::log(c);
+        for (int i = 0; i < n; ++i) a[i] /= c;
+        for (int64_t k = s0 + 1; k < s1; ++k) {
+            const double* P = pow_cache.data() + static_cast<size_t>(slot[k - 1]) * n2;
+            c = 0.0;
+            for (int j = 0; j < n; ++j) {
+                double acc = 0.0;
+                for (int i = 0; i < n; ++i) acc += a[i] * P[i * n + j];
+                b[j] = acc * B_t[j * p + sym[k]];
+                c += b[j];
+            }
+            if (!(c > 0.0)) return -std::numeric_limits<double>::infinity();
+            total += std::log(c);
+            for (int j = 0; j < n; ++j) a[j] = b[j] / c;
+        }
+    }
+    return total;
+}
+
 // -- fit_vb -------------------------------------------------------------------
 
 HmmVB fit_vb(
@@ -198,11 +271,30 @@ HmmVB fit_vb(
         prev = elbo;
     }
 
+    result.elbo_normalised = elbo;
+    result.loglik = log_z;
+
+    // Beal's bound at the *final* posterior: sub-stochastic forward pass minus
+    // the KL terms of that same posterior (elbo_normalised above belongs to the
+    // posterior one update earlier -- at convergence they differ below tol).
+    {
+        std::vector<double> pi_t(n), A_t(static_cast<size_t>(n) * n),
+            B_t(static_cast<size_t>(n) * p);
+        tilde_row(a_prior.data(), n, pi_t.data());
+        for (int i = 0; i < n; ++i)
+            tilde_row(a_trans.data() + i * n, n, A_t.data() + i * n);
+        for (int i = 0; i < n; ++i)
+            tilde_row(a_obs.data() + i * p, p, B_t.data() + i * p);
+        double kl = dirichlet_kl(a_prior.data(), a0_prior.data(), n);
+        kl += sum_kl(a_trans, a0_trans, n);
+        kl += sum_kl(a_obs, a0_obs, p);
+        result.loglik_beal = log_z_sub_stochastic(hmm, pi_t, A_t, B_t, n, p);
+        result.elbo = result.loglik_beal - kl;
+    }
+
     result.alpha_prior = std::move(a_prior);
     result.alpha_trans = std::move(a_trans);
     result.alpha_obs = std::move(a_obs);
-    result.elbo = elbo;
-    result.loglik = log_z;
     return result;
 }
 

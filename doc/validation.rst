@@ -60,6 +60,9 @@ What is compared against what
    * - Photon HMM (H2MM)
      - H2MM_C
      - log-likelihood 1e-9, Viterbi paths identical
+   * - Photon HMM, variational Bayes (``fit_vb``)
+     - hmmlearn ``VariationalCategoricalHMM`` (dense streams)
+     - posterior 1e-4, lower bound 2e-10
    * - PDA
      - PAM ``PDA_histogram.cpp`` (compiled natively)
      - identical (2e-18)

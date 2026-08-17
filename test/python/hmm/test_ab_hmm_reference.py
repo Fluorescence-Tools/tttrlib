@@ -203,20 +203,22 @@ class TestVariationalBayes(unittest.TestCase):
                     + ((a - b) * (digamma(a) - digamma(a.sum()))).sum())
         total_kl = kl(ap, np.ones(n)) + sum(kl(at[i], np.ones(n)) for i in range(n)) \
             + sum(kl(ao[i], np.ones(p)) for i in range(n))
-        # elbo = loglik(data term) - KL: the KL side of the identity is exact
-        self.assertAlmostEqual(vb.elbo, vb.loglik - total_kl, delta=1e-8)
+        # elbo_normalised = loglik(engine data term) - KL; elbo = loglik_beal - KL:
+        # the KL side of both identities is exact
+        self.assertAlmostEqual(vb.elbo_normalised, vb.loglik - total_kl, delta=1e-8)
+        self.assertAlmostEqual(vb.elbo, vb.loglik_beal - total_kl, delta=1e-8)
 
     def test_elbo_data_term_against_the_header_derivation(self):
         """HMMVB.h derives the E-step as forward-backward with the geometric-mean
         parameters substituted, so that marginalising the unobserved ticks gives
         exactly A~^dt (A~ is *sub*-stochastic). The engine's A^dt cache
-        row-normalises after every composition, so what it actually evaluates is
-        the forward pass with A~'s rows normalised first. On this case the two
-        differ by ~1 nat (~90k ticks x log(row mass of A~) ~ -1e-5 each). This
-        test pins the engine's number to the normalised-rows transcription and
-        records the gap to the sub-stochastic derivation, so the deviation is
-        visible rather than silent; which one the ELBO should use is a design
-        question for the header, not a numerical one."""
+        row-normalises after every composition, so the iteration's data term
+        (``loglik``) is the forward pass with A~'s rows normalised first, and
+        the reported bound (``loglik_beal`` / ``elbo``) is one extra
+        sub-stochastic pass at the returned posterior. Both are pinned to their
+        NumPy transcriptions here; the difference is K(K-1)/2 = 1 nat on this
+        two-state case (okf/design/hmmvb-elbo-decision.md; upstream reference:
+        TestVariationalBayesAgainstHmmlearn)."""
         vb, eng, times, streams, (n, p), _, (tp, ta, to) = self._vb()
 
         def fwd(prior, A, B):
@@ -231,8 +233,8 @@ class TestVariationalBayes(unittest.TestCase):
         normalised_rows = fwd(tp, ta / ta.sum(1, keepdims=True), to)
         sub_stochastic = fwd(tp, ta, to)
         self.assertAlmostEqual(vb.loglik, normalised_rows, delta=1e-5)
-        # the header's derivation gives a lower data term on this case
-        self.assertLess(sub_stochastic, vb.loglik - 0.5)
+        self.assertAlmostEqual(vb.loglik_beal, sub_stochastic, delta=1e-8)
+        self.assertAlmostEqual(vb.loglik - vb.loglik_beal, n * (n - 1) / 2, delta=0.05)
 
 
 class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
@@ -245,10 +247,10 @@ class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
 
     What this pins: the engine's fixed point is hmmlearn's (posterior Dirichlet
     parameters to ~1e-3 relative -- the engine iterates on the row-normalised
-    geometric-mean A, hmmlearn on the sub-stochastic one), the sub-stochastic
-    forward pass at the engine's posterior *is* hmmlearn's bound, and the
-    engine's reported ``elbo`` sits K(K-1)/2 nat above that bound (E - H:
-    okf/design/hmmvb-elbo-decision.md)."""
+    geometric-mean A, hmmlearn on the sub-stochastic one), the reported ``elbo``
+    is hmmlearn's bound (the sub-stochastic forward pass at the engine's
+    posterior minus the KL terms), and the iteration's ``elbo_normalised`` sits
+    K(K-1)/2 nat above it (okf/design/hmmvb-elbo-decision.md)."""
 
     FIX = os.path.join(HERE, "..", "..", "data", "reference", "hmm_vb_hmmlearn_reference.npz")
 
@@ -293,7 +295,7 @@ class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
                 np.testing.assert_allclose(at, g("alpha_trans"), rtol=2e-3, atol=2e-2)
                 np.testing.assert_allclose(ao, g("alpha_obs"), rtol=2e-3, atol=2e-2)
 
-    def test_bound_matches_hmmlearn_and_elbo_is_K_choose_2_above_it(self):
+    def test_elbo_is_hmmlearns_bound_and_elbo_normalised_is_K_choose_2_above(self):
         if not os.path.exists(self.FIX):
             raise unittest.SkipTest("hmm_vb_hmmlearn_reference.npz not present")
         d = np.load(self.FIX)
@@ -301,11 +303,13 @@ class TestVariationalBayesAgainstHmmlearn(unittest.TestCase):
             with self.subTest(case=str(name)):
                 g, vb, _, H, K = self._case(d, name)
                 lb = float(g("lower_bound"))
-                # Beal's bound at the engine's posterior vs hmmlearn's at its own optimum
-                self.assertAlmostEqual(H, lb, delta=1e-3)
-                self.assertLessEqual(H, lb + 1e-6)                # hmmlearn maximises the bound
-                # the engine's reported elbo is not the bound: K(K-1)/2 nat above it
-                self.assertAlmostEqual(vb.elbo - lb, K * (K - 1) / 2, delta=0.05)
+                # the reported elbo is the sub-stochastic bound at the returned posterior
+                self.assertAlmostEqual(vb.elbo, H, delta=1e-8)
+                # ... which is hmmlearn's bound (theirs at their own optimum: >= ours, ~1e-5 nat)
+                self.assertAlmostEqual(vb.elbo, lb, delta=1e-3)
+                self.assertLessEqual(vb.elbo, lb + 1e-6)
+                # the iteration variable is K(K-1)/2 nat above the bound
+                self.assertAlmostEqual(vb.elbo_normalised - vb.elbo, K * (K - 1) / 2, delta=0.05)
 
 
 if __name__ == "__main__":

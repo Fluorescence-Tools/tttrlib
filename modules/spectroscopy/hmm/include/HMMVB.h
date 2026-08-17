@@ -17,9 +17,18 @@
  *     - \sum_i \mathrm{KL}(q(B_i)\|p(B_i))
  * \f]
  *
- * where \f$\log\tilde Z\f$ is the log-normaliser the forward pass returns. The
- * ELBO doubles as the model-selection criterion, filling the gap that priors
- * open up under BIC.
+ * where \f$\log\tilde Z\f$ is the log-normaliser of the forward pass under the
+ * sub-stochastic weights (\f$\tilde A^{\Delta t}\f$ over a gap, no row
+ * normalisation) — Beal's bound, `HmmVB::elbo`. The ELBO doubles as the
+ * model-selection criterion, filling the gap that priors open up under BIC.
+ * It is conservative: ln K! and the mean-field gap are not recovered.
+ *
+ * The *iteration* runs on `HMM::evaluate`, whose \f$A^{\Delta t}\f$ cache
+ * row-normalises \f$\tilde A\f$ before every composition. Its fixed point is
+ * the VB one to ~1e-4 relative (hmmlearn A/B), and its data term is exactly
+ * K(K−1)/2 nat above the sub-stochastic one; that value is kept as
+ * `HmmVB::loglik` / `elbo_normalised`, the bound is computed once at the
+ * returned posterior (one extra forward pass).
  *
  * \par Why the E-step reuses unchanged
  * Standard VB-HMM assumes one transition per observation. Here photons are
@@ -36,6 +45,11 @@
  */
 #ifndef TTTRLIB_HMMVB_H
 #define TTTRLIB_HMMVB_H
+// Validation: A/B-TESTED 2026-08-17 -- hmmlearn 0.3.3 VariationalCategoricalHMM on dense
+//   (dt = 1) streams: posterior alpha 1e-4 rel, its lower bound at our posterior = elbo to
+//   2e-10, elbo_normalised - elbo = K(K-1)/2 (K = 2, 3); digamma vs scipy 1e-11; Dirichlet
+//   KL closed form. test/python/hmm/test_ab_hmm_reference.py::TestVariationalBayes*.
+//   Register: okf/testing/algorithm-validation.md
 
 #include <cmath>
 #include <limits>
@@ -82,13 +96,44 @@ struct HmmVB {
     std::vector<double> alpha_trans;
     /// Posterior concentrations for emission rows \f$B_i\f$, row-major.
     std::vector<double> alpha_obs;
-    /// Evidence lower bound (the model-selection criterion).
+    /*!
+     * \brief Evidence lower bound at the returned posterior — Beal's bound,
+     *        the model-selection criterion.
+     *
+     * `loglik_beal − ΣKL(q‖p)`: the forward pass under the sub-stochastic
+     * geometric-mean weights (\f$\tilde A^{\Delta t}\f$ marginalising the
+     * unobserved ticks) minus the Dirichlet KL terms. This is the quantity the
+     * header derives and what `hmmlearn`'s VB-HMM reports (A/B to 2e-10 on
+     * dense streams). Conservative: ln K! (label switching) and the mean-field
+     * gap are not recovered, so it trails the exact evidence by a few nat
+     * growing with K — compare models by it, do not read it as log p(y).
+     */
     double elbo = -std::numeric_limits<double>::infinity();
-    /// Log-normaliser of the last E-step (the data-fit term of the ELBO).
+    /*!
+     * \brief Data term of `elbo`: log-normaliser of the sub-stochastic
+     *        forward pass at the returned posterior.
+     */
+    double loglik_beal = -std::numeric_limits<double>::infinity();
+    /*!
+     * \brief Log-normaliser of the last E-step as the engine evaluates it —
+     *        the geometric-mean weights with \f$\tilde A\f$'s rows normalised
+     *        before the tick power (`HMM::evaluate`).
+     *
+     * This is the fit's iteration variable, not a bound: it sits exactly
+     * K(K−1)/2 nat above `loglik_beal` (½ nat per free transition parameter,
+     * data-independent once every state is populated). Kept as the E-step's
+     * own number; `elbo_normalised` is this minus the KL terms.
+     */
     double loglik = -std::numeric_limits<double>::infinity();
+    /*!
+     * \brief `loglik − ΣKL`, the value `elbo` reported before 2026-08-17 and
+     *        the convergence variable of the iteration (`history` holds it per
+     *        iteration). Equals `elbo + K(K−1)/2` nat up to the last update.
+     */
+    double elbo_normalised = -std::numeric_limits<double>::infinity();
     int n_iter = 0;
     bool converged = false;
-    /// ELBO per iteration, for diagnostics.
+    /// `elbo_normalised` per iteration (the convergence variable), for diagnostics.
     std::vector<double> history;
     int n_micro_bins = 1;
 
@@ -114,7 +159,7 @@ struct HmmVB {
  * \param restraints Dirichlet prior concentrations; flat (Dir(1) everywhere)
  *        if null.
  * \param max_iter Maximum VB iterations.
- * \param tol Convergence tolerance on the ELBO.
+ * \param tol Convergence tolerance on `elbo_normalised` between iterations.
  *
  * Fixed entries are not supported: a pinned parameter is a point mass, not a
  * Dirichlet. Use `HMM::optimize` for constrained point estimates, or a sharp

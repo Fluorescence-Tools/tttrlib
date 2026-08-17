@@ -1,5 +1,19 @@
 # Bundle update log
 
+## 2026-08-17 (40th entry)
+
+* **HmmVB: `elbo` is Beal's bound now.** The recommended option of
+  [`design/hmmvb-elbo-decision.md`](design/hmmvb-elbo-decision.md) implemented:
+  one sub-stochastic forward pass at the returned posterior
+  (`log_z_sub_stochastic`, ~one E-step) gives `elbo` = hmmlearn's lower bound
+  to 2e-10; the iteration and its fixed point are untouched and its value is
+  kept as `elbo_normalised` (+ `history`), with `loglik` / `loglik_beal` the two
+  data terms. Header rewritten (bound vs iteration variable, K(K−1)/2, the
+  "conservative" wording), `// Validation:` block added; register row PASS,
+  BUGS entry FIXED, PERF/check text updated, CHANGELOG. Example
+  `plot_hmm_variational_bayes.py` + notebook (simulated two-state stream,
+  K = 1..4, ELBO vs BIC, posterior ± sd vs truth). hmm suite 173 green.
+
 ## 2026-08-17 (39th entry)
 
 * **HmmVB: an independent reference at last — hmmlearn's VB-HMM.** The brief's

@@ -211,3 +211,10 @@ fixture `test/data/reference/hmm_vb_hmmlearn_reference.npz`
 `test_ab_hmm_reference.py::TestVariationalBayesAgainstHmmlearn`, benchmark
 pair `hmm_vb` (`bench_sciref.py` / `competitors/bench_sciref.py` /
 `check_sciref.py`).
+
+## 6. Outcome (2026-08-17)
+
+Implemented as recommended: `elbo` = H (one extra sub-stochastic forward pass at
+the returned posterior, `HMMVB.cpp::log_z_sub_stochastic`), iteration
+unchanged, `elbo_normalised` = former value, `loglik` / `loglik_beal` the two
+data terms. hmmlearn A/B: `elbo` − hmmlearn's bound at our posterior = 2.5e-10.
