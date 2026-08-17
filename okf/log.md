@@ -1,5 +1,16 @@
 # Bundle update log
 
+## 2026-08-17 (44th entry)
+
+* **MT19937 was a name without an engine** — `TTTR_RNG_ENGINE=mt19937` accepted
+  and every streaming draw silently Philox. `Random` now streams `std::mt19937`
+  (numpy `RandomState(int)` raw stream, bit for bit; `seek` by discard;
+  `deterministic` keeps its documented Philox fallback). No default changed, no
+  result depended on it. FLIM LABS: checked flim-labs and VicidominiLab on
+  GitHub — no STT1/ITT1 sample exists; the vendor's own STT1 reader now runs on
+  our writer's bytes as the reference (bounded PASS). PCH/ICS vs pysimfcs and
+  Kolin/Wiseman STICS in the previous entry.
+
 ## 2026-08-17 (43rd entry)
 
 * **PCH and ICS against an implementation that is not ours — pysimfcs (J.

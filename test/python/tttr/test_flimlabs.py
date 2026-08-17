@@ -17,6 +17,7 @@ import struct
 
 import numpy as np
 import pytest
+import pandas as pd
 import tttrlib
 from test_settings import DATA_ROOT  # type: ignore
 
@@ -326,3 +327,57 @@ def test_writing_is_refused(simple, tmp_path):
     """Read-only until the tick choice has been checked against a real file."""
     d = tttrlib.TTTR(simple, "FLIMLABS-STT1")
     assert not d.write(str(tmp_path / "out.bin"), "FLIMLABS-STT1")
+
+
+def test_vendor_time_tagger_reader_agrees_on_our_bytes(tmp_path):
+    """The one FLIM LABS artefact that exists for STT1 is the vendor's own
+    reader (``spectroscopy_STT1_time_tagger.py`` from flim-labs/spectroscopy-py,
+    kept under tttr-data/flimlabs/reference_readers). No real STT1 sample is
+    published (checked flim-labs and VicidominiLab on GitHub 2026-08-17; only
+    the histogram/intensity exports are), so the reference runs on a file our
+    writer produced: the vendor generator must parse every record we wrote and,
+    after the sort every vendor script applies, give the photon channels,
+    micro times and macro times tttrlib decodes (macro time in laser pulses,
+    micro time in the 256-bin hardware grid)."""
+    ref_dir = os.path.join(DATA_ROOT, "flimlabs", "reference_readers")
+    src = os.path.join(ref_dir, "spectroscopy_STT1_time_tagger.py")
+    if not os.path.exists(src):
+        pytest.skip("vendor reader not in tttr-data")
+    pytest.importorskip("colorama"); pytest.importorskip("pandas"); pytest.importorskip("pyarrow")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("flimlabs_vendor_stt1", src)
+    vendor = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(vendor)
+
+    rng = np.random.default_rng(3)
+    n = 400
+    macro_ns = np.sort(rng.integers(0, 4000, n)) * PERIOD          # whole pulses
+    micro_ns = rng.uniform(0.0, PERIOD, n)
+    chan = rng.integers(0, 2, n)
+    events = [(int(c), float(mi), float(ma)) for c, mi, ma in zip(chan, micro_ns, macro_ns)]
+    events.append((MARKER_FRAME, 0.0, 0.0)); events.append((MARKER_LINE, 0.0, 0.0))
+    rng.shuffle(events)                                            # real files are not time-ordered
+    p = str(tmp_path / "tagger.bin")
+    write_stt1(p, events, channels=(0, 1), laser_period_ns=PERIOD)
+
+    frames = list(vendor.read_time_tagger_bin(p, chunk_size=100))
+    df = pd.concat([f[0] for f in frames], ignore_index=True)     # (DataFrame, channels, laser period)
+    assert len(df) == len(events)
+    df.columns = ["event", "micro_time", "macro_time"]              # vendor labels: Event, Micro Time (ns), Macro Time (ns)
+    ev = df["event"].astype(str)
+    is_photon = ~ev.isin(["F", "L", "P"])                             # the vendor maps 70/76/80 to letters
+    ph = df[is_photon].sort_values(["macro_time", "micro_time"], kind="stable")
+
+    d = tttrlib.TTTR(p, "FLIMLABS-STT1")
+    et = np.asarray(d.event_types)
+    ours_ch = np.asarray(d.routing_channels)[et == 0]
+    ours_mt = np.asarray(d.macro_times)[et == 0].astype(np.int64)
+    ours_mi = np.asarray(d.micro_times)[et == 0].astype(np.int64)
+    ref_mt = np.rint(ph["macro_time"].to_numpy(dtype=float) / PERIOD).astype(np.int64)
+    ref_mi = np.floor(ph["micro_time"].to_numpy(dtype=float) / MICRO_BIN).astype(np.int64)
+    ref_ch = ph["event"].str.replace("ch", "", regex=False).astype(int).to_numpy() - 1   # vendor prints "ch1".."ch2" (1-based)
+    order = np.lexsort((ours_mi, ours_mt))
+    np.testing.assert_array_equal(ours_mt[order], ref_mt)
+    np.testing.assert_array_equal(np.sort(ours_ch[order]), np.sort(ref_ch))
+    np.testing.assert_array_equal(np.sort(ours_mi[order]), np.sort(ref_mi))
+    assert int((et == 1).sum()) == 2
