@@ -25,7 +25,23 @@
 // with a binary search inside -- the shape array languages express badly, and
 // the reason the implementation this replaces needed a JIT.
 //
-// Reference: Toru Kondo (Schlau-Cohen lab, MIT), `TK_Create2DFDC_04.m`.
+// Reference: Toru Kondo (Schlau-Cohen lab, MIT), `TK_Create2DFDC_04.m`, the
+// original author's implementation. The method is two-dimensional
+// fluorescence lifetime correlation (2D-FLC) spectroscopy, introduced by
+// Ishii & Tahara:
+//
+// - K. Ishii and T. Tahara, "Two-Dimensional Fluorescence Lifetime Correlation
+//   Spectroscopy. 1. Principle", J. Phys. Chem. B 117(39), 11414-11422 (2013),
+//   doi:10.1021/jp406861u
+// - K. Ishii and T. Tahara, "Two-Dimensional Fluorescence Lifetime Correlation
+//   Spectroscopy. 2. Application", J. Phys. Chem. B 117(39), 11423-11432
+//   (2013), doi:10.1021/jp406864e
+//
+// and applied at single-molecule level in T. Kondo, J. B. Gordon, A. Pinnola,
+// L. Dall'osto, R. Bassi and G. S. Schlau-Cohen, "Microsecond and millisecond
+// dynamics in the photosynthetic protein LHCSR1 observed by single-molecule
+// correlation spectroscopy", Proc. Natl. Acad. Sci. USA 116(23), 11247-11252
+// (2019), doi:10.1073/pnas.1821207116.
 //
 // ---------------------------------------------------------------------------
 // The log axis depends on `lint_bin_factor`, and that is the reference's rule
@@ -71,11 +87,14 @@
 // from a real feature there. Same for the reference photon: if its micro-time
 // is out of range the whole window is skipped.
 //
-// The log-time axis is the reference's, tick for tick:
-// `logt[0] = -1`, then `logt[j] = round(t_imax^(j/(L-1)) - 1)`. It is built in
-// integers so a bin edge cannot move with the floating-point mood of the
-// machine, and it is exposed (`fdc_log_ticks`) because a caller plotting the
-// matrix needs the same axis the counting used.
+// The log-time axis is the reference's, tick for tick: `logt[0] = -1`, then
+// `logt[j] = floor(t_imax^(j/(L-1)) - 1)`. Floor, because the reference keeps
+// its edges real-valued and compares the integer tick against them, so the
+// effective integer edge is the floor; quantizing to nearest instead moves
+// real pairs (~0.5% on a 3000-photon stream, measured against the .m itself).
+// It is built in integers so a bin edge cannot move with the floating-point
+// mood of the machine, and it is exposed (`fdc_log_ticks`) because a caller
+// plotting the matrix needs the same axis the counting used.
 
 #include <cstdint>
 
@@ -98,9 +117,12 @@ long long fdc_t_imax(long long span_ticks, long long lint_bin_factor);
 /*!
  * \brief The logarithmic micro-time bin edges, in TCSPC ticks.
  *
- * `out[0] = -1` and `out[j] = round(t_imax^(j/(n_ticks-1)) - 1)`, saturating
- * rather than overflowing. Exposed so a caller can label the axis it is given;
- * `fdc_scan_log` builds the same edges internally from the same inputs.
+ * `out[0] = -1` and `out[j] = floor(t_imax^(j/(n_ticks-1)) - 1)`, saturating
+ * rather than overflowing. The floor is the reference's convention: its edges
+ * are real-valued and the integer tick is compared against them directly, so
+ * the effective integer edge is the floor, not the nearest integer. Exposed
+ * so a caller can label the axis it is given; `fdc_scan_log` builds the same
+ * edges internally from the same inputs.
  *
  * \param t_imax   micro-time span in ticks (`t_max - t_min + 1`).
  * \param out      [n_ticks], written. `n_ticks` is `logt_imax + 1`.

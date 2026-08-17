@@ -19,6 +19,7 @@ whose answer is known before the analysis, and live in
 `test_fdc2d_simulation.py`.
 """
 
+import os
 import unittest
 
 import numpy as np
@@ -114,6 +115,75 @@ class TestAgainstTheDefinition(unittest.TestCase):
                                       scan(macro, micro, [500], ddT=200)[0])
 
 
+class TestAgainstTheOriginalMatlab(unittest.TestCase):
+    """The strongest check available: the original author's own output.
+
+    The fixture was produced by running Toru Kondo's `TK_Create2DFDC_04.m`
+    (the reference implementation, Schlau-Cohen lab, MIT) in Octave on a fixed
+    3000-photon stream, with `tStep = 1` so MATLAB ticks and library ticks are
+    the same integers. It records the log matrix at `lint_bin_factor` 1 and 8
+    and three lags, and the linear matrix at factor 8 -- the cases where the
+    axis and gate rules diverge if implemented wrong.
+
+    Every other test here checks tttrlib against tttrlib (a brute-force
+    restatement of the definition) or against streams with known ground truth;
+    only this one pins the port to the published implementation, which is what
+    caught the tick-quantization deviation: the edges are real-valued in the
+    .m file, so the effective integer edge is `floor`, and quantizing to
+    nearest instead moved ~0.5% of pairs (352-457 of ~85k) with no other test
+    any the wiser.
+    """
+
+    PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data",
+                        "reference", "fdc2d_matlab_tk_create2dfdc04.npz")
+
+    @classmethod
+    def setUpClass(cls):
+        with np.load(cls.PATH) as z:
+            cls.macro = z["macro_times"]
+            cls.micro = z["micro_times"]
+            cls.t_min = int(z["t_min"])
+            cls.t_max = int(z["t_max"])
+            cls.ddT = int(z["ddT_ticks"])
+            cls.L = int(z["logt_imax"])
+            cls.expected = dict(z)
+
+    def test_log_matrix_matches_factor_one_and_eight(self):
+        for factor in (1, 8):
+            for lag in (150, 500, 2000):
+                with self.subTest(factor=factor, lag=lag):
+                    out = np.zeros(self.L * self.L, dtype=np.int64)
+                    tttrlib.fdc_scan_log(
+                        self.macro, self.micro,
+                        np.asarray([lag], dtype=np.int64), self.ddT,
+                        self.t_min, self.t_max, self.L, 1, out, factor)
+                    np.testing.assert_array_equal(
+                        out.reshape(self.L, self.L),
+                        self.expected[f"log_f{factor}_lag{lag}"])
+
+    def test_linear_matrix_matches_the_reference_ceiling_rule(self):
+        """Positional alignment is not 1:1: MATLAB's 1-based `ceil(tau/f)`
+        bin b is this library's 0-based bin b, so the reference matrix sits one
+        row and column down -- and both implementations trim the last bin
+        (the .m file lines 170-175 do the same trim this reproduces)."""
+        factor = 8
+        t_imax = tttrlib.fdc_t_imax(self.t_max - self.t_min, factor)
+        lin_ticks = np.concatenate(
+            [[-1], np.arange(0, t_imax + 1, factor)]).astype(np.int64)
+        bins = lin_ticks.size - 1
+        n = (t_imax + factor - 1) // factor - 1        # MATLAB trimmed size
+        for lag in (150, 500, 2000):
+            with self.subTest(lag=lag):
+                out = np.zeros(bins * bins, dtype=np.int64)
+                tttrlib.fdc_scan_axis(
+                    self.macro, self.micro,
+                    np.asarray([lag], dtype=np.int64), self.ddT,
+                    self.t_min, self.t_max, lin_ticks, 1, out, t_imax)
+                np.testing.assert_array_equal(
+                    out.reshape(bins, bins)[1:n + 1, 1:n + 1],
+                    self.expected[f"lin_f{factor}_lag{lag}"])
+
+
 class TestTheContracts(unittest.TestCase):
     """The two properties the header calls contracts, and the input checks."""
 
@@ -180,7 +250,12 @@ class TestTheLogAxis(unittest.TestCase):
         ticks = np.empty(n, dtype=np.int64)
         tttrlib.fdc_log_ticks(t_imax, ticks)
         self.assertEqual(ticks[0], -1)
-        expected = [-1] + [int(np.floor(t_imax ** (j / (n - 1)) - 1.0 + 0.5))
+        # floor, not nearest: the reference's edges are real-valued and the
+        # integer tick is compared against them directly, so the effective
+        # integer edge is the floor. Quantizing to nearest instead moved
+        # ~0.5% of pairs against the .m run in Octave (2026-08-16) -- see
+        # TestAgainstTheOriginalMatlab for the permanent pin.
+        expected = [-1] + [int(np.floor(t_imax ** (j / (n - 1)) - 1.0))
                            for j in range(1, n)]
         np.testing.assert_array_equal(ticks, np.asarray(expected, dtype=np.int64))
         self.assertTrue(np.all(np.diff(ticks) >= 0), "the axis must be sorted")
@@ -329,34 +404,45 @@ class TestTwoAxesInOnePass(unittest.TestCase):
         self.assertGreater(got_log.sum(), 0)
 
     def test_the_totals_differ_only_by_the_photons_an_axis_cannot_place(self):
-        """Two binnings of one set of pairs do NOT have to agree, and here they
-        do not.
+        """Two binnings of one set of pairs do NOT have to agree, and the
+        invariant is: remove the photons only one axis can place, and the
+        two agree exactly.
 
-        Bin 0 is excluded on every axis, and "bin 0" covers a different span of
-        micro-times per axis: on this log axis the first edges are
-        `[-1, 1, 2, 4, ...]`, so `tau = 1` lands in bin 0 and is dropped, while
-        the linear axis (`[-1, 0, 256, ...]`) puts it in bin 1 and keeps it.
-        The totals therefore differ by exactly the pairs involving a `tau = 1`
-        photon.
-
-        This test previously asserted the totals were equal, which sounded
-        obviously true and was not -- the kernel was right and the assertion was
-        wrong. What is pinned now is the actual invariant: remove the photons
-        only one axis can place, and the two agree exactly.
+        This version previously used the production log axis as the
+        asymmetry source and asserted `tau = 1` was dropped by it -- which was
+        not a property of the method but of quantizing the edges to nearest
+        (first edge 1 instead of 0, so bin 0 swallowed `tau = 1`). With the
+        reference's floor quantization the production log axis places
+        `tau = 1` in bin 1, same as any linear axis, and the two production
+        axes agree on the total outright -- pinned first below. The invariant
+        itself is then pinned against a hand-built axis that genuinely cannot
+        place `tau = 1`, so it no longer depends on any one tick construction.
         """
         macro, micro = a_small_stream(seed=41, n=600)
         log, lin = self.axes()
 
+        # the production axes now agree exactly: floor edges leave bin 0
+        # covering only tau = 0, which no photon here has
         got_log, got_lin = self.two(macro, micro, [500], 200, log, lin)
+        self.assertEqual(tttrlib.fdc_log_bin(1, log), 1)     # kept
+        self.assertEqual(tttrlib.fdc_log_bin(1, lin), 1)     # kept
+        self.assertEqual(int(got_log.sum()), int(got_lin.sum()))
+
+        # a hand-built axis whose bin 0 covers tau = 1 -- the shape the old
+        # round-quantized axis had, and any axis with a first edge above 1
+        # will have
+        drops_one = np.asarray(
+            [-1, 1, 2, 4, 7, 12, 22, 37, 63, 107, 180, 303, 511, 860,
+             1447, 2435, 4096], dtype=np.int64)
+        self.assertEqual(tttrlib.fdc_log_bin(1, drops_one), 0)   # dropped
+        got_log, got_lin = self.two(macro, micro, [500], 200, drops_one, lin)
         self.assertNotEqual(int(got_log.sum()), int(got_lin.sum()),
                             "the sample no longer exercises the asymmetry")
-        self.assertEqual(tttrlib.fdc_log_bin(1, log), 0)     # dropped
-        self.assertEqual(tttrlib.fdc_log_bin(1, lin), 1)     # kept
 
         keep = micro != 1
         same_log, same_lin = self.two(np.ascontiguousarray(macro[keep]),
                                       np.ascontiguousarray(micro[keep]),
-                                      [500], 200, log, lin)
+                                      [500], 200, drops_one, lin)
         self.assertEqual(int(same_log.sum()), int(same_lin.sum()))
 
     def test_it_is_still_independent_of_the_chunk_count(self):

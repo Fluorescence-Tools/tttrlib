@@ -20,10 +20,17 @@ void require(bool ok, const char* what) {
     if (!ok) throw std::invalid_argument(std::string("2d-fdc: ") + what);
 }
 
-// The reference's axis, in integers: logt[0] = -1, logt[j] = round(t_imax^x - 1)
-// with x = j/(n-1). Saturating rather than wrapping, because a caller can ask
-// for a span that overflows int64 at the top edge and a wrapped edge would sort
-// below the others and silently swallow every pair.
+// The reference's axis, in integers. TK_Create2DFDC_04.m:44 builds the edges
+// as REAL values (t_Imax^x - 1) and compares the integer micro-time tick
+// against them directly, so the effective integer edge is floor(v), not the
+// nearest integer. Quantizing with round instead moves pairs that sit between
+// the two: measured against the original .m run in Octave (3000 photons,
+// 3 lags, factors 1 and 8, 16 log bins), round disagreed in every matrix
+// (352-457 of ~85k pairs, ~0.5%, at the 5-7 of 16 edges where the two
+// conventions differ) and floor reproduced it exactly. Saturating rather than
+// wrapping, because a caller can ask for a span that overflows int64 at the
+// top edge and a wrapped edge would sort below the others and silently
+// swallow every pair.
 void build_log_ticks(long long t_imax, long long* out, int n_ticks) {
     require(n_ticks >= 2, "the log axis needs at least two edges");
     out[0] = -1;
@@ -36,7 +43,7 @@ void build_log_ticks(long long t_imax, long long* out, int n_ticks) {
         else if (v > 9.22e18)
             out[j] = std::numeric_limits<long long>::max();
         else
-            out[j] = static_cast<long long>(std::floor(v + 0.5));
+            out[j] = static_cast<long long>(std::floor(v));
     }
 }
 

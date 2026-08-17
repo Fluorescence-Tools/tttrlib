@@ -29,7 +29,9 @@ enum class SimRngScope {
 
 /// Engine time-step, stopping condition, RNG seeds, and RNG backend.
 struct SimIntegrator {
-    double dt = 0.01;                    ///< diffusion/emission time-window length
+    double dt = 0.01;                    ///< diffusion/emission time-window length, in SECONDS (rate
+                                          ///< matrices are per second; the micro-time fields below
+                                          ///< are in ns — mixed on purpose, matching TCSPC practice)
     uint64_t n_ph_max = 1000000;         ///< stop after this many photons
     uint64_t max_windows = 0;            ///< optional hard cap on windows (0 = unlimited)
     uint32_t seed_diffusion = 12345;     ///< RNG stream: diffusion, geometry, state transitions
