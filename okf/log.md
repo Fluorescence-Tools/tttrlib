@@ -21,6 +21,10 @@
   recognises PicoHarp T3 markers; `test_CLSM_single_frame_ptu.py` had pinned a
   garbage 652-line "salvaged" frame built from misread photons — now one clean
   256 × 256 frame with every photon. Register/PERF/BUGS/CHANGELOG/doc.
+  Later: Photon-HDF5 read vs h5py identical; the HT3 v1 sample turns out
+  SF-compressed (counted overflows) — tttrlib detects it, phconvert reads it
+  2.2× short; the Kristine `.cor` references are a per-time-window estimator
+  tttrlib does not have (feature gap, not a validation).
 
 ## 2026-08-17 (41st entry)
 

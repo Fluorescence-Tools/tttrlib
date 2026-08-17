@@ -620,6 +620,60 @@ class TestRecordDecodingAgainstIndependentReaders(unittest.TestCase):
                 rise = np.concatenate([[0], rise])
             np.testing.assert_array_equal(mt[mk & (ch == marker)], d["record_step"][rise])
 
+    def test_photon_hdf5_matches_h5py(self):
+        try:
+            import h5py
+        except ImportError:
+            self.skipTest("h5py not installed")
+        fn = settings.get("photon_hdf_filename", "")
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        d = tttrlib.TTTR(fn, "PHOTON-HDF5")
+        with h5py.File(fn, "r") as f:
+            ts = f["/photon_data/timestamps"][:]
+            det = f["/photon_data/detectors"][:]
+            nano = f["/photon_data/nanotimes"][:]
+            unit = float(f["/photon_data/timestamps_specs/timestamps_unit"][()])
+            tunit = float(f["/photon_data/nanotimes_specs/tcspc_unit"][()])
+        np.testing.assert_array_equal(np.asarray(d.macro_times), ts)
+        np.testing.assert_array_equal(np.asarray(d.micro_times), nano)
+        np.testing.assert_array_equal(np.asarray(d.routing_channels), det)
+        self.assertAlmostEqual(d.header.macro_time_resolution, unit, places=18)
+        self.assertAlmostEqual(d.header.micro_time_resolution, tunit, places=18)
+
+    def test_ht3_v1_sample_is_sf_compressed_and_phconvert_cannot_know(self):
+        """``pq_ht3v1.0_hh_t3.ht3`` is a HydraHarp v1 HT3 whose overflow
+        records carry a count (Suren Felekyan's SF compression: the sync
+        counter advances by (1 + count) * 1024). tttrlib detects that (record
+        type SF_HT3); phconvert decodes v1 overflows as 1024 each and comes out
+        2.2x too short. Channels and micro times agree exactly; the macro times
+        differ by design. The stream itself decides: at ~100 kHz a plain v1
+        file would carry runs of consecutive overflow records for every gap
+        beyond 32 us, and this file has none."""
+        fn = settings.get("ht3_v1_filename", "")
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        pq = _load_phconvert("pqreader")
+        if pq is None:
+            self.skipTest("phconvert not importable from junk/")
+        ts, det, nano, meta, _ = pq.load_ht3(fn)
+        d = tttrlib.TTTR(fn, "HT3")
+        self.assertEqual(d.header.tttr_record_type, 14)          # PQ_RECORD_TYPE_SF_HT3
+        ph = det < 64
+        np.testing.assert_array_equal(np.asarray(d.routing_channels), det[ph])
+        np.testing.assert_array_equal(np.asarray(d.micro_times), nano[ph])
+        raw = np.fromfile(fn, dtype=np.uint32)
+        recs = raw[raw.size - ts.size:]
+        ovf = ((recs >> 25) & 0x7F) == 0x7F
+        self.assertGreater(int(ovf.sum()), 0)
+        self.assertEqual(int((np.diff(np.flatnonzero(ovf)) == 1).sum()), 0)   # never two overflow records in a row
+        counts = recs[ovf] & 0xFFFFFF
+        self.assertGreater(int((counts > 0).sum()), 0)                    # counted overflows are present
+        # tttrlib's macro times are phconvert's plus 1024 per counted overflow
+        add = np.zeros(recs.size, dtype=np.int64); add[ovf] = counts.astype(np.int64)
+        expected = ts[ph].astype(np.int64) + 1024 * np.cumsum(add)[ph]
+        np.testing.assert_array_equal(np.asarray(d.macro_times).astype(np.int64), expected)
+
     def test_bh_spc630_256_matches_phconvert_up_to_its_overflow_shift(self):
         """SPC-600/630 32-bit records: 8-bit ADC, 17-bit macro time, 3-bit
         routing. phconvert's `_read_spc6xx_32bit` masks the 17-bit field but
