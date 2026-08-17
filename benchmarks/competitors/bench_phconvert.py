@@ -24,6 +24,9 @@ def _p(*a):
 F_PTU = _p("pq", "ptu", "pq_ptu_hh_t3.ptu")
 F_HT3 = _p("imaging", "pq", "ht3", "pq_ht3_clsm.ht3")
 F_SPC = _p("bh", "bh_spc132.spc")
+F_SPC630 = _p("bh", "bh_spc630_256.spc")
+F_SPCQC = _p("bh", "bh_spcqc004.spc")
+F_SMFILE = _p("sm", "data.sm")
 OUT = {}
 
 
@@ -51,6 +54,28 @@ def main():
         n_ph = int((r["detectors"] < OUT["spc_marker_min"]).sum())
         bench("file_read", "phconvert (SPC-130)", "read SPC-130 (Becker & Hickl)",
               read_spc, repeat=3, warmup=1, n_items=n_ph, unit="photons", dataset="bh_spc132.spc")
+    if F_SPC630 and os.path.exists(F_SPC630):
+        def read_spc630():
+            with open(F_SPC630, "rb") as f:          # a path would re-read the header word as a record
+                return bhreader._read_spc6xx_32bit(f)
+        r = read_spc630()
+        OUT["spc630_ts"], OUT["spc630_det"], OUT["spc630_nano"] = r["timestamps"], r["detectors"], r["nanotimes"]
+        bench("file_read", "phconvert (SPC-630)", "read SPC-600/630 256-ch (Becker & Hickl)",
+              read_spc630, repeat=3, warmup=1, n_items=int(r["timestamps"].size), unit="photons", dataset="bh_spc630_256.spc")
+    if F_SPCQC and os.path.exists(F_SPCQC):
+        def read_spcqc():
+            with open(F_SPCQC, "rb") as f:
+                return bhreader._read_QCX04(f)
+        r = read_spcqc()
+        OUT["spcqc_ts"], OUT["spcqc_det"], OUT["spcqc_nano"] = r["timestamps"], r["detectors"], r["nanotimes"]
+        bench("file_read", "phconvert (SPC-QC)", "read SPC-QC-104 (Becker & Hickl)",
+              read_spcqc, repeat=3, warmup=1, n_items=int(r["timestamps"].size), unit="photons", dataset="bh_spcqc004.spc")
+    if F_SMFILE and os.path.exists(F_SMFILE):
+        from phconvert import smreader
+        ts, det, _ = smreader.load_sm(F_SMFILE, return_labels=True)
+        OUT["sm_ts"], OUT["sm_det"] = ts, det
+        bench("file_read", "phconvert (SM)", "read .sm (Weiss lab)",
+              lambda: smreader.load_sm(F_SMFILE), repeat=3, warmup=1, n_items=int(ts.size), unit="photons", dataset="data.sm")
     np.savez(os.path.join(SHARED, "phconvert_outputs.npz"), **OUT)
 
 

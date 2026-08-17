@@ -396,7 +396,11 @@ def vectorial_psf(shape, na: float, wavelength_nm: float, pixel_size_nm: float,
     Notes
     -----
     As NA/n falls this converges to the scalar Airy pattern, which is the check
-    :func:`airy_psf` provides.
+    :func:`airy_psf` provides. At NA 1.4 it agrees with BrightEyes-ISM /
+    PyFocus's vectorial propagator to 5e-5 of the peak (x, y and circular
+    states, in focus and defocused; ``test_ab_localization_superres_reference.py``).
+    Note PyFocus indexes its PSF ``[x, y]`` and defines the pixel as
+    ``fov / (Nx - 1)``; this function is ``[y, x]`` with the pixel as given.
     """
     from scipy.special import jv
 

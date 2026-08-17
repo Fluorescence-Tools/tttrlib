@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_IO_BRIGHTEYES_H
 #define TTTRLIB_IO_BRIGHTEYES_H
+// Validation: A/B-TESTED 2026-08-17 -- vs the vendor parser libttp 0.1.43 (ttpCython.timeProcessNewProtocol,
+//   recorded on the first 4 M words of the Zenodo sample): 326 835 photons' channels, macro times (16-bit
+//   step unwrapping) and micro times (code - laser code mod 256) identical; pixel/line/frame markers = the
+//   rising edges of the step-byte enable bits. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
 
 /*!
  * \file io_be.h

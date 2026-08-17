@@ -84,9 +84,15 @@ What is compared against what
    * - Phasor
      - phasorpy
      - identical
-   * - Record decoding (PTU, HT3, SPC-130)
+   * - Record decoding (PTU HydraHarp/PicoHarp/TimeHarp/MultiHarp, HT3, SPC-130, SPC-630, SPC-QC, .sm)
      - ptufile, phconvert
      - photon-for-photon identical
+   * - BrightEyes-TTM ``.ttr``
+     - libttp (vendor parser)
+     - photons, macro/micro times and marker edges identical
+   * - Vectorial PSF (Richards-Wolf)
+     - BrightEyes-ISM / PyFocus
+     - 5e-5 of peak
    * - Decay convolution and fits
      - NumPy/scipy transcriptions of the integrals and likelihoods
      - 1e-13 .. 1e-16

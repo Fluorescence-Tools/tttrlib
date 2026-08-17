@@ -17,6 +17,7 @@
 // Defined in TTTR.cpp, which owns the PTU record-type mapping. Declared here
 // rather than copied: a second mapping is a second thing to keep in step.
 int pq_ptu_record_type_identifier(int record_type);
+void pq_ptu_add_measurement_mode(nlohmann::json& json, int record_type);
 
 namespace tttrlib {
 namespace io {
@@ -161,6 +162,7 @@ bool RecordStreamWriter::open_target(const std::string& filename, TTTRHeader* he
         if (!j.is_discarded()) {
             TTTRHeader::add_tag(j, TTTRTagTTTRRecType,
                                 ::pq_ptu_record_type_identifier(m.record), tyInt8);
+            ::pq_ptu_add_measurement_mode(j, m.record);
             m.header.set_json(j.dump());
         }
     }

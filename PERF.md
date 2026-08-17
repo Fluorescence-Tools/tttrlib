@@ -46,6 +46,8 @@ directly comparable.
 | CLSM intensity image | **19.8 ms** | ptufile 22.8 ms | **1.15×** |
 | TTTR file reading | **26.4 ms** | ptufile 25.8 ms | **≈1.0×** (I/O-bound) |
 | ↳ PTU / HT3 / SPC-130 vs phconvert | **23.0 ms** / **90.8 ms** (15.6 M photons) / **1.55 ms** | phconvert 134 ms / 2238 ms / 6.8 ms | **5.8× / 25× / 4.4×** — photon-for-photon identical |
+| ↳ SPC-630 (256 ch) / SPC-QC / `.sm` vs phconvert | **1.6 ms** / **2.1 ms** / **12.1 ms** | phconvert 6.3 ms / 7.8 ms / 18.1 ms | **4.0× / 3.6× / 1.5×** — identical (SPC-630 up to phconvert's own overflow-shift defect) |
+| ↳ PicoHarp T3 PTU vs ptufile | 3.8 ms (723 k records) | ptufile 2.1 ms | 0.55× — identical; a 3 MB file where the fixed costs (header JSON, array hand-over) dominate; on the 19 MB HydraHarp file the two tie |
 | **Blind IRF estimation** (BIRFI, 25 ch × 1024 bins, 500 RL it.) | **780 ms** | birfi (torch, CPU) 3039 ms | **3.9×** |
 | **ISM adaptive pixel reassignment** (25 el. × 256², usf 10) | **40.4 ms** | BrightEyes-ISM APR 153 ms (`fourier`) · 204 ms (`interp`, default) | **3.8×** · 5.0× — identical output |
 | **Focus-ISM** (25 el. × 64²) | **30.3 ms** | BrightEyes-ISM focusISM 8806 ms | **291×** |
@@ -156,6 +158,10 @@ against phconvert 0.10.1 in the `read` venv (the A/B in
 | `pq_ptu_hh_t3.ptu` (HydraHarp T3) | 3 506 476 photons | macro/micro/channel identical | ✅ |
 | `pq_ht3_clsm.ht3` (HydraHarp T3, CLSM) | 15 583 897 photons + 20 533 markers | photons and marker times identical | ✅ |
 | `bh_spc132.spc` (Becker & Hickl SPC-130) | 183 657 photons | identical | ✅ |
+| `bh_spc630_256.spc` (SPC-600/630, 32-bit records) | 294 884 photons | channels and ADC identical; macro times identical once phconvert's 2^12-per-overflow shift (a 17-bit field: 2^17) is undone — phconvert's timestamps run backwards 61× on this file | ✅ (bounded) |
+| `bh_spcqc004.spc` (SPC-QC-104) | 32 644 photons | identical (pass phconvert an open file: a path re-reads the header word as an overflow) | ✅ |
+| `data.sm` (Weiss-lab .sm) | 2 060 245 photons | identical | ✅ |
+| `Example_PTU_PicoHarp.ptu` (PicoHarp T3) vs ptufile | 722 402 photons + 513 markers | identical (tttrlib keeps the 1-based channel field, ptufile 0-based) — **after fixing the PHT3 special-record logic 2026-08-17** | ✅ |
 
 ### The scientific-Python kernels — identity checklist
 

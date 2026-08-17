@@ -53,13 +53,20 @@ struct RecordProcessor<PQ_RECORD_TYPE_PHT3> {
         const int T3WRAPAROUND = 65536;
         pq_ph_t3_record_t rec;
         rec.allbits = TTTRRecord;
-        
-        if ((rec.bits.channel == 0xF) && (rec.bits.dtime == 0)) {
-            overflow_counter += T3WRAPAROUND;
-            return false;
-        }
-        
-        if (rec.bits.dtime == 0) {
+
+        // PicoHarp T3 (PicoQuant demo, ptufile, phconvert agree): channel 15
+        // is the *special* record -- dtime 0 an overflow, otherwise a marker
+        // whose bits are in dtime. Every other channel is a photon, dtime 0
+        // included. (Until 2026-08-17 this tested dtime == 0 for markers and
+        // passed channel-15 markers through as photons: 0.1 % of photons lost
+        // and every marker miscounted on PicoHarp / Leica SP8 files.) Markers
+        // keep channel 15 with the marker bits in the micro time, which is
+        // what the SP8 CLSM routine selects on.
+        if (rec.bits.channel == 0xF) {
+            if (rec.bits.dtime == 0) {
+                overflow_counter += T3WRAPAROUND;
+                return false;
+            }
             record_type = RECORD_MARKER;
         } else {
             record_type = RECORD_PHOTON;
@@ -680,22 +687,27 @@ inline void process_records_batch(
         }
     };
 
-    // Process in blocks of 4 for better pipeline utilization
+    // Process in blocks of 4 for better pipeline utilization. Every 32-bit
+    // record type has a compile-time stride of 4; only the 6-byte SPC-600
+    // 4096-channel record needs the runtime width. (No measurable change on
+    // a PicoHarp T3 file -- the loop is not where a read spends its time.)
+    constexpr bool kFixed4 = (RecordType != BH_RECORD_TYPE_SPC600_4096);
+    const size_t stride = kFixed4 ? size_t(4) : bytes_per_record;
     size_t num_blocks = num_records / 4;
     size_t remainder = num_records % 4;
 
     // Unrolled loop for main processing
     for (size_t block = 0; block < num_blocks; block++) {
-        process_one(record_ptr); record_ptr += bytes_per_record;
-        process_one(record_ptr); record_ptr += bytes_per_record;
-        process_one(record_ptr); record_ptr += bytes_per_record;
-        process_one(record_ptr); record_ptr += bytes_per_record;
+        process_one(record_ptr); record_ptr += stride;
+        process_one(record_ptr); record_ptr += stride;
+        process_one(record_ptr); record_ptr += stride;
+        process_one(record_ptr); record_ptr += stride;
     }
 
     // Handle remaining records
     for (size_t j = 0; j < remainder; j++) {
         process_one(record_ptr);
-        record_ptr += bytes_per_record;
+        record_ptr += stride;
     }
 }
 

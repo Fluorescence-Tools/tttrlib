@@ -175,6 +175,10 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | MicrotimeLinearization.h | LUT + shift | NumPy transcription | exact | PASS |
 | TTTR.h | `compute_intensity_trace`, `selection_by_count_rate`, `ranges_by_time_window`, count rate, mean micro time, `get_microtime_histogram`, `mean_lifetime` | np.bincount / searchsorted transcriptions; Isenberg 1973 first moment | exact; 1e-9; τ 3.7 ns within 0.05 | PASS |
 | TTTRRecordReader.h / io_pq.h / io_bh.h | HydraHarp T3, HT3, SPC-130 decoding | ptufile; phconvert `load_ht3`, `_read_spc1xx_8xx` | macro/micro/channel/markers exact (15.6 M events HT3) | PASS |
+| TTTRRecordReader.h | **PicoHarp T3** (every Leica SP8 PTU), TimeHarp 260 PT3, MultiHarp generic T3 | ptufile 2025.5.10 (live) | **PHT3 tested `dtime == 0` for markers and passed channel-15 markers as photons — 0.1 % of photons lost, every marker miscounted; fixed 2026-08-17** (reader + writer; SP8 CLSM fixture regenerated, 3 bins +1). Now photons/markers/bits identical (channel field kept 1-based); TH260/generic identical as they were | PASS (after fix) |
+| TTTRRecordReader.h / io_bh.h | SPC-600/630 256-ch, SPC-QC-104, `.sm` | phconvert `_read_spc6xx_32bit`, `_read_QCX04`, `smreader.load_sm` (junk checkout, live) | SPC-QC and .sm identical; SPC-630 channels/ADC identical, macro times identical up to phconvert's 2^12 overflow shift on a 17-bit field (its output is non-monotone). **tttrlib had ignored the SPC-6x0 header frame (macro clock stayed 1.0 s) — read and written per BH `SPC_data_file_structure.h` since 2026-08-17** | PASS (bounded by the reference's defect) |
+| io_be.h | BrightEyes-TTM `.ttr` decoding | **libttp 0.1.43** (vendor Cython parser, recorded, first 4 M words) | 326 835 photons: channel / macro (16-bit step) / micro (code − laser code) identical; markers = rising edges of the enable bits (A pixel, C line, B frame) | PASS |
+| TTTR.h `write` (PTU) | header built from scratch | ptufile | **`Measurement_Mode` was missing, so ptufile could not decode a PTU written from a bare `TTTR()`; added 2026-08-17** (T2/T3 from the record type). PHT3 write→read round trip with markers and dtime-0 photons pinned | PASS (after fix) |
 | SpectralCrosstalk.h | `correct_three_cube(_batch)`, `invert_mixing_ridge` | Hellenkamp 2018; FRETBursts `correct_E_gamma_leak_dir`; np.linalg.lstsq, closed-form ridge, sklearn Ridge | 1e-12 / 1e-10 / 1e-8 | PASS |
 | BackgroundEstimation.h | `estimate_background_rate` | FRETBursts `expon_fit` tail MLE; true Poisson rate | **tail estimate was biased low by 1/(1−ln f) (0.59× at the default 0.5) — threshold not subtracted; fixed 2026-08-17**, now = tail MLE to 1e-9 at 0.2/1/3 kHz; **returns kHz** as the header promised (code returned Hz; unit fixed 2026-08-17) | PASS (after fix) |
 | MaxEnt.h | `maxent_invert` | scipy L-BFGS-B | round 1 | PASS |
@@ -192,7 +196,8 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | ImageLocalization.h | `fit2DGaussian` (Poisson-MLE, fixed/free ellipticity) | scipy L-BFGS-B on the identical deviance from the same start | same minimum 1e-9 rel; position 1e-2 px | PASS |
 | CLSMSuperRes.h | `airy_psf`; `apr_reconstruction`; `temporal_combine` | scipy.special.j1; scipy.ndimage.fourier_shift; numpy | 1e-9 / 1e-9 / 1e-12 | PASS |
 | CLSMSuperRes.h | `shift_vectors`, `apr_reconstruction`, `focus_reconstruction`, `s2ism_reconstruction`, FRC | **VicidominiLab code live** from `../chisurf/junk`: BrightEyes-ISM `APR_lib.ShiftVectors` (bit-identical), `APR_lib.APR(mode='fourier')` (1e-9; default `interp` is 7e-4 away, not offered), `FocusISM_lib.focusISM` (corr > 0.98, bg fractions within 0.02), s2ISM `max_likelihood_reconstruction` (torch subprocess, 1e-6; its `max_iter+1` update count and even-size cropping pinned), `FRC_lib` | on the user's direction (2026-08-17): the upstream code, not transcriptions | PASS |
-| CLSMSuperRes.h | `rgc_map` (eSRRF), SOFISM, detector grid, vectorial PSF | NanoJ-eSRRF numpy transcription, SOFISM transcription, BrightEyes lattices | pre-existing | PASS (vectorial PSF: scalar-limit KNOWN-ANSWER only) |
+| CLSMSuperRes.h | `rgc_map` (eSRRF), SOFISM, detector grid | NanoJ-eSRRF numpy transcription, SOFISM transcription, BrightEyes lattices | pre-existing | PASS |
+| CLSMSuperRes.i | `vectorial_psf` (Richards–Wolf) | **BrightEyes-ISM `PSF_sim.singlePSF` → PyFocus `VectorialCartesianPropagator`** (recorded; NA 1.4 oil, 520 nm, x / y / circular, z = 0 and 400 nm) | 5e-5 of peak in focus (0.1 % relative where I > 1 %), 5e-4 defocused; residual halves with PyFocus's pupil sampling. Two reference conventions undone: `[x, y]` indexing, pixel = fov/(Nx−1). Scalar limit vs `airy_psf` pre-existing | PASS |
 | CLSMSuperRes.h | `reassign_photons`, `focus_reconstruction` | — | photon conservation, background fraction | KNOWN-ANSWER |
 | CLSMFrame/Line/Pixel.h | containers | — | — | not marked |
 
@@ -268,7 +273,7 @@ Upstream code itself as reference (`benchmarks/check_fret.py`,
 
 ## Record decoding — identity and speed, checked (2026-08-17)
 
-`benchmarks/check_reading.py`: PTU (3.5 M photons), HT3 (15.6 M photons + 20 k markers), SPC-130 (184 k photons) decoded by tttrlib vs phconvert 0.10.1 — **identical**, 5.8× / 25× / 4.4× faster; PTU vs ptufile at parity (I/O-bound). ✅ ✅ ✅
+`benchmarks/check_reading.py`: PTU (3.5 M photons), HT3 (15.6 M photons + 20 k markers), SPC-130 (184 k photons) decoded by tttrlib vs phconvert 0.10.1 — **identical**, 5.8× / 25× / 4.4× faster; PTU vs ptufile at parity (I/O-bound). ✅ ✅ ✅ Second round: SPC-630 / SPC-QC / `.sm` vs phconvert identical (SPC-630 up to phconvert's overflow-shift defect), 4.0× / 3.6× / 1.5×; PicoHarp T3 vs ptufile identical after the PHT3 fix, 0.55× on a 3 MB file (fixed costs). ✅ ✅ ✅ ✅
 
 ## What the A/B found — fixed the same day
 

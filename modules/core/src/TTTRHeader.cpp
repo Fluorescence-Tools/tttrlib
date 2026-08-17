@@ -118,16 +118,10 @@ if (is_verbose()) {
         header_end = read_ht3_header(fpin, json_data(), rewind);
         tttr_record_type = get_tag(json_data(), TTTRRecordType)["value"];
     } else if(tttr_container_type == BH_SPC600_256_CONTAINER){
-        header_end = 0;
-        add_tag(json_data(), TTTRTagGlobRes, 1.0, tyFloat8);
-        add_tag(json_data(), TTTRNMicroTimes, 256, tyInt8);
-        add_tag(json_data(), TTTRTagBits, 32, tyInt8);
+        header_end = read_bh_spc600_header(fpin, json_data(), rewind, false);
         tttr_record_type = BH_RECORD_TYPE_SPC600_256;
     } else if(tttr_container_type == BH_SPC600_4096_CONTAINER){
-        header_end = 0;
-        add_tag(json_data(), TTTRTagGlobRes, 1.0, tyFloat8);
-        add_tag(json_data(), TTTRNMicroTimes, 4096, tyInt8);
-        add_tag(json_data(), TTTRTagBits, 48, tyInt8);
+        header_end = read_bh_spc600_header(fpin, json_data(), rewind, true);
         tttr_record_type = BH_RECORD_TYPE_SPC600_4096;
     } else if(tttr_container_type == BH_SPC130_CONTAINER){
         header_end = read_bh132_header(fpin, json_data(), rewind);
@@ -539,6 +533,10 @@ void TTTRHeader::write_cz_confocor3_header(std::string fn, TTTRHeader* header, s
     tttrlib::io::write_cz_confocor3_header(std::move(fn), header->json_data(), std::move(modes));
 }
 
+size_t TTTRHeader::read_bh_spc600_header(std::FILE *fpin, nlohmann::json &data, bool rewind, bool wide_48bit) {
+    return tttrlib::io::read_bh_spc600_header(fpin, data, rewind, wide_48bit);
+}
+
 size_t TTTRHeader::read_bh132_header(std::FILE *fpin, nlohmann::json &data, bool rewind) {
     return tttrlib::io::read_bh132_header(fpin, data, rewind);
 }
@@ -561,6 +559,10 @@ bool TTTRHeader::write_bh_set_file(const std::string& filename, TTTRHeader* head
 
 void TTTRHeader::write_spc132_header(std::string fn, TTTRHeader* header, std::string modes) {
     tttrlib::io::write_spc132_header(std::move(fn), header->json_data(), std::move(modes));
+}
+
+void TTTRHeader::write_spc600_header(std::string fn, TTTRHeader* header, std::string modes, bool wide_48bit) {
+    tttrlib::io::write_spc600_header(std::move(fn), header->json_data(), std::move(modes), wide_48bit);
 }
 
 void TTTRHeader::write_spcqc_header(std::string fn, TTTRHeader* header, std::string modes) {

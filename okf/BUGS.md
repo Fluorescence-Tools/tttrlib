@@ -3,6 +3,43 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## FIXED — PicoHarp T3 decoder: markers were "dtime == 0", channel-15 markers came out as photons
+
+**Fixed 2026-08-17, same day — found by the ptufile A/B on the second reading round.**
+`RecordProcessor<PQ_RECORD_TYPE_PHT3>` treated any record with `dtime == 0` as
+a marker and any record with `dtime != 0` as a photon, channel 15 included.
+The PicoHarp T3 format (PicoQuant demo, ptufile, phconvert) says: channel 15
+is the *special* record — `dtime == 0` an overflow, otherwise a marker whose
+bits are `dtime`; every other channel is a photon, `dtime == 0` included.
+On the SymPhoTime example file 653 real photons (0.09 %) were filed as markers
+and all 513 markers as photons on channel 15; on the Leica SP8 files (PicoHarp
+T3 too) 95 325 markers likewise. The SP8 CLSM routine kept working only because
+it selects markers by `routing_channel == 15` and the micro-time bits, never by
+event type — which is why the fix keeps channel 15 / bits-in-micro-time for
+markers and only corrects the event type and the photon set. The PHT3 writer
+mirrored the wrong rule (markers as dtime 0, photon micro time 0 clipped to 1)
+and was fixed with it. ptufile now sees photons, markers and marker bits
+identical on three files (tttrlib keeps the 1-based channel field). One CLSM
+fixture (`img_ref_decay_image_sp8.npy`) changed by three single-photon bins.
+Tests: `test_ab_core_reference.py::…::test_picoharp_t3_*`.
+
+Downstream, `test_CLSM_single_frame_ptu.py` had pinned a *wrong* reconstruction
+of the SymPhoTime PicoHarp example — "1 × 652 × 256, salvaged frame": the 653
+dtime-0 photons on channel 1 had been taken for line-start markers. Correctly
+decoded the file is one clean 256 × 256 frame with all 722 402 photons; the
+default CLSM routine now recognises PicoHarp T3 markers (channel 15 + micro-time
+bits, as the SP8 routine always did) and the test pins that.
+
+Two more found on the same round, fixed with it: the SPC-600/630 header frame
+(macro clock, routing bits; BH `SPC_data_file_structure.h`) was never read
+(resolution stayed 1.0 s) nor written; a PTU written from a bare `TTTR()`
+lacked `Measurement_Mode`, so ptufile could not decode it.
+
+**Reference defects noted, not ours:** phconvert `_read_spc6xx_32bit` adds
+2^12 per overflow to a 17-bit macro field (its timestamps run backwards) and
+inverts the 8-bit ADC against 4095; its BH readers re-read the header word as a
+record when handed a path instead of an open file.
+
 ## FIXED — `HmmPosterior::ess` ignored between-chain disagreement (reported ~N where ArviZ reports ~40)
 
 **Fixed 2026-08-17, same day.** Found by the ArviZ A/B: on two chains offset by

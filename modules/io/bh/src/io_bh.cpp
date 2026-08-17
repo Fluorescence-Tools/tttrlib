@@ -305,6 +305,67 @@ bool write_bh_set_file(const std::string& filename, nlohmann::json &data){
     return true;
 }
 
+size_t read_bh_spc600_header(
+        std::FILE *fpin,
+        nlohmann::json &data,
+        bool rewind,
+        bool wide_48bit
+){
+    if(rewind) std::fseek(fpin, 0, SEEK_SET);
+    double mt_clk = 0.0;
+    int n_routing_bits = 0;
+    size_t header_end = 0;
+    if (!wide_48bit) {
+        // 32-bit mode: the SPC-130 header word (bits 0-23 clock, 27-30 routing bits, 31 invalid)
+        uint32_t word = 0;
+        if (fread(&word, 4, 1, fpin) != 1) word = 0;
+        mt_clk = (double) (word & 0x00FFFFFFu) / 10.0e9;
+        n_routing_bits = (int) ((word >> 27) & 0xF);
+        header_end = 4;
+    } else {
+        // 48-bit mode: byte 1 bit 4 invalid, byte 1 bits 0-3 routing bits, bytes 2-3 clock (0.1 ns)
+        unsigned char b[6] = {0, 0, 0, 0, 0, 0};
+        if (fread(b, 1, 6, fpin) != 6) std::memset(b, 0, sizeof(b));
+        mt_clk = (double) ((unsigned) b[2] | ((unsigned) b[3] << 8)) / 10.0e9;
+        n_routing_bits = (int) (b[1] & 0x0F);
+        header_end = 6;
+    }
+    const int n_micro = wide_48bit ? 4096 : 256;
+    if (!(mt_clk > 0.0)) mt_clk = 1.0;          // frame absent or zeroed: keep the old sentinel
+    add_tag(data, TTTRTagGlobRes, mt_clk, tyFloat8);
+    add_tag(data, TTTRTagRes, mt_clk / n_micro, tyFloat8);   // same placeholder convention as SPC-130
+    add_tag(data, TTTRNMicroTimes, n_micro, tyInt8);
+    add_tag(data, TTTRTagBits, wide_48bit ? 48 : 32, tyInt8);
+    add_tag(data, "BH_RoutingBits", n_routing_bits, tyInt8);
+    if (is_verbose()) {
+        std::clog << "-- BH SPC-600/630 header reader (" << (wide_48bit ? 48 : 32) << " bit)" << std::endl;
+        std::clog << "-- macro_time_resolution: " << mt_clk << std::endl;
+    }
+    return header_end;
+}
+
+void write_spc600_header(
+        std::string fn, nlohmann::json &data, std::string mode, bool wide_48bit){
+    double mt_clk = 1.0;
+    if (find_tag(data, TTTRTagGlobRes) >= 0) mt_clk = (double) get_tag(data, TTTRTagGlobRes)["value"];
+    unsigned clk = (unsigned) (mt_clk * 10.e9 + 0.5);
+    int rb = 0;
+    if (find_tag(data, "BH_RoutingBits") >= 0) rb = (int) get_tag(data, "BH_RoutingBits")["value"];
+    FILE* fp = open_file(fn, mode.c_str());
+    if (fp == nullptr) return;
+    if (!wide_48bit) {
+        uint32_t word = (clk & 0x00FFFFFFu) | ((unsigned) (rb & 0xF) << 27) | 0x80000000u;
+        fwrite(&word, 4, 1, fp);
+    } else {
+        unsigned char b[6] = {0, 0, 0, 0, 0, 0};
+        b[1] = (unsigned char) (0x10 | (rb & 0x0F));
+        b[2] = (unsigned char) (clk & 0xFF);
+        b[3] = (unsigned char) ((clk >> 8) & 0xFF);
+        fwrite(b, 1, 6, fp);
+    }
+    fclose(fp);
+}
+
 void write_spc132_header(
         std::string fn, nlohmann::json &data, std::string mode){
     // write header

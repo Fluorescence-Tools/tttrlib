@@ -493,6 +493,193 @@ class TestRecordDecodingAgainstIndependentReaders(unittest.TestCase):
         np.testing.assert_array_equal(np.asarray(d.macro_times)[et == 1], ts[mk_ref])
         np.testing.assert_array_equal(np.asarray(d.routing_channels)[et == 1], det[mk_ref] - 64)
 
+    # ---- 2026-08-17: the second reading round -----------------------------
+
+    def _ptu_vs_ptufile(self, fn, channel_offset=0):
+        """Photons and markers of a PTU vs ptufile. `channel_offset` is what
+        tttrlib adds to ptufile's 0-based channel: 0 for HydraHarp/TimeHarp/
+        MultiHarp (a 0-based hardware field), 1 for PicoHarp T3 whose 4-bit
+        field is 1-based on the wire and is kept as written."""
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        p = ptufile.PtuFile(fn)
+        r = p.decode_records()
+        ph = (r["channel"] >= 0) & (r["marker"] == 0)
+        mk = r["marker"] != 0
+        d = tttrlib.TTTR(fn, "PTU")
+        et = np.asarray(d.event_types)
+        self.assertEqual(int((et == 0).sum()), int(ph.sum()))
+        np.testing.assert_array_equal(np.asarray(d.macro_times)[et == 0], r["time"][ph])
+        np.testing.assert_array_equal(np.asarray(d.micro_times)[et == 0], r["dtime"][ph])
+        np.testing.assert_array_equal(np.asarray(d.routing_channels)[et == 0] - channel_offset, r["channel"][ph])
+        self.assertEqual(int((et == 1).sum()), int(mk.sum()))
+        np.testing.assert_array_equal(np.asarray(d.macro_times)[et == 1], r["time"][mk])
+        return d, r, p
+
+    @unittest.skipIf(not HAVE_PTUFILE, "ptufile not installed")
+    def test_picoharp_t3_matches_ptufile(self):
+        """PicoHarp T3 (also every Leica SP8 PTU): channel 15 is the special
+        record -- dtime 0 an overflow, otherwise a marker with its bits in
+        dtime; photons keep dtime 0. Until 2026-08-17 the decoder tested
+        dtime == 0 for markers (0.1 % of photons lost, channel-15 markers
+        passed as photons). Markers keep channel 15 with the bits in the
+        micro time (the SP8 CLSM routine selects on that)."""
+        for key in ("ptu_picoharp_t3_filename", "clsm_sp8_filename"):
+            fn = settings.get(key, "")
+            with self.subTest(file=os.path.basename(fn)):
+                d, r, p = self._ptu_vs_ptufile(fn, channel_offset=1)
+                et = np.asarray(d.event_types)
+                mk = r["marker"] != 0
+                np.testing.assert_array_equal(np.asarray(d.micro_times)[et == 1], r["marker"][mk])
+                self.assertTrue(np.all(np.asarray(d.routing_channels)[et == 1] == 15))
+                self.assertGreater(int(((et == 0) & (np.asarray(d.micro_times) == 0)).sum()), 0)
+
+    @unittest.skipIf(not HAVE_PTUFILE, "ptufile not installed")
+    def test_timeharp260_pt3_matches_ptufile(self):
+        self._ptu_vs_ptufile(settings.get("microtime_th260_beads_filename", ""))
+
+    @unittest.skipIf(not HAVE_PTUFILE, "ptufile not installed")
+    def test_generic_t3_matches_ptufile(self):
+        """MultiHarp / HydraHarp v2 'generic' T3 (record type 0x00010304 family)."""
+        self._ptu_vs_ptufile(settings.get("ptu_generic_t3_filename", ""))
+
+    def test_picoharp_t3_write_read_roundtrip_with_markers(self):
+        """The PHT3 writer mirrors the reader: markers as channel 15 + bits,
+        photons with micro time 0 survive (they used to be clipped to 1)."""
+        rng = np.random.default_rng(1)
+        n = 5000
+        macro = np.sort(rng.integers(0, 400000, n)).astype(np.uint64)
+        micro = rng.integers(0, 4096, n).astype(np.uint16)
+        micro[:200] = 0
+        chan = rng.integers(1, 5, n).astype(np.int8)
+        types = np.zeros(n, np.int8)
+        marker_idx = rng.choice(n, 40, replace=False)
+        types[marker_idx] = 1
+        chan[marker_idx] = 15
+        micro[marker_idx] = rng.integers(1, 5, 40)
+        d = tttrlib.TTTR()
+        d.append_events(macro, micro, chan, types)
+        d.header.set_macro_time_resolution(25e-9)
+        d.header.set_micro_time_resolution(16e-12)
+        d.header.set_number_of_micro_time_channels(4096)
+        d.header.tttr_container_type = 0
+        d.header.tttr_record_type = 5          # PQ_RECORD_TYPE_PHT3
+        import tempfile
+        fd, path = tempfile.mkstemp(suffix=".ptu")
+        os.close(fd)
+        try:
+            self.assertTrue(d.write(path))
+            back = tttrlib.TTTR(path, "PTU")
+            np.testing.assert_array_equal(np.asarray(back.macro_times), macro)
+            np.testing.assert_array_equal(np.asarray(back.micro_times), micro)
+            np.testing.assert_array_equal(np.asarray(back.routing_channels), chan)
+            np.testing.assert_array_equal(np.asarray(back.event_types), types)
+            if HAVE_PTUFILE:
+                r = ptufile.PtuFile(path).decode_records()
+                ph = (r["channel"] >= 0) & (r["marker"] == 0)
+                np.testing.assert_array_equal(r["dtime"][ph], micro[types == 0])
+                np.testing.assert_array_equal(r["marker"][r["marker"] != 0], micro[types == 1])
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def test_brighteyes_ttr_matches_libttp(self):
+        """BrightEyes-TTM ``.ttr`` vs the vendor's own Cython parser
+        (``libttp.ttpCython.timeProcessNewProtocol``, recorded by
+        ``tttr/gen_ab_brighteyes_libttp_reference.py`` on the first 4 M words of
+        the Zenodo sample): photon channels, macro times (libttp's default
+        16-bit step unwrapping) and micro times (TDC code differenced against
+        the record's laser code when it has one) identical for 326 835
+        photons; pixel / line / frame markers are the rising edges of the
+        step-byte enable bits (A -> pixel, C -> line, B -> frame; libttp's
+        column names call B 'scan' and C 'line')."""
+        fix = os.path.join(_ROOT, "test", "data", "reference", "brighteyes_libttp_reference.npz")
+        fn = settings.get("brighteyes_ttr_filename", "")
+        if not os.path.exists(fix) or not os.path.isfile(fn):
+            self.skipTest("libttp fixture or .ttr sample missing")
+        d = np.load(fix)
+        tt = tttrlib.TTTR(fn, "BRIGHTEYES-TTR")
+        et = np.asarray(tt.event_types)
+        mt = np.asarray(tt.macro_times).astype(np.int64)
+        mi = np.asarray(tt.micro_times).astype(np.int64)
+        ch = np.asarray(tt.routing_channels)
+        n = int(d["photon_record"].size)
+        ph = np.flatnonzero(et == 0)[:n]
+        np.testing.assert_array_equal(ch[ph], d["photon_channel"])
+        np.testing.assert_array_equal(mt[ph], d["record_step"][d["photon_record"]])
+        expected_micro = np.where(d["photon_laser_valid"],
+                                  (d["photon_code"].astype(np.int64) - d["photon_laser_code"]) % 256,
+                                  d["photon_code"].astype(np.int64))
+        np.testing.assert_array_equal(mi[ph], expected_micro)
+        last_step = int(d["record_step"][-1])
+        mk = (mt <= last_step) & (et == 1)
+        for bit, marker in (("pixel_enable", 1), ("frame_enable", 2), ("line_enable", 3)):   # libttp names, our meaning
+            b = d[bit].astype(np.int8)
+            rise = np.flatnonzero((b[1:] > 0) & (b[:-1] == 0)) + 1
+            if b[0] > 0:
+                rise = np.concatenate([[0], rise])
+            np.testing.assert_array_equal(mt[mk & (ch == marker)], d["record_step"][rise])
+
+    def test_bh_spc630_256_matches_phconvert_up_to_its_overflow_shift(self):
+        """SPC-600/630 32-bit records: 8-bit ADC, 17-bit macro time, 3-bit
+        routing. phconvert's `_read_spc6xx_32bit` masks the 17-bit field but
+        adds 2^12 per overflow (the SPC-130 shift) and inverts the ADC against
+        4095 -- its timestamps run backwards 61 times on this file. Channels
+        and the ADC (mod 256) agree exactly; the macro times agree once the
+        overflow increment is 2^17."""
+        fn = settings["spc630_filename"]
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        bh = _load_phconvert("bhreader")
+        if bh is None:
+            self.skipTest("phconvert not importable from junk/")
+        with open(fn, "rb") as f:
+            ref = bh._read_spc6xx_32bit(f)
+        d = tttrlib.TTTR(fn, "SPC-600_256")
+        self.assertEqual(len(d.macro_times), ref["timestamps"].size)
+        np.testing.assert_array_equal(np.asarray(d.routing_channels), ref["detectors"])
+        np.testing.assert_array_equal(np.asarray(d.micro_times), ref["nanotimes"] & 0xFF)
+        mt = np.asarray(d.macro_times).astype(np.int64)
+        self.assertTrue(np.all(np.diff(mt) >= 0))
+        self.assertGreater(int((np.diff(ref["timestamps"].astype(np.int64)) < 0).sum()), 0)   # the reference's defect
+        # phconvert's own fields with the 17-bit overflow increment reproduce tttrlib
+        raw = np.fromfile(fn, dtype=np.uint32)[1:]
+        field = ((raw & 0x01FFFF00) >> 8).astype(np.int64)
+        ovfl = ((raw >> 30) & 1).astype(np.int64)
+        multi = (raw >> 30) == 3
+        keep = ((raw >> 31) & 1) == 0
+        ts17 = field + (np.cumsum(ovfl) << 17)
+        if not multi.any():
+            np.testing.assert_array_equal(ts17[keep], mt)
+        self.assertAlmostEqual(d.header.macro_time_resolution, ref["timestamps_unit"], places=15)
+
+    def test_bh_spc_qc_matches_phconvert(self):
+        fn = settings.get("spcqc_filename", "")
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        bh = _load_phconvert("bhreader")
+        if bh is None:
+            self.skipTest("phconvert not importable from junk/")
+        with open(fn, "rb") as f:                # a path would re-read the header word as a record
+            ref = bh._read_QCX04(f)
+        d = tttrlib.TTTR(fn, "SPC-QC")
+        np.testing.assert_array_equal(np.asarray(d.macro_times), ref["timestamps"])
+        np.testing.assert_array_equal(np.asarray(d.micro_times), ref["nanotimes"])
+        np.testing.assert_array_equal(np.asarray(d.routing_channels), ref["detectors"])
+        self.assertAlmostEqual(d.header.macro_time_resolution, ref["timestamps_unit"], places=15)
+
+    def test_sm_matches_phconvert(self):
+        fn = settings.get("sm_filename", "")
+        if not os.path.isfile(fn):
+            self.skipTest(fn)
+        sm = _load_phconvert("smreader")
+        if sm is None:
+            self.skipTest("phconvert not importable from junk/")
+        ts, det, _ = sm.load_sm(fn, return_labels=True)
+        d = tttrlib.TTTR(fn, "SM")
+        np.testing.assert_array_equal(np.asarray(d.macro_times), ts)
+        np.testing.assert_array_equal(np.asarray(d.routing_channels), det)
+
 
 # --------------------------------------------------------------------------
 # util: SHA-256, bit ops, byte order -- header-only, via a tiny harness

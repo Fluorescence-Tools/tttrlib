@@ -1,8 +1,11 @@
-"""BrightEyes-TTM (.ttr), checked against the official libttp reader.
+"""BrightEyes-TTM (.ttr): geometry, markers, round trip.
 
 A .ttr has no header and no magic, so nothing about it can be verified from the
 file itself -- which makes an A/B against the vendor's own reader the only real
-check. libttp is optional; the test skips without it rather than pretending.
+check. That A/B lives in ``test_ab_core_reference.py::…::
+test_brighteyes_ttr_matches_libttp`` (recorded libttp decode of the first 4 M
+words: photons, macro/micro times and marker edges identical); this file checks
+what the sample's filename promises about the acquisition.
 """
 import os
 

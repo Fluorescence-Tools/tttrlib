@@ -45,6 +45,41 @@ def main():
                 np.array_equal(np.asarray(d.micro_times)[ph], ref["spc_nano"][pr]) and
                 np.array_equal(np.asarray(d.routing_channels)[ph], det[pr]))
         v["spc130"] = {"n_photons": int(ph.sum()), "identical": bool(same)}
+    if "spc630_ts" in ref:
+        d = tttrlib.TTTR(data("bh", "bh_spc630_256.spc"), "SPC-600_256")
+        mt = np.asarray(d.macro_times).astype(np.int64)
+        # phconvert adds 2^12 per overflow to a 17-bit field and inverts the 8-bit ADC
+        # against 4095: channels and ADC (mod 256) agree, macro times only after undoing that
+        chan_ok = np.array_equal(np.asarray(d.routing_channels), ref["spc630_det"])
+        nano_ok = np.array_equal(np.asarray(d.micro_times), ref["spc630_nano"] & 0xFF)
+        raw = np.fromfile(data("bh", "bh_spc630_256.spc"), dtype=np.uint32)[1:]
+        keep = ((raw >> 31) & 1) == 0
+        ts17 = ((raw & 0x01FFFF00) >> 8).astype(np.int64) + (np.cumsum((raw >> 30) & 1) << 17)
+        macro_ok = np.array_equal(ts17[keep], mt)
+        v["spc630"] = {"n_photons": int(mt.size), "channels_identical": bool(chan_ok), "adc_identical_mod_256": bool(nano_ok),
+                       "macro_identical_with_2_17_overflow": bool(macro_ok),
+                       "phconvert_backward_steps": int((np.diff(ref["spc630_ts"].astype(np.int64)) < 0).sum()),
+                       "identical": bool(chan_ok and nano_ok and macro_ok),
+                       "note": "identical up to phconvert's SPC-6xx defects (2^12 overflow shift on a 17-bit field; ADC inverted against 4095)"}
+    if "spcqc_ts" in ref:
+        d = tttrlib.TTTR(data("bh", "bh_spcqc004.spc"), "SPC-QC")
+        same = (np.array_equal(np.asarray(d.macro_times), ref["spcqc_ts"]) and np.array_equal(np.asarray(d.micro_times), ref["spcqc_nano"])
+                and np.array_equal(np.asarray(d.routing_channels), ref["spcqc_det"]))
+        v["spcqc"] = {"n_photons": int(len(d.macro_times)), "identical": bool(same)}
+    if "sm_ts" in ref:
+        d = tttrlib.TTTR(data("sm", "data.sm"), "SM")
+        same = np.array_equal(np.asarray(d.macro_times), ref["sm_ts"]) and np.array_equal(np.asarray(d.routing_channels), ref["sm_det"])
+        v["sm"] = {"n_photons": int(len(d.macro_times)), "identical": bool(same)}
+    pht3 = os.path.join(SHARED, "ptufile_pht3_outputs.npz")
+    if os.path.exists(pht3):
+        r = np.load(pht3)
+        d = tttrlib.TTTR(data("imaging", "pq", "PicoHarp_SymPhoTime", "Example_PTU_PicoHarp.ptu"), "PTU")
+        et = np.asarray(d.event_types); ph = (r["channel"] >= 0) & (r["marker"] == 0); mk = r["marker"] != 0
+        same = (np.array_equal(np.asarray(d.macro_times)[et == 0], r["time"][ph]) and np.array_equal(np.asarray(d.micro_times)[et == 0], r["dtime"][ph])
+                and np.array_equal(np.asarray(d.routing_channels)[et == 0] - 1, r["channel"][ph])
+                and np.array_equal(np.asarray(d.macro_times)[et == 1], r["time"][mk]) and np.array_equal(np.asarray(d.micro_times)[et == 1], r["marker"][mk]))
+        v["ptu_picoharp_t3"] = {"n_photons": int((et == 0).sum()), "n_markers": int((et == 1).sum()), "identical": bool(same),
+                                "note": "tttrlib keeps PicoHarp's 1-based channel field; ptufile reports it 0-based"}
     for k, r in v.items():
         print(f"[{k}] {'IDENTICAL' if r['identical'] else 'DIFFERS'} {json.dumps({kk: vv for kk, vv in r.items() if kk != 'identical'})}")
     with open(os.path.join(SHARED, "check.json"), "w") as fh:

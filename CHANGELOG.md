@@ -3,6 +3,22 @@
 ## [Unreleased]
 
 ### Fixed
+- **PicoHarp T3 (PT3 / every Leica SP8 PTU) decoding follows the format.**
+  Channel 15 is the special record (dtime 0 = overflow, else a marker with
+  its bits in dtime); everything else is a photon, dtime 0 included. The
+  decoder had tested `dtime == 0` for markers and passed channel-15 markers
+  through as photons: 0.1 % of photons lost, every marker miscounted.
+  Photons, markers and marker bits are now identical to ptufile; markers keep
+  channel 15 with the bits in the micro time (what the SP8 CLSM routine
+  selects on). The PHT3 writer follows the same rule, and the default CLSM
+  routine recognises PicoHarp T3 markers -- a SymPhoTime PicoHarp single-frame
+  export reconstructs as one 256 x 256 frame with every photon (it used to be
+  a "salvaged" 652-line frame built from misread photons).
+- **SPC-600/630 header frame read and written** (macro time clock, routing
+  bits, per Becker & Hickl's `SPC_data_file_structure.h`); the macro time
+  resolution had stayed at 1.0 s.
+- **PTU files written from a bare `TTTR()` carry `Measurement_Mode`**, so
+  ptufile and PicoQuant's readers can decode them.
 - **`HmmPosterior.ess` is the split-chain estimator of Vehtari et al. 2021**
   (Stan / ArviZ `ess(method="mean")`), bit-identical to ArviZ. The previous
   form pooled within-chain autocorrelations only, so two chains sitting at

@@ -2890,8 +2890,9 @@ void TTTR::write_pht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
     // chunk is wrong. Null keeps the old whole-file behaviour.
     uint64_t MT_ov_local = 0;
     uint64_t& MT_ov = MT_ov_state ? *MT_ov_state : MT_ov_local;
-    // PicoHarp T3. Markers are encoded with dtime = 0 (PicoHarp convention);
-    // photons therefore need dtime >= 1: micro time 0 is clipped to 1.
+    // PicoHarp T3. A marker is the special channel 15 with its marker bits
+    // in dtime (dtime 0 on channel 15 is the overflow record); a photon keeps
+    // its channel and dtime, 0 included.
     const uint64_t T3WRAPAROUND = 65536;
     for (size_t n = 0; n < tttr->size(); n++) {
         uint64_t MT = tttr->get_macro_time_at(n);
@@ -2908,13 +2909,19 @@ void TTTR::write_pht3_events(FILE* fp, TTTR* tttr, uint64_t* MT_ov_state){
         }
         pq_ph_t3_record_t rec;
         rec.allbits = 0;
-        rec.bits.channel = tttr->routing_channels[n] & 0xF;
         rec.bits.n_sync = (unsigned) (MT % T3WRAPAROUND);
         if (tttr->event_types[n] == RECORD_MARKER) {
-            rec.bits.dtime = 0;
+            // marker bits: the micro time as the reader stores them; a marker
+            // that arrived through another format (bits in the channel) and
+            // has micro time 0 takes its channel as the bits, never 0 (that
+            // would read back as an overflow)
+            unsigned bits = tttr->micro_times[n] & 0xFFF;
+            if (bits == 0) bits = std::max<unsigned>(1, tttr->routing_channels[n] & 0xF);
+            rec.bits.channel = 0xF;
+            rec.bits.dtime = bits;
         } else {
-            rec.bits.dtime = std::max<unsigned short>(
-                    1, std::min<unsigned short>(tttr->micro_times[n], 4095));
+            rec.bits.channel = std::min<unsigned>(tttr->routing_channels[n] & 0xF, 0xE);
+            rec.bits.dtime = std::min<unsigned short>(tttr->micro_times[n], 4095);
         }
         fwrite(&rec, 4, 1, fp);
     }
@@ -3021,12 +3028,10 @@ void TTTR::write_header(std::string &fn, TTTRHeader* header){
         TTTRHeader::write_sm_header(fn, header);
     } else if(container_type == CZ_CONFOCOR3_CONTAINER){
         TTTRHeader::write_cz_confocor3_header(fn, header);
-    } else if(
-            (container_type == BH_SPC600_256_CONTAINER) ||
-            (container_type == BH_SPC600_4096_CONTAINER)){
-        // SPC-600 files have no on-disk header; create/truncate the file
-        FILE* f = open_file(fn, "wb");
-        if (f != nullptr) fclose(f);
+    } else if(container_type == BH_SPC600_256_CONTAINER){
+        TTTRHeader::write_spc600_header(fn, header, "w", false);
+    } else if(container_type == BH_SPC600_4096_CONTAINER){
+        TTTRHeader::write_spc600_header(fn, header, "w", true);
     } else{
         std::cerr << "Error in TTTR::write, writing of headers not implemented" << std::endl;
     }
@@ -3062,6 +3067,21 @@ static int default_record_type_for_container(int container_type){
  */
 // Not static: RecordStreamWriter needs the same mapping, and a second copy
 // of it would be a second thing to keep in step.
+void pq_ptu_add_measurement_mode(nlohmann::json& json, int record_type){
+    if (TTTRHeader::find_tag(json, "Measurement_Mode") >= 0) return;
+    int mode = -1;
+    switch (record_type) {
+        case PQ_RECORD_TYPE_PHT3: case PQ_RECORD_TYPE_HHT3v1:
+        case PQ_RECORD_TYPE_HHT3v2: case PQ_RECORD_TYPE_GENERIC_T3:
+            mode = 3; break;
+        case PQ_RECORD_TYPE_PHT2: case PQ_RECORD_TYPE_HHT2v1:
+        case PQ_RECORD_TYPE_HHT2v2: case PQ_RECORD_TYPE_GENERIC_T2:
+            mode = 2; break;
+        default: break;
+    }
+    if (mode > 0) TTTRHeader::add_tag(json, "Measurement_Mode", mode, tyInt8);
+}
+
 int pq_ptu_record_type_identifier(int record_type){
     switch (record_type) {
         case PQ_RECORD_TYPE_PHT3:       return rtPicoHarpT3;
@@ -3218,6 +3238,10 @@ bool TTTR::write(std::string filename, TTTRHeader* header, int container_type){
         TTTRHeader::add_tag(
                 header->json_data(), TTTRTagTTTRRecType,
                 pq_ptu_record_type_identifier(record_type), tyInt8);
+        // Measurement_Mode (2 = T2, 3 = T3) is what conforming readers
+        // (ptufile, PicoQuant's own demos) branch on before they look at the
+        // record type; a header built from scratch has none.
+        pq_ptu_add_measurement_mode(header->json_data(), record_type);
     }
 
     write_header(filename, header);

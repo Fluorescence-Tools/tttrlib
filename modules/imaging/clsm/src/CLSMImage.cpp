@@ -777,6 +777,7 @@ CLSMImage::CLSMImage(
         // settings -- including the Python __init__, which resolves these itself --
         // are unaffected. The full parsed metadata (geometry, timing, calibration)
         // is always stored in image_info_ for introspection.
+        bool pht3_default_markers = false;
         {
             auto pq_header = tttr_data->get_header();
             if (pq_header != nullptr) {
@@ -816,6 +817,20 @@ CLSMImage::CLSMImage(
                             }
                         }
                     }
+                    // PicoHarp T3 (every Leica SP8 PTU, and SymPhoTime PicoHarp
+                    // files) stores a marker as routing channel 15 with the
+                    // marker bits in the micro time, where the HydraHarp family
+                    // puts the bits in the routing channel. The default routine
+                    // matches on the routing channel, so a PicoHarp file under
+                    // the default routine finds no marker at all. Route it
+                    // through the SP8 matching (channel 15 + micro-time bits)
+                    // while keeping the header-decoded marker values.
+                    if (this->settings.reading_routine == CLSM_DEFAULT &&
+                        tttr_data->get_tttr_record_type() == PQ_RECORD_TYPE_PHT3) {
+                        this->settings.reading_routine = CLSM_SP8;
+                        this->settings.marker_event_type = 15;
+                        pht3_default_markers = true;
+                    }
                     // Instrument marker conventions for the non-default reading
                     // routines. These lived only in the Python wrapper, so a
                     // Leica SP5/SP8 or BH SPC measurement reconstructed correctly
@@ -830,6 +845,7 @@ CLSMImage::CLSMImage(
                             this->settings.marker_line_stop   = 2;
                             break;
                         case CLSM_SP8:
+                            if (pht3_default_markers) break;   // header-decoded values already set
                             this->settings.marker_event_type  = 15;
                             this->settings.marker_frame_start = { 4, 6 };
                             // SP8 uses the RAW ImgHdr_LineStart/Stop values, not

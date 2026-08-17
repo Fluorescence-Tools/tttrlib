@@ -343,6 +343,14 @@ public:
             bool rewind = true
     );
 
+    /// SPC-600/630 first frame (macro time clock, routing bits); see io_bh.h.
+    static size_t read_bh_spc600_header(
+            std::FILE *fpin,
+            nlohmann::json &data,
+            bool rewind = true,
+            bool wide_48bit = false
+    );
+
     /*!
      * @brief Reads a Becker & Hickl .set file and extracts imaging parameters.
      *
@@ -413,6 +421,14 @@ public:
             std::string fn,
             TTTRHeader* header,
             std::string modes = "w"
+    );
+
+    /// Write the SPC-600/630 first frame (macro time clock, routing bits) to \p fn.
+    static void write_spc600_header(
+            std::string fn,
+            TTTRHeader* header,
+            std::string modes = "w",
+            bool wide_48bit = false
     );
 
     /*!

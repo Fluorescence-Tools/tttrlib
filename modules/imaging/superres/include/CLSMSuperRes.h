@@ -35,7 +35,9 @@
 //   (test_clsm_superres_nanoj_ab.py); airy_psf vs scipy.special.j1 (1e-9); temporal_combine vs
 //   numpy (1e-12); SOFISM vs its reference transcription (test_clsm_superres_sofism.py);
 //   detector_grid vs BrightEyes lattices and the vectorial PSF's scalar limit
-//   (test_ism_psf_model.py). test/python/clsm/test_ab_localization_superres_reference.py.
+//   (test_ism_psf_model.py); vectorial_psf vs BrightEyes-ISM / PyFocus VectorialCartesianPropagator
+//   (recorded, NA 1.4, x/y/circular, focus + 400 nm defocus): 5e-5 of peak in focus, 5e-4 defocused,
+//   residual is PyFocus's pupil sampling. test/python/clsm/test_ab_localization_superres_reference.py.
 //   Register: okf/testing/algorithm-validation.md
 
 #include <vector>

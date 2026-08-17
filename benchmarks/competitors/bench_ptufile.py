@@ -18,6 +18,8 @@ from ptufile import PtuFile   # noqa: E402
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 F_SM = os.path.join(REPO, "tttr-data", "pq", "ptu", "pq_ptu_hh_t3.ptu")
 F_IMG = os.path.join(REPO, "tttr-data", "imaging", "pq", "Microtime200_TH260", "beads.ptu")
+F_PHT3 = os.path.join(REPO, "tttr-data", "imaging", "pq", "PicoHarp_SymPhoTime", "Example_PTU_PicoHarp.ptu")
+SHARED = os.path.join(REPO, "benchmarks", "results", "shared", "reading")
 ENV = "venv-read"
 
 
@@ -30,6 +32,21 @@ def bench_read():
             return ptu.decode_records()
     bench("file_read", "ptufile", "read PTU T3 (HydraHarp)", run,
           repeat=5, n_items=n, unit="photons", dataset="pq_ptu_hh_t3.ptu", env=ENV)
+
+
+def bench_read_picoharp():
+    with PtuFile(F_PHT3) as ptu:
+        r = ptu.decode_records()
+    ph = (r["channel"] >= 0) & (r["marker"] == 0)
+    os.makedirs(SHARED, exist_ok=True)
+    np.savez(os.path.join(SHARED, "ptufile_pht3_outputs.npz"), time=r["time"], dtime=r["dtime"],
+             channel=r["channel"], marker=r["marker"])
+
+    def run():
+        with PtuFile(F_PHT3) as ptu:
+            return ptu.decode_records()
+    bench("file_read", "ptufile (PicoHarp T3)", "read PTU T3 (PicoHarp)", run,
+          repeat=5, n_items=int(ph.sum()), unit="photons", dataset="Example_PTU_PicoHarp.ptu", env=ENV)
 
 
 def bench_clsm_intensity():
@@ -50,7 +67,7 @@ if __name__ == "__main__":
     print("=" * 70)
     print("ptufile benchmarks (%s)" % ENV)
     print("=" * 70)
-    for fn in [bench_read, bench_clsm_intensity]:
+    for fn in [bench_read, bench_read_picoharp, bench_clsm_intensity]:
         try:
             fn()
         except Exception as e:

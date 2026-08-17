@@ -39,6 +39,20 @@ std::size_t read_bh132_header(FILE* fpin, nlohmann::json& data, bool rewind = tr
 std::size_t read_bh_spcqc_header(FILE* fpin, nlohmann::json& data, bool rewind = true);
 
 /*!
+ * \brief Read the first frame of an SPC-600/630 FIFO file into \p data.
+ *
+ * Becker & Hickl (`SPC_data_file_structure.h`): the software prepends one
+ * photon frame carrying the macro time clock in 0.1 ns units and the number
+ * of routing bits, flagged INVALID. In 256-channel (32-bit) mode it is the
+ * same word as the SPC-130 header (bits 0-23 clock, 27-30 routing bits, 31
+ * invalid); in 4096-channel (48-bit) mode it is 6 bytes with the clock in
+ * bytes 2-3 and the routing bits in byte 1. Returns the first record's
+ * offset (4 or 6). Until 2026-08-17 the frame was decoded as a record and
+ * dropped as invalid, so the macro time resolution stayed at 1.0.
+ */
+std::size_t read_bh_spc600_header(FILE* fpin, nlohmann::json& data, bool rewind = true, bool wide_48bit = false);
+
+/*!
  * \brief Read a ".set" sidecar into \p data.
  *
  * Extracts SP_IMG_X, SP_IMG_Y and SP_PIX_CLK as ImgHdr_PixX / ImgHdr_PixY /
@@ -60,6 +74,9 @@ bool write_bh_set_file(const std::string& filename, nlohmann::json& data);
 
 /// Write an SPC-130 header describing \p data to \p fn.
 void write_spc132_header(std::string fn, nlohmann::json& data, std::string modes = "w");
+
+/// Write the SPC-600/630 first frame (4 bytes, or 6 in 48-bit mode) describing \p data to \p fn.
+void write_spc600_header(std::string fn, nlohmann::json& data, std::string modes = "w", bool wide_48bit = false);
 
 /// Write an SPC-QC header describing \p data to \p fn.
 void write_spcqc_header(std::string fn, nlohmann::json& data, std::string modes = "w");

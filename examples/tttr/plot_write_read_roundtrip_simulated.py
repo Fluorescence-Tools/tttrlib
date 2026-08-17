@@ -5,7 +5,7 @@ Write a simulated photon stream, read it back
 
 A TTTR container is a record stream plus a header. This example builds a photon
 stream from a simulation -- no instrument file needed -- writes it as a
-PicoQuant PTU (HydraHarp T3), a HydraHarp HT3 and a Becker & Hickl SPC-130 file
+PicoQuant PTU (HydraHarp T3 and PicoHarp T3), a HydraHarp HT3 and a Becker & Hickl SPC-130 file
 with :meth:`tttrlib.TTTR.write`, reads each back, and checks that every macro
 time, micro time and routing channel survives. The record encoders insert the
 overflow records the formats need (a 10-bit macro-time field wraps every 1024
@@ -90,10 +90,11 @@ def round_trip(container, record_type, suffix, reader_hint):
             os.remove(path)
 
 
-# container / record type codes: PTU + HHT3v2, HT3 + HHT3v2, SPC-130
+# container / record type codes: PTU + HHT3v2, PTU + PicoHarp T3, HT3 + HHT3v2, SPC-130
 results = {}
 for name, container, record, suffix, hint in [
     ("PTU (HydraHarp T3)", 0, 4, ".ptu", "PTU"),
+    ("PTU (PicoHarp T3)", 0, 5, ".ptu", "PTU"),
     ("HT3 (HydraHarp T3)", 1, 4, ".ht3", "HT3"),
     ("SPC-130 (Becker & Hickl)", 2, 0, ".spc", "SPC-130"),
 ]:
@@ -126,8 +127,12 @@ plt.show()
 # Notes
 # -----
 # * The overflow bookkeeping differs per format (HHT3v2 counts up to 1023
-#   overflows in one record; SPC-130 wraps a 12-bit macro time), which is why the
+#   overflows in one record; PicoHarp T3 wraps a 16-bit sync counter with one
+#   record per overflow; SPC-130 wraps a 12-bit macro time), which is why the
 #   files differ in size while the photons are identical.
+# * PicoHarp T3 keeps its markers on the special channel 15 with the marker
+#   bits in the micro time; a photon with micro time 0 stays a photon (the
+#   PicoQuant convention, identical to ptufile's decoding).
 # * ``TTTR.write`` fills the mandatory header tags a container needs
 #   (record type, bits per record, resolutions, record count) from the header
 #   given, and for PTU patches ``TTResult_NumberOfRecords`` to the number of

@@ -42,6 +42,16 @@ PicoQuant PTU (``.ptu``)
    Imaging (CLSM) acquisitions store scanner markers as special records and
    the scan geometry in ``ImgHdr_*`` tags.
 
+   *PicoHarp T3* (the record type of every Leica SP8 PTU) differs from the
+   HydraHarp family: its 4-bit channel field is 1-based on the wire (kept as
+   written, so tttrlib reports channels 1..4 where ptufile reports 0..3), and
+   channel 15 is the *special* record -- ``dtime == 0`` an overflow, otherwise
+   a marker whose bits are in ``dtime``. tttrlib stores such a marker with
+   routing channel 15 and the marker bits as its micro time (what the ``SP8``
+   CLSM reading routine selects on); a photon with micro time 0 is a photon.
+   Decoding is photon-for-photon identical to ptufile
+   (``test/python/test_ab_core_reference.py``).
+
 PicoQuant HT3 (``.ht3``)
    The older HydraHarp v1/v2 container: a fixed binary header (identity,
    measurement and display settings, per-channel input settings, TT-mode
@@ -549,9 +559,11 @@ rules follow directly from the record layouts above:
        word per 4096 macro time units of idle time is emitted — long, sparse
        measurements produce large files (as they do on the instrument).
    * - anything → ``SPC-600_256``
-     - Micro times clip to 8 bit, channels to 3 bit, markers dropped.
+     - Micro times clip to 8 bit, channels to 3 bit, markers dropped. The
+       Becker & Hickl header frame (macro time clock, routing bits) is written
+       and read back.
    * - anything → ``SPC-600_4096``
-     - Micro times clip to 12 bit, markers dropped.
+     - Micro times clip to 12 bit, markers dropped. Header frame as above (6 bytes).
    * - anything → ``SM``
      - Macro times and channels survive; micro times and markers are
        dropped.

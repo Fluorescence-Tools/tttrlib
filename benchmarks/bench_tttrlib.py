@@ -30,6 +30,10 @@ F_SM = P("pq", "ptu", "pq_ptu_hh_t3.ptu")                 # confocal single-mole
 F_IMG_PTU = P("imaging", "pq", "Microtime200_TH260", "beads.ptu")   # 512x512 CLSM PTU
 F_IMG_HT3 = P("imaging", "pq", "ht3", "pq_ht3_clsm.ht3")  # 40x256x256 FLIM HT3
 F_SPC = P("bh", "bh_spc132.spc")                           # Becker & Hickl SPC-130 single-molecule
+F_SPC630 = P("bh", "bh_spc630_256.spc")                    # Becker & Hickl SPC-600/630, 256-channel 32-bit records
+F_SPCQC = P("bh", "bh_spcqc004.spc")                       # Becker & Hickl SPC-QC-104
+F_SMFILE = P("sm", "data.sm")                              # Weiss-lab .sm (phconvert smreader)
+F_PHT3 = P("imaging", "pq", "PicoHarp_SymPhoTime", "Example_PTU_PicoHarp.ptu")   # PicoHarp T3 PTU
 
 
 # --------------------------------------------------------------------------- #
@@ -55,6 +59,16 @@ def bench_read():
         bench("file_read", "tttrlib (SPC-130)", "read SPC-130 (Becker & Hickl)",
               lambda: tttrlib.TTTR(F_SPC, "SPC-130").macro_times, repeat=5,
               n_items=len(ds.macro_times), unit="photons", dataset="bh_spc132.spc")
+    # second reading round (2026-08-17): PicoHarp T3 (ptufile), SPC-630 / SPC-QC / .sm (phconvert)
+    for f, ctype, label, desc in ((F_PHT3, "PTU", "tttrlib (PicoHarp T3)", "read PTU T3 (PicoHarp)"),
+                                  (F_SPC630, "SPC-600_256", "tttrlib (SPC-630)", "read SPC-600/630 256-ch (Becker & Hickl)"),
+                                  (F_SPCQC, "SPC-QC", "tttrlib (SPC-QC)", "read SPC-QC-104 (Becker & Hickl)"),
+                                  (F_SMFILE, "SM", "tttrlib (SM)", "read .sm (Weiss lab)")):
+        if os.path.exists(f):
+            dd = tttrlib.TTTR(f, ctype)
+            bench("file_read", label, desc, lambda f=f, ctype=ctype: tttrlib.TTTR(f, ctype).macro_times, repeat=5,
+                  n_items=int((np.asarray(dd.event_types) == 0).sum()), unit="photons", dataset=os.path.basename(f))
+
     # save the photon stream so FRETBursts searches the identical photons
     np.savez(os.path.join(SHARED, "burst_stream.npz"),
              macro_times=np.asarray(d.macro_times, dtype=np.int64),

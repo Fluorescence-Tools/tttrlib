@@ -28,6 +28,7 @@ s2ISM (`test_clsm_superres_s2ism.py`), SOFISM (`test_clsm_superres_sofism.py`),
 `detector_grid` lattices and the vectorial PSF's scalar limit
 (`test_ism_psf_model.py`).
 """
+import os
 import unittest
 
 import numpy as np
@@ -244,6 +245,56 @@ class TestTemporalCombineAgainstNumpy(unittest.TestCase):
         # n-1 pairs (NanoJ's second-order auto-cumulant)
         tac2 = (stack[:-1] * stack[1:]).mean(0) - stack.mean(0) ** 2
         np.testing.assert_allclose(got["TAC2"], tac2, rtol=1e-11, atol=1e-11)
+
+
+class TestVectorialPsfAgainstPyFocus(unittest.TestCase):
+    """``vectorial_psf`` (Richards-Wolf, theta quadrature) vs BrightEyes-ISM /
+    PyFocus's ``VectorialCartesianPropagator`` (Cartesian pupil grid, chirp-z),
+    recorded by ``gen_ab_vectorial_psf_pyfocus_reference.py`` in the vicidomini
+    venv: NA 1.4 oil, 520 nm, x / y / circular polarisation, in focus and at
+    400 nm defocus. Two conventions had to be undone on the reference side --
+    PyFocus indexes ``[x, y]`` and its pixel is ``fov / (Nx - 1)`` -- after
+    which the two agree to 5e-5 of the peak in focus (0.1 % relative wherever
+    the intensity exceeds 1 %) and 5e-4 defocused; the residual halves when
+    PyFocus's pupil sampling is raised, so it is theirs. Defocus enters as
+    |z| here (an aberration-free PSF is symmetric in z), so the sign convention
+    is not tested."""
+
+    FIX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "reference",
+                       "vectorial_psf_pyfocus_reference.npz")
+
+    @pytest.mark.heavy  # ~70 s: five 161x161 Richards-Wolf evaluations
+    def test_focal_plane_and_defocused_psfs(self):
+        if not os.path.exists(self.FIX):
+            raise unittest.SkipTest("vectorial_psf_pyfocus_reference.npz not present")
+        d = np.load(self.FIX)
+        n, px = int(d["nx"]), float(d["pixel_nm"])
+        for name in d["cases"]:
+            pol = str(name).split("_")[0]
+            z = float(d[f"{name}/z_nm"])
+            with self.subTest(case=str(name)):
+                ours = tttrlib.vectorial_psf((n, n), float(d["na"]), float(d["wavelength_nm"]), px,
+                                             n_immersion=float(d["n_immersion"]), polarization=pol, z_nm=z)
+                ours = ours / ours.max()
+                ref = d[f"{name}/psf"]
+                tol = 1e-4 if z == 0.0 else 8e-4
+                self.assertLess(float(np.abs(ours - ref).max()), tol)
+                bright = ref > 0.01
+                self.assertLess(float(np.max(np.abs(ours - ref)[bright] / ref[bright])), 3e-3)
+                if z != 0.0:
+                    continue          # the half-maximum crossing is not a width on a ringed defocused spot
+                # the linear states are elongated along their own axis, circular is round
+                mid = n // 2
+                def fwhm(img, axis):
+                    prof = img[mid, :] if axis == "x" else img[:, mid]
+                    below = np.where(prof < 0.5)[0]
+                    return 2 * (below[below > mid][0] - mid)
+                if pol == "x":
+                    self.assertGreater(fwhm(ours, "x"), fwhm(ours, "y"))
+                elif pol == "y":
+                    self.assertGreater(fwhm(ours, "y"), fwhm(ours, "x"))
+                else:
+                    self.assertEqual(fwhm(ours, "x"), fwhm(ours, "y"))
 
 
 if __name__ == "__main__":
