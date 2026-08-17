@@ -18,6 +18,9 @@ below undo that displacement in different ways:
 
 import sys
 from pathlib import Path
+import os
+# `__file__` does not exist inside a notebook; fall back to the working directory
+_HERE_FILE = Path(globals().get("__file__", os.path.join(os.getcwd(), "example.py")))
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,7 +31,7 @@ import tttrlib
 
 # The phantom and the array-detector PSF model are simulation helpers, not part
 # of the library.
-sim_dir = Path(__file__).resolve().parent.parent / "simulation"
+sim_dir = _HERE_FILE.resolve().parent.parent / "simulation"
 if str(sim_dir) not in sys.path:
     sys.path.insert(0, str(sim_dir))
 

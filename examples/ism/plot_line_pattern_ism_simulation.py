@@ -14,6 +14,9 @@ This example evaluates 2D resolution limits across the super-resolution methods:
 
 import sys
 from pathlib import Path
+import os
+# `__file__` does not exist inside a notebook; fall back to the working directory
+_HERE_FILE = Path(globals().get("__file__", os.path.join(os.getcwd(), "example.py")))
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
@@ -22,7 +25,7 @@ from scipy.signal import fftconvolve, correlate
 import tttrlib
 
 # The array-detector PSF model is a simulation helper, not part of the library
-sim_dir = Path(__file__).resolve().parent.parent / "simulation"
+sim_dir = _HERE_FILE.resolve().parent.parent / "simulation"
 if str(sim_dir) not in sys.path:
     sys.path.insert(0, str(sim_dir))
 
@@ -240,7 +243,7 @@ def run_line_pattern_demo():
         ax_diff.tick_params(labelsize=7)
 
     plt.tight_layout()
-    output_png = Path(__file__).resolve().parent / "line_pattern_ism_reconstruction.png"
+    output_png = _HERE_FILE.resolve().parent / "line_pattern_ism_reconstruction.png"
     plt.savefig(output_png, dpi=150)
     print(f"Saved visual comparison figure to {output_png}")
 
@@ -259,7 +262,7 @@ def run_line_pattern_demo():
     plt.grid(True, linestyle=':', alpha=0.6)
     plt.tight_layout()
 
-    curve_png = Path(__file__).resolve().parent / "line_pattern_resolution_curve.png"
+    curve_png = _HERE_FILE.resolve().parent / "line_pattern_resolution_curve.png"
     plt.savefig(curve_png, dpi=150)
     plt.close()
     print(f"Saved quantitative resolution curve figure to {curve_png}")
