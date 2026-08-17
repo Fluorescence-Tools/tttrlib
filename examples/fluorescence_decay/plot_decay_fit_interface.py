@@ -196,6 +196,31 @@ print(f"fit24 lifetimes: {out24.parameters[0]:.2f} ns and "
       f"{out24.parameters[2]:.2f} ns, 2I* = {out24.objective:.2f}")
 
 # %%
+# Choosing the statistic: ``objective``
+# --------------------------------------
+# The setup's ``objective`` picks what the optimiser minimises, by name from
+# the ``objective`` registry category: the Poisson likelihood (default), the
+# same likelihood on the anisotropy-free sum P + 2S, or one of two
+# least-squares statistics -- Neyman's data-weighted chi-square and the
+# Gehrels-weighted variant for sparse counts. On a well-populated decay all
+# three agree; on a few hundred photons the least-squares lifetimes drift
+# (Neyman weights a channel that fluctuated low more), which is why the
+# likelihood is the default. Least-squares fits report the reduced chi-square
+# where the likelihood fits report 2I*.
+sparse = np.random.default_rng(2).poisson(expected / 60).astype(float)   # ~500 photons
+problem_sparse = tttrlib.DecayFitProblem(2, n_bins, dt)
+problem_sparse.irf = tttrlib.VectorDouble(irf.tolist())
+problem_sparse.background = tttrlib.VectorDouble(background.tolist())
+problem_sparse.data = tttrlib.VectorDouble(sparse.tolist())
+for objective in ("poisson_mle", "neyman_lsq", "gehrels_lsq"):
+    f = tttrlib.DecayFit2("fit23", tttrlib.setup_vector(
+        "fit23", dt=dt, period=period, g_factor=1.0, soft_bifl_scatter_flag=False,
+        objective=objective), irf.tolist())
+    o = f.fit(start, constraints, problem_sparse)
+    print(f"{objective:12s}: tau = {o.parameters[0]:.3f} ns  "
+          f"({'2I*' if objective.endswith('mle') else 'reduced chi2'} = {o.objective:.2f})")
+
+# %%
 # .. note::
 #    A bi-exponential model fitted to single-exponential data is not
 #    identifiable — the two lifetimes are free to trade against each other, and
