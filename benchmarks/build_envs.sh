@@ -23,7 +23,7 @@ build () {
 build flimlib 3.10 flimlib numpy scipy matplotlib
 
 # 2. reading — ptufile (Gohlke) PTU reader
-build read 3.10 ptufile numpy tifffile matplotlib
+build read 3.10 ptufile phconvert numpy tifffile matplotlib
 
 # Competitors come from upstream, not from a clone in junk/: that directory is
 # disposable by design, and a benchmark that silently depends on whichever
@@ -49,7 +49,17 @@ build h2mm_c 3.10 "$ROOT/../../chisurf/junk/H2MM_C" numpy
 build h2mm_numba 3.10 numpy numba
 
 # 8. pycorrelate — reference NumPy photon-timestamp FCS correlator
-build pycorrelate 3.10 pycorrelate numpy
+build pycorrelate 3.10 pycorrelate multipletau numpy
+
+# 9. VicidominiLab — birfi (blind IRF), BrightEyes-ISM (APR / focus-ISM) and s2ISM
+#    (torch, CPU). The reference implementations of tttrlib's blind_irf_estimate,
+#    shift_vectors/apr_reconstruction/focus_reconstruction and s2ism_reconstruction.
+build vicidomini 3.10 numpy scipy matplotlib scikit-image scikit-learn joblib tqdm statsmodels torch brighteyes-ism brighteyes-mcs-reader "git+https://github.com/VicidominiLab/birfi" "git+https://github.com/VicidominiLab/s2ISM"
+
+# 10. sciref — the scientific-Python references of the general kernels: scikit-image
+#     (watershed, marching squares, Richardson-Lucy), scikit-learn (k-means, HDBSCAN),
+#     filterpy (Kalman), hmmlearn (HMM lattice), phasorpy (phasor), astropy (Bayesian blocks).
+build sciref 3.10 numpy scipy scikit-image scikit-learn filterpy hmmlearn phasorpy astropy
 
 # --- Cross-version tracking (bench_versions.py) -----------------------------
 # One env per *released* tttrlib version to compare against the working-tree

@@ -32,7 +32,7 @@ plt.rcParams.update({
 })
 
 TITLES = {
-    "file_read": "TTTR file reading  (PicoQuant HydraHarp T3 PTU, 3.5 M photons)",
+    "file_read": "TTTR file reading  (PTU 3.5 M photons; HT3 15.6 M; SPC-130 184 k)",
     "clsm_intensity": "CLSM intensity image construction  (512x512 confocal PTU)",
     "lifetime_image": "Per-pixel FLIM lifetime image  (256x256, 65k pixels)",
     "fit_curve": "Single-curve lifetime fit  (256-bin decay, single detector)",
@@ -40,12 +40,37 @@ TITLES = {
     "correlation": "Correlation / FCS  (3.5 M photons)",
     "simulation": "Single-molecule diffusion + photon simulation  (20 molecules, 1 s)",
     "h2mm": "Photon-by-photon HMM (H2MM) — Baum-Welch EM  (3-state, 200k photons)",
+    "blind_irf": "Blind IRF estimation (BIRFI)  (25 channels x 1024 bins, 500 RL iterations)",
+    "apr": "ISM adaptive pixel reassignment (APR)  (25 elements x 256x256, usf 10)",
+    "focus_ism": "Focus-ISM in/out-of-focus split  (25 elements x 64x64)",
+    "s2ism": "s2ISM super-resolution + sectioning  (25 elements x 3 planes x 129x129, 30 it)",
+    "watershed": "Watershed segmentation  (1024x1024, 200 markers)",
+    "marching_squares": "Marching squares iso-contour  (1024x1024, one level)",
+    "richardson_lucy": "Richardson-Lucy deconvolution  (512x512, 15x15 PSF, 30 iterations)",
+    "kmeans": "k-means  (n=200k, d=8, k=10; k-means++ + Lloyd)",
+    "hdbscan": "HDBSCAN  (n=20k, d=4)",
+    "kalman": "Kalman filter  (50k steps x 2 channels)",
+    "hmm_lattice": "HMM lattice: forward + posteriors + Viterbi  (T=200k, K=4)",
+    "phasor": "Phasor of a decay stack  (100k decays x 256 bins)",
+    "pda": "PDA S1/S2 histogram  (nmax 180, 3-species mixture)",
+    "burstml": "BurstML likelihood  (187 bursts x 20 parameter sets, 2 states / 2 colours)",
+    "two_cde": "FRET-2CDE, Laplace KDE  (200 bursts x 120 photons)",
+    "fdc2d": "2D fluorescence decay correlation (2D-FDC)  (4000 photons x 3 lags)",
+    "cusum": "CUSUM/SPRT burst search  (3.3k photons)",
 }
 XLABEL = {
     "file_read": "photons / second", "clsm_intensity": "pixels / second",
     "lifetime_image": "pixels / second", "fit_curve": "fits / second",
     "burst_search": "photons / second", "correlation": "photons / second",
     "simulation": "diffusion steps / second", "h2mm": "photons / second",
+    "blind_irf": "channels / second", "apr": "pixels / second",
+    "focus_ism": "pixels / second", "s2ism": "pixels / second",
+    "watershed": "pixels / second", "marching_squares": "pixels / second",
+    "richardson_lucy": "pixels / second", "kmeans": "samples / second",
+    "hdbscan": "samples / second", "kalman": "steps / second",
+    "hmm_lattice": "steps / second", "phasor": "decays / second",
+    "pda": "cells / second", "burstml": "evaluations / second", "two_cde": "bursts / second",
+    "fdc2d": "photon-lags / second", "cusum": "photons / second",
 }
 
 
@@ -116,6 +141,9 @@ def bar_chart(cat, rows):
 # Algorithm-matched head-to-heads for the summary (honest same-method pairs).
 SUMMARY = [
     ("File reading (PTU)", "file_read", "tttrlib", "ptufile"),
+    ("File reading (PTU) vs phconvert", "file_read", "tttrlib", "phconvert"),
+    ("File reading (HT3) vs phconvert", "file_read", "tttrlib (HT3)", "phconvert (HT3)"),
+    ("File reading (SPC-130) vs phconvert", "file_read", "tttrlib (SPC-130)", "phconvert (SPC-130)"),
     ("Fast lifetime map", "lifetime_image", "tttrlib (moments)", "flimlib (RLD)"),
     ("CLSM intensity image", "clsm_intensity", "tttrlib", "ptufile"),
     ("Per-pixel reconv. MLE (vs GPU)", "lifetime_image", "tttrlib (MLE fit_map)", "FLIMKit (per-pixel, GPU)"),
@@ -124,6 +152,23 @@ SUMMARY = [
     ("Single-curve MLE fit", "fit_curve", "tttrlib (FitNExp MLE)", "flimlib (LMA)"),
     ("H2MM Baum-Welch (vs C ref)", "h2mm", "tttrlib (SQUAREM)", "H2MM_C"),
     ("Correlation / FCS", "correlation", "tttrlib", "pycorrelate"),
+    ("Blind IRF (BIRFI)", "blind_irf", "tttrlib", "birfi (torch, CPU)"),
+    ("ISM pixel reassignment (APR)", "apr", "tttrlib", "BrightEyes-ISM APR (fourier)"),
+    ("Focus-ISM", "focus_ism", "tttrlib", "BrightEyes-ISM focusISM"),
+    ("s2ISM reconstruction", "s2ism", "tttrlib", "s2ISM (torch, CPU)"),
+    ("Watershed", "watershed", "tttrlib", "scikit-image"),
+    ("Marching squares", "marching_squares", "tttrlib", "scikit-image (segments)"),
+    ("Richardson-Lucy", "richardson_lucy", "tttrlib", "scikit-image"),
+    ("k-means (k-means++ + Lloyd)", "kmeans", "tttrlib", "scikit-learn KMeans (k-means++ + lloyd)"),
+    ("HDBSCAN", "hdbscan", "tttrlib", "scikit-learn HDBSCAN"),
+    ("Kalman filter", "kalman", "tttrlib", "filterpy KalmanFilter"),
+    ("HMM lattice", "hmm_lattice", "tttrlib", "hmmlearn (_hmmc)"),
+    ("Phasor (decay stack)", "phasor", "tttrlib", "phasorpy"),
+    ("PDA histogram", "pda", "tttrlib", "PAM PDA_histogram.cpp"),
+    ("BurstML likelihood", "burstml", "tttrlib", "FRET_burstML MEX (native)"),
+    ("FRET-2CDE", "two_cde", "tttrlib", "FRETBursts kde_laplace + 2CDE"),
+    ("2D-FDC (vs Octave)", "fdc2d", "tttrlib", "TK_Create2DFDC_04.m (Octave)"),
+    ("CUSUM burst search (vs Octave)", "cusum", "tttrlib", "PAM CUSUM_burstsearch (Octave)"),
 ]
 
 

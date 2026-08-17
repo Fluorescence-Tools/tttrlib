@@ -13,7 +13,10 @@ produces them lives in [`benchmarks/`](benchmarks/); raw per-run records are in
 - **Apple M1 Pro** (6 performance + 2 efficiency cores), 16 GB, macOS 26.5.
 - Python 3.10 (base) / 3.12 (FLIMKit); **tttrlib 0.27.0**, flimlib 2.2.5,
   ptufile 2025.5.10, FRETBursts 0.8.3, PyBroMo 0.8.1, FLIMKit git-main,
-  pycorrelate 0.3, H2MM_C 1.0.
+  pycorrelate 0.3, H2MM_C 1.0; birfi, BrightEyes-ISM and s2ISM from their
+  upstream repositories on 2026-08-17 (birfi 0.1.1, brighteyes-ism 1.5.1,
+  s2ism 0.2.0; torch 2.13 CPU); scikit-image 0.25.2, scikit-learn 1.7.2,
+  filterpy 1.4.5, hmmlearn 0.3.3, phasorpy 0.4 (`sciref` venv).
 - tttrlib built with its runtime-dispatched NEON kernels + OpenMP, no GPU.
 
 Numbers are hardware-specific. Re-run on your machine for local figures; the
@@ -42,6 +45,24 @@ directly comparable.
 | ↳ re-tune IRF on an already-built map | **0.11 ms** | flimlib RLD 43.9 ms (recomputes) | **~400×** |
 | CLSM intensity image | **19.8 ms** | ptufile 22.8 ms | **1.15×** |
 | TTTR file reading | **26.4 ms** | ptufile 25.8 ms | **≈1.0×** (I/O-bound) |
+| ↳ PTU / HT3 / SPC-130 vs phconvert | **23.0 ms** / **90.8 ms** (15.6 M photons) / **1.55 ms** | phconvert 134 ms / 2238 ms / 6.8 ms | **5.8× / 25× / 4.4×** — photon-for-photon identical |
+| **Blind IRF estimation** (BIRFI, 25 ch × 1024 bins, 500 RL it.) | **780 ms** | birfi (torch, CPU) 3039 ms | **3.9×** |
+| **ISM adaptive pixel reassignment** (25 el. × 256², usf 10) | **40.4 ms** | BrightEyes-ISM APR 153 ms (`fourier`) · 204 ms (`interp`, default) | **3.8×** · 5.0× — identical output |
+| **Focus-ISM** (25 el. × 64²) | **30.3 ms** | BrightEyes-ISM focusISM 8806 ms | **291×** |
+| **s2ISM** (25 el. × 3 planes × 129², 30 it.) | **685 ms** | s2ISM (torch, CPU) 2479 ms | **3.6×** — identical output |
+| **Watershed** (1024², 200 markers) | **124 ms** | scikit-image 0.25.2 174 ms | **1.4×** — identical labels |
+| **Marching squares** (1024², one level) | **3.1 ms** | scikit-image segments 10.9 ms | **3.5×** — identical segments, in order |
+| **Richardson–Lucy** (512², 15² PSF, 30 it.) | **203 ms** | scikit-image 358 ms | **1.8×** — identical (4e-15) |
+| **k-means** (n=200 k, d=8, k=10; k-means++ + Lloyd) | **29.6 ms** (seed 21.4 + Lloyd 8.2) | scikit-learn 176 ms (k-means++ + Lloyd) · 24.0 ms (Lloyd only, given init) | **5.9×** same job · **2.9× on Lloyd** — identical centres/labels/inertia |
+| **HDBSCAN** (n=20 k, d=4) | **72.7 ms** | scikit-learn HDBSCAN 1548 ms | **21×** — identical partition (ARI 1.0) |
+| **Kalman filter** (50 k steps × 2 ch) | **2.2 ms** | filterpy 1140 ms | **510×** — identical (5e-16) |
+| **HMM lattice** (T=200 k, K=4: forward + posteriors + Viterbi) | **60.9 ms** | hmmlearn `_hmmc` 113 ms | **1.8×** — identical (log-prob, posteriors 4e-16, paths) |
+| **Phasor** (100 k decays × 256 bins) | **7.3 ms** | phasorpy 25.2 ms | **3.4×** — identical (0.0) |
+| **PDA** S1/S2 histogram (nmax 180, 3 species) | **0.31 ms** | PAM `PDA_histogram.cpp` (native build) 1.43 ms | **4.7×** — identical (2e-18) |
+| **BurstML** likelihood (187 bursts × 20 param. sets) | **265 ms** | original FRET_burstML MEX (native, GSL) 2194 ms | **8.3×** — identical (3e-13) |
+| **FRET-2CDE** (Laplace KDE, 200 bursts × 120 ph.) | **2.15 ms** | FRETBursts `kde_laplace` + Tomov formula 9.0 ms | **4.2×** — identical (6e-15) |
+| **2D-FDC** log matrices (4000 photons × 3 lags) | **2.9 ms** | `TK_Create2DFDC_04.m` in Octave 13.6 s | **~4700×** — identical counts |
+| **CUSUM/SPRT burst search** (3.3 k photons) | **0.04 ms** | PAM `CUSUM_burstsearch` in Octave 61 ms | **~1400×** — behavioural (Jaccard ≥ 0.87) |
 
 Run 2026-08-09. The per-pixel `fit_map` is now **140 ms** — a 3.3× improvement
 over the 456 ms baseline — from three changes: (1) allocation-free `FitWorkspace`
@@ -51,10 +72,115 @@ stacked-moment cache that avoids allocating 41 MB of per-frame buffers per
 mean-lifetime map (28.1 ms vs 39.6 ms). The CPU fits now beat FLIMKit's MLX GPU
 by **6.3×** on per-pixel MLE.
 
+Run 2026-08-17 (VicidominiLab rows). The four kernels ported from or validated
+against VicidominiLab code — `blind_irf_estimate` (birfi), `shift_vectors` /
+`apr_reconstruction` (BrightEyes-ISM `APR_lib`), `focus_reconstruction`
+(`FocusISM_lib`), `s2ism_reconstruction` (s2ISM) — are benchmarked against the
+upstream packages themselves in the `vicidomini` venv (`build_envs.sh`; torch
+CPU), on identical inputs written by `bench_vicidomini.py`; see *The
+VicidominiLab kernels* below for the output-identity checklist that goes with
+the numbers. Getting APR faster than the reference took two changes: the
+per-element work now runs in OpenMP, and the reassignment is the reference's
+own circular Fourier shift (it had been on a canvas zero-padded to twice the
+frame — 4× the FFT work — which is also why its output only matched the
+reference away from the edges). Focus-ISM keeps a zero-padded margin (now a
+few times the shift instead of half the frame) because `focusISM` reassigns
+with the zero-filled `interp` mode before fitting; a wrapped border row would
+move its background split at the frame edge.
+
+Run 2026-08-17 (scientific-Python rows). The general kernels are benchmarked
+against their upstream references in the `sciref` venv (scikit-image 0.25.2,
+scikit-learn 1.7.2, filterpy 1.4.5, hmmlearn 0.3.3, phasorpy 0.4) with
+`check_sciref.py` confirming identical outputs on the benchmark inputs — all
+eight identical. Three changes came out of it: watershed follows current
+upstream's marker seeding (skimage 0.25.1 reverted 0.25.0's `-inf`; 13 % of
+the pixels of the benchmark image change basin between the two, and tttrlib
+had pinned 0.25.0); k-means assigns points in parallel while every sum stays
+serial and in order (bit-exact with ChiSurf) and the k-means++ seeding replaces
+its per-trial linear scans with one prefix array + binary search (same
+numbers); Richardson–Lucy threads its pocketfft transforms. A batched phasor
+binding (`compute_phasor_bincounts_batch`) was added so a decay stack is one
+call rather than a per-decay loop that measures the binding, not the kernel.
+
+Run 2026-08-17 (FRET / burst rows). The kernels whose upstream code is a
+MEX source, a MATLAB file or FRETBursts are timed against exactly that:
+PAM's `PDA_histogram.cpp` and the original FRET_burstML `mlhDiffNTRbkg_MT.cpp`
+compiled natively (timing drivers in `benchmarks/competitors/native/`, clock
+inside the process so startup does not count), Toru Kondo's
+`TK_Create2DFDC_04.m` and PAM's `CUSUM_burstsearch` in Octave (`tic`/`toc`
+around the call), FRETBursts' cython KDE in its venv. `check_fret.py` confirms
+the outputs; the Octave ratios are what an interpreted double loop against a
+compiled kernel looks like and are reported for completeness, not as a claim
+about MATLAB.
+
 Datasets: 3.5 M-photon HydraHarp T3 PTU (reading, burst search, correlation),
 512×512 confocal PTU (CLSM intensity), 256×256 FLIM HT3 (lifetime maps),
 synthetic 256-bin decay (curve fits), simulated 3-state 200 k-photon trace
 (H2MM), 20 molecules / 1 s with matched D, box and PSF (simulation).
+
+### The VicidominiLab kernels — speed AND identity, checked together
+
+`benchmarks/check_vicidomini.py` runs after both sides and compares the outputs
+on the benchmark inputs themselves (`results/shared/vicidomini/check.json`);
+the same comparisons on smaller data are the permanent A/B tests
+(`test_ab_decay_reference.py::TestBlindIrfAgainstBirfi`,
+`test_clsm_superres_ism_arrays.py`, `test_clsm_superres_s2ism.py`).
+
+| Kernel | Reference | tttrlib | Speedup | Output vs reference | Checked |
+|---|---|--:|--:|---|:-:|
+| `shift_vectors` | `APR_lib.ShiftVectors` | (part of APR) | — | **bit-identical** (max diff 0.0) | ✅ |
+| `apr_reconstruction` | `APR_lib.APR(mode='fourier')` | 40.4 ms | 3.8× (5.0× vs default `interp`) | **identical**, 3e-16 relative | ✅ |
+| `s2ism_reconstruction` | `s2ISM.max_likelihood_reconstruction` | 685 ms | 3.6× | **identical**, 2e-9 relative (reference is float32); its `max_iter=n` runs n+1 updates, so it is called with n−1 | ✅ |
+| `blind_irf_estimate` | `birfi.Birfi.run` | 780 ms | 3.9× | same model (shared rate, per-channel A, C; RL) — birfi fits it with Adam (not converged), tttrlib solves it: IRFs correlate ≥ 0.9947 per channel after undoing birfi's n/2 `ifftshift` roll; against the **truth** min. corr tttrlib 0.9959 vs birfi 0.9932 | ✅ (at tolerance, ≥ reference accuracy) |
+| `focus_reconstruction` | `FocusISM_lib.focusISM` | 30.3 ms | 291× | same split; the reference registers with its `interp` spline and fits every micro-image with `scipy.optimize.curve_fit`; against the **truth** the mean absolute background-fraction error is 0.084 (tttrlib) vs 0.083 (reference), the two disagree by 0.011 | ✅ (at tolerance, = reference accuracy) |
+
+Why the two "at tolerance" rows are not identical: birfi's Adam fit of the
+decay rate stops after 1000 steps wherever it is (5–38 % off on the A/B
+fixtures) and Richardson–Lucy forgives it; matching that would mean copying a
+non-converged optimiser. focusISM's per-pixel `curve_fit` and spline
+registration are likewise not something to reproduce digit for digit; the
+recovered physics (the background fraction map) is what is compared, and it is
+the same to within noise. Both are documented in the tests and in
+[`okf/testing/algorithm-validation.md`](okf/testing/algorithm-validation.md).
+
+### Reading vs phconvert — identity checklist
+
+`benchmarks/check_reading.py` (`results/shared/reading/check.json`), 2026-08-17,
+against phconvert 0.10.1 in the `read` venv (the A/B in
+`test/python/test_ab_core_reference.py` pins the same comparisons):
+
+| File | Records | Output vs phconvert | Checked |
+|---|--:|---|:-:|
+| `pq_ptu_hh_t3.ptu` (HydraHarp T3) | 3 506 476 photons | macro/micro/channel identical | ✅ |
+| `pq_ht3_clsm.ht3` (HydraHarp T3, CLSM) | 15 583 897 photons + 20 533 markers | photons and marker times identical | ✅ |
+| `bh_spc132.spc` (Becker & Hickl SPC-130) | 183 657 photons | identical | ✅ |
+
+### The scientific-Python kernels — identity checklist
+
+`benchmarks/check_sciref.py` (`results/shared/sciref/check.json`), 2026-08-17:
+
+| Kernel | Reference | Output vs reference | Checked |
+|---|---|---|:-:|
+| `watershed` | `skimage.segmentation.watershed` 0.25.2 | 0 differing pixels of 1 048 576 | ✅ |
+| `marching_squares` | `skimage.measure._find_contours_cy._get_contour_segments` | 31 464 segments equal, in raster order | ✅ |
+| `richardson_lucy_2d` | `skimage.restoration.richardson_lucy` | 3.5e-15 relative | ✅ |
+| `kmeans` | `sklearn.cluster.KMeans(lloyd)` from the same k-means++ centres | centres 9e-15, labels equal, inertia 2e-15 | ✅ |
+| HDBSCAN pipeline | `sklearn.cluster.HDBSCAN` | same partition, ARI 1.0, 11 clusters both | ✅ |
+| `kalman_filter` | `filterpy.kalman.KalmanFilter` (Joseph-form update) | x/P/D ≤ 5e-16 | ✅ |
+| `hmm_forward_log` / `hmm_backward_posteriors_xi` / `hmm_viterbi_log` | `hmmlearn._hmmc` | log-prob 0.0, posteriors 4e-16, xi 5e-12, Viterbi paths equal | ✅ |
+| `compute_phasor_bincounts_batch` | `phasorpy.phasor.phasor_from_signal` | g, s 0.0 | ✅ |
+
+### The FRET / burst kernels — identity checklist
+
+`benchmarks/check_fret.py` (`results/shared/fret/check.json`), 2026-08-17:
+
+| Kernel | Reference | Output vs reference | Checked |
+|---|---|---|:-:|
+| `Pda.s1s2` | PAM `PDA_histogram.cpp` (native) | 2e-18 abs on the 181² matrix | ✅ |
+| `BurstML.neg_log_likelihood` | FRET_burstML MEX (native, GSL) | ratio 1 ± 3e-13 over 20 parameter sets | ✅ |
+| `TwoCDE` FRET-2CDE | FRETBursts `kde_laplace` + Tomov | 6e-15 relative, 200 bursts | ✅ |
+| `fdc_scan_log` | `TK_Create2DFDC_04.m` (Octave) | 389 185 pair counts, 0 cells differ | ✅ |
+| `burst_search_cusum_sprt` | PAM `CUSUM_burstsearch` (Octave) | 3 bursts each, min Jaccard 0.87 — behavioural by construction (PAM's discretisation, α = 1/N, offset heuristics) | ✅ (behavioural) |
 
 ### Steps taken to improve FLIM performance (0.27 → working tree)
 
@@ -720,13 +846,24 @@ cd benchmarks
 ./build_envs.sh                        # one uv venv per competitor (base env untouched)
 python bench_tttrlib.py                # tttrlib side + writes results/shared/ inputs
 python bench_h2mm.py                   # tttrlib H2MM (plain EM + SQUAREM + Viterbi)
+python bench_vicidomini.py             # blind IRF / APR / focus-ISM / s2ISM (tttrlib side)
 .venvs/flimlib/bin/python      competitors/bench_flimlib.py
 .venvs/read/bin/python         competitors/bench_ptufile.py
+.venvs/read/bin/python         competitors/bench_phconvert.py   # PTU / HT3 / SPC-130 readers
+python check_reading.py                # photon-for-photon identity of the reading pairs
 .venvs/fretbursts/bin/python   competitors/bench_fretbursts.py
 .venvs/pybromo/bin/python      competitors/bench_pybromo.py
 .venvs/flimkit/bin/python      competitors/bench_flimkit.py
 .venvs/h2mm_c/bin/python       competitors/bench_h2mm_c.py
 .venvs/h2mm_numba/bin/python   competitors/bench_h2mm_numba.py
+KMP_DUPLICATE_LIB_OK=TRUE .venvs/vicidomini/bin/python competitors/bench_vicidomini.py   # birfi / BrightEyes-ISM / s2ISM
+python check_vicidomini.py             # output identity of the VicidominiLab pairs
+python bench_sciref.py                 # watershed / marching squares / RL / k-means / HDBSCAN / Kalman / HMM / phasor (tttrlib)
+.venvs/sciref/bin/python competitors/bench_sciref.py     # scikit-image / scikit-learn / filterpy / hmmlearn / phasorpy
+python check_sciref.py                 # output identity of those pairs
+python bench_fret.py                   # PDA / BurstML / 2CDE / 2D-FDC / CUSUM (tttrlib)
+python competitors/bench_fret.py       # PAM + FRET_burstML natively, FRETBursts venv, Octave (base env; skips what is missing)
+python check_fret.py                   # output identity of those pairs
 python make_plots.py                   # -> plots/*.png
 ```
 

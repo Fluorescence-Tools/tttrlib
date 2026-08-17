@@ -29,6 +29,7 @@ def P(*a):
 F_SM = P("pq", "ptu", "pq_ptu_hh_t3.ptu")                 # confocal single-molecule, ch 0/2
 F_IMG_PTU = P("imaging", "pq", "Microtime200_TH260", "beads.ptu")   # 512x512 CLSM PTU
 F_IMG_HT3 = P("imaging", "pq", "ht3", "pq_ht3_clsm.ht3")  # 40x256x256 FLIM HT3
+F_SPC = P("bh", "bh_spc132.spc")                           # Becker & Hickl SPC-130 single-molecule
 
 
 # --------------------------------------------------------------------------- #
@@ -42,6 +43,18 @@ def bench_read():
     n = len(d.macro_times)
     bench("file_read", "tttrlib", "read PTU T3 (HydraHarp)", run,
           repeat=5, n_items=n, unit="photons", dataset="pq_ptu_hh_t3.ptu")
+    # HT3 and SPC-130 too: phconvert (competitors/bench_phconvert.py) reads
+    # both, and check_reading.py confirms photon-for-photon identity.
+    if os.path.exists(F_IMG_HT3):
+        d3 = tttrlib.TTTR(F_IMG_HT3, "HT3")
+        bench("file_read", "tttrlib (HT3)", "read HT3 T3 (HydraHarp, CLSM)",
+              lambda: tttrlib.TTTR(F_IMG_HT3, "HT3").macro_times, repeat=5,
+              n_items=len(d3.macro_times), unit="photons", dataset="pq_ht3_clsm.ht3")
+    if os.path.exists(F_SPC):
+        ds = tttrlib.TTTR(F_SPC, "SPC-130")
+        bench("file_read", "tttrlib (SPC-130)", "read SPC-130 (Becker & Hickl)",
+              lambda: tttrlib.TTTR(F_SPC, "SPC-130").macro_times, repeat=5,
+              n_items=len(ds.macro_times), unit="photons", dataset="bh_spc132.spc")
     # save the photon stream so FRETBursts searches the identical photons
     np.savez(os.path.join(SHARED, "burst_stream.npz"),
              macro_times=np.asarray(d.macro_times, dtype=np.int64),

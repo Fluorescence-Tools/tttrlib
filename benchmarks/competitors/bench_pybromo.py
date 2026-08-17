@@ -44,7 +44,12 @@ def bench_sim():
             box = pbm.Box(x1=-box_h, x2=box_h, y1=-box_h, y2=box_h,
                           z1=-2 * box_h, z2=2 * box_h)
             P = pbm.Particles.from_specs(num_particles=(N,), D=(D,), box=box, seed=1)
-            psf = pbm.GaussianPSF(sx=w0 / 2, sy=w0 / 2, sz=3 * w0 / 2)
+            # PyBroMo's emission is the Gaussian PSF *squared* (excitation x
+            # detection), so tttrlib's exp(-2 r^2 / w0^2) needs s = w0/sqrt(2),
+            # not w0/2 (which is 2^1.5 less volume and half the diffusion time
+            # -- the two sides then time different physics). Same setting as
+            # test/python/simulation/gen_pybromo_reference.py.
+            psf = pbm.GaussianPSF(sx=w0 / 2 ** 0.5, sy=w0 / 2 ** 0.5, sz=3 * w0 / 2 ** 0.5)
             S = pbm.ParticlesSimulation(t_step=t_step, t_max=T, particles=P,
                                         box=box, psf=psf)
             S.simulate_diffusion(total_emission=False, save_pos=False,

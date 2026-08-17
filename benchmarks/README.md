@@ -30,6 +30,23 @@ every competitor), so the wall-clock numbers are directly comparable.
 | Diffusion simulation | `SimEngine` | [PyBroMo](https://github.com/OpenSMFS/PyBroMo) | 20 molecules, 1 s, matched D/box/PSF |
 | Single-molecule localization | `localization.fit2DGaussian` (Poisson MLE, AD gradients) | scipy `least_squares` | synthetic 15×15 PSF patch, 1–3 emitters |
 | H2MM (photon-by-photon HMM) | `H2MM.optimize` (SQUAREM) | [H2MM_C](https://github.com/harripd/H2MMpythonlib) (Harris/Pirchi C ref), chisurf numba engine | simulated 3-state, 200k photons |
+| Blind IRF (BIRFI) | `blind_irf_estimate` | [birfi](https://github.com/VicidominiLab/birfi) (torch, CPU) | 25 channels × 1024 bins, 500 RL iterations |
+| ISM pixel reassignment (APR) | `CLSMSuperRes.apr_reconstruction` | [BrightEyes-ISM](https://github.com/VicidominiLab/BrightEyes-ISM) `APR_lib.APR` (`fourier` and default `interp`) | 25 elements × 256×256 — **identical output** |
+| Focus-ISM | `CLSMSuperRes.focus_reconstruction` | BrightEyes-ISM `FocusISM_lib.focusISM` | 25 elements × 64×64 |
+| s2ISM | `CLSMSuperRes.s2ism_reconstruction` | [s2ISM](https://github.com/VicidominiLab/s2ISM) (torch, CPU) | 25 elements × 3 planes × 129×129, 30 iterations — **identical output** |
+| Watershed / marching squares | `watershed`, `marching_squares` | scikit-image | 1024×1024 — **identical** |
+| Richardson–Lucy | `richardson_lucy_2d` | scikit-image | 512×512, 15×15 PSF, 30 iterations — **identical** |
+| k-means | `kmeans` (k-means++ + Lloyd) | scikit-learn `KMeans` (same job, and Lloyd-only from the same centres) | n=200k, d=8, k=10 — **identical** |
+| HDBSCAN | `core_distances` + `mutual_reachability_mst` + `hdbscan_condensed_tree` + `hdbscan_label_points` | scikit-learn `HDBSCAN` | n=20k, d=4 — **identical partition** |
+| Kalman filter | `kalman_filter` | filterpy | 50k steps × 2 channels — **identical** |
+| HMM lattice | `hmm_forward_log` / posteriors / Viterbi | hmmlearn `_hmmc` | T=200k, K=4 — **identical** |
+| Phasor | `DecayPhasor.compute_phasor_bincounts_batch` | phasorpy | 100k decays × 256 bins — **identical** |
+| File reading (PTU / HT3 / SPC-130) | `TTTR(...)` | [phconvert](https://github.com/Photon-HDF5/phconvert) readers (and ptufile for PTU) | real files, 0.2–15.6 M photons — **photon-for-photon identical** |
+| PDA histogram | `Pda.s1s2` | PAM `PDA_histogram.cpp` (Schrimpf 2018), compiled natively | nmax 180, 3 species — **identical** |
+| BurstML likelihood | `BurstML.neg_log_likelihood` | the original FRET_burstML MEX (Hoffmann et al.), compiled natively with GSL | 187 bursts × 20 parameter sets — **identical** |
+| FRET-2CDE | `TwoCDE` | FRETBursts `phrates.kde_laplace` + Tomov's formula | 200 bursts × 120 photons — **identical** |
+| 2D-FDC | `fdc_scan_log` | Toru Kondo's `TK_Create2DFDC_04.m` in Octave | 4000 photons × 3 lags — **identical** |
+| CUSUM burst search | `TTTR.burst_search_cusum_sprt` | PAM `CUSUM_burstsearch` in Octave | 3.3k photons — behavioural (Jaccard ≥ 0.85) |
 
 ## Results
 
@@ -52,13 +69,30 @@ python bench_h2mm.py                   # tttrlib H2MM (plain EM + SQUAREM + Vite
 python bench_localization.py          # 2D Gaussian PSF fit vs scipy
 .venvs/flimlib/bin/python     competitors/bench_flimlib.py
 .venvs/read/bin/python        competitors/bench_ptufile.py
+.venvs/read/bin/python competitors/bench_phconvert.py   # phconvert PTU/HT3/SPC-130 readers
+python check_reading.py                            # photon-for-photon identity
 .venvs/fretbursts/bin/python  competitors/bench_fretbursts.py
 .venvs/pybromo/bin/python     competitors/bench_pybromo.py
 .venvs/flimkit/bin/python     competitors/bench_flimkit.py
 .venvs/h2mm_c/bin/python       competitors/bench_h2mm_c.py
 .venvs/h2mm_numba/bin/python   competitors/bench_h2mm_numba.py
+python bench_vicidomini.py            # blind IRF / APR / focus-ISM / s2ISM (tttrlib side)
+KMP_DUPLICATE_LIB_OK=TRUE .venvs/vicidomini/bin/python competitors/bench_vicidomini.py
+python check_vicidomini.py            # are the VicidominiLab pairs computing the same thing? (writes check.json)
+python bench_sciref.py                # watershed / marching squares / RL / k-means / HDBSCAN / Kalman / HMM lattice / phasor (tttrlib side)
+.venvs/sciref/bin/python competitors/bench_sciref.py
+python check_sciref.py                # output identity of those pairs (writes check.json)
+python bench_fret.py                  # PDA / BurstML / FRET-2CDE / 2D-FDC / CUSUM (tttrlib side)
+python competitors/bench_fret.py      # PAM + FRET_burstML compiled natively, FRETBursts venv, Octave (base env)
+python check_fret.py                  # output identity of those pairs (writes check.json)
 python make_plots.py                  # -> plots/*.png
 ```
+
+`check_vicidomini.py` exists because "faster" is only meaningful next to "the
+same answer": it recomputes tttrlib's outputs on the benchmark inputs and
+compares them with the reference outputs the competitor script saves — APR and
+s2ISM identical, blind IRF and focus-ISM at tolerance with the accuracy against
+the simulated truth reported for both sides (see PERF.md).
 
 ### The C++ kernel benchmarks
 
