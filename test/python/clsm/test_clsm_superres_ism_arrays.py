@@ -359,3 +359,100 @@ def test_detector_cube_accepts_a_tiff_path():
 def test_detector_cube_rejects_non_3d():
     with pytest.raises(ValueError):
         tttrlib.CLSMSuperRes.apr_reconstruction(np.zeros((8, 8)))
+
+
+# ---------------------------------------------------------------------------
+# The real reference, live: BrightEyes-ISM APR_lib / FocusISM_lib
+# ---------------------------------------------------------------------------
+
+def _brighteyes_analysis(name):
+    """Import `brighteyes_ism.analysis.<name>` from the reference checkout with
+    the package __init__ bypassed (it pulls in a reader we do not have), so the
+    intra-package relative imports (FocusISM_lib -> APR_lib) still resolve.
+    Optional like _brighteyes_frc_lib: missing checkout or dependency = skip."""
+    import importlib
+    import os
+    import sys
+    import types
+
+    candidates = []
+    env = os.environ.get("BRIGHTEYES_ISM_SRC")
+    if env:
+        candidates.append(os.path.join(env, "brighteyes_ism"))
+    candidates.append("/Users/tpeulen/dev/chisurf/junk/brighteyes-ism/src/brighteyes_ism")
+    root = next((p for p in candidates if os.path.isdir(p)), None)
+    if root is None:
+        pytest.skip("BrightEyes-ISM reference not available")
+    if "brighteyes_ism" not in sys.modules or getattr(sys.modules["brighteyes_ism"], "__path__", None) != [root]:
+        pkg = types.ModuleType("brighteyes_ism")
+        pkg.__path__ = [root]
+        sub = types.ModuleType("brighteyes_ism.analysis")
+        sub.__path__ = [os.path.join(root, "analysis")]
+        sys.modules["brighteyes_ism"] = pkg
+        sys.modules["brighteyes_ism.analysis"] = sub
+    try:
+        return importlib.import_module("brighteyes_ism.analysis." + name)
+    except ImportError as e:
+        pytest.skip("BrightEyes-ISM reference needs %s" % e.name)
+
+
+@pytest.mark.parametrize("filter_sigma", [0.0, 1.0])
+def test_shift_vectors_equal_brighteyes_ShiftVectors_live(filter_sigma):
+    """The reference function itself (not the transcription above): identical
+    shift vectors, both filter settings."""
+    APR = _brighteyes_analysis("APR_lib")
+    cube, _ = _ism_cube(pitch=2.3, sigma=2.5, n=48, side=3)
+    n_det = cube.shape[0]
+    ref = n_det // 2
+    expected, _ = APR.ShiftVectors(np.moveaxis(cube, 0, -1), 10, ref, apodize=True, filter_sigma=filter_sigma)
+    got = tttrlib.CLSMSuperRes.shift_vectors(cube, usf=10, ref_idx=ref, filter_sigma=filter_sigma)
+    assert np.abs(got - expected).max() == 0.0
+
+
+@pytest.mark.parametrize("filter_sigma", [0.0, 1.0])
+def test_apr_equals_brighteyes_APR_fourier_mode_live(filter_sigma):
+    """apr_reconstruction == APR_lib.APR(mode='fourier') summed over elements
+    (to 1e-9 relative). BrightEyes' default mode is 'interp' (a cubic-spline
+    scipy.ndimage.shift), which tttrlib does not offer; on this cube it differs
+    from the Fourier registration by 7e-4 relative, recorded here."""
+    APR = _brighteyes_analysis("APR_lib")
+    cube, _ = _ism_cube()
+    n_det = cube.shape[0]
+    ref = n_det // 2
+    dset = np.moveaxis(cube, 0, -1)
+    _, res = APR.APR(dset, 10, ref, apodize=True, filter_sigma=filter_sigma, mode="fourier")
+    expected = res.sum(-1)
+    got = tttrlib.CLSMSuperRes.apr_reconstruction(cube, usf=10, ref_idx=ref, filter_sigma=filter_sigma)[0]
+    assert np.abs(got - expected).max() / expected.max() < 1e-9
+    _, res_i = APR.APR(dset, 10, ref, apodize=True, filter_sigma=filter_sigma, mode="interp")
+    assert np.abs(got - res_i.sum(-1)).max() / expected.max() < 5e-3
+
+
+def test_focus_ism_agrees_with_brighteyes_focusISM_live():
+    """focus_reconstruction vs FocusISM_lib.focusISM on the known-mixture cube,
+    the reference calibrated on the same central pure-signal patch. Agreement is
+    at tolerance, not round-off: the reference reassigns with its default
+    'interp' mode before fitting and fits every micro-image with scipy
+    curve_fit; tttrlib registers by Fourier shift and fits natively. Pinned:
+    per-pixel focus/background correlate > 0.98, the recovered background
+    fractions of the two agree within 0.02 in each region and both are within
+    0.05 of the truth."""
+    import contextlib
+    import io
+    F = _brighteyes_analysis("FocusISM_lib")
+    cube, b_true, (c0, c1) = _focus_cube()
+    dset = np.moveaxis(cube, 0, -1)
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        sig, bkg, ism = F.focusISM(dset, sigma_B_bound=2.0, threshold=0, apr=True,
+                                   calibration=dset[c0:c1, c0:c1, :], sum_results=True, parallelize=False)
+    focus, background, ism_t = tttrlib.CLSMSuperRes.focus_reconstruction(
+        cube, sigma_bound=2.0, threshold=0.0, calibration_size=c1 - c0)
+    for got, ref in ((focus, sig), (background, bkg), (ism_t, ism)):
+        assert np.corrcoef(got.ravel(), ref.ravel())[0, 1] > 0.98
+    b_ref = bkg / (sig + bkg)
+    b_got = background / (focus + background)
+    for region, truth in (((slice(2, 10), slice(2, 10)), 0.20),
+                          ((slice(-10, -2), slice(-10, -2)), 0.60)):
+        assert abs(b_got[region].mean() - b_ref[region].mean()) < 0.02
+        assert abs(b_got[region].mean() - truth) < 0.05
+        assert abs(b_ref[region].mean() - truth) < 0.05

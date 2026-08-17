@@ -16,6 +16,7 @@ updated multiplicatively without any further normalization because the PSF of
 each plane is already normalized over (channel, y, x).
 """
 
+import os
 import numpy as np
 import pytest
 
@@ -162,3 +163,89 @@ def test_s2ism_rejects_mismatched_psf():
         tttrlib.CLSMSuperRes.s2ism_reconstruction(data, h[:, :, :-1, :])
     with pytest.raises(ValueError):
         tttrlib.CLSMSuperRes.s2ism_reconstruction(data[0], h)
+
+
+# ---------------------------------------------------------------------------
+# The real reference: VicidominiLab/s2ISM (torch), run from the junk checkout
+# ---------------------------------------------------------------------------
+
+_S2ISM_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
+                          "chisurf", "junk", "s2ISM", "src")
+_S2ISM_RUNNER = r"""
+import sys, types, importlib.util, numpy as np, torch
+src = sys.argv[1]
+# s2ism.psf_estimator pulls brighteyes_ism -> brighteyes_mcs_reader, which the ML
+# reconstruction never uses; stub the submodule so s2ism.s2ism imports alone.
+spec = importlib.util.spec_from_file_location("s2ism", src + "/s2ism/__init__.py",
+                                              submodule_search_locations=[src + "/s2ism"])
+pkg = importlib.util.module_from_spec(spec); sys.modules["s2ism"] = pkg
+sys.modules["s2ism.psf_estimator"] = types.ModuleType("s2ism.psf_estimator")
+spec2 = importlib.util.spec_from_file_location("s2ism.s2ism", src + "/s2ism/s2ism.py")
+m = importlib.util.module_from_spec(spec2); sys.modules["s2ism.s2ism"] = m; spec2.loader.exec_module(m)
+d = np.load(sys.argv[2]); it = int(sys.argv[3]); init = sys.argv[4]
+dset = d["dset"][:, :, None, :]            # (Nx, Ny, Nt=1, Nch)
+psf = d["psf"][:, :, :, None, :]           # (Nz, Nx, Ny, Nt=1, Nch)
+O = m.max_likelihood_reconstruction(dset, psf, stop="fixed", max_iter=it, rep_to_save="last",
+                                    initialization=init, process="cpu")
+np.savez(sys.argv[5], obj=np.asarray(O[0]))
+"""
+
+
+def _odd_dataset(NX=25, NY=25, NCH=4, NZ=3):
+    """Same construction as _dataset, odd-sized: the reference crops even sizes
+    (drops the first row/column and zero-pads them back afterwards)."""
+    yy, xx = np.mgrid[0:NX, 0:NY]
+    psf = np.zeros((NZ, NX, NY, NCH))
+    for z in range(NZ):
+        sigma = 1.4 + 0.8 * abs(z - NZ // 2)
+        for c in range(NCH):
+            dx, dy = (c % 2 - 0.5) * 2.0, (c // 2 - 0.5) * 2.0
+            psf[z, :, :, c] = np.exp(-(((xx - (NX // 2 + dx)) ** 2 + (yy - (NY // 2 + dy)) ** 2) / (2 * sigma ** 2)))
+    obj = np.zeros((NX, NY))
+    obj[10, 12] = 1.0
+    obj[14, 9] = 0.6
+    dset = np.zeros((NX, NY, NCH))
+    for c in range(NCH):
+        spectrum = np.fft.fft2(obj) * np.fft.fft2(np.fft.ifftshift(psf[NZ // 2, :, :, c]))
+        dset[:, :, c] = np.real(np.fft.ifft2(spectrum))
+    return np.clip(dset, 0, None) * 500.0 + 1.0, psf
+
+
+def _s2ism_available():
+    if not os.path.isdir(_S2ISM_SRC):
+        return False
+    try:
+        import torch  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.skipif(not _s2ism_available(), reason="VicidominiLab s2ISM (../chisurf/junk/s2ISM) or torch not available")
+@pytest.mark.parametrize("n_updates,init", [(2, "flat"), (6, "flat"), (21, "flat"), (9, "sum")])
+def test_s2ism_matches_the_vicidomini_reference(n_updates, init):
+    """tttrlib vs the actual VicidominiLab `s2ISM` package (torch), run in a
+    subprocess (torch and tttrlib each ship an OpenMP runtime). Two reference
+    conventions are pinned, not copied: `max_likelihood_reconstruction(max_iter=n)`
+    performs n + 1 updates (its stop test `k == max_iter` runs after the update at
+    index k, k from 0), so tttrlib's `max_iter=n+1` is the same computation; and it
+    keeps the data in float32 (hence 1e-6, not round-off). Odd sizes, because the
+    reference crops even ones."""
+    import subprocess, sys, tempfile
+    dset, psf = _odd_dataset()
+    tmp = tempfile.mkdtemp(prefix="s2ism_ab_")
+    fin, fout, frun = [os.path.join(tmp, f) for f in ("in.npz", "out.npz", "run.py")]
+    np.savez(fin, dset=dset, psf=psf)
+    with open(frun, "w") as fh:
+        fh.write(_S2ISM_RUNNER)
+    env = dict(os.environ, KMP_DUPLICATE_LIB_OK="TRUE")
+    r = subprocess.run([sys.executable, frun, _S2ISM_SRC, fin, str(n_updates - 1), init, fout],
+                       capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        pytest.skip("s2ISM did not run: " + r.stderr[-600:])
+    ref = np.squeeze(np.load(fout)["obj"])
+    got = tttrlib.CLSMSuperRes.s2ism_reconstruction(*_as_native(dset, psf), max_iter=n_updates,
+                                                    init_from_sum=(init == "sum"))
+    assert got.shape == ref.shape
+    scale = np.abs(ref).max()
+    assert np.abs(got - ref).max() / scale < 1e-6

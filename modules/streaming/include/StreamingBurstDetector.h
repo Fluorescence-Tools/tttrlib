@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_STREAMING_BURST_DETECTOR_H
 #define TTTRLIB_STREAMING_BURST_DETECTOR_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs the batch sliding window / FRETBursts rule (identical bursts; chunked
+//   delivery, flush, memory bound in test/python/streaming/test_streaming_burst_detector.py). test/python/burstfilter/test_ab_burst_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 #include <algorithm>

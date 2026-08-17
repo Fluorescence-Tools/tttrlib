@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_STREAMING_DECAY_HISTOGRAM_H
 #define TTTRLIB_STREAMING_DECAY_HISTOGRAM_H
 
+// Validation: EQUIVALENCE-TESTED 2026-08-17 -- vs np.bincount per channel at random chunk cuts, push_np == push_photon
+//   (exact) -- test/python/streaming/test_ab_streaming_equivalence.py; vs TTTR.get_microtime_histogram in
+//   test/python/streaming/test_streaming_decay_and_phasor.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 #include <cmath>

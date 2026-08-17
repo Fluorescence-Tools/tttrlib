@@ -2,6 +2,9 @@
 #ifndef TTTRLIB_BYTEORDER_H
 #define TTTRLIB_BYTEORDER_H
 
+// Validation: A/B-TESTED 2026-08-17 -- SwapEndian<uint16/32/64> vs int.to_bytes round trips. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 /*!
  * \file ByteOrder.h
  * \brief Byte-order conversion.

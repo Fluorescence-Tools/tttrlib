@@ -2,6 +2,14 @@
 #ifndef TTTRLIB_CLSMIMAGE_H
 #define TTTRLIB_CLSMIMAGE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- intensity image, pixel TTTR indices, per-pixel decays,
+//   masked decays, mean micro-time and moment-lifetime images vs an independent NumPy
+//   marker reconstruction (default routine on the HT3 sample and the SP5 routine on
+//   LSM_1.ptu: exact counts, means to 1e-12); crop/rebin vs slices/block sums;
+//   compute_ics vs a NumPy FFT correlation. test/python/clsm/test_ab_clsm_reference.py,
+//   test/python/clsm/test_clsm_ics.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <iostream> /* cout, clog */
 #include <vector>
 #include <utility>
@@ -930,8 +938,9 @@ public:
      * \brief Calculates an image stack where the value of each pixel corresponds to the
      *        mean micro time (in units of the micro channel resolution).
      *
-     * Pixels with few photons can be discriminated. Discriminated pixels will be filled
-     * with zeros.
+     * Pixels with fewer than `minimum_number_of_photons` photons are discriminated and
+     * written as -1 (a pixel with exactly the minimum is kept); a mean micro time is
+     * never negative, so -1 is an unambiguous "no estimate" a caller can mask on.
      *
      * @param tttr_data               Pointer to a TTTR object.
      * @param output                  Pointer to the output array that will contain the
@@ -977,8 +986,9 @@ public:
     /*!
      * \brief Computes the phasor values for every pixel.
      *
-     * Pixels with few photons can be discriminated. Discriminated pixels will be filled
-     * with zeros.
+     * Pixels with at most `minimum_number_of_photons` photons are discriminated and
+     * written as (g, s) = (-1, -1) -- outside the universal semicircle, so a caller
+     * can mask on it.
      *
      * @param output                  Pointer to the output array that will contain the
      *                                image stack. The array is allocated by the function.
@@ -1017,8 +1027,8 @@ public:
      * The average lifetimes are computed (not fitted) by the methods of moments
      * (Irvin Isenberg, 1973, Biophysical journal).
      *
-     * Pixels with few photons can be discriminated. Discriminated pixels are filled
-     * with zeros.
+     * Pixels with at most `minimum_number_of_photons` photons are discriminated and
+     * written as 0.
      *
      * By default, the fluorescence lifetimes of the pixels are computed in units of
      * nanoseconds.

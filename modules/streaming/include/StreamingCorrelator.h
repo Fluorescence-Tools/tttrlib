@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_STREAMING_CORRELATOR_H
 #define TTTRLIB_STREAMING_CORRELATOR_H
 
+// Validation: A/B-TESTED 2026-08-17 -- reproduces the batch wahl curve on the blinking-emitter trace
+//   (whose G(tau) is analytic) to 5%, and the batch on Poisson/diffusion streams in
+//   test/python/streaming/test_streaming_correlator.py.
+//   test/python/correlator/test_ab_correlator_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 #include <cmath>

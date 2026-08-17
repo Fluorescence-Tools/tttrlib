@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_LOCALIZATION_H
 #define TTTRLIB_LOCALIZATION_H
 
+// Validation: A/B-TESTED 2026-08-17 -- fit2DGaussian vs scipy.optimize.minimize (L-BFGS-B) on the
+//   same Poisson deviance from the same start: identical optimum (deviance to 1e-9 rel,
+//   position to 1e-2 px under Poisson noise, 2e-3 px noise-free; elliptical model too).
+//   test/python/clsm/test_ab_localization_superres_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <iostream>
 #include <cmath>
 #include <cinttypes>    /* uint64, int64, etc */

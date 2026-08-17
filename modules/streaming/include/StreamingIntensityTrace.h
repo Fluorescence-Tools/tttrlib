@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_STREAMING_INTENSITY_TRACE_H
 #define TTTRLIB_STREAMING_INTENSITY_TRACE_H
 
+// Validation: EQUIVALENCE-TESTED 2026-08-17 -- vs np.bincount of the batch definition at 25 random chunk cuts per stream
+//   (exact) -- test/python/streaming/test_ab_streaming_equivalence.py; vs compute_intensity_trace incl. rolling window in
+//   test/python/streaming/test_streaming_intensity_trace.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 #include <deque>

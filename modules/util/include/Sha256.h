@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_UTIL_SHA256_H
 #define TTTRLIB_UTIL_SHA256_H
 
+// Validation: A/B-TESTED 2026-08-17 -- sha256_hex / sha256_file_hex vs hashlib.sha256 (empty, 55/56/64/119-byte
+//   block boundaries, 1000 bytes, a file). test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 // SHA-256, hand-rolled rather than pulled in: the library is deliberately
 // std-only and this is the whole of what is needed. Straight from FIPS 180-4.
 //

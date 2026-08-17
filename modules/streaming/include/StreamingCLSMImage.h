@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_STREAMING_CLSM_IMAGE_H
 #define TTTRLIB_STREAMING_CLSM_IMAGE_H
 
+// Validation: EQUIVALENCE-TESTED 2026-08-17 -- vs the batch CLSMImage frame by frame on a real HT3 scan, integrating and
+//   live modes, mid-stream switches, chunked delivery
+//   (test/python/streaming/test_streaming_clsm_image.py).
+//   Register: okf/testing/algorithm-validation.md
+
 #include "TTTR.h"
 #include "TTTRHeader.h"
 #include "CLSMImage.h"

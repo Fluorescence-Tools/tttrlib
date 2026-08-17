@@ -1295,9 +1295,16 @@ static void fourier_shift_inplace(CImage& F, double dx, double dy) {
 // those wrapped tails as converging gradients and renders them as puncta. The
 // padding also confines the interpolation's ringing, matching the compact
 // boundary behaviour of the reference implementation's default shift.
-static Image subpixel_shift(const Image& in, double dx, double dy) {
+// `pad` = 0 means the historical half-image margin on every side. A caller
+// whose shifts are known to be small (APR: sub-pixel to a few pixels) passes a
+// margin of a few times the shift instead: nothing wraps as long as the margin
+// exceeds the shift plus the ringing of the padded edge, and a 256x256 frame
+// then costs a 288x288 transform instead of 512x512 (4x the pixels) -- which
+// was what left tttrlib's APR slower than BrightEyes' unpadded reference.
+static Image subpixel_shift(const Image& in, double dx, double dy, size_t pad = 0) {
     const size_t W = in.W, H = in.H;
-    const size_t pad_x = W / 2, pad_y = H / 2;
+    const size_t pad_x = pad ? std::min(pad, W / 2) : W / 2;
+    const size_t pad_y = pad ? std::min(pad, H / 2) : H / 2;
     const size_t W2 = W + 2 * pad_x, H2 = H + 2 * pad_y;
 
     Image canvas(W2, H2, 0.0);
@@ -1382,15 +1389,14 @@ static void gaussian_blur_inplace(Image& im, double sigma) {
 // upsample_factor=usf, normalization=None), which is what BrightEyes-ISM's
 // ShiftVectors calls. The return value is the shift that has to be *applied to
 // `moving`* to register it onto `reference`, as (dx, dy) with dx along the width.
-static std::pair<double,double> phase_cross_correlation(
-        const Image& reference, const Image& moving, int usf)
+static std::pair<double,double> phase_cross_correlation_spectrum(
+        const CImage& Fr, const Image& moving, int usf)
 {
-    if (reference.W != moving.W || reference.H != moving.H)
+    if (Fr.W != moving.W || Fr.H != moving.H)
         throw std::runtime_error("phase_cross_correlation: size mismatch");
-    const size_t W = reference.W, H = reference.H;
+    const size_t W = moving.W, H = moving.H;
 
-    CImage Fr, Fm;
-    fft2d::fft2(reference, Fr);
+    CImage Fm;
     fft2d::fft2(moving, Fm);
 
     CImage product(W, H);
@@ -1458,6 +1464,14 @@ static std::pair<double,double> phase_cross_correlation(
     dx += (best_b - dft_shift) / usf;
     dy += (best_a - dft_shift) / usf;
     return {dx, dy};
+}
+
+static std::pair<double,double> phase_cross_correlation(
+        const Image& reference, const Image& moving, int usf)
+{
+    CImage Fr;
+    fft2d::fft2(reference, Fr);
+    return phase_cross_correlation_spectrum(Fr, moving, usf);
 }
 
 // ---------- Simple utilities ----------
@@ -1571,29 +1585,68 @@ static std::vector<std::pair<double,double>> apr_shift_vectors(
         work.emplace_back(std::move(im));
     }
 
+    // The reference spectrum once (it was recomputed for every element), and
+    // the elements in parallel: each correlation is independent.
+    CImage Fr;
+    fft2d::fft2(work[ref_idx], Fr);
     std::vector<std::pair<double,double>> shifts(D, {0.0, 0.0});
-    for (size_t i = 0; i < D; ++i) {
+    #pragma omp parallel for schedule(dynamic) if(D > 1)
+    for (long long ii = 0; ii < (long long) D; ++ii) {
+        const size_t i = static_cast<size_t>(ii);
         if (i == ref_idx) continue;
-        shifts[i] = phase_cross_correlation(work[ref_idx], work[i], usf);
+        shifts[i] = phase_cross_correlation_spectrum(Fr, work[i], usf);
     }
     return shifts;
 }
 
+// Circular Fourier shift of an image, no padding: the transform's own
+// periodicity, exactly scipy.ndimage.fourier_shift on np.fft.fftn(image) --
+// which is what APR_lib.Reassignment(mode='fourier') does. Content leaving one
+// edge reappears at the other; for the sub-pixel shifts of pixel reassignment
+// that is a one-pixel margin effect, and it is the reference's contract (the
+// zero-padded subpixel_shift above serves the eSRRF/SOFISM paths, where wrapped
+// tails would be read as structure).
+static Image fourier_shift_circular(const Image& in, double dx, double dy) {
+    CImage F;
+    fft2d::fft2(in, F);
+    fourier_shift_inplace(F, dx, dy);
+    Image out(in.W, in.H);
+    fft2d::ifft2_real(F, out);
+    return out;
+}
+
 // Register every channel with its shift vector and sum, matching
-// APR_lib.Reassignment(mode='fourier') followed by the channel sum.
+// APR_lib.Reassignment(mode='fourier') followed by the channel sum -- bit for
+// bit the same estimator (circular shift, negatives clamped), so the A/B
+// against the reference holds on any image, edge content included.
+// `circular` selects the reference's periodic shift (APR's contract); false
+// keeps a zero-padded margin so nothing wraps -- what focus-ISM wants, since
+// FocusISM_lib reassigns with the zero-filled spline `interp` mode before its
+// per-pixel fits, and a wrapped border row would move the background split at
+// the frame edge. The margin is a few times the largest shift (at least 8 px):
+// the sub-pixel shifts of pixel reassignment never move content further, and a
+// 256x256 frame then costs a 288x288 transform, not the 512x512 (4x the pixels)
+// of the former half-frame padding.
 static std::vector<Image> apr_register(
         const std::vector<Image>& det_imgs,
-        const std::vector<std::pair<double,double>>& shifts)
+        const std::vector<std::pair<double,double>>& shifts,
+        bool circular = true)
 {
-    std::vector<Image> out;
-    out.reserve(det_imgs.size());
-    for (size_t i = 0; i < det_imgs.size(); ++i) {
+    const size_t D = det_imgs.size();
+    double smax = 0.0;
+    for (const auto& s : shifts) smax = std::max({smax, std::abs(s.first), std::abs(s.second)});
+    const size_t pad = static_cast<size_t>(std::max(8.0, std::ceil(4.0 * smax) + 4.0));
+    std::vector<Image> out(D);
+    #pragma omp parallel for schedule(dynamic) if(D > 1)
+    for (long long ii = 0; ii < (long long) D; ++ii) {
+        const size_t i = static_cast<size_t>(ii);
         const auto [dx, dy] = shifts[i];
         Image shifted = (std::abs(dx) > 1e-9 || std::abs(dy) > 1e-9)
-                ? subpixel_shift(det_imgs[i], dx, dy)
+                ? (circular ? fourier_shift_circular(det_imgs[i], dx, dy)
+                            : subpixel_shift(det_imgs[i], dx, dy, pad))
                 : det_imgs[i];
         clamp_non_negative(shifted);
-        out.emplace_back(std::move(shifted));
+        out[i] = std::move(shifted);
     }
     return out;
 }
@@ -1726,7 +1779,7 @@ static void focus_ism_core(
 
     // Step 1: adaptive pixel reassignment, as focusISM() does before fitting.
     const auto shifts = apr_shift_vectors(det_imgs, 10, n_det / 2, true, 1.0);
-    const std::vector<Image> ism_imgs = apr_register(det_imgs, shifts);
+    const std::vector<Image> ism_imgs = apr_register(det_imgs, shifts, /*circular=*/false);
     const Image ism_sum = sum_images(ism_imgs);
 
     // Step 2: calibrate the in-focus fingerprint width on a central patch of

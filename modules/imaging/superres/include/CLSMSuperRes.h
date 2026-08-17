@@ -22,6 +22,22 @@
 #ifndef TTTRLIB_CLSMSUPERRES_H
 #define TTTRLIB_CLSMSUPERRES_H
 
+// Validation: A/B-TESTED 2026-08-17 -- against the VicidominiLab code itself, live from the junk
+//   checkouts (test_clsm_superres_ism_arrays.py, test_clsm_superres_s2ism.py): shift_vectors ==
+//   BrightEyes-ISM APR_lib.ShiftVectors (bit-identical); apr_reconstruction == APR_lib.APR(mode=
+//   'fourier') (identical, 3e-16 -- the same circular Fourier shift; BrightEyes' default 'interp'
+//   spline registration is not offered); focus_reconstruction vs FocusISM_lib.focusISM (corr > 0.98, background fractions
+//   within 0.02, both within 0.05 of the truth); s2ism_reconstruction == s2ISM
+//   max_likelihood_reconstruction (torch, subprocess) to 1e-6 with its max_iter+1 update
+//   count pinned; FRC vs FRC_lib. Benchmarked vs the same packages (benchmarks/bench_vicidomini.py,
+//   check_vicidomini.py, PERF.md): APR 3.8x with identical output, focus-ISM 291x, s2ISM 3.6x
+//   identical. Also: rgc_map/temporal_combine vs the NanoJ-eSRRF transcription
+//   (test_clsm_superres_nanoj_ab.py); airy_psf vs scipy.special.j1 (1e-9); temporal_combine vs
+//   numpy (1e-12); SOFISM vs its reference transcription (test_clsm_superres_sofism.py);
+//   detector_grid vs BrightEyes lattices and the vectorial PSF's scalar limit
+//   (test_ism_psf_model.py). test/python/clsm/test_ab_localization_superres_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <memory>
 

@@ -2,6 +2,9 @@
 #ifndef TTTRLIB_STRING_ENCODING_H
 #define TTTRLIB_STRING_ENCODING_H
 
+// Validation: A/B-TESTED 2026-08-17 -- ISO-8859-1 <-> UTF-8 round trip vs Python codecs. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <string>
 #include <cstdint>
 

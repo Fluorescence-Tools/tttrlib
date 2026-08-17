@@ -2,6 +2,9 @@
 #ifndef TTTRLIB_BITOPS_H
 #define TTTRLIB_BITOPS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- ctz64, popcount64, word_count, tail_mask vs Python integer arithmetic. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 /// Internal helpers for packed 64-bit-word bitsets (std-only, no third-party
 /// code). Not exposed through SWIG.
 
