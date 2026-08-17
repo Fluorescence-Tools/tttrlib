@@ -1,5 +1,17 @@
 # Bundle update log
 
+## 2026-08-17 (45th entry)
+
+* **The last IO paths get outside references.** TIFF I/O vs tifffile in both
+  directions (dtypes, compressions, ImageJ hyperstacks: identical); `.photons`
+  vs the public photonsfile decoder on our written files; CSV reader/writer
+  rows for the existing pyarrow A/B; header marks on those files. The BH `.set`
+  comparison against phconvert `load_set` found the SPC-130 path ignoring the
+  sidecar and every path ignoring the TAC gain (6.1 ps read for a 3.05 ps FLIM
+  file) — fixed, BUGS entry, pinned. HT3 header units and Photon-HDF5 units
+  equal phconvert/h5py. Register: every header with a kernel or a decoder now
+  carries a `// Validation:` block or a NO-REF/plumbing row.
+
 ## 2026-08-17 (44th entry)
 
 * **MT19937 was a name without an engine** — `TTTR_RNG_ENGINE=mt19937` accepted
