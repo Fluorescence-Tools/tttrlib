@@ -205,6 +205,7 @@
     },
     {
       "id": "tttr.spc600.basic",
+      "doc": "n_chan read 0 until 2026-08-17: the SPC-600/630 header frame (macro clock, routing bits; the file's first 4 bytes per Becker & Hickl) was decoded as an invalid record and no micro-time channel count was set. The frame is read now, so the 8-bit ADC's 256 channels are reported.",
       "data": ["bh/bh_spc630_256.spc"],
       "steps": [
         {"op": "tttr.open", "args": ["$data0", "SPC-600_256"], "as": "t"},
@@ -213,7 +214,7 @@
         {"op": "sum", "on": "ut", "as": "micro_total"},
         {"op": "tttr.n_micro_channels", "on": "t", "as": "n_chan"}
       ],
-      "expect": {"n": 294884, "micro_total": 28321868, "n_chan": 0}
+      "expect": {"n": 294884, "micro_total": 28321868, "n_chan": 256}
     },
     {
       "id": "tttr.open.bad_container_throws",
