@@ -43,21 +43,61 @@ int next_pow2(int n) {
     return p;
 }
 
-// Circular convolution via FFT: result[i] = sum_j signal[j] * kernel[(i-j) mod n]
+// CIRCULAR convolution of period n: result[i] = sum_j signal[j] * kernel[(i-j) mod n].
+// The forward model of the reference (ChiSurf `irf_estimation.py`, from
+// BrightEyes-FLISM / BIRFI, Gomez-Sanchez et al. 2024) is periodic: a TCSPC
+// histogram spans one excitation period and the decay tail wraps into the next,
+// so the convolution over the period is circular. Computed exactly for ANY n by
+// a zero-padded linear FFT convolution folded back onto the period -- the
+// former next_pow2(n) transform was circular only when n was a power of two and
+// something in between otherwise (found by the known-answer A/B, 2026-08-17).
+static std::vector<double> linear_fft(
+    const std::vector<double>& signal, const std::vector<double>& kernel, bool correlate
+) {
+    int n = static_cast<int>(signal.size());
+    int m = next_pow2(2 * n - 1);
+    std::vector<cdouble> sf(m, cdouble(0.0)), kf(m, cdouble(0.0));
+    for (int i = 0; i < n; ++i) { sf[i] = signal[i]; kf[i] = kernel[i]; }
+    fft(sf.data(), m, -1.0);
+    fft(kf.data(), m, -1.0);
+    for (int i = 0; i < m; ++i) sf[i] *= correlate ? std::conj(kf[i]) : kf[i];
+    fft(sf.data(), m, 1.0);
+    std::vector<double> result(m);
+    for (int i = 0; i < m; ++i) result[i] = sf[i].real() / m;
+    return result;   // convolution: lags 0..2n-2; correlation: lags 0..n-1 then m-(n-1)..m-1 (negative)
+}
+
 std::vector<double> fft_convolve(
     const std::vector<double>& signal,
     const std::vector<double>& kernel
 ) {
     int n = static_cast<int>(signal.size());
-    int m = next_pow2(n);
-    std::vector<cdouble> sf(m, cdouble(0.0)), kf(m, cdouble(0.0));
-    for (int i = 0; i < n; ++i) { sf[i] = signal[i]; kf[i] = kernel[i]; }
-    fft(sf.data(), m, -1.0);
-    fft(kf.data(), m, -1.0);
-    for (int i = 0; i < m; ++i) sf[i] *= kf[i];
-    fft(sf.data(), m, 1.0);
+    auto lin = linear_fft(signal, kernel, false);
     std::vector<double> result(n);
-    for (int i = 0; i < n; ++i) result[i] = sf[i].real() / m;
+    for (int i = 0; i < n; ++i) {
+        result[i] = lin[i];
+        if (i + n < 2 * n - 1) result[i] += lin[i + n];   // wrap of the tail
+    }
+    return result;
+}
+
+// Circular cross-correlation: result[i] = sum_j signal[j] * kernel[(j-i) mod n] --
+// the adjoint of fft_convolve, which is what the Richardson-Lucy back-projection
+// needs. The reference convolves with the time-reversed kernel instead, which is
+// this correlation shifted by one bin; measured to move nothing visible on the
+// known answer (peak and shape identical), so the exact adjoint is kept.
+std::vector<double> fft_correlate(
+    const std::vector<double>& signal,
+    const std::vector<double>& kernel
+) {
+    int n = static_cast<int>(signal.size());
+    auto lin = linear_fft(signal, kernel, true);
+    int m = static_cast<int>(lin.size());
+    std::vector<double> result(n);
+    for (int i = 0; i < n; ++i) {
+        result[i] = lin[i];                                 // lag +i
+        if (i > 0) result[i] += lin[m - (n - i)];           // lag i - n (negative), wrapped
+    }
     return result;
 }
 
@@ -107,8 +147,14 @@ std::vector<double> sg_derivative(
     // Build A = V^T V (order+1 x order+1) and the derivative weighting vector
     int p = order + 1;
     std::vector<double> ATA(p * p, 0.0);
+    // Unitless abscissa (i - half) here AND in the weight vector below; the
+    // derivative is scaled to per-time at the end. Until 2026-08-17 the normal
+    // equations used (i - half)*dt while the weights used (i - half), so the
+    // filter was not the SG derivative: on a TCSPC decay its minimum landed on
+    // the RISING edge and the "tail" window was a handful of bins wide (tau
+    // came out 0.2 ns for a 2.5 ns decay). Found by the known-answer A/B.
     for (int i = 0; i < window; ++i) {
-        double xi = (i - half) * dt;
+        double xi = (i - half);
         double xj = 1.0;
         for (int r = 0; r < p; ++r) {
             double xk = 1.0;
@@ -174,7 +220,7 @@ std::vector<double> sg_derivative(
             idx = std::clamp(idx, 0, n - 1);
             s += weights[k + half] * y[idx];
         }
-        deriv[i] = s;  // derivative in units of 1/dt
+        deriv[i] = s / dt;  // per unit time
     }
     return deriv;
 }
@@ -230,30 +276,83 @@ std::vector<double> blind_irf_estimate(
     }
 
     // --- Step 2: Fit truncated exponential ---
-    // Estimate per-channel A, C and shared k via simple optimization
-    std::vector<double> A_opt(n_channels), C_opt(n_channels);
+    // The reference model (birfi / ChiSurf): one shared decay rate k, per-channel
+    // amplitude A and background C, least squares over each channel's decay
+    // region. birfi minimises it with Adam (1000 steps, often not converged);
+    // here it is solved: for a given k the (A, C) of every channel are a 2x2
+    // weighted linear least-squares problem (variable projection), so only k is
+    // searched -- golden section on log k around a centroid guess. Weights are
+    // Poisson (1/max(y,1)). The region starts one SG window after the steepest
+    // descent, past the IRF-broadened bins. C matters twice: it is subtracted
+    // before the Richardson-Lucy step, and min(y) or a tail median (the two
+    // shortcuts tried first) both mis-estimate it -- one sits ~3 sigma below a
+    // Poisson floor and hands RL a pedestal it smears into the IRF, the other
+    // overshoots when the decay has not reached the floor by the last bin.
+    std::vector<double> A_opt(n_channels, 1.0), C_opt(n_channels, 0.0);
     double k_opt = 0.01;
-
-    for (int c = 0; c < n_channels; ++c) {
-        std::vector<double> y(n_samples);
-        for (int i = 0; i < n_samples; ++i)
-            y[i] = data_in[i * n_channels + c];
-
-        double ymin = *std::min_element(y.begin(), y.end());
-        double ymax = *std::max_element(y.begin(), y.end());
-        C_opt[c] = std::max(ymin, 0.0);
-        A_opt[c] = std::max(ymax - C_opt[c], 1e-6);
-
-        // Centroid-based lifetime from decay region
-        if (t1[c] > t0[c] + 1) {
-            double sum_xy = 0.0, sum_y = 0.0;
-            for (int i = t0[c]; i <= t1[c] && i < n_samples; ++i) {
-                double xv = (i - t0[c]) * dt;
-                double yv = std::max(y[i] - ymin, 0.0);
-                sum_xy += xv * yv;
-                sum_y += yv;
+    {
+        std::vector<int> r0(n_channels), r1(n_channels);
+        double k_guess_num = 0.0, k_guess_den = 0.0;
+        for (int c = 0; c < n_channels; ++c) {
+            int a = std::min(t0[c] + sg_window, n_samples - 1);
+            int b = std::min(t1[c], n_samples - 1);
+            if (b - a < 3) a = t0[c];
+            r0[c] = a; r1[c] = b;
+            // centroid guess of 1/tau on this channel's region
+            double ymin = std::numeric_limits<double>::infinity();
+            for (int i = a; i <= b; ++i) ymin = std::min(ymin, data_in[i * n_channels + c]);
+            double sxy = 0.0, sy = 0.0;
+            for (int i = a; i <= b; ++i) {
+                double yv = std::max(data_in[i * n_channels + c] - ymin, 0.0);
+                sxy += (i - a) * dt * yv; sy += yv;
             }
-            if (sum_y > 0) k_opt = sum_y / sum_xy;  // 1/tau
+            if (sy > 0.0 && sxy > 0.0) { k_guess_num += sy * (sy / sxy); k_guess_den += sy; }
+        }
+        const double k_guess = (k_guess_den > 0.0) ? k_guess_num / k_guess_den : 0.01;
+
+        // total weighted SSE at k, with the per-channel (A, C) that minimise it
+        auto sse_at = [&](double k, std::vector<double>* A_out, std::vector<double>* C_out) {
+            double total = 0.0;
+            for (int c = 0; c < n_channels; ++c) {
+                double sw = 0, swe = 0, swee = 0, swy = 0, swey = 0;
+                for (int i = r0[c]; i <= r1[c]; ++i) {
+                    const double yv = data_in[i * n_channels + c];
+                    const double w = 1.0 / std::max(yv, 1.0);
+                    const double e = std::exp(-k * (i - r0[c]) * dt);
+                    sw += w; swe += w * e; swee += w * e * e; swy += w * yv; swey += w * e * yv;
+                }
+                const double det = swee * sw - swe * swe;
+                double A = 0.0, C = 0.0;
+                if (std::abs(det) > 1e-300) {
+                    A = (swey * sw - swe * swy) / det;
+                    C = (swee * swy - swe * swey) / det;
+                }
+                if (A_out) (*A_out)[c] = A;
+                if (C_out) (*C_out)[c] = C;
+                for (int i = r0[c]; i <= r1[c]; ++i) {
+                    const double yv = data_in[i * n_channels + c];
+                    const double w = 1.0 / std::max(yv, 1.0);
+                    const double res = yv - A * std::exp(-k * (i - r0[c]) * dt) - C;
+                    total += w * res * res;
+                }
+            }
+            return total;
+        };
+
+        // golden-section search on log k in [k_guess/10, k_guess*10]
+        const double gr = 0.6180339887498949;
+        double lo = std::log(std::max(k_guess, 1e-12) / 10.0), hi = std::log(std::max(k_guess, 1e-12) * 10.0);
+        double x1 = hi - gr * (hi - lo), x2 = lo + gr * (hi - lo);
+        double f1 = sse_at(std::exp(x1), nullptr, nullptr), f2 = sse_at(std::exp(x2), nullptr, nullptr);
+        for (int it = 0; it < 80 && (hi - lo) > 1e-7; ++it) {
+            if (f1 < f2) { hi = x2; x2 = x1; f2 = f1; x1 = hi - gr * (hi - lo); f1 = sse_at(std::exp(x1), nullptr, nullptr); }
+            else         { lo = x1; x1 = x2; f1 = f2; x2 = lo + gr * (hi - lo); f2 = sse_at(std::exp(x2), nullptr, nullptr); }
+        }
+        k_opt = std::exp(0.5 * (lo + hi));
+        sse_at(k_opt, &A_opt, &C_opt);
+        for (int c = 0; c < n_channels; ++c) {
+            if (!(C_opt[c] > 0.0)) C_opt[c] = 0.0;
+            if (!(A_opt[c] > 1e-6)) A_opt[c] = 1e-6;
         }
     }
 
@@ -265,8 +364,6 @@ std::vector<double> blind_irf_estimate(
         ksum += kernel[i];
     }
     if (ksum > 0) for (auto& v : kernel) v /= ksum;
-
-    std::vector<double> kernel_t(kernel.rbegin(), kernel.rend());
 
     // --- Step 4: Richardson-Lucy deconvolution ---
     std::vector<double> irf(n_samples * n_channels);
@@ -285,7 +382,7 @@ std::vector<double> blind_irf_estimate(
             std::vector<double> ratio(n_samples);
             for (int i = 0; i < n_samples; ++i)
                 ratio[i] = y[i] / conv[i];
-            auto correction = fft_convolve(ratio, kernel_t);
+            auto correction = fft_correlate(ratio, kernel);
             for (int i = 0; i < n_samples; ++i) {
                 x_est[i] *= correction[i];
                 if (x_est[i] < 0) x_est[i] = 0;

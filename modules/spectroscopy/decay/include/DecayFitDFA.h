@@ -100,6 +100,12 @@
 #ifndef TTTRLIB_DECAYFITDFA_H
 #define TTTRLIB_DECAYFITDFA_H
 
+// Validation: A/B-TESTED 2026-08-17 -- dfa_convolve (spectral 1e-13, recursive 1e-9 = discretisation) and
+//   dfa_vv_vh_convolved vs an np.fft circular convolution of the closed-form periodic decay
+//   with the unit-area response, incl. a fractional shift; closed forms pinned in
+//   test_dfa_kernel.py. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <complex>
 #include <cstddef>
 #include <vector>

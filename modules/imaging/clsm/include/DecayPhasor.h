@@ -2,6 +2,14 @@
 #ifndef TTTRLIB_PHASOR_H
 #define TTTRLIB_PHASOR_H
 
+// Validation: A/B-TESTED 2026-08-17 -- raw, IRF and calibrated phasors bit-for-bit (1e-13) against phasorpy 0.4
+//   (phasor_from_signal + phasor_transform), harmonics 1 and 2; g()/s() are the complex
+//   division. Recorded fixture test/data/reference/phasor_phasorpy_reference.npz.
+//   test/python/clsm/test_ab_phasor_reference.py.
+//   Benchmarked vs phasorpy on 100k decays x 256 bins through compute_phasor_bincounts_batch: 3.4x, identical
+//   (bench_sciref.py, check_sciref.py).
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <cmath>
 #include <algorithm> /* std::max */
@@ -89,6 +97,29 @@ public:
      */
     static std::vector<double> compute_phasor_bincounts(
             std::vector<int> &bincounts,
+            double frequency = 1.0,
+            int minimum_number_of_photons = 1,
+            double g_irf = 1.0, double s_irf = 0.0
+    );
+
+    /**
+     * @brief The phasor of every row of a (n_decays x n_bins) histogram stack
+     *        in one call -- `compute_phasor_bincounts` for each row, with the
+     *        cos/sin table shared and the rows in parallel.
+     *
+     * Same arithmetic as the per-decay method, digit for digit (the table holds
+     * the same `cos(mt * factor)` values that method computes on the fly), so a
+     * pixel map computed here equals the per-pixel loop. One call for a stack
+     * is the granularity rule of `okf/bindings/marshalling-cost.md`; the
+     * per-decay method costs more in the binding than in the arithmetic.
+     *
+     * @param[in] bincounts2d row-major (n_decays x n_bins) counts
+     * @param[out] output allocated (n_decays x 2) array of (g, s), the sentinel
+     *             `(-1, -1)` for rows with too few photons
+     */
+    static void compute_phasor_bincounts_batch(
+            const int* bincounts2d, int n_decays, int n_bins,
+            double** output, int* dim1, int* dim2,
             double frequency = 1.0,
             int minimum_number_of_photons = 1,
             double g_irf = 1.0, double s_irf = 0.0

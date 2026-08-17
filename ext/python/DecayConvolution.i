@@ -35,7 +35,8 @@ static inline void PyErr_Format(int, const char* fmt, ...) {
     (double* decay, int n_decay),
     (double* irf, int n_irf),
     (double* lamp, int n_lamp),
-    (double* lampsh, int n_lampsh)
+    (double* lampsh, int n_lampsh),
+    (double *instrument_response_function, int n_instrument_response_function)
 }
 
 void add_pile_up_to_model(
@@ -453,7 +454,9 @@ void my_fconv_ref(
                      "Stop index (%d) too large for array of lengths (%d).",
                      stop, n_irf);
     }
-    fconv_ref(fit, x, irf, n_x / 2, start, stop, tauref);
+    // dt used to be dropped here (C++ default 0.05 regardless of the
+    // argument); found by the A/B vs the trapezoid sum, 2026-08-17.
+    fconv_ref(fit, x, irf, n_x / 2, start, stop, tauref, dt);
 }
 %}
 

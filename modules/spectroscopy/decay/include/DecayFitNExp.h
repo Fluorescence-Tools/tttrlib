@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_DECAYFITNEXP_H
 #define TTTRLIB_DECAYFITNEXP_H
 
+// Validation: A/B-TESTED 2026-08-17 -- lifetimes/amplitudes/NLL vs scipy Nelder-Mead on the same Poisson mixture NLL
+//   built on an independent periodic trapezoid convolution (1e-5 / 1e-6), returned model
+//   equals the reference mixture (1e-13); known answer 0.7/3.5 ns, 60/40. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstddef>
 #include <vector>
 

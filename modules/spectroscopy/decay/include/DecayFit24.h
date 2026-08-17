@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_DECAYFIT24_H
 #define TTTRLIB_DECAYFIT24_H
 
+// Validation: A/B-TESTED 2026-08-17 -- objective (per-channel normalised Poisson likelihood of the bi-exponential
+//   model) vs NumPy, optimum vs scipy Nelder-Mead (1e-4); known answer recovered. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <nlohmann/json_fwd.hpp>
 #include "DecayFit.h"
 #include "DecayConvolution.h"

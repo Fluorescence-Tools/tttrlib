@@ -34,6 +34,10 @@
 #ifndef TTTRLIB_DECAYPATTERNFIT_H
 #define TTTRLIB_DECAYPATTERNFIT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- kNone vs scipy.optimize.nnls; Tikhonov/MaxEnt/target-chisq by monotonicity and
+//   known-answer recovery. test/python/decayfit/test_decay_pattern_fit.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 
 namespace tttrlib {

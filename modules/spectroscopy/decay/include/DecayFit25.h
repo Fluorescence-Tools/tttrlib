@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_DECAYFIT25_H
 #define TTTRLIB_DECAYFIT25_H
 
+// Validation: A/B-TESTED 2026-08-17 -- selected_index equals the argmin of the independent NumPy Fit23 likelihood
+//   over the four candidate lifetimes (planted 0.5/2.0/4.0 ns). test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <nlohmann/json_fwd.hpp>
 #include "DecayConvolution.h"
 #include "DecayStatistics.h"

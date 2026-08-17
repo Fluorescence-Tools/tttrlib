@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_DECAYSTATISTICS_H
 #define TTTRLIB_DECAYSTATISTICS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- Wcm / log_m_ext reached through the Fit23/24/26 objectives, which agree with a
+//   NumPy -sum(C*log_ext(M)) to 1e-9 rel incl. bins under the 1e-12 floor. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 
 #include <cmath>
 #include <vector>

@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_DECAYFIT26_H
 #define TTTRLIB_DECAYFIT26_H
 
+// Validation: A/B-TESTED 2026-08-17 -- objective vs the NumPy two-pattern mixture likelihood (1e-10), optimum vs
+//   scipy bounded Brent (1e-6); known 0.3 fraction recovered. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <nlohmann/json_fwd.hpp>
 #include "DecayFit.h"
 #include "DecayConvolution.h"

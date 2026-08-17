@@ -2,6 +2,15 @@
 #ifndef TTTRLIB_FSCONV_H
 #define TTTRLIB_FSCONV_H
 
+// Validation: A/B-TESTED 2026-08-17 -- fconv/fconv_per/fconv_per_cs (scalar and SIMD lifetime counts), sconv,
+//   fconv_ref, the *_time_axis wrapper vs NumPy transcriptions of the trapezoid convolution
+//   integral (np.convolve, no recursion) and a brute-force periodic sum (IRF tiled over 40
+//   periods, folded back): 1e-13 abs; shift_lamp vs np.interp; rescale* vs the closed
+//   formulas; add_pile_up_to_model vs a Coates (1968) transcription (inclusive cumulative
+//   sum). Two things on record there: fconv_per_cs bin 0 carries a (1+exp(-dt/tau)) factor
+//   fconv_per does not, and the Python `fconv_ref` binding drops `dt`. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>  /* std::ceil */
 #include <numeric> /* std::accumulate */
 #include <iostream>
@@ -69,11 +78,16 @@ void rescale_w(double *fit, double *decay, double *w_sq, double *scale, int star
  * offset of the data.
  *
  * The scaling parameter (scale) is calculated using the formula:
- * \f$ \text{scale} = \frac{\sum (\text{fit} \cdot (\text{decay} - \text{bg}) / w^2)}{\sum (\text{fit}^2 / w^2)} \f$
+ * \f$ \text{scale} = \frac{\sum \text{fit} \cdot (\text{decay} - \text{bg}) \cdot (e^2 + 10^{-12})}{\sum \text{fit}^2 \cdot (e^2 + 10^{-12})} \f$
+ *
+ * where `e` is the third argument: the *inverse* error of each channel (so
+ * `e^2` is the weight `1/sigma^2`, and the `1e-12` floor keeps a zero-error
+ * channel from vanishing). Callers that hold errors pass `1/sigma`, not
+ * `sigma^2` -- the A/B against the closed formula pins this reading.
  *
  * @param fit [in,out] Model function that is scaled (modified in-place).
  * @param decay [in] Experimental data to which the model function is scaled.
- * @param w_sq [in] Squared weights of the data.
+ * @param w_sq [in] Inverse errors `e = 1/sigma` of the data (weight = e^2 + 1e-12).
  * @param bg [in] Constant background of the data.
  * @param scale [out] The scaling parameter (the factor) by which the model
  * function is multiplied.

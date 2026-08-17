@@ -20,6 +20,11 @@
 #ifndef TTTRLIB_MAXENTTCSPC_H
 #define TTTRLIB_MAXENTTCSPC_H
 
+// Validation: A/B-TESTED 2026-08-17 -- shift_lamp/fconv vs a brute-force sum and known-answer lifetime/distance
+//   recovery (test/python/decayfit/test_maxent_tcspc.py); the QP/MEM engine underneath vs
+//   scipy L-BFGS-B KKT (test/python/misc/test_math_ab_probabilistic.py).
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 
 namespace tttrlib {

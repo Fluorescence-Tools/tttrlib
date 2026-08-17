@@ -68,6 +68,11 @@ using json = nlohmann::json;
 %shared_ptr(GammaPrior)
 %shared_ptr(BetaPrior)
 %shared_ptr(ProductPrior)
+// ProductPrior's constructor takes a vector of shared prior pointers; the
+// %template is what lets a Python list of priors (or a VectorDecayFitPrior)
+// reach it -- without it the class was not constructible from Python
+// (found by the A/B 2026-08-17). Same pattern as VectorChannelPtr in HMM.i.
+%template(VectorDecayFitPrior) std::vector<std::shared_ptr<DecayFitPrior>>;
 
 // The abstract model and the raw factory stay out of the bindings: `DecayFit2`
 // owns one and gives every language the same plain object, so no binding has to

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayPhasor.h"
+#include <cstdlib>
 
 namespace {
 
@@ -129,6 +130,52 @@ std::vector<double> DecayPhasor::compute_phasor_bincounts(
     return re;
 }
 
+
+
+void DecayPhasor::compute_phasor_bincounts_batch(
+        const int* bincounts2d, int n_decays, int n_bins,
+        double** output, int* dim1, int* dim2,
+        double frequency,
+        int minimum_number_of_photons,
+        double g_irf, double s_irf
+){
+    check_frequency(frequency);
+    check_irf(g_irf, s_irf);
+    if (!output || !dim1 || !dim2) throw std::invalid_argument("compute_phasor_bincounts_batch: null output");
+    if (n_decays < 0 || n_bins < 0) throw std::invalid_argument("compute_phasor_bincounts_batch: negative shape");
+
+    const double factor = (2. * frequency * M_PI);
+    std::vector<double> ct(n_bins), st(n_bins);
+    for (int mt = 0; mt < n_bins; ++mt) {          // the values the per-decay loop computes
+        ct[mt] = std::cos(mt * factor);
+        st[mt] = std::sin(mt * factor);
+    }
+    double* out = static_cast<double*>(std::malloc(std::max(1, n_decays * 2) * sizeof(double)));
+    if (!out) throw std::bad_alloc();
+
+    #pragma omp parallel for schedule(static) if(n_decays > 256)
+    for (int r = 0; r < n_decays; ++r) {
+        const int* row = bincounts2d + static_cast<size_t>(r) * n_bins;
+        double g_sum = 0.0, s_sum = 0.0, sum = 0.0;
+        for (int mt = 0; mt < n_bins; ++mt) {
+            sum += row[mt];
+            g_sum += row[mt] * ct[mt];
+            s_sum += row[mt] * st[mt];
+        }
+        double gv = -1.0, sv = -1.0;
+        if (sum > minimum_number_of_photons && sum > 0.0) {
+            const double g_exp = g_sum / std::max(1., sum);
+            const double s_exp = s_sum / std::max(1., sum);
+            gv = DecayPhasor::g(g_irf, s_irf, g_exp, s_exp);
+            sv = DecayPhasor::s(g_irf, s_irf, g_exp, s_exp);
+        }
+        out[2 * r] = gv;
+        out[2 * r + 1] = sv;
+    }
+    *output = out;
+    *dim1 = n_decays;
+    *dim2 = 2;
+}
 
 
 double DecayPhasor::g(

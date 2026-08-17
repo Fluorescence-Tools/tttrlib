@@ -3,6 +3,10 @@
 #ifndef TTTRLIB_DECAYFIT_H
 #define TTTRLIB_DECAYFIT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- DecayFitIntegrateSignals r()/rs()/normM reached through Fit23's outputs and
+//   objective vs the closed formulas (1e-10). test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include "Verbose.h"
 
 #include <algorithm>

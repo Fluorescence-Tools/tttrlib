@@ -44,6 +44,11 @@
 #ifndef TTTRLIB_DECAYFITPRIOR_H
 #define TTTRLIB_DECAYFITPRIOR_H
 
+// Validation: A/B-TESTED 2026-08-17 -- lnpdf of Uniform/Normal/HalfNormal/LogNormal/Exponential/Gamma/Beta vs
+//   scipy.stats logpdf (1e-10, incl. outside support); TruncatedNormal equals truncnorm up
+//   to the truncation constant (not renormalised, on record). test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <limits>
 #include <memory>

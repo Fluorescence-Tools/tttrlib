@@ -23,6 +23,11 @@
 #ifndef TTTRLIB_DECAYFIT23_H
 #define TTTRLIB_DECAYFIT23_H
 
+// Validation: A/B-TESTED 2026-08-17 -- objective vs a NumPy Poisson likelihood on an independent trapezoid/periodic
+//   convolution (1e-9 rel), optimum vs scipy Nelder-Mead on that likelihood (1e-5), r()/rs()
+//   outputs vs the closed formulas; known-answer 2.7 ns recovered. test/python/decayfit/test_ab_decay_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -83,7 +88,11 @@ public:
      * \brief Optimise \p x in place; returns 2I* at the optimum.
      *
      * \param x ``[tau, gamma, r0, rho, softbifl_flag, p2s_flag, r_scatter,
-     *        r_experimental]``; the last two are outputs.
+     *        r_experimental]``; the last two are outputs, named as legacy fit2x
+     *        named them: ``r_scatter`` is the anisotropy of the scatter- and
+     *        background-corrected fluorescence (``DecayFitIntegrateSignals::r()``
+     *        from Fp, Fs), ``r_experimental`` the anisotropy of the raw signals
+     *        (``rs()`` from Sp, Ss). Neither is "the anisotropy of the scatter".
      * \param fixed Which of the first four parameters are held.
      * \param p Borrowed data context.
      */
