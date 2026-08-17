@@ -93,6 +93,8 @@
 %include "NeuralNet.i"
 /* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
 %include "Cluster.i"
+/* Kalman filter recursion over a count-rate trace */
+%include "Kalman.i"
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
 %include "Jitter.i"

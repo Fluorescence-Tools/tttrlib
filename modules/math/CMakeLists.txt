@@ -26,28 +26,25 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/HmmLattice.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MaxEntQp.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Nnls.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/KMeans.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/Kalman.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i Sampling.i
-                    HmmLattice.i
+                    HmmLattice.i Kalman.i
     TEST_DIR test/python/misc
 )
 
-# Cluster.cpp must not contract a*b+c into an FMA.
-#
-# The minimum spanning tree it builds is consumed by callers that keep their own
-# pure-Python implementation of the same algorithm for environments without this
-# library, and the two must agree exactly -- a mutual-reachability graph is full
-# of tied edge weights, so a difference of one unit in the last place changes
-# which edge is picked, which changes the dendrogram, which changes the cluster
-# count. Contraction is the one optimisation that changes the bits, and it is
-# worth nothing here: the distance loop is memory bound.
-if(NOT MSVC)
-    set_source_files_properties(
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/Cluster.cpp"
-        PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
-endif()
+# Cluster.cpp and KMeans.cpp carry their fp-contraction contract in source:
+# both open with `#pragma STDC FP_CONTRACT OFF`, because each is a bit-exact
+# port of a ChiSurf Python implementation whose correctness depends on one
+# unit in the last place of a summed distance (a tied mutual-reachability
+# edge for Cluster.cpp, a restart-ranked inertia for KMeans.cpp). A compile
+# flag was tried first and rejected: `if(NOT MSVC)` silently skipped Windows,
+# so the contract lived in the build instead of the code. The pragma is
+# portable across clang, gcc and MSVC and needs no build-system support, so
+# no per-file COMPILE_OPTIONS here.
 
 # HmmLattice.cpp must not be compiled with fast math.
 #

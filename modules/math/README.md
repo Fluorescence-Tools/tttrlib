@@ -14,7 +14,26 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`HmmLattice.h` / `HmmLattice.cpp`**: The log-domain HMM recursions over a **caller-supplied** `log_frameprob` (T×K) — `hmm_forward_log`, a fused `hmm_backward_posteriors_xi` sweep, `hmm_viterbi_log`, a standalone `hmm_backward_log` for tests, and `hmm_estep_log` for concatenated sequences. Emissions belong to the caller, which is what lets one lattice serve a Gaussian mixture, a Poisson rate and a lookup table. Not to be confused with `spectroscopy/hmm`: that is a photon-stream model with Δt-dependent transitions and a *scaled* recursion, and it stays. Two contracts worth knowing before calling: `xi_sum` is **accumulated** (`+=`, never zeroed inside) because a fit sums it across sequences, and `-inf` is a value — an impossible sequence returns `-inf` with no `nan` and contributes zero transition counts. That is also why the CMakeLists pins fast math **off** on that translation unit.
 - **`Random.h`**: Centralised counter-based RNG (Philox / PCG / SplitMix64 / MT19937) with thread-safe deterministic parallel draws.
 - **`MaxEntQp.h` / `MaxEntQp.cpp`**: Shared engine behind every maximum-entropy inversion in the library — `quadpr_bound` (bound-constrained QP, active-set sweep) and `run_mem` (the Skilling-Bryan outer iteration built on it), plus `build_normal_equations` for turning an arbitrary design matrix into the quadratic form both expect. Relocated (not rewritten) from `spectroscopy/decay/MaxEntTcspc.cpp`, which now delegates to it, and now also used by `spectroscopy/corrections/MaxEnt.cpp` in place of a second implementation whose entropy term had the wrong sign. See PRD-038. Also `run_mem_target_chisq` — opt-in "historic MaxEnt": a joint (p, nu) Gull-Skilling controller that updates nu *inside* the MEM loop (secant in log-nu/log-chisq space, warm-started) so the fit's chi-square lands at a caller-chosen target. An earlier outer-bisection design failed on steep cases (1M-photon FRET: 500 cold MEM solves, no convergence) — the joint controller converges in ~157 warm QP steps; both numbers measured and pinned by a regression test. See PRD-039, including why the reference implementation deliberately doesn't have this mode.
+- **`Cluster.h` / `Cluster.cpp`**: Single-linkage bundling on a mutual-reachability
+  MST (the reader and the union-find in one pass, sorted edge list in, node
+  counts out), plus the HDBSCAN condensed tree and per-point label read-off.
+  The MST end of the pipeline is called by `spectroscopy/burst`, the HDBSCAN
+  end was ported verbatim from ChiSurf's pure-Python implementation and must
+  agree with it bit for bit — which is why the translation unit compiles with
+  `-ffp-contract=off` (a fused multiply-add changes a tied edge, then the
+  dendrogram; see the CMakeLists comment).
+- **`KMeans.h` / `KMeans.cpp`**: k-means. k-means++ seeding over **caller-supplied
+  uniforms** (the consumer owns the RNG and the reproducibility contract) plus
+  the Lloyd sweeps and a final assignment pass that re-measures the inertia of
+  the *returned* centres. The whole fit is one call. Exactness is carried in
+  source: the file opens with `#pragma STDC FP_CONTRACT OFF`, because a
+  compiled-in multiply-add would round `acc += diff*diff` once instead of
+  twice and drift the inertia — the number restarts are ranked on — by one
+  ulp while centres and labels stay identical. (The contract lives in the
+  pragma deliberately: a per-file compile flag silently skipped MSVC and any
+  other build that did not apply it.) See PRD-037.
 - **`Nnls.h` / `Nnls.cpp`**: Non-negative least squares by the classical Lawson-Hanson (1974) algorithm — KKT-correct, unlike `quadpr_bound`'s active-set sweep (see that header's docstring for why the two are not interchangeable). Verified against `scipy.optimize.nnls`.
+- **`Kalman.h` / `Kalman.cpp`**: The Kalman filter recursion over a whole count-rate trace in one call — `kalman_filter(y, x0, P0, Q, dt, r_scale)` → `(x_filt, P_filt, D_mahal)`. A bit-exact port of ChiSurf's `_kalman_filter_loop` (`core/fluorescence/burst/kalman.py`), which since ChiSurf dropped numba runs as plain Python per trace. The closed-form 2×2 inverse (`_inv2x2`) is ported as-is, so the two-channel single-molecule case agrees with the reference digit for digit; dimensions above two fall back to the library's own Gauss-Jordan inverse and are *not* bit-parity with ChiSurf's LAPACK path. Parity rides on two things carried in source: `#pragma STDC FP_CONTRACT OFF`, and reproducing BLAS's fused-second-product inner sum (`std::fma`) that numpy's `@` emits for 2×2 — a plain `a0*b0 + a1*b1` disagrees with numpy ~44% of the time, one ulp, and the Mahalanobis threshold ChiSurf's fcs plugin bursts on moves. See PRD-037 B3.
 - **`SimPcgRandom.h`**: Compact inline PCG32 PRNG for per-stream reproducible randomness.
 
 ## Dependencies

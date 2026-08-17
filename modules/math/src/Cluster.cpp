@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
+// Do not contract `acc += diff * diff` into a fused multiply-add anywhere in
+// this file. The minimum spanning tree this file builds is consumed by
+// callers that keep their own pure-Python implementation of the same
+// algorithm, and the two must agree exactly -- a mutual-reachability graph is
+// full of tied edge weights, so a difference of one unit in the last place
+// changes which edge is picked, which changes the dendrogram, which changes
+// the cluster count. The pragma is the contract carried in source,
+// deliberately, rather than a compile flag read from the build -- a flag
+// silently leaves builds that do not apply it (MSVC has none for this today)
+// drifting by one ulp on tied-edge comparisons. Contraction is worth nothing
+// here anyway: the distance loop is memory bound.
+#pragma STDC FP_CONTRACT OFF
 #include "Cluster.h"
 
 #include <algorithm>

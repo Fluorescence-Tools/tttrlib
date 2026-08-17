@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 %{
 #include "Cluster.h"
+#include "KMeans.h"
 %}
 
 // The sample table arrives as a 2D NumPy array (rows = samples).
@@ -29,6 +30,14 @@ TTTRLIB_NOGIL(tttrlib::mutual_reachability_mst)
 TTTRLIB_NOGIL(tttrlib::KDTree::core_distances)
 TTTRLIB_NOGIL(tttrlib::KDTree::mutual_reachability_mst)
 
+// k-means: the sample table typemap above serves X; the uniforms arrive as a
+// 1D array and everything the fit produces comes back in ARGOUTVIEWM buffers.
+%apply (double* IN_ARRAY1, int DIM1) {(const double* uniforms, int n_uniforms)}
+%apply (double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double** out_centers, int* out_n1, int* out_n2)}
+%apply (long long** ARGOUTVIEWM_ARRAY1, int* DIM1) {(long long** out_labels, int* out_n_labels)}
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double** out_stats, int* out_n_stats)}
+TTTRLIB_NOGIL(tttrlib::kmeans)
+
 %exception {
     try {
         $action
@@ -43,6 +52,7 @@ TTTRLIB_NOGIL(tttrlib::KDTree::mutual_reachability_mst)
 %ignore tttrlib::KDTree::query;
 
 %include "Cluster.h"
+%include "KMeans.h"
 
 #ifdef SWIGPYTHON
 %extend tttrlib::KDTree {
