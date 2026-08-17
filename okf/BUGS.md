@@ -750,6 +750,77 @@ correcting the record: that example's wording, and my first reading of it, put
 the blame on the writers. The forced-read column above shows the writers are
 innocent.
 
+## FIXED — The k-means bit-exactness contract is enforced by a compiler flag, not by the code
+
+**Fixed 2026-08-16.** The contract now lives in source: `KMeans.cpp` and
+`Cluster.cpp` open with the standard `#pragma STDC FP_CONTRACT OFF`, and the
+per-file CMake flag (which `if(NOT MSVC)` skipped on Windows) is gone. The
+pragma is honored by clang, gcc and MSVC on their default builds, and a probe
+confirms it wins over clang's default `-ffp-contract=on` and gcc's default
+mode (both compiled one ulp off without it, on-parity with it — and parity
+holds end to end: 7/7 k-means configs bit-identical, HDBSCAN + cluster
+suites green, all on a rebuild *without* any per-file flag). A caller that
+passes `-ffp-contract=fast` still overrides the pragma — correct, that is an
+explicit opt-out of IEEE arithmetic library-wide and no source-level contract
+can beat it. The entry as filed follows.
+
+**2026-08-16.** PRD-037 B2's whole claim — `kmeans(X, n_clusters, uniforms,
+…)` comes back digit-for-digit identical to ChiSurf's pure-Python
+implementation, because ChiSurf ranks restart seeds on the inertia — currently
+rests on `-ffp-contract=off` being applied to `KMeans.cpp` in the CMake. That
+is build configuration before it is code, and it is a workaround, not a fix:
+on MSVC the guard `if(NOT MSVC)` skips the flag entirely, and on any compiler
+or build that fuses `acc += diff * diff` into one multiply-add the ranked
+inertia drifts by one ulp while centres and labels stay identical — measured
+on arm64 clang before the flag went in (7 configs, one restart affected). A
+caller that ranks restarts on the inertia then silently picks a different
+restart, on a machine that changed nothing but a compile flag. The same
+latent dependency holds for `Cluster.cpp` (HDBSCAN, PRD-037 B1): its
+bit-exactness against ChiSurf's Python linkage is protected the same way, so
+B1's "validated" reading carries the same caveat until either file carries
+the contract in source.
+
+Reproduce:
+
+```bash
+cmake -B build_fma -DMATH_KMEANS_FP_CONTRACT=on   # hypothetical; any config
+# that lets clang/gcc contract a*b+c in KMeans.cpp
+cmake --build build_fma -j4
+python - <<'PY'
+import numpy as np, tttrlib
+rng = np.random.default_rng(99)              # the failing case
+x = np.ascontiguousarray(rng.normal(0, 3, (1000, 5)))
+k, n_init = 8, 4
+u = np.random.default_rng(1000 + 1000 + k).random(n_init * k * (2 + int(np.log(k))))
+c, l, s = tttrlib.kmeans(x, k, u, n_init, 300, 1e-4)
+inertia = 0.0                                 # python-side re-measure, same order
+for t in range(1000):
+    d = x[t] - c[int(l[t])]; inertia += float(d @ d)
+assert s[0] == inertia                          # False: one ulp apart
+PY
+```
+
+The right fix is to make the loop order carry the contract, not a flag:
+`KMeans.cpp`'s `squared_distances` and the assignment passes already bake the
+accumulation order into source (accumulate per sample, along features) so
+"re-measure the returned centres in Python accumulates to the same double"
+only needs the compiler to round each `a*b + c` the IEEE way. Options, in
+preference order: write the reduce so no single expression fuses (`acc +=
+diff*diff` split so the product is its own statement and the add its own —
+clang/gcc still contract across statements under `-ffp-contract=fast`, so
+better: accumulate via `std::accumulate`-style separate `acc = fma? `, or use
+`#pragma STDC FP_CONTRACT OFF` inside the two TUs, which is the same thing as
+the flag but local and self-documenting), or — the honest version — drop the
+"bit-exact" wording and rank restarts on the double the caller measures,
+since ranking on a one-ulp-lagged metric is ranking on noise anyway. At
+minimum the MSVC hole should be closed (a dedicated functional test that
+re-measures the returned centres in Python and asserts exact equality, which
+the current suite already has in
+`test/python/misc/test_kmeans.py::TestAgainstTheRecordedReference`, fails on
+any compiler that contracts — the fixture run happens to be the flag's
+responsibility today). Not fixed; this note is the memory of *why* that test
+is there.
+
 ## Sixteen to eighteen subsystems are Python-only, and every other binding's interface file says it is identical to Python's
 
 **2026-08-11.** The four bindings do not share one `%include` list. Each master

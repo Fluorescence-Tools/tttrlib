@@ -2,7 +2,113 @@
 
 ## [Unreleased]
 
+### Fixed
+- **2D-FDC log axis: the tick quantization now follows the reference MATLAB.**
+  `TK_Create2DFDC_04.m` keeps its log bin edges real-valued
+  (`t_Imax^(j/L) - 1`) and compares the integer micro-time tick against them
+  directly, so the effective integer edge is the floor; the kernels quantized
+  to nearest instead, which moved real pairs between bins — 352–457 of ~85k
+  (~0.5%) per matrix on a 3000-photon stream, measured by running the
+  original author's .m in Octave against the library (2 linear factors × 3
+  lags: log and linear matrices now identical, every count). The comparison
+  is pinned permanently by a fixture recorded from the .m itself
+  (`test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`,
+  `TestAgainstTheOriginalMatlab`); matrices previously produced with more
+  than ~16 log bins can shift by ~0.5% of their pairs. Fdc2D.h and the fcs
+  README now cite the method papers (Ishii & Tahara JPCB 2013,
+  doi:10.1021/jp406861u / jp406864e; Kondo et al. PNAS 2019,
+  doi:10.1073/pnas.1821207116).
+
 ### Added
+- **Kalman filter over a whole count-rate trace in one call:
+  `kalman_filter(y, x0, P0, Q, dt, r_scale)` → `(x_filt, P_filt, D_mahal)`**
+  (`modules/math/Kalman.h` / `Kalman.cpp`, PRD-037 B3). Bit-exact port of the
+  pure-Python `_kalman_filter_loop` ChiSurf runs since the numba removal,
+  closed-form 2×2 inverse (`_inv2x2`) included, so the two-channel
+  single-molecule case ChiSurf's fcs burst detection depends on agrees digit
+  for digit. Two exactness carriers, both in source: `#pragma STDC FP_CONTRACT
+  OFF`, and the BLAS inner-sum order — numpy's `@` for 2×2 forms
+  `a0*b0 + a1*b1` as `fma(a1, b1, a0*b0)` (measured: plain left-to-right
+  disagrees ~44% of the time), reproduced with `std::fma`. Validated
+  2026-08-17: known-answer simulation, bit-for-bit fixture recorded from
+  ChiSurf's `kalman.py`, bit-identical over 50 randomised traces and across
+  -O0/-O1/-O2/-O3; **195×** vs the Python path (0.19 ms @ T=5k, 2.0 ms @
+  T=50k). Binding in `ext/{python,r,js}/Kalman.i` (Java excluded: its argout
+  typemaps cover no rank, see the parity exception). dim>2 falls back to the
+  library's Gauss-Jordan inverse and is deliberately not bit-parity with
+  ChiSurf's LAPACK path — documented in the header.
+- **k-means in one compiled call: `kmeans(X, n_clusters, uniforms, n_init,
+  max_iter, tol)` → `(centres, labels, [inertia, n_iter])`** (`modules/math/
+  KMeans.h`, PRD-037 B2). k-means++ seeding and the Lloyd sweeps, exact port
+  of the pure-Python `_kmeans.py` ChiSurf runs since the numba removal — the
+  seeding randomness is the caller's `uniforms` array, so the fit reproduces
+  byte for byte (ChiSurf's Gaussian-HMM seeds from this and ranks restarts on
+  the inertia; one ulp there is a different answer). Validated 2026-08-16:
+  eight tests (blobs with known membership, bit-for-bit determinism, a
+  committed fixture recorded from ChiSurf's implementation, wrong-length
+  rejection, the degenerate n_samples ≤ k case); bit-identical to ChiSurf on
+  7/7 configurations. **Exactness is carried in source, not build config:**
+  the multiply-add fusion that could drift the ranked inertia one ulp is
+  switched off with the standard `#pragma STDC FP_CONTRACT OFF` at the top of
+  `KMeans.cpp` and `Cluster.cpp` — the previous per-file `-ffp-contract=off`
+  CMake flag was a workaround (skipped MSVC entirely and silently re-opened
+  the ulp drift on any contracting build) and is removed; a probe confirms
+  the pragma wins over clang's default `-ffp-contract=on` and gcc's default,
+  and the fixture test fails loudly if a build ever contracts again.
+  Benchmarked: 919× at n=2k and 418× at n=10k, 904× at n=50k (1.75 s vs
+  26 min for the Python path ChiSurf runs today); SWIG four-language guard
+  clean.
+
+- **HDBSCAN downstream of the MST: `hdbscan_condensed_tree` +
+  `hdbscan_label_points`** (`modules/math/Cluster.h`, PRD-037 B1). The union-find
+  single linkage, the dendrogram condensation at `min_cluster_size`, and the
+  per-point root read-off — the 43% of a compiled run that no array language
+  expresses (pointer-chasing), delivered as two calls with cluster *selection*
+  deliberately left to the caller (it is policy: eom vs leaf,
+  `allow_single_cluster`, epsilon). Validated 2026-08-16: condensed trees
+  bit-identical to ChiSurf's implementation on 12 dataset × `min_cluster_size`
+  configurations, end-to-end labels identical on 6 ground-truth sets (blobs,
+  moons, bridges, pure noise; sklearn's independent HDBSCAN agrees exactly on
+  4/6 and at ≥ 0.996 purity on the rest — boundary/noise choice, the expected
+  difference between independent EOM implementations). Benchmarked:
+  post-MST 1.4 ms at n=20k and 9.1 ms at n=100k against 72/380 ms for the
+  Python path ChiSurf runs today (42–51×; also ~10× faster than the numba
+  kernels it replaced there).
+
+- **2D-FDC gallery examples: the method, and a dynamics-resolution benchmark
+  on simulated ground truth.** `examples/correlation/plot_fdc_2d.py` walks the
+  whole chain the C++ owns (simulate → `fdc_scan_two_axes` → coupling vs lag →
+  relaxation), recovering 0.91 s against 1.00 s simulated on the seeded
+  stream, with the method papers cited.
+  `plot_fdc_2d_dynamics_resolution.py` benchmarks the method itself,
+  seed-replicated: a two-state emitter's relaxation is recovered within 25%
+  from 50 ms to 10 s (10 ms macro window, 80 ms lag window) and nowhere below
+  the lag-window width — the resolution floor is the method's window, not the
+  photon pass. A three-state chain with two relaxation times (1 s, 10 s) is
+  resolved on the seed-averaged curve (0.86 and 7.9 s; the single-exponential
+  control fits 4.96 s, neither mode); per-stream fits recover the fast mode
+  but the slow mode needs averaging or a longer stream at ~300k photons.
+  A third example answers the microsecond question on a simulated FRET
+  experiment (`plot_fdc_2d_microsecond_fret.py`): T3-mode TTTR (macro clock =
+  25 ns laser period), one immobilized FRET molecule's donor channel at
+  500 kcps, states E = 0.2/0.8, 75 ns-effective lag window — every relaxation
+  from **200 ns to 10 µs recovered within 25%** (3 seeds, spread ±3%,
+  consistent −15…−22% bias belonging to the deliberately simple estimator;
+  the floor tracks the window span). Caveats stated in the example: Poisson
+  emission only, immobilized stream rather than aggregated bursts. A fourth
+  example repeats it with **freely diffusing molecules** at τ_diff = 2 ms
+  (`plot_fdc_2d_microsecond_fret_diffusion.py`): microsecond recovery
+  survives the same-molecule dilution (200 ns–10 µs fitted within 0.7–27%,
+  wider seed scatter), and the diffusion time is the ceiling exactly as the
+  window width is the floor — a 5 ms relaxation is gated away (each seed
+  fits ≈ τ_diff). Finding recorded with it: the total-variation coupling
+  carries a √(K/4N) shot-noise pedestal that the diluted regime pushes up
+  to the signal level (flat 0.018 in single-lifetime and shuffled controls);
+  the pair micro-time **covariance** from the same `fdc_scan_log` matrix has
+  per-pair noise and no bias and is the right statistic there. Also:
+  `SimIntegrator`'s `dt` doc now states its units (seconds) against the
+  ns micro-time fields, after a debugging round where passing the resolution
+  in seconds silently flattened every decay pattern.
 - **Opt-in "historic MaxEnt": find the entropy weight automatically by
   targeting a chi-square.** `solve_tcspc_mem_lifetime`/`solve_tcspc_mem_fret`
   gain a trailing `target_chisq` parameter (≤0, the default, is the untouched

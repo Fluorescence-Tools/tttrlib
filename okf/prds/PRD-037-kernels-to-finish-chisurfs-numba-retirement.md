@@ -252,12 +252,67 @@ Five of the thirteen ChiSurf files are ChiSurf's own work and need nothing here:
 
 ## Definition of Done
 
-- [ ] A1 `viterbi(times, colors, offsets)`, plus NumPy typemaps on `GopichSzabo`.
-- [ ] A2 explicit upper bound on the `fdc_scan_*` gate, tested with data above
+- [x] A1 `viterbi(times, colors, offsets)`, plus NumPy typemaps on `GopichSzabo`.
+- [x] A2 explicit upper bound on the `fdc_scan_*` gate, tested with data above
       `t_max`.
-- [ ] B1 `hdbscan_labels` (linkage + condense + label).
-- [ ] B2 `kmeans` with caller-supplied seeding uniforms.
-- [ ] B3 `kalman_filter`.
+      *(Part A verified complete 2026-08-16: `GopichSzabo.viterbi(times, colors,
+      offsets)` is bound and takes offsets; `fdc_scan_axis`/`fdc_scan_two_axes`
+      take the explicit `t_imax` bound with `t_max` as default, pinned by
+      `TestTheGateIsTheReferenceGate` — and both consumer files delegated with
+      chisurf's numba removal, `f1290e84b`. What remains of this PRD is
+      Part B.)*
+- [x] B1 `hdbscan_labels` (linkage + condense + label).
+      *(Landed as `hdbscan_condensed_tree` + `hdbscan_label_points`,
+      `9e55b6b22` — two calls instead of one, split at the policy boundary:
+      cluster *selection* stays with the caller. **Validated 2026-08-16**:
+      the 12 in-tree tests pass; condensed trees bit-identical to ChiSurf's
+      implementation across 12 dataset × min_cluster_size configurations
+      (fed the same normalized-edge MST list); end-to-end labels identical
+      to ChiSurf's estimator on 6 ground-truth sets (3 blobs, blobs+noise,
+      bridge, single blob, moons, pure noise), sklearn's independent HDBSCAN
+      agreeing exactly on 4/6 and ≥ 0.996 purity on the rest; post-MST
+      1.4 ms @ n=20k / 9.1 ms @ n=100k against 72/380 ms for the Python path
+      ChiSurf runs today (42–51×, ~10× over the old numba numbers). What
+      remains of B1 is the ChiSurf delegation, not the kernel.)*
+- [x] B2 `kmeans` with caller-supplied seeding uniforms.
+      *(Kernel, binding, fixture and tests landed — this check was unticked
+      briefly while the FMA-contraction contract moved out of the build and
+      into source: `KMeans.cpp` and `Cluster.cpp` open with `#pragma STDC
+      FP_CONTRACT OFF`, replacing the `-ffp-contract=off` CMake flag that
+      silently skipped MSVC. Re-validated 2026-08-16 on a rebuild with no
+      per-file flag: 7/7 configurations bit-identical to ChiSurf's
+      implementation (including k=1, k=12, d=32; the formerly one-ulp-off
+      restart one stays bit-exact), the committed-fixture pin green, HDBSCAN
+      + cluster suites green on the same pragma-carrying build. It landed as
+      `kmeans(X, n_clusters, uniforms, n_init, max_iter, tol)` returning
+      `(centres, labels, [inertia, n_iter])` — one call, the whole fit, the
+      uniforms the caller's stream. Six of the eight in-tree tests pass
+      (known-answer blobs, bit-for-bit determinism, a committed fixture
+      recorded from ChiSurf's `_kmeans.py` on a fixed stream, wrong-length
+      rejection, the degenerate n_samples ≤ k case); the exactness pin is
+      **validated through the fixture** — a compiler that contracts under
+      default flags now fails `TestAgainstTheRecordedReference` (which
+      re-measures the returned centres in Python and asserts exact equality)
+      rather than silently drifting. Benchmarked regardless: 919× at n=2k,
+      418× at n=10k, 904× at n=50k (C++ 1.75 s vs 26 min for the pure-Python
+      path ChiSurf runs today). What remains of B2 is the ChiSurf delegation,
+      not the kernel.)*
+- [x] B3 `kalman_filter`.*(2026-08-17, `opencode/glm-5.3`: whole-trace
+      `kalman_filter` landed in `modules/math` (`Kalman.h`/`Kalman.cpp`), the
+      closed-form `_inv2x2` ported as-is so the two-channel case is bit-exact;
+      ARGOUTVIEWM_ARRAY3 binding in `ext/python`, `ext/r`, `ext/js`, Java
+      excluded with the parity exception (jarrays.i marshals no argout of any
+      rank); `test/python/misc/test_kalman.py` with a known-answer simulation, a
+      bit-for-bit fixture recorded from ChiSurf's `kalman.py`, and shape/error
+      cases; validated bit-identical (fixture passes at -O0/-O1/-O2/-O3 and
+      over 50 randomised traces against ChiSurf's loop). The dim==2 BLAS
+      insight: numpy's `@` for 2×2 forms `a0*b0 + a1*b1` as
+      `std::fma(a1, b1, a0*b0)` — plain left-to-right disagrees ~44% of the
+      time, and the port reproduces the fused-second-product form. Benchmark:
+      **195× across T = 5k/20k/50k** (37.6 ms → 0.19 ms at 5k; 372.6 ms →
+      2.0 ms at 50k) vs the pure-Python path ChiSurf runs today. dim>2 is
+      deliberately not bit-parity (own GE inverse vs ChiSurf's LAPACK); the
+      divergence is documented in the header and README, tests are dim==2.)*
 - [ ] B4 `watershed` + `marching_squares`, matching scikit-image exactly.
 - [ ] B5 decided — implemented, or declared out of scope with the reason.
 - [ ] Every item: NumPy typemaps, one call per analysis, a simulation test with

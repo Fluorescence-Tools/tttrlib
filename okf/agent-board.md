@@ -424,6 +424,68 @@ retired so nobody works the same thing twice.)*
 
 ## Active
 
+- **T-20260816-04 · [tttrlib] PRD-037 B3: `kalman_filter` — the filter
+  recursion over a count-rate trace, one whole-trace call**
+  - Status: ✅ done (kernel, binding, tests, benchmark) — validating the
+    four-language guard and hooking ChiSurf's delegation is what remains
+  - Owner: `opencode/glm-5.3`
+  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-17
+  - Why: chisurf's `kalman_burst_detection(_multi)` (fcs plugin's advanced
+    mode) runs the pure-Python `_kalman_filter_loop` per trace since numba
+    removal. tttrlib's existing `BurstSearchKalman` is a *different* surface
+    (TTTR burst start/stop with general GE inverse, no trace out) and does not
+    cover B3's kernels. PRD-037 B3: `kalman_filter(Y, x0, P0, Q, dt,
+    r_scale)` → `(x_filt, P_filt, D_mahal)` in one call, with chisurf's
+    closed-form `_inv2x2` (dim==2) ported as-is.
+  - Done when: C++ kernel in `modules/math` (own header, Cluster family
+    conventions), NumPy-typemap binding with the SWIGPYTHON guard, tests on
+    known-answer simulation + bit-for-bit determinism + committed fixture
+    recorded from chisurf's implementation, parity numbers vs chisurf
+    recorded, A/B benchmark vs the Python path. Then mark validated.
+  - Progress: picked 2026-08-16. Scope confirmed: `_inv2x2`/`_kalman_filter_loop`
+    used only inside kalman.py; fcs plugin calls `kalman_burst_detection_multi`
+    (pure loop), GUI wizard uses the existing `tttr.burst_search_kalman`.
+    Forked 2026-08-17 per dim==2 BLAS discovery: numpy's `@` (numpy 1.26.4 +
+    Accelerate) forms 2×2 inner products with the SECOND product fused
+    (`std::fma(a1,b1,a0*b0)`); plain left-to-right `a0*b0+a1*b1` disagreed
+    ~44% over 2e5 random pairs, the fma form matched 0/200k. Ported that way;
+    bit-identical to chisurf's loop on 50 randomised traces AND the committed
+    fixture across -O0/-O1/-O2/-O3. Kernel: `modules/math/{include/Kalman.h,
+    src/Kalman.cpp}`; binding `ext/{python,r,js}/Kalman.i` (+ Java parity
+    exception in tools/binding_parity_exceptions.txt); tests
+    `test/python/misc/test_kalman.py` + fixture
+    `test/data/reference/kalman_chisurf_reference.npz`. Benchmark 195×
+    (0.19 ms @ T=5k → 2.0 ms @ T=50k vs 37.6/372.6 ms Python).
+  - Touching: `modules/math/{include/Kalman.h,src/Kalman.cpp,CMakeLists.txt}`,
+    `ext/python/<i-file>`, `test/python/misc/test_kalman.py`, PRD-037,
+    CHANGELOG, board.
+
+- **T-20260816-03 · [tttrlib] PRD-037 B2: `kmeans` — k-means++ seeding (caller
+  uniforms) + Lloyd, the whole fit in one call**
+  - Status: ✅ done (validated)
+  - Owner: `opencode/glm-5.3`
+  - Opened: 2026-08-16 · Picked: 2026-08-16 · Done: 2026-08-16
+  - Why: chisurf's `_kmeans.py` runs pure-Python loops since the numba removal
+    (`f1290e84b`) — it seeds its Gaussian-HMM emissions and serves KMeans.
+    PRD-037 B2: `kmeans(X, n_clusters, seed_uniforms, max_iter, tol)` one
+    call, determinism from caller-supplied uniforms.
+  - Done when: C++ kernel in `modules/math` (own header, Cluster family
+    conventions), NumPy-typemap binding in `Cluster.i` with the SWIGPYTHON
+    guard, tests on known-answer simulations + bit-for-bit determinism + a
+    committed fixture recorded from chisurf's implementation, parity numbers
+    vs chisurf recorded, A/B benchmark. Then mark validated.
+  - Progress: picked 2026-08-16. Kernel, binding, fixture, 8 tests landed.
+    The one-ulp parity gap (restart 2 of n=1000 d=5 k=8) was traced to FMA
+    contraction; the initial `-ffp-contract=off` CMake fix was rejected as a
+    build-config crutch (skipped MSVC), and re-worked as the source-level
+    `#pragma STDC FP_CONTRACT OFF` in `KMeans.cpp` and `Cluster.cpp` with the
+    flag removed. Final rebuild, no per-file flag: 7/7 bit-identical,
+    HDBSCAN/cluster/kmeans suites green, SWIG guard clean. Benchmarks:
+    919×/418×/904× at n=2k/10k/50k. Validated 2026-08-16.
+  - Touching: `modules/math/{include/KMeans.h,src/KMeans.cpp,CMakeLists.txt}`,
+    `ext/python/Cluster.i`, `test/python/misc/test_kmeans.py`, PRD-037,
+    CHANGELOG, board.
+
 - **T-20260816-02 · [tttrlib] PRD-037 B1: `hdbscan_labels` — single-linkage +
   condense + stability-label, one call over the existing MST**
   - Status: ✅ done (validated)

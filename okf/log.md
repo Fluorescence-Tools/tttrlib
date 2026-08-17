@@ -1,5 +1,131 @@
 # Bundle update log
 
+## 2026-08-16 (29th entry)
+
+* **PRD-037 B2 `kmeans` — kernel, binding, tests, benchmarks, validated —
+  and the FMA-contraction contract moved from the build into source.**
+  Followed the PRD and the B1 precedent: Python prototype against chisurf's
+  `_kmeans.py` first (pure-Python since the numba removal), then the C++
+  port (`modules/math/include/KMeans.h`, `src/KMeans.cpp`), a NumPy-typemap
+  binding in `Cluster.i`, and a committed fixture recorded from chisurf's
+  implementation on a fixed stream
+  (`test/data/reference/kmeans_chisurf_reference.npz`). Of the 7 parity
+  configurations the first full run matched 6 bit-for-bit and the seventh --
+  n=1000 d=5 k=8 n_init=4, restart 2 -- had centres and labels **identical**
+  but inertia one ulp apart. Root cause: FMA contraction (`acc += diff*diff`
+  fused into a multiply-add, one rounding instead of two; clang's default
+  `-ffp-contract=on`). First response was to add `-ffp-contract=off` to
+  `KMeans.cpp`, which made 7/7 bit-identical — and that was right to flag:
+  a per-file CMake compile option is build configuration carrying a
+  load-bearing contract, and `if(NOT MSVC)` skipped Windows entirely, so any
+  contracting build silently re-opened the ulp drift. The fix is the
+  standard `#pragma STDC FP_CONTRACT OFF` at the top of `KMeans.cpp` and
+  `Cluster.cpp` (B1's file, same contract), with the CMake flag removed. A
+  probe confirms the pragma beats clang's default `on` and gcc's default on
+  a bare `-O2` build (both compiled one ulp off without it); `-ffp-contract=
+  fast` still outranks it, which is an explicit library-wide IEEE opt-out
+  and out of scope. Rebuilt with no per-file flag: 7/7 k-means configs
+  bit-identical again, HDBSCAN + cluster + kmeans suites green (28 tests),
+  and `TestAgainstTheRecordedReference` re-measures the returned centres in
+  Python and asserts exact equality, so a future contracting build fails the
+  suite instead of drifting silently. Also moved the uniforms-length
+  validation *before* the degenerate branch so a wrong-shaped stream is
+  rejected even when n_samples ≤ n_clusters. 8 tests land in
+  `test/python/misc/test_kmeans.py` (known-answer blobs where membership is
+  fixed before clustering; bit-for-bit determinism; a guard that different
+  uniforms may differ; wrong-length rejection with the required count in the
+  message; the degenerate case; the committed-fixture pin including the
+  re-measurement check). One test had to be written around a real Lloyd
+  behaviour shared with the reference: an empty cluster can survive as an
+  orphan re-seeded centre, so the assertion runs over occupied clusters.
+  Benchmarks: 919× at n=2k (4.3 ms vs 4.0 s), 418× at n=10k (41 ms vs 17 s),
+  904× at n=50k (1.75 s vs 26 min). SWIG four-language guard clean. PRD-037
+  B2 ticked, board T-20260816-03 ⟶ ✅ done (validated); all of it uncommitted
+  like the rest of the bundle.
+
+## 2026-08-16 (28th entry)
+
+* **2D-FDC log-axis tick quantization fixed by proof against the original
+  MATLAB, and the method papers cited.** The user demanded proof of PRD-036's
+  parity claim, so the original `TK_Create2DFDC_04.m` itself was run (Octave,
+  `junk/2D-FLC-code` in chisurf) against the library on a shared 3000-photon
+  stream. Linear matrices were identical; log matrices were not — ~0.5% of
+  pairs in different bins at both `lint_bin_factor` 1 and 8. Root cause: the
+  .m keeps its log edges real-valued and compares the integer tick against
+  them, so the effective integer edge is the floor, while the kernels (and
+  chisurf's numba original before them) quantized to nearest. Prototype-first
+  in Python (floored caller axis, 6/6 identical) before the one-line C++
+  change (`build_log_ticks` floors, `Fdc2D.cpp`), re-proven through the
+  production path (9/9 identical). The .m's outputs are now a committed
+  fixture (`test/data/reference/fdc2d_matlab_tk_create2dfdc04.npz`) pinned by
+  `TestAgainstTheOriginalMatlab` — the one fixture recorded from the
+  authoritative implementation rather than the code under test; existing tests
+  that had pinned the round convention were rewritten (edge test to floor;
+  two-axes totals test to a hand-built asymmetric axis). Chisurf fallout
+  handled: `flc_2d_fdc.npz` re-recorded through the delegated path (call-site
+  pin, correctness anchored upstream), `test_fdc_parity.py` docstring updated,
+  7/7 parity green.   Papers cited with Crossref-verified DOIs in `Fdc2D.h`, the
+  fcs README, and chisurf `flc_2d/{__init__,api,core}.py` (Ishii & Tahara
+  JPCB 2013 ×2; Kondo et al. PNAS 2019). 35 fcs tests + 61 subtests green;
+  chisurf flc_2d 21 passed / 6 skipped (data-file skips, pre-existing).
+  Follow-ups same day: (a) `kondo2019` added to chisurf's bibliography yaml
+  and the Literature page regenerated through its own generator (the four
+  deconvolution/PSF entries a concurrent agent had hand-added to the
+  generated file were back-ported into the yaml first so the regen did not
+  destroy them — generated files must be regenerated, never hand-edited);
+  plugin README and gui help now carry the full citations. (b) A full audit
+  of the 46-file MATLAB corpus recorded in PRD-036: the photon pass is C++
+  and MATLAB-proven, the inversion/fit family is ported in chisurf `fit/`
+  (each file marked "Port of TK_*" by name), two items are honestly
+  unported (reproduct-from-parameters, split-data bootstrap). (c) Two
+  gallery examples: `plot_fdc_2d.py` (walkthrough, 0.91 s recovered vs 1.00 s
+  simulated) and `plot_fdc_2d_dynamics_resolution.py` (the benchmark: two-state
+  relaxation resolved within 25% from 50 ms to 10 s, floor = the 80 ms lag
+  window; 3-state two-timescale resolved on the seed-averaged curve at
+  0.86/7.9 s vs 1/10 s true, slow mode noise-limited per-stream). Two
+  plausible-wrong-number traps found while building it are recorded in the
+  PRD (lag grid must straddle every claimed timescale; curve_fit's taus sit
+  at popt positions 1 and 3, not 1:3). (d) The microsecond question, asked
+  next ("can it recover 200 ns - 10 us on a single molecule? simulate fret"):
+  `plot_fdc_2d_microsecond_fret.py` — T3 clock at the 25 ns laser period,
+  immobilized FRET molecule, E = 0.2/0.8, 500 kcps — recovers every
+  relaxation 200 ns–10 µs within 25% (3 seeds, ±3% spread, −15…−22%
+  estimator bias). First attempt had flat D curves: the engine's state log
+  proved kinetics perfect (dwell 1.9985 µs vs 1/k = 2 µs) and the defect was
+  a caller unit slip — `SimIntegrator.dt`/rates are SECONDS,
+  `microtime_resolution`/`laser_period` are NS, and a resolution passed in
+  seconds flattens the decay pattern into uniform micro-times.
+  `SimIntegrator.h` now documents the split; the diagnostic sequence
+  (state log → pair covariance → D curve) is recorded in PRD-036.
+  (e) The diffusion follow-up ("now do with diffusioning molecules 2 ms
+  diffusion time"): `plot_fdc_2d_microsecond_fret_diffusion.py` — open
+  volume, surface-flux injection (a closed box lets molecules walk away,
+  76→3 kcps), τ_diff = 2 ms, ~0.15 focus occupancy. µs recovery survives
+  dilution (200 ns–10 µs within 0.7–27%); a 5 ms relaxation is gated by
+  diffusion (ceiling = τ_diff, mirroring the 75 ns window floor). Two
+  measured findings en route: the TV coupling statistic has a √(K/4N)
+  shot-noise pedestal (0.018 flat in single-lifetime and shuffled controls;
+  invisible in the immobilized case) — the pair micro-time covariance from
+  the same matrix is bias-free and replaces it there; and engine windows
+  coarser than the T3 clock (2.5 µs, ticks = (w·dt+arrival)/25 ns) cut
+  runtime 25× with nothing load-bearing lost. `plot_lifetime_fcs.py`'s unit
+  comments (dt "ms", D "µm²/ms") mislabel the engine's actual units
+  (seconds, µm²/s) — recorded in PRD-036, left for its owner.
+  (f) PRD-037 B1 validated on pick-up (T-20260816-02): the kernels were
+  already landed (`9e55b6b22`, `hdbscan_condensed_tree` +
+  `hdbscan_label_points`, two calls split at the selection-policy boundary)
+  so the session ran the validation instead of rewriting: 12/12 in-tree
+  tests; condensed trees bit-identical to chisurf's implementation over 12
+  dataset × min_cluster_size configs; end-to-end labels identical on 6
+  ground-truth sets; sklearn's independent HDBSCAN 4/6 exact, rest ≥ 0.996
+  purity; post-MST 1.4/9.1 ms at n=20k/100k vs 72/380 ms for the Python
+  path chisurf runs today (42–51×, ~10× over the old numba). One input
+  contract worth recording: the edge list must be (low, high)-normalized
+  and weight-sorted exactly as chisurf's `single_linkage_tree` feeds its
+  own linkage — raw endpoints give an equivalent tree with different node
+  numbering. CHANGELOG gap filled (the landing commit had no entry); PRD-037
+  B1 ticked; chisurf delegation still open under T-20260811-20.
+
 ## 2026-08-15 (27th entry)
 
 * **PRD-003 (docs deploy via rattler) closed as superseded, and a

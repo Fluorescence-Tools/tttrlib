@@ -55,7 +55,7 @@ Product Requirements Documents for tttrlib. One `.md` per initiative,
 | [033](PRD-033-streaming-correlator.md) | Streaming correlator agrees with the batch correlator | 🟢 Done |
 | [034](PRD-034-pto-native-tttr-sink.md) | .pto as its own TTTR sink — native photon tables + header definitions | 🔵 Proposed |
 | [035](PRD-035-generic-log-domain-hmm-lattice.md) | Generic log-domain HMM lattice (forward / backward+xi / Viterbi) over a caller-supplied frame-probability matrix | 🟢 Done |
-| [036](PRD-036-2d-flc-photon-kernels.md) | 2D-FLC photon kernels — the fluorescence-decay correlation (2D-FDC) pass | 🟡 In Progress |
+| [036](PRD-036-2d-flc-photon-kernels.md) | 2D-FLC photon kernels — the fluorescence-decay correlation (2D-FDC) pass | 🟢 Done |
 | [037](PRD-037-kernels-to-finish-chisurfs-numba-retirement.md) | Everything tttrlib needs so ChiSurf can drop numba entirely | 🔵 Proposed |
 | [038](PRD-038-general-pattern-fit-and-maxent-consolidation.md) | General N-pattern fit (NNLS/Tikhonov/MaxEnt) and one MaxEnt engine instead of two | 🟢 Done |
 | [039](PRD-039-historic-maxent-target-chisq.md) | Historic MaxEnt: opt-in joint chi²+nu optimization (auto-nu via target chi-square) | 🟢 Done |
@@ -74,9 +74,14 @@ the Sphinx render) is in the PRD's resolution note and where the job used to
 sit in `ci.yml`. Its underlying goal — one doc build path, not two — is true
 by construction now.
 
-**036** is yellow because only the tttrlib half is done: the kernels, bindings
-and tests landed, and ChiSurf's `flc_2d` still calls its own numba (board ticket
-`T-20260811-14`).
+**036** is green: the ChiSurf half landed with chisurf's numba removal
+(`f1290e84b` — `flc_2d/core.py` delegates to `fdc_*`, parity fixture green).
+Beyond the PRD's own scope it was later proven against the original author's
+MATLAB in Octave (log-axis tick quantization fixed and pinned by a
+MATLAB-recorded fixture) and benchmarked end to end — dynamics resolution
+from simulated experiments, microsecond recovery on an immobilized single
+FRET molecule, and the same with freely diffusing molecules at
+τ_diff = 2 ms. See the PRD's closing sections.
 
 **012** is green with one criterion **waived, not met** (2026-08-10): no FLIM
 LABS sample file is published anywhere and none is expected, so its `STT1`
