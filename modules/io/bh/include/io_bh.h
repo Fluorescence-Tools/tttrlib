@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_IO_BECKERHICKL_H
 #define TTTRLIB_IO_BECKERHICKL_H
 
+// Validation: A/B-TESTED 2026-08-17 -- SPC-130 photon stream vs phconvert's SPC-1xx reader (macro, micro, routing
+//   exact; timestamps_unit equal). QC formats are not in phconvert correctly
+//   (its QC reader is known-wrong, see memory) and are pinned by fixture in
+//   test/python/tttr/test_bh_spcqc.py. test/python/test_ab_core_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 /*!
  * \file io_bh.h
  * \brief Becker & Hickl SPC containers: SPC-130, SPC-600 and SPC-QC.

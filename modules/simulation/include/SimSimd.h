@@ -83,6 +83,10 @@
 #ifndef TTTRLIB_SIMSIMD_H
 #define TTTRLIB_SIMSIMD_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- SimRandomV normals KS vs N(0,1) (test/python/simulation/test_ab_simulation_reference.py);
+//   moments, tails, lane independence and seeding in test_simd.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <cstdint>
 #include <vector>

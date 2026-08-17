@@ -14,6 +14,10 @@
 #ifndef TTTRLIB_SIMDECAY_H
 #define TTTRLIB_SIMDECAY_H
 
+// Validation: A/B-TESTED 2026-08-17 -- multi_exponential_pattern / convolve / pdf exact vs numpy; alias sampling
+//   chi-square vs the pdf, sub-bin jitter uniform. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <cmath>
 #include <vector>

@@ -1,6 +1,11 @@
 #ifndef TTTRLIB_SIMKINETICS_H
 #define TTTRLIB_SIMKINETICS_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- 3-state occupation fractions vs the null space of the generator,
+//   sim_state_at_times marginals vs scipy.linalg.expm (chi-square), plus test_kinetics.py's telegraph
+//   closed form. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 #include <cstdint>
 #include <stdexcept>

@@ -16,6 +16,10 @@
 #ifndef TTTRLIB_SIMZIGGURAT_H
 #define TTTRLIB_SIMZIGGURAT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- tables and output stream bit-exact vs Marsaglia & Tsang 2000 zigset/RNOR
+//   driven by the same MT19937 stream; KS/moments vs N(0,1), tails populated. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <cmath>
 

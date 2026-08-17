@@ -18,6 +18,10 @@
 #ifndef TTTRLIB_SIMCOUNTERRANDOM_H
 #define TTTRLIB_SIMCOUNTERRANDOM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- bit-exact vs Philox4x32-10 (Salmon et al. 2011; Random123 KAT pinned in
+//   test_math_ab_numerics.py) for key=(base,id) at seeked counters. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <cmath>
 #include "Random.h"  // shared Philox core + global_rng

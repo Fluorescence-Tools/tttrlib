@@ -16,6 +16,15 @@
 #ifndef TTTRLIB_SIMENGINE_H
 #define TTTRLIB_SIMENGINE_H
 
+// Validation: KNOWN-ANSWER-TESTED 2026-08-17 -- window counts Poisson with the set brightness, background rate,
+//   micro-time histogram = IRF (x) exp with tau recovered by MLE, MSD = 6 D t across lags and dt,
+//   dwell times exponential + equilibrium occupancy, anisotropy r(0)=r0 with the Perrin slope,
+//   FCS G(tau) vs PyBroMo (recorded, same D/PSF/concentration) and the analytic 3-D curve, PTU
+//   records vs ptufile (test/python/simulation/test_ab_simulation_reference.py; test_engine/test_flow/test_kinetics/
+//   test_anisotropy/test_imaging.py); r(t) = r0 exp(-t/rho) out to 2 rho (the A/B found the
+//   excited-state rotation was ONE Gaussian kick, r(2 rho) 0.10-0.12 vs 0.054; sub-stepped since).
+//   Register: okf/testing/algorithm-validation.md
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -686,10 +695,25 @@ private:
                         double ne = 1.0 / std::sqrt(xe*xe + ye*ye + ze*ze);
                         xe *= ne; ye *= ne; ze *= ne;
                         if (Drot > 0.0 && delay > 0.0) {   // rotate during the excited state
-                            double sr = std::sqrt(2.0 * Drot * delay);
-                            xe += sr * rng.randomNorm(); ye += sr * rng.randomNorm(); ze += sr * rng.randomNorm();
-                            double nr = 1.0 / std::sqrt(xe*xe + ye*ye + ze*ze);
-                            xe *= nr; ye *= nr; ze *= nr;
+                            // Isotropic rotational diffusion as Gaussian kicks + renormalise
+                            // is exact only to first order in the kick variance: one kick
+                            // for the whole delay decorrelates too slowly once delay ~ rho
+                            // (r(2 rho) came out 0.10-0.12 vs r0 e^-2 = 0.054; A/B
+                            // 2026-08-17). Sub-step so each kick's per-axis variance
+                            // 2 D dt stays <= kKick2 (angle rms ~ 0.2 rad); the number of
+                            // steps is capped so a pathological delay cannot stall.
+                            constexpr double kKick2 = 0.02;
+                            constexpr int kMaxSteps = 256;
+                            const double var_total = 2.0 * Drot * delay;
+                            int nsteps = int(std::ceil(var_total / kKick2));
+                            if (nsteps < 1) nsteps = 1;
+                            if (nsteps > kMaxSteps) nsteps = kMaxSteps;
+                            const double sr = std::sqrt(var_total / nsteps);
+                            for (int s = 0; s < nsteps; ++s) {
+                                xe += sr * rng.randomNorm(); ye += sr * rng.randomNorm(); ze += sr * rng.randomNorm();
+                                double nr = 1.0 / std::sqrt(xe*xe + ye*ye + ze*ze);
+                                xe *= nr; ye *= nr; ze *= nr;
+                            }
                         }
                         double pp = f * ((1.0 - l1) * xe*xe + l1 * ye*ye);   // parallel (ch 0)
                         double ps = f * (l2 * xe*xe + (1.0 - l2) * ye*ye);   // perpendicular (ch 1)

@@ -16,6 +16,10 @@
 #ifndef TTTRLIB_SIMINJECTION_H
 #define TTTRLIB_SIMINJECTION_H
 
+// Validation: A/B-TESTED 2026-08-17 -- qnorm vs scipy.stats.norm.sf (1e-9), influx_weight vs its closed form and
+//   scipy.integrate.quad, random_erfc / random_entry_depth KS vs their integrated densities. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cmath>
 
 namespace tttrlib {

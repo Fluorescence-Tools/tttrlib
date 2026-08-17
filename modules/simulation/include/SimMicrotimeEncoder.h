@@ -13,6 +13,12 @@
 #ifndef TTTRLIB_SIMMICROTIMEENCODER_H
 #define TTTRLIB_SIMMICROTIMEENCODER_H
 
+// Validation: A/B-TESTED 2026-08-17 -- SPC-132 export keeps every photon's channel and micro-time histogram
+//   (test/python/simulation/test_ab_simulation_reference.py, test_engine.py); byte-identity vs the legacy data2spc_tac was the P2 dev-time check
+//   (okf/design/plan-005-photon-simulator.md). PTU/HHT3v2 records of a simulated stream decode
+//   identically in ptufile (three PTU *header* writer defects, io/pq, are documented on the test).
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <vector>
 #include "SimRandom.h"

@@ -15,6 +15,11 @@
 #ifndef TTTRLIB_SIMRANDOM_H
 #define TTTRLIB_SIMRANDOM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- MT19937 raw stream bit-exact vs numpy's legacy init_genrand seeding, init_by_array
+//   vs the mt19937ar.c test vector, random_res53 vs RandomState.random_sample; state snapshot
+//   round trip. test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <cmath>
 #include <vector>

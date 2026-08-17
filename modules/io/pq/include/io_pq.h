@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_IO_PICOQUANT_H
 #define TTTRLIB_IO_PICOQUANT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- PTU HydraHarp T2/T3 and HT3 photon streams vs ptufile / phconvert (exact).
+//   test/python/test_ab_core_reference.py, test/python/tttr/test_t2_ptufile_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 /*!
  * \file io_pq.h
  * \brief PicoQuant PTU and HT3 containers.

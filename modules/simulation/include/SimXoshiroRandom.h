@@ -14,6 +14,11 @@
 #ifndef TTTRLIB_SIMXOSHIRORANDOM_H
 #define TTTRLIB_SIMXOSHIRORANDOM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- bit-exact vs Blackman & Vigna's xoshiro256++ reference (transcription checked
+//   on the state-{1,2,3,4} vector), seed hash + splitmix64 expansion included; randomNorm KS vs
+//   N(0,1). test/python/simulation/test_ab_simulation_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <cstdint>
 #include <cmath>
 

@@ -295,7 +295,7 @@ void write_ptu_header(std::string fn, nlohmann::json &data, std::string modes){
     //     std::clog << "WARNING: File exists" << fn << "." << std::endl;
     // }
     std::ifstream f(fn);
-    if(f.good()){
+    if(f.good() && modes.rfind("r+", 0) != 0){   // "r+b" is an in-place header rewrite
         std::clog << "WARNING: File exists" << fn << "." << std::endl;
     }
 
@@ -341,8 +341,12 @@ if (is_verbose()) {
         strcpy(TagHead.Ident, tmp_str.c_str());
         TagHead.Idx = tag["idx"];
         TagHead.Typ = tag["type"];
+        // Header_End is written last, below, whatever its position in the
+        // tag list: ensure_minimal_tags appends the mandatory tags AFTER a
+        // Header_End the caller supplied, and a reader stops at the first
+        // Header_End it sees (found by the ptufile round trip, 2026-08-17).
         if(tmp_str == FileTagEnd)
-            header_end_written = true;
+            continue;
         switch (TagHead.Typ) {
             // In these cases the tags have the same number of bits
             case tyTDateTime:
@@ -423,16 +427,19 @@ if (is_verbose()) {
                 throw std::string("Tag type not supported");
         }
     }
-    if(!header_end_written){
-if (is_verbose()) {
-        std::clog << "Header_End is missing. Adding Header_End to tag list." << std::endl;
-}
+    // Always the last tag, fully initialised: the earlier version left Typ
+    // and the Ident tail uninitialised, which ptufile rejects ("invalid tag
+    // type ... typecode=0") -- tttrlib's own reader only matched the name.
+    {
         tag_head_t TagHead;
-        TagHead.TagValue = 0;
+        memset(&TagHead, 0, sizeof(TagHead));
         strcpy(TagHead.Ident, FileTagEnd.c_str());
         TagHead.Idx = -1;
+        TagHead.Typ = tyEmpty8;
+        TagHead.TagValue = 0;
         fwrite(&TagHead, sizeof(TagHead), 1, fp);
     }
+    (void) header_end_written;
     fclose(fp);
 }
 

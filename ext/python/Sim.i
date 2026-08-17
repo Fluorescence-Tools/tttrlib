@@ -30,7 +30,11 @@
 %ignore tttrlib::SimSystem::set_emitter_grid(const int*, int, int, int, int,
                                              double, double, double, double, double, double);
 
+// init_by_array(const uint32_t* key, int key_length): array in, MT19937's
+// init_by_array; the raw-pointer form was unreachable from Python (2026-08-17).
+%apply (unsigned int* IN_ARRAY1, int DIM1) { (const uint32_t* key, int key_length) }
 %include "SimRandom.h"
+%clear (const uint32_t* key, int key_length);
 
 // Continuous-time Markov kinetics on its own — no photons, no focus, no box.
 %include "SimKinetics.h"
