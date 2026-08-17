@@ -156,6 +156,8 @@ def experimental(cls):
 %include "Cluster.i"
 /* Kalman filter recursion over a count-rate trace */
 %include "Kalman.i"
+/* Watershed flood and marching-squares contours -- region segmentation */
+%include "Watershed.i"
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
 %include "Jitter.i"

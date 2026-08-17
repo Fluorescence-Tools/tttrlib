@@ -422,9 +422,9 @@ retired so nobody works the same thing twice.)*
 
 - **T-20260817-01 · [tttrlib] PRD-037 B4: `watershed` + `marching_squares` —
   region segmentation, skimage-exact**
-  - Status: 🚧 picked 2026-08-17
+  - Status: ✅ done (2026-08-17)
   - Owner: `opencode/deepseek-v4-flash-free`
-  - Opened: 2026-08-17 · Picked: 2026-08-17
+  - Opened: 2026-08-17 · Picked: 2026-08-17 · Done: 2026-08-17
   - Why: the last open kernel of PRD-037 Part B (B5 was declared out of scope).
     ChiSurf's `core/roi/segmentation.py` runs five pure-Python kernels since
     the numba removal — `_flood` (watershed flood from markers with a priority
@@ -440,6 +440,19 @@ retired so nobody works the same thing twice.)*
     known-answer simulation + bit-for-bit determinism against skimage + committed
     fixture recorded from chisurf, parity numbers vs skimage recorded, A/B
     benchmark vs the Python path, four-language guard, PRD-037 B4 checkbox.
+  - Progress: done 2026-08-17. Kernels (`Watershed.h/.cpp`), binding
+    (`ext/python/Watershed.i`), and the r/js includes landed with the fp
+    contract carried in source; Java excluded via the parity exception (no
+    argout rank in jarrays.i, no `_into` shape). The committed fixture is
+    recorded from **skimage 0.25.0**, not chisurf — chisurf's `_flood` seeds
+    at `image[marker]` and its marching-squares bits swap the lower row, so a
+    chisurf-recorded fixture would fail its own pin (see the header). 18
+    tests in `test/python/misc/test_watershed.py`: known-answer, fixture
+    bit-exactness (both connectivities, mask/no-mask, levels × vch, NaN
+    skip), live skimage sweep (skips when skimage absent), errors. A/B:
+    watershed 97–108×, marching squares 219–240× vs the Python path. PRD-037
+    B4 ticked, CHANGELOG + modules/math README updated. Remaining (chisurf
+    side, tracked in T-20260811-20): `roi/segmentation.py` delegation.
   - Touching: `modules/math/{include,src}` watershed/marching_squares,
     `ext/python/<i-file>`, test in `test/python/misc/`, PRD-037, CHANGELOG,
     board.

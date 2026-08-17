@@ -20,6 +20,33 @@
   doi:10.1073/pnas.1821207116).
 
 ### Added
+- **Region segmentation in one compiled call each: `watershed(image, markers,
+  mask, connectivity)` → label image, and `marching_squares(image, level,
+  vertex_connect_high)` → `(n, 4)` contour segments**
+  (`modules/math/Watershed.h` / `Watershed.cpp`, PRD-037 B4). Both kernels
+  match **scikit-image 0.25.0 exactly**, digit for digit — the contract is
+  skimage, not ChiSurf, because ChiSurf's `core/roi` is documented as
+  skimage-exact `regionprops` and its tests compare against skimage. The two
+  places ChiSurf's own `segmentation.py` diverges were measured and settled in
+  skimage's favour: the flood seeds its priority queue at `-inf` (ChiSurf
+  pushes `image[marker]`; the change gives 0 diffs vs skimage across seeds
+  0–9 and connectivity 1/2), and the marching-squares case bits are
+  `ul=1, ur=2, ll=4, lr=8` in raster emission order (ChiSurf swaps the lower
+  row and inverts the ambiguous squares). Exactness is carried in source via
+  `#pragma STDC FP_CONTRACT OFF` — a contracted `_fraction` interpolation
+  rounds once instead of twice and moves a contour endpoint by a ulp. The
+  fixture `test/data/reference/watershed_skimage_reference.npz` is recorded
+  from skimage 0.25.0; `test/python/misc/test_watershed.py` (18 tests) pins
+  it bit-for-bit (both connectivities, mask and no-mask, both levels and vch
+  values, the NaN-corner skip) and sweeps live skimage over seeds. Mask is a
+  required argument (pass an all-true uint8 image for skimage's `mask=None`).
+  A/B benchmark vs the pure-Python path ChiSurf runs today: watershed
+  **97–108×** (6.9 ms vs 745 ms at 256²; 35.9 ms vs 3.5 s at 512²), marching
+  squares **219–240×** (0.9 ms vs 208 ms at 256²; 3.8 ms vs 832 ms at 512²).
+  Binding in `ext/{python,r,js}` (Java excluded: its argout typemaps marshal
+  no rank, see the parity exception). ChiSurf's delegation is tracked on the
+  board (T-20260811-20).
+
 - **Kalman filter over a whole count-rate trace in one call:
   `kalman_filter(y, x0, P0, Q, dt, r_scale)` → `(x_filt, P_filt, D_mahal)`**
   (`modules/math/Kalman.h` / `Kalman.cpp`, PRD-037 B3). Bit-exact port of the

@@ -28,22 +28,24 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Nnls.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/KMeans.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Kalman.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/Watershed.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
     DEPENDS  util
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i Sampling.i
-                    HmmLattice.i Kalman.i
+                    HmmLattice.i Kalman.i Watershed.i
     TEST_DIR test/python/misc
 )
 
-# Cluster.cpp and KMeans.cpp carry their fp-contraction contract in source:
-# both open with `#pragma STDC FP_CONTRACT OFF`, because each is a bit-exact
-# port of a ChiSurf Python implementation whose correctness depends on one
-# unit in the last place of a summed distance (a tied mutual-reachability
-# edge for Cluster.cpp, a restart-ranked inertia for KMeans.cpp). A compile
-# flag was tried first and rejected: `if(NOT MSVC)` silently skipped Windows,
-# so the contract lived in the build instead of the code. The pragma is
-# portable across clang, gcc and MSVC and needs no build-system support, so
+# Cluster.cpp, KMeans.cpp and Watershed.cpp carry their fp-contraction
+# contract in source: all three open with `#pragma STDC FP_CONTRACT OFF`,
+# because each is a bit-exact port of a Python implementation whose correctness
+# depends on one unit in the last place (a tied mutual-reachability edge for
+# Cluster.cpp, a restart-ranked inertia for KMeans.cpp, an interpolated
+# contour endpoint for Watershed.cpp). A compile flag was tried first and
+# rejected: `if(NOT MSVC)` silently skipped Windows, so the contract lived in
+# the build instead of the code. The pragma is portable across clang, gcc and
+# MSVC and needs no build-system support, so no per-file COMPILE_OPTIONS here.
 # no per-file COMPILE_OPTIONS here.
 
 # HmmLattice.cpp must not be compiled with fast math.

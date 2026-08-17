@@ -313,8 +313,35 @@ Five of the thirteen ChiSurf files are ChiSurf's own work and need nothing here:
       2.0 ms at 50k) vs the pure-Python path ChiSurf runs today. dim>2 is
       deliberately not bit-parity (own GE inverse vs ChiSurf's LAPACK); the
       divergence is documented in the header and README, tests are dim==2.)*
-- [ ] B4 `watershed` + `marching_squares`, matching scikit-image exactly.
-- [ ] B5 decided — implemented, or declared out of scope with the reason.
+- [x] B4 `watershed` + `marching_squares`, matching scikit-image exactly.
+      *(2026-08-17, `opencode/deepseek-v4-flash-free`: both kernels landed in
+      `modules/math` (`Watershed.h`/`Watershed.cpp`), binding in
+      `ext/python/Watershed.i` with the NumPy IN_ARRAY2/ARGOUTVIEWM_ARRAY2
+      typemaps, `ext/r`/`ext/js` include it, Java excluded with the parity
+      exception (jarrays.i marshals no argout of any rank and there is no
+      `_into` helper shape). The contract is **skimage 0.25.0, not ChiSurf** —
+      ChiSurf's `_flood` seeds its queue at `image[marker]` where skimage
+      pushes `-inf`, and its marching-squares case bits swap the lower row and
+      invert the ambiguous squares; both divergences were measured against the
+      installed skimage and settled in skimage's favour (0 diffs vs skimage on
+      watershed across seeds 0–9 and connectivity 1/2 after the `-inf` change;
+      the case table matches skimage's cython bit for bit in order). The
+      committed fixture `test/data/reference/watershed_skimage_reference.npz`
+      is recorded from skimage 0.25.0 for that reason — a "reference" from
+      ChiSurf would fail its own pin. `test/python/misc/test_watershed.py`:
+      18 tests, known-answer simulations, fixture bit-exactness (label image
+      for both connectivities, with and without mask; marching-squares
+      segments in raster order for 2 levels × 2 vertex_connect_high, plus the
+      NaN-corner skip case), a live skimage sweep over 6 seeds × connectivities
+      / levels × vch that skips when skimage is absent, and error cases
+      (shape mismatch, connectivity out of range, <2×2 marching-squares
+      input). Benchmark vs the pure-Python path ChiSurf runs today:
+      watershed **97–108×** (6.9 ms vs 745 ms at 256²; 35.9 ms vs 3475 ms at
+      512²), marching squares **219–240×** (0.9 ms vs 208 ms at 256²; 3.8 ms
+      vs 832 ms at 512²). What remains is the ChiSurf delegation
+      (T-20260811-20's roi/segmentation.py item), not the kernels.)*
+- [x] B5 decided — declared out of scope 2026-08-11: not tttrlib. *[ticked
+      2026-08-17 — the decision block above is the answer.]*
 - [ ] Every item: NumPy typemaps, one call per analysis, a simulation test with
       a known answer, and the four-language guard.
 - [ ] ChiSurf's allow-list drops to **5** (the *Not in scope* files).
