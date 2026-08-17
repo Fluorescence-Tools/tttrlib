@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Fixed
+- **Becker & Hickl `.set` sidecar: the micro-time channel width now applies to
+  every BH container and honours the TAC gain** (`SP_TAC_TC`, or
+  `SP_TAC_R / (SP_TAC_G * SP_ADC_RE)`). SPC-130 files had kept the header
+  guess (macro clock / 4096): the BH FLIM sample read 6.1 ps per channel
+  instead of SPCM's 3.05 ps. Files without a sidecar are unchanged.
 - **`TTTR_RNG_ENGINE=mt19937` now runs a Mersenne Twister.** The engine name
   was accepted and every streaming draw silently used Philox. `Random` now
   streams `std::mt19937` (mt19937ar `init_genrand`, i.e. numpy's legacy

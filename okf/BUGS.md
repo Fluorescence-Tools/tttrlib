@@ -3,6 +3,19 @@
 Found from outside the library, with a reproduction each. Anything fixed moves
 to the changelog and leaves here.
 
+## FIXED — SPC-130 micro-time resolution ignored the .set sidecar (and every BH path ignored the TAC gain)
+
+**Fixed 2026-08-17, same day — found by comparing tttrlib's header against
+phconvert's `load_set` on the BH FLIM samples.** `read_bh_set_file` applied the
+sidecar's `SP_TAC_R / SP_ADC_RE` only for SPC-QC containers and never divided
+by `SP_TAC_G`; an SPC-130 file kept the header guess macro clock / 4096. On
+`imaging/bh/spcm/FocalCheck_*` (TAC range 50 ns, gain 4, 4096 channels) that
+was 6.1 ps per channel where SPCM's own `SP_TAC_TC` says 3.05 ps — every
+lifetime derived from that header would be 2× too long. Now every BH container
+takes `SP_TAC_TC` (or `SP_TAC_R / (SP_TAC_G · SP_ADC_RE)`) when a .set exists;
+files without a sidecar keep the guess as before. Pinned against phconvert
+`load_set` in `test_ab_core_reference.py`.
+
 ## FIXED — PicoHarp T3 decoder: markers were "dtime == 0", channel-15 markers came out as photons
 
 **Fixed 2026-08-17, same day — found by the ptufile A/B on the second reading round.**

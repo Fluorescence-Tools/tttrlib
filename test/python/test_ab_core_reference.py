@@ -674,6 +674,29 @@ class TestRecordDecodingAgainstIndependentReaders(unittest.TestCase):
         expected = ts[ph].astype(np.int64) + 1024 * np.cumsum(add)[ph]
         np.testing.assert_array_equal(np.asarray(d.macro_times).astype(np.int64), expected)
 
+    def test_bh_set_sidecar_tac_width_matches_phconvert_load_set(self):
+        """The micro-time channel width of a Becker & Hickl file lives only in
+        the .set sidecar (SPCM's SP_TAC_TC = SP_TAC_R / (SP_TAC_G * SP_ADC_RE)).
+        phconvert's ``load_set`` parses the same file independently. Until
+        2026-08-17 only the SPC-QC path used the sidecar, without the TAC gain:
+        the SPC-130 FLIM sample (gain 4, 12.5 ns over 4096 channels) read as
+        6.1 ps instead of 3.05 ps."""
+        bh = _load_phconvert("bhreader")
+        if bh is None:
+            self.skipTest("phconvert not importable from junk/")
+        for spc, ct in (("imaging/bh/spcm/FocalCheck_A1_20x_8xzoom_750nm_m1.spc", "SPC-130"),
+                        ("bh/bh_spcqc004.spc", "SPC-QC")):
+            fn = os.path.join(_ROOT, "tttr-data", spc)
+            if not os.path.isfile(fn):
+                continue
+            with self.subTest(file=os.path.basename(spc)):
+                sp = bh.load_set(fn[:-4] + ".set")["setup"]
+                d = tttrlib.TTTR(fn, ct)
+                self.assertAlmostEqual(d.header.micro_time_resolution, float(sp["SP_TAC_TC"]), delta=1e-18)
+                self.assertAlmostEqual(d.header.micro_time_resolution,
+                                       float(sp["SP_TAC_R"]) / (float(sp["SP_TAC_G"]) * int(sp["SP_ADC_RE"])), delta=1e-18)
+                self.assertEqual(d.header.number_of_micro_time_channels, int(sp["SP_ADC_RE"]))
+
     def test_bh_spc630_256_matches_phconvert_up_to_its_overflow_shift(self):
         """SPC-600/630 32-bit records: 8-bit ADC, 17-bit macro time, 3-bit
         routing. phconvert's `_read_spc6xx_32bit` masks the 17-bit field but

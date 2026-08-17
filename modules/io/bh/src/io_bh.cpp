@@ -180,6 +180,8 @@ bool parse_bh_set(const std::string& content, nlohmann::json &data) {
     // 4 byte .spc header cannot carry the micro time resolution (see below)
     double tac_range = 0.0;
     int adc_resolution = 0;
+    double tac_gain = 0.0;
+    double tac_time_per_channel = 0.0;
 
     std::istringstream text(raw);
     std::string line;
@@ -220,6 +222,10 @@ bool parse_bh_set(const std::string& content, nlohmann::json &data) {
                             add_tag(data, "BH_UsePixelClock", use_pixel_clock, tyInt8);
                         } else if (key == "SP_TAC_R") {
                             tac_range = std::stod(val);
+                        } else if (key == "SP_TAC_G") {
+                            tac_gain = std::stod(val);
+                        } else if (key == "SP_TAC_TC") {
+                            tac_time_per_channel = std::stod(val);
                         } else if (key == "SP_ADC_RE") {
                             adc_resolution = std::stoi(val);
                         }
@@ -238,14 +244,25 @@ bool parse_bh_set(const std::string& content, nlohmann::json &data) {
         }
     }
 
-    // The SPC-QC modules run the TAC independently of the macro time clock, so
-    // the micro time resolution is not derivable from the .spc header. The .set
-    // is the only place it is recorded; use it to replace the default assumed
-    // by read_bh_spcqc_header.
-    if((int) data[TTTRContainerType] == BH_SPCQC_CONTAINER &&
-       tac_range > 0.0 && adc_resolution > 0){
-        add_tag(data, TTTRTagRes, tac_range / (double) adc_resolution, tyFloat8);
-        add_tag(data, TTTRNMicroTimes, adc_resolution, tyInt8);
+    // The micro time channel width is not in any .spc header -- the SPC-130
+    // reader guesses macro clock / 4096 and the SPC-QC reader a default TAC
+    // range. The .set is the only place it is recorded: SPCM's own
+    // SP_TAC_TC ("TAC time per channel"), which equals
+    // SP_TAC_R / (SP_TAC_G * SP_ADC_RE). Until 2026-08-17 only the QC path
+    // used the .set, and without the gain: an SPC-130 FLIM file with TAC gain 4
+    // (12.5 ns over 4096 channels, 3.05 ps) read as 6.1 ps.
+    {
+        const int ct = (int) data[TTTRContainerType];
+        const bool bh = ct == BH_SPCQC_CONTAINER || ct == BH_SPC130_CONTAINER ||
+                        ct == BH_SPC600_256_CONTAINER || ct == BH_SPC600_4096_CONTAINER;
+        double width = 0.0;
+        if (tac_time_per_channel > 0.0) width = tac_time_per_channel;
+        else if (tac_range > 0.0 && adc_resolution > 0)
+            width = tac_range / ((tac_gain > 0.0 ? tac_gain : 1.0) * (double) adc_resolution);
+        if (bh && width > 0.0) {
+            add_tag(data, TTTRTagRes, width, tyFloat8);
+            if (adc_resolution > 0) add_tag(data, TTTRNMicroTimes, adc_resolution, tyInt8);
+        }
     }
 
     // Record that this is a BH SPC CLSM image so the reconstruction routine can
