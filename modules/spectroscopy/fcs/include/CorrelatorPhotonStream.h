@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_CORRELATORPHOTONSTREAM_H
 #define TTTRLIB_CORRELATORPHOTONSTREAM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- coarsen() (floor-halve times, merge weights) is what the
+//   cascade pair-count reference assumes and the wahl curve matches it to rounding; make_fine
+//   pinned in test/python/correlator/test_Correlator.py.
+//   test/python/correlator/test_ab_correlator_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <vector>
 #include <numeric>  /* std::accumulate */
 

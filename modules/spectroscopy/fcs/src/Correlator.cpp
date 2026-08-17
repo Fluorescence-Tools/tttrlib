@@ -659,17 +659,22 @@ void Correlator::ccf_laurence(
         double w1 = p1.weights[i];
 
         for(int k = 0; k < nbins - 1; k++){
-            double tau_min = static_cast<double>(taus[k + 0]); // lower edge of tau bin
-            double tau_max = static_cast<double>(taus[k + 1]); // upper edge of tau bin
+            // Edges of the tau bin, moved to the partner's time axis so the
+            // comparison never subtracts unsigned times: a partner photon
+            // EARLIER than ti used to wrap to ~2^64 and stop the skip loop,
+            // which zeroed every cross-correlation whose second stream
+            // started first (A/B vs exact pair counts, 2026-08-17).
+            const unsigned long long edge_min = ti + taus[k + 0];
+            const unsigned long long edge_max = ti + taus[k + 1];
 
             if(k == 0){
                 j = jmin[k];
-                for(; (j < p2.size()) && ((p2.times[j] - ti) < tau_min); j++);
+                for(; (j < p2.size()) && (p2.times[j] < edge_min); j++);
             }
             jmin[k] = j;
 
             j = std::max(jmax[k], j);
-            for(; (j < p2.size()) && ((p2.times[j] - ti) < tau_max); j++);
+            for(; (j < p2.size()) && (p2.times[j] < edge_max); j++);
             jmax[k] = j;
 
             // add weight

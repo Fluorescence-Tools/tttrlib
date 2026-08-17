@@ -122,16 +122,15 @@ class Tests(unittest.TestCase):
         x_felekyan = correlator.x_axis
         y_felekyan = correlator.correlation
 
-        n_min = min(len(x_wahl), len(x_felekyan))
-        d = scipy.spatial.distance.directed_hausdorff(
-            u=(
-                np.vstack([y_wahl, x_wahl]).T[0:n_min]
-            ),
-            v=(
-                np.vstack([y_felekyan, x_felekyan]).T[0:n_min]
-            )
-        )
-        self.assertEqual(d[0] < 5.3, True)
+        # wahl and felekyan estimate the same G(tau) on different lag axes
+        # (felekyan's blocks step 2^(k-1), wahl's 2^k), so compare them as
+        # functions of tau: interpolate wahl onto felekyan's lags above the
+        # shot-noise-dominated first decades and require agreement within
+        # the statistical scatter of this 6 MB file.
+        sel = (x_felekyan >= 1e3) & (x_felekyan < x_wahl.max())
+        y_interp = np.interp(x_felekyan[sel], x_wahl, y_wahl)
+        self.assertLess(np.abs(np.mean(y_interp - y_felekyan[sel])), 0.1)
+        self.assertLess(np.max(np.abs(y_interp - y_felekyan[sel])), 1.0)
 
         d = {
             'tttr': data,

@@ -2,6 +2,12 @@
 #ifndef TTTRLIB_FDC2D_H
 #define TTTRLIB_FDC2D_H
 
+// Validation: A/B-TESTED 2026-08-16 -- vs the original MATLAB TK_Create2DFDC_04.m run in Octave
+//   (recorded fixture fdc2d_matlab_tk_create2dfdc04.npz: log and linear matrices identical,
+//   every count, 2 factors x 3 lags) and vs a double loop over every pair.
+//   test/python/fcs/test_fdc2d.py (TestAgainstTheOriginalMatlab).
+//   Register: okf/testing/algorithm-validation.md
+
 // Fdc2D.h -- the 2D fluorescence-decay correlation (2D-FDC) photon pass.
 //
 // A 2D-FDC matrix is a **photon-pair histogram over micro-times**: walk a

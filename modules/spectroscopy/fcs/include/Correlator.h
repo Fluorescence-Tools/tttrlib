@@ -2,6 +2,19 @@
 #ifndef TTTRLIB_CORRELATOR_H
 #define TTTRLIB_CORRELATOR_H
 
+// Validation: A/B-TESTED 2026-08-17 (wahl, laurence, felekyan) -- unnormalized pair counts vs a
+//   NumPy pair counter written from each lag definition (rounding-exact) and vs
+//   pycorrelate.pcorrelate (per cascade on the coarsened times); normalized G(tau) vs the analytic
+//   autocorrelation of a simulated blinking emitter (ACF and random-split CCF, amplitude within
+//   3 sigma, shape bracketed by the labelled bin) and vs multipletau at short lags (3%).
+//   Two defects the A/B found were fixed the same day and are pinned there: `laurence`
+//   cross-correlation formed t2 - t1 unsigned (all-zero when the second stream started first);
+//   `felekyan` was labelled with the wahl axis (spacing 2^k) while counting at 2^(k-1) -- it now
+//   has its own contiguous axis (CorrelatorCurve::update_axis).
+//   Also: the `wahl` label is the upper end of its coarse bin by up to one coarse step.
+//   test/python/correlator/test_ab_correlator_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <iostream>
 #include <cstdio>
 #include <vector>
@@ -311,7 +324,10 @@ public:
     void set_correlation_method(std::string cm) {
         is_valid = false;
         correlation_method = cm;
-       }
+        // felekyan has its own lag axis (see CorrelatorCurve::update_axis)
+        curve.settings.correlation_method = cm;
+        curve.update_axis();
+    }
 
 
     /*!

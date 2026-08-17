@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_CORRELATORCURVE_H
 #define TTTRLIB_CORRELATORCURVE_H
 
+// Validation: A/B-TESTED 2026-08-17 -- the multi-tau axis (step doubling every n_bins) equals the
+//   NumPy construction used by the pair-count references; corr / corr_normalized round-trip
+//   through the reference checks. test/python/correlator/test_ab_correlator_reference.py.
+//   Register: okf/testing/algorithm-validation.md
+
 #include <iostream>
 #include <vector>
 #include <algorithm>  /* std::max */
