@@ -239,5 +239,51 @@ class TestFidaEqualsPchUnderTheConventionMap(unittest.TestCase):
         np.testing.assert_allclose(p_def_rescaled, p_conv, rtol=1e-2, atol=1e-5)
 
 
+class TestPchAgainstPysimfcs(unittest.TestCase):
+    """An implementation that is not ours: Jay Unruh's ``pysimfcs``
+    (``analysis_utils.p3DG`` / ``singlespecies``, the NumPy port of his ImageJ
+    Jay_Plugins PCH), which evaluates Chen et al. 1999 eq. 16 with the
+    incomplete gamma function and references the particle number to the PSF
+    volume V_PSF = (pi/2)^{3/2} w0^2 z0 (Chen's N_PSF).
+
+    tttrlib's radial x^2 form has the same k >= 1 shape (ratio constant to
+    1e-5) but references N to V0 = 4 pi w0^3, so tttrlib's ``avg_n`` is
+    N_PSF * 16/sqrt(2 pi) = 6.383 N_PSF; with that conversion the open-system
+    histograms agree to 5e-5 relative (pysimfcs' own dx = 0.01 sum sets the
+    floor). Nothing about the shape or the brightness depends on the
+    convention -- see the header. Skips when junk/pysimfcs is absent."""
+
+    PYSIMFCS = os.path.join(_CHISURF_ROOT, "junk", "pysimfcs")
+    F = np.sqrt(2.0 * np.pi) / 16.0            # N_PSF / N_tttrlib
+
+    def _au(self):
+        if not os.path.isdir(self.PYSIMFCS):
+            self.skipTest("junk/pysimfcs not present")
+        sys.path.insert(0, self.PYSIMFCS)
+        try:
+            return importlib.import_module("analysis_utils")
+        finally:
+            sys.path.pop(0)
+
+    def test_single_particle_shape_and_reference_volume(self):
+        au = self._au()
+        for eps in (0.3, 0.8, 2.5):
+            with self.subTest(eps=eps):
+                p1 = np.asarray(tttrlib.pch_single_species(10, eps))
+                ref = np.array([au.p3DG(k, eps) for k in range(1, 11)])
+                ratio = p1[1:9] / ref[:8]
+                np.testing.assert_allclose(ratio, self.F, rtol=2e-5)
+
+    def test_open_system_with_n_converted_to_the_psf_volume(self):
+        au = self._au()
+        for eps, n_psf in ((0.3, 0.5), (0.8, 2.0), (2.5, 0.5)):
+            with self.subTest(eps=eps, n_psf=n_psf):
+                ref = au.singlespecies(eps, n_psf, nlength=60, klength=14)
+                ours = np.asarray(tttrlib.pch_open_system(14, eps, n_psf / self.F, 60))
+                self.assertLess(float(np.abs(ref - ours).max()), 1e-5)
+                sel = ref > 1e-6
+                self.assertLess(float(np.max(np.abs(ref - ours)[sel] / ref[sel])), 1e-4)
+
+
 if __name__ == "__main__":
     unittest.main()

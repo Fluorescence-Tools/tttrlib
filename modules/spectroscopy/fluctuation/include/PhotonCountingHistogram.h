@@ -10,6 +10,22 @@
  * FIDA (Fluorescence Intensity Distribution Analysis, Kask et al., PNAS 1999)
  * computes the same P(k) through the probability generating function (PGF)
  * evaluated on the complex unit circle and inverted via FFT.
+ *
+ * \par Which "number of molecules" -- the reference volume
+ * Chen et al. 1999 (Biophys J 77:553) show that an open-system PCH does not
+ * depend on the reference volume the single-molecule term is normalised to,
+ * as long as the mean particle number refers to that same volume; by
+ * convention they report N_PSF, the mean number in the PSF volume
+ * V_PSF = (pi/2)^{3/2} w0^2 z0. This file's single-molecule term is the
+ * radial integral \f$\int x^2\,\mathrm{Poi}(k, \varepsilon e^{-2x^2})\,dx\f$
+ * without the 4 pi and without dividing by a volume, i.e. it is referenced to
+ * V0 = 4 pi w0^3 (isotropic w0 = z0). Hence
+ *
+ *   avg_n (here) = N_PSF * 16 / sqrt(2 pi) = 6.383 N_PSF,   <k> = avg_n * eps * sqrt(2 pi)/16 = N_PSF * eps.
+ *
+ * The k >= 1 shape and the brightness are convention-free (checked against
+ * pysimfcs' Chen eq. 16 implementation to 1e-5); only the meaning of `avg_n`
+ * carries the factor. Convert before comparing with literature N_PSF values.
  */
 #ifndef TTTRLIB_PHOTONCOUNTINGHISTOGRAM_H
 #define TTTRLIB_PHOTONCOUNTINGHISTOGRAM_H
@@ -21,7 +37,10 @@
 //   moments (1e-10), Poisson for background only, ChiSurf's NumPy fida (1e-12), and equal to
 //   pch_open_system under the x^2 dx <-> w(b) db change of variables with a converged profile.
 //   CAVEAT found: fida_pch's N is grid-relative -- the default 256-bin profile makes N ~6.8x
-//   the converged-profile N (shape unchanged to 3e-3). test/python/fluctuation/test_ab_pch_reference.py.
+//   the converged-profile N (shape unchanged to 3e-3). Independent implementation: pysimfcs (J. Unruh)
+//   p3DG / singlespecies (Chen 1999 eq. 16, N in V_PSF): same k>=1 shape to 1e-5, open-system P(k)
+//   equal to 5e-5 once avg_n = N_PSF * 16/sqrt(2 pi) -- avg_n is referenced to V0 = 4 pi w0^3 (see \par).
+//   test/python/fluctuation/test_ab_pch_reference.py.
 //   Register: okf/testing/algorithm-validation.md
 
 #include <vector>
@@ -50,7 +69,7 @@ std::vector<double> pch_single_species(
  *
  * \param k_max largest photon count
  * \param brightness molecular brightness per particle
- * \param avg_n average number of particles in the observation volume
+ * \param avg_n mean number of particles referenced to V0 = 4 pi w0^3 (= 6.383 N_PSF; see the file note)
  * \param max_n maximum particle number for Poisson summation
  */
 std::vector<double> pch_open_system(

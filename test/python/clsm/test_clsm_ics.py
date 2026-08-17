@@ -11,6 +11,8 @@ and segfaulted the interpreter.
 """
 from __future__ import division
 
+import os
+import sys
 import unittest
 
 import numpy as np
@@ -196,6 +198,34 @@ class TestAgainstNumpy(unittest.TestCase):
         np.testing.assert_allclose(g_ours, g_pam, rtol=1e-10, atol=1e-12)
         # and the zero-lag amplitude is the usual 1/N_particles-style quantity
         self.assertGreater(g_ours[0, 0], 0.0)
+
+
+class TestAgainstPysimfcs(unittest.TestCase):
+    """An implementation that is not ours: Jay Unruh's ``pysimfcs``
+    ``analysis_utils.autocorr2d`` (NumPy port of the Jay_Plugins ICS): the raw
+    correlation divided by ``N * mean^2`` minus one, fftshifted. Identical
+    (0.0) on even shapes; on an odd width pysimfcs' ``irfft2`` without ``s=``
+    drops the last column (their limitation), so only even shapes are compared.
+    Skips when junk/pysimfcs is absent."""
+
+    PYSIMFCS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
+                            "chisurf", "junk", "pysimfcs")
+
+    def test_normalised_autocorrelation_identical(self):
+        if not os.path.isdir(self.PYSIMFCS):
+            self.skipTest("junk/pysimfcs not present")
+        import importlib
+        sys.path.insert(0, self.PYSIMFCS)
+        try:
+            au = importlib.import_module("analysis_utils")
+        finally:
+            sys.path.pop(0)
+        rng = np.random.default_rng(0)
+        for shape in ((16, 16), (32, 48), (64, 8), (8, 64)):
+            with self.subTest(shape=shape):
+                a = rng.poisson(20.0, shape).astype(float)
+                ours = _raw_ics(a) / (a.size * a.mean() ** 2) - 1.0
+                np.testing.assert_allclose(np.fft.fftshift(ours), au.autocorr2d(a), rtol=0, atol=1e-12)
 
 
 if __name__ == '__main__':

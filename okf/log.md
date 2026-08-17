@@ -1,5 +1,17 @@
 # Bundle update log
 
+## 2026-08-17 (43rd entry)
+
+* **PCH and ICS against an implementation that is not ours — pysimfcs (J.
+  Unruh).** `pch_single_species` has Chen 1999 eq. 16's shape to 1e-5, and the
+  open-system histogram equals pysimfcs' to 5e-5 once the particle number is
+  converted: tttrlib references `avg_n` to V0 = 4π w0³, Chen/pysimfcs to
+  V_PSF, so `avg_n` = 6.383 N_PSF. That was undocumented (ChiSurf's PCH module
+  knew, the header did not) — the header now states the convention and the
+  conversion; the number itself is left alone (ChiSurf's fitted N depends on
+  it). `compute_ics` equals pysimfcs' `autocorr2d` exactly. Also this round:
+  Photon-HDF5 vs h5py, HT3-v1 sample is SF-compressed, Kristine `.cor` gap.
+
 ## 2026-08-17 (42nd entry)
 
 * **Vectorial PSF vs PyFocus; second reading round; three decoding fixes.**
