@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_DUAL_H
 #define TTTRLIB_DUAL_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs autodiff (A/B before autodiff was deleted), a long-double dual and central
+//   differences on the localization objective. test/cpp/test_ad_gradient.cpp.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <cmath>
 
 /// Forward-mode dual number: a value and the derivative that travels with it.

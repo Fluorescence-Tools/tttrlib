@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <thread>
 #include <cstdlib>
 #include <cstring>
 #include <new>
@@ -75,15 +76,27 @@ struct Grid {
         spectrum_strides = byte_strides(half, sizeof(std::complex<double>));
     }
 
+    // pocketfft threads a multi-axis transform over the lines of the other
+    // axes; each line's transform is the same arithmetic whichever thread runs
+    // it, so the result is bit-identical to the serial one. Capped at 8: the
+    // 512^2 grids here saturate memory bandwidth before that.
+    static std::size_t n_threads() {
+        static const std::size_t n = [] {
+            unsigned hw = std::thread::hardware_concurrency();
+            return static_cast<std::size_t>(hw == 0 ? 1 : std::min(hw, 8u));
+        }();
+        return n;
+    }
+
     void forward(const double* in, std::complex<double>* out) const {
         pocketfft::r2c(shape, real_strides, spectrum_strides, axes, /*forward=*/true,
-                       in, out, 1.0);
+                       in, out, 1.0, n_threads());
     }
 
     void inverse(const std::complex<double>* in, double* out) const {
         // 1/n here, so a round trip is the identity.
         pocketfft::c2r(shape, spectrum_strides, real_strides, axes, /*forward=*/false,
-                       in, out, 1.0 / static_cast<double>(n_real));
+                       in, out, 1.0 / static_cast<double>(n_real), n_threads());
     }
 };
 

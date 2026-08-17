@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_QREIGEN_H
 #define TTTRLIB_QREIGEN_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs numpy.linalg.eig (eigenvalue multiset 1e-8*scale, A v = lambda v residuals,
+//   V V^-1 = I, n up to 64) and numpy complex kernels. test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 /// QR-based eigendecomposition for real non-symmetric matrices and
 /// complex matrix operations (multiply, inverse, matrix-vector).
 ///

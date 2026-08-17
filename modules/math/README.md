@@ -34,8 +34,16 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
   other build that did not apply it.) See PRD-037.
 - **`Nnls.h` / `Nnls.cpp`**: Non-negative least squares by the classical Lawson-Hanson (1974) algorithm — KKT-correct, unlike `quadpr_bound`'s active-set sweep (see that header's docstring for why the two are not interchangeable). Verified against `scipy.optimize.nnls`.
 - **`Kalman.h` / `Kalman.cpp`**: The Kalman filter recursion over a whole count-rate trace in one call — `kalman_filter(y, x0, P0, Q, dt, r_scale)` → `(x_filt, P_filt, D_mahal)`. A bit-exact port of ChiSurf's `_kalman_filter_loop` (`core/fluorescence/burst/kalman.py`), which since ChiSurf dropped numba runs as plain Python per trace. The closed-form 2×2 inverse (`_inv2x2`) is ported as-is, so the two-channel single-molecule case agrees with the reference digit for digit; dimensions above two fall back to the library's own Gauss-Jordan inverse and are *not* bit-parity with ChiSurf's LAPACK path. Parity rides on two things carried in source: `#pragma STDC FP_CONTRACT OFF`, and reproducing BLAS's fused-second-product inner sum (`std::fma`) that numpy's `@` emits for 2×2 — a plain `a0*b0 + a1*b1` disagrees with numpy ~44% of the time, one ulp, and the Mahalanobis threshold ChiSurf's fcs plugin bursts on moves. See PRD-037 B3.
-- **`Watershed.h` / `Watershed.cpp`**: Two region-segmentation kernels — a priority-queue watershed flood (`watershed(image, markers, mask, connectivity)`, label image out) and iso-contour extraction by marching squares (`marching_squares(image, level, vertex_connect_high)`, `(n, 4)` endpoint pairs out). Both match **scikit-image 0.25.0 exactly**, digit for digit, not ChiSurf: ChiSurf's `core/roi` is documented as skimage-exact `regionprops` and its tests compare against skimage, so a merely-correct port fails them. The two places ChiSurf's own `segmentation.py` diverges were measured and settled in skimage's favour — the flood seeds its queue with markers at `-inf` (ChiSurf pushes `image[marker]`; patching that gives 0 diffs vs skimage across seeds 0–9, connectivity 1/2), and the marching-squares case bits are `ul=1, ur=2, ll=4, lr=8` in raster emission order (ChiSurf swaps the lower row and inverts the ambiguous squares). Raster order is part of the marching-squares contract because skimage chains the segments into polygons in that order. `#pragma STDC FP_CONTRACT OFF` carries the exactness: a fused `_fraction` interpolation rounds once instead of twice and moves a contour endpoint by a ulp. The mask argument is required (an all-true uint8 image is skimage's `mask=None`); padding, footprint and output are allocated inside the call. See PRD-037 B4.
+- **`Watershed.h` / `Watershed.cpp`**: Two region-segmentation kernels — a priority-queue watershed flood (`watershed(image, markers, mask, connectivity)`, label image out) and iso-contour extraction by marching squares (`marching_squares(image, level, vertex_connect_high)`, `(n, 4)` endpoint pairs out). Both match **scikit-image exactly**, digit for digit (current upstream, ≥ 0.25.1 — see the marker-seed note in the header), not ChiSurf: ChiSurf's `core/roi` is documented as skimage-exact `regionprops` and its tests compare against skimage, so a merely-correct port fails them. The two places ChiSurf's own `segmentation.py` diverges were measured and settled in skimage's favour — the flood seeds its queue with markers at their own image value (skimage 0.25.0 briefly used `-inf`, reverted upstream in 0.25.1 — the port now follows ChiSurf and current skimage), and the marching-squares case bits are `ul=1, ur=2, ll=4, lr=8` in raster emission order (ChiSurf swaps the lower row and inverts the ambiguous squares). Raster order is part of the marching-squares contract because skimage chains the segments into polygons in that order. `#pragma STDC FP_CONTRACT OFF` carries the exactness: a fused `_fraction` interpolation rounds once instead of twice and moves a contour endpoint by a ulp. The mask argument is required (an all-true uint8 image is skimage's `mask=None`); padding, footprint and output are allocated inside the call. See PRD-037 B4.
 - **`SimPcgRandom.h`**: Compact inline PCG32 PRNG for per-stream reproducible randomness.
+
+## Examples
+
+- `examples/miscellaneous/plot_watershed_marching_squares.py` (+ `.ipynb`): `watershed` and `marching_squares` on a simulated field of touching cells -- markers, mask, labels as ROIs, iso-contour outlines, connectivity 1 vs 2.
+- `examples/miscellaneous/plot_richardson_lucy_deconvolution.py` (+ `.ipynb`): `richardson_lucy_2d` on a simulated blurred, Poisson-noised image -- the iteration count as the regularisation (error-vs-truth minimum), `wiener_deconvolve_2d` for comparison, and the list-mode `richardson_lucy_events_2d` on photon coordinates.
+- `examples/single_molecule/plot_burst_feature_clustering.py` (+ `.ipynb`): `kmeans` (caller-owned uniforms) and the HDBSCAN pipeline `core_distances` -> `mutual_reachability_mst` -> `hdbscan_condensed_tree` -> excess-of-mass selection (in the caller) -> `hdbscan_label_points` on a simulated burst table with two FRET populations and noise.
+- `examples/single_molecule/plot_kalman_burst_detection.py` (+ `.ipynb`): `kalman_filter` on a simulated two-channel count trace -- filtered background rate, Mahalanobis distance as burst score, and `TTTR.burst_search_kalman` on the same photons.
+- `examples/single_molecule/plot_hmm_lattice_two_state.py` (+ `.ipynb`): `hmm_forward_log`, `hmm_backward_posteriors_xi`, `hmm_viterbi_log` on a simulated two-state Poisson trace -- the caller builds `log_frameprob`, the lattice returns log-likelihood, posteriors, xi sums (one M-step shown) and the Viterbi path.
 
 ## Dependencies
 
@@ -107,6 +115,19 @@ ways — vectorized dual, scalar dual, long-double dual, central differences —
 requires agreement. The layering matters because the failure mode here is
 silent: a sign, an aliasing bug in `*=`, a missing term in the product rule
 compiles, runs, and converges to the wrong place.
+
+## Validation status
+
+Every header in this module is A/B-tested against an independent reference
+implementation (sklearn, scipy, scikit-image, numpy, hmmlearn, filterpy,
+Random123 / pcg32 known answers; ChiSurf's Python where the kernel is a port of
+it) and carries a `// Validation: A/B-TESTED <date> -- ...` block after its
+include guard naming the reference, the metric and the test. The register with
+every row, and what the A/B found, is
+[`okf/testing/math-kernel-validation.md`](../../okf/testing/math-kernel-validation.md);
+the suites are `test/python/misc/test_math_ab_{clustering,imaging,probabilistic,numerics}.py`
+(the last one compiles `test/cpp/ab_numerics_harness.cpp` for the unbound C++).
+A new kernel is not done until it has a row, a block and a test.
 
 ## Correctness and performance
 

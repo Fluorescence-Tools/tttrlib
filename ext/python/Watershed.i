@@ -38,4 +38,39 @@ TTTRLIB_NOGIL(tttrlib::marching_squares)
     }
 }
 
+#ifdef SWIGPYTHON
+// scikit-image's call is `watershed(image, markers, mask=None, connectivity=1)`;
+// the kernel wants an explicit uint8 mask (an all-ones one is `mask=None`) and
+// int64 markers, so the Python name takes the same optional arguments and
+// supplies both.
+%rename(_watershed_native) tttrlib::watershed;
+#endif
 %include "Watershed.h"
+#ifdef SWIGPYTHON
+%pythoncode %{
+def watershed(image, markers, mask=None, connectivity=1):
+    """Marker-based watershed of `image` (2-D float64), scikit-image-exact.
+
+    Parameters
+    ----------
+    image : (ny, nx) array_like
+    markers : (ny, nx) integer array; 0 = not a marker
+    mask : (ny, nx) array_like of bool/uint8, optional (default: all True)
+    connectivity : 1 (4-neighbourhood) or 2 (8-neighbourhood)
+
+    Returns
+    -------
+    labels : (ny, nx) int64 array
+    """
+    import numpy as _np
+    image = _np.ascontiguousarray(image, dtype=_np.float64)
+    markers = _np.ascontiguousarray(markers, dtype=_np.int64)
+    if mask is None:
+        mask = _np.ones(image.shape, dtype=_np.uint8)
+    else:
+        mask = _np.ascontiguousarray(_np.asarray(mask) != 0, dtype=_np.uint8)
+    if connectivity not in (1, 2) or isinstance(connectivity, float):
+        raise ValueError("watershed: connectivity must be 1 or 2, got %r" % (connectivity,))
+    return _watershed_native(image, markers, mask, int(connectivity))
+%}
+#endif

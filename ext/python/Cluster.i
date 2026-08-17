@@ -61,6 +61,27 @@ TTTRLIB_NOGIL(tttrlib::kmeans)
         return "KDTree({} x {})".format(self.n_samples(), self.n_features())
     %}
 }
+
+// The k-means++ seeding consumes n_init * n_clusters * (2 + int(ln k)) uniforms
+// (the greedy variant's trial count), which every caller was re-deriving. The
+// randomness stays the caller's: these only size and, on request, draw it.
+%pythoncode %{
+import math as _math
+
+def kmeans_n_uniforms(n_clusters, n_init=1):
+    """Number of uniforms `kmeans` consumes: n_init * n_clusters * (2 + int(ln n_clusters))."""
+    return int(n_init) * int(n_clusters) * (2 + int(_math.log(int(n_clusters))))
+
+
+def kmeans_uniforms(n_clusters, n_init=1, seed=None):
+    """A stream of the right length from ``numpy.random.default_rng(seed)``.
+
+    The kernel never draws randomness itself; passing the same ``seed`` here
+    reproduces a fit exactly, which is the contract ChiSurf relies on.
+    """
+    import numpy as _np
+    return _np.random.default_rng(seed).random(kmeans_n_uniforms(n_clusters, n_init))
+%}
 #endif
 
 // Restore the global handler rather than clearing it. A bare `%exception;`

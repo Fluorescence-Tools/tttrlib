@@ -39,6 +39,12 @@
 #ifndef TTTRLIB_RANDOM_H
 #define TTTRLIB_RANDOM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- Philox4x32-10 vs the Random123 known-answer vectors (bit-exact); PCG vs the
+//   canonical pcg32 XSH-RR output (bit-exact -- the A/B found and fixed the
+//   xorshift on 2026-08-17); SplitMix64 mixer canonical; MT19937 engine is not
+//   implemented (falls through to Philox, pinned). test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <cstdint>
 #include <cmath>
 #include <cstdlib>
@@ -305,7 +311,10 @@ private:
         // PCG advance: one step of the LCG
         state = state * 6364136223846793005ULL + 1442695040888963407ULL;
         // PCG output: XSH-RR (xorshift-high, random rotation)
-        uint64_t xorshifted = ((state >> 18u) ^ (state >> 27u)) >> 27u;
+        // Canonical XSH-RR: xorshift the state by 18, then take bits 27..58.
+        // (Was `(state >> 18) ^ (state >> 27)` -- a 19-live-bit word whose
+        // output bits were 1 with P ~ 0.22-0.37; caught by the pcg32 A/B.)
+        uint64_t xorshifted = ((state >> 18u) ^ state) >> 27u;
         uint32_t rot = static_cast<uint32_t>(state >> 59u);
         uint32_t out = static_cast<uint32_t>(xorshifted);
         return (out >> rot) | (out << ((-rot) & 31));

@@ -2,6 +2,11 @@
 #ifndef TTTRLIB_I_BFGS_H
 #define TTTRLIB_I_BFGS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs scipy L-BFGS-B optima (1e-6 analytic gradient, 1e-4 central difference; soft
+//   bounds land within |g|/2k of the hard-bounded optimum) and analytic gradients
+//   for the O(h)/O(h^2)/O(h^4) stencils. test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 /*!
  * Header-only limited-memory BFGS minimizer with numerical gradients.
  *

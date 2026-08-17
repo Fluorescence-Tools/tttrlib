@@ -12,6 +12,10 @@
 #ifndef TTTRLIB_SIMPCGRANDOM_H
 #define TTTRLIB_SIMPCGRANDOM_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs O'Neill's pcg32_srandom_r/pcg32_random_r (bit-exact, seeding included).
+//   test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <cstdint>
 #include <cmath>
 

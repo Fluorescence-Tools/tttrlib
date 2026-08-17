@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_JITTER_H
 #define TTTRLIB_JITTER_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs np.histogram2d (counts round trip exact, jitter preserves the histogram,
+//   dither uniform in +-w/2). test/python/misc/test_math_ab_imaging.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 // Jitter.h -- the bridge between photons and algorithms that want floats.
 //
 // ---------------------------------------------------------------------------

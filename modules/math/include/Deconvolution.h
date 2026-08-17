@@ -2,6 +2,13 @@
 #ifndef TTTRLIB_DECONVOLUTION_H
 #define TTTRLIB_DECONVOLUTION_H
 
+// Validation: A/B-TESTED 2026-08-17 -- richardson_lucy_2d benchmarked vs skimage: 1.8x, identical (bench_sciref.py,
+//   check_sciref.py); richardson_lucy 2d/3d vs skimage.restoration.richardson_lucy (1e-15, all
+//   PSF parities) and scipy direct convolution; wiener vs the NumPy formula only
+//   (skimage.restoration.wiener is a different estimator); list-mode RL vs scipy
+//   convolve/correlate. test/python/misc/test_math_ab_imaging.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 // Deconvolution.h -- undoing a known blur.
 //
 // A microscope does not record the sample, it records the sample convolved with

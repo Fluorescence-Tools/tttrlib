@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_GRADVEC_H
 #define TTTRLIB_GRADVEC_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs the scalar Dual<double> reference, bitwise, and Eigen::Array in
+//   benchmarks/bench_gradvec.cpp. test/cpp/test_ad_gradient.cpp.
+//   Register: okf/testing/math-kernel-validation.md
+
 /// Fixed-size vector of doubles used as the *derivative part* of a
 /// vectorized forward-mode dual number.
 ///

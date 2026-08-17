@@ -21,6 +21,11 @@
 #ifndef TTTRLIB_SAMPLING_H
 #define TTTRLIB_SAMPLING_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs np.searchsorted on the cumulative weights / CDF with the same Philox
+//   uniforms (index-exact) and numpy choice(p=) frequencies. test/python/misc/test_math_ab_numerics.py,
+//   test/python/misc/test_math_ab_imaging.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>

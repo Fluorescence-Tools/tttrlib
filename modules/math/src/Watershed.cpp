@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
-// Bit-exact port of scikit-image 0.25.0, not of ChiSurf -- read the header for
-// why. The two places they disagree were measured (see header): the flood must
-// seed the queue with markers at `-inf`, and the marching-squares case bits
-// are `ul=1, ur=2, ll=4, lr=8`. `#pragma STDC FP_CONTRACT OFF` is load-bearing
+// Bit-exact port of scikit-image (>= 0.25.1), read the header for the history:
+// the flood seeds the queue with markers at their image value (0.25.0 briefly
+// used `-inf`, reverted upstream in PR 7702), and the marching-squares case
+// bits are `ul=1, ur=2, ll=4, lr=8`. `#pragma STDC FP_CONTRACT OFF` is load-bearing
 // for the same reason KMeans.cpp and Kalman.cpp carry it: `_fraction` below is
 // `(level - from) / (to - from)`, and a fused evaluation of that expression
 // rounds once instead of twice and moves a contour endpoint by a ulp, which
@@ -59,9 +59,9 @@ std::vector<long long> neighbour_offsets(int W, int connectivity) {
     return out;
 }
 
-// The flood itself, a direct port of ChiSurf's `_flood` with the one change
-// that made it agree with skimage: markers enter the queue at `-inf` instead
-// of `image[index]`. Min-heap on `(value, age)`; `age` is the entry order and
+// The flood itself, a direct port of ChiSurf's `_flood` (which agrees with
+// skimage >= 0.25.1; only 0.25.0 seeded markers at `-inf`). Min-heap on
+// `(value, age)`; `age` is the entry order and
 // is what splits a plateau evenly between the markers on either side of it.
 // `output` carries the padded labels and must be nonzero exactly at the
 // markers on entry; labels are assigned at push time, which is correct for the
@@ -103,10 +103,16 @@ void flood(const double* image, const std::vector<long long>& marker_locations,
         heap_source[position] = source;
     };
 
+    // Markers enter at their own image value (scikit-image >= 0.25.1, PR 7702,
+    // which reverted 0.25.0's `-inf` seeding: a marker placed at a maximum no
+    // longer floods before every other pixel can be reached). This is also what
+    // ChiSurf's `_flood` always did. Recorded difference on a 1024^2 basin
+    // image with 200 markers: 13% of the pixels change basin between the two.
     for (size_t i = 0; i < marker_locations.size(); ++i) {
         const long long index = marker_locations[i];
-        push(neg_inf, 0, index, index);
+        push(image[index], 0, index, index);
     }
+    (void) neg_inf;
 
     long long age_counter = 1;
     while (size > 0) {

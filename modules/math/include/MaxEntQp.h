@@ -37,6 +37,13 @@
 #ifndef TTTRLIB_MAXENTQP_H
 #define TTTRLIB_MAXENTQP_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs scipy L-BFGS-B on the same objectives (run_mem: KKT to 1e-9 and Q not
+//   lowerable; quadpr_bound: equal whenever the sweep's answer is a KKT point,
+//   feasible and never below the true minimum otherwise -- the non-KKT caveat this
+//   header states). No valid external MEM reference (ChiSurf mem.py is
+//   value/gradient-inconsistent). test/python/misc/test_math_ab_probabilistic.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <vector>
 
 namespace tttrlib {

@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_NEURALNET_H
 #define TTTRLIB_NEURALNET_H
 
+// Validation: A/B-TESTED 2026-08-17 -- forward pass vs sklearn MLPRegressor weights (1e-10, test/python/test_neural_net.py);
+//   training head-to-head with sklearn Adam on one regression task. test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <cstddef>
 #include <string>
 #include <vector>

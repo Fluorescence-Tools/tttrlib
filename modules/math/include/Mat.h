@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_MAT_H
 #define TTTRLIB_MAT_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs numpy.linalg solve/inv/lstsq(rcond)/matrix_power and `@` (1e-9*cond; minimum-
+//   norm and rank-deficient cases; scaled-singular flagged). test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 // Mat.h -- a standalone, dependency-free dense matrix library.
 //
 // Design goals, in priority order:

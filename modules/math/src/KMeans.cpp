@@ -16,6 +16,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace tttrlib {
 namespace {
@@ -34,6 +35,8 @@ int seeding_trials(int n_clusters) {
 // port: accumulate along features, per sample, in order.
 void squared_distances(const double* X, int n_samples, int n_features,
                        const double* center, double* out) {
+    // per-point, no reduction: parallel is bit-identical to serial
+    #pragma omp parallel for schedule(static) if(n_samples >= 4096)
     for (int t = 0; t < n_samples; ++t) {
         const double* row = X + static_cast<size_t>(t) * n_features;
         double acc = 0.0;
@@ -53,6 +56,12 @@ void kmeanspp_seed(const double* X, int n_samples, int n_features,
                    double* centers) {
     std::vector<double> closest(n_samples);
     std::vector<double> candidate(n_samples);
+    // Prefix sums of `closest`, built once per centre in the reference's
+    // sequential order: prefix[t] is exactly the running `acc` the reference
+    // holds after adding closest[t], so "first t with acc >= target" is a
+    // binary search on it instead of one linear scan per trial (n_trials of
+    // them, each n adds). Same numbers, ~n_trials times less serial work.
+    std::vector<double> prefix(n_samples);
 
     // int(u[0] * n) truncated toward zero, clamped -- matches
     // min(int(uniform * n_samples), n_samples - 1) for uniform in [0,1).
@@ -64,7 +73,7 @@ void kmeanspp_seed(const double* X, int n_samples, int n_features,
 
     for (int c = 1; c < n_clusters; ++c) {
         double total = 0.0;
-        for (int t = 0; t < n_samples; ++t) total += closest[t];
+        for (int t = 0; t < n_samples; ++t) { total += closest[t]; prefix[t] = total; }
 
         double best_potential = std::numeric_limits<double>::infinity();
         int best_index = -1;
@@ -75,11 +84,14 @@ void kmeanspp_seed(const double* X, int n_samples, int n_features,
                 if (index > n_samples - 1) index = n_samples - 1;
             } else {
                 const double target = uniform * total;
-                double acc = 0.0;
+                // first t with prefix[t] >= target (prefix is non-decreasing);
+                // n_samples - 1 if none, as the reference's scan falls through
+                int lo = 0, hi = n_samples - 1;
                 index = n_samples - 1;
-                for (int t = 0; t < n_samples; ++t) {
-                    acc += closest[t];
-                    if (acc >= target) { index = t; break; }
+                while (lo <= hi) {
+                    const int mid = lo + (hi - lo) / 2;
+                    if (prefix[mid] >= target) { index = mid; hi = mid - 1; }
+                    else lo = mid + 1;
                 }
             }
             squared_distances(X, n_samples, n_features,
@@ -116,14 +128,16 @@ void kmeans_lloyd(const double* X, int n_samples, int n_features,
 
     for (int t = 0; t < n_samples; ++t) labels[t] = -1;
 
-    for (int sweep = 0; sweep < max_iter; ++sweep) {
-        ++n_iter;
-        std::fill(sums.begin(), sums.end(), 0.0);
-        std::fill(counts.begin(), counts.end(), 0.0);
-        long long n_changed = 0;
-        double worst_distance = -1.0;
-        int worst_index = 0;
-
+    // Scratch for the assignment step: the nearest centre and its squared
+    // distance per point. The assignment is per-point work with no reduction,
+    // so it runs in parallel; everything that SUMS (counts, centre sums,
+    // inertia, the "worst point" scan) stays serial and in point order, which
+    // is what keeps the result bit-identical to the reference's sequential
+    // loop -- a parallel reduction would round the sums differently.
+    std::vector<int> best_of(static_cast<size_t>(n_samples));
+    std::vector<double> best_d(static_cast<size_t>(n_samples));
+    auto assign_all = [&]() {
+        #pragma omp parallel for schedule(static) if(n_samples >= 4096)
         for (int t = 0; t < n_samples; ++t) {
             const double* row = X + static_cast<size_t>(t) * n_features;
             double best = std::numeric_limits<double>::infinity();
@@ -137,6 +151,24 @@ void kmeans_lloyd(const double* X, int n_samples, int n_features,
                 }
                 if (acc < best) { best = acc; best_c = c; }
             }
+            best_of[t] = best_c;
+            best_d[t] = best;
+        }
+    };
+
+    for (int sweep = 0; sweep < max_iter; ++sweep) {
+        ++n_iter;
+        std::fill(sums.begin(), sums.end(), 0.0);
+        std::fill(counts.begin(), counts.end(), 0.0);
+        long long n_changed = 0;
+        double worst_distance = -1.0;
+        int worst_index = 0;
+
+        assign_all();
+        for (int t = 0; t < n_samples; ++t) {           // serial, in order
+            const double* row = X + static_cast<size_t>(t) * n_features;
+            const int best_c = best_of[t];
+            const double best = best_d[t];
             if (labels[t] != best_c) { labels[t] = best_c; ++n_changed; }
             counts[best_c] += 1.0;
             double* srow = sums.data() + static_cast<size_t>(best_c) * n_features;
@@ -185,21 +217,10 @@ void kmeans_lloyd(const double* X, int n_samples, int n_features,
     // final assignment pass: the sweep's inertia was accumulated against the
     // centres the sweep started with
     double inertia = 0.0;
-    for (int t = 0; t < n_samples; ++t) {
-        const double* row = X + static_cast<size_t>(t) * n_features;
-        double best = std::numeric_limits<double>::infinity();
-        int best_c = 0;
-        for (int c = 0; c < n_clusters; ++c) {
-            const double* ctr = centers + static_cast<size_t>(c) * n_features;
-            double acc = 0.0;
-            for (int j = 0; j < n_features; ++j) {
-                const double diff = row[j] - ctr[j];
-                acc += diff * diff;
-            }
-            if (acc < best) { best = acc; best_c = c; }
-        }
-        labels[t] = best_c;
-        inertia += best;
+    assign_all();
+    for (int t = 0; t < n_samples; ++t) {               // serial, in order
+        labels[t] = best_of[t];
+        inertia += best_d[t];
     }
     *out_inertia = inertia;
     *out_n_iter = n_iter;

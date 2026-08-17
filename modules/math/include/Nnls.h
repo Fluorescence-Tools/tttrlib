@@ -19,6 +19,10 @@
 #ifndef TTTRLIB_NNLS_H
 #define TTTRLIB_NNLS_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs scipy.optimize.nnls (x 1e-8 well-conditioned; residual + KKT on ill-conditioned
+//   and underdetermined designs where x is not unique). test/python/misc/test_math_ab_imaging.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 #include <vector>
 
 namespace tttrlib {

@@ -76,7 +76,6 @@ void kalman_filter(
     require(Q != nullptr, "Q is null");
     require(T >= 0, "T must not be negative");
     require(dim >= 1, "dim must be at least 1");
-    require(dim <= 4, "dim above 4 is not supported");
     require(dt > 0.0, "dt must be positive");
     require(n_x0 == dim, "x0 must have length dim");
     require(n_P1 == dim && n_P2 == dim, "P0 must be dim x dim");
@@ -164,11 +163,17 @@ void kalman_filter(
                             P_pred[i * 3 + 1] * S_inv[1 * 3 + j] +
                             P_pred[i * 3 + 2] * S_inv[2 * 3 + j];
                 } else {
-                    const size_t ij = static_cast<size_t>(i) * 4 + j;
-                    K[ij] = P_pred[i * 4 + 0] * S_inv[0 * 4 + j] +
-                            P_pred[i * 4 + 1] * S_inv[1 * 4 + j] +
-                            P_pred[i * 4 + 2] * S_inv[2 * 4 + j] +
-                            P_pred[i * 4 + 3] * S_inv[3 * 4 + j];
+                    // General dim (1, or > 3). Until 2026-08-17 this branch was
+                    // written for dim == 4 (strides of 4, four terms): for
+                    // dim == 1 it read past the 1-element vectors -- undefined
+                    // behaviour that usually met heap slack holding zeros and
+                    // now and then did not, an intermittent one-channel failure
+                    // in the A/B against the textbook filter -- and for dim >= 5
+                    // it would have been silently wrong.
+                    double sum = 0.0;
+                    for (int k = 0; k < dim; ++k)
+                        sum += P_pred[static_cast<size_t>(i) * dim + k] * S_inv[static_cast<size_t>(k) * dim + j];
+                    K[static_cast<size_t>(i) * dim + j] = sum;
                 }
             }
         }

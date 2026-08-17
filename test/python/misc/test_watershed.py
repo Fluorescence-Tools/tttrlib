@@ -3,11 +3,15 @@
 Both kernels match **scikit-image 0.25.0 exactly**, digit for digit, because
 ChiSurf's `core/roi` is documented as skimage-exact `regionprops` and its tests
 compare against skimage. The committed fixture below was therefore recorded
-from skimage 0.25.0 -- *not* from ChiSurf's pure-Python `segmentation.py`,
+from scikit-image (watershed re-recorded from 0.25.2 on 2026-08-17, see below)
+-- *not* from ChiSurf's pure-Python `segmentation.py`,
 which diverges in both kernels in ways this library deliberately follows
-skimage on: ChiSurf's `_flood` seeds its priority queue with `image[marker]`
-where skimage pushes `-inf`, and ChiSurf's marching-squares case bits swap the
-lower row and invert the ambiguous squares. A "reference" recorded from
+skimage on: the marching-squares case bits (ChiSurf swaps the lower row and
+inverts the ambiguous squares) -- and, for one skimage release, the marker seed:
+0.25.0 pushed markers at `-inf` where ChiSurf pushes `image[marker]`; upstream
+reverted that in 0.25.1 (PR 7702), so the flood now follows ChiSurf and current
+skimage, and the four watershed arrays of the fixture were re-recorded from
+0.25.2. A "reference" recorded from
 ChiSurf would fail the very test file it was meant to pin (see the header of
 `Watershed.h` for the measurements). The skimage-comparison tests skip when
 skimage is absent; the fixture tests do not -- the compiled contract stands
@@ -31,6 +35,21 @@ try:
     HAS_SKIMAGE = True
 except ImportError:
     HAS_SKIMAGE = False
+
+
+def _skimage_at_least_0_25_1():
+    """The watershed contract is current upstream: skimage 0.25.0 seeded markers
+    at -inf and 0.25.1 reverted that (PR 7702); a sweep against 0.25.0 measures
+    the old behaviour, not this library."""
+    try:
+        import skimage
+        parts = tuple(int(x) for x in skimage.__version__.split(".")[:3])
+        return parts >= (0, 25, 1)
+    except Exception:
+        return False
+
+
+SKIMAGE_WATERSHED_OK = HAS_SKIMAGE and _skimage_at_least_0_25_1()
 
 
 def ones_mask(shape):
@@ -133,7 +152,8 @@ class TestMarchingSquaresKnownAnswer(unittest.TestCase):
 
 
 class TestAgainstTheRecordedReference(unittest.TestCase):
-    """The committed fixture, recorded from skimage 0.25.0. This is the
+    """The committed fixture, recorded from skimage (0.25.0; watershed arrays
+    re-recorded from 0.25.2 after upstream's marker-seed revert). This is the
     bit-exactness pin: any deviation -- ordering, interpolation, -inf seeding,
     the ambiguous-square choice -- fails this, with or without skimage
     installed."""
@@ -182,6 +202,24 @@ class TestAgainstTheRecordedReference(unittest.TestCase):
                 np.testing.assert_array_equal(seg, ref)
 
 
+class TestPythonSignature(unittest.TestCase):
+    """The Python name takes scikit-image's arguments: `mask=None` means all
+    pixels, `connectivity` defaults to 1, markers/mask are cast for the caller."""
+
+    def test_mask_none_is_all_true_and_dtypes_are_cast(self):
+        rng = np.random.default_rng(2)
+        image = rng.random((12, 15))
+        markers = np.zeros((12, 15), dtype=np.int32)
+        markers[2, 2] = 1
+        markers[9, 12] = 2
+        a = tttrlib.watershed(image, markers)
+        b = tttrlib.watershed(image, markers.astype(np.int64), np.ones((12, 15), np.uint8), 1)
+        c = tttrlib.watershed(image, markers, mask=np.ones((12, 15), bool), connectivity=1)
+        np.testing.assert_array_equal(a, b)
+        np.testing.assert_array_equal(a, c)
+        self.assertEqual(int(a.max()), 2)
+
+
 @unittest.skipUnless(HAS_SKIMAGE, "skimage is not installed")
 class TestAgainstLiveSkimage(unittest.TestCase):
     """Sanity across a seeded sweep on top of the fixture pin: the fixture is
@@ -195,6 +233,7 @@ class TestAgainstLiveSkimage(unittest.TestCase):
         mask = rng.random((33, 32)) > 0.15
         return image, mask
 
+    @unittest.skipUnless(SKIMAGE_WATERSHED_OK, "needs skimage >= 0.25.1 (0.25.0 seeded markers at -inf, reverted upstream)")
     def test_watershed_sweep(self):
         for seed in range(6):
             image, mask = self._synthetic(seed)

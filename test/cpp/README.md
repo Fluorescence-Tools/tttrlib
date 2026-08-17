@@ -120,3 +120,49 @@ is `1e12`, so any finite probe shows a finite gap — 6e-05 for a step of 1e-18,
 which is correct C1 behaviour. What separates a steep join from a cliff is that
 the gap **halves when the probe step halves**. The original's gap was 828.9
 regardless of step. That is the assertion.
+
+## The A/B against numpy, scipy and the canonical generators (`ab_numerics_harness`)
+
+`ab_numerics_harness.cpp` is not a test on its own. It is the C++ half of
+`test/python/misc/test_math_ab_numerics.py`, which compiles it (skipping when no
+compiler is on the PATH), feeds each subcommand its inputs on stdin and compares
+the printed result against the *real* reference library on the Python side —
+`numpy.linalg`, `scipy.optimize`, scikit-learn, and from-the-paper Python
+implementations of Philox4x32-10, pcg32 and SplitMix64 — rather than against a
+recorded number. Kernels covered: `NelderMead.h`, `i_lbfgs.h` (including the
+soft-bound semantics and the `fgrad1/2/4` stencils), `Mat.h` (`mat_solve`,
+`mat_lstsq_minnorm`, `mat_inverse_inplace`, `mat_power`, GEMM NN/NT/TN,
+reductions), `QREigen.h` (`qr_eigendecompose`, `zmatmul`, `zmatvec`, `zinv`),
+`Random.h` (Philox stream, `seek`, `deterministic` per engine, `normal`),
+`SimPcgRandom.h`, and `Sampling.h`. Two known gaps are pinned there as
+`expectedFailure` so a fix flips a test: the `pcg` engine of
+`Random::deterministic` does not implement PCG's XSH-RR output function
+(19 live bits before the rotation, not 32 — visible as biased output bits), and
+`mt19937` is not implemented (falls through to Philox, as the header says).
+
+```bash
+c++ -std=c++17 -O2 -I modules/math/include -I modules/util/include \
+    test/cpp/ab_numerics_harness.cpp -o /tmp/ab_numerics_harness
+python -m pytest test/python/misc/test_math_ab_numerics.py -q
+```
+
+## The simulator's samplers against their canonical references (`ab_simulation_harness`)
+
+`ab_simulation_harness.cpp` is the same idea for `modules/simulation`: it is the
+C++ half of `test/python/simulation/test_ab_simulation_reference.py`, which
+compiles it together with `modules/simulation/src/SimRandom.cpp` and compares
+each subcommand's output with a from-the-paper Python implementation or with
+scipy — `SimXoshiroRandom` against Blackman & Vigna's xoshiro256++ (bit-exact,
+seed hash included), `SimCounterRandom` against Philox4x32-10, `SimRandom`'s
+`init_by_array` against the mt19937ar.c test vector, `sim_randn` against
+Marsaglia & Tsang's `zigset`/`RNOR` on the same MT stream (tables and outputs
+bit-exact), the boundary-flux samplers of `SimInjection.h` (`qnorm` vs
+`scipy.stats.norm.sf`, `random_erfc` / `random_entry_depth` KS against their
+integrated densities), and `SimDecay::sample_ns` (chi-square against the pdf).
+
+```bash
+c++ -std=c++17 -O2 -I modules/simulation/include -I modules/math/include \
+    -I modules/util/include modules/simulation/src/SimRandom.cpp \
+    test/cpp/ab_simulation_harness.cpp -o /tmp/ab_simulation_harness
+python -m pytest test/python/simulation/test_ab_simulation_reference.py -q
+```

@@ -48,6 +48,24 @@
     (double* edges_out, int n_edges_out)
 }
 
+// bincount1D(int* data, int n_data, int* bins, int n_bins) as declared shares
+// (int* data, n_data) with the IN map above but its output pair is named like an
+// INPUT elsewhere; give it its own array-in / inplace-out wrapper instead of
+// letting SWIG expose the raw pointers (unreachable from Python until 2026-08-17).
+%ignore bincount1D;
+%rename (bincount1D) bincount1D_arrays;
+%apply (int* IN_ARRAY1, int DIM1) { (const int* bincount_data, int n_bincount_data) }
+%apply (int* INPLACE_ARRAY1, int DIM1) { (int* bincount_out, int n_bincount_out) }
+%inline %{
+void bincount1D_arrays(const int* bincount_data, int n_bincount_data,
+                       int* bincount_out, int n_bincount_out) {
+    bincount1D(const_cast<int*>(bincount_data), n_bincount_data,
+               bincount_out, n_bincount_out);
+}
+%}
+%clear (const int* bincount_data, int n_bincount_data);
+%clear (int* bincount_out, int n_bincount_out);
+
 %include "Histogram.h"
 %include "HistogramAxis.h"
 

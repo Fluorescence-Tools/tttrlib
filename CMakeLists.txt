@@ -616,6 +616,14 @@ IF(TTTRLIB_BUILD_CPP_TESTS)
     TARGET_INCLUDE_DIRECTORIES(test_decay_likelihood
         PRIVATE "${PROJECT_SOURCE_DIR}/modules/spectroscopy/decay/include"
                 "${PROJECT_SOURCE_DIR}/modules/util/include")
+
+    # ab_numerics_harness is not a test but the C++ half of one:
+    # test/python/misc/test_math_ab_numerics.py compiles it itself and drives
+    # it against numpy/scipy. Built here too so it cannot rot unnoticed.
+    ADD_EXECUTABLE(ab_numerics_harness "${PROJECT_SOURCE_DIR}/test/cpp/ab_numerics_harness.cpp")
+    TARGET_INCLUDE_DIRECTORIES(ab_numerics_harness
+        PRIVATE "${PROJECT_SOURCE_DIR}/modules/math/include"
+                "${PROJECT_SOURCE_DIR}/modules/util/include")
     ADD_TEST(NAME test_decay_likelihood COMMAND test_decay_likelihood)
 ENDIF()
 

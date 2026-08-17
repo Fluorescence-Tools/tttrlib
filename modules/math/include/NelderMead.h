@@ -2,6 +2,10 @@
 #ifndef TTTRLIB_NELDER_MEAD_H
 #define TTTRLIB_NELDER_MEAD_H
 
+// Validation: A/B-TESTED 2026-08-17 -- vs scipy.optimize.minimize(Nelder-Mead) optima (x 2e-5, f 1e-6 rel) and analytic
+//   constrained optima (clamped bounds). test/python/misc/test_math_ab_numerics.py.
+//   Register: okf/testing/math-kernel-validation.md
+
 /// Header-only Nelder-Mead simplex optimizer.
 ///
 /// A derivative-free minimiser suitable for noisy or non-smooth objective
