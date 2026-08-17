@@ -86,6 +86,105 @@ are still claims and still binding.
 
 *Pick one by moving the whole entry to **Active** and filling in `Owner:`.*
 
+- **T-20260818-01 · [tttrlib] Make the split Python extensions the default build (`TTTRLIB_PYTHON_SPLIT=ON`)**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: the split (core / spectroscopy / imaging / sim, `ext/python/split/`)
+    builds, imports and passes the suite locally, but the wheel and conda
+    paths have only ever shipped `_tttrlib` + `tttrlib.py`. `recipes/py/build.sh`
+    and `build.bat` still move those two by name (guarded, so a no-op), and the
+    Windows job's DLL-search comment names `_tttrlib`.
+  - Done when: cibuildwheel (3 OSes) and the conda recipe build with
+    `TTTRLIB_PYTHON_SPLIT=ON`, `import tttrlib` works from a wheel on Windows
+    (four `.pyd` + the module DLLs beside them), the option default flips to ON,
+    and the monolith stays as the fallback for one release.
+  - Touching: `ext/CMakeLists.txt` (default), `pyproject.toml`/CI env,
+    `recipes/py/build.{sh,bat}`, `.github/workflows/ci.yml`.
+
+- **T-20260818-02 · [tttrlib] Split `core` further: `io` and `math` off it**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: `core` is 157k of the 312k wrapper lines, so a change to a core
+    fragment still costs a ~2-minute serial compile+LTO link while the other
+    three finish in parallel. The file formats (Pto/Store/Csv/Hdf5/Table/
+    RecordStream/BhSet/Tiff, ~40 %) and the math kernels (NeuralNet, Cluster,
+    Kalman, Watershed, Deconvolution, Jitter, HmmLattice, Sampling) depend on
+    nothing but misc types and DataStore.
+  - Done when: `mod_io.i` and `mod_math.i` exist, `core` is under 80k lines,
+    the parity guard passes, `import tttrlib` re-exports the same names, and a
+    touch of `Pto.i` rebuilds `io` alone.
+  - Touching: `ext/python/split/*.i`, `__init__.py.in`, `ext/CMakeLists.txt`,
+    `tools/check_binding_parity.py`.
+
+- **T-20260818-03 · [tttrlib] Debt 2: `libtttrlib.so` / `libtttrlib_static.a` as thin aggregates over the module objects**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: `okf/MODULE-DEBT.md` §2 — the two consumer-facing artefacts still
+    recompile every source themselves (`TTTRLIB_CLAIMED_SOURCES`), so the tree
+    is compiled twice and an extraction can drift them.
+  - Done when: both are built from the module object libraries (or link the
+    module libs whole-archive), the R and ImageJ link paths still resolve
+    every symbol (`nm` check in the build), installed names unchanged.
+  - Touching: `CMakeLists.txt`, `cmake/TTTRLibModule.cmake`.
+
+- **T-20260818-04 · [tttrlib] Debt 5 / plan phase 7: export macros instead of `WINDOWS_EXPORT_ALL_SYMBOLS`**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: ~97 sites (43 classes with out-of-line members, ~54 free functions);
+    needed for typeinfo/vtables across `.so`s, the accepted `friend`
+    relationships and the `read_tiff<T>` instantiations (`extern template`).
+  - Done when: `TTTRLIB_<MOD>_EXPORT` macros at class granularity, `io_image`
+    and `pda` first, `core` last; Windows CI green without the CMake `.def`.
+  - Touching: every `modules/*/include/*.h` header, `cmake/`.
+
+- **T-20260818-05 · [tttrlib] Plan phase 5 remainder: registries for the last dispatch chains**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: `Correlator.cpp` method + normalisation `if/else` (an unknown method
+    warns and returns empty; `CLSMImage::get_fcs_image` defaults to
+    `"default"`, which is not a method); `SuperResMethod` enum (`"sofi"` parses
+    then throws); `DecayFitPrior::from_json` inline 9-way chain;
+    `activation_from_string`. Objectives are DONE (2026-08-17: neyman/gehrels
+    reach the kernels).
+  - Done when: each is a `std::map<std::string, fn>` with a `register_*`
+    entry through the plugin host, the Python names unchanged, and the
+    `get_fcs_image` default is a real method.
+  - Touching: `modules/spectroscopy/fcs`, `modules/imaging/superres`,
+    `modules/spectroscopy/decay/DecayFitPrior.*`, `modules/math/NeuralNet.cpp`,
+    `modules/plugin`.
+
+- **T-20260818-06 · [tttrlib] Debt 6: the `CLSMImage ↔ Correlator ↔ DecayPhasor` friend cycle and the five `TTTR::` burst TUs in core**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: `okf/MODULE-DEBT.md` §6 — narrow accessors instead of `friend`; free
+    functions taking `const TTTR&` with the methods kept as forwarders (SWIG
+    `%extend` re-attaches them), so `burst` no longer has to live in `core`.
+  - Done when: no `friend` between the three classes; `BurstSearch*.cpp` and
+    `BurstConfidence.cpp` moved to `spectroscopy/burst` with the Python API
+    byte-identical (`tools/check_binding_parity.py`, conformance suite).
+  - Touching: `modules/imaging/clsm`, `modules/spectroscopy/fcs`,
+    `modules/core/src/TTTR.cpp`, `modules/spectroscopy/burst`.
+
+- **T-20260818-07 · [tttrlib] Optional modules: `WITH_<MODULE>` switches + `dev-<module>` presets**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Why: plan phase 7 / ask 3 — a developer working on `sim` should configure
+    core+sim and never compile the other ~40k lines. `tttrlib_add_module`
+    already carries the dependency graph, so an OFF module can refuse
+    dependents with a clear message.
+  - Done when: every module has `WITH_<NAME>` (default ON), the SWIG split
+    drops fragments of OFF modules automatically, `dev-sim` / `dev-clsm` /
+    `dev-hmm` presets exist and build.
+  - Touching: `cmake/TTTRLibModule.cmake`, `modules/*/CMakeLists.txt`,
+    `ext/CMakeLists.txt`, `CMakePresets.json`.
+
 - **T-20260811-17 · [chisurf] AV grid re-expressed against `IMP.bff.AV` (PRD-100 group 1)**
   - Status: 🆕 open
   - Owner: —
