@@ -43,7 +43,14 @@ bool register_burst_search(const std::string& name, BurstSearchFn fn) {
 }
 
 bool register_burst_search(const AlgorithmDescriptor& desc, BurstSearchFn fn) {
-    if (desc.operation_type.empty() || !fn) return false;
+    // The dispatch key is the descriptor's registry key (`name`, or
+    // `operation_type` when it has none) -- NOT its operation_type: the seven
+    // searches all PERFORM `burst_selection` (mmfdb's term, what a .pto
+    // records) and are told apart by their own names. Keying dispatch on the
+    // operation type made six of them unreachable and the seventh answer for
+    // all.
+    const std::string& key = algorithm_key(desc);
+    if (key.empty() || !fn) return false;
 
     // The descriptor is registered first because it is the one that can be
     // rejected on grounds the dispatch table knows nothing about (a duplicate
@@ -54,7 +61,7 @@ bool register_burst_search(const AlgorithmDescriptor& desc, BurstSearchFn fn) {
     d.capability = "burst_search";
     if (!register_algorithm(d)) return false;
 
-    return register_burst_search(d.operation_type, std::move(fn));
+    return register_burst_search(key, std::move(fn));
 }
 
 const BurstSearchFn* find_burst_search(const std::string& name) {

@@ -178,14 +178,20 @@ def test_the_builtin_searches_are_exactly_the_seven():
 
 @pytest.mark.parametrize("name", sorted(BUILTIN_SEARCHES))
 def test_each_entry_identifies_itself_consistently(name):
-    """`operation_type` is the dispatch key. If it disagreed with the key it is
-    filed under, the registry would advertise one name and dispatch another —
-    which is the original bug wearing a different hat."""
+    """`name` is the dispatch key. If it disagreed with the key it is filed
+    under, the registry would advertise one name and dispatch another — which
+    is the original bug wearing a different hat.
+
+    `operation_type` is a different thing and is deliberately NOT the key: it
+    is mmfdb's term for what the search *performs*, and all seven perform
+    `burst_selection` (that is what a `.pto` records and what a pipeline
+    document exports). Keying dispatch on it once made six of the seven
+    unreachable."""
     e = _builtin_entries()[name]
-    assert e["operation_type"] == name
+    assert e["name"] == name
+    assert e["operation_type"] == "burst_selection"
     assert e["capability"] == "burst_search"
     assert e["provider"] == "builtin"
-    assert e["name"] == name
 
 
 @pytest.mark.parametrize("name", sorted(BUILTIN_SEARCHES))

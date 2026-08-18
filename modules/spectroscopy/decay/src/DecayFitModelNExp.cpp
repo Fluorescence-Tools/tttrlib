@@ -191,6 +191,7 @@ namespace {
 // model; see the note in DecayFitModelFit2x.cpp.
 const char* const kFitNexpEntry = R"JSON({
   "name": "fit_nexp",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFitNExp", "DecayFitNExpOptions", "DecayFitNExpResult", "FitNExp"],
   "n_patterns": 0,
   "label": "Multi-exponential reconvolution (N-exp)",
@@ -284,6 +285,7 @@ const char* const kFitNexpEntry = R"JSON({
 
 const char* const kNexpEntry = R"JSON({
   "name": "nexp",
+  "operation_type": "tcspc_fitting",
   "api": [],
   "label": "Multi-exponential construction inputs",
   "summary": "Inputs set once when a multi-exponential model is built.",

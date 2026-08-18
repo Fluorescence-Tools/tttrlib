@@ -467,6 +467,7 @@ namespace {
 // these blocks are normative, not documentation.
 const char* const kFit23Entry = R"JSON({
   "name": "fit23",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFit2", "DecayFit23", "Fit23"],
   "n_patterns": 0,
   "label": "Single lifetime + anisotropy (Fit23)",
@@ -561,6 +562,7 @@ const char* const kFit23Entry = R"JSON({
 
 const char* const kFit24Entry = R"JSON({
   "name": "fit24",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFit24", "Fit24"],
   "n_patterns": 0,
   "label": "Bi-exponential (Fit24)",
@@ -665,6 +667,7 @@ const char* const kFit24Entry = R"JSON({
 
 const char* const kFit25Entry = R"JSON({
   "name": "fit25",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFit25", "Fit25"],
   "n_patterns": 0,
   "label": "Best of four fixed lifetimes (Fit25)",
@@ -786,6 +789,7 @@ const char* const kFit25Entry = R"JSON({
 
 const char* const kFit26Entry = R"JSON({
   "name": "fit26",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFit26", "Fit26"],
   "n_patterns": 2,
   "label": "Two-pattern mixture (Fit26)",
@@ -838,6 +842,7 @@ const char* const kFit26Entry = R"JSON({
 
 const char* const kFit2xEntry = R"JSON({
   "name": "fit2x",
+  "operation_type": "tcspc_fitting",
   "api": ["DecayFitProblem", "DecayFitConstraints", "DecayFitOutcome", "DecayFitBatchOutcome", "DecayFitLinkedOutcome", "fit_linked", "fit_names", "result_names", "results_as_dict", "parameter_vector", "setup_vector", "default_links", "decay_fit_names", "decay_fit_parameter_names", "decay_fit_result_names", "decay_fit_setup_names", "decay_fit_setup_vector", "decay_fit_default_links", "decay_fit_is_registered", "install_plugin_decay_fits"],
   "label": "Fit2x construction inputs",
   "summary": "Inputs set once when a Fit2x model is built (not optimised).",

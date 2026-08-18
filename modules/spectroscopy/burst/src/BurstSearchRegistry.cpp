@@ -58,7 +58,8 @@ void register_builtin_burst_searches() {
     std::call_once(once, [] {
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "sliding_window";
+        d.name           = "sliding_window";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Sliding window)L";
         d.dispatch_name   = "burst_search_sliding_window";
@@ -110,7 +111,8 @@ void register_builtin_burst_searches() {
 
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "cusum_sprt";
+        d.name           = "cusum_sprt";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Cumulative (CUSUM / SPRT))L";
         d.dispatch_name   = "burst_search_cusum_sprt";
@@ -182,7 +184,8 @@ void register_builtin_burst_searches() {
     // `T` is the bin width in seconds here; 0 keeps the default.
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "kalman";
+        d.name           = "kalman";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Kalman (rate change))L";
         d.dispatch_name   = "burst_search_kalman";
@@ -284,7 +287,8 @@ void register_builtin_burst_searches() {
     // `T` is the bin width in seconds; 0 keeps the default.
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "bocpd";
+        d.name           = "bocpd";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Bayesian changepoint (BOCPD))L";
         d.dispatch_name   = "burst_search_bocpd";
@@ -389,7 +393,8 @@ void register_builtin_burst_searches() {
     // touch the unknown-name fallback that callers rely on.
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "coincident";
+        d.name           = "coincident";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Coincident (multi-detector))L";
         d.dispatch_name   = "burst_search_coincident";
@@ -475,7 +480,8 @@ void register_builtin_burst_searches() {
     // again: a second copy of a default is a second thing to forget.
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "maxtree";
+        d.name           = "maxtree";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Max-tree (threshold-free))L";
         d.dispatch_name   = "burst_search_maxtree";
@@ -646,7 +652,8 @@ void register_builtin_burst_searches() {
     // `T` is p0, the change-point false-alarm probability; 0 keeps the default.
     {
         AlgorithmDescriptor d;
-        d.operation_type  = "bayesian_blocks";
+        d.name           = "bayesian_blocks";   // the registry key
+        d.operation_type = "burst_selection";  // mmfdb term for what it does
         d.capability      = "burst_search";
         d.display_name    = R"L(Bayesian Blocks (optimal segmentation))L";
         d.dispatch_name   = "burst_search_bayesian_blocks";

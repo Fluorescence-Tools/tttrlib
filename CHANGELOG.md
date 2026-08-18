@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+- **Pipelines are documents** (`tttrlib.Pipeline`): a processing chain is a
+  list of registered operations plus parameters, exportable and importable as
+  **JSON**, inside a **`.pto`** container (under mmfdb's own
+  `_mmfdb_workflow.definition` tag, beside the results it produced) and as an
+  **mmfdb workflow** (schema version 1) that `mmfdb workflow run` can execute.
+  Every document states its format and format version, the tttrlib version
+  that wrote it and the software of each step; a document from a newer format
+  is refused rather than half-understood. `Pipeline.then` / `|` compose,
+  `run(value, adapters=...)` replays, and a reloaded pipeline computes the same
+  numbers (pinned by `test/python/test_pipeline_document.py`). New module
+  `tttrlib.pipeline` is the import path an mmfdb `python` step names
+  (`tttrlib.pipeline:run_step`).
+- **Every registry entry names an mmfdb `operation_type`** — the seven burst
+  searches are `burst_selection`, fit models / objectives / priors are
+  `tcspc_fitting`, correlation methods `fcs_correlation` — so any step of a
+  pipeline document validates against mmfdb's vocabulary (enforced by a test).
+  `AlgorithmDescriptor::name` separates the registry key from the term.
+- New docs page `doc/pipelines.rst`; the registry example now shows the
+  export/import/replay round trips.
+
 - **Every module registers, and operations compose.** All 26 categories of the
   one registry are now filled by the modules themselves: burst features /
   filtering / significance / ML / recurrence, CLSM reconstruction, FLIM,

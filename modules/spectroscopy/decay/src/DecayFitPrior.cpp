@@ -140,6 +140,7 @@ private:
 namespace {
 const char* const kUniformPriorEntry = R"JSON({
   "name": "uniform",
+  "operation_type": "tcspc_fitting",
   "api": ["UniformPrior", "DecayFitPrior"],
   "label": "Uniform (box)",
   "summary": "Flat inside [lb, ub], -inf outside; the optimiser sees it as box bounds.",
@@ -160,6 +161,7 @@ const char* const kUniformPriorEntry = R"JSON({
 })JSON";
 const char* const kNormalPriorEntry = R"JSON({
   "name": "normal",
+  "operation_type": "tcspc_fitting",
   "api": ["NormalPrior"],
   "label": "Normal",
   "summary": "Gaussian prior; enters the fit as one deviance residual (x-mu)/sigma.",
@@ -181,6 +183,7 @@ const char* const kNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kTruncatedNormalPriorEntry = R"JSON({
   "name": "truncated_normal",
+  "operation_type": "tcspc_fitting",
   "api": ["TruncatedNormalPrior"],
   "label": "Truncated normal",
   "summary": "Gaussian inside [lb, ub], -inf outside.",
@@ -210,6 +213,7 @@ const char* const kTruncatedNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kHalfNormalPriorEntry = R"JSON({
   "name": "half_normal",
+  "operation_type": "tcspc_fitting",
   "api": ["HalfNormalPrior"],
   "label": "Half-normal",
   "summary": "Gaussian on x >= loc, -inf below; a soft non-negativity prior.",
@@ -231,6 +235,7 @@ const char* const kHalfNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kLognormalPriorEntry = R"JSON({
   "name": "lognormal",
+  "operation_type": "tcspc_fitting",
   "api": ["LogNormalPrior"],
   "label": "Log-normal",
   "summary": "ln x ~ N(mu, sigma); positive support.",
@@ -252,6 +257,7 @@ const char* const kLognormalPriorEntry = R"JSON({
 })JSON";
 const char* const kExponentialPriorEntry = R"JSON({
   "name": "exponential",
+  "operation_type": "tcspc_fitting",
   "api": ["ExponentialPrior"],
   "label": "Exponential",
   "summary": "p(x) ~ exp(-(x-loc)/scale) for x >= loc.",
@@ -273,6 +279,7 @@ const char* const kExponentialPriorEntry = R"JSON({
 })JSON";
 const char* const kGammaPriorEntry = R"JSON({
   "name": "gamma",
+  "operation_type": "tcspc_fitting",
   "api": ["GammaPrior"],
   "label": "Gamma",
   "summary": "Gamma(alpha, beta) on x >= loc.",
@@ -299,6 +306,7 @@ const char* const kGammaPriorEntry = R"JSON({
 })JSON";
 const char* const kBetaPriorEntry = R"JSON({
   "name": "beta",
+  "operation_type": "tcspc_fitting",
   "api": ["BetaPrior"],
   "label": "Beta",
   "summary": "Beta(alpha, beta) on [0, 1].",
@@ -321,6 +329,7 @@ const char* const kBetaPriorEntry = R"JSON({
 })JSON";
 const char* const kProductPriorEntry = R"JSON({
   "name": "product",
+  "operation_type": "tcspc_fitting",
   "api": ["ProductPrior"],
   "label": "Product",
   "summary": "The product of other priors on the same parameter (their log densities add).",
@@ -339,6 +348,7 @@ const char* const kProductPriorEntry = R"JSON({
 })JSON";
 const char* const kCallablePriorEntry = R"JSON({
   "name": "callable",
+  "operation_type": "tcspc_fitting",
   "label": "Python callable",
   "summary": "A live Python callback; usable from Python only, refused in a native fit.",
   "description": "A live Python callback; usable from Python only, refused in a native fit. State: {\"kind\": \"callable\", ...} as accepted by DecayFitPrior.from_json_string.",

@@ -110,36 +110,67 @@ print(f"significance: median {np.median(sigma):.1f} sigma, "
       f"{np.count_nonzero(sigma > 5)} bursts above 5 sigma")
 
 # %%
-# 4. The same pipeline as data
-# ----------------------------
-# A pipeline written as a list of dicts is what a ``.pto`` provenance record
-# stores, and what a GUI or a config file would produce. Executing it needs no
-# code that knows the steps -- only the registry.
-recipe = [
-    {"operation": "burst_selection",
-     "parameters": {"L": 30, "m": 5, "T": 5e-6}, "algorithm": "sliding_window"},
-    {"operation": "burst_significance",
-     "parameters": {"background_window": 0.05, "significance_mode": 2}},
-]
+# 4. The pipeline as a document -- JSON, ``.pto``, mmfdb
+# -----------------------------------------------------
+# ``Pipeline`` is the same composition as a *document*: it states its format
+# and version, the tttrlib version that wrote it, and per step the mmfdb
+# ``operation_type``. That is what makes a data-processing run reproducible --
+# the recipe travels with the result and can be re-run elsewhere.
+import os
+import tempfile
 
-for step in recipe:                       # every step must exist before running
-    described = tttrlib.describe(step["operation"])
-    print(f"{step['operation']:22s} -> {described['label']}")
+pipeline = (tttrlib.Pipeline("burst-analysis",
+                             description="sliding-window bursts with Li&Ma significance",
+                             sources={"raw": {"path": "measurement.spc",
+                                              "kind": "raw_measurement"}})
+            .then("burst_selection", L=30, m=5, T=5e-6)
+            .then("burst_significance", background_window=0.05, significance_mode=2))
+print(pipeline.describe())
+print(json.dumps(pipeline.to_dict(), indent=1)[:520], "...")
 
-value = data
+# %%
+# **JSON**: write it next to the data, read it back anywhere.
+folder = tempfile.mkdtemp()
+json_path = pipeline.save(os.path.join(folder, "burst-analysis.json"))
+reloaded = tttrlib.Pipeline.load(json_path)
+print("json round trip:", reloaded == pipeline)
+
+# %%
+# **PTO**: the container the results live in carries the recipe that produced
+# them, under mmfdb's own item name ``_mmfdb_workflow.definition``.
+pto_path = pipeline.to_pto(os.path.join(folder, "run.pto"))
+print("pto round trip:", tttrlib.Pipeline.from_pto(pto_path) == pipeline)
+
+# %%
+# **mmfdb**: the document *is* an mmfdb workflow (schema version 1), so
+# ``mmfdb workflow run`` can execute it, and a workflow that stitches tttrlib
+# with another tool loads here as its tttrlib steps.
+workflow = pipeline.to_mmfdb()
+print(json.dumps(workflow["steps"][0], indent=1))
+print("mmfdb round trip:", tttrlib.Pipeline.from_mmfdb(workflow) == pipeline)
+
+# %%
+# **Replay**: the reloaded document computes the same numbers. The adapters
+# say how each step's input is wired; everything else came out of the file.
 found = None
-for step in recipe:
-    name, params = step["operation"], dict(step["parameters"])
-    target = tttrlib.resolve(name)
-    cls, attr = target if isinstance(target, tuple) else (None, None)
-    method = getattr(value, attr) if cls is not None else target
-    if name == "burst_selection":
-        found = np.asarray(method(step["algorithm"], **params))
-        value = data
-    else:
-        value = np.asarray(method(found.ravel().tolist(), *params.values()))
-print(f"replayed: {len(found)} bursts, median {np.median(value):.1f} sigma")
-assert np.array_equal(value, sigma)       # identical to the composed pipeline
+
+
+def take_bursts(value):
+    return (value, "sliding_window"), {}
+
+
+def take_significance(value):
+    return (data, found.ravel().tolist()), {}
+
+
+search_again = tttrlib.compose((reloaded.steps[0]["operation"],
+                                reloaded.steps[0]["params"], take_bursts))
+found = np.asarray(search_again(data))
+significance_again = tttrlib.compose((reloaded.steps[1]["operation"],
+                                      reloaded.steps[1]["params"], take_significance))
+replayed = np.asarray(significance_again(data))
+print(f"replayed: {len(found)} bursts, median {np.median(replayed):.1f} sigma")
+assert np.array_equal(replayed, sigma)    # identical to the composed pipeline
 
 # %%
 # 5. What the registry buys

@@ -122,7 +122,7 @@ IF(BUILD_PYTHON_INTERFACE)
     file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i" "${CMAKE_CURRENT_SOURCE_DIR}/python/split/*.i")
     list(REMOVE_ITEM SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/tttrlib.i")
     file(GLOB SWIG_PYTHON_HELPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py")
-    list(FILTER SWIG_PYTHON_HELPERS EXCLUDE REGEX ".*/tttrlib.py$")
+    list(FILTER SWIG_PYTHON_HELPERS EXCLUDE REGEX ".*/(tttrlib|pipeline_module).py$")
     set(SWIG_DEPENDENCIES "${SWIG_INTERFACE_FILES};${SWIG_PYTHON_HELPERS}")
     list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
 
@@ -266,6 +266,15 @@ IF(BUILD_PYTHON_INTERFACE)
     endif()
     MESSAGE(STATUS "Module libraries install dir: ${TTTRLIB_MODULE_INSTALL_DIR}")
     tttrlib_install_modules(DESTINATION ${TTTRLIB_MODULE_INSTALL_DIR} COMPONENT bindings)
+
+    # `tttrlib.pipeline` -- the import path an mmfdb workflow step names
+    # (`python: tttrlib.pipeline:run_step`). A real module file, because
+    # `importlib.import_module` has to find it; it only re-exports what SWIG
+    # generated into the extension's namespace.
+    INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/pipeline_module.py
+            DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
+            RENAME pipeline.py
+            COMPONENT bindings)
 
     # The drop-in plugin directory. Shipped with a README so it exists, is
     # discoverable, and explains itself without anyone having to find the docs.

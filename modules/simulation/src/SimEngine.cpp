@@ -1236,7 +1236,7 @@ const char* const kPhotonSimulationEntry = R"JSON({
   "label": "Photon-stream simulation (diffusion, kinetics, excitation, detection)",
   "summary": "Simulates a TTTR photon stream: molecules diffusing through a focus, switching states by a rate matrix, excited by pulsed/ALEX lasers, emitting into detectors with lifetimes and anisotropy, encoded to any container.",
   "description": "An event-driven simulator: Brownian (or flow) motion of species with per-state brightness, lifetimes and FRET, Gillespie state switching, excitation by one or more lasers (ALEX / PIE periods), emission into routing channels with micro times drawn from the state's decay convolved with an IRF, background, and scanner markers for imaging; the result is a `TTTR` or an encoded record stream, so every analysis in the library can be tested on known ground truth. Known-answer validated (dwell times, MSD = 6Dt, Poisson counts, r(t) Perrin) and cross-checked against PyBroMo for FCS.",
-  "operation_type": "simulation",
+  "operation_type": "analysis",
   "method": "run",
   "params_schema": {
     "type": "object",

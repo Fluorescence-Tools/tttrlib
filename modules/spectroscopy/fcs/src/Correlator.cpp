@@ -770,6 +770,7 @@ const char* kFcsReferences = R"JSON([
 namespace {
 const char* const kWahlMethodEntry = R"JSON({
   "name": "wahl",
+  "operation_type": "fcs_correlation",
   "label": "Multi-tau (Wahl)",
   "summary": "Multi-tau autocorrelation/cross-correlation on a semi-logarithmic lag axis; the default.",
   "description": "Wahl et al. 2003 multi-tau scheme: n_bins linear lags per cascade, the photon streams coarsened by two between cascades. Normalised by the streams' durations and total weights. Handles arbitrary weights (filtered FCS).",
@@ -805,6 +806,7 @@ const char* const kWahlMethodEntry = R"JSON({
 })JSON";
 const char* const kFelekyanMethodEntry = R"JSON({
   "name": "felekyan",
+  "operation_type": "fcs_correlation",
   "label": "Multi-tau (Felekyan)",
   "summary": "Multi-tau correlation on the lag axis of Felekyan et al.; normalised by mean count rates.",
   "description": "The multiple-tau scheme with the lag axis of Felekyan et al. 2005 (its own axis, see CorrelatorCurve::update_axis) and a count-rate normalisation. Reproduces the correlation software of the Seidel lab.",
@@ -840,6 +842,7 @@ const char* const kFelekyanMethodEntry = R"JSON({
 })JSON";
 const char* const kLaurenceMethodEntry = R"JSON({
   "name": "laurence",
+  "operation_type": "fcs_correlation",
   "label": "Direct pair counting (Laurence)",
   "summary": "Exact correlation from photon pairs per lag bin, no coarsening; slower, no binning artefacts.",
   "description": "The photon-pair algorithm of Laurence et al. 2006: for each lag bin the pairs whose separation falls into it are counted directly from the two arrival-time lists, so the estimate is exact on the chosen lag axis. Normalised by the pair-count expectation of two uncorrelated streams.",

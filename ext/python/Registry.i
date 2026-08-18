@@ -6,6 +6,8 @@
 %include "Registry.h"
 
 #ifdef SWIGPYTHON
+%pythoncode "./ext/python/pipeline_support.py"
+
 %pythoncode %{
 
 def registry(category=None):

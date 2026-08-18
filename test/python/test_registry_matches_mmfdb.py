@@ -159,3 +159,27 @@ def test_every_tag_the_source_emits_is_defined():
                      if not re.search(r'_item\.name\s+"' + re.escape(t) + r'"', text))
     assert not missing, (
         f"emitted into .pto containers but not defined in mmfdb.dic: {missing}")
+
+
+def test_every_registry_entry_names_an_mmfdb_operation_type():
+    """Not only the `operation` category: EVERY entry says, in mmfdb's
+    vocabulary, what it performs -- a burst search performs `burst_selection`,
+    a fit model and its objectives and priors `tcspc_fitting`, a correlation
+    method `fcs_correlation`. That is what makes a pipeline document
+    (`Pipeline.to_mmfdb`) valid mmfdb whatever step it carries: the step's
+    `operation_type` is a defined term, and the tttrlib name travels beside it.
+    """
+    import json as _json
+    defined = _defined_operation_types()
+    registry = _json.loads(tttrlib.registry_json())
+    undefined = []
+    for category, entries in registry.items():
+        if category in ("file_container", "table_format", "plugin"):
+            continue                     # catalogs, not operations
+        for name, entry in entries.items():
+            operation_type = entry.get("operation_type")
+            if operation_type and operation_type not in defined:
+                undefined.append(f"{category}/{name}: {operation_type}")
+    assert not undefined, (
+        "registry entries whose operation_type is not an mmfdb term:\n  "
+        + "\n  ".join(undefined))

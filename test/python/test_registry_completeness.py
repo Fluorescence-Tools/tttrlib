@@ -86,6 +86,7 @@ PLUMBING = {
         "fit_setup_json", "operation_registry_json", "register_algorithm", "register_algorithm_json",
         "registry", "registry_categories", "registry_category_json", "registry_json",
         "describe", "defaults", "resolve", "compose",
+        "Pipeline", "run_step",   # the pipeline document API (constants are not callables)
     },
     "runtime / build introspection": {
         "configure_openmp", "detect_features", "get_avx_compiled", "get_avx_enabled",

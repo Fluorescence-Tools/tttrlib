@@ -20,24 +20,28 @@ namespace tttrlib { void register_prior_descriptors(); }
 namespace {
 const char* const kPoissonMleEntry = R"JSON({
   "name": "poisson_mle",
+  "operation_type": "tcspc_fitting",
   "label": "Poisson maximum likelihood (2I*)",
   "summary": "The counting-statistics likelihood; the right default for photon data.",
   "description": "Minimises the Poisson deviance 2I* = -2 ln(L(C|M)/L(C|C)), which compares the model against a hypothetical perfectly fitting one. Correct at every count level including empty channels, where a chi-squared weighted by the data is undefined and one weighted by the model is biased. This is what a TCSPC decay should normally be fitted with."
 })JSON";
 const char* const kP2sMleEntry = R"JSON({
   "name": "p2s_mle",
+  "operation_type": "tcspc_fitting",
   "label": "Poisson MLE on the P+2S sum",
   "summary": "Scores the summed decay rather than the two channels separately.",
   "description": "Forms the anisotropy-free sum P + 2S from the parallel and perpendicular channels and applies the Poisson deviance to it. Removes the anisotropy from the objective entirely, which is what you want when the rotational correlation time is a nuisance rather than a measurement. The alternative is to score the two channels individually in a global fit."
 })JSON";
 const char* const kNeymanLsqEntry = R"JSON({
   "name": "neyman_lsq",
+  "operation_type": "tcspc_fitting",
   "label": "Least squares, data-weighted (Neyman)",
   "summary": "Chi-squared weighted by the observed counts.",
   "description": "Weights each channel by 1/max(1, C). Fast and familiar, but biased low at small counts because a channel that happens to fluctuate down is given more weight. Use it for well-populated decays, or for comparison with historical fits; prefer the Poisson likelihood otherwise."
 })JSON";
 const char* const kGehrelsLsqEntry = R"JSON({
   "name": "gehrels_lsq",
+  "operation_type": "tcspc_fitting",
   "label": "Least squares, Gehrels-weighted",
   "summary": "Chi-squared with a small-count correction to the variance.",
   "description": "Weights by an approximation to the Poisson confidence interval rather than by the raw count, which keeps a least-squares fit usable where the counts are low enough that Neyman weighting visibly biases the result. A pragmatic middle ground when a least-squares optimiser is required but the data are sparse."
@@ -85,7 +89,7 @@ const char* const kTcspcCalibrationEntry = R"JSON({
     "api": ["blind_irf_estimate", "estimate_background_rate"],
   "label": "IRF and background extraction",
   "summary": "Extracts the instrument response function (IRF) and background rate from non-burst photons per detector channel. The IRF curve is used by MLE lifetime fitting.",
-  "operation_type": "calibration",
+  "operation_type": "tcspc_fitting",
   "data_format": "dstore",
   "row_grain": "curve_point",
   "kind": "irf_curve",
