@@ -120,9 +120,14 @@ are still claims and still binding.
     `tools/check_binding_parity.py`.
 
 - **T-20260818-03 · [tttrlib] Debt 2: `libtttrlib.so` / `libtttrlib_static.a` as thin aggregates over the module objects**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Status: ✅ done
+  - Owner: claude
+  - Opened: 2026-08-18 · Picked: 2026-08-18 · Done: 2026-08-18
+  - Result: per-module OBJECT libraries, one compile; module libs and both
+    aggregates link `$<TARGET_OBJECTS>`; GCC `-ffat-lto-objects` for the static
+    archive, Apple ld64 reads bitcode archives (consumer link verified), else
+    fallback own compile. `nm`: TIFF / decay-fit / TTTR members present in both.
+    Details in `okf/MODULE-DEBT.md` §2.
   - Why: `okf/MODULE-DEBT.md` §2 — the two consumer-facing artefacts still
     recompile every source themselves (`TTTRLIB_CLAIMED_SOURCES`), so the tree
     is compiled twice and an extraction can drift them.

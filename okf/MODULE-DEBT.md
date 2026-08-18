@@ -42,7 +42,20 @@ off it the same day; T-20260818-02 done). Default OFF until CI
 has run the wheel with it; the parity guard keeps both fragment lists identical.
 Design and the traps that cost time: `ext/python/split/README.md`.
 
-## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
+## 2. ~~`tttrlibShared` and `tttrlibStatic` still compile every source themselves~~ -- thin aggregates since 2026-08-18
+
+**Closed 2026-08-18.** Every module compiles its sources exactly once into an
+OBJECT library (`tttrlib_<name>_objects`); the module `.so`/`.a` and both
+whole-library targets are links over `$<TARGET_OBJECTS:...>`. Names unchanged.
+One wrinkle: `libtttrlib_static.a` must hold real code for an `ar`/linker
+without the LTO plugin. GCC compiles the objects with `-ffat-lto-objects`
+(bitcode + code in one object, one compile); Apple clang cannot but ld64 reads
+bitcode archives natively (verified: a consumer links a Release+LTO archive);
+any other toolchain with LTO on falls back to the archive's own `-fno-lto`
+compile (`TTTRLIB_STATIC_FROM_OBJECTS`, reported at configure). A module
+switched off with `WITH_<NAME>=OFF` is now absent from the aggregates too, as it
+is from the bindings -- before, they compiled it anyway. Original text kept
+below for the reasoning.
 
 The three SWIG targets now link the modules instead of recompiling the glob, so
 the sources are compiled three times per configure rather than five. The two

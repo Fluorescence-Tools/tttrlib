@@ -46,6 +46,29 @@ set_property(CACHE TTTRLIB_MODULE_TYPE PROPERTY STRINGS SHARED STATIC)
 set_property(GLOBAL PROPERTY TTTRLIB_MODULE_LIST "")
 set_property(GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES "")
 set_property(GLOBAL PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "")
+# The OBJECT libraries of every compiled module, for the whole-library aggregates.
+set_property(GLOBAL PROPERTY TTTRLIB_MODULE_OBJECT_TARGETS "")
+
+# Whether one compile can serve both the LTO-linked module .so and a static
+# archive for a linker without the LTO plugin. GCC (and LLVM >= 17 on ELF)
+# can emit both forms in one object; Apple clang cannot, but ld64 reads
+# bitcode members of an archive natively, so it does not need to. Anywhere
+# else with LTO on, libtttrlib_static.a keeps its own -fno-lto compile.
+set(TTTRLIB_FAT_LTO_OBJECTS OFF)
+set(TTTRLIB_STATIC_FROM_OBJECTS ON)
+if(TTTRLIB_LTO AND NOT MINGW AND NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release"
+        AND TTTRLIB_MODULE_TYPE STREQUAL "SHARED")
+    include(CheckCXXCompilerFlag)
+    set(CMAKE_REQUIRED_FLAGS "-flto")
+    check_cxx_compiler_flag("-ffat-lto-objects" TTTRLIB_HAS_FAT_LTO_OBJECTS)
+    unset(CMAKE_REQUIRED_FLAGS)
+    if(TTTRLIB_HAS_FAT_LTO_OBJECTS)
+        set(TTTRLIB_FAT_LTO_OBJECTS ON)
+    elseif(NOT APPLE)
+        set(TTTRLIB_STATIC_FROM_OBJECTS OFF)
+        message(STATUS "tttrlib: no fat LTO objects; libtttrlib_static.a compiles on its own (-fno-lto)")
+    endif()
+endif()
 
 # Point a target at its own directory for sibling libraries.
 function(tttrlib_set_sibling_rpath target)
@@ -121,7 +144,35 @@ function(tttrlib_add_module)
         message(FATAL_ERROR "tttrlib_add_module(${M_NAME}): no SOURCES")
     endif()
 
-    add_library(${target} ${TTTRLIB_MODULE_TYPE} ${M_SOURCES})
+    # The sources are compiled exactly once, into an OBJECT library. The module
+    # library below and the two whole-library aggregates (libtttrlib.so and
+    # libtttrlib_static.a, in the top-level CMakeLists) are then only links over
+    # these objects. Before this the aggregates recompiled every source a second
+    # and third time -- and, worse, from a list of their own that could drift
+    # from what the modules built (okf/MODULE-DEBT.md §2).
+    #
+    # The object library links its dependencies PRIVATE and nobody links the
+    # object library itself: it exists for its include directories, defines and
+    # $<TARGET_OBJECTS>. Consumers get the usage requirements from the module
+    # target, which restates them PUBLIC.
+    set(objs "${target}_objects")
+    add_library(${objs} OBJECT ${M_SOURCES})
+    set_target_properties(${objs} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${objs} PRIVATE tttrlib::build_config)
+    foreach(dep IN LISTS M_DEPENDS)
+        target_link_libraries(${objs} PRIVATE tttrlib::${dep})
+    endforeach()
+    foreach(dep IN LISTS M_EXTERNAL_DEPS)
+        target_link_libraries(${objs} PRIVATE ${dep})
+    endforeach()
+    if(TTTRLIB_FAT_LTO_OBJECTS)
+        # Bitcode AND machine code in every object: the module .so links with
+        # LTO, and libtttrlib_static.a built from the very same objects still
+        # holds real code for an ar/linker without the LTO plugin.
+        target_compile_options(${objs} PRIVATE -ffat-lto-objects)
+    endif()
+
+    add_library(${target} ${TTTRLIB_MODULE_TYPE} $<TARGET_OBJECTS:${objs}>)
     add_library(tttrlib::${M_NAME} ALIAS ${target})
 
     # Every module gets the project's own include dirs and defines, plus exactly
@@ -135,6 +186,7 @@ function(tttrlib_add_module)
     endforeach()
 
     foreach(dir IN LISTS M_HEADERS)
+        target_include_directories(${objs} PUBLIC "${dir}")
         target_include_directories(${target} PUBLIC "${dir}")
         set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "${dir}")
     endforeach()
@@ -154,10 +206,12 @@ function(tttrlib_add_module)
         # and fatal for a module library, which exists to be linked against. A
         # module with hidden visibility links to nothing and the first split
         # wheel would fail at import with undefined symbols.
-        set_target_properties(${target} PROPERTIES
+        # Visibility is a compile property, so it goes on the objects.
+        set_target_properties(${objs} PROPERTIES
                 C_VISIBILITY_PRESET default
                 CXX_VISIBILITY_PRESET default
-                VISIBILITY_INLINES_HIDDEN OFF
+                VISIBILITY_INLINES_HIDDEN OFF)
+        set_target_properties(${target} PROPERTIES
                 # MSVC exports nothing without __declspec(dllexport), and there is
                 # no such annotation anywhere in include/. Until the export macros
                 # land (they are ~97 sites), let CMake generate the .def file.
@@ -165,7 +219,7 @@ function(tttrlib_add_module)
         # __create_def cannot parse /GL (whole-program) objects and crashes;
         # a module compiled with /GL- keeps the .def generation working.
         if(MSVC)
-            target_compile_options(${target} PRIVATE /GL-)
+            target_compile_options(${objs} PRIVATE /GL-)
         endif()
         # Find siblings next to itself: modules and the extension are installed
         # into the same directory.
@@ -181,11 +235,12 @@ function(tttrlib_add_module)
         # drops vague-linkage symbols out of slim LTO members -- typeinfo and
         # vtables, e.g. _ZTI9TTTRRange -- and the consumer fails at load.
         if(NOT MSVC)
-            target_compile_options(${target} PRIVATE -fno-lto)
+            target_compile_options(${objs} PRIVATE -fno-lto)
         endif()
     endif()
 
     set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_LIST ${M_NAME})
+    set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULE_OBJECT_TARGETS ${objs})
     set_property(GLOBAL APPEND PROPERTY TTTRLIB_CLAIMED_SOURCES ${M_SOURCES})
     set_property(GLOBAL PROPERTY TTTRLIB_MODULE_${M_NAME}_SWIG "${M_SWIG_INTERFACES}")
     set_property(GLOBAL PROPERTY TTTRLIB_MODULE_${M_NAME}_TESTS "${M_TEST_DIR}")

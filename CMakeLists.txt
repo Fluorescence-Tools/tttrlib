@@ -645,19 +645,30 @@ IF(BUILD_LIBRARY)
   ## Shared / static library
   ###########################
   # cmake needs unique target name, thus place shared in front of project
-  # These build EVERY source, including the ones extracted modules now own.
-  # libtttrlib.so is what a C++ consumer links and libtttrlib_static.a is what
-  # the conda R package links, and both must stay complete: globbing src/ alone
-  # would silently drop a capability with each extraction (the R package wraps
-  # both Histogram and Tiff). The exit is to collapse these onto the module
-  # objects, which must not change either artefact's name.
-  ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${TTTRLIB_ALL_SOURCES})
-  ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${TTTRLIB_ALL_SOURCES})
-  IF(NOT MSVC)
-    # The static archive is consumed outside this build (e.g. R CMD INSTALL
-    # links it into the R package). If it holds slim LTO bitcode, an ar/linker
-    # without the LTO plugin drops vague-linkage symbols (typeinfo/vtables,
-    # e.g. _ZTI9TTTRRange) and the consumer fails at load. Archive real code.
+  # Thin aggregates over the module objects: every source is compiled once, by
+  # its module's OBJECT library, and these two just link all of those objects
+  # under the names a C++ consumer (libtttrlib.so) and the conda R package
+  # (libtttrlib_static.a) have always used. Being built from the same objects
+  # as the modules is what makes them complete by construction -- an extraction
+  # cannot subtract from them any more (okf/MODULE-DEBT.md §2). A module
+  # switched off with WITH_<NAME>=OFF is absent from them, as it is from the
+  # bindings.
+  GET_PROPERTY(TTTRLIB_MODULE_OBJECT_TARGETS GLOBAL PROPERTY TTTRLIB_MODULE_OBJECT_TARGETS)
+  SET(TTTRLIB_ALL_OBJECTS "")
+  FOREACH(_objs IN LISTS TTTRLIB_MODULE_OBJECT_TARGETS)
+    LIST(APPEND TTTRLIB_ALL_OBJECTS "$<TARGET_OBJECTS:${_objs}>")
+  ENDFOREACH()
+  ADD_LIBRARY(${PROJECT_NAME}Shared SHARED ${TTTRLIB_ALL_OBJECTS})
+  IF(TTTRLIB_STATIC_FROM_OBJECTS)
+    ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${TTTRLIB_ALL_OBJECTS})
+  ELSE()
+    # The static archive is consumed outside this build (R CMD INSTALL links it
+    # into the R package). Slim LTO bitcode in it makes an ar/linker without the
+    # LTO plugin drop vague-linkage symbols (typeinfo/vtables, e.g.
+    # _ZTI9TTTRRange) and the consumer fails at load. When the toolchain cannot
+    # emit fat LTO objects (see TTTRLibModule.cmake), archive real code from a
+    # compile of its own.
+    ADD_LIBRARY(${PROJECT_NAME}Static STATIC ${TTTRLIB_ALL_SOURCES})
     TARGET_COMPILE_OPTIONS(${PROJECT_NAME}Static PRIVATE -fno-lto)
   ENDIF()
 

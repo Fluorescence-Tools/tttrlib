@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- **Build: every source compiles once.** Each module owns an OBJECT library and
+  the module libraries, `libtttrlib.so` and `libtttrlib_static.a` are links over
+  those objects (the two aggregates used to recompile the whole tree). Names
+  and contents unchanged; a module disabled with `WITH_<NAME>=OFF` is now
+  absent from the aggregates as well.
+
 ### Fixed
 - **`objective = neyman_lsq` / `gehrels_lsq` now fit what they say.** Both
   were in the registry and in `setup_vector`, but every fit2x kernel scored the
