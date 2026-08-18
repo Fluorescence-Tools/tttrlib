@@ -5,6 +5,7 @@
 // <nlohmann/json_fwd.hpp> rather than the ~41k preprocessed lines of json.hpp.
 #include "DecayFitPrior.h"
 #include "PluginHost.h"
+#include "AlgorithmRegistry.h"
 
 #include <nlohmann/json.hpp>
 #include <algorithm>
@@ -131,6 +132,229 @@ private:
 };
 
 }  // namespace
+
+// ---- registry("prior") ---------------------------------------------------
+//
+// The built-in kinds of kinds_table(), described for the one registry (a
+// plugin's kind registers into the same category when it loads).
+namespace {
+const char* const kUniformPriorEntry = R"JSON({
+  "name": "uniform",
+  "label": "Uniform (box)",
+  "summary": "Flat inside [lb, ub], -inf outside; the optimiser sees it as box bounds.",
+  "description": "Flat inside [lb, ub], -inf outside; the optimiser sees it as box bounds. State: {\"kind\": \"uniform\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "lb": {
+        "type": "number",
+        "default": "-inf"
+      },
+      "ub": {
+        "type": "number",
+        "default": "inf"
+      }
+    }
+  }
+})JSON";
+const char* const kNormalPriorEntry = R"JSON({
+  "name": "normal",
+  "label": "Normal",
+  "summary": "Gaussian prior; enters the fit as one deviance residual (x-mu)/sigma.",
+  "description": "Gaussian prior; enters the fit as one deviance residual (x-mu)/sigma. State: {\"kind\": \"normal\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "mu": {
+        "type": "number",
+        "default": 0.0
+      },
+      "sigma": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      }
+    }
+  }
+})JSON";
+const char* const kTruncatedNormalPriorEntry = R"JSON({
+  "name": "truncated_normal",
+  "label": "Truncated normal",
+  "summary": "Gaussian inside [lb, ub], -inf outside.",
+  "description": "Gaussian inside [lb, ub], -inf outside. State: {\"kind\": \"truncated_normal\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "mu": {
+        "type": "number",
+        "default": 0.0
+      },
+      "sigma": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "lb": {
+        "type": "number",
+        "default": "-inf"
+      },
+      "ub": {
+        "type": "number",
+        "default": "inf"
+      }
+    }
+  }
+})JSON";
+const char* const kHalfNormalPriorEntry = R"JSON({
+  "name": "half_normal",
+  "label": "Half-normal",
+  "summary": "Gaussian on x >= loc, -inf below; a soft non-negativity prior.",
+  "description": "Gaussian on x >= loc, -inf below; a soft non-negativity prior. State: {\"kind\": \"half_normal\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "sigma": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "loc": {
+        "type": "number",
+        "default": 0.0
+      }
+    }
+  }
+})JSON";
+const char* const kLognormalPriorEntry = R"JSON({
+  "name": "lognormal",
+  "label": "Log-normal",
+  "summary": "ln x ~ N(mu, sigma); positive support.",
+  "description": "ln x ~ N(mu, sigma); positive support. State: {\"kind\": \"lognormal\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "mu": {
+        "type": "number",
+        "default": 0.0
+      },
+      "sigma": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      }
+    }
+  }
+})JSON";
+const char* const kExponentialPriorEntry = R"JSON({
+  "name": "exponential",
+  "label": "Exponential",
+  "summary": "p(x) ~ exp(-(x-loc)/scale) for x >= loc.",
+  "description": "p(x) ~ exp(-(x-loc)/scale) for x >= loc. State: {\"kind\": \"exponential\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "scale": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "loc": {
+        "type": "number",
+        "default": 0.0
+      }
+    }
+  }
+})JSON";
+const char* const kGammaPriorEntry = R"JSON({
+  "name": "gamma",
+  "label": "Gamma",
+  "summary": "Gamma(alpha, beta) on x >= loc.",
+  "description": "Gamma(alpha, beta) on x >= loc. State: {\"kind\": \"gamma\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "alpha": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "beta": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "loc": {
+        "type": "number",
+        "default": 0.0
+      }
+    }
+  }
+})JSON";
+const char* const kBetaPriorEntry = R"JSON({
+  "name": "beta",
+  "label": "Beta",
+  "summary": "Beta(alpha, beta) on [0, 1].",
+  "description": "Beta(alpha, beta) on [0, 1]. State: {\"kind\": \"beta\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "alpha": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      },
+      "beta": {
+        "type": "number",
+        "default": 1.0,
+        "exclusiveMinimum": 0
+      }
+    }
+  }
+})JSON";
+const char* const kProductPriorEntry = R"JSON({
+  "name": "product",
+  "label": "Product",
+  "summary": "The product of other priors on the same parameter (their log densities add).",
+  "description": "The product of other priors on the same parameter (their log densities add). State: {\"kind\": \"product\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "priors": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
+    }
+  }
+})JSON";
+const char* const kCallablePriorEntry = R"JSON({
+  "name": "callable",
+  "label": "Python callable",
+  "summary": "A live Python callback; usable from Python only, refused in a native fit.",
+  "description": "A live Python callback; usable from Python only, refused in a native fit. State: {\"kind\": \"callable\", ...} as accepted by DecayFitPrior.from_json_string.",
+  "params_schema": {
+    "type": "object",
+    "properties": {}
+  }
+})JSON";
+}  // namespace
+
+namespace tttrlib {
+/// Register the built-in prior kinds' registry entries. Idempotent.
+void register_prior_descriptors() {
+    tttrlib::register_algorithm_json("prior", "uniform", kUniformPriorEntry);
+    tttrlib::register_algorithm_json("prior", "normal", kNormalPriorEntry);
+    tttrlib::register_algorithm_json("prior", "truncated_normal", kTruncatedNormalPriorEntry);
+    tttrlib::register_algorithm_json("prior", "half_normal", kHalfNormalPriorEntry);
+    tttrlib::register_algorithm_json("prior", "lognormal", kLognormalPriorEntry);
+    tttrlib::register_algorithm_json("prior", "exponential", kExponentialPriorEntry);
+    tttrlib::register_algorithm_json("prior", "gamma", kGammaPriorEntry);
+    tttrlib::register_algorithm_json("prior", "beta", kBetaPriorEntry);
+    tttrlib::register_algorithm_json("prior", "product", kProductPriorEntry);
+    tttrlib::register_algorithm_json("prior", "callable", kCallablePriorEntry);
+}
+}  // namespace tttrlib
 
 std::vector<std::string> DecayFitPrior::kinds() {
     std::vector<std::string> out;

@@ -34,8 +34,10 @@
 
 
 namespace tttrlib {
-/// Register the `burst_fcs` pipeline-operation registry entry (registry("operation")). Idempotent.
-void register_operation_burst_fcs();
+/// Register the fcs module's registry entries: the `burst_fcs` pipeline
+/// operation and the built-in correlation methods (`correlation_method`
+/// category). Idempotent.
+void register_fcs_descriptors();
 }
 
 class Correlator {

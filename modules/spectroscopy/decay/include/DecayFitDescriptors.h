@@ -33,7 +33,7 @@
 namespace tttrlib {
 
 /// Register every entry the decay module contributes to the registry: the
-/// `fit`, `fit_setup` and `objective` categories and its `operation` entries.
+/// `fit`, `fit_setup`, `objective` and `prior` categories and its `operation` entries.
 /// Idempotent; explicit rather than a static initialiser (an archive member
 /// nothing references is dropped by the linker, DecayFitModelRegistration.h).
 void register_decay_descriptors();

@@ -14,8 +14,10 @@
   `register_algorithm_json(capability, key, entry)`, `unregister_algorithm`
   and `algorithm_operations_json` are new. Registry content is unchanged
   (0 entries removed or changed, generic descriptor keys added; parameter
-  order preserved). Two new categories appear when a plugin brings them:
-  `correlation_method`, `prior`.
+  order preserved). Two new categories: `correlation_method` (wahl, felekyan,
+  laurence + a plugin's) and `prior` (the ten kinds + a plugin's) -- the
+  registry now describes exactly what `set_correlation_method` and
+  `DecayFitPrior.from_json_string` accept (a test pins the two sets equal).
 
 - **Plugins can contribute a correlation kernel and a prior kind.** Two new
   C-ABI tables, `tttrlib_correlation_method_v1` (a name

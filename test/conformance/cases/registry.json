@@ -6,7 +6,7 @@
       "id": "registry.categories",
       "doc": "The categories, in the order the registry lists them.",
       "steps": [{"op": "registry.categories", "as": "cats"}, {"op": "len", "on": "cats", "as": "n"}],
-      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective", "operation", "fcs", "hmm", "pda"], "n": 11}
+      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective", "operation", "fcs", "hmm", "pda", "prior", "correlation_method"], "n": 13}
     },
     {
       "id": "registry.live_algorithm_categories",

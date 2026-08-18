@@ -743,9 +743,124 @@ const char* const kBurstFcsEntry = R"JSON({
 })JSON";
 }  // namespace
 
-/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
-void tttrlib::register_operation_burst_fcs() {
+// The three built-in kernels of Correlator::correlation_methods(), described
+// for the one registry (a plugin's kernel registers into the same category
+// when it loads); a caller sees every name set_correlation_method accepts.
+namespace {
+const char* const kWahlMethodEntry = R"JSON({
+  "name": "wahl",
+  "label": "Multi-tau (Wahl)",
+  "summary": "Multi-tau autocorrelation/cross-correlation on a semi-logarithmic lag axis; the default.",
+  "description": "Wahl et al. 2003 multi-tau scheme: n_bins linear lags per cascade, the photon streams coarsened by two between cascades. Normalised by the streams' durations and total weights. Handles arbitrary weights (filtered FCS).",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_bins": {
+        "type": "integer",
+        "title": "Lags per cascade",
+        "default": 17,
+        "minimum": 1
+      },
+      "n_casc": {
+        "type": "integer",
+        "title": "Cascades",
+        "default": 25,
+        "minimum": 1
+      }
+    }
+  },
+  "references": [
+    {
+      "type": "article",
+      "authors": "Wahl M, Gregor I, Patting M, Enderlein J",
+      "title": "Fast calculation of fluorescence correlation data with asynchronous time-correlated single-photon counting",
+      "year": 2003,
+      "journal": "Opt Express",
+      "volume": "11",
+      "pages": "3583-3591",
+      "doi": "10.1364/OE.11.003583"
+    }
+  ]
+})JSON";
+const char* const kFelekyanMethodEntry = R"JSON({
+  "name": "felekyan",
+  "label": "Multi-tau (Felekyan)",
+  "summary": "Multi-tau correlation on the lag axis of Felekyan et al.; normalised by mean count rates.",
+  "description": "The multiple-tau scheme with the lag axis of Felekyan et al. 2005 (its own axis, see CorrelatorCurve::update_axis) and a count-rate normalisation. Reproduces the correlation software of the Seidel lab.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_bins": {
+        "type": "integer",
+        "title": "Lags per cascade",
+        "default": 17,
+        "minimum": 1
+      },
+      "n_casc": {
+        "type": "integer",
+        "title": "Cascades",
+        "default": 25,
+        "minimum": 1
+      }
+    }
+  },
+  "references": [
+    {
+      "type": "article",
+      "authors": "Felekyan S, Kuehnemuth R, Kudryavtsev V, Sandhagen C, Becker W, Seidel CAM",
+      "title": "Full correlation from picoseconds to seconds by time-resolved and time-correlated single photon detection",
+      "year": 2005,
+      "journal": "Rev Sci Instrum",
+      "volume": "76",
+      "pages": "083104",
+      "doi": "10.1063/1.1946088"
+    }
+  ]
+})JSON";
+const char* const kLaurenceMethodEntry = R"JSON({
+  "name": "laurence",
+  "label": "Direct pair counting (Laurence)",
+  "summary": "Exact correlation from photon pairs per lag bin, no coarsening; slower, no binning artefacts.",
+  "description": "The photon-pair algorithm of Laurence et al. 2006: for each lag bin the pairs whose separation falls into it are counted directly from the two arrival-time lists, so the estimate is exact on the chosen lag axis. Normalised by the pair-count expectation of two uncorrelated streams.",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_bins": {
+        "type": "integer",
+        "title": "Lags per cascade",
+        "default": 17,
+        "minimum": 1
+      },
+      "n_casc": {
+        "type": "integer",
+        "title": "Cascades",
+        "default": 25,
+        "minimum": 1
+      }
+    }
+  },
+  "references": [
+    {
+      "type": "article",
+      "authors": "Laurence TA, Fore S, Huser T",
+      "title": "Fast, flexible algorithm for calculating photon correlations",
+      "year": 2006,
+      "journal": "Opt Lett",
+      "volume": "31",
+      "pages": "829-831",
+      "doi": "10.1364/OL.31.000829"
+    }
+  ]
+})JSON";
+}  // namespace
+
+/// Register the fcs module's registry entries: the burst_fcs operation and the
+/// three built-in correlation methods. Idempotent (a duplicate key is refused).
+void tttrlib::register_fcs_descriptors() {
     tttrlib::register_algorithm_json("operation", "burst_fcs", kBurstFcsEntry);
+    tttrlib::register_algorithm_json("correlation_method", "wahl", kWahlMethodEntry);
+    tttrlib::register_algorithm_json("correlation_method", "felekyan", kFelekyanMethodEntry);
+    tttrlib::register_algorithm_json("correlation_method", "laurence", kLaurenceMethodEntry);
 }
 
 // ---- the method table -------------------------------------------------------

@@ -8,7 +8,7 @@
 // Declared next to the entries they register (see DecayFitDescriptors.h).
 void register_fit_descriptors_fit2x();
 void register_fit_descriptors_nexp();
-namespace tttrlib { void register_objective_descriptors(); }
+namespace tttrlib { void register_objective_descriptors(); void register_prior_descriptors(); }
 
 namespace tttrlib {
 
@@ -20,6 +20,7 @@ void register_decay_descriptors() {
         register_fit_descriptors_fit2x();
         register_fit_descriptors_nexp();
         register_objective_descriptors();
+        register_prior_descriptors();
         register_decay_operations();
     });
 }

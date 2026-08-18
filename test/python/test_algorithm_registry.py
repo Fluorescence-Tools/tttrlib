@@ -123,7 +123,8 @@ def test_the_former_literal_operations_are_still_there(registry):
 # ---------------------------------------------------------- one registry ------
 
 ONE_REGISTRY_CATEGORIES = ("burst_search", "fit", "fit_setup", "objective",
-                           "operation", "fcs", "hmm", "pda")
+                           "operation", "fcs", "hmm", "pda",
+                           "correlation_method", "prior")
 
 
 @pytest.mark.parametrize("capability", ONE_REGISTRY_CATEGORIES)
@@ -207,3 +208,13 @@ def test_registry_helper_returns_the_new_categories():
     for capability in LIVE_CAPABILITIES:
         entries = tttrlib.registry(capability)
         assert isinstance(entries, dict) and entries
+
+
+def test_registry_describes_exactly_the_dispatch_tables(registry):
+    """The registry describes what the dispatch tables can run -- no more, no
+    less: every correlation method `set_correlation_method` accepts has an
+    entry and vice versa, and the same for the prior kinds `from_json_string`
+    builds. A plugin adds to both at once (the host registers the entry, the
+    layer looks the table up), so this holds with plugins loaded too."""
+    assert set(registry["correlation_method"]) == set(tttrlib.Correlator.correlation_method_names())
+    assert set(registry["prior"]) == set(tttrlib.DecayFitPrior.kinds())
