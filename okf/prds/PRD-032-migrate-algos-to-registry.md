@@ -39,9 +39,11 @@
 > `registry` without closing a cycle. Nothing could have migrated while the
 > mechanism lived above the algorithms.
 >
-> **2026-08-18, later — DONE. One registry.** Owner's ruling: "there should be
-> only one registry", "no per-module registry files". Implemented as: the
-> `algorithm` module's `register_algorithm` table is the registry; `kFitRegistry`
+> **2026-08-18, later — DONE. One registry, in core.** Owner's rulings: "there
+> should be only one registry", "no per-module registry files", "registry must
+> be in core". Implemented as: `core/Registry.h` is the registry (the `algorithm`
+> and `registry` modules are folded into it; every entry registers from a static
+> initialiser next to its code at load, static consumers link whole); `kFitRegistry`
 > and `kOperationRegistry` are deleted, their entries registered next to the code
 > (fits/setups in the model TUs, objectives in `DecayStatistics.cpp`, operations
 > in `BurstSearchRegistry.cpp` / `BVA.cpp` / `TwoCDE.cpp` / `RecurrenceAnalysis.cpp`

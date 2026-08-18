@@ -117,14 +117,20 @@ toctree), `okf/MODULE-DEBT.md` §2/§6/§6b/§7 closed with the reasoning kept.
    wrong — a dllexport class merely *used* from another DLL links with
    LNK2019), `extern template` for `read_tiff<T>`. Only verifiable on
    Windows CI.
-4. ~~PRD-032~~ **done 2026-08-18 on the owner's ruling "only one registry"**
-   (508c1135a, cd9b85b1e): `kFitRegistry` and `kOperationRegistry` deleted;
-   fits/setups/objectives/priors/operations register next to their code into
-   the `algorithm` module's `register_algorithm` table; the plugin host
-   registers every plugin capability into the same table at load (rolled back
-   on a failed init); `Registry.cpp` only primes and assembles; content
-   unchanged (0 removed / 0 changed), `params_schema` order pinned by test;
-   new categories `prior`, `correlation_method`. Left inside it: the
+4. ~~PRD-032~~ **done 2026-08-18 on the owner's rulings "only one registry"
+   and "registry must be in core"** (508c1135a, cd9b85b1e, 1f1846038): the
+   registry is `core/Registry.h` (the `algorithm` and `registry` modules are
+   gone); `kFitRegistry` / `kOperationRegistry` deleted; every entry --
+   fits/setups/objectives/priors/operations/correlation methods/fcs/hmm/pda --
+   registers **next to its code from a static initialiser at load**; the
+   plugin host records plugin declarations (`PluginHost::registry_entries`, it
+   sits beneath core) and the registry pulls them; content unchanged
+   (0 removed / 0 changed), `params_schema` order pinned by test; new
+   categories `prior`, `correlation_method`. **Consequence to watch in CI**:
+   static consumers must link whole -- `recipes/r/build.sh` now passes
+   `--whole-archive` / `-force_load` (untestable here, no R), in-tree
+   `TTTRLIB_MODULE_TYPE=STATIC` links module objects (Java build verified,
+   registrations present in the JNI lib). Left inside it: the
    `burst_selection` entry's column list is still the two-detector default
    (kept verbatim; a note sits next to the entry) -- changing that contract is
    consumer-visible (ChiSurf/ndx) and the owner's call.

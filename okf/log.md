@@ -26,6 +26,20 @@
   `registry("prior")` describe exactly what `set_correlation_method` and
   `DecayFitPrior.from_json_string` accept (test pins the sets equal); the
   conformance category case grew from 11 to 13.
+  Then the second ruling, "registry must be in core" / "why is there still a
+  split: algoreg and reg?": the `algorithm` (table) and `registry` (assembler)
+  modules are folded into one `core/Registry.h` (1f1846038). That forced the
+  priming question into the open -- core cannot call the modules above it to
+  make them register -- and the answer is what the plan had avoided since
+  `DecayFitModelRegistration.h`: modules register from static initialisers
+  next to their code, and the archive-drop problem is solved at the link
+  instead of in the code (`tttrlib_link_all_modules` links module objects for
+  STATIC builds; the R recipe links `libtttrlib_static.a` whole). The plugin
+  host, beneath core, records declarations and the registry pulls them; a
+  failed init drops them with the journal before anyone can have pulled.
+  fcs/hmm/pda descriptors moved from the central `BuiltinAlgorithms.cpp` into
+  their modules. Java (STATIC) verified: the JNI library carries the
+  registrations; R is CI's to confirm.
 
 ## 2026-08-18 (47th entry)
 
