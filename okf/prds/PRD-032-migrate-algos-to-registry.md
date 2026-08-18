@@ -39,7 +39,21 @@
 > `registry` without closing a cycle. Nothing could have migrated while the
 > mechanism lived above the algorithms.
 >
-> **Criterion 1 obstacle 2 (ownership) still stands** for `kOperationRegistry`:
+> **2026-08-18 — obstacle 2 is lifted, and the literal is now known to be stale.**
+> PRD-026's C++ port has landed (`modules/cli/src/cmd_sm.cpp`, board
+> T-20260811-04 closed on evidence): `burst_selection`, `mle_*`, `bva`,
+> `kde_cde` have C++ homes. Two facts for whoever migrates the eight entries:
+> (1) the literal's `outputs.columns` for `burst_selection` still lists the
+> green/red-hardcoded set (`Duration (green) (ms)`, ...), while the port names
+> columns per detector of the `--setup`, so a byte-identical migration
+> (criterion 5) would carry a wrong contract into the descriptor -- the
+> descriptor should describe the column *pattern* (`Duration (<detector>) (ms)`)
+> and the migration needs a criterion-5 exception recorded for exactly that key;
+> (2) `mle_green` / `mle_red` are one operation parameterised by detector, not
+> two. Not started here: `registry("operation")` is consumed by ChiSurf/ndx and
+> the shape decision is the owner's.
+>
+> **Criterion 1 obstacle 2 (ownership) still stood (2026-08-10)** for `kOperationRegistry`:
 >    retiring it faithfully means each
 >    operation's descriptor moving next to the code that performs it — that is
 >    the point of the exercise, and the only thing that stops the entry drifting
