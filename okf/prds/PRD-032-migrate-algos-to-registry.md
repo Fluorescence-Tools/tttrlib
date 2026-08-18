@@ -53,6 +53,15 @@
 > two. Not started here: `registry("operation")` is consumed by ChiSurf/ndx and
 > the shape decision is the owner's.
 >
+> **`kFitRegistry` has a layering reason to stay where it is** (found while
+> sizing the migration): `decay` DEPENDS on `registry` and reads the fit
+> schema back (`DecayFitSetup.cpp::fit_entry` -> `fit_models_json()`) to
+> derive the flat parameter layout -- the literal is the normative spec the
+> models implement, not a description of them. "Descriptor next to the model"
+> would invert that edge (registry -> decay is a cycle) unless the schemas move
+> to a module below both, i.e. a new home, not a move. That is a design
+> decision for the owner; the mechanical part is small once it is made.
+>
 > **Criterion 1 obstacle 2 (ownership) still stood (2026-08-10)** for `kOperationRegistry`:
 >    retiring it faithfully means each
 >    operation's descriptor moving next to the code that performs it — that is
