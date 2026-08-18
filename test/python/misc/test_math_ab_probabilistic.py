@@ -510,12 +510,19 @@ class TestRunMemAgainstScipy(unittest.TestCase):
             # WORSE than L-BFGS-B from the same start.
             self.assertLessEqual(Q(p), r.fun + 1e-9 * abs(r.fun), f"nu={nu}")
             if Q(p) >= r.fun - 1e-6 * abs(r.fun):
-                # Same point. Q is flat along the clamped directions, so where
-                # L-BFGS-B stops in p is loose (~1e-3 of the peak) even when
-                # its Q is 1e-8 off; the tight statement about p is the KKT
-                # test above.
-                np.testing.assert_allclose(p, r.x, rtol=0, atol=5e-3 * p.max(),
+                # Same objective. Compare the two solutions only WHERE THE MASS
+                # IS: Q is flat along the clamped directions, so the near-zero
+                # coordinates are arbitrary in both solvers and comparing them
+                # measures the platform's BLAS, not the kernel (nu=1.0 differs
+                # by 4e-3 of the peak on macOS and by nothing here). Where a
+                # coordinate carries mass the two must agree; the tight
+                # statement about the whole vector is the KKT test above.
+                carries_mass = p > 0.01 * p.max()
+                np.testing.assert_allclose(p[carries_mass], r.x[carries_mass],
+                                           rtol=0, atol=5e-3 * p.max(),
                                            err_msg=f"nu={nu}")
+                self.assertLess(float(np.max(r.x[~carries_mass], initial=0.0)),
+                                0.05 * p.max(), f"nu={nu}: mass where we have none")
             else:
                 # L-BFGS-B stalled above the kernel's point -- a projected
                 # quasi-Newton is weak exactly where coordinates clamp, and

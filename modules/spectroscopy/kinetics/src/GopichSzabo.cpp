@@ -415,10 +415,35 @@ void GopichSzabo::viterbi_flat(
 }
 
 std::vector<double> GopichSzabo::relaxation_times() const {
+    // A rate matrix has EXACTLY ONE zero eigenvalue -- the stationary
+    // distribution -- and the relaxation times are the other n-1. Dropping it
+    // by an absolute threshold (|re| > 1e-15) is wrong: how close to zero that
+    // eigenvalue lands is a property of the QR iteration on the platform's
+    // arithmetic, not of the model. A four-state scheme whose rates are ~1e4
+    // gave 1.8e-12 on macOS/clang and an exact 0 here, so the same model
+    // returned four times on one machine and three on another, the extra one
+    // being 5.5e11 s of "relaxation" that means nothing.
+    //
+    // The threshold is therefore RELATIVE to the spectrum: drop the single
+    // eigenvalue nearest zero, and guard the rest against the scale of the
+    // largest. That is the mathematical statement ("one zero mode") rather
+    // than a guess about how small zero looks today.
+    if (n_states_ <= 0) return {};
+    double largest = 0.0;
+    int zero_mode = 0;
+    double smallest = std::abs(eigenvalues_[0].real());
+    for (int i = 0; i < n_states_; ++i) {
+        const double re = std::abs(eigenvalues_[i].real());
+        if (re > largest) largest = re;
+        if (re < smallest) { smallest = re; zero_mode = i; }
+    }
+    const double floor_re = largest * 1e-10;   // below this, it IS the zero mode
     std::vector<double> t;
     for (int i = 0; i < n_states_; ++i) {
-        double re = eigenvalues_[i].real();
-        if (std::abs(re) > 1e-15) t.push_back(-1.0 / re);
+        if (i == zero_mode) continue;          // the stationary distribution
+        const double re = eigenvalues_[i].real();
+        if (std::abs(re) <= floor_re) continue;  // a second (degenerate) zero mode
+        t.push_back(-1.0 / re);
     }
     return t;
 }

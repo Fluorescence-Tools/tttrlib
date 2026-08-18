@@ -442,10 +442,21 @@ def test_groups_do_not_slow_the_selection_path():
         s.add_group("g%d" % i)
     after = timed()
 
+    if after >= before * 2.0 + 1e-3:
+        # One more round before failing. This is a ratio of two wall clocks on
+        # a shared runner: a scheduling hiccup inside the 20 scans of `before`
+        # makes it small and the comparison meaningless (Windows CI hit this).
+        # A real regression -- a branch on the scan path -- survives a re-measure;
+        # a hiccup does not.
+        before = min(before, timed())
+        after = min(after, timed())
     assert after < before * 2.0 + 1e-3, "scanning got slower once groups existed"
 
 
 def test_dropping_the_root_frees_the_whole_tree():
+    # Collect first: what an earlier test left for the collector would otherwise
+    # be freed *during* this one and show up as a negative leak.
+    gc.collect()
     before = tttrlib.live_data_store_bytes()
     s = tttrlib.DataStore()
     g = s.ensure_group("a/b")
@@ -454,4 +465,7 @@ def test_dropping_the_root_frees_the_whole_tree():
     assert tttrlib.live_data_store_bytes() >= before + 1600000
     del s, g
     gc.collect()
-    assert tttrlib.live_data_store_bytes() == before
+    # The claim is that the tree is gone -- nothing of it is still held. An
+    # exact equality also asserts that no OTHER store was freed in between,
+    # which is not this test's business and made it order-dependent.
+    assert tttrlib.live_data_store_bytes() <= before

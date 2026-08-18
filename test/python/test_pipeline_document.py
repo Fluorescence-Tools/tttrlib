@@ -172,6 +172,7 @@ def test_writing_a_pipeline_into_an_existing_pto_keeps_its_contents(pipeline, tm
     tttrlib.pto_add_store(f, "table", "bursts", store)
     assert f.commit()
     f.close()
+    del store        # freed here, not in whatever test runs next
 
     pipeline.to_pto(path)
 
