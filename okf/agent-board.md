@@ -145,12 +145,21 @@ are still claims and still binding.
     relationships and the `read_tiff<T>` instantiations (`extern template`).
   - Done when: `TTTRLIB_<MOD>_EXPORT` macros at class granularity, `io_image`
     and `pda` first, `core` last; Windows CI green without the CMake `.def`.
+  - Note 2026-08-18: deliberately not started locally -- the done-criterion is
+    Windows CI, there is no Windows machine here, and 97 blind `__declspec`
+    sites can only break the Windows wheel silently. Shape when picked up:
+    `generate_export_header(tttrlib_<name>_objects BASE_NAME TTTRLIB_<UPPER>)`
+    on the OBJECT libraries (T-03 layout: one compile per source, so the
+    `_EXPORTS` define lands once), a per-module macro (one shared macro is
+    wrong: a dllexport class *used* from another DLL links with LNK2019),
+    `extern template` for `read_tiff<T>`. `WINDOWS_EXPORT_ALL_SYMBOLS` stays
+    ON until then.
   - Touching: every `modules/*/include/*.h` header, `cmake/`.
 
 - **T-20260818-05 · [tttrlib] Plan phase 5 remainder: registries for the last dispatch chains**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Status: ✅ done
+  - Owner: claude
+  - Opened: 2026-08-18 · Picked: 2026-08-18 · Done: 2026-08-18
   - Why: `Correlator.cpp` method + normalisation `if/else` (an unknown method
     warns and returns empty; `CLSMImage::get_fcs_image` defaults to
     `"default"`, which is not a method); `SuperResMethod` enum (`"sofi"` parses
