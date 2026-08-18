@@ -37,4 +37,6 @@ from tttrlib.core import *
         SWIG_exception(SWIG_UnknownError, "Unknown exception");
     }
 }
+#ifndef TTTRLIB_WITHOUT_SIMULATION
 %include "Sim.i"
+#endif

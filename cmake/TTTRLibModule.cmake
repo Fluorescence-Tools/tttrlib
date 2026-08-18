@@ -48,6 +48,8 @@ set_property(GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES "")
 set_property(GLOBAL PROPERTY TTTRLIB_MODULE_INCLUDE_DIRS "")
 # The OBJECT libraries of every compiled module, for the whole-library aggregates.
 set_property(GLOBAL PROPERTY TTTRLIB_MODULE_OBJECT_TARGETS "")
+# Modules configured off (WITH_<NAME>=OFF); the bindings drop their fragments.
+set_property(GLOBAL PROPERTY TTTRLIB_MODULES_OFF "")
 
 # Whether one compile can serve both the LTO-linked module .so and a static
 # archive for a linker without the LTO plugin. GCC (and LLVM >= 17 on ELF)
@@ -101,16 +103,24 @@ function(tttrlib_add_module)
     string(TOUPPER "${M_NAME}" M_UPPER)
     set(target "tttrlib_${M_NAME}")
 
-    # An optional module gets a switch. Default ON so the shipped package is
-    # API-identical no matter how it was configured.
-    if(M_OPTIONAL)
-        option(WITH_${M_UPPER} "Build the ${M_NAME} module" ON)
-        if(NOT WITH_${M_UPPER})
-            message(STATUS "module ${M_NAME}: DISABLED (WITH_${M_UPPER}=OFF)")
-            set_property(GLOBAL APPEND PROPERTY TTTRLIB_CLAIMED_SOURCES ${M_SOURCES})
-            return()
-        endif()
+    # Every module has a switch, default ON so the shipped package is
+    # API-identical no matter how it was configured. A developer working on
+    # one subsystem configures the rest off (see the dev-<module> presets) and
+    # never compiles it; the bindings drop the fragments of an OFF module
+    # (-DTTTRLIB_WITHOUT_<NAME> on the swig line, tttrlib_module_swig_flags()).
+    # The OPTIONAL keyword is accepted for compatibility and means nothing more.
+    option(WITH_${M_UPPER} "Build the ${M_NAME} module" ON)
+    if(NOT WITH_${M_UPPER})
+        message(STATUS "module ${M_NAME}: DISABLED (WITH_${M_UPPER}=OFF)")
+        set_property(GLOBAL APPEND PROPERTY TTTRLIB_CLAIMED_SOURCES ${M_SOURCES})
+        set_property(GLOBAL APPEND PROPERTY TTTRLIB_MODULES_OFF ${M_NAME})
+        return()
     endif()
+
+    # Checked in tttrlib_finalize_modules(), once every module is declared:
+    # a module may be declared before its dependency (decay before registry),
+    # and target_link_libraries is happy with that, so the check must be too.
+    set_property(GLOBAL PROPERTY TTTRLIB_MODULE_${M_NAME}_DEPENDS "${M_DEPENDS}")
 
     # A header-only module is a real module: it declares a dependency edge and a
     # boundary, it just has nothing to compile. Reaching for one is what keeps a
@@ -261,6 +271,22 @@ function(tttrlib_finalize_modules)
     get_property(claimed GLOBAL PROPERTY TTTRLIB_CLAIMED_SOURCES)
     get_property(modules GLOBAL PROPERTY TTTRLIB_MODULE_LIST)
 
+    # A dependency that is switched off is a configure error with the fix in
+    # the message, not an "unknown target tttrlib::x" from deep inside CMake.
+    foreach(m IN LISTS modules)
+        get_property(deps GLOBAL PROPERTY TTTRLIB_MODULE_${m}_DEPENDS)
+        foreach(dep IN LISTS deps)
+            if(NOT dep IN_LIST modules)
+                string(TOUPPER "${dep}" _dep_upper)
+                string(TOUPPER "${m}" _m_upper)
+                message(FATAL_ERROR
+                        "module ${m} depends on ${dep}, which is not built "
+                        "(WITH_${_dep_upper}=OFF). Configure with -DWITH_${_dep_upper}=ON, "
+                        "or switch ${m} off too (-DWITH_${_m_upper}=OFF).")
+            endif()
+        endforeach()
+    endforeach()
+
     # Everything that must be built: what is still in src/, plus what the
     # modules have taken into modules/<name>/src/ -- at any depth, because the
     # format modules are nested one level further under modules/io/.
@@ -312,6 +338,21 @@ function(tttrlib_finalize_modules)
     list(LENGTH all_sources _total)
     list(JOIN modules ", " _mods)
     message(STATUS "tttrlib modules (${_total} sources, all claimed): ${_mods}")
+endfunction()
+
+
+# The swig -D flags that hide the fragments of every OFF module:
+# -DTTTRLIB_WITHOUT_<NAME>. The guards in the .i files are `#ifndef`, so a
+# swig run outside CMake (tools/check_binding_parity.py, the docs) sees the
+# whole API without any flag.
+function(tttrlib_module_swig_flags outvar)
+    get_property(off GLOBAL PROPERTY TTTRLIB_MODULES_OFF)
+    set(flags "")
+    foreach(m IN LISTS off)
+        string(TOUPPER "${m}" u)
+        list(APPEND flags "-DTTTRLIB_WITHOUT_${u}")
+    endforeach()
+    set(${outvar} "${flags}" PARENT_SCOPE)
 endfunction()
 
 

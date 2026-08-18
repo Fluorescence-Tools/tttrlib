@@ -72,7 +72,9 @@
 // wrappers generate, not that they expose the same API.
 %include "info.h"
 %include "misc_types.i"
+#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
+#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"
@@ -80,6 +82,7 @@
 %include "TTTR.i"
 %include "TTTRMask.i"
 %include "Channel.i"
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "BurstSignificance.i"
 %include "BurstSearchMaxTree.i"
 %include "BurstFilter.i"
@@ -88,9 +91,13 @@
 %include "BVA.i"
 %include "TwoCDE.i"
 %include "BurstML.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMRestraints.i"
 %include "HMMConstraints.i"
 %include "HMM.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_MATH
 %include "NeuralNet.i"
 /* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
 %include "Cluster.i"
@@ -102,27 +109,44 @@
 %include "Deconvolution.i"
 %include "Jitter.i"
 %include "Sampling.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMSurrogate.i"
+#endif
 %include "MicrotimeLinearization.i"
+#ifndef TTTRLIB_WITHOUT_KINETICS
 %include "GopichSzabo.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_FLUCTUATION
 %include "PhotonCountingHistogram.i"
+#endif
 
 %include "Histogram.i"
 %include "HistogramNd.i"
 %include "DataStore.i"
+#ifndef TTTRLIB_WITHOUT_IO_CSV
 %include "CsvReader.i"
 %include "CsvWriter.i"
+#endif
 // The columnar HDF5 reader has landed in the Python module, which is what the
 // note here used to be waiting for. ext/js/pkg/index.js already exposed
 // readHdf5()/writeHdf5() behind a feature check, so adding this line is all it
 // took; test/js/conformance.test.mjs runs the group-tree cases through
 // it. This list is again NOT identical to ext/python/tttrlib.i's -- see above.
+#ifndef TTTRLIB_WITHOUT_IO_HDF5_TABLE
 %include "Hdf5Table.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_IO_STORE
 %include "StoreFile.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_IO_PTO
 %include "Pto.i"
+#endif
 /* One vocabulary for a table in a file, whatever the file is. Must follow
    StoreFile.i, Hdf5Table.i, Csv.i and Pto.i: it dispatches to all four. */
+#ifndef TTTRLIB_WITHOUT_IO_TABLE
 %include "Table.i"
+#endif
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
    ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
@@ -131,52 +155,80 @@
 %include "BhSet.i"
 
 /* Correlation of data */
+#ifndef TTTRLIB_WITHOUT_FCS
 %include "Correlator.i"
 /* 2D fluorescence-decay correlation: the photon-pair pass. */
 %include "Fdc2D.i"
+#endif
 
 
 /* Microscopy */
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "CLSM.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_SUPERRES
 %include "CLSMSuperRes.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_LOCALIZATION
 %include "Localization.i"
+#endif
 
 /* TIFF I/O for 2D/3D arrays (imread / imwrite) */
+#ifndef TTTRLIB_WITHOUT_IO_IMAGE
 %include "Tiff.i"
+#endif
 
 /* Phasor analysis */
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "DecayPhasor.i"
+#endif
 
 /* Photon distribution analysis */
+#ifndef TTTRLIB_WITHOUT_PDA
 %include "Pda.i"
+#endif
 
 /* convolution */
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "DecayConvolution.i"
 
 /* DecayFit(s) */
 %include "DecayFit.i"
+#endif
 
 /* Five interfaces that carry no NumPy typemaps, so they need no per-language
    surface -- they were simply never added to this list. Restored 2026-08-11
    (T-20260811-09): background estimation, spectral crosstalk, recurrence
    analysis, maximum-entropy lifetime distributions, and blind IRF recovery.
    Order mirrors ext/python/tttrlib.i. */
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "RecurrenceAnalysis.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_CORRECTIONS
 %include "SpectralCrosstalk.i"
 %include "BackgroundEstimation.i"
 %include "MaxEnt.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "BlindIRF.i"
 %include "DecayPatternFit.i"
+#endif
 /* Maximum-entropy TCSPC: lifetime and FRET-distance distributions. Its inputs
    go through IN_ARRAY1 and its outputs through ARGOUTVIEWM_ARRAY1/2, all of
    which jsarrays.i implements -- unlike jarrays.i, which has no rank-2 argout,
    so this file stays declared for java. */
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "MaxEntTcspc.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_PDA
 %include "Pda3cCore.i"
+#endif
 
 
 /* Photon simulator */
+#ifndef TTTRLIB_WITHOUT_SIMULATION
 %include "Sim.i"
+#endif
 
 /* Sim.i is the only interface that includes <stdint.i>, and after it SWIG
    resolves a `uint64_t` parameter past the name jsarrays.i keyed its
@@ -187,4 +239,6 @@ TTTRLIB_JS_FIXED_WIDTH_64_TYPEMAPS
 /* Live correlation, decay histogram, phasor and intensity trace. After Sim.i,
    as in ext/python/tttrlib.i. Its only array typemap is IN_ARRAY1, which
    jsarrays.i implements, so it needs no per-language surface. */
+#ifndef TTTRLIB_WITHOUT_STREAMING
 %include "Streaming.i"
+#endif

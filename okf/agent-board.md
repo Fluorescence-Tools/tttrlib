@@ -178,6 +178,10 @@ are still claims and still binding.
   - Why: `okf/MODULE-DEBT.md` §6 — narrow accessors instead of `friend`; free
     functions taking `const TTTR&` with the methods kept as forwarders (SWIG
     `%extend` re-attaches them), so `burst` no longer has to live in `core`.
+  - Note 2026-08-18: the ten `TTTR::burst_*` definitions already live in
+    `burst`; T-07 made the bindings `%ignore` them under
+    `TTTRLIB_WITHOUT_BURST`. What is left is the declaration in `TTTR.h`
+    (core's header names methods core does not define) and the friend cycle.
   - Done when: no `friend` between the three classes; `BurstSearch*.cpp` and
     `BurstConfidence.cpp` moved to `spectroscopy/burst` with the Python API
     byte-identical (`tools/check_binding_parity.py`, conformance suite).
@@ -185,9 +189,16 @@ are still claims and still binding.
     `modules/core/src/TTTR.cpp`, `modules/spectroscopy/burst`.
 
 - **T-20260818-07 · [tttrlib] Optional modules: `WITH_<MODULE>` switches + `dev-<module>` presets**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Status: ✅ done
+  - Owner: claude
+  - Opened: 2026-08-18 · Picked: 2026-08-18 · Done: 2026-08-18
+  - Result: `WITH_<NAME>` on every module; dependency check in
+    `tttrlib_finalize_modules` (order-independent, names both switches);
+    `-DTTTRLIB_WITHOUT_<NAME>` + `#ifndef` guards in all four `tttrlib.i` and
+    the split `mod_*.i`; `tttr` binary gated on `WITH_CLI`; TTTR burst members
+    `%ignore`d without burst. Presets `dev-sim` (14 modules, sim suite 141/147,
+    the 6 fail on fcs/clsm/burst) / `dev-clsm` (15) / `dev-hmm` (19, hmm+burst
+    A/B 45/46, the 1 on streaming) build and import.
   - Why: plan phase 7 / ask 3 — a developer working on `sim` should configure
     core+sim and never compile the other ~40k lines. `tttrlib_add_module`
     already carries the dependency graph, so an OFF module can refuse

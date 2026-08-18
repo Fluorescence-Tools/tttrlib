@@ -38,6 +38,11 @@ IF(UNIX AND NOT APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     ENDIF()
 ENDIF()
 
+# Fragments of modules configured off (WITH_<NAME>=OFF) are hidden from every
+# binding by -DTTTRLIB_WITHOUT_<NAME>; the .i files guard them with #ifndef.
+tttrlib_module_swig_flags(TTTRLIB_SWIG_MODULE_FLAGS)
+LIST(APPEND CMAKE_SWIG_FLAGS ${TTTRLIB_SWIG_MODULE_FLAGS})
+
 IF(BUILD_PYTHON_INTERFACE)
 
     IF(BUILD_PYTHON_DOCS)
@@ -312,7 +317,7 @@ IF(BUILD_R_INTERFACE)
             SWIG_MODULE_NAME tttrlib)
 
     # r/tttrlib.i re-includes the shared fragments that live in ext/python.
-    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG_R})
+    SET(CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG_R} ${TTTRLIB_SWIG_MODULE_FLAGS})
 
     # Rerun SWIG when any shared fragment, the R module, or the R array library changes.
     file(GLOB R_SWIG_DEPS
@@ -403,7 +408,7 @@ IF(BUILD_JAVASCRIPT_INTERFACE)
     SET(CMAKE_SWIG_FLAGS -napi
             -I${CMAKE_CURRENT_SOURCE_DIR}/python
             -I${CMAKE_CURRENT_SOURCE_DIR}/js
-            ${TTTRLIB_SWIG_INT64_FLAG})
+            ${TTTRLIB_SWIG_INT64_FLAG} ${TTTRLIB_SWIG_MODULE_FLAGS})
 
     file(GLOB JS_SWIG_DEPS
             "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i"
@@ -563,7 +568,7 @@ IF(BUILD_JAVA_INTERFACE)
     SET_SOURCE_FILES_PROPERTIES(java/tttrlib.i PROPERTIES
             CPLUSPLUS ON
             SWIG_MODULE_NAME tttrlib)
-    SET(CMAKE_SWIG_FLAGS -package ${J_PACKAGE} -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG})
+    SET(CMAKE_SWIG_FLAGS -package ${J_PACKAGE} -I${CMAKE_CURRENT_SOURCE_DIR}/python ${TTTRLIB_SWIG_INT64_FLAG} ${TTTRLIB_SWIG_MODULE_FLAGS})
     SET(CMAKE_SWIG_OUTDIR ${J_OUTDIR})
 
     file(GLOB J_SWIG_DEPS

@@ -144,13 +144,21 @@ also need `extern template`). Annotate `io_image` and `pda` first, `core` last.
   the bindings: `tttrlib.Correlator` is named by its SWIG fragment, not by which
   library it lives in. **Exit:** replace the three `friend` declarations with a
   narrow accessor.
-- `TTTR` publishes the whole burst-search API as its own methods, and five
-  translation units define `TTTR::` members outside `TTTR.cpp`, so those stay in
-  `core`. **Exit:** free functions taking `const TTTR&`, with the methods kept as
+- `TTTR` publishes the whole burst-search API as its own methods; the ten
+  translation units that define those `TTTR::` members now live in `burst`
+  (core's `libtttrlib_core.so` does not reference them), and the bindings
+  `%ignore` them under `TTTRLIB_WITHOUT_BURST` (2026-08-18). **Exit:** free functions taking `const TTTR&`, with the methods kept as
   forwarders -- and SWIG `%extend` re-attaches them to the Python proxy, so the
   API does not change.
 - `HMMEmission.h -> SimDecay.h`, `HMMRestraints.h -> DecayFitPrior.h`,
   `NeuralNet.cpp -> SimPcgRandom.h` make `hmm` depend on nearly everything.
+
+## 6b. ~~Optional modules~~ -- `WITH_<NAME>` for every module (2026-08-18)
+
+Every module has a `WITH_<NAME>` switch; OFF drops it from the objects, the
+aggregates and all four bindings (`-DTTTRLIB_WITHOUT_<NAME>` on the swig line,
+`#ifndef` guards around each fragment). `dev-sim`, `dev-clsm`, `dev-hmm`
+presets build and import. See `modules/README.md`.
 
 ## 7. R and Java `%include` lists lag Python by 12 fragments
 

@@ -7,6 +7,11 @@
   those objects (the two aggregates used to recompile the whole tree). Names
   and contents unchanged; a module disabled with `WITH_<NAME>=OFF` is now
   absent from the aggregates as well.
+- **Build: every module has a `WITH_<NAME>` switch** and the bindings drop
+  the fragments of an OFF module. Presets `dev-sim`, `dev-clsm`, `dev-hmm`
+  configure a subset (≈15 of 35 modules) for iteration; a module whose
+  dependency is off fails the configure naming both switches
+  (`modules/README.md`).
 
 ### Fixed
 - **`objective = neyman_lsq` / `gehrels_lsq` now fit what they say.** Both

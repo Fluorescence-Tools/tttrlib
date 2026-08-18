@@ -133,7 +133,9 @@ def experimental(cls):
 
 %include "info.h"
 %include "misc_types.i"
+#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
+#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"
@@ -141,6 +143,7 @@ def experimental(cls):
 %include "TTTR.i"
 %include "TTTRMask.i"
 %include "Channel.i"
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "BurstSignificance.i"
 %include "BurstSearchMaxTree.i"
 %include "BurstFilter.i"
@@ -149,9 +152,13 @@ def experimental(cls):
 %include "BVA.i"
 %include "TwoCDE.i"
 %include "BurstML.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMRestraints.i"
 %include "HMMConstraints.i"
 %include "HMM.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_MATH
 %include "NeuralNet.i"
 /* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
 %include "Cluster.i"
@@ -166,30 +173,55 @@ def experimental(cls):
    binned-trace counterpart to the photon-stream HMM above */
 %include "HmmLattice.i"
 %include "Sampling.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMSurrogate.i"
+#endif
 %include "MicrotimeLinearization.i"
+#ifndef TTTRLIB_WITHOUT_KINETICS
 %include "GopichSzabo.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_FLUCTUATION
 %include "PhotonCountingHistogram.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "RecurrenceAnalysis.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_CORRECTIONS
 %include "SpectralCrosstalk.i"
 %include "BackgroundEstimation.i"
 %include "MaxEnt.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "BlindIRF.i"
 %include "MaxEntTcspc.i"
 %include "DecayPatternFit.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_PDA
 %include "Pda3cCore.i"
+#endif
 
 %include "Histogram.i"
 %include "HistogramNd.i"
 %include "DataStore.i"
+#ifndef TTTRLIB_WITHOUT_IO_CSV
 %include "CsvReader.i"
 %include "CsvWriter.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_IO_HDF5_TABLE
 %include "Hdf5Table.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_IO_STORE
 %include "StoreFile.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_IO_PTO
 %include "Pto.i"
+#endif
 /* One vocabulary for a table in a file, whatever the file is. Must follow
    StoreFile.i, Hdf5Table.i, Csv.i and Pto.i: it dispatches to all four. */
+#ifndef TTTRLIB_WITHOUT_IO_TABLE
 %include "Table.i"
+#endif
 
 /* Decoding a buffer, reading a container in pieces, and the whole B&H
    ".set" sidecar. RecordStream.i must follow TTTR.i and Pto.i:
@@ -198,35 +230,55 @@ def experimental(cls):
 %include "BhSet.i"
 
 /* Correlation of data */
+#ifndef TTTRLIB_WITHOUT_FCS
 %include "Correlator.i"
 /* 2D fluorescence-decay correlation: the photon-pair pass. */
 %include "Fdc2D.i"
+#endif
 
 
 /* Microscopy */
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "CLSM.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_SUPERRES
 %include "CLSMSuperRes.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_LOCALIZATION
 %include "Localization.i"
+#endif
 
 /* TIFF I/O for 2D/3D arrays (imread / imwrite) */
+#ifndef TTTRLIB_WITHOUT_IO_IMAGE
 %include "Tiff.i"
+#endif
 
 /* Phasor analysis */
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "DecayPhasor.i"
+#endif
 
 /* Photon distribution analysis */
+#ifndef TTTRLIB_WITHOUT_PDA
 %include "Pda.i"
+#endif
 
 /* convolution */
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "DecayConvolution.i"
 
 
 /* DecayFit(s) */
 %include "DecayFit.i"
+#endif
 // %include "DecayFitMLEWrapper.i"  // Not ready yet
 
 /* Photon simulator */
+#ifndef TTTRLIB_WITHOUT_SIMULATION
 %include "Sim.i"
+#endif
 
 /* Streaming / online analysis */
+#ifndef TTTRLIB_WITHOUT_STREAMING
 %include "Streaming.i"
+#endif

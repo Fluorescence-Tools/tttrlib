@@ -33,6 +33,7 @@ from tttrlib.core import *
         SWIG_exception(SWIG_RuntimeError, e.what());
     }
 }
+#ifndef TTTRLIB_WITHOUT_MATH
 %include "NeuralNet.i"
 %include "Cluster.i"
 %include "Kalman.i"
@@ -41,5 +42,6 @@ from tttrlib.core import *
 %include "Jitter.i"
 %include "HmmLattice.i"
 %include "Sampling.i"
+#endif
 
 %include "stdint.i"

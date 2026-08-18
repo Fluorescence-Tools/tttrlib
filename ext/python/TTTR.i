@@ -73,6 +73,24 @@ TTTRLIB_NOGIL(TTTR::read_sm_file)   // src/TTTR.cpp:392
 TTTRLIB_NOGIL(TTTR::TTTR)           // reading constructors call read_file()
 TTTRLIB_NOGIL(TTTR::decode_records) // pure record decoding, no Python objects
 
+// The burst searches are TTTR members declared in core's TTTR.h but defined in
+// the burst module (T-20260818-06 will make them free functions there). With
+// WITH_BURST=OFF (-DTTTRLIB_WITHOUT_BURST) their definitions do not exist, so the
+// wrapper must not reference them; the Python helpers in TTTR.py that call them
+// then raise AttributeError at call time, which is the honest answer.
+#ifdef TTTRLIB_WITHOUT_BURST
+%ignore TTTR::burst_search;
+%ignore TTTR::burst_search_sliding_window;
+%ignore TTTR::burst_search_cusum_sprt;
+%ignore TTTR::burst_search_maxtree;
+%ignore TTTR::burst_search_kalman;
+%ignore TTTR::burst_search_bocpd;
+%ignore TTTR::burst_search_bayesian_blocks;
+%ignore TTTR::burst_search_plugin;
+%ignore TTTR::burst_search_algorithms_json;
+%ignore TTTR::burst_confidence;
+#endif
+
 #ifdef SWIGPYTHON
 // Burst boundaries come back as a NumPy int64 array directly (the flat
 // [start, stop, start, stop, ...] layout) so callers reshape/slice without

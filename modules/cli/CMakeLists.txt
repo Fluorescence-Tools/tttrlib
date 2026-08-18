@@ -41,7 +41,8 @@ tttrlib_add_module(
     EXTERNAL_DEPS tttrlib::json tttrlib::cxxopts
 )
 
-IF(BUILD_LIBRARY)
+# No cli module, no tttr binary: main.cpp is the module's front door.
+IF(BUILD_LIBRARY AND WITH_CLI)
     ADD_EXECUTABLE(tttr "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
     SET_TARGET_PROPERTIES(tttr PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 

@@ -1,7 +1,10 @@
 {
   "version": 3,
-  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
-
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
@@ -13,7 +16,6 @@
         "TTTRLIB_CCACHE": "ON"
       }
     },
-
     {
       "name": "dev",
       "inherits": "base",
@@ -24,16 +26,16 @@
         "TTTRLIB_LTO": "OFF"
       }
     },
-
     {
       "name": "dev-split",
       "inherits": "dev",
       "displayName": "Developer build, Python bindings as four extensions",
       "description": "Like dev, with TTTRLIB_PYTHON_SPLIT=ON: core / formats / kernels / spectroscopy / imaging / sim compile in parallel and a fragment change rebuilds one of them (ext/python/split/README.md).",
       "binaryDir": "${sourceDir}/build/dev-split",
-      "cacheVariables": { "TTTRLIB_PYTHON_SPLIT": "ON" }
+      "cacheVariables": {
+        "TTTRLIB_PYTHON_SPLIT": "ON"
+      }
     },
-
     {
       "name": "debug",
       "inherits": "base",
@@ -43,7 +45,6 @@
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
-
     {
       "name": "release",
       "inherits": "base",
@@ -54,7 +55,6 @@
         "TTTRLIB_LTO": "ON"
       }
     },
-
     {
       "name": "lib-only",
       "inherits": "dev",
@@ -66,7 +66,6 @@
         "BUILD_JAVA_INTERFACE": "OFF"
       }
     },
-
     {
       "name": "no-hdf5",
       "inherits": "dev",
@@ -75,15 +74,125 @@
       "cacheVariables": {
         "BUILD_PHOTON_HDF": "OFF"
       }
+    },
+    {
+      "name": "dev-sim",
+      "inherits": "dev",
+      "displayName": "Developer build: core + simulation only",
+      "description": "Compiles util/io/formats/core/math/simulation and nothing else; the bindings drop the fragments of the modules that are off. For work on the simulator.",
+      "cacheVariables": {
+        "WITH_CLI": "OFF",
+        "WITH_STREAMING": "OFF",
+        "WITH_IO_CSV": "OFF",
+        "WITH_IO_HDF5_TABLE": "OFF",
+        "WITH_IO_STORE": "OFF",
+        "WITH_IO_PTO": "OFF",
+        "WITH_IO_TABLE": "OFF",
+        "WITH_FCS": "OFF",
+        "WITH_CLSM": "OFF",
+        "WITH_SUPERRES": "OFF",
+        "WITH_LOCALIZATION": "OFF",
+        "WITH_BURST": "OFF",
+        "WITH_DECAY": "OFF",
+        "WITH_HMM": "OFF",
+        "WITH_PDA": "OFF",
+        "WITH_KINETICS": "OFF",
+        "WITH_FLUCTUATION": "OFF",
+        "WITH_CORRECTIONS": "OFF",
+        "WITH_REGISTRY": "OFF",
+        "WITH_ALGORITHM": "OFF",
+        "WITH_IO_IMAGE": "OFF"
+      }
+    },
+    {
+      "name": "dev-clsm",
+      "inherits": "dev",
+      "displayName": "Developer build: core + fcs + clsm (+ TIFF)",
+      "description": "Compiles util/io/formats/core/fcs/clsm and io_image; superres and localization (which need math) are off. For work on CLSM image reconstruction.",
+      "cacheVariables": {
+        "WITH_CLI": "OFF",
+        "WITH_STREAMING": "OFF",
+        "WITH_IO_CSV": "OFF",
+        "WITH_IO_HDF5_TABLE": "OFF",
+        "WITH_IO_STORE": "OFF",
+        "WITH_IO_PTO": "OFF",
+        "WITH_IO_TABLE": "OFF",
+        "WITH_MATH": "OFF",
+        "WITH_SIMULATION": "OFF",
+        "WITH_SUPERRES": "OFF",
+        "WITH_LOCALIZATION": "OFF",
+        "WITH_BURST": "OFF",
+        "WITH_DECAY": "OFF",
+        "WITH_HMM": "OFF",
+        "WITH_PDA": "OFF",
+        "WITH_KINETICS": "OFF",
+        "WITH_FLUCTUATION": "OFF",
+        "WITH_CORRECTIONS": "OFF",
+        "WITH_REGISTRY": "OFF",
+        "WITH_ALGORITHM": "OFF"
+      }
+    },
+    {
+      "name": "dev-hmm",
+      "inherits": "dev",
+      "displayName": "Developer build: core + math + burst + decay + simulation + hmm",
+      "description": "The photon-HMM stack and its declared dependencies (registry, algorithm, decay, burst, simulation, math); imaging, correlation, PDA and the table formats are off.",
+      "cacheVariables": {
+        "WITH_CLI": "OFF",
+        "WITH_STREAMING": "OFF",
+        "WITH_IO_CSV": "OFF",
+        "WITH_IO_HDF5_TABLE": "OFF",
+        "WITH_IO_STORE": "OFF",
+        "WITH_IO_PTO": "OFF",
+        "WITH_IO_TABLE": "OFF",
+        "WITH_FCS": "OFF",
+        "WITH_CLSM": "OFF",
+        "WITH_SUPERRES": "OFF",
+        "WITH_LOCALIZATION": "OFF",
+        "WITH_PDA": "OFF",
+        "WITH_KINETICS": "OFF",
+        "WITH_FLUCTUATION": "OFF",
+        "WITH_CORRECTIONS": "OFF",
+        "WITH_IO_IMAGE": "OFF"
+      }
     }
   ],
-
   "buildPresets": [
-    { "name": "dev", "configurePreset": "dev" },
-    { "name": "dev-split", "configurePreset": "dev-split" },
-    { "name": "debug", "configurePreset": "debug" },
-    { "name": "release", "configurePreset": "release" },
-    { "name": "lib-only", "configurePreset": "lib-only" },
-    { "name": "no-hdf5", "configurePreset": "no-hdf5" }
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "dev-split",
+      "configurePreset": "dev-split"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "lib-only",
+      "configurePreset": "lib-only"
+    },
+    {
+      "name": "no-hdf5",
+      "configurePreset": "no-hdf5"
+    },
+    {
+      "name": "dev-sim",
+      "configurePreset": "dev-sim"
+    },
+    {
+      "name": "dev-clsm",
+      "configurePreset": "dev-clsm"
+    },
+    {
+      "name": "dev-hmm",
+      "configurePreset": "dev-hmm"
+    }
   ]
 }

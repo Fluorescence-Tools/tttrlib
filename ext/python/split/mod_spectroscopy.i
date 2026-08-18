@@ -16,8 +16,12 @@
 #include "TTTR.h"
 #include "TTTRMask.h"
 #include "Channel.h"
+#ifndef TTTRLIB_WITHOUT_CLSM
 #include "CLSMImage.h"
+#endif
+#ifndef TTTRLIB_WITHOUT_MATH
 #include "NeuralNet.h"
+#endif
 %}
 %import "split/mod_core.i"
 %import "split/mod_kernels.i"      // HmmSurrogate takes a NeuralNet, BurstFeatureExtractor uses it
@@ -38,15 +42,19 @@ from tttrlib.kernels import *
         SWIG_exception(SWIG_RuntimeError, e.what());
     }
 }
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "BurstFilter.i"
 %include "BurstFeatureExtractor.i"
 %include "BurstFeature.i"
 %include "BVA.i"
 %include "TwoCDE.i"
 %include "BurstML.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMRestraints.i"
 %include "HMMConstraints.i"
 %include "HMM.i"
+#endif
 // The active global %exception here must be what this fragment inherited in
 // the monolith's include order (a directive in an %imported file does not
 // carry over); restated verbatim from the fragment that set it there.
@@ -61,7 +69,9 @@ from tttrlib.kernels import *
         SWIG_exception(SWIG_UnknownError, "Unknown exception");
     }
 }
+#ifndef TTTRLIB_WITHOUT_HMM
 %include "HMMSurrogate.i"
+#endif
 // The active global %exception here must be what this fragment inherited in
 // the monolith's include order (a directive in an %imported file does not
 // carry over); restated verbatim from the fragment that set it there.
@@ -76,19 +86,33 @@ from tttrlib.kernels import *
         SWIG_exception(SWIG_UnknownError, "Unknown exception");
     }
 }
+#ifndef TTTRLIB_WITHOUT_KINETICS
 %include "GopichSzabo.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_FLUCTUATION
 %include "PhotonCountingHistogram.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_BURST
 %include "RecurrenceAnalysis.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_CORRECTIONS
 %include "SpectralCrosstalk.i"
 %include "BackgroundEstimation.i"
 %include "MaxEnt.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "BlindIRF.i"
 %include "MaxEntTcspc.i"
 %include "DecayPatternFit.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_PDA
 %include "Pda3cCore.i"
 %include "Pda.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_DECAY
 %include "DecayConvolution.i"
 %include "DecayFit.i"
+#endif
 
 // The monolith sees stdint.i once, at the very end, through Sim.i (see the note
 // at the top of misc_types.i on why not earlier): SWIG resolves the typedefs

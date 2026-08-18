@@ -17,8 +17,12 @@
 #include "TTTR.h"
 #include "TTTRMask.h"
 #include "Channel.h"
+#ifndef TTTRLIB_WITHOUT_BURST
 #include "BurstFilter.h"
+#endif
+#ifndef TTTRLIB_WITHOUT_DECAY
 #include "DecayFitPrior.h"
+#endif
 %}
 %import "split/mod_core.i"
 %import "split/mod_kernels.i"
@@ -46,13 +50,25 @@ from tttrlib.spectroscopy import *
         SWIG_exception(SWIG_UnknownError, "Unknown exception");
     }
 }
+#ifndef TTTRLIB_WITHOUT_FCS
 %include "Correlator.i"
 %include "Fdc2D.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "CLSM.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_SUPERRES
 %include "CLSMSuperRes.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_LOCALIZATION
 %include "Localization.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_CLSM
 %include "DecayPhasor.i"
+#endif
+#ifndef TTTRLIB_WITHOUT_STREAMING
 %include "Streaming.i"
+#endif
 
 // The monolith sees stdint.i once, at the very end, through Sim.i (see the note
 // at the top of misc_types.i on why not earlier): SWIG resolves the typedefs
