@@ -1,5 +1,11 @@
 # Handover — Burst pipeline: prototype done, C++ port unblocked
 
+> **Superseded 2026-08-18.** Every open item below has landed:
+> `modules/cli/src/cmd_sm.cpp` is detector-setup-driven with computed
+> companions and real MLE columns, tested in
+> `test/python/misc/test_cli_sm_burst_table.py`; burst-search dispatch is a
+> table. Kept for the history; see board T-20260811-04.
+
 > **Date:** 2026-08-09 · **Repos:** [tttrlib] · **Previous:** burst pipeline
 > prototype + PRD-027 blocker · **Next:** C++ port of PRD-026
 

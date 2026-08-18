@@ -502,9 +502,18 @@ retired so nobody works the same thing twice.)*
     `ext/python/*.i` the chosen mechanism needs.
 
 - **T-20260811-04 · [tttrlib] Burst pipeline → C++ port (PRD-026 continuation)**
-  - Status: 🆕 open
-  - Owner: —
+  - Status: ✅ done (closed 2026-08-18 on evidence -- the work had landed without the ticket being touched)
+  - Owner: claude (audit)
   - Opened: 2026-08-11 (carried over from the 2026-08-09 handoff below)
+  - Evidence: `modules/cli/src/cmd_sm.cpp` is detector-setup-driven (columns per
+    named `DetectorDef`, no green/red parity), companions are computed (BVA,
+    FRET-2CDE, per-detector Poisson-MLE lifetimes with NaN-on-failure and the
+    `.bg4` column set), placeholders are gone; `test/python/misc/test_cli_sm_burst_table.py`
+    (20 tests: four-detector setups, reference arithmetic cell for cell,
+    MLE recovers simulated lifetimes, IRF spellings, units, PTO profile).
+    Burst-search dispatch is a table (`BurstSearchDispatch.h`); the remaining
+    `kOperationRegistry` literal is PRD-032's scope, not this ticket's.
+    Handover note marked superseded.
   - Why: PRD-027's blocker is resolved, so the C++ port is unblocked and has
     been sitting in **Handoffs** with no owner since 2026-08-09.
   - Done when: the handover's checklist in
