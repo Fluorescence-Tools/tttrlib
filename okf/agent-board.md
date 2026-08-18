@@ -151,7 +151,10 @@ are still claims and still binding.
     `"default"`, which is not a method); `SuperResMethod` enum (`"sofi"` parses
     then throws); `DecayFitPrior::from_json` inline 9-way chain;
     `activation_from_string`. Objectives are DONE (2026-08-17: neyman/gehrels
-    reach the kernels).
+    reach the kernels). **Correlator DONE 2026-08-18** (`correlation_methods()`
+    table, unknown name refused at set time, `get_fcs_image` already mapped
+    "default"→wahl). Left: SuperResMethod, DecayFitPrior::from_json,
+    activation_from_string, and the plugin-host tables for all of them.
   - Done when: each is a `std::map<std::string, fn>` with a `register_*`
     entry through the plugin host, the Python names unchanged, and the
     `get_fcs_image` default is a real method.

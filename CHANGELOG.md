@@ -47,6 +47,14 @@
   reference); batch forms `gamma_variates(shape, key, counter, n)` and
   `dirichlet_variates(alpha, key, counter, n)` return the draws.
 
+### Changed
+- **`Correlator` methods are a registry** (`correlation_methods()`,
+  `register_correlation_method`, `correlation_method_names()`): the three
+  built-ins are table entries, and `set_correlation_method` (the `method`
+  property) now refuses an unknown name with a `ValueError` naming the
+  registered ones -- an unknown method used to warn at `run()` and hand back
+  an all-zero curve. `"default"` and `""` mean `wahl`.
+
 ### Added
 - **`TTTRLIB_PYTHON_SPLIT` (CMake option, preset `dev-split`): the Python
   bindings as six extensions** -- `tttrlib.core`, `.formats`, `.kernels`,

@@ -116,30 +116,14 @@ if (is_verbose()) {
     } else {
         if(!p1.empty() && !p2.empty()){
             curve.clear();
-            if (correlation_method == "wahl"){
-                ccf_wahl(
-                        get_n_casc(), get_n_bins(),
-                        curve.x_axis, 
-                        curve.correlation,
-                        p1, p2
-                );
-            } else if (correlation_method == "felekyan") {
-                ccf_felekyan(
-                        (const unsigned long long *) p1.times.data(),
-                        (const unsigned long long *) p2.times.data(),
-                        p1.weights.data(), p2.weights.data(),
-                        (unsigned int) curve.settings.n_bins,
-                        (unsigned int) curve.settings.n_casc,
-                        (unsigned int) p1.size(),
-                        (unsigned int) p2.size(),
-                        curve.x_axis.data(),
-                        curve.correlation.data()
-                );
-            } else if (correlation_method == "laurence") {
-                ccf_laurence(curve.x_axis, curve.correlation, p1, p2);
-            } else{
-                std::cerr << "WARNING: Correlation mode not recognized!" << std::endl;
+            auto it = correlation_methods().find(correlation_method);
+            if (it == correlation_methods().end()) {
+                // set_correlation_method refuses unknown names; this is only
+                // reachable through a stale object whose method was unregistered.
+                throw std::invalid_argument("Correlator: correlation method '" + correlation_method +
+                                            "' is not registered");
             }
+            it->second.kernel(*this, curve);
             normalize(this, this->curve);
         } else{
             std::cerr << "WARNING: No data to correlate!" << std::endl;
@@ -690,34 +674,66 @@ if (is_verbose()) {
     std::clog << "-- Normalizing correlation curve..." << std::endl;
 }
     for(size_t i=0; i < curve.corr_normalized.size(); i++) curve.corr_normalized[i] = curve.correlation[i];
-    uint64_t maximum_macro_time = correlator->dt();
-    if(correlator->correlation_method == "wahl"){
-        normalize_ccf_wahl(
-                correlator->p1.sum_of_weights(), correlator->p1.dt(),
-                correlator->p2.sum_of_weights(), correlator->p2.dt(),
-                curve.x_axis,
-                curve.corr_normalized,
-                curve.settings.n_bins
-        );
-    } else if (correlator->correlation_method == "felekyan") {
-        normalize_ccf_felekyan(
-                curve.x_axis, curve.correlation,
-                curve.x_axis,
-                curve.corr_normalized,
-                correlator->p1.mean_count_rate(), correlator->p2.mean_count_rate(),
-                curve.settings.n_bins,
-                curve.settings.n_casc,
-                maximum_macro_time
-        );
-    } else if (correlator->correlation_method == "laurence") {
-        normalize_ccf_laurence(
-            correlator->p1,
-            correlator->p2,
-            curve.x_axis, 
-            curve.correlation,
-            curve.corr_normalized         
-        );
-    }
+    auto it = correlation_methods().find(correlator->correlation_method);
+    if (it != correlation_methods().end() && it->second.normalise)
+        it->second.normalise(*correlator, curve);
+}
+
+// ---- the method table -------------------------------------------------------
+
+std::map<std::string, Correlator::CorrelationMethod>& Correlator::correlation_methods() {
+    static std::map<std::string, CorrelationMethod> table = [] {
+        std::map<std::string, CorrelationMethod> t;
+        t["wahl"] = CorrelationMethod{
+            [](Correlator& c, CorrelatorCurve& curve) {
+                ccf_wahl(c.get_n_casc(), c.get_n_bins(), curve.x_axis, curve.correlation, c.p1, c.p2);
+            },
+            [](Correlator& c, CorrelatorCurve& curve) {
+                normalize_ccf_wahl(c.p1.sum_of_weights(), c.p1.dt(), c.p2.sum_of_weights(), c.p2.dt(),
+                                   curve.x_axis, curve.corr_normalized, curve.settings.n_bins);
+            }};
+        t["felekyan"] = CorrelationMethod{
+            [](Correlator& c, CorrelatorCurve& curve) {
+                ccf_felekyan((const unsigned long long*) c.p1.times.data(),
+                             (const unsigned long long*) c.p2.times.data(),
+                             c.p1.weights.data(), c.p2.weights.data(),
+                             (unsigned int) curve.settings.n_bins, (unsigned int) curve.settings.n_casc,
+                             (unsigned int) c.p1.size(), (unsigned int) c.p2.size(),
+                             curve.x_axis.data(), curve.correlation.data());
+            },
+            [](Correlator& c, CorrelatorCurve& curve) {
+                normalize_ccf_felekyan(curve.x_axis, curve.correlation, curve.x_axis, curve.corr_normalized,
+                                       c.p1.mean_count_rate(), c.p2.mean_count_rate(),
+                                       curve.settings.n_bins, curve.settings.n_casc, c.dt());
+            }};
+        t["laurence"] = CorrelationMethod{
+            [](Correlator& c, CorrelatorCurve& curve) {
+                ccf_laurence(curve.x_axis, curve.correlation, c.p1, c.p2);
+            },
+            [](Correlator& c, CorrelatorCurve& curve) {
+                normalize_ccf_laurence(c.p1, c.p2, curve.x_axis, curve.correlation, curve.corr_normalized);
+            }};
+        return t;
+    }();
+    return table;
+}
+
+void Correlator::register_correlation_method(const std::string& name, CorrelationMethod method) {
+    if (name.empty() || !method.kernel)
+        throw std::invalid_argument("register_correlation_method: a name and a kernel are required");
+    correlation_methods()[name] = std::move(method);
+}
+
+std::vector<std::string> Correlator::correlation_method_names() {
+    std::vector<std::string> out;
+    for (const auto& kv : correlation_methods()) out.push_back(kv.first);
+    return out;
+}
+
+std::string Correlator::joined_correlation_method_names() {
+    std::string s;
+    for (const auto& n : correlation_method_names()) { if (!s.empty()) s += ", "; s += n; }
+    return s;
 }
 
 void Correlator::normalize_ccf_wahl(

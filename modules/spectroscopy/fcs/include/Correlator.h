@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <climits>
 #include <map>
+#include <stdexcept>
+#include <string>
 
 #include "TTTR.h"
 #include "CorrelatorPhotonStream.h"
@@ -322,12 +324,44 @@ public:
      *   Opt Lett. 15;31(6):829-31.
      */
     void set_correlation_method(std::string cm) {
+        // "default" and "" mean the default method; anything else must be a
+        // registered name -- an unknown method used to warn at run() and hand
+        // back an all-zero curve, which is how a misspelt "felekyan" became a
+        // published flat correlation once. Refusing here is the cheaper lesson.
+        if (cm.empty() || cm == "default") cm = "wahl";
+        if (correlation_methods().count(cm) == 0)
+            throw std::invalid_argument(
+                "Correlator: unknown correlation method '" + cm +
+                "'; registered: " + joined_correlation_method_names());
         is_valid = false;
         correlation_method = cm;
         // felekyan has its own lag axis (see CorrelatorCurve::update_axis)
         curve.settings.correlation_method = cm;
         curve.update_axis();
     }
+
+    /*!
+     * \brief One correlation method: the kernel that fills `curve.correlation`
+     *        from the two photon streams, and the normalisation that fills
+     *        `curve.corr_normalized` from it.
+     *
+     * The three built-ins (wahl, felekyan, laurence) are entries of this table;
+     * `register_correlation_method` adds another under a new name, which
+     * `set_correlation_method` then accepts and `correlation_method_names`
+     * lists. The lag axis is still chosen by name in
+     * `CorrelatorCurve::update_axis` (multi-tau for everything but felekyan).
+     */
+    struct CorrelationMethod {
+        std::function<void(Correlator&, CorrelatorCurve&)> kernel;
+        std::function<void(Correlator&, CorrelatorCurve&)> normalise;
+    };
+    /// The registered methods by name (built-ins installed on first use).
+    static std::map<std::string, CorrelationMethod>& correlation_methods();
+    /// Add or replace a method. Not thread-safe against concurrent `run()`.
+    static void register_correlation_method(const std::string& name, CorrelationMethod method);
+    /// Registered method names, sorted.
+    static std::vector<std::string> correlation_method_names();
+    static std::string joined_correlation_method_names();
 
 
     /*!
