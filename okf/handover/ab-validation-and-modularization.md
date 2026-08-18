@@ -117,12 +117,17 @@ toctree), `okf/MODULE-DEBT.md` §2/§6/§6b/§7 closed with the reasoning kept.
    wrong — a dllexport class merely *used* from another DLL links with
    LNK2019), `extern template` for `read_tiff<T>`. Only verifiable on
    Windows CI.
-4. **PRD-032** (`okf/prds/PRD-032-migrate-algos-to-registry.md`, owner
-   tpeulen): the two remaining literals need decisions, both written into the
-   PRD today — `kOperationRegistry` is unblocked (PRD-026's port landed) but
-   its `burst_selection` columns are stale vs the detector-setup output, and
-   `kFitRegistry` cannot move "next to the models" because `decay` reads the
-   schema back from `registry` (would be a cycle; needs a lower home).
+4. ~~PRD-032~~ **done 2026-08-18 on the owner's ruling "only one registry"**
+   (508c1135a, cd9b85b1e): `kFitRegistry` and `kOperationRegistry` deleted;
+   fits/setups/objectives/priors/operations register next to their code into
+   the `algorithm` module's `register_algorithm` table; the plugin host
+   registers every plugin capability into the same table at load (rolled back
+   on a failed init); `Registry.cpp` only primes and assembles; content
+   unchanged (0 removed / 0 changed), `params_schema` order pinned by test;
+   new categories `prior`, `correlation_method`. Left inside it: the
+   `burst_selection` entry's column list is still the two-detector default
+   (kept verbatim; a note sits next to the entry) -- changing that contract is
+   consumer-visible (ChiSurf/ndx) and the owner's call.
 5. Feature gap, if wanted: a per-time-window-normalised correlation estimator
    (Kristine TW), which would turn the one NO-REF correlator row into an A/B.
 

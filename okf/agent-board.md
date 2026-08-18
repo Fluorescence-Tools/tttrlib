@@ -176,7 +176,9 @@ are still claims and still binding.
     `register_correlation_method` / `register_decay_prior` on the host, fcs and
     decay look the host up on a table miss (per call, no dangling on rollback);
     example plugin registers a direct pair-count kernel and a Laplace prior,
-    tested in `test/python/plugin/test_plugins.py`.
+    tested in `test/python/plugin/test_plugins.py`. **One registry
+    2026-08-18** (owner's ruling): the two remaining literals are gone, every
+    built-in and plugin entry registers into `register_algorithm`; see PRD-032.
   - Done when: each is a `std::map<std::string, fn>` with a `register_*`
     entry through the plugin host, the Python names unchanged, and the
     `get_fcs_image` default is a real method.

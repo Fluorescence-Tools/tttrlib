@@ -1,5 +1,32 @@
 # Bundle update log
 
+## 2026-08-18 (48th entry)
+
+* **One registry** (commits 508c1135a, cd9b85b1e; PRD-032 closed). The
+  owner's ruling -- "there should be only one registry", "no per-module
+  registry files" -- ended the two remaining hand-authored literals.
+  `kFitRegistry` (5 fits, 2 setup blocks, 4 objectives) and
+  `kOperationRegistry` (8 pipeline operations) are deleted; each entry is now
+  a `register_algorithm_json` call next to the code it describes (the model
+  TUs, `DecayStatistics.cpp`, `BVA.cpp`, `TwoCDE.cpp`, `RecurrenceAnalysis.cpp`,
+  `Correlator.cpp`, ...), the plugin host registers every plugin capability
+  into the same table as the plugin loads (a failed init unregisters through
+  the journal) and the three text splices are gone; `Registry.cpp` primes and
+  assembles, holds nothing. `AlgorithmDescriptor` gained `name` -- the
+  registry key, distinct from the mmfdb `operation_type` (mle_green and mle_red
+  are one operation type) -- and `extra_json` for capability-specific keys, so
+  the emitter needed no per-capability fields. The layering worry recorded
+  earlier in PRD-032 dissolved: `decay` depends on `algorithm` (below it) and
+  reads its own registrations back; `registry` now depends on `decay` and
+  `fcs`. Verified the way the burst-search migration was: 0 entries removed,
+  0 changed, 145 generic keys added, `params_schema` property order identical
+  to the literals (a test now pins it, since a sorting JSON type would
+  silently reorder the flat parameter layout). Built-in correlation methods
+  and prior kinds register too, so `registry("correlation_method")` and
+  `registry("prior")` describe exactly what `set_correlation_method` and
+  `DecayFitPrior.from_json_string` accept (test pins the sets equal); the
+  conformance category case grew from 11 to 13.
+
 ## 2026-08-18 (47th entry)
 
 * **Modularization tickets T-03, T-05, T-06, T-07 closed** (commits 0e2d34d73,
