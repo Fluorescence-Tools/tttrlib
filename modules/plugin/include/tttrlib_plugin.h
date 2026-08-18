@@ -402,6 +402,95 @@ typedef struct tttrlib_operation_v1 {
 } tttrlib_operation_v1;
 
 /*!
+ * \brief A correlation kernel contributed by a plugin.
+ *
+ * The fifth capability. ``Correlator.set_correlation_method(name)`` (and the
+ * ``method=`` argument everywhere a correlation is requested) accepts the name
+ * once the plugin is loaded, ``Correlator.correlation_method_names()`` lists
+ * it, and ``run()`` calls \ref correlate instead of a built-in kernel. The
+ * host owns the streams and the lag axis; the plugin fills the curve.
+ *
+ * Appended after \ref tttrlib_operation_v1, same \ref struct_size rule.
+ */
+typedef struct tttrlib_correlation_method_v1 {
+    uint32_t struct_size;         /*!< sizeof(tttrlib_correlation_method_v1). */
+
+    /*! What set_correlation_method takes. Refused if a built-in or another
+     *  plugin already owns it. */
+    const char* name;
+    const char* label;            /*!< Human-readable. May be NULL. */
+    const char* summary;          /*!< One line. May be NULL. */
+
+    /*!
+     * \brief Correlate two weighted event streams on the host's lag axis.
+     *
+     * \param t1, t2       Arrival times in macro-time ticks, ascending.
+     * \param w1, w2       One weight per event (1.0 for a plain photon).
+     * \param n1, n2       Number of events in each stream.
+     * \param duration1, duration2  Last minus first tick of each stream -- what
+     *                     the built-in normalisations divide by.
+     * \param seconds_per_tick  Macro-time calibration, so a kernel can work in
+     *                     seconds. 0 if unknown.
+     * \param tau          The lag axis in ticks, ascending: the multi-tau grid
+     *                     the host built from n_bins / n_casc, \p n_tau long.
+     * \param corr         Out, \p n_tau entries: the raw correlation on \p tau.
+     * \param corr_normalized  Out, \p n_tau entries: the normalised curve. A
+     *                     kernel with no normalisation of its own copies
+     *                     \p corr here.
+     * All buffers are valid for the call only.
+     */
+    int (*correlate)(void* ctx,
+                     const uint64_t* t1, const double* w1, uint64_t n1,
+                     const uint64_t* t2, const double* w2, uint64_t n2,
+                     uint64_t duration1, uint64_t duration2, double seconds_per_tick,
+                     const uint64_t* tau, uint64_t n_tau,
+                     double* corr, double* corr_normalized);
+
+    void* ctx;                    /*!< The plugin's own state. */
+} tttrlib_correlation_method_v1;
+
+/*!
+ * \brief A prior over one fit parameter, contributed by a plugin.
+ *
+ * The sixth capability. A prior is named by the ``kind`` in its JSON state
+ * (``{"kind": "laplace", "mu": 1.0, "b": 0.5}``); once the plugin is loaded
+ * ``DecayFitPrior.from_json`` builds this kind through \ref create and
+ * ``DecayFitPrior.kinds()`` lists it. One prior is one \ref create handle;
+ * the host calls \ref destroy when it lets go of the last reference.
+ *
+ * Appended after \ref tttrlib_correlation_method_v1, same \ref struct_size
+ * rule.
+ */
+typedef struct tttrlib_decay_prior_v1 {
+    uint32_t struct_size;         /*!< sizeof(tttrlib_decay_prior_v1). */
+
+    const char* kind;             /*!< The JSON ``kind``. Refused if taken. */
+    const char* label;            /*!< Human-readable. May be NULL. */
+    const char* summary;          /*!< One line. May be NULL. */
+    /*! JSON Schema of the state's other keys, published for form builders.
+     *  May be NULL. */
+    const char* params_schema;
+
+    /*! Build one prior from its JSON state (the whole object, ``kind``
+     *  included). Set \p handle; return \ref TTTRLIB_OK, or set an error and
+     *  return \ref TTTRLIB_INVALID for a state it cannot use. */
+    int (*create)(void* ctx, const char* state_json, void** handle);
+    /*! Log density at \p x; ``-inf`` outside the support. Required. */
+    double (*lnpdf)(void* handle, double x);
+    /*! Value maximising the density -- the reference of the deviance
+     *  residual. May be NULL, which means 0. */
+    double (*mode)(void* handle);
+    /*! Hard support as box bounds for the optimiser. May be NULL for
+     *  ``(-inf, +inf)``. */
+    int (*support)(void* handle, double* lower, double* upper);
+    /*! Release a handle from \ref create. May be NULL if create allocates
+     *  nothing. */
+    void (*destroy)(void* handle);
+
+    void* ctx;                    /*!< The plugin's own state. */
+} tttrlib_decay_prior_v1;
+
+/*!
  * \brief What the host offers the plugin. Valid for the process lifetime.
  *
  * Handed to \ref tttrlib_plugin_init_v1. A plugin may keep the pointer.
@@ -452,6 +541,15 @@ typedef struct tttrlib_host_v1 {
      *  algorithm type (BVA, 2CDE, IRF extraction, FCS, ...) without
      *  editing tttrlib source. */
     int (*register_operation)(const tttrlib_operation_v1* op);
+
+    /*! Contribute a correlation kernel. Only valid during init. Appended after
+     *  \ref register_operation; the same \ref struct_size rule applies. */
+    int (*register_correlation_method)(const tttrlib_correlation_method_v1* method);
+
+    /*! Contribute a prior kind for the decay fits. Only valid during init.
+     *  Appended after \ref register_correlation_method; the same
+     *  \ref struct_size rule applies. */
+    int (*register_decay_prior)(const tttrlib_decay_prior_v1* prior);
 } tttrlib_host_v1;
 
 /*!

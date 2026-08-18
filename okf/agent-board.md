@@ -162,8 +162,12 @@ are still claims and still binding.
     DONE 2026-08-18.** `activation_from_string`: closed as won't-do — the
     `Activation` enum is a public API type and a hot-loop switch, and the four
     sklearn names are the only names; a table would add a function pointer per
-    layer for nothing. Left: the plugin-host tables (correlation methods, prior
-    kinds) so a drop-in library can register one.
+    layer for nothing. **Plugin-host tables DONE 2026-08-18**:
+    `tttrlib_correlation_method_v1` / `tttrlib_decay_prior_v1` in the C ABI,
+    `register_correlation_method` / `register_decay_prior` on the host, fcs and
+    decay look the host up on a table miss (per call, no dangling on rollback);
+    example plugin registers a direct pair-count kernel and a Laplace prior,
+    tested in `test/python/plugin/test_plugins.py`.
   - Done when: each is a `std::map<std::string, fn>` with a `register_*`
     entry through the plugin host, the Python names unchanged, and the
     `get_fcs_image` default is a real method.

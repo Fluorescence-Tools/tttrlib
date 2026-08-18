@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Correlator.h"
+#include "PluginHost.h"
 #include "Verbose.h"
 #include "info.h"
 
@@ -117,14 +118,33 @@ if (is_verbose()) {
         if(!p1.empty() && !p2.empty()){
             curve.clear();
             auto it = correlation_methods().find(correlation_method);
-            if (it == correlation_methods().end()) {
+            if (it != correlation_methods().end()) {
+                it->second.kernel(*this, curve);
+                normalize(this, this->curve);
+            } else if (const tttrlib_correlation_method_v1* pm =
+                               tttrlib::PluginHost::correlation_method(correlation_method)) {
+                // A kernel a drop-in plugin contributed. Looked up per run, not
+                // cached in the table: a plugin rolled back after a failed init
+                // then simply stops being found instead of leaving a dangling
+                // wrapper behind.
+                curve.corr_normalized.assign(curve.correlation.size(), 0.0);
+                const int status = pm->correlate(
+                        pm->ctx,
+                        (const uint64_t*) p1.times.data(), p1.weights.data(), (uint64_t) p1.size(),
+                        (const uint64_t*) p2.times.data(), p2.weights.data(), (uint64_t) p2.size(),
+                        (uint64_t) p1.dt(), (uint64_t) p2.dt(), p1.get_time_axis_calibration(),
+                        (const uint64_t*) curve.x_axis.data(), (uint64_t) curve.x_axis.size(),
+                        curve.correlation.data(), curve.corr_normalized.data());
+                if (status != TTTRLIB_OK)
+                    throw std::runtime_error("Correlator: plugin correlation method '" +
+                                             correlation_method + "' failed: " +
+                                             tttrlib::PluginHost::last_error());
+            } else {
                 // set_correlation_method refuses unknown names; this is only
                 // reachable through a stale object whose method was unregistered.
                 throw std::invalid_argument("Correlator: correlation method '" + correlation_method +
                                             "' is not registered");
             }
-            it->second.kernel(*this, curve);
-            normalize(this, this->curve);
         } else{
             std::cerr << "WARNING: No data to correlate!" << std::endl;
         }
@@ -727,7 +747,15 @@ void Correlator::register_correlation_method(const std::string& name, Correlatio
 std::vector<std::string> Correlator::correlation_method_names() {
     std::vector<std::string> out;
     for (const auto& kv : correlation_methods()) out.push_back(kv.first);
+    for (const tttrlib_correlation_method_v1* m : tttrlib::PluginHost::correlation_methods())
+        if (correlation_methods().count(m->name) == 0) out.push_back(m->name);
+    std::sort(out.begin(), out.end());
     return out;
+}
+
+bool Correlator::has_correlation_method(const std::string& name) {
+    return correlation_methods().count(name) != 0 ||
+           tttrlib::PluginHost::correlation_method(name) != nullptr;
 }
 
 std::string Correlator::joined_correlation_method_names() {

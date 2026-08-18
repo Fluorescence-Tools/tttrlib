@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- **Plugins can contribute a correlation kernel and a prior kind.** Two new
+  C-ABI tables, `tttrlib_correlation_method_v1` (a name
+  `Correlator.set_correlation_method` accepts and `run()` calls on the host's
+  lag axis) and `tttrlib_decay_prior_v1` (a `kind` that
+  `DecayFitPrior.from_json_string` builds); `correlation_method_names()` and
+  `DecayFitPrior.kinds()` list them. The example plugin registers a direct
+  pair-count kernel and a Laplace prior. New: `DecayFitPrior.from_json_string`.
+
 - **Build: every source compiles once.** Each module owns an OBJECT library and
   the module libraries, `libtttrlib.so` and `libtttrlib_static.a` are links over
   those objects (the two aggregates used to recompile the whole tree). Names

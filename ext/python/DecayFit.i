@@ -123,6 +123,11 @@ using json = nlohmann::json;
     std::string get_json() const {
         return $self->to_json().dump();
     }
+    /*! Build a prior from its JSON state (the inverse of `get_json`): any
+     *  built-in kind, or one a drop-in plugin contributed. */
+    static std::shared_ptr<DecayFitPrior> from_json_string(const std::string& payload) {
+        return DecayFitPrior::from_json(json::parse(payload));
+    }
 }
 
 // Raw model curve at given parameters, with no reference to any data.

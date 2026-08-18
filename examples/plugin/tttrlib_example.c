@@ -410,6 +410,130 @@ static tttrlib_burst_search_v1 g_burst_search = {
     NULL
 };
 
+/* ------------------------------------------------------------ correlation method
+ *
+ * The fifth capability. The host owns the two event streams and the lag axis;
+ * the kernel fills the curve. This one is the direct estimator -- count the
+ * pairs whose lag falls in each bin -- with the standard normalisation
+ * G(tau) = N_pairs(tau) * T / (N1 * N2 * width). O(n1 * n_tau * log n2), so it
+ * is a demonstration, not a competitor for the multi-tau kernels.
+ */
+
+static uint64_t lower_bound_u64(const uint64_t* a, uint64_t n, uint64_t v) {
+    uint64_t lo = 0, hi = n;
+    while (lo < hi) {
+        uint64_t mid = lo + (hi - lo) / 2;
+        if (a[mid] < v) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+}
+
+static int example_correlate(void* ctx,
+                             const uint64_t* t1, const double* w1, uint64_t n1,
+                             const uint64_t* t2, const double* w2, uint64_t n2,
+                             uint64_t duration1, uint64_t duration2, double seconds_per_tick,
+                             const uint64_t* tau, uint64_t n_tau,
+                             double* corr, double* corr_normalized) {
+    double sw1 = 0.0, sw2 = 0.0;
+    uint64_t i, k, T;
+    (void)ctx; (void)seconds_per_tick;
+    if (n_tau == 0) return TTTRLIB_OK;
+    for (i = 0; i < n1; i++) sw1 += w1[i];
+    for (i = 0; i < n2; i++) sw2 += w2[i];
+    for (k = 0; k < n_tau; k++) corr[k] = 0.0;
+    for (i = 0; i < n1; i++) {
+        for (k = 0; k < n_tau; k++) {
+            /* bin k covers lags [tau[k], tau[k+1]); the last bin keeps the
+             * width of the one before it */
+            uint64_t lo = tau[k];
+            uint64_t width = (k + 1 < n_tau) ? tau[k + 1] - tau[k]
+                                             : (k > 0 ? tau[k] - tau[k - 1] : 1);
+            uint64_t hi = lo + width;
+            uint64_t j0 = lower_bound_u64(t2, n2, t1[i] + lo);
+            uint64_t j1 = lower_bound_u64(t2, n2, t1[i] + hi);
+            double acc = 0.0;
+            uint64_t j;
+            for (j = j0; j < j1; j++) acc += w2[j];
+            corr[k] += w1[i] * acc;
+        }
+    }
+    T = duration1 > duration2 ? duration1 : duration2;
+    for (k = 0; k < n_tau; k++) {
+        uint64_t width = (k + 1 < n_tau) ? tau[k + 1] - tau[k]
+                                         : (k > 0 ? tau[k] - tau[k - 1] : 1);
+        double denom = sw1 * sw2 * (double)width;
+        corr_normalized[k] = denom > 0.0 ? corr[k] * (double)T / denom : 0.0;
+    }
+    return TTTRLIB_OK;
+}
+
+static tttrlib_correlation_method_v1 g_correlation = {
+    sizeof(tttrlib_correlation_method_v1),
+    "direct_plugin",
+    "Direct pair counting (plugin)",
+    "Counts photon pairs per lag bin; G = N_pairs T / (N1 N2 dtau).",
+    example_correlate,
+    NULL
+};
+
+/* ------------------------------------------------------------------ prior kind
+ *
+ * The sixth capability: a prior over one fit parameter, named by the `kind` in
+ * its JSON state. A Laplace prior, {"kind": "laplace", "mu": m, "b": b}:
+ * ln p(x) = -|x - mu| / b - ln(2 b), mode mu, unbounded support.
+ */
+
+typedef struct { double mu, b; } laplace_state;
+
+static int laplace_create(void* ctx, const char* state_json, void** handle) {
+    laplace_state* st;
+    const char* p;
+    (void)ctx;
+    st = (laplace_state*)malloc(sizeof(*st));
+    if (st == NULL) return TTTRLIB_ERROR;
+    st->mu = 0.0; st->b = 1.0;
+    if (state_json != NULL) {
+        p = strstr(state_json, "\"mu\"");
+        if (p != NULL && (p = strchr(p, ':')) != NULL) st->mu = atof(p + 1);
+        p = strstr(state_json, "\"b\"");
+        if (p != NULL && (p = strchr(p, ':')) != NULL) st->b = atof(p + 1);
+    }
+    if (!(st->b > 0.0)) {
+        free(st);
+        g_host->set_error("laplace prior: b must be > 0");
+        return TTTRLIB_INVALID;
+    }
+    *handle = st;
+    return TTTRLIB_OK;
+}
+
+static double laplace_lnpdf(void* handle, double x) {
+    const laplace_state* st = (const laplace_state*)handle;
+    return -fabs(x - st->mu) / st->b - log(2.0 * st->b);
+}
+
+static double laplace_mode(void* handle) {
+    return ((const laplace_state*)handle)->mu;
+}
+
+static void laplace_destroy(void* handle) { free(handle); }
+
+static tttrlib_decay_prior_v1 g_prior = {
+    sizeof(tttrlib_decay_prior_v1),
+    "laplace",
+    "Laplace (plugin)",
+    "Double-exponential prior around mu with scale b.",
+    "{\"type\": \"object\", \"properties\": {"
+    "\"mu\": {\"type\": \"number\", \"default\": 0.0},"
+    "\"b\": {\"type\": \"number\", \"default\": 1.0, \"exclusiveMinimum\": 0}}}",
+    laplace_create,
+    laplace_lnpdf,
+    laplace_mode,
+    NULL,
+    laplace_destroy,
+    NULL
+};
+
 /* ------------------------------------------------------------------ entry */
 
 TTTRLIB_PLUGIN_EXPORT int tttrlib_plugin_init_v1(const tttrlib_host_v1* host,
@@ -443,6 +567,16 @@ TTTRLIB_PLUGIN_EXPORT int tttrlib_plugin_init_v1(const tttrlib_host_v1* host,
     if (host->struct_size >= sizeof(tttrlib_host_v1) &&
         host->register_burst_search != NULL) {
         status = host->register_burst_search(&g_burst_search);
+        if (status != TTTRLIB_OK) return status;
+    }
+    if (host->struct_size >= sizeof(tttrlib_host_v1) &&
+        host->register_correlation_method != NULL) {
+        status = host->register_correlation_method(&g_correlation);
+        if (status != TTTRLIB_OK) return status;
+    }
+    if (host->struct_size >= sizeof(tttrlib_host_v1) &&
+        host->register_decay_prior != NULL) {
+        status = host->register_decay_prior(&g_prior);
         if (status != TTTRLIB_OK) return status;
     }
     return TTTRLIB_OK;

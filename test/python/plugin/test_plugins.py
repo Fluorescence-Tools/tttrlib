@@ -595,3 +595,85 @@ def test_the_current_directory_is_never_searched(plugin_dir, plugin_so, tmp_path
         capture_output=True, text=True, env=env, cwd=str(cwd), timeout=300)
     assert proc.returncode == 0, proc.stderr
     assert json.loads(proc.stdout.strip().splitlines()[-1]) == {}
+
+
+# ------------------------------------------ correlation method / prior kind
+
+
+def test_a_plugin_correlation_method_runs_through_the_correlator(plugin_dir):
+    """The fifth capability: a kernel a plugin contributed is a method name
+    like any built-in -- listed by ``correlation_method_names``, accepted by
+    ``set_correlation_method``, run by ``run()`` on the host's lag axis.
+
+    The example kernel is the direct pair count with the standard
+    normalisation, so on two independent Poisson streams its normalised curve
+    sits at 1 (within shot noise) and its raw curve equals a NumPy pair count
+    on the same lag bins exactly.
+    """
+    out = run_in_subprocess("""
+        import json, numpy as np, tttrlib
+        rng = np.random.default_rng(3)
+        n = 4000
+        t1 = np.sort(rng.integers(0, 2_000_000, n)).astype(np.uint64)
+        t2 = np.sort(rng.integers(0, 2_000_000, n)).astype(np.uint64)
+        w = np.ones(n)
+        c = tttrlib.Correlator(n_bins=8, n_casc=6)
+        names = list(tttrlib.Correlator.correlation_method_names())
+        c.method = "direct_plugin"   # the %attributestring form of set_correlation_method
+        c.set_events(t1, w, t2, w)
+        c.run()
+        tau = np.asarray(c.x_axis, dtype=np.float64)
+        raw = np.asarray(c.get_corr(), dtype=np.float64)
+        g = np.asarray(c.get_corr_normalized(), dtype=np.float64)
+        # NumPy oracle for the raw pair count on the same bins
+        # half-open [tau_k, tau_k+1) bins on integer lags; np.histogram closes
+        # its last bin on the right, so shift the edges by half a tick
+        edges = np.append(tau, tau[-1] + (tau[-1] - tau[-2])) - 0.5
+        lags = (t2[None, :].astype(np.int64) - t1[:, None].astype(np.int64)).ravel()
+        lags = lags[lags >= 0]
+        oracle = np.histogram(lags, bins=edges)[0].astype(np.float64)
+        print(json.dumps({
+            "names": names,
+            "max_abs_diff_raw": float(np.max(np.abs(raw - oracle))),
+            "g_mean_tail": float(np.mean(g[8:])),
+            "n_tau": int(len(tau)),
+        }))
+    """, plugin_path=plugin_dir)
+    assert "direct_plugin" in out["names"]
+    assert "wahl" in out["names"] and "felekyan" in out["names"]
+    assert out["max_abs_diff_raw"] == 0.0
+    assert abs(out["g_mean_tail"] - 1.0) < 0.05
+
+
+def test_a_plugin_prior_kind_builds_from_json(plugin_dir):
+    """The sixth capability: a prior kind. ``DecayFitPrior.from_json`` finds
+    the plugin's ``laplace`` when its own table misses, and the object is a
+    real prior -- lnpdf, mode, residual, and a state that round-trips.
+    """
+    out = run_in_subprocess("""
+        import json, math, tttrlib
+        kinds = list(tttrlib.DecayFitPrior.kinds())
+        p = tttrlib.DecayFitPrior.from_json_string(json.dumps({"kind": "laplace", "mu": 1.5, "b": 0.5}))
+        xs = [-1.0, 0.0, 1.5, 3.0]
+        ln = [p.lnpdf(x) for x in xs]
+        expect = [-abs(x - 1.5) / 0.5 - math.log(2 * 0.5) for x in xs]
+        try:
+            tttrlib.DecayFitPrior.from_json_string(json.dumps({"kind": "laplace", "mu": 0.0, "b": -1.0}))
+            bad = None
+        except Exception as e:
+            bad = str(e)
+        print(json.dumps({
+            "kinds": kinds,
+            "kind": p.kind(),
+            "mode": p.mode(),
+            "max_abs_diff": max(abs(a - b) for a, b in zip(ln, expect)),
+            "state": json.loads(p.get_json()),
+            "bad": bad,
+        }))
+    """, plugin_path=plugin_dir)
+    assert "laplace" in out["kinds"] and "normal" in out["kinds"]
+    assert out["kind"] == "laplace"
+    assert out["mode"] == 1.5
+    assert out["max_abs_diff"] < 1e-12
+    assert out["state"] == {"kind": "laplace", "mu": 1.5, "b": 0.5}
+    assert out["bad"] is not None and "b must be > 0" in out["bad"]

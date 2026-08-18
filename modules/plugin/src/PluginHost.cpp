@@ -190,6 +190,8 @@ struct Journal {
     std::size_t decay_fits_before = 0;
     std::size_t burst_searches_before = 0;
     std::size_t operations_before = 0;
+    std::size_t correlation_methods_before = 0;
+    std::size_t decay_priors_before = 0;
 };
 
 struct HostState {
@@ -214,6 +216,12 @@ struct HostState {
     // self-describing analysis step; the host stores the table and publishes
     // it via operations_json(). The pipeline dispatches by name.
     std::vector<const tttrlib_operation_v1*> operations;
+
+    // Correlation kernels and prior kinds: plain tables too. The fcs and decay
+    // layers look a name up here when their own table misses, so nothing is
+    // pushed upward and nothing dangles when a failed plugin is rolled back.
+    std::vector<const tttrlib_correlation_method_v1*> correlation_methods;
+    std::vector<const tttrlib_decay_prior_v1*> decay_priors;
 };
 
 HostState& state() {
@@ -392,6 +400,47 @@ int host_register_operation(const tttrlib_operation_v1* o) noexcept {
     return TTTRLIB_OK;
 }
 
+int host_register_correlation_method(const tttrlib_correlation_method_v1* m) noexcept {
+    if (m == nullptr || m->struct_size < sizeof(tttrlib_correlation_method_v1) ||
+        m->name == nullptr || m->name[0] == '\0' || m->correlate == nullptr) {
+        host_set_error("register_correlation_method: incomplete table (name and "
+                       "correlate are required)");
+        return TTTRLIB_INVALID;
+    }
+    for (const tttrlib_correlation_method_v1* existing : state().correlation_methods) {
+        if (std::string(existing->name) == m->name) {
+            const std::string taken =
+                    std::string("register_correlation_method: the name '") + m->name +
+                    "' is already taken";
+            host_set_error(taken.c_str());
+            return TTTRLIB_INVALID;
+        }
+    }
+    state().correlation_methods.push_back(m);
+    return TTTRLIB_OK;
+}
+
+int host_register_decay_prior(const tttrlib_decay_prior_v1* p) noexcept {
+    if (p == nullptr || p->struct_size < sizeof(tttrlib_decay_prior_v1) ||
+        p->kind == nullptr || p->kind[0] == '\0' || p->create == nullptr ||
+        p->lnpdf == nullptr) {
+        host_set_error("register_decay_prior: incomplete table (kind, create "
+                       "and lnpdf are required)");
+        return TTTRLIB_INVALID;
+    }
+    for (const tttrlib_decay_prior_v1* existing : state().decay_priors) {
+        if (std::string(existing->kind) == p->kind) {
+            const std::string taken =
+                    std::string("register_decay_prior: the kind '") + p->kind +
+                    "' is already taken";
+            host_set_error(taken.c_str());
+            return TTTRLIB_INVALID;
+        }
+    }
+    state().decay_priors.push_back(p);
+    return TTTRLIB_OK;
+}
+
 const tttrlib_host_v1& host_table() {
     static const tttrlib_host_v1 host = {
         sizeof(tttrlib_host_v1),
@@ -403,6 +452,8 @@ const tttrlib_host_v1& host_table() {
         &host_register_decay_fit,
         &host_register_burst_search,
         &host_register_operation,
+        &host_register_correlation_method,
+        &host_register_decay_prior,
     };
     return host;
 }
@@ -421,6 +472,12 @@ void roll_back(const Journal& journal) {
     }
     if (state().operations.size() > journal.operations_before) {
         state().operations.resize(journal.operations_before);
+    }
+    if (state().correlation_methods.size() > journal.correlation_methods_before) {
+        state().correlation_methods.resize(journal.correlation_methods_before);
+    }
+    if (state().decay_priors.size() > journal.decay_priors_before) {
+        state().decay_priors.resize(journal.decay_priors_before);
     }
     for (const std::string& name : journal.container_names) {
         const FileFormat* f = IORegistry::by_name(name);
@@ -548,6 +605,8 @@ void load_one(PluginRecord& record) {
     journal.decay_fits_before = state().decay_fits.size();
     journal.burst_searches_before = state().burst_searches.size();
     journal.operations_before = state().operations.size();
+    journal.correlation_methods_before = state().correlation_methods.size();
+    journal.decay_priors_before = state().decay_priors.size();
     state().journal = &journal;
     state().error.clear();
 
@@ -751,6 +810,34 @@ const tttrlib_operation_v1* PluginHost::operation(const std::string& name) {
 const std::vector<const tttrlib_operation_v1*>& PluginHost::operations() {
     ensure_loaded();
     return state().operations;
+}
+
+// ── correlation methods / decay priors ───────────────────────────────
+
+const tttrlib_correlation_method_v1* PluginHost::correlation_method(const std::string& name) {
+    ensure_loaded();
+    for (const tttrlib_correlation_method_v1* m : state().correlation_methods) {
+        if (std::string(m->name) == name) return m;
+    }
+    return nullptr;
+}
+
+const std::vector<const tttrlib_correlation_method_v1*>& PluginHost::correlation_methods() {
+    ensure_loaded();
+    return state().correlation_methods;
+}
+
+const tttrlib_decay_prior_v1* PluginHost::decay_prior(const std::string& kind) {
+    ensure_loaded();
+    for (const tttrlib_decay_prior_v1* p : state().decay_priors) {
+        if (std::string(p->kind) == kind) return p;
+    }
+    return nullptr;
+}
+
+const std::vector<const tttrlib_decay_prior_v1*>& PluginHost::decay_priors() {
+    ensure_loaded();
+    return state().decay_priors;
 }
 
 std::string PluginHost::operations_json() {

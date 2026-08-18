@@ -327,7 +327,7 @@ public:
         // back an all-zero curve, which is how a misspelt "felekyan" became a
         // published flat correlation once. Refusing here is the cheaper lesson.
         if (cm.empty() || cm == "default") cm = "wahl";
-        if (correlation_methods().count(cm) == 0)
+        if (!has_correlation_method(cm))
             throw std::invalid_argument(
                 "Correlator: unknown correlation method '" + cm +
                 "'; registered: " + joined_correlation_method_names());
@@ -357,8 +357,11 @@ public:
     static std::map<std::string, CorrelationMethod>& correlation_methods();
     /// Add or replace a method. Not thread-safe against concurrent `run()`.
     static void register_correlation_method(const std::string& name, CorrelationMethod method);
-    /// Registered method names, sorted.
+    /// Registered method names, sorted: the built-in table plus every kernel a
+    /// drop-in plugin contributed (`tttrlib_correlation_method_v1`).
     static std::vector<std::string> correlation_method_names();
+    /// Whether `name` is a built-in or plugin method.
+    static bool has_correlation_method(const std::string& name);
     static std::string joined_correlation_method_names();
 
 

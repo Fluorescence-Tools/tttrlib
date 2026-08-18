@@ -195,6 +195,18 @@ public:
      * table. Entries carry ``"provider": "plugin"``.
      */
     static std::string operations_json();
+
+    // ── correlation methods / decay priors ─────────────────────────
+
+    /// The correlation kernel registered under \p name, or nullptr.
+    static const tttrlib_correlation_method_v1* correlation_method(const std::string& name);
+    /// Every correlation kernel a plugin registered, in registration order.
+    static const std::vector<const tttrlib_correlation_method_v1*>& correlation_methods();
+
+    /// The prior kind registered under \p kind, or nullptr.
+    static const tttrlib_decay_prior_v1* decay_prior(const std::string& kind);
+    /// Every prior kind a plugin registered, in registration order.
+    static const std::vector<const tttrlib_decay_prior_v1*>& decay_priors();
 };
 
 }  // namespace tttrlib

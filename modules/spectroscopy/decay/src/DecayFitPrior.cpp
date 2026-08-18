@@ -4,8 +4,10 @@
 // `from_json` factory live here, so DecayFitPrior.h needs
 // <nlohmann/json_fwd.hpp> rather than the ~41k preprocessed lines of json.hpp.
 #include "DecayFitPrior.h"
+#include "PluginHost.h"
 
 #include <nlohmann/json.hpp>
+#include <algorithm>
 
 json UniformPrior::to_json() const {
     return json{{"kind", kind()}, {"lb", lb_}, {"ub", ub_}};
@@ -97,9 +99,45 @@ void DecayFitPrior::register_kind(const std::string &kind, Factory factory) {
     kinds_table()[kind] = std::move(factory);
 }
 
+namespace {
+
+/*!
+ * A prior kind a drop-in plugin contributed (`tttrlib_decay_prior_v1`). One
+ * instance owns one plugin handle; the state that built it is kept verbatim
+ * so `to_json` round-trips whatever keys the plugin understands.
+ */
+class PluginPrior : public DecayFitPrior {
+public:
+    PluginPrior(const tttrlib_decay_prior_v1 *table, void *handle, json state)
+        : table_(table), handle_(handle), state_(std::move(state)) {}
+    ~PluginPrior() override {
+        if (table_->destroy) table_->destroy(handle_);
+    }
+    const char *kind() const override { return table_->kind; }
+    double lnpdf(double x) const override { return table_->lnpdf(handle_, x); }
+    double mode() const override { return table_->mode ? table_->mode(handle_) : 0.0; }
+    std::pair<double, double> support() const override {
+        if (!table_->support) return DecayFitPrior::support();
+        double lo = -kInf, hi = kInf;
+        if (table_->support(handle_, &lo, &hi) != TTTRLIB_OK) return DecayFitPrior::support();
+        return {lo, hi};
+    }
+    json to_json() const override { return state_; }
+
+private:
+    const tttrlib_decay_prior_v1 *table_;
+    void *handle_;
+    json state_;
+};
+
+}  // namespace
+
 std::vector<std::string> DecayFitPrior::kinds() {
     std::vector<std::string> out;
     for (const auto &kv : kinds_table()) out.push_back(kv.first);
+    for (const tttrlib_decay_prior_v1 *p : tttrlib::PluginHost::decay_priors())
+        if (kinds_table().count(p->kind) == 0) out.push_back(p->kind);
+    std::sort(out.begin(), out.end());
     return out;
 }
 
@@ -111,6 +149,16 @@ std::shared_ptr<DecayFitPrior> DecayFitPrior::from_json(const json &state) {
     const std::string kind = state.at("kind").get<std::string>();
     auto it = kinds_table().find(kind);
     if (it == kinds_table().end()) {
+        // Not built in: a plugin may own the kind. Looked up per call, so a
+        // plugin rolled back after a failed init is simply not found.
+        if (const tttrlib_decay_prior_v1 *p = tttrlib::PluginHost::decay_prior(kind)) {
+            const std::string payload = state.dump();
+            void *handle = nullptr;
+            if (p->create(p->ctx, payload.c_str(), &handle) != TTTRLIB_OK || handle == nullptr)
+                throw std::invalid_argument("prior kind '" + kind + "' (plugin) refused its state: " +
+                                            tttrlib::PluginHost::last_error());
+            return std::make_shared<PluginPrior>(p, handle, state);
+        }
         std::string known;
         for (const auto &k : kinds()) { if (!known.empty()) known += ", "; known += k; }
         throw std::invalid_argument("unknown prior kind '" + kind + "'; registered: " + known);
