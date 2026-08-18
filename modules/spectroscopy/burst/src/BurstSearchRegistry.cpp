@@ -805,8 +805,12 @@ void register_builtin_burst_searches() {
 namespace {
 const char* const kBurstSelectionEntry = R"JSON({
   "name": "burst_selection",
-    "method": "burst_search_by_name",
-    "api": ["TTTR.burst_search_by_name", "TTTR.burst_search", "BurstFilter"],
+  "method": "burst_search_by_name",
+  "api": [
+    "TTTR.burst_search_by_name",
+    "TTTR.burst_search",
+    "BurstFilter"
+  ],
   "label": "Burst search and selection",
   "summary": "Sliding-window / CUSUM / Kalman / Bayesian-blocks burst search on TTTR macro-times. Produces the primary .bur burst table.",
   "operation_type": "burst_selection",
@@ -843,54 +847,72 @@ const char* const kBurstSelectionEntry = R"JSON({
   "settings_schema": {
     "type": "object",
     "properties": {
-      "threshold_khz": {
-        "type": "number",
-        "default": 30.0,
-        "unit": "kHz"
+      "algorithm": {
+        "type": "string",
+        "title": "Search",
+        "default": "sliding_window",
+        "description": "Name of a registered burst search (registry(\"burst_search\")); its own parameters follow."
       },
-      "l_min": {
+      "L": {
         "type": "integer",
-        "default": 30,
+        "title": "Minimum photons",
+        "default": 20,
         "minimum": 1
       },
-      "m_min": {
+      "m": {
         "type": "integer",
-        "default": 5,
+        "title": "Photons for the local rate",
+        "default": 10,
         "minimum": 1
       },
-      "t_window_ms": {
+      "T": {
         "type": "number",
-        "default": 0.5,
-        "unit": "ms"
-      },
-      "routing_channels": {
-        "type": "array",
-        "items": {
-          "type": "integer"
-        },
-        "default": [
-          0,
-          1
-        ]
-      },
-      "microtime_ranges": {
-        "type": "array",
-        "items": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "default": [
-          [
-            0,
-            4096
-          ]
-        ]
+        "title": "Time separation of m photons",
+        "default": 0.0005,
+        "unit": "s"
       }
-    }
+    },
+    "required": [
+      "algorithm"
+    ]
   },
-  "can_replay": true
+  "can_replay": true,
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "algorithm": {
+        "type": "string",
+        "title": "Search",
+        "default": "sliding_window",
+        "description": "Name of a registered burst search (registry(\"burst_search\")); its own parameters follow."
+      },
+      "L": {
+        "type": "integer",
+        "title": "Minimum photons",
+        "default": 20,
+        "minimum": 1
+      },
+      "m": {
+        "type": "integer",
+        "title": "Photons for the local rate",
+        "default": 10,
+        "minimum": 1
+      },
+      "T": {
+        "type": "number",
+        "title": "Time separation of m photons",
+        "default": 0.0005,
+        "unit": "s"
+      }
+    },
+    "required": [
+      "algorithm"
+    ]
+  },
+  "positional": [
+    "algorithm"
+  ],
+  "description": "Sliding-window / CUSUM / Kalman / Bayesian-blocks burst search on TTTR macro-times. Produces the primary .bur burst table.\n\nParameters are those of `TTTR.burst_search_by_name(algorithm, **params)`: the name of a registered search plus that search's own parameters (the `burst_search` category describes each). Until 2026-08-18 this entry declared `threshold_khz` / `l_min` / `m_min` / `t_window_ms`, which matched no callable in the library -- they were the hand-authored literal's names, so a caller building a call from them got a TypeError. Restricting the search to routing channels is a separate step (`photon_selection`), not a parameter here: the selection happens before the search, and a document that hid it inside the search would replay on the whole stream."
 })JSON";
 }  // namespace
 

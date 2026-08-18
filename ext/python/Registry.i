@@ -203,6 +203,15 @@ def compose(*steps):
                 kwargs = dict(kwargs or {})
             else:
                 args, kwargs = ((value,) if value is not None else ()), {}
+            call = {**params, **kwargs}
+            # Parameters the entry declares POSITIONAL are passed as arguments,
+            # in the declared order: `burst_search_by_name(algorithm, /, **rest)`
+            # cannot take its first argument by keyword, and a document that
+            # carries every parameter by name would otherwise not run.
+            leading = []
+            for key in (entry.get("positional") or []):
+                if key in call:
+                    leading.append(call.pop(key))
             if isinstance(target, tuple):        # (class, method): value is the instance
                 cls, attr = target
                 if args and isinstance(args[0], cls):
@@ -211,9 +220,9 @@ def compose(*steps):
                     raise TypeError(
                         f"step {name!r} is a method of {cls.__name__}; the pipeline's "
                         f"value must be a {cls.__name__} instance (got {type(args[0]).__name__ if args else 'nothing'})")
-                value = getattr(instance, attr)(*args, **{**params, **kwargs})
+                value = getattr(instance, attr)(*leading, *args, **call)
             else:
-                value = target(*args, **{**params, **kwargs})
+                value = target(*args, *leading, **call)
         return value
 
     run.steps = [name for name, _, _, _ in prepared]

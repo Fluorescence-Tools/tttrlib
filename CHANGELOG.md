@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+- **A pipeline document is executable, not just readable.** A step's `params`
+  are now the ARGUMENTS of the call it names: `burst_selection` declares
+  `algorithm` / `L` / `m` / `T` (what `TTTR.burst_search_by_name` takes), an
+  entry can mark parameters `positional` (that call takes `algorithm`
+  positionally), a channel restriction is its own `photon_selection` step
+  because it happens before the search, and provenance-only keys (the parent
+  run hash, the mmfdb `tttrlib_operation` marker) are kept out of `params`.
+  Until now the `burst_selection` entry advertised `threshold_khz` / `l_min` /
+  `m_min` / `t_window_ms`, which matched no callable in the library -- a
+  consumer building a call from the registry got a `TypeError`. A step that
+  genuinely needs wiring (BVA over a burst table) now fails with a message
+  naming the adapter instead of a traceback from inside a proxy.
 - **`tttr sm` writes the pipeline that produced its output**, and can run one.
   The `.pto` it writes carries a replayable document under
   `_mmfdb_workflow.definition` (search plus the companions that actually ran:

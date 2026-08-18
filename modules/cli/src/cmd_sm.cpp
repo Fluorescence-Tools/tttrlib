@@ -678,13 +678,41 @@ json pipeline_document(const std::string& input_path,
     json software = {{"package", "tttrlib"}, {"version", version}};
     json steps = json::array();
 
-    json search_params = search_settings;
-    search_params["tttrlib_operation"] = "burst_selection";
+    // A channel restriction is applied BEFORE the search, so it is its own
+    // step. Hiding it in the search's parameters would make a replay run on
+    // the whole stream and quietly find other bursts.
+    std::string previous = "raw";
+    if (search_settings.contains("channels")) {
+        steps.push_back({{"id", "photon_selection"},
+                         {"operation", "photon_selection"},
+                         {"operation_type", "filtering"},
+                         {"params", {{"channels", search_settings["channels"]}}},
+                         {"inputs", {{"photons", "raw"}}},
+                         {"outputs", json::object()},
+                         {"python", "tttrlib.pipeline:run_step"},
+                         {"software", software}});
+        previous = "photon_selection";
+    }
+
+    // The step's parameters are the ones `burst_selection` DECLARES -- the
+    // arguments of `TTTR.burst_search_by_name(algorithm, **params)` -- not the
+    // .bur settings names used for the per-artifact `settings_json` tag. A
+    // document is only replayable if its parameters are the call's.
+    json search_params = json::object();
+    search_params["algorithm"] = search_settings.value("method", std::string("sliding_window"));
+    if (search_settings.contains("min_photons"))
+        search_params["L"] = search_settings["min_photons"];
+    if (search_settings.contains("rate_window"))
+        search_params["m"] = search_settings["rate_window"];
+    if (search_settings.contains("time_separation"))
+        search_params["T"] = search_settings["time_separation"];
     steps.push_back({{"id", "burst_selection"},
                      {"operation", "burst_selection"},
                      {"operation_type", "burst_selection"},
                      {"params", search_params},
-                     {"inputs", {{"photons", "raw"}}},
+                     {"inputs", {{"photons", previous == "raw"
+                                                 ? std::string("raw")
+                                                 : previous + ".output"}}},
                      {"outputs", json::object()},
                      {"python", "tttrlib.pipeline:run_step"},
                      {"software", software}});
@@ -706,8 +734,12 @@ json pipeline_document(const std::string& input_path,
 json pipeline_step(const std::string& id, const std::string& operation,
                    const std::string& operation_type, const json& settings,
                    const std::string& after) {
+    // The document's `params` are the step's ARGUMENTS. The run identity of
+    // the burst list a companion was computed over is provenance, and it is
+    // already stated as the step's input, so it does not belong here -- a
+    // replay would pass a hash where a number goes.
     json params = settings;
-    params["tttrlib_operation"] = operation;
+    params.erase("bursts");
     return json{{"id", id},
                 {"operation", operation},
                 {"operation_type", operation_type},
@@ -1065,12 +1097,30 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
                 return 1;
             }
             for (const auto& step : doc.value("steps", json::array())) {
+                if (step.value("operation", std::string()) == "photon_selection") {
+                    const json params = step.value("params", json::object());
+                    if (params.contains("channels")) {
+                        channels.clear();
+                        for (const auto& c : params["channels"]) {
+                            if (!channels.empty()) channels += ",";
+                            channels += std::to_string(c.get<int>());
+                        }
+                    }
+                    continue;
+                }
                 if (step.value("operation", std::string()) != "burst_selection") continue;
                 const json params = step.value("params", json::object());
-                if (params.contains("method")) method = params["method"].get<std::string>();
-                if (params.contains("min_photons")) L = params["min_photons"].get<int>();
-                if (params.contains("rate_window")) m = params["rate_window"].get<int>();
-                if (params.contains("time_separation"))
+                // The declared names (`algorithm`, `L`, `m`, `T`) are what a
+                // document written from 2026-08-18 carries; the `.bur` settings
+                // names are what the earlier ones did, and both still run.
+                if (params.contains("algorithm")) method = params["algorithm"].get<std::string>();
+                else if (params.contains("method")) method = params["method"].get<std::string>();
+                if (params.contains("L")) L = params["L"].get<int>();
+                else if (params.contains("min_photons")) L = params["min_photons"].get<int>();
+                if (params.contains("m")) m = params["m"].get<int>();
+                else if (params.contains("rate_window")) m = params["rate_window"].get<int>();
+                if (params.contains("T")) T = params["T"].get<double>();
+                else if (params.contains("time_separation"))
                     T = params["time_separation"].get<double>();
                 if (params.contains("channels")) {
                     channels.clear();

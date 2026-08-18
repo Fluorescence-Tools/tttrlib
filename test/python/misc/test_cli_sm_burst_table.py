@@ -820,8 +820,10 @@ def test_the_container_carries_the_pipeline_that_produced_it(two_detector):
     pipeline = tttrlib.Pipeline.from_pto(str(pto))
     operations = [s["operation"] for s in pipeline.steps]
     assert "burst_selection" in operations
-    params = pipeline.steps[0]["params"]
-    assert params["method"] and params["min_photons"] and params["rate_window"]
+    # The step's parameters are the ARGUMENTS of the call it names, so the
+    # document is replayable rather than merely descriptive.
+    params = next(s for s in pipeline.steps if s["operation"] == "burst_selection")["params"]
+    assert params["algorithm"] and params["L"] and params["m"] and params["T"]
     document = pipeline.to_dict()
     assert document["software"]["package"] == "tttrlib"
     assert document["sources"]["raw"]["path"].endswith(".spc")
@@ -835,8 +837,14 @@ def test_the_companions_it_computed_are_steps_of_the_document(two_detector):
     pipeline = tttrlib.Pipeline.from_pto(str(pto))
     operations = [s["operation"] for s in pipeline.steps]
     assert "bva" in operations and "kde_cde" in operations
-    for step in pipeline.steps[1:]:
-        assert step["inputs"] == {"bursts": "burst_selection.output"}
+    for step in pipeline.steps:
+        if step["operation"] in ("bva", "kde_cde"):
+            assert step["inputs"] == {"bursts": "burst_selection.output"}
+    # A channel restriction is applied before the search, so it is its own
+    # step and the search reads that step's output.
+    if any(s["operation"] == "photon_selection" for s in pipeline.steps):
+        search = next(s for s in pipeline.steps if s["operation"] == "burst_selection")
+        assert search["inputs"] == {"photons": "photon_selection.output"}
 
 
 def test_write_pipeline_emits_the_recipe_without_reading_the_data(sim_file, tmp_path):
@@ -848,8 +856,9 @@ def test_write_pipeline_emits_the_recipe_without_reading_the_data(sim_file, tmp_
          "--write-pipeline", str(recipe))
     document = json.loads(recipe.read_text())
     assert document["format"] == "tttrlib.pipeline"
-    assert document["steps"][0]["params"]["min_photons"] == 45
-    assert document["steps"][0]["params"]["rate_window"] == 7
+    search = next(s for s in document["steps"] if s["operation"] == "burst_selection")
+    assert search["params"]["L"] == 45
+    assert search["params"]["m"] == 7
     # and it is a pipeline tttrlib can read back
     assert tttrlib.Pipeline.from_json(recipe.read_text()).steps[0]["operation"] \
         == "burst_selection"
@@ -862,8 +871,9 @@ def test_a_run_from_a_recipe_uses_the_recipes_parameters(sim_file, tmp_path):
          "--write-pipeline", str(recipe))
     _run("sm", str(sim_file), "--pipeline", str(recipe), "--output", str(out))
     written = tttrlib.Pipeline.from_pto(str(out))
-    assert written.steps[0]["params"]["min_photons"] == 45
-    assert written.steps[0]["params"]["rate_window"] == 7
+    search = next(s for s in written.steps if s["operation"] == "burst_selection")
+    assert search["params"]["L"] == 45
+    assert search["params"]["m"] == 7
 
 
 def test_a_run_can_be_repeated_from_the_container_it_produced(sim_file, tmp_path):
@@ -873,9 +883,10 @@ def test_a_run_can_be_repeated_from_the_container_it_produced(sim_file, tmp_path
     first, second = tmp_path / "first.pto", tmp_path / "second.pto"
     _run("sm", str(sim_file), "--min-photons", "40", "--output", str(first))
     _run("sm", str(sim_file), "--pipeline", str(first), "--output", str(second))
-    a = tttrlib.Pipeline.from_pto(str(first)).steps[0]["params"]
-    b = tttrlib.Pipeline.from_pto(str(second)).steps[0]["params"]
-    assert a == b
+    def search_of(path):
+        pipeline = tttrlib.Pipeline.from_pto(str(path))
+        return next(s for s in pipeline.steps if s["operation"] == "burst_selection")["params"]
+    assert search_of(first) == search_of(second)
 
 
 def test_a_pipeline_from_a_newer_format_is_refused(sim_file, tmp_path):
@@ -891,3 +902,23 @@ def test_a_pipeline_from_a_newer_format_is_refused(sim_file, tmp_path):
                             capture_output=True, text=True, env=env)
     assert result.returncode != 0
     assert "newer than this tttrlib understands" in result.stderr
+
+
+def test_the_document_of_a_run_executes_without_adapters(sim_file, tmp_path):
+    """The recipe is executable, not only readable: `Pipeline.run(tttr)` on the
+    document a run wrote reproduces that run's burst search exactly. This is
+    what `params` being the call's ARGUMENTS buys."""
+    import tttrlib
+    out = tmp_path / "run.pto"
+    _run("sm", str(sim_file), "--min-photons", "25", "--rate-window", "8",
+         "--output", str(out))
+    pipeline = tttrlib.Pipeline.from_pto(str(out))
+    search = next(s for s in pipeline.steps if s["operation"] == "burst_selection")
+
+    data = tttrlib.TTTR(str(sim_file))
+    replayed = np.asarray(tttrlib.compose((search["operation"], search["params"],
+                                           lambda t: ((t,), {})))(data))
+    direct = np.asarray(data.burst_search_by_name(
+        search["params"]["algorithm"], L=search["params"]["L"],
+        m=search["params"]["m"], T=search["params"]["T"]))
+    assert np.array_equal(replayed, direct)

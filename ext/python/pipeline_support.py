@@ -373,9 +373,23 @@ class Pipeline:
         import tttrlib
         adapters = dict(adapters or {})
         composed = tttrlib.compose(*[
-            (s["operation"], s.get("params", {}), adapters.get(s["id"]))
+            (s["operation"],
+             # `tttrlib_operation` is how the mmfdb form carries the operation
+             # name inside `params`; it is a marker, never an argument.
+             {k: v for k, v in s.get("params", {}).items() if k != "tttrlib_operation"},
+             adapters.get(s["id"]))
             for s in self.steps])
-        return composed(value)
+        try:
+            return composed(value)
+        except (TypeError, ValueError) as error:
+            # A step whose input is not simply the previous output needs an
+            # adapter, and saying which one is the difference between a
+            # fixable message and a traceback out of a SWIG proxy.
+            raise type(error)(
+                f"{error}\n\nA step of {self.name!r} could not be called with the "
+                f"previous value alone. Give it an adapter: "
+                f"run(value, adapters={{'<step id>': lambda previous: ((args...), {{}})}}). "
+                f"Steps: {[s['id'] for s in self.steps]}") from error
 
     def describe(self):
         """One line per step: what it is, and what implements it."""
@@ -407,11 +421,15 @@ def run_step(ctx):
     """
     import tttrlib
     params = dict(getattr(ctx, "params", None) or ctx["params"])
-    operation = params.pop("tttrlib_operation")
+    operation = params.pop("tttrlib_operation")   # the mmfdb marker, not a parameter
     inputs = getattr(ctx, "inputs", None) or ctx.get("inputs", {})
     value = next(iter(inputs.values())) if inputs else None
+    entry = tttrlib.describe(operation)
+    leading = [params.pop(key) for key in (entry.get("positional") or []) if key in params]
     target = tttrlib.resolve(operation)
     if isinstance(target, tuple):
         cls, attr = target
-        return getattr(value, attr)(**params)
-    return target(value, **params) if value is not None else target(**params)
+        return getattr(value, attr)(*leading, **params)
+    if value is not None:
+        return target(value, *leading, **params)
+    return target(*leading, **params)
