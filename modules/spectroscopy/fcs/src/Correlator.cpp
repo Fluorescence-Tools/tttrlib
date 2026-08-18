@@ -4,9 +4,14 @@
 #include "Verbose.h"
 #include "info.h"
 
+// The registry this module registers its correlation methods and its
+// burst_fcs operation in. NOT inside the _OPENMP guard below: a build without
+// OpenMP (macOS CI) then compiled this file with no registry declared, and
+// every registration became "no member named ... in namespace tttrlib".
+#include "Registry.h"
+
 // OpenMP for parallel processing
 #ifdef _OPENMP
-#include "Registry.h"
 #include <omp.h>
 #endif
 

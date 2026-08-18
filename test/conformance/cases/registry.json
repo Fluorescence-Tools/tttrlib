@@ -4,9 +4,9 @@
   "cases": [
     {
       "id": "registry.categories",
-      "doc": "The categories, in the order the registry lists them. Every algorithm family the library exposes registers itself into one of these; a binding that serves fewer categories is missing entries that exist.",
+      "doc": "The categories, in the order the registry lists them: the historical ones first, then the rest alphabetically -- NOT registration order, which is static-initialiser order and therefore link order, and differs between the Python extension, the R package and the JNI library. Every algorithm family the library exposes registers itself into one of these; a binding that serves fewer categories is missing entries that exist.",
       "steps": [{"op": "registry.categories", "as": "cats"}, {"op": "len", "on": "cats", "as": "n"}],
-      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective", "operation", "fcs", "hmm", "pda", "prior", "correlation_method", "histogram", "selection", "calibration", "math", "burst", "decay", "simulation", "kinetics", "fluctuation", "corrections", "clsm", "superres", "localization"], "n": 26}
+      "expect": {"cats": ["burst_search", "file_container", "table_format", "plugin", "fit", "fit_setup", "objective", "operation", "fcs", "hmm", "pda", "prior", "correlation_method", "burst", "calibration", "clsm", "corrections", "decay", "fluctuation", "histogram", "kinetics", "localization", "math", "selection", "simulation", "superres"], "n": 26}
     },
     {
       "id": "registry.live_algorithm_categories",

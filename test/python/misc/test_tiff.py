@@ -18,6 +18,12 @@ SUPPORTED_DTYPES = [
     np.float32, np.float64,
 ]
 
+try:                       # tifffile can WRITE lzw but needs imagecodecs to READ it
+    import imagecodecs      # noqa: F401
+    HAVE_IMAGECODECS = True
+except Exception:           # pragma: no cover - environment dependent
+    HAVE_IMAGECODECS = False
+
 COMPRESSIONS = ["none", "lzw", "packbits"]
 
 
@@ -255,6 +261,8 @@ def test_squeeze_false_keeps_single_page_3d(tmp_path):
 @pytest.mark.parametrize("dtype", SUPPORTED_DTYPES)
 @pytest.mark.parametrize("compression", COMPRESSIONS)
 def test_tifffile_reads_what_we_write(tmp_path, dtype, compression):
+    if compression == "lzw" and not HAVE_IMAGECODECS:
+        pytest.skip("tifffile needs imagecodecs to DECODE lzw (writing is ours)")
     tifffile = pytest.importorskip("tifffile")
     path = str(tmp_path / "ours.tif")
     arr = _sample(dtype, (3, 17, 23))

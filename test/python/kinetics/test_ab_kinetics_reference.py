@@ -23,6 +23,9 @@ an independent NumPy transcription of the published likelihood.
 import unittest
 
 import numpy as np
+
+# numpy 2 renamed `trapz` to `trapezoid`; the suite runs on both.
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 from scipy.linalg import expm, null_space
 
 import tttrlib
@@ -254,7 +257,7 @@ class TestSimKineticsAgainstExpm(unittest.TestCase):
         fr = np.asarray(tttrlib.sim_occupation_fractions(k, 2, T, n, [1.0, 0.0], 3)).reshape(n, 2)
         # (1/T) int_0^T expm(Q t) p0 dt by fine quadrature
         tt = np.linspace(0, T, 2001)
-        ref = np.trapz(np.array([expm(Q * t) @ np.array([1.0, 0.0]) for t in tt]), tt, axis=0) / T
+        ref = _trapezoid(np.array([expm(Q * t) @ np.array([1.0, 0.0]) for t in tt]), tt, axis=0) / T
         se = fr.std(axis=0) / np.sqrt(n)
         self.assertTrue(np.all(np.abs(fr.mean(axis=0) - ref) < 5 * se), f"{fr.mean(axis=0)} vs {ref}")
 

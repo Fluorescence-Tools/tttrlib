@@ -420,6 +420,7 @@ class TestKalmanBurstSearchWarmUp(unittest.TestCase):
         np.testing.assert_array_equal(legacy[1:], warm)
 
 
+@unittest.skipUnless(HAVE_CHISURF, "ChiSurf (installed or ../chisurf) needed for the Kalman detector")
 class TestKalmanBurstSearchAgainstChisurfDetector(unittest.TestCase):
     """``burst_search_kalman`` vs ChiSurf's ``KalmanBurstDetector.detect`` on
     the same bins -- an independent implementation (numpy filter, run

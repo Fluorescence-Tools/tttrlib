@@ -422,6 +422,7 @@ class TestKmeansUniformHelpers(unittest.TestCase):
             tttrlib.kmeans(x, 4, tttrlib.kmeans_uniforms(4, 1, seed=11), 2, 100, 1e-9)
 
 
+@unittest.skipUnless(HAVE_SKLEARN, "scikit-learn not installed")
 class TestKmeansAgainstSklearn(unittest.TestCase):
     """`KMeans(algorithm="lloyd", n_init=1, tol=0)` from a given `init` runs the
     same Lloyd recursion until the labels stop changing; tttrlib with a tiny

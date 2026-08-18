@@ -374,13 +374,21 @@ json build() {
     // algorithm, fit model, setup block, objective and pipeline operation
     // registered itself there (next to its code), and so did every plugin
     // capability when the plugin host loaded it. Nothing is spliced.
-    // Category order is part of the surface (the conformance suite pins it):
-    // the historical order first, then anything new in first-registration order.
+    // Category order is part of the surface (the conformance suite pins it, and
+    // it must be the same in all four bindings): the historical order first,
+    // then everything else ALPHABETICALLY. Not registration order -- entries
+    // register from static initialisers, so that is link order, and it differs
+    // between the Python extension, the R package and the JNI library. The
+    // first push pinned it and the R/Java/JS conformance runs disagreed at
+    // category 13.
     std::vector<std::string> capabilities = {"fit", "fit_setup", "objective", "operation",
                                              "fcs", "hmm", "pda", "prior", "correlation_method"};
+    std::vector<std::string> rest;
     for (const std::string& c : tttrlib::algorithm_capabilities())
         if (std::find(capabilities.begin(), capabilities.end(), c) == capabilities.end())
-            capabilities.push_back(c);
+            rest.push_back(c);
+    std::sort(rest.begin(), rest.end());
+    capabilities.insert(capabilities.end(), rest.begin(), rest.end());
     for (const std::string& capability : capabilities) {
         json entries = json::parse(tttrlib::algorithms_json(capability));
         if (entries.empty()) continue;

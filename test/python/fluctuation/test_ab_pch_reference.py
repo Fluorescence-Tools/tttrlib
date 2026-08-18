@@ -37,6 +37,9 @@ import sys
 import unittest
 
 import numpy as np
+
+# numpy 2 renamed `trapz` to `trapezoid`; the suite runs on both.
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 from scipy import integrate, special, stats
 
 import tttrlib
@@ -86,7 +89,7 @@ class TestPchOpenSystemAgainstTheCompoundPoissonModel(unittest.TestCase):
         lam = eps * np.exp(-2.0 * x * x)
 
         def E(xi):
-            return avg_n * np.trapz((np.exp((xi[:, None] - 1.0) * lam[None, :]) - 1.0) * (x * x)[None, :], dx=dx, axis=1)
+            return avg_n * _trapezoid((np.exp((xi[:, None] - 1.0) * lam[None, :]) - 1.0) * (x * x)[None, :], dx=dx, axis=1)
         return _pgf_pmf(k_max, E)
 
     def test_matches_an_independent_pgf_inversion(self):
