@@ -51,41 +51,136 @@ import_array();
 %include "jsarrays.i"
 #endif
 
-// Templates
+// Templates. A split Python module other than `core` defines
+// TTTRLIB_TEMPLATES_IMPORTED: it then instantiates each of these NAMELESSLY
+// (`%template() ...`), which emits the traits/typemaps its own wrappers need
+// without a second proxy class; the proxies (VectorDouble, ...) exist once, in
+// core, and are found through the shared SWIG type table at run time.
 #if !defined(SWIGR) && !defined(SWIGJAVASCRIPT)
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(SetInt32) std::set<int>;  // std::set unsupported by SWIG's R and JavaScript libraries
+#else
+%template() std::set<int>;  // std::set unsupported by SWIG's R and JavaScript libraries
+#endif
 #endif
 
 // Vector templates
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorBool) std::vector<bool>;
+#else
+%template() std::vector<bool>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorDouble) std::vector<double>;
+#else
+%template() std::vector<double>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorFloat) std::vector<float>;
+#else
+%template() std::vector<float>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorInt16) std::vector<short>;
+#else
+%template() std::vector<short>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorInt32) std::vector<int>;
+#else
+%template() std::vector<int>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
+%template(VectorUint8) std::vector<unsigned char>;
+#else
+%template() std::vector<unsigned char>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
+%template(VectorUint16) std::vector<unsigned short>;
+#else
+%template() std::vector<unsigned short>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
+%template(VectorInt8) std::vector<signed char>;
+#else
+%template() std::vector<signed char>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorInt64) std::vector<long long>;
+#else
+%template() std::vector<long long>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorUint32) std::vector<unsigned int>;
+#else
+%template() std::vector<unsigned int>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorUint64) std::vector<unsigned long>;
+#else
+%template() std::vector<unsigned long>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorUint128) std::vector<unsigned long long>;
+#else
+%template() std::vector<unsigned long long>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorUint32_3D) std::vector<std::vector<std::vector<unsigned int>>>;
+#else
+%template() std::vector<std::vector<std::vector<unsigned int>>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorDouble_2D) std::vector<std::vector<double>>;
+#else
+%template() std::vector<std::vector<double>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapShortVectorDouble) std::map<short, std::vector<double>>;
+#else
+%template() std::map<short, std::vector<double>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapStringString) std::map<std::string, std::string>;
+#else
+%template() std::map<std::string, std::string>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapIntVectorFloat) std::map<int, std::vector<float>>;
+#else
+%template() std::map<int, std::vector<float>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapIntInt) std::map<int, int>;
+#else
+%template() std::map<int, int>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapSignedCharInt) std::map<signed char, int>;
+#else
+%template() std::map<signed char, int>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorString) std::vector<std::string>;
+#else
+%template() std::vector<std::string>;
+#endif
 
 
 
 // swig::from is provided by the Python and R std_vector runtimes but not by Java
 // or JavaScript; exclude these overrides there so they use the default
 // std::vector wrapping (JavaScript overrides it in ext/js/jsarrays.i instead).
+// The fragment names matter: a custom typemap that calls swig::from must say
+// which traits it needs, or a module that never instantiates the vector by
+// name (the split Python extensions import their templates from core) gets
+// `no member named 'type_name' in swig::traits<long long>` at compile time.
 #if !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT)
-%typemap(out) std::vector< long long,std::allocator< long long > > * {
+%typemap(out, fragment=SWIG_Traits_frag(std::vector< long long,std::allocator< long long > >)) std::vector< long long,std::allocator< long long > > * {
 $result = swig::from(static_cast<std::vector< long long,std::allocator< long long > > >(*($1)));
 }
 
-%typemap(out) std::vector< long long > {
+%typemap(out, fragment=SWIG_Traits_frag(std::vector< long long,std::allocator< long long > >)) std::vector< long long > {
 $result = swig::from($1);
 }
 #endif
@@ -93,10 +188,26 @@ $result = swig::from($1);
 // Pair templates. A vector of pairs needs its element type instantiated
 // first: without it SWIG leaves value_type opaque and the generated Java
 // and JavaScript code does not compile.
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(PairInt) std::pair<int,int>;
+#else
+%template() std::pair<int,int>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(PairInt64) std::pair<long long, long long>;
+#else
+%template() std::pair<long long, long long>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorPairInt) std::vector<std::pair<int,int>>;
+#else
+%template() std::vector<std::pair<int,int>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorPairInt64) std::vector<std::pair<long long, long long>>;
+#else
+%template() std::vector<std::pair<long long, long long>>;
+#endif
 
 // With SWIGWORDSIZE64 (Linux, see ext/CMakeLists.txt) int64_t is 'long' and
 // therefore a different type than the 'long long' containers above.
@@ -117,9 +228,21 @@ $result = swig::from($1);
 // state the one typedef this platform needs. 'long' is what SWIGWORDSIZE64
 // means, and it keeps int64_t distinct from the 'long long' containers above.
 typedef long int64_t;
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorInt64T) std::vector<int64_t>;
+#else
+%template() std::vector<int64_t>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(PairInt64T) std::pair<int64_t, int64_t>;
+#else
+%template() std::pair<int64_t, int64_t>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(VectorPairInt64T) std::vector<std::pair<int64_t, int64_t>>;
+#else
+%template() std::vector<std::pair<int64_t, int64_t>>;
+#endif
 #endif
 
 #if !defined(SWIGJAVA) && !defined(SWIGJAVASCRIPT) && defined(SWIGWORDSIZE64)
@@ -134,8 +257,16 @@ $result = swig::from(static_cast<std::vector< int64_t,std::allocator< int64_t > 
 $result = swig::from(static_cast< std::vector< int64_t,std::allocator< int64_t > > >($1));
 }
 #endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(PairVectorDouble) std::pair<std::vector<double>, std::vector<double>>;
+#else
+%template() std::pair<std::vector<double>, std::vector<double>>;
+#endif
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(PairVectorInt64) std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
+#else
+%template() std::pair<std::vector<unsigned long long>, std::vector<unsigned long long>>;
+#endif
 
 /*---------------------*/
 // Generic numpy arrays
@@ -224,4 +355,8 @@ $result = swig::from(static_cast< std::vector< int64_t,std::allocator< int64_t >
 
 
 // ---- Additional STL templates for maps (avoid duplicate int64_t pair specializations) ----
+#ifndef TTTRLIB_TEMPLATES_IMPORTED
 %template(MapStringInt) std::map<std::string,int>;
+#else
+%template() std::map<std::string,int>;
+#endif

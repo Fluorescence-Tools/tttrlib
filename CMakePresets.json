@@ -26,6 +26,15 @@
     },
 
     {
+      "name": "dev-split",
+      "inherits": "dev",
+      "displayName": "Developer build, Python bindings as four extensions",
+      "description": "Like dev, with TTTRLIB_PYTHON_SPLIT=ON: core / formats / kernels / spectroscopy / imaging / sim compile in parallel and a fragment change rebuilds one of them (ext/python/split/README.md).",
+      "binaryDir": "${sourceDir}/build/dev-split",
+      "cacheVariables": { "TTTRLIB_PYTHON_SPLIT": "ON" }
+    },
+
+    {
       "name": "debug",
       "inherits": "base",
       "displayName": "Debug build (warnings on, VERBOSE_TTTRLIB)",
@@ -71,6 +80,7 @@
 
   "buildPresets": [
     { "name": "dev", "configurePreset": "dev" },
+    { "name": "dev-split", "configurePreset": "dev-split" },
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
     { "name": "lib-only", "configurePreset": "lib-only" },

@@ -186,12 +186,9 @@
 %template(PtoCueVector) std::vector<tttrlib::io::PtoCue>;
 
 // A payload crosses as bytes: Python has the typemaps above, JavaScript gets a
-// Uint8Array from jsarrays.i. Java and R have neither, and wrap nothing else
-// that instantiates this -- Sim.i does, and neither of them includes it -- so
-// without this `read` hands them an opaque proxy of the payload they asked for.
-#if defined(SWIGJAVA) || defined(SWIGR)
-%template(VectorUint8) std::vector<unsigned char>;
-#endif
+// Uint8Array from jsarrays.i, Java and R the VectorUint8 proxy that
+// misc_types.i now instantiates for every language (it used to live in Sim.i,
+// which neither of them includes, with a Java/R-only copy here).
 
 #ifdef SWIGPYTHON
 %pythoncode %{

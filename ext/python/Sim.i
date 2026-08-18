@@ -19,10 +19,8 @@
 
 %include "stdint.i"
 
-// Extra std::vector instantiations not already provided by misc_types.i.
-%template(VectorUint8)  std::vector<unsigned char>;
-%template(VectorUint16) std::vector<unsigned short>;
-%template(VectorInt8)   std::vector<signed char>;
+// VectorUint8 / VectorUint16 / VectorInt8 moved to misc_types.i (2026-08-18):
+// HMM's state sidecar and the split Python modules need them without Sim.i.
 
 // Hide raw-pointer overloads; Python uses the vector/convenience forms instead.
 %ignore tttrlib::SimMicrotimeEncoder::encode;                 // use SimEngine.encode(...)

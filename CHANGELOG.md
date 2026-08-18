@@ -48,6 +48,15 @@
   `dirichlet_variates(alpha, key, counter, n)` return the draws.
 
 ### Added
+- **`TTTRLIB_PYTHON_SPLIT` (CMake option, preset `dev-split`): the Python
+  bindings as six extensions** -- `tttrlib.core`, `.formats`, `.kernels`,
+  `.spectroscopy`, `.imaging`, `.sim` -- that `%import` each other over one shared SWIG type table and are
+  re-exported flat by `__init__.py`, so `tttrlib.TTTR` and every other name are
+  unchanged. They compile in parallel and a fragment change rebuilds one of
+  them (a `Sim.i` edit: ~45 s instead of the whole 3-minute monolithic wrapper).
+  Off by default until the wheel CI has run with it; `ext/python/split/README.md`
+  documents the design and the traps. The parity guard keeps the four fragment
+  lists identical to the monolith's.
 - **`max_tree_1d(levels)`** -- the 1-D component tree the max-tree burst
   search filters, as an `(n_nodes, 4)` array `[level, lo, hi, parent]`;
   identical to scikit-image's `max_tree` component set and 11x faster.

@@ -58,9 +58,41 @@ def read_exceptions():
     return out
 
 
+def check_split_modules(python):
+    """The split Python extensions (ext/python/split/mod_*.i, TTTRLIB_PYTHON_SPLIT)
+    must wrap exactly the fragments the monolithic ext/python/tttrlib.i wraps --
+    each once. A fragment added to one list and not the other is a Python API
+    that exists in one build mode only."""
+    split_dir = ROOT / "ext" / "python" / "split"
+    seen = {}
+    for mod in sorted(split_dir.glob("mod_*.i")):
+        for name in includes(mod):
+            if name in ("split/common.i", "misc_types.i", "info.h", "documentation.i", "stdint.i"):
+                continue
+            seen.setdefault(name, []).append(mod.name)
+    problems = []
+    for name in python:
+        if name in ("misc_types.i", "info.h", "documentation.i"):   # common.i carries these
+            continue
+        if name not in seen:
+            problems.append(f"{name}: in ext/python/tttrlib.i but in no split module")
+    for name, mods in seen.items():
+        if name not in python:
+            problems.append(f"{name}: in {', '.join(mods)} but not in ext/python/tttrlib.i")
+        if len(mods) > 1:
+            problems.append(f"{name}: wrapped by more than one split module ({', '.join(mods)})")
+    return problems
+
+
 def main():
     python = includes(ROOT / "ext" / "python" / "tttrlib.i")
     exceptions = read_exceptions()
+    split_problems = check_split_modules(python)
+    if split_problems:
+        print("split Python modules disagree with ext/python/tttrlib.i:", file=sys.stderr)
+        for p in split_problems:
+            print("   " + p, file=sys.stderr)
+        return 1
 
     undeclared, declared = [], set()
     for binding in BINDINGS:

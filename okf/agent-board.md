@@ -103,9 +103,10 @@ are still claims and still binding.
     `recipes/py/build.{sh,bat}`, `.github/workflows/ci.yml`.
 
 - **T-20260818-02 · [tttrlib] Split `core` further: `io` and `math` off it**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Status: ✅ done (same session, 2026-08-18: `mod_formats.i`, `mod_kernels.i`; core
+    157k → 110k wrapper lines; parity guard green; suite run pending commit)
+  - Owner: `fable-5/11a5046b`
+  - Opened: 2026-08-18 · Picked: 2026-08-18 · Done: 2026-08-18
   - Why: `core` is 157k of the 312k wrapper lines, so a change to a core
     fragment still costs a ~2-minute serial compile+LTO link while the other
     three finish in parallel. The file formats (Pto/Store/Csv/Hdf5/Table/

@@ -1,0 +1,77 @@
+"""tttrlib -- time-tagged time-resolved data.
+
+The Python API is flat: every class and function of the split extension
+modules (core, formats, kernels, spectroscopy, imaging, sim) is re-exported here.
+The two are not named io / math: the proxies' own `import io`, `import math`
+would otherwise be copied over the submodule attributes.
+"""
+from __future__ import annotations
+import sys
+import warnings
+
+if sys.version_info[0] < 3:
+    from importlib_metadata import version
+else:
+    from importlib.metadata import version
+
+try:
+    __version__ = version(__package__ or __name__)
+except Exception:
+    __version__ = "0.0.0"
+
+
+class ExperimentalWarning(UserWarning):
+    """Warning for experimental features."""
+    pass
+
+
+def mark_experimental(cls, message=None):
+    """Mark a class as experimental by patching its __init__ and docstring."""
+    if message is None:
+        message = (
+            "This class is experimental and may change or be removed in a future "
+            "release. Use with caution."
+        )
+    
+    original_init = cls.__init__ if hasattr(cls, '__init__') else None
+    
+    def __init__(*args, **kwargs):
+        warnings.warn(
+            f"{cls.__name__}: {message}",
+            ExperimentalWarning,
+            stacklevel=2
+        )
+        if original_init is not None:
+            return original_init(*args, **kwargs)
+    
+    cls.__init__ = __init__
+    cls.__experimental__ = True
+    
+    if cls.__doc__:
+        cls.__doc__ = f".. warning:: Experimental\n\n{cls.__doc__}"
+    else:
+        cls.__doc__ = f".. warning:: Experimental\n\n{message}"
+    
+    return cls
+
+
+def experimental(cls):
+    """Decorator to mark a class as experimental."""
+    return mark_experimental(cls)
+
+
+from . import core, formats, kernels, spectroscopy, imaging, sim   # noqa: E402  (dependency order)
+
+# Flat re-export of the four extensions' names -- exactly what the single-module
+# package used to expose, including the underscore-prefixed native entry points
+# the helpers and the conformance runner call (`_tiff_write_f64`,
+# `_write_csv_native`, ...). Only SWIG's own machinery and the C-module handles
+# stay behind. Not `import *`: a helper pasted into a proxy may define
+# `__all__` for its own file and would silently narrow it.
+_PRIVATE = {"_core", "_formats", "_kernels", "_spectroscopy", "_imaging", "_sim", "_tttrlib"}
+for _mod in (core, formats, kernels, spectroscopy, imaging, sim):
+    for _name, _value in vars(_mod).items():
+        if _name.startswith("__") or _name.startswith("_swig") or _name.startswith("_Swig") or _name in _PRIVATE:
+            continue
+        globals()[_name] = _value
+del _mod, _name, _value, _PRIVATE

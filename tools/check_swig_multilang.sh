@@ -49,6 +49,18 @@ mkdir -p "$OUT/py"
 swig -c++ -python "${INCLUDES[@]}" -outdir "$OUT/py" -o "$OUT/py/w.cxx" ext/python/tttrlib.i
 echo "   OK"
 
+# The split Python extensions (TTTRLIB_PYTHON_SPLIT; ext/python/split/README.md)
+# wrap the same fragments as four %modules that %import each other. They break
+# in ways the monolith cannot -- a fragment missing from a module, a template
+# only imported, a helper naming the wrong C module -- so generate all four too.
+echo "== split Python wrappers =="
+for m in core formats kernels spectroscopy imaging sim; do
+  mkdir -p "$OUT/py_$m"
+  swig -c++ -python "${INCLUDES[@]}" -Iext/python -outdir "$OUT/py_$m" \
+       -o "$OUT/py_$m/w.cxx" "ext/python/split/mod_$m.i"
+done
+echo "   OK"
+
 # The Python wrapper is the reference: adding or changing a binding for another
 # language must not perturb it. Hash it here and re-check at the end, after every
 # other backend has run over the same shared fragments.

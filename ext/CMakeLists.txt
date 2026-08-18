@@ -107,179 +107,148 @@ IF(BUILD_PYTHON_INTERFACE)
     # os.add_dll_directory to point at, and no plugins/ directory. It is also
     # what recipes/py/build.sh already reassembles by hand after installing.
     set(TTTRLIB_PY_PACKAGE_DIR "${MY_INSTALL_PREFIX}/tttrlib")
-    SET_SOURCE_FILES_PROPERTIES(python/tttrlib.i PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${PROJECT_NAME})
-
-    # Ensure SWIG reruns when any of the included interface or helper Python files change.
-    file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i")
+    # One function configures one Python SWIG extension; the monolith calls it
+    # once, the split (TTTRLIB_PYTHON_SPLIT) once per split module. Everything
+    # target-specific that used to be inline lives here so both paths agree.
+    #
+    #   IFACE       the .i (relative to ext/)
+    #   TARGET      the CMake target / C extension name (`tttrlib` or `_core`)
+    #   MODULE      the SWIG %module name (`tttrlib` or `core`)
+    file(GLOB SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/*.i" "${CMAKE_CURRENT_SOURCE_DIR}/python/split/*.i")
     list(REMOVE_ITEM SWIG_INTERFACE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/python/tttrlib.i")
-    file(GLOB SWIG_PYTHON_HELPERS
-            "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py"
-    )
-    # Exclude the generated wrapper (lives in the build directory, not the source tree)
+    file(GLOB SWIG_PYTHON_HELPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/*.py")
     list(FILTER SWIG_PYTHON_HELPERS EXCLUDE REGEX ".*/tttrlib.py$")
-
     set(SWIG_DEPENDENCIES "${SWIG_INTERFACE_FILES};${SWIG_PYTHON_HELPERS}")
-    if(SWIG_DEPENDENCIES)
-        list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
+    list(REMOVE_DUPLICATES SWIG_DEPENDENCIES)
+
+    function(tttrlib_add_python_swig_module IFACE TARGET MODULE)
+        SET_SOURCE_FILES_PROPERTIES(${IFACE} PROPERTIES CPLUSPLUS ON SWIG_MODULE_NAME ${MODULE})
         # NB: SWIG_MODULE_DEPENDS is NOT a property UseSWIG reads -- it was silently
         # ignored, so editing a .i (or a header) never regenerated the wrapper and a
         # cached build directory could ship a stale one. UseSWIG.cmake consumes the
         # SWIG_MODULE_<name>_EXTRA_DEPS variable (and the target's SWIG_DEPENDS).
-        set(SWIG_MODULE_${MODULE_NAME}_EXTRA_DEPS ${SWIG_DEPENDENCIES})
-    endif()
-    # Better still: let swig compute implicit dependencies itself, which also covers
-    # the C++ headers pulled in by %include. Requires CMake >= 3.20 (this project
-    # declares 3.13), hence the explicit list above as a fallback.
-    set_property(SOURCE python/tttrlib.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
-    # Release the GIL around every wrapped C++ call (-threads): a long
-    # correlation, burst search or file read must not freeze every other
-    # Python thread -- a GUI heartbeat, a progress bar, a second reader.
-    # Typemap code still runs with the GIL held; the two %extend methods
-    # whose C++ BODIES call the Python C-API are marked nothread in
-    # Localization.i.
-    set_property(SOURCE python/tttrlib.i APPEND PROPERTY COMPILE_OPTIONS -threads)
+        # Better still: let swig compute implicit dependencies itself (-MD), which
+        # also covers the C++ headers pulled in by %include and -- for the split
+        # modules -- means touching Sim.i regenerates `sim` alone rather than all
+        # four. Requires CMake >= 3.20; the explicit glob is the fallback below it.
+        if(CMAKE_VERSION VERSION_LESS "3.20")
+            set(SWIG_MODULE_${TARGET}_EXTRA_DEPS ${SWIG_DEPENDENCIES})
+        else()
+            set_property(SOURCE ${IFACE} PROPERTY USE_SWIG_DEPENDENCIES TRUE)
+        endif()
+        # Release the GIL around every wrapped C++ call (-threads): a long
+        # correlation, burst search or file read must not freeze every other
+        # Python thread -- a GUI heartbeat, a progress bar, a second reader.
+        # Typemap code still runs with the GIL held; the two %extend methods
+        # whose C++ BODIES call the Python C-API are marked nothread in
+        # Localization.i.
+        set_property(SOURCE ${IFACE} APPEND PROPERTY COMPILE_OPTIONS -threads)
+        SWIG_ADD_LIBRARY(${TARGET} TYPE MODULE LANGUAGE python SOURCES ${IFACE})
+        # Link the modules rather than recompiling every source into the wrapper.
+        tttrlib_link_all_modules(${TARGET})
+        # -Wfree-nonheap-object, on the generated wrapper only: GCC 14 warns on every
+        # SWIG wrapper whose function takes a defaulted container by const reference
+        # (`if (SWIG_IsNewObj(res5)) delete arg5;` on a stack temporary). It cannot
+        # fire -- res5 gains the NEWOBJ bit only on the heap path -- and four false
+        # sites per Python version are enough to bury a real one in our own code.
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(${TARGET} PRIVATE -Wno-free-nonheap-object)
+        endif()
+        # The wrapper itself still needs the OpenMP include dirs and flags: it
+        # includes the project headers, and info.h reaches for <omp.h>.
+        if(WITH_OPENMP AND OpenMP_CXX_FOUND)
+            target_include_directories(${TARGET} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
+            # OpenMP_CXX_FLAGS is a *string*; on AppleClang it is two words
+            # ("-Xclang -fopenmp"), so split it the way a shell would.
+            separate_arguments(_tttrlib_omp_cxx_flags NATIVE_COMMAND "${OpenMP_CXX_FLAGS}")
+            target_compile_options(${TARGET} PRIVATE ${_tttrlib_omp_cxx_flags})
+        endif()
+        # Force correct Python extension suffix for auditwheel compatibility
+        if(Python3_EXECUTABLE)
+            execute_process(
+                COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO') or '.so')"
+                OUTPUT_VARIABLE PYTHON_EXT_SUFFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+            if(PYTHON_EXT_SUFFIX)
+                set_target_properties(${TARGET} PROPERTIES SUFFIX "${PYTHON_EXT_SUFFIX}")
+            endif()
+        endif()
+        # The extension loads its module libraries from its own directory, so it
+        # needs the rpath in EVERY build: the conda package installs the same
+        # layout into site-packages/tttrlib/.
+        tttrlib_set_sibling_rpath(${TARGET})
+        # One SWIG runtime type table for every tttrlib extension, and for those
+        # only: the split modules hand each other TTTR, VectorDouble, ... through
+        # it (that is what makes `tttrlib.sim` accept a `tttrlib.core.TTTR`),
+        # while a foreign SWIG module imported first (IMP, for one) must not own
+        # the entry for std::vector<double> -- an import-order-dependent
+        # TypeError that reads as unrelated.
+        TARGET_COMPILE_DEFINITIONS(${TARGET} PRIVATE SWIG_TYPE_TABLE=tttrlib)
+        TARGET_LINK_LIBRARIES(${TARGET} Python3::Module ${CMAKE_THREAD_LIBS_INIT})
+        # A Python extension is a MODULE library, so the OpenMP link flags in
+        # CMAKE_EXE_LINKER_FLAGS never reach it; link the runtime explicitly or
+        # the module fails at *import* on macOS ("symbol not found in flat
+        # namespace '___kmpc_barrier'").
+        IF(OpenMP_CXX_FOUND)
+            TARGET_LINK_LIBRARIES(${TARGET} OpenMP::OpenMP_CXX)
+        ENDIF()
+        # On macOS, use dynamic lookup for Python symbols: plain dynamic_lookup,
+        # NOT -flat_namespace (that would let a foreign libtttrlib shadow ours).
+        IF (APPLE)
+            SET_TARGET_PROPERTIES(${TARGET} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+        ENDIF()
+        INSTALL(TARGETS ${TARGET}
+                COMPONENT bindings
+                LIBRARY DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
+                ARCHIVE DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
+                RUNTIME DESTINATION ${TTTRLIB_PY_PACKAGE_DIR})
+        get_property(_wrapper_py TARGET ${TARGET} PROPERTY SWIG_SUPPORT_FILES)
+        set(TTTRLIB_PY_WRAPPER_${TARGET} "${_wrapper_py}" PARENT_SCOPE)
+        add_custom_target(${TARGET}_python_wrapper DEPENDS ${_wrapper_py}
+                COMMENT "Regenerate SWIG-generated Python wrapper ${_wrapper_py}")
+    endfunction()
 
     # Fix file path on Windows systems
     FILE(TO_CMAKE_PATH "${CMAKE_SWIG_OUTDIR}" CMAKE_SWIG_OUTDIR)
     MESSAGE(STATUS "CMAKE_SWIG_OUTDIR: '${CMAKE_SWIG_OUTDIR}'")
-    MESSAGE(STATUS "SWIG_SUPPORT_FILES_DIRECTORY: '${SWIG_SUPPORT_FILES_DIRECTORY}'")
     MESSAGE(STATUS "MY_INSTALL_PREFIX: '${MY_INSTALL_PREFIX}'")
-    SWIG_ADD_LIBRARY(
-            ${MODULE_NAME}
-            TYPE MODULE
-            LANGUAGE python
-            SOURCES python/tttrlib.i
-    )
-    # Link the modules rather than recompiling every source into the wrapper.
-    # The same glob used to be handed to this target, to the R target, to the
-    # Java target and to both library targets, so src/ was compiled up to five
-    # times per configure.
-    tttrlib_link_all_modules(${MODULE_NAME})
 
-    # -Wfree-nonheap-object, on the generated wrapper only.
-    #
-    # GCC 14 warns on every SWIG wrapper whose function takes a defaulted
-    # container by const reference -- CLSMImage::fill, fida_pch, DecayFit2 and
-    # one TTTR constructor. SWIG puts the default in a stack temporary
-    # (`arg5_defvalue`), points `arg5` at it, and ends the wrapper with
-    # `if (SWIG_IsNewObj(res5)) delete arg5;`. GCC cannot see that the guard and
-    # the pointer are correlated, so it reports the delete as freeing a stack
-    # object.
-    #
-    # It cannot fire. `res5` starts as `SWIG_OLDOBJ`, which is `SWIG_OK`, and
-    # `SWIG_IsNewObj(r)` is `SWIG_IsOK(r) && (r & SWIG_NEWOBJMASK)` -- false
-    # without the mask bit. `res5` only gains that bit from `swig::asptr` on the
-    # path where an argument was supplied, and there `arg5` is the heap pointer.
-    #
-    # Scoped to this target and never to ours: the same warning on a file we
-    # wrote would be a real double-free, and four false sites per Python version
-    # are enough to bury it.
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${MODULE_NAME} PRIVATE -Wno-free-nonheap-object)
-    endif()
-
-    # The wrapper itself still needs the OpenMP include dirs and flags: it
-    # includes the project headers, and info.h reaches for <omp.h>.
-    if(WITH_OPENMP AND OpenMP_CXX_FOUND)
-        target_include_directories(${MODULE_NAME} PRIVATE ${OpenMP_CXX_INCLUDE_DIRS})
-        # OpenMP_CXX_FLAGS is a *string*, and on AppleClang it is two words
-        # ("-Xclang -fopenmp"). target_compile_options treats each list element
-        # as one argument, so passing it unsplit hands clang the single argument
-        # "-Xclang -fopenmp" and every translation unit dies with
-        # "unknown argument". Split it the way a shell would.
-        separate_arguments(_tttrlib_omp_cxx_flags NATIVE_COMMAND "${OpenMP_CXX_FLAGS}")
-        target_compile_options(${MODULE_NAME} PRIVATE ${_tttrlib_omp_cxx_flags})
-    endif()
-
-    # Force correct Python extension suffix for auditwheel compatibility
-    if(Python3_EXECUTABLE)
-        execute_process(
-            COMMAND ${Python3_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO') or '.so')"
-            OUTPUT_VARIABLE PYTHON_EXT_SUFFIX
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        if(PYTHON_EXT_SUFFIX)
-            MESSAGE(STATUS "Setting Python extension suffix to: ${PYTHON_EXT_SUFFIX}")
-            set_target_properties(${MODULE_NAME} PROPERTIES SUFFIX "${PYTHON_EXT_SUFFIX}")
+    # The split interfaces live one directory down and %include the fragments
+    # by bare name, so python/ must be on SWIG's include path (the monolith found
+    # them relative to itself).
+    LIST(APPEND CMAKE_SWIG_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/python)
+    OPTION(TTTRLIB_PYTHON_SPLIT "Build the Python bindings as six extensions (core, formats, kernels, spectroscopy, imaging, sim) that compile in parallel instead of one 290k-line wrapper" OFF)
+    if(TTTRLIB_PYTHON_SPLIT)
+        set(TTTRLIB_PY_SPLIT_MODULES core formats kernels spectroscopy imaging sim)
+        set(_all_wrappers "")
+        foreach(_m IN LISTS TTTRLIB_PY_SPLIT_MODULES)
+            # Target name == %module name: UseSWIG derives the C extension's file
+            # name (and the proxy's `import _core`) from the target, so `core`
+            # yields `_core.<abi>.so`; a target named `_core` would give `__core`.
+            tttrlib_add_python_swig_module(python/split/mod_${_m}.i ${_m} ${_m})
+            list(APPEND _all_wrappers ${TTTRLIB_PY_WRAPPER_${_m}})
+            INSTALL(FILES ${TTTRLIB_PY_WRAPPER_${_m}} DESTINATION ${TTTRLIB_PY_PACKAGE_DIR} COMPONENT bindings)
+        endforeach()
+        # The four extensions register into one type table at import time, but the
+        # proxies of one module refer to another's by `import tttrlib.core`, so
+        # __init__.py imports them in dependency order and re-exports flat.
+        INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/split/__init__.py.in
+                DESTINATION ${TTTRLIB_PY_PACKAGE_DIR} RENAME __init__.py COMPONENT bindings)
+        add_custom_target(python_wrapper DEPENDS ${_all_wrappers})
+        # Compatibility with scripts that address the monolith's target names.
+        add_custom_target(${MODULE_NAME} DEPENDS core formats kernels spectroscopy imaging sim)
+    else()
+        tttrlib_add_python_swig_module(python/tttrlib.i ${MODULE_NAME} ${PROJECT_NAME})
+        set(WRAPPER_PY_FILE ${TTTRLIB_PY_WRAPPER_${MODULE_NAME}})
+        INSTALL(FILES ${WRAPPER_PY_FILE}
+                DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
+                RENAME __init__.py
+                COMPONENT bindings)
+        if(NOT TARGET python_wrapper)
+            add_custom_target(python_wrapper DEPENDS ${MODULE_NAME}_python_wrapper)
         endif()
     endif()
 
-    # The extension now loads its module libraries from its own directory, so it
-    # needs the rpath in EVERY build, not only wheel builds: the conda package
-    # installs the same layout into site-packages/tttrlib/.
-    tttrlib_set_sibling_rpath(${MODULE_NAME})
-
-    # Keep the SWIG runtime type table private to this module. SWIG modules
-    # otherwise share one process-global table, and whichever registers a common
-    # type such as std::vector<double> first owns the entry -- so a proxy created
-    # here stops matching a by-value argument of that type as soon as another SWIG
-    # extension (IMP, for one) is imported first. The failure is import-order
-    # dependent and reads as an unrelated TypeError. Nothing here is meant to be
-    # exchanged with another SWIG module, so a private table costs nothing.
-    TARGET_COMPILE_DEFINITIONS(${MODULE_NAME} PRIVATE SWIG_TYPE_TABLE=tttrlib)
-
-    TARGET_LINK_LIBRARIES(
-            ${MODULE_NAME}
-            Python3::Module
-            ${CMAKE_THREAD_LIBS_INIT}
-    )
-    # The OpenMP link flags reach the top-level CMAKE_EXE_LINKER_FLAGS only, and
-    # a Python extension is a MODULE library rather than an executable, so it
-    # never saw them: the module compiled with -fopenmp but linked without the
-    # runtime. The R and Java modules below always linked OpenMP explicitly; do
-    # the same here. Without this the module fails at *import* rather than at
-    # link time on macOS, where the dynamic-lookup flag below lets the
-    # unresolved OpenMP symbols through ("symbol not found in flat namespace
-    # '___kmpc_barrier'"), which forced every downstream build to inject
-    # -lomp by hand.
-    IF(OpenMP_CXX_FOUND)
-        TARGET_LINK_LIBRARIES(${MODULE_NAME} OpenMP::OpenMP_CXX)
-    ENDIF()
-    # On macOS, use dynamic lookup for Python symbols
-    IF (APPLE)
-        # Plain dynamic_lookup, NOT -flat_namespace. Both let the Python symbols
-        # stay unresolved until the interpreter loads the extension, which is the
-        # only thing needed here -- but flat namespace is process-wide: it merges
-        # every loaded image into one symbol namespace, so a plugin (or any other
-        # extension) that statically links its own zlib or libtiff can interpose
-        # on the copies tttrlib bundles, and which definition wins depends on load
-        # order. That is a bad property for a library that is about to start
-        # loading third-party binaries on purpose.
-        SET_TARGET_PROPERTIES(${MODULE_NAME} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
-    ENDIF()
-
-    # =======
-    # Install
-    # =======
-    # Get the autogenerated Python file
-    get_property(WRAPPER_PY_FILE
-            TARGET ${MODULE_NAME}
-            PROPERTY SWIG_SUPPORT_FILES)
-
-    # Install the autogenerated Python file as the package's __init__.py
-    INSTALL(FILES ${WRAPPER_PY_FILE}
-            DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
-            RENAME __init__.py
-            COMPONENT bindings)
-
-    # Where the module libraries go depends on who is packaging.
-    #
-    # A wheel must be self-contained, so they sit beside the extension inside
-    # tttrlib/ and @loader_path / $ORIGIN finds them. (pyproject.toml already
-    # passes -DCMAKE_INSTALL_LIBDIR=tttrlib for exactly this.)
-    #
-    # A conda package must NOT do that. conda-build rewrites install names and
-    # rpaths in post-processing on the assumption that shared libraries live in
-    # $PREFIX/lib: it turns the extension's `@loader_path` into
-    # `@loader_path/../../..`, which from site-packages/tttrlib/ is $PREFIX/lib.
-    # Installing the modules next to the extension there produces a package that
-    # builds and packages cleanly and then fails at `import tttrlib` with the
-    # library not found -- which is exactly what happened. Put them where
-    # conda-build's rewriting already points.
-    #
-    # COMPONENT bindings is load-bearing either way: pyproject.toml installs only
-    # that component, so a module installed without it yields a wheel that
-    # builds, repairs and uploads cleanly and then ImportErrors.
     include(GNUInstallDirs)
     if(SKBUILD OR DEFINED ENV{SKBUILD})
         set(TTTRLIB_MODULE_INSTALL_DIR "${TTTRLIB_PY_PACKAGE_DIR}")
@@ -301,25 +270,6 @@ IF(BUILD_PYTHON_INTERFACE)
             COMPONENT bindings)
 
     # Provide a lightweight target to regenerate only the SWIG-generated Python wrapper.
-    add_custom_target(${MODULE_NAME}_python_wrapper
-            DEPENDS ${WRAPPER_PY_FILE}
-            COMMENT "Regenerate SWIG-generated Python wrapper ${WRAPPER_PY_FILE}")
-
-    # Backward compatible alias so users can run: cmake --build <build-dir> --target python_wrapper
-    if(NOT TARGET python_wrapper)
-        add_custom_target(python_wrapper
-                DEPENDS ${MODULE_NAME}_python_wrapper)
-    endif()
-
-    # Install the SWIG library
-    INSTALL(TARGETS ${MODULE_NAME}
-            COMPONENT bindings
-            LIBRARY DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
-            ARCHIVE DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
-            RUNTIME DESTINATION ${TTTRLIB_PY_PACKAGE_DIR}
-    )
-
-    # Configure HDF5 DLL bundling for Windows wheels (when using h5py)
     if(BUILD_PHOTON_HDF AND HDF5_IS_FROM_H5PY AND WIN32)
         message(STATUS "Configuring HDF5 DLL bundling for Windows wheel")
 

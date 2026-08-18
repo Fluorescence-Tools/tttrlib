@@ -30,6 +30,18 @@ Two edges only the linker or the compiler found, not a reading of the headers:
 tables belong with `registry` and not `decay`; and `LayerNode.cpp` reaches into
 the CLSM hierarchy that `LayerNode.h` gives no hint of.
 
+## 1b. ~~One SWIG module for Python~~ -- split available (`TTTRLIB_PYTHON_SPLIT`, 2026-08-17)
+
+`ext/python/split/mod_{core,formats,kernels,spectroscopy,imaging,sim}.i` build six extensions
+that %import each other over one shared type table; `__init__.py.in` re-exports
+flat, so `tttrlib.TTTR` is unchanged. Measured on this machine (LTO on): a
+change to `Sim.i` rebuilds `sim` alone in ~45 s where the monolith took the
+whole 3 min; a change to a core fragment still rebuilds all four in parallel,
+bounded by `core` (110k of 334k wrapper lines after `formats` and `kernels` were split
+off it the same day; T-20260818-02 done). Default OFF until CI
+has run the wheel with it; the parity guard keeps both fragment lists identical.
+Design and the traps that cost time: `ext/python/split/README.md`.
+
 ## 2. `tttrlibShared` and `tttrlibStatic` still compile every source themselves
 
 The three SWIG targets now link the modules instead of recompiling the glob, so
