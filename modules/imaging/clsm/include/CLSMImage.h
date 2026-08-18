@@ -326,7 +326,6 @@ struct CLSMImageInfo {
 
 class CLSMImage {
 
-    friend class Correlator;
     friend class CLSMFrame;
     friend class CLSMLine;
     friend class CLSMPixel;

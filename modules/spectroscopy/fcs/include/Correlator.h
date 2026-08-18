@@ -32,12 +32,10 @@
 #include "CorrelatorPhotonStream.h"
 #include "CorrelatorCurve.h"
 
-class CLSMImage;
 
 class Correlator {
 
     friend class CorrelatorCurve;
-    friend class CLSMImage;
 
 private:
 

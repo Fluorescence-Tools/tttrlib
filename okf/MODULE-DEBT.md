@@ -138,12 +138,11 @@ also need `extern template`). Annotate `io_image` and `pda` first, `core` last.
 
 ## 6. Known cross-module reach-ins, to resolve as the modules land
 
-- `CLSMImage` <-> `Correlator` <-> `DecayPhasor` are mutual friends and include
-  each other's headers, so they are co-located in one `imaging` module -- CMake
-  will not accept a link cycle between shared libraries. This costs nothing in
-  the bindings: `tttrlib.Correlator` is named by its SWIG fragment, not by which
-  library it lives in. **Exit:** replace the three `friend` declarations with a
-  narrow accessor.
+- ~~`CLSMImage` <-> `Correlator` <-> `DecayPhasor` are mutual friends~~ --
+  gone 2026-08-18. `fcs` and `clsm` had long been separate libraries (clsm
+  depends on fcs, fcs only forward-declared CLSMImage); the two remaining
+  `friend` lines were dead -- CLSMImage reaches only public Correlator members
+  (`curve`, `get_corr*`, `set_tttr`) -- and are removed. No accessor was needed.
 - `TTTR` publishes the whole burst-search API as its own methods; the ten
   translation units that define those `TTTR::` members now live in `burst`
   (core's `libtttrlib_core.so` does not reference them), and the bindings

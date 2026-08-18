@@ -172,9 +172,16 @@ are still claims and still binding.
     `modules/plugin`.
 
 - **T-20260818-06 · [tttrlib] Debt 6: the `CLSMImage ↔ Correlator ↔ DecayPhasor` friend cycle and the five `TTTR::` burst TUs in core**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-18 · Picked: — · Done: —
+  - Status: ✅ done (friend cycle removed; burst members closed by decision)
+  - Owner: claude
+  - Opened: 2026-08-18 · Picked: 2026-08-18 · Done: 2026-08-18
+  - Result: the two cross-module `friend` lines were dead and are gone (fcs and
+    clsm were already separate libraries). The `TTTR::burst_*` members stay
+    members: their definitions live in `burst` (core has no burst code), the
+    C++/R/Java/JS API is unchanged, and `TTTRLIB_WITHOUT_BURST` hides them from
+    the bindings -- see the rationale at the head of
+    `modules/spectroscopy/burst/src/TTTRBurstSearch.cpp`. Free functions +
+    `%extend` would rename the C++ entry points for no consumer benefit.
   - Why: `okf/MODULE-DEBT.md` §6 — narrow accessors instead of `friend`; free
     functions taking `const TTTR&` with the methods kept as forwarders (SWIG
     `%extend` re-attaches them), so `burst` no longer has to live in `core`.
