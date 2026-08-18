@@ -159,7 +159,16 @@ aggregates and all four bindings (`-DTTTRLIB_WITHOUT_<NAME>` on the swig line,
 `#ifndef` guards around each fragment). `dev-sim`, `dev-clsm`, `dev-hmm`
 presets build and import. See `modules/README.md`.
 
-## 7. R and Java `%include` lists lag Python by 12 fragments
+## 7. ~~R and Java `%include` lists lag Python by 12 fragments~~ -- enforced by `tools/check_binding_parity.py`
+
+**Status 2026-08-18.** The four lists are compared on every
+`tools/check_swig_multilang.sh` run; a gap must be declared with a reason in
+`tools/binding_parity_exceptions.txt`, and a stale declaration fails the check.
+R and JS are at full parity (`DecayFitMLEWrapper.i` is commented out
+everywhere); Java's seven remaining gaps are all deliberate ARGOUTVIEWM cases
+with `_into` helpers in `ext/java/helpers.i` (documentation.i is a measured
+no-op). `HmmLattice.i` joined R/Java/JS today. The generated-list exit below
+was not needed. Original text kept.
 
 `ext/python/tttrlib.i` lists 30 fragments; `ext/r/tttrlib.i` and
 `ext/java/tttrlib.i` list 18 each while claiming in a comment to be identical, so

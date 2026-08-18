@@ -108,6 +108,8 @@
 /* Richardson-Lucy and Wiener deconvolution over the vendored FFT */
 %include "Deconvolution.i"
 %include "Jitter.i"
+/* the log-domain HMM lattice over a caller-supplied frame matrix */
+%include "HmmLattice.i"
 %include "Sampling.i"
 #endif
 #ifndef TTTRLIB_WITHOUT_HMM

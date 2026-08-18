@@ -78,6 +78,9 @@
 %include "NeuralNet.i"
 /* k-d tree nearest neighbours, and the mutual-reachability MST behind HDBSCAN */
 %include "Cluster.i"
+/* the log-domain HMM lattice: IN_ARRAY in, INPLACE buffers out -- the
+   preallocate-and-fill shape java can marshal */
+%include "HmmLattice.i"
 #endif
 /* Sampling.i is NOT here: sample_from_cdf returns through
    ARGOUTVIEWM_ARRAY1, and jarrays.i defines NO argout typemaps at any
