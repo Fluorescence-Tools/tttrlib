@@ -1,5 +1,24 @@
 # Bundle update log
 
+## 2026-08-18 (46th entry)
+
+* **The Python bindings as six SWIG extensions** (`TTTRLIB_PYTHON_SPLIT`, preset
+  `dev-split`; commit 4245cbd47): the plan's "N SWIG modules, not one" is real
+  -- core / formats / kernels / spectroscopy / imaging / sim over one shared
+  type table, flat re-export, opt-in until CI has shipped a wheel with it
+  (T-20260818-01). Getting there cost a day of SWIG traps, all written down in
+  `ext/python/split/README.md`: a split file that shares a fragment's name
+  includes itself on a case-insensitive disk; %import carries types but not
+  library fragments, `%{ #include %}` blocks or global `%exception` order;
+  templates must be instantiated (namelessly) where used; `import *` is not a
+  re-export; `io`/`math` cannot be submodule names. Measured: a leaf change
+  rebuilds one module (~45 s); a core change still rebuilds all six in
+  parallel, bounded by core (110k lines). Modularization TODO filed as
+  T-20260818-01..07; T-02 (`formats`/`kernels` off core) done in the same pass.
+* Also this session: `neyman_lsq`/`gehrels_lsq` were advertised objectives that
+  ran the Poisson likelihood -- fixed; MT19937 engine name ran Philox -- fixed;
+  BH `.set` TAC width; PicoHarp T3 markers (see entries 42-45).
+
 ## 2026-08-17 (45th entry)
 
 * **The last IO paths get outside references.** TIFF I/O vs tifffile in both
