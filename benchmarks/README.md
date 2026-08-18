@@ -48,6 +48,17 @@ every competitor), so the wall-clock numbers are directly comparable.
 | 2D-FDC | `fdc_scan_log` | Toru Kondo's `TK_Create2DFDC_04.m` in Octave | 4000 photons × 3 lags — **identical** |
 | CUSUM burst search | `TTTR.burst_search_cusum_sprt` | PAM `CUSUM_burstsearch` in Octave | 3.3k photons — behavioural (Jaccard ≥ 0.85) |
 
+
+## Layout
+
+| directory | what it holds |
+|---|---|
+| `competitors/` | one script per competing package, each run in its own uv venv (`.venvs/`, built by `build_envs.sh`) |
+| `results/` | the raw records, JSONL, one line per measurement (`results/shared/` holds the inputs every side reads) |
+| `plots/` | the figures `make_plots.py` regenerates from `results/` |
+| `hist/` | the histogram micro-benchmarks (C++), built separately |
+| `logs/` | stdout of the long competitor runs, kept so a number can be traced back to the run that produced it |
+
 ## Results
 
 Measured numbers — the comparison table, cross-version time/memory tracking, the

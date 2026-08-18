@@ -118,6 +118,16 @@ is the authority if this table ever falls behind.
 | *(files directly in `test/python/`)* | registry, settings, DataStore, table I/O | registry, io_csv, io_hdf5_table, io_store, io_pto |
 | `benchmarks/` | standalone perf scripts, not collected by pytest | -- |
 
+Beside `test/python/`:
+
+| directory | what it holds |
+|---|---|
+| `cpp/` | C++ tests and A/B harnesses a Python test compiles and drives: `test_ad_gradient.cpp` (forward-mode AD four ways), `test_decay_likelihood.cpp`, `ab_numerics_harness.cpp`, `ab_burst_harness.cpp`, `ab_simulation_harness.cpp`, and `burstml_mex_shim/` (the original FRET_burstML MEX, built natively as the reference) |
+| `data/` | reference fixtures (`reference/*.npz`), configs and small inputs the tests generate against |
+| `java/`, `r/`, `js/` | the other bindings' own tests |
+| `conformance/` | the one case list all four bindings run (see below) |
+| `tools/` | helpers the suite itself uses |
+
 `test/java/` and `test/r/` hold the bindings' own tests; see
 `tools/check_swig_multilang.sh` after changing any `.i` file.
 

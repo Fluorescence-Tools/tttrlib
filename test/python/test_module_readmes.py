@@ -110,6 +110,25 @@ def test_an_aggregate_readme_names_every_submodule(readme):
         f"{readme.relative_to(REPO)} does not list submodules: {missing}")
 
 
+TOP_LEVEL = {"test": ("cpp", "data", "java", "js", "r", "conformance", "tools"),
+             "benchmarks": ("competitors", "results", "plots", "hist", "logs"),
+             "doc": ("formats", "modules", "includes", "sphinxext", "logos", "img",
+                     "whats_new", "auto_examples")}
+
+
+@pytest.mark.parametrize("directory,subdirs", sorted(TOP_LEVEL.items()))
+def test_a_top_level_readme_lists_its_subdirectories(directory, subdirs):
+    """`test/`, `benchmarks/` and `doc/` are navigated the same way a module
+    is, so their READMEs carry the same obligation."""
+    readme = REPO / directory / "README.md"
+    if not readme.exists():
+        pytest.skip(f"{directory}/README.md does not exist")
+    text = readme.read_text()
+    missing = [d for d in subdirs
+               if (REPO / directory / d).is_dir() and d not in text]
+    assert not missing, f"{directory}/README.md does not list: {missing}"
+
+
 def test_every_module_directory_has_a_readme():
     """A module without a README is a module nobody can find their way into.
     `modules/README.md` states the rule; this enforces it."""
