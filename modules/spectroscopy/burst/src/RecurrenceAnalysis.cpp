@@ -141,6 +141,8 @@ std::vector<double> recurrence_efficiencies(
 namespace {
 const char* const kBurstFusionEntry = R"JSON({
   "name": "burst_fusion",
+    "method": "same_molecule_probability",
+    "api": ["same_molecule_probability", "recurrence_efficiencies", "pair_statistics"],
   "label": "Recurrence burst fusion",
   "summary": "Estimates same-molecule probability from inter-burst time gaps and fuses bursts from the same molecule passage (Hoffmann et al.).",
   "operation_type": "burst_fusion",
@@ -179,3 +181,75 @@ void register_operation_burst_fusion() {
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kRecurrenceAnalysisEntry = R"JSON({
+  "name": "recurrence_analysis",
+  "label": "Recurrence analysis of single particles (RASP)",
+  "summary": "Same-molecule probability from inter-burst gaps, and the FRET efficiency of bursts that recur within a time window after a burst of a chosen efficiency.",
+  "description": "Hoffmann et al.'s recurrence analysis: the distribution of gaps between consecutive bursts is compared with the Poisson expectation for independent molecules to give, per gap, the probability that two bursts came from the same molecule; `recurrence_efficiencies` then collects the efficiencies of bursts that follow an initial burst of efficiency in [e_min, e_max] within [dt_min, dt_max], which separates conformational dynamics from static heterogeneity without a fit. `pair_statistics` are the raw pair counts. The `burst_fusion` operation is built on this.",
+  "operation_type": "burst_fusion",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "tau_min": {
+        "type": "number",
+        "title": "Min gap (s)",
+        "default": 0.001
+      },
+      "tau_max": {
+        "type": "number",
+        "title": "Max gap (s)",
+        "default": 1.0
+      },
+      "n_bins": {
+        "type": "integer",
+        "title": "Gap bins",
+        "default": 50
+      },
+      "edge_correction": {
+        "type": "boolean",
+        "title": "Edge correction",
+        "default": true
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "burst_selection",
+      "fret_efficiency"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "Same-molecule probability",
+      "Recurrence efficiency"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Hoffmann, A., Nettels, D., Clark, J., Borgia, A., Radford, S. E., Clarke, J., Schuler, B.",
+      "title": "Quantifying heterogeneity and conformational dynamics from single molecule FRET of diffusing molecules: recurrence analysis of single particles (RASP)",
+      "journal": "Phys Chem Chem Phys",
+      "year": 2011,
+      "volume": "13",
+      "pages": "1857-1871"
+    }
+  ],
+  "api": [
+    "same_molecule_probability",
+    "recurrence_efficiencies",
+    "pair_statistics"
+  ],
+  "can_replay": true
+})JSON";
+bool register_recurrenceanalysis_entries() {
+    tttrlib::register_algorithm_json("burst", "recurrence_analysis", kRecurrenceAnalysisEntry);
+    return true;
+}
+const bool kRecurrenceAnalysisRegistered = register_recurrenceanalysis_entries();
+}  // namespace

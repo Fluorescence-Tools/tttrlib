@@ -10,6 +10,7 @@
  * Open-volume (FCS) population uses the legacy surface-flux injection (ported here).
  */
 #include "SimEngine.h"
+#include "Registry.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -1226,3 +1227,79 @@ std::string SimEngine::default_json() {
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPhotonSimulationEntry = R"JSON({
+  "name": "photon_simulation",
+  "label": "Photon-stream simulation (diffusion, kinetics, excitation, detection)",
+  "summary": "Simulates a TTTR photon stream: molecules diffusing through a focus, switching states by a rate matrix, excited by pulsed/ALEX lasers, emitting into detectors with lifetimes and anisotropy, encoded to any container.",
+  "description": "An event-driven simulator: Brownian (or flow) motion of species with per-state brightness, lifetimes and FRET, Gillespie state switching, excitation by one or more lasers (ALEX / PIE periods), emission into routing channels with micro times drawn from the state's decay convolved with an IRF, background, and scanner markers for imaging; the result is a `TTTR` or an encoded record stream, so every analysis in the library can be tested on known ground truth. Known-answer validated (dwell times, MSD = 6Dt, Poisson counts, r(t) Perrin) and cross-checked against PyBroMo for FCS.",
+  "operation_type": "simulation",
+  "method": "run",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_photons": {
+        "type": "integer",
+        "title": "Photons to simulate"
+      },
+      "duration_s": {
+        "type": "number",
+        "title": "Duration (s)"
+      },
+      "seed": {
+        "type": "integer",
+        "title": "Seed",
+        "default": 0
+      }
+    }
+  },
+  "outputs": {
+    "columns": [
+      "tttr_photon_stream"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Gillespie, D. T.",
+      "title": "Exact stochastic simulation of coupled chemical reactions",
+      "journal": "J Phys Chem",
+      "year": 1977,
+      "volume": "81",
+      "pages": "2340-2361"
+    }
+  ],
+  "api": [
+    "SimEngine",
+    "SimSystem",
+    "SimSpecies",
+    "SimState",
+    "SimDecay",
+    "SimEmitter",
+    "SimGrid",
+    "SimVectorGrid",
+    "SimIntegrator",
+    "SimScanner",
+    "SimMarkerConfig",
+    "SimMicrotimeEncoder",
+    "SimEncodedRecords",
+    "SimRandom",
+    "SimRandomV",
+    "SimRngState",
+    "sim_occupation_fractions",
+    "sim_state_at_times",
+    "sim_simd_backend",
+    "sim_simd_lanes"
+  ],
+  "can_replay": false
+})JSON";
+bool register_simengine_entries() {
+    tttrlib::register_algorithm_json("simulation", "photon_simulation", kPhotonSimulationEntry);
+    return true;
+}
+const bool kSimEngineRegistered = register_simengine_entries();
+}  // namespace

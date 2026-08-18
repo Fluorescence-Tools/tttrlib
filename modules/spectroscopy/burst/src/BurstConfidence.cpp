@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BurstConfidence.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -111,3 +112,73 @@ std::vector<double> TTTR::burst_confidence(
         times, bursts, header->get_macro_time_resolution(), background_window,
         static_cast<tttrlib::SignificanceMode>(significance_mode));
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBurstSignificanceEntry = R"JSON({
+  "name": "burst_significance",
+  "label": "Burst significance (Li & Ma, Poisson tails, trials correction)",
+  "summary": "How strongly the data supports each burst, in sigma, from its photons and the flanking background -- comparable across all burst searches.",
+  "description": "A post-hoc statistic computed from the burst boundaries and the photon stream, so it applies to the output of any burst search and means the same thing for all of them: the Gaussian (k-mu)/sqrt(mu), the exact Poisson upper tail, or Li & Ma's likelihood-ratio significance which accounts for the background being measured rather than known. `sigma_for_false_alarm_rate` converts an expected number of spurious bursts per second into a post-trials threshold, so one setting means the same on a 10 s and a 1 h acquisition. Li & Ma is the right choice at the ~20-photon counts bursts have.",
+  "operation_type": "validation",
+  "method": "burst_confidence",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "background_window": {
+        "type": "number",
+        "title": "Background window (s)",
+        "minimum": 0,
+        "default": 0.05
+      },
+      "significance_mode": {
+        "type": "integer",
+        "title": "Mode: 0 Gaussian, 1 Poisson, 2 Li&Ma",
+        "minimum": 0,
+        "maximum": 2,
+        "default": 2
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "burst_selection"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "Significance (sigma)"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Li, T.-P., Ma, Y.-Q.",
+      "title": "Analysis methods for results in gamma-ray astronomy",
+      "journal": "Astrophys J",
+      "year": 1983,
+      "volume": "272",
+      "pages": "317-324"
+    }
+  ],
+  "api": [
+    "TTTR.burst_confidence",
+    "li_ma_significance",
+    "poisson_significance",
+    "log_poisson_upper_tail",
+    "log_p_to_sigma",
+    "sigma_for_false_alarm_rate",
+    "estimate_n_trials",
+    "log_gamma_p"
+  ],
+  "can_replay": true
+})JSON";
+bool register_burstconfidence_entries() {
+    tttrlib::register_algorithm_json("burst", "burst_significance", kBurstSignificanceEntry);
+    return true;
+}
+const bool kBurstConfidenceRegistered = register_burstconfidence_entries();
+}  // namespace

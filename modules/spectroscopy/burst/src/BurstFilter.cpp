@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BurstFilter.h"
+#include "Registry.h"
 
 #include <nlohmann/json.hpp>
 #include <algorithm>
@@ -844,3 +845,91 @@ void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBurstFilterEntry = R"JSON({
+  "name": "burst_filter",
+  "label": "Burst filtering (size, duration, background, channels, photon masks)",
+  "summary": "Turns a raw burst list into an accepted one: per-channel photon selection by routing channel and micro-time gate, then size / duration / background filters and merging of close bursts.",
+  "description": "The stateful filter behind burst selection: detector channels are declared as `Channel` objects (routing channel plus micro-time gate), bursts are found on the selected photons and then filtered by photon count, duration and local background rate; nearby bursts can be merged. Its JSON state (`to_json` / `from_json`) is what a `.pto` provenance record and ChiSurf's wizard exchange, so a selection can be reapplied. Selection by count rate over sliding windows (`selection_by_count_rate`, `ranges_by_time_window`) is the same operation on a photon stream without a burst list.",
+  "operation_type": "burst_filtering",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "min_photons": {
+        "type": "integer",
+        "title": "Minimum photons",
+        "minimum": 1,
+        "default": 20
+      },
+      "min_duration_ms": {
+        "type": "number",
+        "title": "Min duration (ms)",
+        "default": 0.0
+      },
+      "max_duration_ms": {
+        "type": "number",
+        "title": "Max duration (ms)"
+      },
+      "max_background_khz": {
+        "type": "number",
+        "title": "Max background (kHz)"
+      },
+      "merge_gap_ms": {
+        "type": "number",
+        "title": "Merge gap (ms)",
+        "default": 0.0
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ],
+    "optional": [
+      "burst_selection"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "First Photon",
+      "Last Photon"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Eggeling, C., Berger, S., Brand, L., Fries, J. R., Schaffer, J., Volkmer, A., Seidel, C. A. M.",
+      "title": "Data registration and selective single-molecule analysis using multi-parameter fluorescence detection",
+      "journal": "J Biotechnol",
+      "year": 2001,
+      "volume": "86",
+      "pages": "163-180"
+    },
+    {
+      "type": "journal",
+      "authors": "Nir, E., Michalet, X., Hamadani, K. M., Laurence, T. A., Neuhauser, D., Kovchegov, Y., Weiss, S.",
+      "title": "Shot-noise limited single-molecule FRET histograms: comparison between theory and experiments",
+      "journal": "J Phys Chem B",
+      "year": 2006,
+      "volume": "110",
+      "pages": "22103-22124"
+    }
+  ],
+  "api": [
+    "BurstFilter",
+    "selection_by_count_rate",
+    "ranges_by_time_window",
+    "compute_intensity_trace"
+  ],
+  "can_replay": true
+})JSON";
+bool register_burstfilter_entries() {
+    tttrlib::register_algorithm_json("burst", "burst_filter", kBurstFilterEntry);
+    return true;
+}
+const bool kBurstFilterRegistered = register_burstfilter_entries();
+}  // namespace

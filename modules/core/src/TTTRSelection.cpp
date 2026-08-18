@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TTTRSelection.h"
+#include "Registry.h"
 
 #include <nlohmann/json.hpp>
 
@@ -238,3 +239,67 @@ void TTTRSelection::from_json(const std::string& payload) {
     set_z_stack_frame(j["z_stack"]);
     set_time_series_frame(j["time_series"]);
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPhotonSelectionEntry = R"JSON({
+  "name": "photon_selection",
+  "label": "Photon selection and masks (channels, micro-time gates, time windows, ranges)",
+  "summary": "Selects photons of a TTTR by routing channel, micro-time gate, event type and time window into index lists, ranges and bit masks.",
+  "description": "`TTTRSelection` builds index selections by channel / micro-time / event type and combines them; `TTTRMask` is the bit-mask form used by the streaming detectors and `TTTRRange` the (start, stop) form the burst tables use; `Channel` is the named (routing, micro-time gate) detector definition every burst and CLSM analysis takes. Plumbing that every operation composes with, registered so a pipeline can name it.",
+  "operation_type": "filtering",
+  "method": "get_selection_by_channel",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "channels": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "micro_time_ranges": {
+        "type": "array"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "photon indices"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Eggeling, C., Berger, S., Brand, L., Fries, J. R., Schaffer, J., Volkmer, A., Seidel, C. A. M.",
+      "title": "Data registration and selective single-molecule analysis using multi-parameter fluorescence detection",
+      "journal": "J Biotechnol",
+      "year": 2001,
+      "volume": "86",
+      "pages": "163-180"
+    }
+  ],
+  "api": [
+    "TTTRSelection",
+    "TTTRMask",
+    "TTTRRange",
+    "TTTRPair",
+    "Channel",
+    "TTTR.get_selection_by_channel",
+    "TTTR.get_selection_by_count_rate"
+  ],
+  "can_replay": true
+})JSON";
+bool register_tttrselection_entries() {
+    tttrlib::register_algorithm_json("selection", "photon_selection", kPhotonSelectionEntry);
+    return true;
+}
+const bool kTTTRSelectionRegistered = register_tttrselection_entries();
+}  // namespace

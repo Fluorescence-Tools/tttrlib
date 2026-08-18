@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "HmmLattice.h"
+#include "Registry.h"
 
 #include <cmath>
 #include <limits>
@@ -308,3 +309,66 @@ double hmm_estep_log(
 }
 
 }  // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kHmmLatticeEntry = R"JSON({
+  "name": "hmm_lattice",
+  "label": "Log-domain HMM lattice (forward, backward, posteriors, Viterbi) over a frame matrix",
+  "summary": "The generic hidden-Markov recursions on a caller-supplied log frame-probability matrix -- the binned-trace counterpart of the photon-stream HMM.",
+  "description": "Rabiner's forward-backward and Viterbi in the log domain over an arbitrary emission matrix (T x K), with per-sequence lengths for concatenated traces; returns log-likelihood, forward/backward lattices, posteriors, expected transition counts and the Viterbi path into caller-preallocated buffers. Offered in R/Java/JS on the preallocate-and-fill shape.",
+  "operation_type": "analysis",
+  "method": "hmm_forward_log",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_states": {
+        "type": "integer",
+        "title": "States"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "log_frame_probabilities",
+      "log_transition_matrix",
+      "log_start_probabilities"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "log_likelihood",
+      "posteriors",
+      "state_sequence"
+    ]
+  },
+  "row_grain": "frame",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Rabiner, L. R.",
+      "title": "A tutorial on hidden Markov models and selected applications in speech recognition",
+      "journal": "Proc IEEE",
+      "year": 1989,
+      "volume": "77",
+      "pages": "257-286"
+    }
+  ],
+  "api": [
+    "hmm_forward_log",
+    "hmm_backward_log",
+    "hmm_backward_posteriors_xi",
+    "hmm_estep_log",
+    "hmm_viterbi_log",
+    "hmm_logsumexp",
+    "hmm_max_channel"
+  ],
+  "can_replay": false
+})JSON";
+bool register_hmmlattice_entries() {
+    tttrlib::register_algorithm_json("math", "hmm_lattice", kHmmLatticeEntry);
+    return true;
+}
+const bool kHmmLatticeRegistered = register_hmmlattice_entries();
+}  // namespace

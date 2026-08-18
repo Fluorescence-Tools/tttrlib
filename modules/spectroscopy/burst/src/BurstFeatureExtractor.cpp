@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BurstFeatureExtractor.h"
+#include "Registry.h"
 #include <cmath>
 
 namespace tttrlib {
@@ -68,3 +69,86 @@ namespace tttrlib {
         return fret_efficiencies_;
     }
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBurstFeaturesEntry = R"JSON({
+  "name": "burst_features",
+  "label": "Per-burst features (sizes, durations, proximity ratio, FRET efficiency)",
+  "summary": "Reduces each burst to its table row: photon counts per stream, duration, mean arrival time, mean micro time, proximity ratio and FRET efficiency with corrections.",
+  "description": "The reduction from photon indices to a burst table. For every burst and every registered detector stream it counts photons, measures the duration and mean macro/micro time, and computes the proximity ratio and the corrected FRET efficiency (gamma, direct excitation, crosstalk, background) of the MFD literature. It is the C++ of ChiSurf's `generate_burst_dataframe` and produces the same cells; `tttr sm` writes its output. Streams are named -- `Duration (<detector>) (ms)` -- so any detector setup produces the same table shape.",
+  "operation_type": "analysis",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "gamma": {
+        "type": "number",
+        "title": "gamma",
+        "default": 1.0
+      },
+      "beta": {
+        "type": "number",
+        "title": "beta (direct excitation)",
+        "default": 0.0
+      },
+      "alpha": {
+        "type": "number",
+        "title": "alpha (crosstalk)",
+        "default": 0.0
+      },
+      "background": {
+        "type": "number",
+        "title": "background rate per stream"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "burst_selection"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "Number of Photons (<detector>)",
+      "Duration (<detector>) (ms)",
+      "Mean Macro Time (<detector>) (ms)",
+      "Mean Microtime (<detector>) (ns)",
+      "Proximity Ratio",
+      "FRET Efficiency"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Eggeling, C., Berger, S., Brand, L., Fries, J. R., Schaffer, J., Volkmer, A., Seidel, C. A. M.",
+      "title": "Data registration and selective single-molecule analysis using multi-parameter fluorescence detection",
+      "journal": "J Biotechnol",
+      "year": 2001,
+      "volume": "86",
+      "pages": "163-180"
+    },
+    {
+      "type": "journal",
+      "authors": "Sisamakis, E., Valeri, A., Kalinin, S., Rothwell, P. J., Seidel, C. A. M.",
+      "title": "Accurate single-molecule FRET studies using multiparameter fluorescence detection",
+      "journal": "Methods Enzymol",
+      "year": 2010,
+      "volume": "475",
+      "pages": "455-514"
+    }
+  ],
+  "api": [
+    "BurstFeatureExtractor",
+    "BurstFeature"
+  ],
+  "can_replay": true
+})JSON";
+bool register_burstfeatureextractor_entries() {
+    tttrlib::register_algorithm_json("burst", "burst_features", kBurstFeaturesEntry);
+    return true;
+}
+const bool kBurstFeatureExtractorRegistered = register_burstfeatureextractor_entries();
+}  // namespace

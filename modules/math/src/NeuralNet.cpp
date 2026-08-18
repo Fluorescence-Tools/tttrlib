@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "NeuralNet.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -574,3 +575,79 @@ void NeuralNet::to_json_file(const std::string& path, int indent) const {
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kNeuralNetEntry = R"JSON({
+  "name": "neural_net",
+  "label": "Feed-forward neural network (dense layers, training, standard scaler)",
+  "summary": "A small dense network with sklearn's activations, mini-batch training and a StandardScaler, for surrogates and classifiers inside the library.",
+  "description": "Dense layers with relu / tanh / logistic / identity activations (sklearn's names), backpropagation training with the usual options, JSON round trip, and a scaler; validated against sklearn's MLP on the same weights. Its role is internal -- the HMM surrogate is built on it -- rather than a general ML toolkit.",
+  "operation_type": "model_fitting",
+  "method": "predict",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "hidden": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "title": "Hidden layer sizes"
+      },
+      "activation": {
+        "type": "string",
+        "title": "Activation",
+        "default": "relu",
+        "enum": [
+          "identity",
+          "logistic",
+          "tanh",
+          "relu"
+        ]
+      },
+      "learning_rate": {
+        "type": "number",
+        "title": "Learning rate",
+        "default": 0.001
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "features"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "prediction"
+    ]
+  },
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Rumelhart, D. E., Hinton, G. E., Williams, R. J.",
+      "title": "Learning representations by back-propagating errors",
+      "journal": "Nature",
+      "year": 1986,
+      "volume": "323",
+      "pages": "533-536"
+    }
+  ],
+  "api": [
+    "NeuralNet",
+    "DenseLayer",
+    "TrainOptions",
+    "StandardScaler",
+    "activation_from_string",
+    "activation_to_string"
+  ],
+  "can_replay": false
+})JSON";
+bool register_neuralnet_entries() {
+    tttrlib::register_algorithm_json("math", "neural_net", kNeuralNetEntry);
+    return true;
+}
+const bool kNeuralNetRegistered = register_neuralnet_entries();
+}  // namespace

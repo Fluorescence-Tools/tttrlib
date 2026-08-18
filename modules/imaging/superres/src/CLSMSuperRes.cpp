@@ -7,6 +7,7 @@
  */
 
 #include "CLSMSuperRes.h"
+#include "Registry.h"
 #include "CLSMImage.h"
 #include "TTTR.h"
 #include "TTTRHeader.h"  // TTTRHeader::add_tag / set_*_resolution / tyInt8 etc.
@@ -2337,3 +2338,269 @@ void CLSMSuperRes::focus_reconstruction(
                    output, out_dim1, out_dim2, out_dim3,
                    detector_coords, detector_coords_len);
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPhotonReassignmentEntry = R"JSON({
+  "name": "photon_reassignment",
+  "label": "Photon reassignment onto a finer raster (eSRRF, uniform, ISM)",
+  "summary": "Redistributes the photons of a CLSM image onto an M-times finer grid by a named method, giving a super-resolved photon image.",
+  "description": "Every photon of the CLSM image is moved to a sub-pixel position: uniformly within its pixel, by the radial-fluctuation map of eSRRF, or by the ISM pixel-reassignment shift of its detector element, or eSRRF and ISM combined. The output is again photons, so lifetime and phasor analyses run on the reassigned image unchanged (super-resolution FLIM). An unknown method is refused. Assumes the raster and, for ISM, a detector array whose geometry `detector_grid` describes.",
+  "operation_type": "image_analysis",
+  "method": "reassign_photons",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "method": {
+        "type": "string",
+        "title": "Method",
+        "default": "esrrf",
+        "enum": [
+          "esrrf",
+          "uniform",
+          "ism",
+          "esrrf+ism"
+        ]
+      },
+      "magnification": {
+        "type": "integer",
+        "title": "Magnification",
+        "minimum": 1,
+        "default": 4
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "clsm_image"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "reassigned_photon_image"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Gustafsson, N., Culley, S., Ashdown, G., Owen, D. M., Pereira, P. M., Henriques, R.",
+      "title": "Fast live-cell conventional fluorophore nanoscopy with ImageJ through super-resolution radial fluctuations",
+      "journal": "Nat Commun",
+      "year": 2016,
+      "volume": "7",
+      "pages": "12471"
+    },
+    {
+      "type": "journal",
+      "authors": "Sheppard, C. J. R.",
+      "title": "Super-resolution in confocal imaging",
+      "journal": "Optik",
+      "year": 1988,
+      "volume": "80",
+      "pages": "53-54"
+    },
+    {
+      "type": "journal",
+      "authors": "Castello, M., Tortarolo, G., Buttafava, M., Deguchi, T., Villa, F., Koho, S., Pesce, L., Oneto, M., Pelicci, S., Lanzanó, L., Bianchini, P., Sheppard, C. J. R., Diaspro, A., Tosi, A., Vicidomini, G.",
+      "title": "A robust and versatile platform for image scanning microscopy enabling super-resolution FLIM",
+      "journal": "Nat Methods",
+      "year": 2019,
+      "volume": "16",
+      "pages": "175-178"
+    }
+  ],
+  "api": [
+    "CLSMSuperRes",
+    "CLSMSuperRes.reassign_photons",
+    "CLSMSuperRes.rgc_map",
+    "CLSMSuperRes.shift_vectors",
+    "CLSMSuperRes.detector_grid",
+    "detector_grid",
+    "CLSMSuperRes.get_photon_positions",
+    "CLSMSuperRes.temporal_combine",
+    "CLSMSuperRes.write"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kIsmReconstructionEntry = R"JSON({
+  "name": "ism_reconstruction",
+  "label": "ISM reconstructions (adaptive pixel reassignment, focus-ISM, s2ISM, SOFISM, Fourier reweighting)",
+  "summary": "Reconstructs a super-resolved image from a detector-array (ISM) scan: APR, focus-ISM in-focus/background separation, s2ISM, SOFISM and Fourier reweighting.",
+  "description": "The reconstruction methods of the BrightEyes-ISM family for a SPAD-array scan: adaptive pixel reassignment estimates and applies per-element shift vectors, focus-ISM separates in-focus signal from out-of-focus background using the array's axial sensitivity, s2ISM and SOFISM extend it, and Fourier reweighting equalises the transfer function. Validated against BrightEyes-ISM and s2ISM. Assumes an N x N detector array with known pixel pitch and a scan whose photons carry the array element in the routing channel.",
+  "operation_type": "image_analysis",
+  "method": "focus_reconstruction",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_detectors": {
+        "type": "integer",
+        "title": "Array side",
+        "default": 5
+      },
+      "pixel_pitch_um": {
+        "type": "number",
+        "title": "Detector pitch (um)"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "detector_array_stack"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "in_focus",
+      "background",
+      "apr_sum"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Castello, M., Tortarolo, G., Buttafava, M., Deguchi, T., Villa, F., Koho, S., Pesce, L., Oneto, M., Pelicci, S., Lanzanó, L., Bianchini, P., Sheppard, C. J. R., Diaspro, A., Tosi, A., Vicidomini, G.",
+      "title": "A robust and versatile platform for image scanning microscopy enabling super-resolution FLIM",
+      "journal": "Nat Methods",
+      "year": 2019,
+      "volume": "16",
+      "pages": "175-178"
+    },
+    {
+      "type": "journal",
+      "authors": "Sheppard, C. J. R.",
+      "title": "Super-resolution in confocal imaging",
+      "journal": "Optik",
+      "year": 1988,
+      "volume": "80",
+      "pages": "53-54"
+    }
+  ],
+  "api": [
+    "CLSMSuperRes.apr_reconstruction",
+    "CLSMSuperRes.focus_reconstruction",
+    "CLSMSuperRes.s2ism_reconstruction",
+    "CLSMSuperRes.sofism_reconstruction",
+    "CLSMSuperRes.fourier_reweight"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kResolutionFrcEntry = R"JSON({
+  "name": "resolution_frc",
+  "label": "Resolution by Fourier ring correlation",
+  "summary": "FRC curve of two independent images and the resolution at the 1/7 (or given) threshold.",
+  "description": "Nieuwenhuizen et al.'s Fourier ring correlation: the two images are Fourier transformed, correlated ring by ring, and the spatial frequency at which the curve crosses the threshold is the resolution. Independent halves of the photons (odd/even frames) are the usual inputs.",
+  "operation_type": "resolution_estimation",
+  "method": "frc_resolution",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "threshold": {
+        "type": "number",
+        "title": "Threshold",
+        "default": 0.14285714285714285
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "image_1",
+      "image_2"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "spatial_frequency",
+      "frc",
+      "resolution"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Nieuwenhuizen, R. P. J., Lidke, K. A., Bates, M., Puig, D. L., Grünwald, D., Stallinga, S., Rieger, B.",
+      "title": "Measuring image resolution in optical nanoscopy",
+      "journal": "Nat Methods",
+      "year": 2013,
+      "volume": "10",
+      "pages": "557-562"
+    }
+  ],
+  "api": [
+    "CLSMSuperRes.frc_curve",
+    "CLSMSuperRes.frc_resolution"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kPsfModelEntry = R"JSON({
+  "name": "psf_model",
+  "label": "Point-spread functions (Airy, vectorial Richards-Wolf)",
+  "summary": "Scalar Airy and vectorial (polarisation-aware) PSFs of a high-NA objective, as 2-D or 3-D stacks.",
+  "description": "The vectorial PSF integrates the Richards-Wolf diffraction integral for the given NA, refractive index, wavelength and input polarisation (Jones vector), reproducing PyFocus; the Airy pattern is the scalar limit. Used as the kernel for deconvolution and ISM shift estimation.",
+  "operation_type": "psf_determination",
+  "method": "vectorial_psf",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "na": {
+        "type": "number",
+        "title": "NA",
+        "default": 1.4
+      },
+      "n": {
+        "type": "number",
+        "title": "Refractive index",
+        "default": 1.518
+      },
+      "wavelength_nm": {
+        "type": "number",
+        "title": "Wavelength (nm)",
+        "default": 520
+      },
+      "pixel_nm": {
+        "type": "number",
+        "title": "Pixel (nm)",
+        "default": 20
+      }
+    }
+  },
+  "outputs": {
+    "columns": [
+      "psf"
+    ]
+  },
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Richards, B., Wolf, E.",
+      "title": "Electromagnetic diffraction in optical systems. II. Structure of the image field in an aplanatic system",
+      "journal": "Proc R Soc Lond A",
+      "year": 1959,
+      "volume": "253",
+      "pages": "358-379"
+    }
+  ],
+  "api": [
+    "CLSMSuperRes.vectorial_psf",
+    "CLSMSuperRes.airy_psf",
+    "CLSMSuperRes.psf_volume",
+    "CLSMSuperRes.jones_vector",
+    "vectorial_psf",
+    "airy_psf",
+    "psf_volume",
+    "jones_vector"
+  ],
+  "can_replay": true
+})JSON";
+bool register_clsm_superres_entries() {
+    tttrlib::register_algorithm_json("superres", "photon_reassignment", kPhotonReassignmentEntry);
+    tttrlib::register_algorithm_json("superres", "ism_reconstruction", kIsmReconstructionEntry);
+    tttrlib::register_algorithm_json("superres", "resolution_frc", kResolutionFrcEntry);
+    tttrlib::register_algorithm_json("superres", "psf_model", kPsfModelEntry);
+    return true;
+}
+const bool kCLSMSuperResRegistered = register_clsm_superres_entries();
+}  // namespace

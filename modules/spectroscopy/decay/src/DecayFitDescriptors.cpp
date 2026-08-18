@@ -81,6 +81,8 @@ namespace { const bool kDecayRegistered = (register_decay_descriptors(), true); 
 namespace {
 const char* const kTcspcCalibrationEntry = R"JSON({
   "name": "tcspc_calibration",
+    "method": "blind_irf_estimate",
+    "api": ["blind_irf_estimate", "estimate_background_rate"],
   "label": "IRF and background extraction",
   "summary": "Extracts the instrument response function (IRF) and background rate from non-burst photons per detector channel. The IRF curve is used by MLE lifetime fitting.",
   "operation_type": "calibration",
@@ -138,6 +140,8 @@ const char* const kTcspcCalibrationEntry = R"JSON({
 })JSON";
 const char* const kMleGreenEntry = R"JSON({
   "name": "mle_green",
+    "method": "fit",
+    "api": ["DecayFit2", "DecayFit23", "Fit23"],
   "label": "MLE lifetime fitting (green channel)",
   "summary": "Burst-wise maximum-likelihood estimation of fluorescence lifetime and anisotropy on the green (donor) detector channel using Fit2x. Failed fits produce NaN in all result columns and MLE Fitted = 0.",
   "operation_type": "burst_lifetime_fitting",
@@ -242,6 +246,8 @@ const char* const kMleGreenEntry = R"JSON({
 })JSON";
 const char* const kMleRedEntry = R"JSON({
   "name": "mle_red",
+    "method": "fit",
+    "api": ["DecayFit2", "DecayFit23", "Fit23"],
   "label": "MLE lifetime fitting (red channel)",
   "summary": "Burst-wise Fit2x MLE on the red (acceptor) detector channel. Same contract as mle_green.",
   "operation_type": "burst_lifetime_fitting",

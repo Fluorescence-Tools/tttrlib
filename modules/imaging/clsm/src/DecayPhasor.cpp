@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayPhasor.h"
+#include "Registry.h"
 #include <cstdlib>
 
 namespace {
@@ -194,3 +195,72 @@ double DecayPhasor::s(
     check_irf(g_irf, s_irf);
     return 1. / (g_irf * g_irf + s_irf * s_irf) * (g_irf * s_exp - s_irf * g_exp);
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPhasorEntry = R"JSON({
+  "name": "phasor",
+  "label": "Phasor analysis of decays and FLIM images",
+  "summary": "Maps a decay or every pixel of a FLIM image to the phasor plane (g, s) at the laser frequency, with IRF calibration.",
+  "description": "Digman et al.'s phasor: the first Fourier component of the micro-time histogram, normalised by the IRF's, so a single-exponential lies on the universal semicircle and mixtures fall inside it on straight lines. Model-free, one pass, and the standard way to look at a whole FLIM image at once; `CLSMImage.get_phasor` does it per pixel with a photon threshold and frame stacking. Assumes a periodic excitation of known frequency and an IRF measured under the same conditions.",
+  "operation_type": "phasor_analysis",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "frequency": {
+        "type": "number",
+        "title": "Frequency (MHz)"
+      },
+      "minimum_number_of_photons": {
+        "type": "integer",
+        "title": "Min photons",
+        "default": 30
+      },
+      "stack_frames": {
+        "type": "boolean",
+        "title": "Stack frames",
+        "default": false
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "micro_time_histogram_or_clsm_image"
+    ],
+    "optional": [
+      "irf"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "g",
+      "s"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Digman, M. A., Caiolfa, V. R., Zamai, M., Gratton, E.",
+      "title": "The phasor approach to fluorescence lifetime imaging analysis",
+      "journal": "Biophys J",
+      "year": 2008,
+      "volume": "94",
+      "pages": "L14-L16"
+    }
+  ],
+  "api": [
+    "DecayPhasor",
+    "CLSMImage.get_phasor",
+    "CLSMImage.get_phasor_v",
+    "StreamingPhasor"
+  ],
+  "can_replay": true
+})JSON";
+bool register_decayphasor_entries() {
+    tttrlib::register_algorithm_json("clsm", "phasor", kPhasorEntry);
+    return true;
+}
+const bool kDecayPhasorRegistered = register_decayphasor_entries();
+}  // namespace

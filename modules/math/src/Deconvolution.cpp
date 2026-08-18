@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Deconvolution.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -834,3 +835,89 @@ void scan_blur_kernel_1d(double dwell_seconds, double jitter_seconds,
 }
 
 }  // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kImageDeconvolutionEntry = R"JSON({
+  "name": "image_deconvolution",
+  "label": "Richardson-Lucy and Wiener deconvolution",
+  "summary": "Iterative Richardson-Lucy (2-D, 3-D, event-based with PSF oversampling) and Wiener deconvolution of images with a given PSF, plus the scan-blur kernel.",
+  "description": "Richardson-Lucy multiplicative updates with optional acceleration, clipping and an epsilon guard, in 2-D and 3-D over the vendored FFT, and an event-based form that deconvolves photon positions directly onto an oversampled grid; the Wiener filter with the balance parameter of scikit-image; `scan_blur_kernel_1d` builds the dwell/jitter kernel of a scanning acquisition. Richardson-Lucy is validated against scikit-image; the Wiener estimator differs from scikit-image's by design (documented in the test).",
+  "operation_type": "image_analysis",
+  "method": "richardson_lucy_2d",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_iter": {
+        "type": "integer",
+        "title": "Iterations",
+        "default": 30
+      },
+      "clip": {
+        "type": "boolean",
+        "title": "Clip",
+        "default": true
+      },
+      "acceleration": {
+        "type": "boolean",
+        "title": "Accelerate",
+        "default": false
+      },
+      "balance": {
+        "type": "number",
+        "title": "Wiener balance",
+        "default": 0.1
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "image",
+      "psf"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "deconvolved"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Richardson, W. H.",
+      "title": "Bayesian-based iterative method of image restoration",
+      "journal": "J Opt Soc Am",
+      "year": 1972,
+      "volume": "62",
+      "pages": "55-59"
+    },
+    {
+      "type": "journal",
+      "authors": "Lucy, L. B.",
+      "title": "An iterative technique for the rectification of observed distributions",
+      "journal": "Astron J",
+      "year": 1974,
+      "volume": "79",
+      "pages": "745-754"
+    }
+  ],
+  "api": [
+    "richardson_lucy_2d",
+    "richardson_lucy_3d",
+    "richardson_lucy_events_2d",
+    "wiener_deconvolve_2d",
+    "scan_blur_kernel_1d",
+    "counts_from_events_2d",
+    "events_from_counts_2d",
+    "jitter_coordinates_2d"
+  ],
+  "can_replay": false
+})JSON";
+bool register_deconvolution_entries() {
+    tttrlib::register_algorithm_json("math", "image_deconvolution", kImageDeconvolutionEntry);
+    return true;
+}
+const bool kDeconvolutionRegistered = register_deconvolution_entries();
+}  // namespace

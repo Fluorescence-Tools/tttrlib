@@ -55,6 +55,169 @@ def registry(category=None):
     return everything[category]
 
 
+def describe(name):
+    """One registry entry by name, whatever category it is in.
+
+        >>> tttrlib.describe("phasor")["label"]
+        'Phasor analysis of decays and FLIM images'
+
+    Raises:
+        ValueError: naming the closest matches, if the name is not registered.
+    """
+    everything = registry()
+    hits = [(c, e[name]) for c, e in everything.items() if name in e]
+    for category, entry in hits:
+        # The declaring category, not the `operation` view: a replayable entry
+        # appears in both, and its own capability is the informative one.
+        if entry.get("capability", category) == category:
+            entry = dict(entry)
+            entry["category"] = category
+            return entry
+    if hits:
+        category, entry = hits[0]
+        entry = dict(entry)
+        entry["category"] = category
+        return entry
+    import difflib as _difflib
+    known = sorted({k for entries in everything.values() for k in entries})
+    close = _difflib.get_close_matches(name, known, n=5)
+    raise ValueError(f"{name!r} is not registered"
+                     + (f"; did you mean: {', '.join(close)}?" if close else ""))
+
+
+def resolve(name):
+    """The callable a registry entry names, ready to call.
+
+    An entry says how it is reached: ``method`` for a method of an object
+    (``"get_mean_lifetime"``), otherwise the first ``api`` symbol. Reading the
+    registry and calling what it names is what makes a pipeline *composable* --
+    a step is a name plus parameters, so it can come from a ``.pto`` file, a
+    UI, or a config, and tttrlib does not need to know it in advance.
+
+        >>> fn = tttrlib.resolve("watershed")
+        >>> callable(fn)
+        True
+
+    Returns:
+        For a free function, the function. For a method, a ``(class, method
+        name)`` pair -- the caller supplies the instance, since only it knows
+        which object the step applies to. For an entry whose interface *is* a
+        class (``BVA``, ``Correlator``, ``HMM``), the class: constructing it is
+        how that step is run.
+    """
+    import inspect as _inspect
+    import tttrlib as _t
+    entry = describe(name)
+    api = entry.get("api") or []
+    method = entry.get("method")
+    # 1. "Class.method" in api -- the most explicit form
+    for symbol in api:
+        if "." in symbol:
+            cls_name, attr = symbol.split(".", 1)
+            if method and attr != method:
+                continue
+            cls = getattr(_t, cls_name, None)
+            if cls is not None and hasattr(cls, attr):
+                return cls, attr
+    # 2. a `method` on the first api class that has it
+    if method:
+        for symbol in api:
+            cls = getattr(_t, symbol.split(".")[0], None)
+            if _inspect.isclass(cls) and callable(getattr(cls, method, None)):
+                return cls, method
+        obj = getattr(_t, method, None)
+        if callable(obj) and not _inspect.isclass(obj):
+            return obj
+    # 3. the first api symbol that is a free function
+    for symbol in api:
+        if "." in symbol:
+            continue
+        obj = getattr(_t, symbol, None)
+        if callable(obj) and not _inspect.isclass(obj):
+            return obj
+    # 4. the entry's interface is a class: constructing it runs the step
+    for symbol in api:
+        cls = getattr(_t, symbol.split(".")[0], None)
+        if _inspect.isclass(cls):
+            return cls
+    raise ValueError(f"registry entry {name!r} names no callable "
+                     f"(api={api!r}, method={method!r})")
+
+
+def defaults(name):
+    """The parameter defaults of a registry entry, as a dict.
+
+        >>> tttrlib.defaults("photon_reassignment")["method"]
+        'esrrf'
+    """
+    schema = describe(name).get("params_schema") or {}
+    out = {}
+    for key, spec in (schema.get("properties") or {}).items():
+        if isinstance(spec, dict) and "default" in spec:
+            out[key] = spec["default"]
+    return out
+
+
+def compose(*steps):
+    """Chain registry entries into one callable pipeline.
+
+    Each step is ``name`` or ``(name, parameters_dict)`` or ``(name, params,
+    adapter)``. The pipeline calls each step's resolved callable in turn,
+    passing the previous result as the first argument and the step's parameters
+    as keyword arguments, and returns the last result. Parameters are the ones
+    given here; :func:`defaults` supplies an entry's schema defaults when a
+    caller wants them (they are not applied silently, because an entry whose
+    schema covers a family of calls would otherwise pass a keyword the chosen
+    one does not take). An ``adapter`` -- ``lambda previous: (args, kwargs)`` -- is how a
+    step whose input is not simply the previous output is wired.
+
+    This is composition *through the registry*: nothing here knows what a
+    watershed or a burst search is, only that the registry names one.
+
+        >>> import numpy as np
+        >>> pipeline = tttrlib.compose(("histogram", {"bins": 8}))
+        >>> callable(pipeline)
+        True
+
+    Returns:
+        callable: takes the pipeline's input, returns the last step's output.
+    """
+    prepared = []
+    for step in steps:
+        if isinstance(step, str):
+            name, params, adapter = step, {}, None
+        elif len(step) == 2:
+            (name, params), adapter = step, None
+        else:
+            name, params, adapter = step
+        entry = describe(name)               # raises if the name is not registered
+        prepared.append((name, entry, dict(params or {}), adapter))
+
+    def run(value=None):
+        for name, entry, params, adapter in prepared:
+            target = resolve(name)
+            if adapter is not None:
+                args, kwargs = adapter(value)
+                kwargs = dict(kwargs or {})
+            else:
+                args, kwargs = ((value,) if value is not None else ()), {}
+            if isinstance(target, tuple):        # (class, method): value is the instance
+                cls, attr = target
+                if args and isinstance(args[0], cls):
+                    instance, args = args[0], args[1:]
+                else:
+                    raise TypeError(
+                        f"step {name!r} is a method of {cls.__name__}; the pipeline's "
+                        f"value must be a {cls.__name__} instance (got {type(args[0]).__name__ if args else 'nothing'})")
+                value = getattr(instance, attr)(*args, **{**params, **kwargs})
+            else:
+                value = target(*args, **{**params, **kwargs})
+        return value
+
+    run.steps = [name for name, _, _, _ in prepared]
+    return run
+
+
 def _api_describe_parameter(parameter):
     """One argument: name, kind, and default when there is one.
 

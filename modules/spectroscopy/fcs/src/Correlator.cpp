@@ -707,6 +707,8 @@ if (is_verbose()) {
 namespace {
 const char* const kBurstFcsEntry = R"JSON({
   "name": "burst_fcs",
+    "method": "run",
+    "api": ["Correlator", "CorrelatorCurve"],
   "label": "Burst-wise FCS",
   "summary": "Per-burst autocorrelation/cross-correlation curves fitted for diffusion time. Produces td4 companion.",
   "operation_type": "burst_correlation",
@@ -928,6 +930,7 @@ void tttrlib::register_fcs_descriptors() {
           "columns": ["Lag time (s)", "G(tau)", "G(tau) normalized"]
         })JSON";
         d.can_replay = true;
+        d.extra_json = R"JSON({"api": ["Correlator", "CorrelatorCurve", "CorrelatorPhotonStream", "CorrelationCurveSettings", "StreamingCorrelator"]})JSON";
         register_algorithm(d);
     }
     tttrlib::register_algorithm_json("operation", "burst_fcs", kBurstFcsEntry);

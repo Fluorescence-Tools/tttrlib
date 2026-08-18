@@ -30,7 +30,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Kalman.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Watershed.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util
+    DEPENDS  util core   # core: the registry (Registry.h) the kernels declare themselves in
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES NeuralNet.i Cluster.i Deconvolution.i Jitter.i Sampling.i
                     HmmLattice.i Kalman.i Watershed.i

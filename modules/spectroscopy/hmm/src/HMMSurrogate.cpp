@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "HMMSurrogate.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -563,3 +564,71 @@ void HmmSurrogate::to_json_file(const std::string& path, int indent) const {
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kHmmSurrogateEntry = R"JSON({
+  "name": "hmm_surrogate",
+  "label": "Neural surrogate for HMM initialisation",
+  "summary": "A trained feed-forward network that maps stream features to a starting HMM, so the EM fit begins near the answer.",
+  "description": "Photon-stream features (rates, colour statistics, dwell descriptors; `FEATURES_VERSION` pins the layout) are fed to a `NeuralNet` trained on simulated streams (`generate_training_set`) to predict the HMM parameters used as the EM start. It shortens the fit and avoids poor local optima; it never replaces the likelihood fit, which runs from the predicted start.",
+  "operation_type": "model_fitting",
+  "method": "decode",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_states": {
+        "type": "integer",
+        "title": "States",
+        "default": 2
+      },
+      "n_streams": {
+        "type": "integer",
+        "title": "Streams",
+        "default": 2
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "initial HMM parameters"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Rumelhart, D. E., Hinton, G. E., Williams, R. J.",
+      "title": "Learning representations by back-propagating errors",
+      "journal": "Nature",
+      "year": 1986,
+      "volume": "323",
+      "pages": "533-536"
+    },
+    {
+      "type": "journal",
+      "authors": "Pirchi, M., Tsukanov, R., Khamis, R., Tomov, T. E., Berger, Y., Khara, D. C., Volkov, H., Haran, G., Nir, E.",
+      "title": "Photon-by-photon hidden Markov model analysis for microsecond single-molecule FRET kinetics",
+      "journal": "J Phys Chem B",
+      "year": 2016,
+      "volume": "120",
+      "pages": "13065-13075"
+    }
+  ],
+  "api": [
+    "HmmSurrogate"
+  ],
+  "can_replay": false
+})JSON";
+bool register_hmmsurrogate_entries() {
+    tttrlib::register_algorithm_json("hmm", "hmm_surrogate", kHmmSurrogateEntry);
+    return true;
+}
+const bool kHMMSurrogateRegistered = register_hmmsurrogate_entries();
+}  // namespace

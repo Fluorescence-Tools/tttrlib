@@ -33,12 +33,14 @@
 #include "CorrelatorCurve.h"
 
 
+#ifndef SWIG
 namespace tttrlib {
 /// Register the fcs module's registry entries: the `burst_fcs` pipeline
 /// operation and the built-in correlation methods (`correlation_method`
-/// category). Idempotent.
+/// category). Idempotent; also run when the library loads.
 void register_fcs_descriptors();
 }
+#endif
 
 class Correlator {
 

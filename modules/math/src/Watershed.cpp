@@ -9,6 +9,7 @@
 // breaks the exactness pin.
 #pragma STDC FP_CONTRACT OFF
 #include "Watershed.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -327,3 +328,119 @@ void marching_squares(
 }
 
 }  // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kRegionSegmentationEntry = R"JSON({
+  "name": "region_segmentation",
+  "label": "Watershed segmentation",
+  "summary": "Marker-based watershed of an image (scikit-image-exact).",
+  "description": "Vincent & Soille's immersion watershed from given markers, priority-flooded so it reproduces scikit-image bit for bit: every pixel is assigned to the marker whose basin it drains into. Region detection for FLIM/ICS masks and for the ndxplorer selection tools.",
+  "operation_type": "region_detection",
+  "method": "watershed",
+  "params_schema": {
+    "type": "object",
+    "properties": {}
+  },
+  "inputs": {
+    "required": [
+      "image",
+      "markers"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "labels"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Vincent, L., Soille, P.",
+      "title": "Watersheds in digital spaces: an efficient algorithm based on immersion simulations",
+      "journal": "IEEE Trans Pattern Anal Mach Intell",
+      "year": 1991,
+      "volume": "13",
+      "pages": "583-598"
+    },
+    {
+      "type": "conference",
+      "authors": "Lorensen, W. E., Cline, H. E.",
+      "title": "Marching cubes: a high resolution 3D surface construction algorithm",
+      "journal": "SIGGRAPH Comput Graph",
+      "year": 1987,
+      "volume": "21",
+      "pages": "163-169"
+    }
+  ],
+  "api": [
+    "watershed"
+  ],
+  "can_replay": false
+})JSON";
+const char* const kIsoContoursEntry = R"JSON({
+  "name": "iso_contours",
+  "label": "Iso-contours by marching squares",
+  "summary": "Contour segments of a 2-D image at a given level.",
+  "description": "Lorensen & Cline's marching squares: the iso-level line segments of a 2-D image, returned as an (n, 4) array of segment endpoints. Reproduces scikit-image's find_contours geometry, including its vertex-connectivity convention.",
+  "operation_type": "region_detection",
+  "method": "marching_squares",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "type": "number",
+        "title": "Contour level"
+      },
+      "vertex_connect_high": {
+        "type": "boolean",
+        "title": "Connect high vertices",
+        "default": false
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "image"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "contour_segments"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Vincent, L., Soille, P.",
+      "title": "Watersheds in digital spaces: an efficient algorithm based on immersion simulations",
+      "journal": "IEEE Trans Pattern Anal Mach Intell",
+      "year": 1991,
+      "volume": "13",
+      "pages": "583-598"
+    },
+    {
+      "type": "conference",
+      "authors": "Lorensen, W. E., Cline, H. E.",
+      "title": "Marching cubes: a high resolution 3D surface construction algorithm",
+      "journal": "SIGGRAPH Comput Graph",
+      "year": 1987,
+      "volume": "21",
+      "pages": "163-169"
+    }
+  ],
+  "api": [
+    "marching_squares"
+  ],
+  "can_replay": false
+})JSON";
+bool register_watershed_entries() {
+    tttrlib::register_algorithm_json("math", "region_segmentation", kRegionSegmentationEntry);
+    tttrlib::register_algorithm_json("math", "iso_contours", kIsoContoursEntry);
+    return true;
+}
+const bool kWatershedRegistered = register_watershed_entries();
+}  // namespace

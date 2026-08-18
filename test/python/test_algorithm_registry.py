@@ -52,7 +52,11 @@ def test_every_entry_is_self_describing(registry, capability):
     for name, e in registry[capability].items():
         assert e["name"] == name
         assert e["capability"] == capability
-        assert e["operation_type"] == name
+        # `operation_type` is the mmfdb term for what the entry DOES; the key is
+        # what a caller names it by. They coincide for most entries and must
+        # not be required to: mle_green and mle_red are both
+        # `burst_lifetime_fitting`, and `fdc_2d` is an `analysis`.
+        assert e["operation_type"]
         for field in ("label", "summary", "description", "row_grain"):
             assert e[field], f"{name}: empty '{field}'"
         assert isinstance(e["settings_schema"], dict)
@@ -171,13 +175,14 @@ def test_fit_parameter_order_is_the_declared_order(registry):
 
 
 def test_operation_names_are_unique_across_both_sources(registry):
-    """A live registration must never silently displace a hand-authored entry
-    of the same name; the merge keeps the existing one, so a collision would
-    show up here rather than as a changed schema at a call site."""
+    """Every replayable registration reaches the `operation` category under its
+    own key, and carries the same schema there -- a collision would show up
+    here rather than as a changed schema at a call site."""
     ops = registry["operation"]
-    live = json.loads(tttrlib.algorithms_json("fcs"))
-    live.update(json.loads(tttrlib.algorithms_json("hmm")))
-    live.update(json.loads(tttrlib.algorithms_json("pda")))
+    live = {}
+    for capability in ("fcs", "hmm", "pda"):
+        live.update({k: v for k, v in json.loads(tttrlib.algorithms_json(capability)).items()
+                     if v.get("can_replay")})
     for name in live:
         assert ops[name]["capability"] in LIVE_CAPABILITIES
 

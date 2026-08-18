@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "ImageLocalization.h"
+#include "Registry.h"
 
 #include "Dual.h"
 #include "GradVec.h"
@@ -438,3 +439,77 @@ double localization::twoIstar_G(double *C, double *M, int osize) {
 
     return -W / (double) osize;
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kGaussianLocalizationEntry = R"JSON({
+  "name": "gaussian_localization",
+  "label": "2-D Gaussian localisation (MLE / least squares) of emitters",
+  "summary": "Fits a 2-D Gaussian (position, width, amplitude, background) to a spot or to every pixel neighbourhood of an image, with a photon threshold.",
+  "description": "Per-spot maximum-likelihood / least-squares fit of a symmetric or elliptical 2-D Gaussian, the standard localisation model of single-molecule microscopy (Smith et al.), plus a whole-image driver that fits every candidate and masks the ones with too few photons. Returns positions, widths, amplitude, background and the goodness of fit; benchmarked against the reference implementations in `benchmarks/bench_localization.py`.",
+  "operation_type": "molecule_localization",
+  "method": "fit2DGaussian",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string",
+        "title": "Model",
+        "default": "gaussian_2d"
+      },
+      "min_photons": {
+        "type": "integer",
+        "title": "Min photons",
+        "default": 30
+      },
+      "max_iter": {
+        "type": "integer",
+        "title": "Max iterations",
+        "default": 100
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "image"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "x",
+      "y",
+      "sigma_x",
+      "sigma_y",
+      "amplitude",
+      "background",
+      "chi2"
+    ]
+  },
+  "row_grain": "molecule",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Smith, C. S., Joseph, N., Rieger, B., Lidke, K. A.",
+      "title": "Fast, single-molecule localization that achieves theoretically minimum uncertainty",
+      "journal": "Nat Methods",
+      "year": 2010,
+      "volume": "7",
+      "pages": "373-375"
+    }
+  ],
+  "api": [
+    "localization",
+    "ImageLocalizer",
+    "fit_image",
+    "GaussianFitResult",
+    "GaussDataType"
+  ],
+  "can_replay": true
+})JSON";
+bool register_imagelocalization_entries() {
+    tttrlib::register_algorithm_json("localization", "gaussian_localization", kGaussianLocalizationEntry);
+    return true;
+}
+const bool kImageLocalizationRegistered = register_imagelocalization_entries();
+}  // namespace

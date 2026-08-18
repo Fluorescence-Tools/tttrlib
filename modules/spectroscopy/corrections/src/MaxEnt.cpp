@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "MaxEnt.h"
+#include "Registry.h"
 #include "MaxEntQp.h"
 
 namespace tttrlib {
@@ -32,3 +33,77 @@ std::vector<double> maxent_invert(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kMaxentInversionEntry = R"JSON({
+  "name": "maxent_inversion",
+  "label": "Maximum-entropy inversion of a linear model",
+  "summary": "Solves A x = b for a non-negative x by maximising entropy under a chi-squared constraint (Skilling & Bryan), for distributions such as lifetime spectra.",
+  "description": "The Skilling-Bryan maximum-entropy method: among all non-negative x consistent with the data to within the chi-squared target, the one of maximal entropy relative to a flat prior, so features are only those the data demand. `nu` sets the entropy weight, iterations run until the gradient criterion. Not equivalent to ChiSurf's `mem.py` (which minimises chi-squared with an entropy-flavoured gradient), which is why that was rejected as a reference.",
+  "operation_type": "fitting",
+  "method": "maxent_invert",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "nu": {
+        "type": "number",
+        "title": "Entropy weight",
+        "default": 1e-05
+      },
+      "max_iter": {
+        "type": "integer",
+        "title": "Max iterations",
+        "default": 500
+      },
+      "tol": {
+        "type": "number",
+        "title": "Tolerance",
+        "default": 1e-08
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "design_matrix",
+      "data"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "x"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Skilling, J., Bryan, R. K.",
+      "title": "Maximum entropy image reconstruction: general algorithm",
+      "journal": "Mon Not R Astron Soc",
+      "year": 1984,
+      "volume": "211",
+      "pages": "111-124"
+    },
+    {
+      "type": "journal",
+      "authors": "Brochon, J.-C.",
+      "title": "Maximum entropy method of data analysis in time-resolved spectroscopy",
+      "journal": "Methods Enzymol",
+      "year": 1994,
+      "volume": "240",
+      "pages": "262-311"
+    }
+  ],
+  "api": [
+    "maxent_invert"
+  ],
+  "can_replay": true
+})JSON";
+bool register_maxent_entries() {
+    tttrlib::register_algorithm_json("corrections", "maxent_inversion", kMaxentInversionEntry);
+    return true;
+}
+const bool kMaxEntRegistered = register_maxent_entries();
+}  // namespace

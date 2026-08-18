@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "MaxEntTcspc.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -412,3 +413,96 @@ MemTcspcResult solve_tcspc_mem_fret(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kTcspcMaxentEntry = R"JSON({
+  "name": "tcspc_maxent",
+  "label": "Maximum-entropy lifetime / distance distributions from TCSPC",
+  "summary": "Fits a TCSPC decay with a maximum-entropy distribution over lifetimes, or over donor-acceptor distances (FRET), reconvolved with the lamp.",
+  "description": "Brochon's MEM for time-resolved fluorescence: the decay is a superposition over a lifetime grid (or a distance grid mapped through the Förster relation, with a donor-only fraction) convolved with the measured lamp, shifted and scaled; the amplitude distribution is the maximum-entropy solution at the chi-squared target. Design matrices are exposed (`tcspc_build_fi_*`) so the same solver serves both parameterisations. Assumes a periodic excitation of known period and a lamp measured at the same settings.",
+  "operation_type": "tcspc_fitting",
+  "method": "solve_tcspc_mem_lifetime",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "nu": {
+        "type": "number",
+        "title": "Entropy weight",
+        "default": 1e-05
+      },
+      "max_iter": {
+        "type": "integer",
+        "title": "Max iterations",
+        "default": 200
+      },
+      "tol": {
+        "type": "number",
+        "title": "Tolerance",
+        "default": 0.0001
+      },
+      "period": {
+        "type": "number",
+        "title": "Period (ns)"
+      },
+      "timeshift": {
+        "type": "number",
+        "title": "Lamp shift (channels)",
+        "default": 0.0
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "decay_histogram",
+      "irf"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "amplitude_distribution",
+      "chi2"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Brochon, J.-C.",
+      "title": "Maximum entropy method of data analysis in time-resolved spectroscopy",
+      "journal": "Methods Enzymol",
+      "year": 1994,
+      "volume": "240",
+      "pages": "262-311"
+    },
+    {
+      "type": "journal",
+      "authors": "Skilling, J., Bryan, R. K.",
+      "title": "Maximum entropy image reconstruction: general algorithm",
+      "journal": "Mon Not R Astron Soc",
+      "year": 1984,
+      "volume": "211",
+      "pages": "111-124"
+    }
+  ],
+  "api": [
+    "solve_tcspc_mem_lifetime",
+    "solve_tcspc_mem_fret",
+    "tcspc_run_mem",
+    "tcspc_build_fi_lifetimes",
+    "tcspc_build_fi_distances",
+    "tcspc_fconv_periodic",
+    "tcspc_fconv_single_shot",
+    "tcspc_shift_lamp",
+    "tcspc_quadpr_bound",
+    "MemTcspcResult"
+  ],
+  "can_replay": true
+})JSON";
+bool register_maxenttcspc_entries() {
+    tttrlib::register_algorithm_json("decay", "tcspc_maxent", kTcspcMaxentEntry);
+    return true;
+}
+const bool kMaxEntTcspcRegistered = register_maxenttcspc_entries();
+}  // namespace

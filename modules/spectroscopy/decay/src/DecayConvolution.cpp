@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayConvolution.h"
+#include "Registry.h"
 #include "Verbose.h"
 #include "info.h"
 
@@ -883,3 +884,100 @@ if (is_verbose()) {
         }
     }
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kDecayConvolutionEntry = R"JSON({
+  "name": "decay_convolution",
+  "label": "Decay-model kernels: IRF convolution, periodicity, pile-up, lamp shift and rescaling",
+  "summary": "The building blocks every decay model is assembled from: convolution of a lifetime spectrum with the IRF (single-shot and periodic, per-channel, SIMD), pile-up correction, lamp shift, and scaling to the data.",
+  "description": "`fconv` and its periodic / per-channel / SIMD variants compute the reconvolution integral of an exponential lifetime spectrum with the measured IRF on the micro-time axis (Fit2x's kernels), `dfa_*` the anisotropy (VV/VH) forms, `add_pile_up_to_model` Coates' pile-up correction, `shift_lamp` a fractional-channel IRF shift, `rescale*` the maximum-likelihood scaling of a model to counts with or without a background pattern. These are the primitives; the models in the `fit` category compose them.",
+  "operation_type": "analysis",
+  "method": "fconv",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "dt": {
+        "type": "number",
+        "title": "Bin width (ns)",
+        "default": 1.0
+      },
+      "period": {
+        "type": "number",
+        "title": "Period (ns)"
+      },
+      "start": {
+        "type": "integer",
+        "title": "Start channel",
+        "default": 0
+      },
+      "stop": {
+        "type": "integer",
+        "title": "Stop channel",
+        "default": -1
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "lifetime_spectrum",
+      "irf"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "model_decay"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "book",
+      "authors": "O'Connor, D. V., Phillips, D.",
+      "title": "Time-correlated Single Photon Counting",
+      "publisher": "Academic Press",
+      "year": 1984
+    },
+    {
+      "type": "journal",
+      "authors": "Coates, P. B.",
+      "title": "The correction for photon 'pile-up' in the measurement of radiative lifetimes",
+      "journal": "J Phys E",
+      "year": 1968,
+      "volume": "1",
+      "pages": "878-879"
+    }
+  ],
+  "api": [
+    "fconv",
+    "fconv_cs_time_axis",
+    "fconv_per",
+    "fconv_per_cs",
+    "fconv_per_cs_2ch",
+    "fconv_per_cs_time_axis",
+    "fconv_per_simd",
+    "fconv_ref",
+    "fconv_simd",
+    "sconv",
+    "dfa_convolve",
+    "dfa_convolved_decay",
+    "dfa_periodic_decay",
+    "dfa_vv_vh_convolved",
+    "dfa_vv_vh_decay",
+    "add_pile_up_to_model",
+    "shift_lamp",
+    "rescale",
+    "rescale_w",
+    "rescale_w_bg",
+    "discriminate_small_amplitudes",
+    "decay_fit23_model_curve"
+  ],
+  "can_replay": false
+})JSON";
+bool register_decayconvolution_entries() {
+    tttrlib::register_algorithm_json("decay", "decay_convolution", kDecayConvolutionEntry);
+    return true;
+}
+const bool kDecayConvolutionRegistered = register_decayconvolution_entries();
+}  // namespace

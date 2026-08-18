@@ -711,6 +711,7 @@ bool register_pda_descriptors() {
           "columns": ["Bin", "Model probability", "Experimental probability"]
         })JSON";
         d.can_replay = true;
+        d.extra_json = R"JSON({"api": ["Pda", "PdaCallback", "channel_probabilities_3c", "channel_probabilities_batch", "transfer_matrix_3c", "gauss_hermite_grid", "emission_from_efficiencies", "species_forward_model"]})JSON";
         register_algorithm(d);
     }
     {
@@ -748,6 +749,7 @@ bool register_pda_descriptors() {
           "columns": ["Log likelihood"]
         })JSON";
         d.can_replay = true;
+        d.extra_json = R"JSON({"api": ["PdaBurstLikelihood"]})JSON";
         register_algorithm(d);
     }
     return true;

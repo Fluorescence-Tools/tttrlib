@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "PhotonCountingHistogram.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -256,3 +257,78 @@ std::vector<double> fida_pch(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPchEntry = R"JSON({
+  "name": "pch",
+  "label": "Photon counting histogram (PCH / FIDA)",
+  "summary": "Predicts the photon-count distribution of one or several species of given brightness and mean number in the observation volume, closed or open system, with the FIDA profile.",
+  "description": "The PCH of Chen et al. for a 3-D Gaussian volume (single species, mixtures, open system with Poisson number fluctuations) and Kask et al.'s FIDA with an explicit brightness profile and background, so a measured count histogram can be fitted for molecular brightness and concentration. Validated against pysimfcs. Assumes stationarity over the binning time and a bin time short against diffusion.",
+  "operation_type": "pch_histogram_computation",
+  "method": "pch_mixture",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "k_max": {
+        "type": "integer",
+        "title": "Max counts",
+        "default": 30
+      },
+      "brightness": {
+        "type": "number",
+        "title": "Brightness (counts/bin)"
+      },
+      "avg_number": {
+        "type": "number",
+        "title": "Mean number in volume"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "count_histogram"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "P(k)"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Chen, Y., Müller, J. D., So, P. T. C., Gratton, E.",
+      "title": "The photon counting histogram in fluorescence fluctuation spectroscopy",
+      "journal": "Biophys J",
+      "year": 1999,
+      "volume": "77",
+      "pages": "553-567"
+    },
+    {
+      "type": "journal",
+      "authors": "Kask, P., Palo, K., Ullmann, D., Gall, K.",
+      "title": "Fluorescence-intensity distribution analysis and its application in biomolecular detection technology",
+      "journal": "Proc Natl Acad Sci USA",
+      "year": 1999,
+      "volume": "96",
+      "pages": "13756-13761"
+    }
+  ],
+  "api": [
+    "pch_single_species",
+    "pch_mixture",
+    "pch_open_system",
+    "fida_pch",
+    "fida_dvdx_gaussian"
+  ],
+  "can_replay": true
+})JSON";
+bool register_photoncountinghistogram_entries() {
+    tttrlib::register_algorithm_json("fluctuation", "pch", kPchEntry);
+    return true;
+}
+const bool kPhotonCountingHistogramRegistered = register_photoncountinghistogram_entries();
+}  // namespace

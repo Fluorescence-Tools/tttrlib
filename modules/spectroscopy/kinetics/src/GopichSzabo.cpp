@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "CtmcKinetics.h"
+#include "Registry.h"
 #include "GopichSzabo.h"
 
 #include <cstdlib>
@@ -423,3 +424,78 @@ std::vector<double> GopichSzabo::relaxation_times() const {
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kGopichSzaboEntry = R"JSON({
+  "name": "gopich_szabo",
+  "label": "Gopich-Szabo photon-colour likelihood for kinetic schemes",
+  "summary": "Likelihood and Viterbi decoding of a photon colour sequence under a kinetic scheme with per-state efficiencies and interconversion rates.",
+  "description": "The generator-matrix likelihood of Gopich & Szabo: between photons the state evolves by exp(K dt), at a photon the emission probability of its colour is applied, so the inter-photon time carries information about the rates. Any number of colours and states, schemes set by name or matrix; `relaxation_times` are the eigenvalues of the rate matrix. It is the per-molecule building block that `burst_ml` sums over bursts.",
+  "operation_type": "analysis",
+  "method": "log_likelihood",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_states": {
+        "type": "integer",
+        "title": "States",
+        "default": 2
+      },
+      "n_colors": {
+        "type": "integer",
+        "title": "Colours",
+        "default": 2
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "photon_colours",
+      "photon_times"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "log_likelihood",
+      "viterbi_path"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Gopich, I. V., Szabo, A.",
+      "title": "Decoding the pattern of photon colors in single-molecule FRET",
+      "journal": "J Phys Chem B",
+      "year": 2009,
+      "volume": "113",
+      "pages": "10965-10973"
+    },
+    {
+      "type": "journal",
+      "authors": "Gopich, I. V., Szabo, A.",
+      "title": "Theory of the energy transfer efficiency and fluorescence lifetime distribution in single-molecule FRET",
+      "journal": "Proc Natl Acad Sci USA",
+      "year": 2012,
+      "volume": "109",
+      "pages": "7747-7752"
+    }
+  ],
+  "api": [
+    "GopichSzabo",
+    "rate_matrix_from_rates",
+    "rates_from_rate_matrix",
+    "generator_from_rate_matrix",
+    "equilibrium_populations",
+    "emission_from_efficiencies"
+  ],
+  "can_replay": true
+})JSON";
+bool register_gopichszabo_entries() {
+    tttrlib::register_algorithm_json("kinetics", "gopich_szabo", kGopichSzaboEntry);
+    return true;
+}
+const bool kGopichSzaboRegistered = register_gopichszabo_entries();
+}  // namespace

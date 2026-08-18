@@ -107,6 +107,7 @@ void TwoCDE::compute(double tau, int variant, int kernel) {
 namespace {
 const char* const kKdeCdeEntry = R"JSON({
   "name": "kde_cde",
+  "api": ["TwoCDE"],
   "label": "KDE 2CDE / ALEX-2CDE",
   "summary": "Kernel-density estimate (Laplace or Gaussian) of donor/acceptor photon arrival times per burst (Tomov et al., 2012). A static burst scores ~100; dynamic bursts deviate.",
   "operation_type": "burst_2cde",

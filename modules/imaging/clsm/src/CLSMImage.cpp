@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "CLSMImage.h"
+#include "Registry.h"
 
 #include <nlohmann/json.hpp>
 #include "BitOps.h"
@@ -4658,3 +4659,285 @@ std::vector<double> CLSMImage::get_cumulative_durations(int frame_idx, int line_
     const std::vector<double>* c = line_cumsum(static_cast<size_t>(line_idx));
     return c ? *c : std::vector<double>{};
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kClsmReconstructionEntry = R"JSON({
+  "name": "clsm_reconstruction",
+  "label": "CLSM image reconstruction from a photon stream",
+  "summary": "Assigns every photon of a laser-scanning TTTR file to frame, line and pixel from the scanner markers, giving intensity, mean micro-time and per-pixel decay images.",
+  "description": "Frame/line/pixel boundaries are read from the marker events (or the header for formats that carry them), the photons between them are binned into pixels, and from that structure come the intensity image, the mean-arrival-time image, the fluorescence decay of any pixel set, per-pixel micro-time gates and channel selections. It is the substrate every imaging analysis in the library works on (FLIM, phasor, ICS, super-resolution). Assumes a raster scan with markers on frame and line starts, or a header that declares the geometry (SP8, Zeiss, PicoQuant, BrightEyes, FLIM LABS).",
+  "operation_type": "image_analysis",
+  "method": "fill",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "channels": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "title": "Routing channels"
+      },
+      "micro_time_ranges": {
+        "type": "array",
+        "title": "Micro-time gates"
+      },
+      "clear": {
+        "type": "boolean",
+        "title": "Clear first",
+        "default": true
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "intensity",
+      "mean_micro_time",
+      "decay_of_pixels"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "book",
+      "authors": "Becker, W.",
+      "title": "Advanced Time-Correlated Single Photon Counting Techniques",
+      "publisher": "Springer",
+      "year": 2005
+    }
+  ],
+  "api": [
+    "CLSMImage",
+    "CLSMFrame",
+    "CLSMLine",
+    "CLSMPixel",
+    "CLSMSettings",
+    "CLSMImageInfo",
+    "StreamingCLSMImage",
+    "vector_CLSMFrame",
+    "vector_CLSMLine",
+    "vector_CLSMPixel"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kFlimMeanLifetimeEntry = R"JSON({
+  "name": "flim_mean_lifetime",
+  "label": "FLIM: per-pixel mean lifetime by moments",
+  "summary": "Mean fluorescence lifetime per pixel from the first moment of the micro-time histogram, corrected by the IRF's moments and an optional background.",
+  "description": "The moment estimator of the mean lifetime: tau = m1/m0 - m1_irf/m0_irf per pixel, with a photon-count threshold below which the pixel is left empty rather than reported with a meaningless value, optional background subtraction and frame stacking. Fast enough for whole stacks and independent of a decay model; for multi-exponential decays it is the amplitude-weighted mean, not a component. Use the fit models (`fit` category, `fit_image`) when components are wanted.",
+  "operation_type": "pixel_lifetime_fitting",
+  "method": "get_mean_lifetime",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "minimum_number_of_photons": {
+        "type": "integer",
+        "title": "Min photons",
+        "minimum": 1,
+        "default": 3
+      },
+      "stack_frames": {
+        "type": "boolean",
+        "title": "Stack frames",
+        "default": false
+      },
+      "m0_irf": {
+        "type": "number",
+        "title": "IRF m0",
+        "default": 1.0
+      },
+      "m1_irf": {
+        "type": "number",
+        "title": "IRF m1",
+        "default": 1.0
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "clsm_image",
+      "tttr_photon_stream"
+    ],
+    "optional": [
+      "irf_photon_stream",
+      "background"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "mean_lifetime"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "book",
+      "authors": "Becker, W.",
+      "title": "Advanced Time-Correlated Single Photon Counting Techniques",
+      "publisher": "Springer",
+      "year": 2005
+    }
+  ],
+  "api": [
+    "CLSMImage.get_mean_lifetime"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kFcsImageEntry = R"JSON({
+  "name": "fcs_image",
+  "label": "FCS per pixel of a CLSM image",
+  "summary": "Auto- or cross-correlation curve of every pixel's photons across frames, with a minimum-photon threshold.",
+  "description": "Runs the correlator (any registered `correlation_method`) on the photons of each pixel accumulated over the frames, optionally against a second image's pixels for cross-correlation, and returns one curve per pixel. Pixels below `min_photons` are skipped. This is the raster-scanning form of FCS (a correlation per pixel over the frame time), so the lag axis is coarse and set by the frame rate; use `image_correlation_spectroscopy` for spatial correlations.",
+  "operation_type": "image_correlation_spectroscopy",
+  "method": "get_fcs_image",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "correlation_method": {
+        "type": "string",
+        "title": "Method",
+        "default": "wahl"
+      },
+      "n_bins": {
+        "type": "integer",
+        "title": "Lags per cascade",
+        "default": 50
+      },
+      "n_casc": {
+        "type": "integer",
+        "title": "Cascades",
+        "default": 1
+      },
+      "stack_frames": {
+        "type": "boolean",
+        "title": "Stack frames",
+        "default": false
+      },
+      "normalized_correlation": {
+        "type": "boolean",
+        "title": "Normalised",
+        "default": false
+      },
+      "min_photons": {
+        "type": "integer",
+        "title": "Min photons",
+        "default": 2
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "clsm_image",
+      "tttr_photon_stream"
+    ],
+    "optional": [
+      "clsm_image_2"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "Lag time (s)",
+      "G(tau) per pixel"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Petersen, N. O., Höddelius, P. L., Wiseman, P. W., Seger, O., Magnusson, K. E.",
+      "title": "Quantitation of membrane receptor distributions by image correlation spectroscopy: concept and application",
+      "journal": "Biophys J",
+      "year": 1993,
+      "volume": "65",
+      "pages": "1135-1146"
+    }
+  ],
+  "api": [
+    "CLSMImage.get_fcs_image"
+  ],
+  "can_replay": true
+})JSON";
+const char* const kImageCorrelationEntry = R"JSON({
+  "name": "image_correlation",
+  "label": "Image correlation spectroscopy (ICS / STICS / FRC)",
+  "summary": "Spatial and spatio-temporal autocorrelation of an image stack, and Fourier ring correlation between two images.",
+  "description": "`compute_ics` correlates an image with itself (or another) in space via FFT and normalises to G(xi, eta), the ICS of Petersen et al.; over frame lags it is STICS (Hebert et al.), whose peak displacement per lag is a flow map. Validated against pysimfcs and Kolin/Wiseman's `stics.m`. `get_frc` is the Fourier ring correlation of two images, the resolution estimate of Nieuwenhuizen et al. Assumes the field is stationary over the correlated region.",
+  "operation_type": "image_correlation_spectroscopy",
+  "method": "compute_ics",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "subtract_mean": {
+        "type": "boolean",
+        "title": "Subtract mean",
+        "default": true
+      },
+      "normalise": {
+        "type": "boolean",
+        "title": "Normalise",
+        "default": true
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "image_stack"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "G(xi, eta, tau)"
+    ]
+  },
+  "row_grain": "pixel",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Petersen, N. O., Höddelius, P. L., Wiseman, P. W., Seger, O., Magnusson, K. E.",
+      "title": "Quantitation of membrane receptor distributions by image correlation spectroscopy: concept and application",
+      "journal": "Biophys J",
+      "year": 1993,
+      "volume": "65",
+      "pages": "1135-1146"
+    },
+    {
+      "type": "journal",
+      "authors": "Hebert, B., Costantino, S., Wiseman, P. W.",
+      "title": "Spatiotemporal image correlation spectroscopy (STICS) theory, verification, and application to protein velocity mapping in living CHO cells",
+      "journal": "Biophys J",
+      "year": 2005,
+      "volume": "88",
+      "pages": "3601-3614"
+    },
+    {
+      "type": "journal",
+      "authors": "Nieuwenhuizen, R. P. J., Lidke, K. A., Bates, M., Puig, D. L., Grünwald, D., Stallinga, S., Rieger, B.",
+      "title": "Measuring image resolution in optical nanoscopy",
+      "journal": "Nat Methods",
+      "year": 2013,
+      "volume": "10",
+      "pages": "557-562"
+    }
+  ],
+  "api": [
+    "CLSMImage.compute_ics",
+    "CLSMImage.get_frc"
+  ],
+  "can_replay": true
+})JSON";
+bool register_clsm_image_entries() {
+    tttrlib::register_algorithm_json("clsm", "clsm_reconstruction", kClsmReconstructionEntry);
+    tttrlib::register_algorithm_json("clsm", "flim_mean_lifetime", kFlimMeanLifetimeEntry);
+    tttrlib::register_algorithm_json("clsm", "fcs_image", kFcsImageEntry);
+    tttrlib::register_algorithm_json("clsm", "image_correlation", kImageCorrelationEntry);
+    return true;
+}
+const bool kCLSMImageRegistered = register_clsm_image_entries();
+}  // namespace

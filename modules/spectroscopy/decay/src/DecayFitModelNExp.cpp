@@ -191,6 +191,7 @@ namespace {
 // model; see the note in DecayFitModelFit2x.cpp.
 const char* const kFitNexpEntry = R"JSON({
   "name": "fit_nexp",
+  "api": ["DecayFitNExp", "DecayFitNExpOptions", "DecayFitNExpResult", "FitNExp"],
   "n_patterns": 0,
   "label": "Multi-exponential reconvolution (N-exp)",
   "summary": "Poisson MLE of any number of lifetimes, with amplitudes profiled by EM.",
@@ -283,6 +284,7 @@ const char* const kFitNexpEntry = R"JSON({
 
 const char* const kNexpEntry = R"JSON({
   "name": "nexp",
+  "api": [],
   "label": "Multi-exponential construction inputs",
   "summary": "Inputs set once when a multi-exponential model is built.",
   "description": "Instrument description, component count and search controls for the N-exponential reconvolution fit. 'n_exponentials' is what the model's variable-length lifetime and amplitude arrays take their length from, via their 'count_from' link.",

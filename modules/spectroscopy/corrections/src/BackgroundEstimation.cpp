@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BackgroundEstimation.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -51,3 +52,64 @@ double estimate_background_rate(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBackgroundEstimationEntry = R"JSON({
+  "name": "background_estimation",
+  "label": "Background rate from inter-photon times",
+  "summary": "Estimates the background count rate of a photon stream from the tail of its inter-photon time distribution.",
+  "description": "Bins the inter-photon times and fits the exponential tail beyond the burst-dominated short times, whose rate is the background; the tail fraction and bin size are the two knobs. Model-free and cheap, so it is what the burst filters and `tcspc_calibration` use for a per-detector background.",
+  "operation_type": "background_correction",
+  "method": "estimate_background_rate",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "bin_size_ms": {
+        "type": "number",
+        "title": "Bin size (ms)",
+        "default": 0.1
+      },
+      "tail_fraction": {
+        "type": "number",
+        "title": "Tail fraction",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.5
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "interphoton_times"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "background_rate_khz"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Eggeling, C., Berger, S., Brand, L., Fries, J. R., Schaffer, J., Volkmer, A., Seidel, C. A. M.",
+      "title": "Data registration and selective single-molecule analysis using multi-parameter fluorescence detection",
+      "journal": "J Biotechnol",
+      "year": 2001,
+      "volume": "86",
+      "pages": "163-180"
+    }
+  ],
+  "api": [
+    "estimate_background_rate"
+  ],
+  "can_replay": true
+})JSON";
+bool register_backgroundestimation_entries() {
+    tttrlib::register_algorithm_json("corrections", "background_estimation", kBackgroundEstimationEntry);
+    return true;
+}
+const bool kBackgroundEstimationRegistered = register_backgroundestimation_entries();
+}  // namespace

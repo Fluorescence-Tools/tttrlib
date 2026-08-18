@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "MicrotimeLinearization.h"
+#include "Registry.h"
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -284,3 +285,55 @@ std::vector<float> MicrotimeLinearization::generate_random_numbers(int n_random,
     
     return random_numbers;
 }
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kMicrotimeLinearizationEntry = R"JSON({
+  "name": "microtime_linearization",
+  "label": "Micro-time linearisation (per-channel LUT and shift)",
+  "summary": "Corrects the differential non-linearity of the TAC/TDC per detector channel by a look-up table, and applies per-channel micro-time shifts.",
+  "description": "The classic DNL correction: a per-channel look-up table measured on uncorrelated light maps each micro-time channel to its linearised value, and per-channel shifts align detectors; `linearize` applies both to a photon stream in place. Assumes the LUT was measured with the same TAC settings.",
+  "operation_type": "calibration",
+  "method": "linearize",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_channels": {
+        "type": "integer",
+        "title": "Micro-time channels"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "lut"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "linearised micro times"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "book",
+      "authors": "Becker, W.",
+      "title": "Advanced Time-Correlated Single Photon Counting Techniques",
+      "publisher": "Springer",
+      "year": 2005
+    }
+  ],
+  "api": [
+    "MicrotimeLinearization"
+  ],
+  "can_replay": true
+})JSON";
+bool register_microtimelinearization_entries() {
+    tttrlib::register_algorithm_json("calibration", "microtime_linearization", kMicrotimeLinearizationEntry);
+    return true;
+}
+const bool kMicrotimeLinearizationRegistered = register_microtimelinearization_entries();
+}  // namespace

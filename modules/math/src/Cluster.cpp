@@ -12,6 +12,7 @@
 // here anyway: the distance loop is memory bound.
 #pragma STDC FP_CONTRACT OFF
 #include "Cluster.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <atomic>
@@ -906,3 +907,85 @@ void hdbscan_label_points(
 }
 
 }  // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kClusteringEntry = R"JSON({
+  "name": "clustering",
+  "label": "Clustering: k-means, k-d tree, HDBSCAN",
+  "summary": "k-means with k-means++-style starts, a k-d tree for nearest neighbours, and HDBSCAN (mutual-reachability MST, condensed tree, stability selection).",
+  "description": "Lloyd's k-means driven by a caller-supplied uniform stream so runs are reproducible across languages, a k-d tree with exact nearest-neighbour queries, and the HDBSCAN pipeline of Campello et al.: core distances, mutual-reachability minimum spanning tree, condensed cluster tree and stability-based label extraction. All validated against scikit-learn (`test_math_ab_imaging.py`, sciref benchmarks). Used by ndxplorer's selection tools and the burst clustering.",
+  "operation_type": "analysis",
+  "method": "kmeans",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_clusters": {
+        "type": "integer",
+        "title": "Clusters",
+        "default": 2
+      },
+      "min_cluster_size": {
+        "type": "integer",
+        "title": "HDBSCAN min cluster size",
+        "default": 5
+      },
+      "min_samples": {
+        "type": "integer",
+        "title": "HDBSCAN min samples",
+        "default": 5
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "points"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "labels",
+      "centres"
+    ]
+  },
+  "row_grain": "molecule",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Lloyd, S. P.",
+      "title": "Least squares quantization in PCM",
+      "journal": "IEEE Trans Inf Theory",
+      "year": 1982,
+      "volume": "28",
+      "pages": "129-137"
+    },
+    {
+      "type": "conference",
+      "authors": "Campello, R. J. G. B., Moulavi, D., Sander, J.",
+      "title": "Density-based clustering based on hierarchical density estimates",
+      "journal": "PAKDD",
+      "year": 2013,
+      "pages": "160-172"
+    }
+  ],
+  "api": [
+    "kmeans",
+    "kmeans_uniforms",
+    "kmeans_n_uniforms",
+    "KDTree",
+    "core_distances",
+    "mutual_reachability_mst",
+    "hdbscan_condensed_tree",
+    "hdbscan_label_points",
+    "OptsCluster",
+    "ResultsCluster"
+  ],
+  "can_replay": false
+})JSON";
+bool register_cluster_entries() {
+    tttrlib::register_algorithm_json("math", "clustering", kClusteringEntry);
+    return true;
+}
+const bool kClusterRegistered = register_cluster_entries();
+}  // namespace

@@ -101,6 +101,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search", "TTTR.burst_search_sliding_window", "StreamingBurstDetector"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int m, double T, double, double) {
             return d.burst_search_sliding_window(L, m, T);
@@ -171,6 +172,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_cusum_sprt"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int m, double T, double alpha, double beta) {
             return d.burst_search_cusum_sprt(L, m, T, alpha, beta);
@@ -272,6 +274,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_kalman"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int, double T, double, double) {
             return d.burst_search_kalman(L, (T > 0.0) ? T : 1e-4);
@@ -364,6 +367,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_bocpd"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int, double T, double, double) {
             return d.burst_search_bocpd(L, (T > 0.0) ? T : 1e-3);
@@ -453,6 +457,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_coincident", "TTTR.burst_search_by_name", "TTTR.burst_search_plugin", "TTTR.burst_search_algorithms", "TTTR.burst_search_defaults"]})JSON";
         register_burst_search(d,
         [](TTTR&, int, int, double, double, double) -> std::vector<long long> {
             throw std::invalid_argument(
@@ -628,6 +633,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_maxtree", "max_tree_1d"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int m, double T, double, double) {
             const MaxTreeBurstSettings mt;
@@ -773,6 +779,7 @@ void register_builtin_burst_searches() {
             }
           }
         })SCHEMA";
+        d.extra_json = R"JSON({"api": ["TTTR.burst_search_bayesian_blocks"]})JSON";
         register_burst_search(d,
         [](TTTR& d, int L, int m, double T, double, double) {
             const BayesianBlocksBurstSettings bb;
@@ -791,6 +798,8 @@ void register_builtin_burst_searches() {
 namespace {
 const char* const kBurstSelectionEntry = R"JSON({
   "name": "burst_selection",
+    "method": "burst_search_by_name",
+    "api": ["TTTR.burst_search_by_name", "TTTR.burst_search", "BurstFilter"],
   "label": "Burst search and selection",
   "summary": "Sliding-window / CUSUM / Kalman / Bayesian-blocks burst search on TTTR macro-times. Produces the primary .bur burst table.",
   "operation_type": "burst_selection",

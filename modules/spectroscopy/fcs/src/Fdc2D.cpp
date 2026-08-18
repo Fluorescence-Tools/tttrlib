@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Fdc2D.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -313,3 +314,82 @@ void fdc_log(
 }
 
 }  // namespace tttrlib
+
+// ---- registry entry (Registry.h, core): declared next to the code, registered
+// when this library loads.
+namespace {
+const char* const kFdc2dEntry = R"JSON({
+  "name": "fdc_2d",
+  "label": "2D fluorescence-decay correlation (2D-FDC)",
+  "summary": "Photon-pair histogram over micro-times at a set of macro-time lags: the matrix whose off-diagonal weight measures a molecule changing its decay between two photons.",
+  "description": "For every reference photon, the photons whose macro-time falls in a lag window dT +/- ddT/2 are counted, each pair binned by its two micro-times on a logarithmic (or caller-supplied) axis, so M[a][b] at lag dT is the number of pairs whose earlier photon fell in bin a and later in b. The lag dependence of the cross-peaks measures the interconversion rate between decay states (Felekyan/Kalinin/Seidel's 2D-FDC). Reproduces the original TK_Create2DFDC_04.m matrices exactly. The matrix is the output; the inversion into lifetimes and rates is left to the caller.",
+  "operation_type": "analysis",
+  "method": "fdc_log",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "dT_ticks": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "title": "Lags (ticks)"
+      },
+      "ddT_ticks": {
+        "type": "number",
+        "title": "Lag window (ticks)"
+      },
+      "logt_imax": {
+        "type": "integer",
+        "title": "Log axis size"
+      },
+      "lint_bin_factor": {
+        "type": "integer",
+        "default": 1
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "M(a, b) per lag"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Kalinin, S., Felekyan, S., Valeri, A., Seidel, C. A. M.",
+      "title": "Characterizing multiple molecular states in single-molecule multiparameter fluorescence detection by probability distribution analysis",
+      "journal": "J Phys Chem B",
+      "year": 2008,
+      "volume": "112",
+      "pages": "8361-8374"
+    },
+    {
+      "type": "journal",
+      "authors": "Felekyan, S., Kalinin, S., Sanabria, H., Valeri, A., Seidel, C. A. M.",
+      "title": "Filtered FCS: species auto- and cross-correlation functions highlight binding and dynamics in biomolecules",
+      "journal": "ChemPhysChem",
+      "year": 2012,
+      "volume": "13",
+      "pages": "1036-1053"
+    }
+  ],
+  "api": [
+    "fdc_log",
+    "fdc_log_bin",
+    "fdc_log_ticks",
+    "fdc_scan_axis",
+    "fdc_scan_log",
+    "fdc_scan_two_axes",
+    "fdc_t_imax"
+  ],
+  "can_replay": true
+})JSON";
+const bool kFdc2dRegistered = (tttrlib::register_algorithm_json("fcs", "fdc_2d", kFdc2dEntry), true);
+}  // namespace

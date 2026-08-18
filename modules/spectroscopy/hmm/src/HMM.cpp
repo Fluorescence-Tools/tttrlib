@@ -1943,6 +1943,7 @@ bool register_hmm_descriptor() {
       "columns": ["State", "Log likelihood", "Transition rate matrix", "Emission probabilities"]
     })JSON";
     d.can_replay = true;
+    d.extra_json = R"JSON({"api": ["HMM", "HmmModel", "HmmEval", "HmmChannelMap", "HmmEmissionSpec", "HmmLifetimeSpectrum", "HmmStateSidecar", "HmmConstraints", "HmmRestraints"]})JSON";
     tttrlib::register_algorithm(d);
     return true;
 }

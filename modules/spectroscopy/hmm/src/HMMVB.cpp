@@ -3,6 +3,7 @@
 // Variational Bayes for the photon-stream HMM. See HMMVB.h for the math.
 
 #include "HMMVB.h"
+#include "Registry.h"
 #include "HMM.h"
 #include "HMMRestraints.h"
 
@@ -299,3 +300,81 @@ HmmVB fit_vb(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kPhotonHmmVbEntry = R"JSON({
+  "name": "photon_hmm_vb",
+  "label": "Variational Bayes for the photon-stream HMM",
+  "summary": "Mean-field variational Bayes fit of the photon HMM: Dirichlet posteriors over initial, transition and emission probabilities, and Beal's evidence lower bound for model selection.",
+  "description": "The same forward-backward engine as the maximum-likelihood photon HMM, iterated with Dirichlet factors (Beal 2003): each pass runs the forward pass under geometric-mean weights, accumulates expected counts, and updates the Dirichlet parameters; the returned `elbo` is a bound on the evidence, which is the model-selection score priors ask for where BIC counts parameters. On dense streams it agrees with hmmlearn's VariationalCategoricalHMM to 1e-4 (posterior) / 2e-10 (ELBO). Use it to choose the number of states and to get uncertainties; use `photon_hmm` for the point estimate.",
+  "operation_type": "photon_hmm",
+  "method": "fit_vb",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "max_iter": {
+        "type": "integer",
+        "title": "Max iterations",
+        "default": 300
+      },
+      "tol": {
+        "type": "number",
+        "title": "Tolerance",
+        "default": 1e-07
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "hmm_model"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "posterior means",
+      "posterior sd",
+      "elbo"
+    ]
+  },
+  "row_grain": "photon",
+  "references": [
+    {
+      "type": "thesis",
+      "authors": "Beal, M. J.",
+      "title": "Variational Algorithms for Approximate Bayesian Inference",
+      "publisher": "University College London",
+      "year": 2003
+    },
+    {
+      "type": "journal",
+      "authors": "Pirchi, M., Tsukanov, R., Khamis, R., Tomov, T. E., Berger, Y., Khara, D. C., Volkov, H., Haran, G., Nir, E.",
+      "title": "Photon-by-photon hidden Markov model analysis for microsecond single-molecule FRET kinetics",
+      "journal": "J Phys Chem B",
+      "year": 2016,
+      "volume": "120",
+      "pages": "13065-13075"
+    }
+  ],
+  "api": [
+    "fit_vb",
+    "HmmVB",
+    "HmmPosterior",
+    "dirichlet_kl",
+    "dirichlet",
+    "dirichlet_variates",
+    "digamma",
+    "gamma_variate",
+    "gamma_variates",
+    "normal"
+  ],
+  "can_replay": true
+})JSON";
+bool register_hmmvb_entries() {
+    tttrlib::register_algorithm_json("hmm", "photon_hmm_vb", kPhotonHmmVbEntry);
+    return true;
+}
+const bool kHMMVBRegistered = register_hmmvb_entries();
+}  // namespace

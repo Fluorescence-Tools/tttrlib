@@ -10,6 +10,7 @@
 // a handful of tiny products, memory bound.
 #pragma STDC FP_CONTRACT OFF
 #include "Kalman.h"
+#include "Registry.h"
 
 #include <cmath>
 #include <cstddef>
@@ -240,3 +241,63 @@ void kalman_filter(
 }
 
 }  // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kKalmanFilterEntry = R"JSON({
+  "name": "kalman_filter",
+  "label": "Kalman filter over a count-rate trace",
+  "summary": "Linear Kalman filter recursion (predict/update) over a binned count trace with Poisson measurement noise, returning states, covariances and innovations.",
+  "description": "The textbook Kalman recursion with a constant-velocity-style state and a measurement noise scaled from the Poisson counts, so a drifting rate is tracked and a jump stands out in the innovations; validated against filterpy. It is the estimator behind `burst_search_kalman`.",
+  "operation_type": "analysis",
+  "method": "kalman_filter",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "dt": {
+        "type": "number",
+        "title": "Bin width (s)"
+      },
+      "r_scale": {
+        "type": "number",
+        "title": "Measurement-noise scale",
+        "default": 0.1
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "count_trace"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "state",
+      "covariance",
+      "innovation"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Kalman, R. E.",
+      "title": "A new approach to linear filtering and prediction problems",
+      "journal": "J Basic Eng",
+      "year": 1960,
+      "volume": "82",
+      "pages": "35-45"
+    }
+  ],
+  "api": [
+    "kalman_filter"
+  ],
+  "can_replay": false
+})JSON";
+bool register_kalman_entries() {
+    tttrlib::register_algorithm_json("math", "kalman_filter", kKalmanFilterEntry);
+    return true;
+}
+const bool kKalmanRegistered = register_kalman_entries();
+}  // namespace

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "DecayPatternFit.h"
+#include "Registry.h"
 
 #include <stdexcept>
 
@@ -114,3 +115,77 @@ PatternFitResult decay_pattern_fit(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kDecayPatternFitEntry = R"JSON({
+  "name": "decay_pattern_fit",
+  "label": "Pattern (species-fraction) fit of a decay",
+  "summary": "Fits a decay as a non-negative combination of measured pattern decays, by Poisson MLE or NNLS, with optional regularisation and prior.",
+  "description": "The linear unmixing of a decay into known component patterns (a scatter pattern, a donor-only pattern, ...): fractions are found by maximum likelihood on the Poisson counts or by non-negative least squares, optionally regularised, and returned with the fitted curve and goodness of fit. Assumes the patterns were measured under the same IRF and binning as the data.",
+  "operation_type": "tcspc_fitting",
+  "method": "decay_pattern_fit",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "title": "Mode",
+        "default": "poisson_mle",
+        "enum": [
+          "poisson_mle",
+          "nnls"
+        ]
+      },
+      "reg_strength": {
+        "type": "number",
+        "title": "Regularisation",
+        "default": 0.0
+      },
+      "max_iter": {
+        "type": "integer",
+        "title": "Max iterations",
+        "default": 200
+      },
+      "tol": {
+        "type": "number",
+        "title": "Tolerance",
+        "default": 1e-08
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "decay_histogram",
+      "patterns"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "fractions",
+      "chi2"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "book",
+      "authors": "O'Connor, D. V., Phillips, D.",
+      "title": "Time-correlated Single Photon Counting",
+      "publisher": "Academic Press",
+      "year": 1984
+    }
+  ],
+  "api": [
+    "decay_pattern_fit",
+    "PatternFitResult"
+  ],
+  "can_replay": true
+})JSON";
+bool register_decaypatternfit_entries() {
+    tttrlib::register_algorithm_json("decay", "decay_pattern_fit", kDecayPatternFitEntry);
+    return true;
+}
+const bool kDecayPatternFitRegistered = register_decaypatternfit_entries();
+}  // namespace

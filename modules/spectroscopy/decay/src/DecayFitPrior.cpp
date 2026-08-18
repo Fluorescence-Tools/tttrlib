@@ -140,6 +140,7 @@ private:
 namespace {
 const char* const kUniformPriorEntry = R"JSON({
   "name": "uniform",
+  "api": ["UniformPrior", "DecayFitPrior"],
   "label": "Uniform (box)",
   "summary": "Flat inside [lb, ub], -inf outside; the optimiser sees it as box bounds.",
   "description": "Flat inside [lb, ub], -inf outside; the optimiser sees it as box bounds. State: {\"kind\": \"uniform\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -159,6 +160,7 @@ const char* const kUniformPriorEntry = R"JSON({
 })JSON";
 const char* const kNormalPriorEntry = R"JSON({
   "name": "normal",
+  "api": ["NormalPrior"],
   "label": "Normal",
   "summary": "Gaussian prior; enters the fit as one deviance residual (x-mu)/sigma.",
   "description": "Gaussian prior; enters the fit as one deviance residual (x-mu)/sigma. State: {\"kind\": \"normal\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -179,6 +181,7 @@ const char* const kNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kTruncatedNormalPriorEntry = R"JSON({
   "name": "truncated_normal",
+  "api": ["TruncatedNormalPrior"],
   "label": "Truncated normal",
   "summary": "Gaussian inside [lb, ub], -inf outside.",
   "description": "Gaussian inside [lb, ub], -inf outside. State: {\"kind\": \"truncated_normal\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -207,6 +210,7 @@ const char* const kTruncatedNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kHalfNormalPriorEntry = R"JSON({
   "name": "half_normal",
+  "api": ["HalfNormalPrior"],
   "label": "Half-normal",
   "summary": "Gaussian on x >= loc, -inf below; a soft non-negativity prior.",
   "description": "Gaussian on x >= loc, -inf below; a soft non-negativity prior. State: {\"kind\": \"half_normal\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -227,6 +231,7 @@ const char* const kHalfNormalPriorEntry = R"JSON({
 })JSON";
 const char* const kLognormalPriorEntry = R"JSON({
   "name": "lognormal",
+  "api": ["LogNormalPrior"],
   "label": "Log-normal",
   "summary": "ln x ~ N(mu, sigma); positive support.",
   "description": "ln x ~ N(mu, sigma); positive support. State: {\"kind\": \"lognormal\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -247,6 +252,7 @@ const char* const kLognormalPriorEntry = R"JSON({
 })JSON";
 const char* const kExponentialPriorEntry = R"JSON({
   "name": "exponential",
+  "api": ["ExponentialPrior"],
   "label": "Exponential",
   "summary": "p(x) ~ exp(-(x-loc)/scale) for x >= loc.",
   "description": "p(x) ~ exp(-(x-loc)/scale) for x >= loc. State: {\"kind\": \"exponential\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -267,6 +273,7 @@ const char* const kExponentialPriorEntry = R"JSON({
 })JSON";
 const char* const kGammaPriorEntry = R"JSON({
   "name": "gamma",
+  "api": ["GammaPrior"],
   "label": "Gamma",
   "summary": "Gamma(alpha, beta) on x >= loc.",
   "description": "Gamma(alpha, beta) on x >= loc. State: {\"kind\": \"gamma\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -292,6 +299,7 @@ const char* const kGammaPriorEntry = R"JSON({
 })JSON";
 const char* const kBetaPriorEntry = R"JSON({
   "name": "beta",
+  "api": ["BetaPrior"],
   "label": "Beta",
   "summary": "Beta(alpha, beta) on [0, 1].",
   "description": "Beta(alpha, beta) on [0, 1]. State: {\"kind\": \"beta\", ...} as accepted by DecayFitPrior.from_json_string.",
@@ -313,6 +321,7 @@ const char* const kBetaPriorEntry = R"JSON({
 })JSON";
 const char* const kProductPriorEntry = R"JSON({
   "name": "product",
+  "api": ["ProductPrior"],
   "label": "Product",
   "summary": "The product of other priors on the same parameter (their log densities add).",
   "description": "The product of other priors on the same parameter (their log densities add). State: {\"kind\": \"product\", ...} as accepted by DecayFitPrior.from_json_string.",

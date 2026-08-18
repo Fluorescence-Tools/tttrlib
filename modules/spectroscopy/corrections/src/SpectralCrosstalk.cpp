@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "SpectralCrosstalk.h"
+#include "Registry.h"
 
 #include <cmath>
 #include <algorithm>
@@ -120,3 +121,74 @@ std::vector<double> invert_mixing_ridge(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kSpectralCrosstalkEntry = R"JSON({
+  "name": "spectral_crosstalk",
+  "label": "Spectral crosstalk / three-cube FRET correction",
+  "summary": "Corrects multi-detector intensities for spectral crosstalk and direct excitation (gamma, alpha, delta), and inverts a general mixing matrix by ridge regression.",
+  "description": "The three-cube (sensitised-emission) FRET correction of Lee et al.: donor bleed-through, acceptor direct excitation and detection-efficiency ratio applied to I_DD, I_DA, I_AA with background subtraction, per burst or per pixel. `invert_mixing_ridge` solves the general n-source/m-detector unmixing with Tikhonov damping for ill-conditioned matrices.",
+  "operation_type": "background_correction",
+  "method": "correct_three_cube",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "gamma": {
+        "type": "number",
+        "title": "gamma",
+        "default": 1.0
+      },
+      "alpha": {
+        "type": "number",
+        "title": "alpha (leakage)",
+        "default": 0.0
+      },
+      "delta": {
+        "type": "number",
+        "title": "delta (direct excitation)",
+        "default": 0.0
+      },
+      "ridge": {
+        "type": "number",
+        "title": "Ridge",
+        "default": 0.0
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "intensities"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "corrected_intensities"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Lee, N. K., Kapanidis, A. N., Wang, Y., Michalet, X., Mukhopadhyay, J., Ebright, R. H., Weiss, S.",
+      "title": "Accurate FRET measurements within single diffusing biomolecules using alternating-laser excitation",
+      "journal": "Biophys J",
+      "year": 2005,
+      "volume": "88",
+      "pages": "2939-2953"
+    }
+  ],
+  "api": [
+    "correct_three_cube",
+    "correct_three_cube_batch",
+    "invert_mixing_ridge"
+  ],
+  "can_replay": true
+})JSON";
+bool register_spectralcrosstalk_entries() {
+    tttrlib::register_algorithm_json("corrections", "spectral_crosstalk", kSpectralCrosstalkEntry);
+    return true;
+}
+const bool kSpectralCrosstalkRegistered = register_spectralcrosstalk_entries();
+}  // namespace

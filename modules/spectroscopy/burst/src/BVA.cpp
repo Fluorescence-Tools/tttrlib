@@ -129,6 +129,7 @@ std::pair<std::vector<double>, std::vector<double>> BVA::compute_static_bva_line
 namespace {
 const char* const kBvaEntry = R"JSON({
   "name": "bva",
+  "api": ["BVA"],
   "label": "Burst Variance Analysis",
   "summary": "BVA (Hoffmann et al.): slices each burst into time or photon windows, computes the proximity ratio per window, reports per-burst mean and standard deviation. Compares against the shot-noise static line.",
   "operation_type": "burst_variance_analysis",

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BlindIRF.h"
+#include "Registry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -412,3 +413,82 @@ std::vector<double> blind_irf_estimate(
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBlindIrfEntry = R"JSON({
+  "name": "blind_irf",
+  "label": "Blind IRF estimation from a decay",
+  "summary": "Recovers the instrument response function from a measured decay alone by regularised Richardson-Lucy deconvolution with Savitzky-Golay smoothing.",
+  "description": "When no scatterer measurement exists the IRF is estimated blind: the decay is deconvolved iteratively (Richardson-Lucy) against a smooth kernel estimate, with entropy-type regularisation and Savitzky-Golay smoothing of the estimate between iterations. Reproduces birfi (Vicidomini lab). Assumes a mono- or few-exponential decay much longer than the IRF; the estimate carries no absolute time zero.",
+  "operation_type": "calibration",
+  "method": "blind_irf_estimate",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "rl_iterations": {
+        "type": "integer",
+        "title": "RL iterations",
+        "default": 500
+      },
+      "regularization": {
+        "type": "number",
+        "title": "Regularisation",
+        "default": 3
+      },
+      "sg_window": {
+        "type": "integer",
+        "title": "SG window",
+        "default": 11
+      },
+      "sg_order": {
+        "type": "integer",
+        "title": "SG order",
+        "default": 3
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "decay_histogram"
+    ]
+  },
+  "outputs": {
+    "columns": [
+      "irf"
+    ]
+  },
+  "row_grain": "curve_point",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Richardson, W. H.",
+      "title": "Bayesian-based iterative method of image restoration",
+      "journal": "J Opt Soc Am",
+      "year": 1972,
+      "volume": "62",
+      "pages": "55-59"
+    },
+    {
+      "type": "journal",
+      "authors": "Lucy, L. B.",
+      "title": "An iterative technique for the rectification of observed distributions",
+      "journal": "Astron J",
+      "year": 1974,
+      "volume": "79",
+      "pages": "745-754"
+    }
+  ],
+  "api": [
+    "blind_irf_estimate",
+    "blind_irf_estimate_array"
+  ],
+  "can_replay": true
+})JSON";
+bool register_blindirf_entries() {
+    tttrlib::register_algorithm_json("decay", "blind_irf", kBlindIrfEntry);
+    return true;
+}
+const bool kBlindIRFRegistered = register_blindirf_entries();
+}  // namespace

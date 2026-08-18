@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+- **Every module registers, and operations compose.** All 26 categories of the
+  one registry are now filled by the modules themselves: burst features /
+  filtering / significance / ML / recurrence, CLSM reconstruction, FLIM,
+  per-pixel FCS, ICS/STICS/FRC, phasor, photon reassignment, ISM, PSF models,
+  localisation, Gopich-Szabo, PCH/FIDA, crosstalk, background, MaxEnt, blind
+  IRF, TCSPC-MaxEnt, pattern fit, decay kernels, HMM-VB, the HMM lattice,
+  surrogate, clustering, segmentation, deconvolution, Kalman, neural net,
+  simulation, histograms, micro-time linearisation, photon selection, 2D-FDC --
+  each with label, summary, description, references, parameter schema, inputs,
+  outputs and the `api` symbols implementing it.
+  `test/python/test_registry_completeness.py` fails if a new public class or
+  function is neither registered nor declared plumbing.
+- **Composition API**: `tttrlib.describe(name)`, `defaults(name)`,
+  `resolve(name)` and `compose(*steps)` run a pipeline written as registered
+  names plus parameters -- what a `.pto` record, a GUI or a config file stores.
+  Example: `examples/miscellaneous/plot_registry_composition.py` (+ notebook);
+  tests in `test/python/test_registry_composition.py`.
+
 - **One registry, in core.** `Registry.h` (module `core`) is the registry:
   the `algorithm` and `registry` modules are folded into it, and every entry
   registers itself next to its code from a static initialiser when its

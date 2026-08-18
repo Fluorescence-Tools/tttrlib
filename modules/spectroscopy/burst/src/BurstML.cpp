@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "BurstML.h"
+#include "Registry.h"
 
 #include "NelderMead.h"
 #include "QREigen.h"
@@ -453,3 +454,95 @@ double BurstML::compute_log_likelihood(const std::vector<double>& params) const 
 }
 
 } // namespace tttrlib
+
+// ---- registry entries (Registry.h, core): declared next to the code, registered
+// when this library loads; a static consumer links the archive whole.
+namespace {
+const char* const kBurstMlEntry = R"JSON({
+  "name": "burst_ml",
+  "label": "Burst maximum likelihood (FRET states + rates)",
+  "summary": "Fits a discrete-state FRET model with interconversion rates to the photon colour sequences of many bursts at once by maximum likelihood.",
+  "description": "The photon-by-photon likelihood of Gopich & Szabo for a set of bursts: each burst's donor/acceptor colour string is scored against a hidden-state model whose states carry FRET efficiencies (per colour) and whose transitions are the interconversion rates. Bursts are combined into one likelihood, so slow exchange between states that no single burst resolves is still identifiable. Use it when the E histogram is broadened by dynamics rather than by heterogeneity; it assumes the states are exchanging on the burst timescale and that photon colours are independent given the state. The kernel reproduces the original FRET_burstML MEX bit for bit (`test/cpp/burstml_mex_shim`).",
+  "operation_type": "model_fitting",
+  "params_schema": {
+    "type": "object",
+    "properties": {
+      "n_states": {
+        "type": "integer",
+        "title": "States",
+        "minimum": 1,
+        "default": 2
+      },
+      "n_colours": {
+        "type": "integer",
+        "title": "Colours",
+        "minimum": 2,
+        "default": 2
+      },
+      "qmax": {
+        "type": "integer",
+        "title": "Max photons per burst",
+        "default": 0
+      },
+      "jmax": {
+        "type": "integer",
+        "title": "Max bursts",
+        "default": 0
+      },
+      "t_th": {
+        "type": "number",
+        "title": "Rate threshold"
+      },
+      "n_th": {
+        "type": "integer",
+        "title": "Photon threshold"
+      }
+    }
+  },
+  "inputs": {
+    "required": [
+      "burst_photon_colours",
+      "burst_photon_times"
+    ],
+    "description": "Per burst the colour (detector) sequence and arrival times."
+  },
+  "outputs": {
+    "columns": [
+      "E per state",
+      "k per transition",
+      "neg_log_likelihood"
+    ]
+  },
+  "row_grain": "burst",
+  "references": [
+    {
+      "type": "journal",
+      "authors": "Gopich, I. V., Szabo, A.",
+      "title": "Decoding the pattern of photon colors in single-molecule FRET",
+      "journal": "J Phys Chem B",
+      "year": 2009,
+      "volume": "113",
+      "pages": "10965-10973"
+    },
+    {
+      "type": "journal",
+      "authors": "Gopich, I. V., Szabo, A.",
+      "title": "Theory of photon statistics in single-molecule Förster resonance energy transfer",
+      "journal": "J Chem Phys",
+      "year": 2005,
+      "volume": "122",
+      "pages": "014707"
+    }
+  ],
+  "api": [
+    "BurstML",
+    "BurstMLFitResult"
+  ],
+  "can_replay": true
+})JSON";
+bool register_burstml_entries() {
+    tttrlib::register_algorithm_json("burst", "burst_ml", kBurstMlEntry);
+    return true;
+}
+const bool kBurstMLRegistered = register_burstml_entries();
+}  // namespace
