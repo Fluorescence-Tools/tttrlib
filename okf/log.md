@@ -1,5 +1,48 @@
 # Bundle update log
 
+## 2026-08-18 (49th entry)
+
+* **Every module registers; operations compose; a pipeline is a document**
+  (commits 90981af4f, b715b16fb, 8a7ec7bc0, 9c9390475). 36 entries were added
+  so the one registry describes what the library actually offers -- burst
+  features/filtering/significance/ML/recurrence, CLSM reconstruction, FLIM,
+  per-pixel FCS, ICS/STICS/FRC, phasor, photon reassignment, ISM, PSF models,
+  localisation, Gopich-Szabo, PCH/FIDA, crosstalk, background, MaxEnt, blind
+  IRF, TCSPC-MEM, pattern fit, decay kernels, HMM-VB/lattice/surrogate,
+  clustering, segmentation, deconvolution, Kalman, neural net, simulation,
+  histograms, micro-time linearisation, photon selection, 2D-FDC -- each with
+  references, a parameter schema and the `api` symbols implementing it. A
+  completeness test walks the Python surface and fails on a symbol that is
+  neither registered nor declared plumbing, which is what keeps the register
+  honest as the library grows.
+
+  Composition came next (`describe` / `defaults` / `resolve` / `compose`) and
+  then the document: `tttrlib.Pipeline` round-trips through JSON, a `.pto` tag
+  (`_mmfdb_workflow.definition`, mmfdb's own item name) and an mmfdb workflow
+  (schema v1), stamping the format, its version and the writing tttrlib.
+  `tttr sm` writes the document of the run it just performed and can run one
+  (`--pipeline`, `--write-pipeline`).
+
+  **What the user's question "all pipeline issues fixed?" exposed**: the
+  document was readable but NOT executable. Running one instead of only
+  reading it back found four defects at once -- `tttr sm` wrote `.bur`
+  settings names while the call takes `algorithm/L/m/T`; the `burst_selection`
+  entry advertised `threshold_khz`/`l_min`/`m_min`/`t_window_ms`, which
+  matched no callable in the library (inherited from the retired literal, so
+  anyone building a call from the registry got a TypeError); a positional-only
+  first argument could not be expressed at all; and a channel restriction was
+  hidden inside the search's parameters, so a replay would have searched the
+  whole stream and quietly found other bursts. Fixed by making `params` the
+  ARGUMENTS of the call an entry names, adding a `positional` declaration,
+  giving the selection its own step, and keeping provenance-only keys out of
+  `params`. The lesson is the cheap one: a serialisation format is only
+  verified by executing what it deserialises.
+
+  Also this session: `bin/tttrlib` (the Python/click CLI the native `tttr`
+  replaced) is deleted -- the upstream bioconda recipe installs `$SRC_DIR/bin/*`
+  and tests `tttrlib --help`, so it must install nothing from `bin/` and test
+  `tttr --help` instead (`recipes/cli` already does).
+
 ## 2026-08-18 (48th entry)
 
 * **One registry** (commits 508c1135a, cd9b85b1e; PRD-032 closed). The

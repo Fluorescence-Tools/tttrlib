@@ -137,6 +137,25 @@ toctree), `okf/MODULE-DEBT.md` §2/§6/§6b/§7 closed with the reasoning kept.
 5. Feature gap, if wanted: a per-time-window-normalised correlation estimator
    (Kristine TW), which would turn the one NO-REF correlator row into an A/B.
 
+## 4b. The registry and pipelines (added 2026-08-18, after the rulings)
+
+The registry is `core/Registry.h` and every algorithm registers into it next to
+its code. Two invariants a change must keep, both enforced by tests:
+
+* `test/python/test_registry_completeness.py` -- a new public class or function
+  must be registered or declared plumbing (with a reason).
+* an entry's `params_schema` names the ARGUMENTS of the call its `api`/`method`
+  points at, `positional` lists the ones that cannot be passed by keyword, and
+  `operation_type` is an mmfdb term (`test_registry_matches_mmfdb.py`). This is
+  what makes a pipeline document executable; the `burst_selection` entry
+  advertised parameters no callable took until it was caught by *running* a
+  document rather than reading one.
+
+`tttrlib.Pipeline` (ext/python/pipeline_support.py, `tttrlib.pipeline` module)
+is the document: JSON / `.pto` (`_mmfdb_workflow.definition`) / mmfdb workflow
+v1. `tttr sm --write-pipeline` emits one, `--pipeline` runs one (json or pto).
+Docs: `doc/pipelines.rst`.
+
 ## 5. Things that bite (read before touching)
 
 - **Shared checkout.** Another session (crush) has an uncommitted hunk in
