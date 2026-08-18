@@ -8,4 +8,4 @@ This module implements reader support for Photonscore LINCam `.photons` (D7) fil
 
 ## Dependencies
 
-- Depends on `io` (`io/base`).
+- Depends on `io/base`, `util`.

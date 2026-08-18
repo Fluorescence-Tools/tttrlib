@@ -21,7 +21,14 @@ cli
 
 ## Subdirectories
 
-- **`util/`**: Low-level utilities (SIMD, RNGs, logging, neural nets, optimization).
+- **`util/`**: Low-level plumbing — logging, progress, byte order, bit ops, CPU
+  feature detection, SHA-256.
+- **`math/`**: Numerical kernels shared by everything above — dense linear
+  algebra, optimisers, RNGs, clustering, segmentation, deconvolution, the HMM
+  lattice, the neural network. Knows nothing about photons.
+- **`streaming/`**: Online consumers that take photons one at a time and keep
+  incremental state (live CLSM image, correlator, burst detector, decay
+  histogram, phasor, intensity trace).
 - **`io/`**: File input/output readers and writers for TTTR file formats and table representations.
 - **`plugin/`**: Native plugin host interface and dynamic library loader.
 - **`simulation/`**: Diffusion and photon emission simulator.

@@ -4,14 +4,35 @@ Algorithms for identifying photon bursts and computing burst metrics in single-m
 
 ## Contents
 
-- **`TTTRBurstSearch.h` / `TTTRBurstSearch.cpp`**: Sliding window (m-out-of-n), sliding time window, Bayesian blocks, and CUSUM/SPRT burst search methods.
+- **`TTTRBurstSearch.cpp`**: the `TTTR::burst_search*` entry points — sliding
+  window (m-out-of-n) and CUSUM/SPRT — defined here rather than in `core`, so
+  core contains no burst-search code (they stay *members* because that is the
+  public API in four languages; see the file header).
+- **`BurstSearchDispatch.h` / `BurstSearchDispatch.cpp`**: the dispatch table a
+  search is reached by name through (`burst_search(mode)`,
+  `burst_search_by_name`), keyed on the registry key.
 - **`BurstSearchKalman.h` / `BurstSearchKalman.cpp`**: Kalman-filtered count rate burst search with Mahalanobis detection.
 - **`BurstSearchBOCPD.h` / `BurstSearchBOCPD.cpp`**: Bayesian Online Changepoint Detection (Adams & MacKay 2007) with Gamma-Poisson conjugate model.
 - **`BurstSearchMaxTree.h` / `BurstSearchMaxTree.cpp`**: Max-tree attribute filtering burst search (threshold-free).
 - **`BurstSearchBayesianBlocks.h` / `BurstSearchBayesianBlocks.cpp`**: Bayesian blocks burst search.
 - **`BurstSearchRegistry.cpp`**: registers every built-in burst search (description + dispatch in one call) and the burst pipeline operations in the one registry (core, `Registry.h`) when the library loads.
-- **`BurstSignificance.h`**: Exact Poisson and Li & Ma significance statistics.
-- **`BurstFeature.h` / `BurstFeatureExtractor.h`**: Feature extraction algorithms for detected bursts (brightness, anisotropy, FRET efficiency, 2CDE).
+- **`BurstSignificance.h`**: Exact Poisson and Li & Ma significance statistics,
+  the sigma conversions and the trials correction.
+- **`BurstConfidence.h` / `BurstConfidence.cpp`**: `TTTR::burst_confidence` —
+  how strongly the photons support each burst, in sigma, measured against the
+  background flanking it, so the number means the same for every search.
+- **`BurstFeature.h` / `BurstFeature.cpp`**: the base a per-burst feature is
+  built on — named photon streams, the per-photon KDE (`build_kde`) the 2CDE
+  variants use, and the per-burst reduction.
+- **`BurstFeatureExtractor.h` / `BurstFeatureExtractor.cpp`**: the burst table:
+  counts, durations, mean macro/micro times, proximity ratio and corrected FRET
+  efficiency per named detector.
+- **`BurstFilter.h` / `BurstFilter.cpp`**: turning a raw burst list into an
+  accepted one — channel and micro-time selection, size / duration /
+  background filters, merging, and the JSON state a `.pto` records.
+- **`RecurrenceAnalysis.h` / `RecurrenceAnalysis.cpp`**: recurrence analysis of
+  single particles (RASP) — same-molecule probability from inter-burst gaps and
+  the efficiencies of recurring bursts.
 - **`BVA.h` / `BVA.cpp`**: Burst Variance Analysis (BVA).
 - **`TwoCDE.h` / `TwoCDE.cpp`**: Two-Channel Kernel Density Estimator (2CDE) analysis.
 - **`BurstML.h` / `BurstML.cpp`**: Maximum-likelihood burst analysis with a combined diffusion-kinetics-photon observation model (port of FRET_burstML, `mlhDiffNTRbkg_MT`). The combined evolution operator is eigendecomposed once per parameter set and the log-likelihood of all bursts is maximised via Nelder-Mead. Uses std-only QR eigendecomposition (`modules/math/QREigen.h`) and Nelder-Mead (`modules/math/NelderMead.h`) — no GSL dependency. Verified to recover FRET efficiency on simulated 2-state bursts. See the `BurstML.h` file header for the `5n`/`(4+n)n` parameter layout.
@@ -25,7 +46,8 @@ Algorithms for identifying photon bursts and computing burst metrics in single-m
 
 ## Dependencies
 
-- Depends on `core`, `util`, `math` (BurstML uses `QREigen` and `NelderMead`).
+- Depends on `util`, `math` (BurstML uses `QREigen` and `NelderMead`), `core`,
+  `plugin` (a search a plugin contributed), nlohmann/json.
 
 ## Adding a burst search
 

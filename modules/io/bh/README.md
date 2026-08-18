@@ -9,4 +9,4 @@ This module implements reader support for Becker & Hickl SPC file formats (SPC-1
 
 ## Dependencies
 
-- Depends on `io` (`io/base`).
+- Depends on `io/base`, `util`, nlohmann/json.

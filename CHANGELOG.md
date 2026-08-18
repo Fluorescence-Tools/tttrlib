@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+- **Module READMEs describe what is actually in the module**, and a test keeps
+  them that way (`test/python/test_module_readmes.py`: every leaf module names
+  every file it has, every aggregate names its submodules, and a file a README
+  claims must exist). Three were wrong about their subject or contents:
+  `io/be` said Becker & Hickl (it is the **BrightEyes-TTM** `.ttr` reader;
+  Becker & Hickl is `io/bh`), `io/csv` named `io_csv_reader.*` (never existed)
+  and `io/table` named `TableVocabulary.*` (renamed long ago). Twelve more
+  listed a fraction of their files -- `core` omitted the registry, the
+  DataStore and the histograms; `cli` omitted nine subcommands; `simulation`
+  omitted seventeen headers -- and several stated dependencies that had
+  changed.
+
 - **A pipeline document is executable, not just readable.** A step's `params`
   are now the ARGUMENTS of the call it names: `burst_selection` declares
   `algorithm` / `L` / `m` / `T` (what `TTTR.burst_search_by_name` takes), an

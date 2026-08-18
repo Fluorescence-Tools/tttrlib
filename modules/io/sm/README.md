@@ -8,4 +8,4 @@ This module implements reader support for single-molecule `.sm` file format.
 
 ## Dependencies
 
-- Depends on `io` (`io/base`).
+- Depends on `io/base`, `util`, nlohmann/json.

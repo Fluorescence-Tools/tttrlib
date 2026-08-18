@@ -4,14 +4,41 @@ Iterative reconvolution fitting algorithms and maximum likelihood estimation for
 
 ## Contents
 
-- **`DecayFit.h` / `DecayFit.cpp`**: Base decay fitting engine and cost function evaluation.
-- **`DecayConvolution.h` / `DecayConvolution.cpp`**: Fast numerical convolution routines with instrument response functions (IRF). SIMD-accelerated (AVX+FMA on x86_64, NEON on AArch64) with runtime CPU dispatch.
-- **`DecayFit23.cpp` - `DecayFit26.cpp`**: Non-linear optimization algorithms (Levenberg-Marquardt, Nelder-Mead, L-BFGS) for multi-exponential model fits.
-- **`DecayFitNExp.h` / `DecayFitNExp.cpp`**: General bounded multi-exponential reconvolution by Poisson MLE. Uses EM variable-projection for amplitudes and coordinate-wise Brent minimization for lifetimes, followed by an additive joint `bfgs`+AD refinement pass for `N >= 2` lifetimes (see below). Allocation-free inner optimization loop via `FitWorkspace` scratch buffers. Supports single-curve, batch, and per-pixel image fitting.
-- **`DecayStatistics.h` / `DecayStatistics.cpp`**: Goodness-of-fit statistics (chi-squared, weighted residuals, autocorrelation of residuals).
-- **`BlindIRF.h` / `BlindIRF.cpp`**: Blind instrument response function estimation from fluorescence decays (BIRFI, Gomez-Sanchez et al. 2024; reference implementation VicidominiLab `birfi`): Savitzky-Golay derivative to find the decay region, the shared-rate / per-channel (A, C) truncated-exponential model solved by variable projection (birfi fits it with Adam), and periodic Richardson-Lucy deconvolution with median-filter regularization. A/B-tested against `birfi` (`test_ab_decay_reference.py::TestBlindIrfAgainstBirfi`: IRFs correlate ≥ 0.99 after undoing birfi's n/2 `ifftshift` roll, and tttrlib is at least as close to the truth) and benchmarked against it: **3.9×** faster on 25 channels × 1024 bins × 500 RL iterations (`benchmarks/bench_vicidomini.py`, PERF.md).
-- **`MaxEntTcspc.h` / `MaxEntTcspc.cpp`**: Maximum-entropy TCSPC lifetime analysis (`me_vin4_E.m` analogue, ported from `chisurf maxent_decay.core.solver`). Recovers a lifetime distribution P(tau) via the quadratic MEM objective with bounded-QP active-set steps. Matches the ChiSurf reference to 1e-12 (p, chisq, Q, niter) and is ~11x faster. Its bounded-QP/MEM engine now lives in `modules/math/include/MaxEntQp.h`, shared with `modules/spectroscopy/corrections/src/MaxEnt.cpp`; see PRD-038. The lifetime/distance axes are caller-supplied arbitrary arrays — log-spaced or irregular grids need no special handling. `solve_tcspc_mem_lifetime`/`_fret` also take an opt-in `target_chisq` (>0 finds nu automatically via a joint (p, nu) controller — the caller's `nu` seeds the search — historic-MaxEnt style; this solver's chi-square is a MEAN over fit bins, so the classic target is ~1.0). See PRD-039.
-- **`DecayPatternFit.h` / `DecayPatternFit.cpp`**: General N-arbitrary-pattern fit — non-negative amplitudes of caller-supplied fixed reference patterns (e.g. `DecayFitProblem::patterns`), with a choice of plain NNLS, L2 (Tikhonov), or Skilling-Bryan maximum-entropy regularisation. See PRD-038. A fourth mode, `kMaxEntTargetChisq`, finds the entropy weight automatically by targeting a chi-square (`reg_strength` is then the target, raw-sum units ~n_bins). See PRD-039.
+**The fit models and the machinery around them.**
+
+- **`DecayFitModel.h` / `DecayFitModel.cpp`** — the model interface and the factory
+  (`make_decay_fit`), plus `DecayFitModelRegistration.h`, which is why a model
+  survives being linked out of a static archive.
+- **`DecayFitModelFit2x.cpp`** — the Fit2x family (`fit23`, `fit24`, `fit25`,
+  `fit26`) and their registry entries.
+- **`DecayFitModelNExp.cpp`** — the n-exponential model and its registry entry.
+- **`DecayFitPlugin.cpp`** — a model a plugin contributed, wrapped so the
+  library's own optimiser fits it.
+- **`DecayFit.h` / `DecayFit.cpp`, and `DecayFit23.h` / `DecayFit23.cpp`,
+  `DecayFit24.h` / `DecayFit24.cpp`, `DecayFit25.h` / `DecayFit25.cpp`,
+  `DecayFit26.h` / `DecayFit26.cpp`** — the kernels:
+  the objective, the profiled amplitudes and the analytic pieces of each model.
+- **`DecayFitProblem.h` / `DecayFitProblem.cpp`** — a fit as data: parameters, links, bounds,
+  results; `DecayFitSetup.cpp` derives the flat parameter layout from the
+  registry entry (the flattening rule).
+- **`DecayFitContext.h`** — what a kernel is given: the data, the IRF, the
+  fitted range and the objective.
+- **`DecayFitPrior.h` / `DecayFitPrior.cpp`** — the prior kinds (uniform, normal, truncated
+  normal, half-normal, log-normal, exponential, gamma, beta, product, a Python
+  callable, and any a plugin adds) and their registry entries.
+- **`DecayFitDescriptors.h` / `DecayFitDescriptors.cpp`** — everything this module registers:
+  `fit`, `fit_setup`, `objective`, `prior` and its pipeline operations.
+- **`DecayStatistics.h` / `DecayStatistics.cpp`** — the objectives: Poisson MLE (2I*), P+2S,
+  Neyman and Gehrels least squares, and the Pearson/Neyman chi-squares.
+- **`DecayConvolution.h` / `DecayConvolution.cpp`** — the reconvolution kernels (`fconv` and
+  its periodic / per-channel / SIMD variants), pile-up, lamp shift, rescaling.
+- **`DecayFitDFA.h` / `DecayFitDFA.cpp`** — the anisotropy (VV/VH) forms of those kernels.
+- **`DecayFitNExp.h` / `DecayFitNExp.cpp`** — the standalone n-exponential fitter.
+- **`DecayPatternFit.h` / `DecayPatternFit.cpp`** — the linear unmixing of a decay into
+  measured patterns (Poisson MLE or NNLS).
+- **`BlindIRF.h` / `BlindIRF.cpp`** — the IRF recovered from a decay alone.
+- **`MaxEntTcspc.h` / `MaxEntTcspc.cpp`** — maximum-entropy lifetime and distance
+  distributions (the engine itself is `MaxEntQp` in [`math`](../../math)).
 
 ## Examples
 

@@ -35,6 +35,18 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`Nnls.h` / `Nnls.cpp`**: Non-negative least squares by the classical Lawson-Hanson (1974) algorithm — KKT-correct, unlike `quadpr_bound`'s active-set sweep (see that header's docstring for why the two are not interchangeable). Verified against `scipy.optimize.nnls`.
 - **`Kalman.h` / `Kalman.cpp`**: The Kalman filter recursion over a whole count-rate trace in one call — `kalman_filter(y, x0, P0, Q, dt, r_scale)` → `(x_filt, P_filt, D_mahal)`. A bit-exact port of ChiSurf's `_kalman_filter_loop` (`core/fluorescence/burst/kalman.py`), which since ChiSurf dropped numba runs as plain Python per trace. The closed-form 2×2 inverse (`_inv2x2`) is ported as-is, so the two-channel single-molecule case agrees with the reference digit for digit; dimensions above two fall back to the library's own Gauss-Jordan inverse and are *not* bit-parity with ChiSurf's LAPACK path. Parity rides on two things carried in source: `#pragma STDC FP_CONTRACT OFF`, and reproducing BLAS's fused-second-product inner sum (`std::fma`) that numpy's `@` emits for 2×2 — a plain `a0*b0 + a1*b1` disagrees with numpy ~44% of the time, one ulp, and the Mahalanobis threshold ChiSurf's fcs plugin bursts on moves. See PRD-037 B3.
 - **`Watershed.h` / `Watershed.cpp`**: Two region-segmentation kernels — a priority-queue watershed flood (`watershed(image, markers, mask, connectivity)`, label image out) and iso-contour extraction by marching squares (`marching_squares(image, level, vertex_connect_high)`, `(n, 4)` endpoint pairs out). Both match **scikit-image exactly**, digit for digit (current upstream, ≥ 0.25.1 — see the marker-seed note in the header), not ChiSurf: ChiSurf's `core/roi` is documented as skimage-exact `regionprops` and its tests compare against skimage, so a merely-correct port fails them. The two places ChiSurf's own `segmentation.py` diverges were measured and settled in skimage's favour — the flood seeds its queue with markers at their own image value (skimage 0.25.0 briefly used `-inf`, reverted upstream in 0.25.1 — the port now follows ChiSurf and current skimage), and the marching-squares case bits are `ul=1, ur=2, ll=4, lr=8` in raster emission order (ChiSurf swaps the lower row and inverts the ambiguous squares). Raster order is part of the marching-squares contract because skimage chains the segments into polygons in that order. `#pragma STDC FP_CONTRACT OFF` carries the exactness: a fused `_fraction` interpolation rounds once instead of twice and moves a contour endpoint by a ulp. The mask argument is required (an all-true uint8 image is skimage's `mask=None`); padding, footprint and output are allocated inside the call. See PRD-037 B4.
+- **`Deconvolution.h` / `Deconvolution.cpp`**: Richardson-Lucy (2-D, 3-D and
+  event-based with PSF oversampling) and Wiener deconvolution over the vendored
+  FFT, plus `scan_blur_kernel_1d` (the dwell/jitter kernel of a scan) and the
+  event <-> count-image conversions. Richardson-Lucy is scikit-image-exact; the
+  Wiener estimator differs from scikit-image's by design (documented in the
+  test).
+- **`Jitter.h` / `Jitter.cpp`**: sub-pixel dithering of integer coordinates
+  (`jitter_coordinates_2d`, in place) — what turns a pixel grid back into
+  positions for list-mode deconvolution and super-resolution.
+- **`Sampling.h`**: drawing from a distribution given as data —
+  `sample_from_cdf` and `weighted_choice`, both on caller-supplied uniforms so
+  the consumer owns the reproducibility contract.
 - **`SimPcgRandom.h`**: Compact inline PCG32 PRNG for per-stream reproducible randomness.
 
 ## Examples

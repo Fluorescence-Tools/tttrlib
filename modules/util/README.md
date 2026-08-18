@@ -12,7 +12,11 @@ The `util` module provides foundational infrastructure used across `tttrlib`: lo
 - **`ByteOrder.h`**: Byte-order conversion (big-endian / little-endian swap).
 - **`ParallelFor.h`**: Parallel for-loop abstraction (OpenMP wrapper).
 - **`bimap.h`**: Bidirectional map container.
-- **`string_encoding.h`**: String encoding helpers.
+- **`string_encoding.h`**: String encoding helpers (native <-> UTF-8), for
+  vendor headers written in a code page.
+- **`Sha256.h`**: SHA-256 of a buffer or a file (`sha256_file_hex`) -- the
+  checksum a `.pto` records for the measurement it was derived from, and what
+  `registry("plugin")` reports for a loaded plugin.
 
 ## Dependencies
 

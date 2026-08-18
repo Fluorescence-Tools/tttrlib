@@ -32,6 +32,7 @@ rather than below it — the arrow runs `io_table_* → core → io_* → io`:
 | [`hdf5/`](hdf5) | `tttrlib_io_hdf5_table` | Columnar HDF5 — one dataset per column |
 | [`store/`](store) | `tttrlib_io_store` | The native `.dstore` file: fidelity, no dependency |
 | [`pto/`](pto) | `tttrlib_io_pto` | PTO, the PhoTon cOntainer — EBML, DocType `pto` |
+| [`table/`](table) | `tttrlib_io_table` | One vocabulary over the four above: `read_table` / `write_table` / `table_columns` |
 
 `hdf5/` is the one directory with a target in each group, because HDF5 is used
 for both jobs. They stay two targets because one target with both dependencies

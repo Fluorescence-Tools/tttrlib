@@ -8,4 +8,4 @@ This module implements reader support for Carl Zeiss ConfoCor3 `.raw` files.
 
 ## Dependencies
 
-- Depends on `io` (`io/base`).
+- Depends on `io/base`, `util`, nlohmann/json.

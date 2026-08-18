@@ -8,4 +8,4 @@ This module implements reader and writer support for PicoQuant file formats: PTU
 
 ## Dependencies
 
-- Depends on `io` (`io/base`).
+- Depends on `io/base`, `util`, nlohmann/json.

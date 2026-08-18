@@ -6,6 +6,9 @@ PDA algorithms for modeling photon count distributions and single-molecule FRET 
 
 - **`Pda.h` / `Pda.cpp`**: Core PDA histogram generation and model calculation.
 - **`PdaBurstLikelihood.h` / `PdaBurstLikelihood.cpp`**: K-channel burst-wise photon-partition maximum likelihood — the C++ hot path that the three-colour PDA (`chisurf pda3c`) likelihood already delegates to.
+- **`PdaCallback.h` / `PdaCallback.cpp`**: the callback a caller supplies to
+  map a photon-count pair to the quantity a histogram is built over (the
+  default is the proximity ratio), so a model is not baked into the kernel.
 - **`Pda3cCore.h` / `Pda3cCore.cpp`**: Three-colour PDA forward-model primitives:
   - `gauss_hermite_grid` — tensor Gauss-Hermite quadrature grid for a trivariate Gaussian species.
   - `transfer_matrix_3c` — cascading FRET transfer matrix from inter-dye distances.

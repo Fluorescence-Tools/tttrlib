@@ -4,9 +4,23 @@
 
 ## Contents
 
-- **`tttr_cli.h`**: Subcommand registry and CLI options parsing.
-- **`cmd_sim.cpp`**: `tttr sim` Monte Carlo TTTR photon stream simulation subcommand.
-- **`cmd_sm.cpp`**: `tttr sm` single-molecule burst search, writing the burst
+- **`main.cpp`, `src/cli_main.cpp`, `include/tttr_cli.h`**: entry point,
+  subcommand table and shared option parsing.
+- **`src/cmd_common.cpp`**: helpers every subcommand shares (input resolution,
+  including `-` for stdin, and container/format naming).
+- **`include/cli_progress.h` / `src/cli_progress.cpp`**: the JSONL progress
+  events `--progress` emits for a calling client.
+- **`include/detector_setup.h` / `src/detector_setup.cpp`**: reading ChiSurf's
+  `detector_setups.json` — named detectors, their channels and micro-time
+  gates, which is where `tttr sm`'s column names come from.
+- **`src/cmd_convert.cpp`**: `tttr convert` — rewrite a file into another
+  container.
+- **`src/cmd_correlate.cpp`**: `tttr correlate` — FCS, four columns out.
+- **`src/cmd_formats.cpp`**: `tttr formats` — what can be read and written.
+- **`src/cmd_detectors.cpp`**: `tttr detectors` — what a setup file declares.
+- **`src/cmd_image.cpp`**: `tttr image` — CLSM reconstruction and export.
+- **`src/cmd_sim.cpp`**: `tttr sim` Monte Carlo TTTR photon stream simulation subcommand.
+- **`src/cmd_sm.cpp`**: `tttr sm` single-molecule burst search, writing the burst
   table as JSON, as a delimited file (`--csv`), or into a container
   (`--output out.mmfdb.pto`). The container is a plain `.pto` carrying the
   `PTO.MFDB` profile — hence the `.mmfdb` on the stem; the suffix stays `.pto`
@@ -31,11 +45,20 @@
   hundred photons do not determine an anisotropy — and `gamma`, the burst's
   background fraction, is measured from the photons no burst contains rather
   than guessed.
-- **`cmd_pto.cpp`**: `tttr pto` subcommands. Read side: ls, cat, extract, tree,
+
+  The container it writes carries the **pipeline document** that produced it
+  (`_mmfdb_workflow.definition`), and a run can be driven by one:
+  `--write-pipeline FILE` emits the recipe without reading the data,
+  `--pipeline FILE` runs one (a `.json`, or a `.pto` that carries one). See
+  [`doc/pipelines.rst`](../../doc/pipelines.rst).
+- **`src/cmd_pto.cpp`**: `tttr pto` subcommands. Read side: ls, cat, extract, tree,
   info, tags. Write side: `pack -o out.pto PATH…` builds a container from files
   and directories, `add FILE PATH…` bundles more into an existing one.
-- **`cmd_tui.cpp`**: TUI interface for interactive PTO file navigation.
+- **`src/cmd_tui.cpp`** (+ `include/pto_tui.hpp`): `tttr tui` — interactive
+  container navigation.
 
 ## Dependencies
 
-- Depends on `simulation`, `io/pto`, `io/store`, `core`, `util`.
+- Depends on `util`, `core`, `simulation`, `fcs`, `clsm`, `superres`,
+  `localization`, `burst`, `decay`, `io`, `io/store`, `io/pto`, `io/image`,
+  `io/csv`, nlohmann/json, cxxopts.
