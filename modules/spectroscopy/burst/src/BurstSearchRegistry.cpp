@@ -782,51 +782,133 @@ void register_builtin_burst_searches() {
     });
 }
 
+
+// ---- registry("operation") entry ------------------------------------------
+// The burst pipeline's first step: a search plus the primary burst table. The
+// column names listed are those of the two-detector (green/red) default; a
+// `--setup` with other detector names produces `Duration (<detector>) (ms)`
+// etc. for each of its detectors (modules/cli/src/cmd_sm.cpp).
+namespace {
+const char* const kBurstSelectionEntry = R"JSON({
+  "name": "burst_selection",
+  "label": "Burst search and selection",
+  "summary": "Sliding-window / CUSUM / Kalman / Bayesian-blocks burst search on TTTR macro-times. Produces the primary .bur burst table.",
+  "operation_type": "burst_selection",
+  "data_format": "dstore",
+  "row_grain": "burst",
+  "kind": "burst_table",
+  "inputs": {
+    "required": [
+      "tttr_photon_stream"
+    ],
+    "description": "Raw TTTR photon stream (macro + micro times, routing channels)."
+  },
+  "outputs": {
+    "columns": [
+      "First Photon",
+      "Last Photon",
+      "Duration (ms)",
+      "Duration (green) (ms)",
+      "Duration (red) (ms)",
+      "Mean Macro Time (ms)",
+      "Mean Macro Time (green) (ms)",
+      "Mean Macro Time (red) (ms)",
+      "Number of Photons",
+      "Number of Photons (green)",
+      "Number of Photons (red)",
+      "Count Rate (KHz)",
+      "Green Count Rate (KHz)",
+      "Red Count Rate (KHz)",
+      "Mean Microtime (green) (ns)",
+      "Mean Microtime (red) (ns)",
+      "Proximity Ratio"
+    ]
+  },
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "threshold_khz": {
+        "type": "number",
+        "default": 30.0,
+        "unit": "kHz"
+      },
+      "l_min": {
+        "type": "integer",
+        "default": 30,
+        "minimum": 1
+      },
+      "m_min": {
+        "type": "integer",
+        "default": 5,
+        "minimum": 1
+      },
+      "t_window_ms": {
+        "type": "number",
+        "default": 0.5,
+        "unit": "ms"
+      },
+      "routing_channels": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "default": [
+          0,
+          1
+        ]
+      },
+      "microtime_ranges": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "default": [
+          [
+            0,
+            4096
+          ]
+        ]
+      }
+    }
+  },
+  "can_replay": true
+})JSON";
+}  // namespace
+
+/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
+void register_operation_burst_selection() {
+    register_algorithm_json("operation", "burst_selection", kBurstSelectionEntry);
+}
+
+void register_operation_bva();
+void register_operation_kde_cde();
+void register_operation_burst_fusion();
+
+void register_burst_operations() {
+    static std::once_flag once;
+    std::call_once(once, [] {
+        register_operation_burst_selection();
+        register_operation_bva();
+        register_operation_kde_cde();
+        register_operation_burst_fusion();
+    });
+}
+
 } // namespace tttrlib
 
 std::string TTTR::burst_search_algorithms_json() {
-    // Assembled from what actually registered, plus whatever a plugin brought.
-    // The built-ins are no longer a literal, so there is no list to keep in
-    // sync with the dispatch table -- they are the same list.
-    //
-    // The registrations have to be primed here. `algorithms_json` triggers the
-    // *algorithm* module's built-ins, which knows nothing about burst searches;
-    // without this call the category came back empty, which is a category that
-    // silently loses all seven entries rather than failing.
+    // The `burst_search` category of the one registry: the seven built-ins
+    // register themselves with their dispatch entry (register_builtin_burst_searches),
+    // a plugin's search is registered by the plugin host when it loads. Both
+    // have to be primed here -- `algorithms_json` only knows the *algorithm*
+    // module's own built-ins, and without these calls the category came back
+    // empty rather than failing.
     tttrlib::register_builtin_burst_searches();
-    //
-    // A plugin's entries carry "provider": "plugin" and no "method", because
-    // there is no attribute on TTTR to call; see TTTR::burst_search_plugin.
-    //
-    // ordered_json, not json: nlohmann::json is a std::map, so parsing and
-    // re-dumping SORTS every object key alphabetically. The registrations are
-    // written in declaration order and `params_schema.properties` is that
-    // order -- which is the C++ argument order, and the only thing a language
-    // without keyword arguments can dispatch on. Round-tripping through the
-    // sorted type turned `[L, m, p0, ...]` into `[L, m, max_false_alarm_rate,
-    // ...]`, and the JavaScript binding's registry-driven call then passed
-    // `max_false_alarm_rate` where `p0` belongs. Python never noticed: it calls
-    // with **kwargs.
-    nlohmann::ordered_json out = nlohmann::ordered_json::parse(
-        tttrlib::algorithms_json("burst_search"));
-
-    const std::string extra = tttrlib::PluginHost::burst_searches_json();
-    if (!extra.empty()) {
-        // Merged as JSON rather than spliced as text. The previous version
-        // inserted the plugin block by searching for the last `}` in the
-        // literal, which is a parser written in `find_last_of` -- and a
-        // built-in whose description happened to end in a brace would have
-        // moved the insertion point.
-        // `burst_searches_json()` returns the entries WITHOUT enclosing braces
-        // — it was written to be spliced into the middle of a literal, so it is
-        // a fragment, not a document. Brace it before parsing.
-        nlohmann::ordered_json plugins =
-            nlohmann::ordered_json::parse("{" + extra + "}", nullptr, false);
-        if (plugins.is_object())
-            for (auto it = plugins.begin(); it != plugins.end(); ++it)
-                if (!out.contains(it.key())) out[it.key()] = it.value();
-    }
-    return out.dump(2);
+    tttrlib::PluginHost::ensure_loaded();
+    return tttrlib::algorithms_json("burst_search");
 }
 
 /*!

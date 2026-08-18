@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TwoCDE.h"
 
+#include "AlgorithmRegistry.h"
 #include <cmath>
 
 namespace tttrlib {
@@ -98,6 +99,58 @@ void TwoCDE::compute(double tau, int variant, int kernel) {
     build_streams();
     build_kde(seconds_to_macro_ticks(tau), kernel);
     for_each_burst_from_filter(make_reducer(variant, kernel));
+}
+
+
+// ---- registry("operation") entry ------------------------------------------
+// FRET-2CDE / ALEX-2CDE as a pipeline step, next to the class that computes it.
+namespace {
+const char* const kKdeCdeEntry = R"JSON({
+  "name": "kde_cde",
+  "label": "KDE 2CDE / ALEX-2CDE",
+  "summary": "Kernel-density estimate (Laplace or Gaussian) of donor/acceptor photon arrival times per burst (Tomov et al., 2012). A static burst scores ~100; dynamic bursts deviate.",
+  "operation_type": "burst_2cde",
+  "data_format": "dstore",
+  "row_grain": "burst",
+  "kind": "burst_table",
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "burst_selection"
+    ],
+    "description": "Photon stream for per-photon arrival times and colours."
+  },
+  "outputs": {
+    "columns": [
+      "FRET-2CDE",
+      "ALEX-2CDE"
+    ]
+  },
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "kernel": {
+        "type": "string",
+        "default": "gaussian",
+        "enum": [
+          "gaussian",
+          "laplace"
+        ]
+      },
+      "bandwidth": {
+        "type": "number",
+        "default": 0.05,
+        "minimum": 0.001
+      }
+    }
+  },
+  "can_replay": true
+})JSON";
+}  // namespace
+
+/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
+void register_operation_kde_cde() {
+    register_algorithm_json("operation", "kde_cde", kKdeCdeEntry);
 }
 
 } // namespace tttrlib

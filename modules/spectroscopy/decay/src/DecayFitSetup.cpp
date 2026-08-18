@@ -21,7 +21,9 @@
 #include <nlohmann/json.hpp>
 
 #include "DecayFitModel.h"
-#include "Registry.h"
+#include "DecayFitDescriptors.h"
+#include "AlgorithmRegistry.h"
+#include "PluginHost.h"
 
 // **ordered**_json, not plain json: the flattening rule says slots are laid out in
 // *declaration* order, and plain nlohmann::json sorts object keys
@@ -33,8 +35,21 @@ using ojson = nlohmann::ordered_json;
 namespace {
 
 /*! The `fit` entry for \p name, or a message naming the alternatives. */
+// The `fit` / `fit_setup` categories of the one registry, primed: the decay
+// module's own entries plus a plugin's (registered by the plugin host as it
+// loads -- ensure_loaded so a plugin model is nameable here too).
+std::string fit_category_json() {
+    tttrlib::register_decay_descriptors();
+    tttrlib::PluginHost::ensure_loaded();
+    return tttrlib::algorithms_json("fit");
+}
+std::string fit_setup_category_json() {
+    tttrlib::register_decay_descriptors();
+    return tttrlib::algorithms_json("fit_setup");
+}
+
 ojson fit_entry(const std::string &name) {
-    const ojson fits = ojson::parse(tttrlib::fit_models_json());
+    const ojson fits = ojson::parse(fit_category_json());
     if (!fits.contains(name)) {
         std::string known;
         for (const auto &item : fits.items()) {
@@ -53,7 +68,7 @@ std::vector<double> decay_fit_setup_vector(const std::string &name,
                                            const std::string &values_json) {
     const ojson entry = fit_entry(name);
     const ojson link = entry.at("setup");
-    const ojson setups = ojson::parse(tttrlib::fit_setup_json());
+    const ojson setups = ojson::parse(fit_setup_category_json());
     const std::string setup_name = link.at("name").get<std::string>();
     if (!setups.contains(setup_name)) {
         throw std::invalid_argument(
@@ -126,7 +141,7 @@ std::vector<double> decay_fit_setup_vector(const std::string &name,
 std::vector<std::string> decay_fit_setup_names(const std::string &name) {
     const ojson entry = fit_entry(name);
     const ojson link = entry.at("setup");
-    const ojson setups = ojson::parse(tttrlib::fit_setup_json());
+    const ojson setups = ojson::parse(fit_setup_category_json());
     const ojson properties =
         setups.at(link.at("name").get<std::string>()).at("params_schema").at("properties");
 

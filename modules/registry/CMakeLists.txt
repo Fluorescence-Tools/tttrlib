@@ -16,10 +16,12 @@
 tttrlib_add_module(
     NAME     registry
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/Registry.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/FitRegistry.cpp"
-             "${CMAKE_CURRENT_SOURCE_DIR}/src/OperationRegistry.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  io plugin util core burst algorithm   # burst_search_algorithms_json lives in burst now
+    # The registry assembles what the modules registered about themselves, so
+    # it sits above every module that declares registry entries: burst (searches
+    # + burst pipeline ops), decay (fits, setups, objectives, MLE ops), fcs
+    # (burst_fcs). There is no registry literal here any more.
+    DEPENDS  io plugin util core burst decay fcs algorithm
     EXTERNAL_DEPS tttrlib::json
     SWIG_INTERFACES Registry.i
     TEST_DIR test/python

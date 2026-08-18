@@ -566,18 +566,27 @@ def test_an_unknown_burst_search_is_refused(plugin_dir):
     assert "nosuchsearch" in out["message"]
 
 
-def test_all_three_capabilities_come_from_one_library(plugin_dir):
-    """One .so, three tables. Nothing about the ABI ties them together."""
+def test_all_capabilities_come_from_one_library(plugin_dir):
+    """One .so, six tables. Nothing about the ABI ties them together -- and
+    every one of them lands in the ONE registry as it loads, provider
+    "plugin", beside the built-ins of the same category."""
     out = run_in_subprocess("""
         import json, tttrlib
+        r = json.loads(tttrlib.registry_json())
         print(json.dumps({
-            "container": "EXAMPLE" in tttrlib.registry("file_container"),
-            "fit": "exp1_plugin" in tttrlib.registry("fit"),
-            "burst": "interphoton_plugin" in tttrlib.registry("burst_search"),
-            "plugins": list(tttrlib.registry("plugin")),
+            "container": "EXAMPLE" in r["file_container"],
+            "fit": r["fit"].get("exp1_plugin", {}).get("provider"),
+            "burst": r["burst_search"].get("interphoton_plugin", {}).get("provider"),
+            "corr": r.get("correlation_method", {}).get("direct_plugin", {}).get("provider"),
+            "prior": r.get("prior", {}).get("laplace", {}).get("provider"),
+            "burst_direct": "interphoton_plugin" in json.loads(tttrlib.algorithms_json("burst_search")),
+            "fit_direct": "exp1_plugin" in json.loads(tttrlib.algorithms_json("fit")),
+            "plugins": list(r["plugin"]),
         }))
     """, plugin_path=plugin_dir)
-    assert out["container"] and out["fit"] and out["burst"]
+    assert out["container"]
+    assert out["fit"] == out["burst"] == out["corr"] == out["prior"] == "plugin"
+    assert out["burst_direct"] and out["fit_direct"]
     assert out["plugins"] == ["example"]
 
 

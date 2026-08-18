@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+- **One registry.** The last two hand-authored registry literals are gone:
+  the decay fit models, their setup blocks and the objectives declare their
+  entries next to their code (`DecayFitModelFit2x.cpp`, `DecayFitModelNExp.cpp`,
+  `DecayStatistics.cpp`) and the eight burst-pipeline operations next to the
+  code performing them (burst, fcs, decay); every plugin capability registers
+  into the same table as it loads (and is unregistered if the plugin's init
+  fails), so `registry()` is assembled from `algorithms_json(<capability>)`
+  with nothing spliced in. `AlgorithmDescriptor` gained `name` (the registry
+  key, distinct from the mmfdb `operation_type`) and `extra_json`;
+  `register_algorithm_json(capability, key, entry)`, `unregister_algorithm`
+  and `algorithm_operations_json` are new. Registry content is unchanged
+  (0 entries removed or changed, generic descriptor keys added; parameter
+  order preserved). Two new categories appear when a plugin brings them:
+  `correlation_method`, `prior`.
+
 - **Plugins can contribute a correlation kernel and a prior kind.** Two new
   C-ABI tables, `tttrlib_correlation_method_v1` (a name
   `Correlator.set_correlation_method` accepts and `run()` calls on the host's

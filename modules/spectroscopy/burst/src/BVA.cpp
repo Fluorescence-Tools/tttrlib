@@ -2,6 +2,7 @@
 #include "BVA.h"
 #include "BurstFilter.h"
 
+#include "AlgorithmRegistry.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -120,6 +121,55 @@ std::pair<std::vector<double>, std::vector<double>> BVA::compute_static_bva_line
         stddev[i] = std::sqrt(std::max(0.0, p * (1.0 - p) / n));
     }
     return {mean, stddev};
+}
+
+
+// ---- registry("operation") entry ------------------------------------------
+// Burst variance analysis as a pipeline step, next to the class that computes it.
+namespace {
+const char* const kBvaEntry = R"JSON({
+  "name": "bva",
+  "label": "Burst Variance Analysis",
+  "summary": "BVA (Hoffmann et al.): slices each burst into time or photon windows, computes the proximity ratio per window, reports per-burst mean and standard deviation. Compares against the shot-noise static line.",
+  "operation_type": "burst_variance_analysis",
+  "data_format": "dstore",
+  "row_grain": "burst",
+  "kind": "burst_table",
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "burst_selection"
+    ],
+    "description": "Photon stream for per-window photon colours, burst indices for slicing."
+  },
+  "outputs": {
+    "columns": [
+      "Proximity Ratio Mean",
+      "Proximity Ratio Std"
+    ]
+  },
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "win_size": {
+        "type": "integer",
+        "default": 5,
+        "minimum": 1
+      },
+      "n_subbursts": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1
+      }
+    }
+  },
+  "can_replay": true
+})JSON";
+}  // namespace
+
+/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
+void register_operation_bva() {
+    register_algorithm_json("operation", "bva", kBvaEntry);
 }
 
 } // namespace tttrlib

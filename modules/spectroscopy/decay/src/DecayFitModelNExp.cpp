@@ -22,6 +22,7 @@
 #include <cmath>
 #include <vector>
 
+#include "AlgorithmRegistry.h"
 #include "DecayFitModel.h"
 #include "DecayFitNExp.h"
 #include "DecayStatistics.h"
@@ -31,7 +32,8 @@ namespace {
 /*!
  * \brief Slots of the `nexp` setup block.
  *
- * Must match the declaration order of `fit_setup/nexp` in FitRegistry.cpp.
+ * Must match the declaration order of the `fit_setup/nexp` entry registered
+ * at the end of this file (kNexpEntry).
  */
 enum NExpSetup {
     kDt = 0,
@@ -183,6 +185,244 @@ public:
  * Named and called explicitly; see src/DecayFitModelRegistration.h for why a
  * static initialiser is not enough.
  */
+namespace {
+
+// registry("fit")["fit_nexp"] and registry("fit_setup")["nexp"], next to the
+// model; see the note in DecayFitModelFit2x.cpp.
+const char* const kFitNexpEntry = R"JSON({
+  "name": "fit_nexp",
+  "n_patterns": 0,
+  "label": "Multi-exponential reconvolution (N-exp)",
+  "summary": "Poisson MLE of any number of lifetimes, with amplitudes profiled by EM.",
+  "description": "General one- or multi-exponential reconvolution fit. Lifetimes are found by deterministic coordinate-wise Brent minimisation over a log-spaced grid of starting points; at every lifetime trial the nonnegative amplitudes and the background fraction are profiled by expectation-maximisation, so they are never searched over directly. Data may be one channel or a polarisation-resolved pair sharing one temporal shape, in which case the channels are pooled as exact sufficient statistics while each keeps its own profiled total. Set 'tail_start' in the setup to fit the tail without reconvolution, which is the usual treatment of a sensitised-emission decay whose rise is not a simple instrument response.",
+  "setup": {
+    "category": "fit_setup",
+    "name": "nexp"
+  },
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "lifetimes",
+      "amplitudes"
+    ],
+    "properties": {
+      "lifetimes": {
+        "type": "array",
+        "title": "Lifetimes (ns)",
+        "count_from": "n_exponentials",
+        "items": {
+          "type": "number",
+          "default": 2.0,
+          "minimum": 0.001,
+          "maximum": 100.0,
+          "unit": "ns",
+          "fixed_default": false,
+          "description": "One fluorescence lifetime. Fix a lifetime to fit a known component's amplitude only."
+        },
+        "description": "The exponential lifetimes, as many as 'n_exponentials' in the setup."
+      },
+      "amplitudes": {
+        "type": "array",
+        "title": "Amplitudes",
+        "count_from": "n_exponentials",
+        "items": {
+          "type": "number",
+          "default": 1.0,
+          "minimum": 0.0,
+          "maximum": 1000000000000.0,
+          "fixed_default": true,
+          "description": "Starting amplitude of the matching lifetime. Profiled by EM rather than searched, so these are starting values, not free parameters in the usual sense."
+        },
+        "description": "Starting amplitudes, one per lifetime."
+      }
+    }
+  },
+  "supports_lnprob": true,
+  "supports_gradient": false,
+  "results_schema": {
+    "type": "object",
+    "properties": {
+      "twoIstar": {
+        "type": "number",
+        "title": "2I*",
+        "description": "Poisson deviance of the optimised fit against a perfectly fitting model."
+      },
+      "converged": {
+        "type": "boolean",
+        "title": "Converged",
+        "description": "Whether the outer lifetime search met its tolerance. Carried as 0.0 or 1.0."
+      },
+      "iterations": {
+        "type": "integer",
+        "title": "Outer iterations",
+        "description": "Coordinate sweeps over the lifetimes."
+      },
+      "negative_log_likelihood": {
+        "type": "number",
+        "title": "-ln L",
+        "description": "Profile shape negative log likelihood. Terms depending only on the data are omitted, so it is comparable between fits of the same data and not otherwise."
+      },
+      "photon_count": {
+        "type": "number",
+        "title": "Photons",
+        "description": "Total counts the fit was scored against."
+      },
+      "background_amplitude": {
+        "type": "number",
+        "title": "Background amplitude",
+        "description": "Profiled amplitude of the background pattern."
+      },
+      "em_iterations": {
+        "type": "integer",
+        "title": "EM iterations",
+        "description": "Amplitude-profiling iterations at the final lifetimes."
+      }
+    }
+  }
+})JSON";
+
+const char* const kNexpEntry = R"JSON({
+  "name": "nexp",
+  "label": "Multi-exponential construction inputs",
+  "summary": "Inputs set once when a multi-exponential model is built.",
+  "description": "Instrument description, component count and search controls for the N-exponential reconvolution fit. 'n_exponentials' is what the model's variable-length lifetime and amplitude arrays take their length from, via their 'count_from' link.",
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "dt",
+      "n_exponentials"
+    ],
+    "properties": {
+      "dt": {
+        "type": "number",
+        "title": "Micro-time bin width (ns)",
+        "default": 0.032,
+        "minimum": 1e-06,
+        "maximum": 1000.0,
+        "unit": "ns",
+        "description": "Time width of one micro-time channel; lifetimes are reported in these units."
+      },
+      "n_exponentials": {
+        "type": "integer",
+        "title": "Number of components",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 32,
+        "description": "How many exponential components the model has. The lifetime and amplitude parameter arrays each hold this many entries — this is the property their 'count_from' names."
+      },
+      "period": {
+        "type": "number",
+        "title": "Excitation period (ns)",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 10000.0,
+        "unit": "ns",
+        "description": "Time between excitation pulses; 0 disables the periodic wrap-around."
+      },
+      "convolution_stop": {
+        "type": "integer",
+        "title": "Convolution stop (channel)",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "Last channel included in the convolution; -1 uses the full IRF length."
+      },
+      "tail_start": {
+        "type": "integer",
+        "title": "Tail-fit start (channel)",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 1000000,
+        "description": "When >= 0 the fit is a tail fit: each component is a pure decay from this channel with no IRF reconvolution, and earlier channels are excluded. The standard treatment of a sensitised-emission decay, whose rise is not a simple instrument response. -1 keeps the normal reconvolution fit."
+      },
+      "tau_min": {
+        "type": "number",
+        "title": "Shortest allowed lifetime (ns)",
+        "default": 0.001,
+        "minimum": 1e-09,
+        "maximum": 1000.0,
+        "unit": "ns",
+        "advanced": true,
+        "description": "Lower bound of the lifetime search."
+      },
+      "tau_max": {
+        "type": "number",
+        "title": "Longest allowed lifetime (ns)",
+        "default": 100.0,
+        "minimum": 1e-06,
+        "maximum": 1000000.0,
+        "unit": "ns",
+        "advanced": true,
+        "description": "Upper bound of the lifetime search."
+      },
+      "coordinate_grid_intervals": {
+        "type": "integer",
+        "title": "Search grid intervals",
+        "default": 24,
+        "minimum": 1,
+        "maximum": 1024,
+        "advanced": true,
+        "description": "Log-spaced starting points per lifetime. Higher is more robust against local minima and linearly slower; a well-conditioned 1-2 component fit with a decent initial guess is usually fine at 8."
+      },
+      "max_outer_iterations": {
+        "type": "integer",
+        "title": "Max lifetime sweeps",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 10000,
+        "advanced": true,
+        "description": "Cap on coordinate sweeps over the lifetimes."
+      },
+      "max_em_iterations": {
+        "type": "integer",
+        "title": "Max EM iterations",
+        "default": 500,
+        "minimum": 1,
+        "maximum": 100000,
+        "advanced": true,
+        "description": "Cap on amplitude-profiling iterations per lifetime trial."
+      },
+      "initial_background_fraction": {
+        "type": "number",
+        "title": "Initial background fraction",
+        "default": 0.01,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "advanced": true,
+        "description": "Starting share of the counts attributed to the background pattern."
+      },
+      "fit_start": {
+        "type": "integer",
+        "title": "First fitted channel",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "First micro-time channel included in the objective."
+      },
+      "fit_stop": {
+        "type": "integer",
+        "title": "Last fitted channel",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "One past the last channel included in the objective; -1 fits to the end."
+      }
+    }
+  }
+})JSON";
+
+
+}  // namespace
+
+/// Register the n-exponential registry entries. Idempotent.
+void register_fit_descriptors_nexp() {
+    tttrlib::register_algorithm_json("fit", "fit_nexp", kFitNexpEntry);
+    tttrlib::register_algorithm_json("fit_setup", "nexp", kNexpEntry);
+}
+
 void register_decay_fit_models_nexp() {
     register_decay_fit("fit_nexp", [](const std::vector<double> &s, const std::vector<double> &irf) {
         return std::make_shared<const NExpModel>(s, irf);

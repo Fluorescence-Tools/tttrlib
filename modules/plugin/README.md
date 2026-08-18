@@ -22,9 +22,13 @@ them, once per process.
   back), and the lookups the layers above call (`burst_search(name)`,
   `correlation_method(name)`, `decay_prior(kind)`, …).
 
-The last two tables are looked up by `fcs` and `decay` when their own
-built-in table misses -- per call, never cached -- so nothing is pushed
-upward into those layers and a rolled-back plugin simply stops being found.
+Every registered capability is also an entry in the **one registry**
+(`register_algorithm_json`, module `algorithm`) the moment it registers --
+`registry("fit")["exp1_plugin"]` sits beside `fit23` with `provider: plugin`
+-- and is unregistered again if the plugin's init later fails. Nothing is
+spliced into the registry from here. The last two tables are looked up by
+`fcs` and `decay` when their own built-in table misses -- per call, never
+cached -- so a rolled-back plugin simply stops being found.
 
 `examples/plugin/tttrlib_example.c` registers one of each and is what
 `test/python/plugin/test_plugins.py` exercises
@@ -32,4 +36,4 @@ upward into those layers and a rolled-back plugin simply stops being found.
 
 ## Dependencies
 
-- Depends on `util`, `io`.
+- Depends on `util`, `io`, `algorithm`.

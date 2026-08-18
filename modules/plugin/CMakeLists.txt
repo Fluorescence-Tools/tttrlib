@@ -16,7 +16,7 @@ tttrlib_add_module(
     NAME     plugin
     SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/src/PluginHost.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util io
+    DEPENDS  util io algorithm
     TEST_DIR test/python/plugin
 )
 

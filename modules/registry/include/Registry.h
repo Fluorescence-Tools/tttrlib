@@ -68,26 +68,25 @@ std::string registry_json();
 /*!
  * \brief The lifetime fit models (`fit` category), as a JSON string.
  *
- * Describes the Fit2x maximum-likelihood models (Fit23/24/25/26): their
- * optimisable model parameters (`params_schema`, in `initial_values` order) and
- * a `setup` link to the shared construction inputs. See FitRegistry.cpp.
+ * Assembled from the entries the decay module registered about its models
+ * (the entries in `DecayFitModelFit2x.cpp` / `DecayFitModelNExp.cpp`), plus a plugin's. Each
+ * carries `params_schema` in `initial_values` order and a `setup` link to the
+ * shared construction inputs.
  */
 std::string fit_models_json();
 
 /*!
- * \brief The shared Fit2x construction inputs (`fit_setup` category), as JSON.
+ * \brief The shared construction inputs (`fit_setup` category), as JSON.
  *
- * The `dt`, `period`, correction factors and objective flags every Fit2x model
- * is built with. Referenced by each `fit` entry's `setup` link.
+ * Referenced by each `fit` entry's `setup` link; declared next to the models.
  */
 std::string fit_setup_json();
 
 /*!
  * \brief The selectable fit objectives (`objective` category), as a JSON string.
  *
- * Which statistic a fit minimises, named rather than encoded as flags, so a new
- * statistic can be offered without touching the models that can use it. A model's
- * setup block selects one by name. See FitRegistry.cpp.
+ * Which statistic a fit minimises, named rather than encoded as flags. From
+ * declared next to the statistics (`DecayStatistics.cpp`).
  */
 std::string fit_objectives_json();
 
@@ -95,13 +94,18 @@ std::string fit_objectives_json();
  * \brief The pipeline operation catalog (`operation` category), as JSON.
  *
  * Describes each analysis step that can appear in a burst pipeline .pto:
- * its operation_type, inputs, outputs (column names matching mmfdb.dic),
- * data_format, row_grain, and settings schema. This is the machine-readable
- * contract for .pto-mfdb provenance — a consumer reads the processing list
- * from the .pto tags, looks up each operation_type here, and can replay,
- * validate, or render the pipeline.
+ * its operation_type (matching ``_mmfdb_operation.operation_type`` in PTO
+ * tags), inputs, outputs (column names matching mmfdb.dic), data_format,
+ * row_grain and settings schema -- the machine-readable contract between the
+ * ``tttr`` CLI that writes .pto artifacts, chiSurf plugins that read/produce
+ * them, ndx that consumes the output columns and the provenance reader that
+ * replays a pipeline. ``data_format`` is **storage** and is ``dstore`` for
+ * every built-in (never a legacy companion suffix; mmfdb declares none).
  *
- * See OperationRegistry.cpp.
+ * Every entry is a registration made next to the code that performs the
+ * operation (burst, decay, fcs modules) or by a plugin
+ * (`tttrlib_operation_v1`); the built-in ones are the `can_replay`
+ * registrations of the `operation` capability.
  */
 std::string operation_registry_json();
 
@@ -125,6 +129,16 @@ std::vector<std::string> registry_categories();
  * registration header.
  */
 std::string algorithms_json(const std::string& capability);
+
+/*!
+ * \brief Every `can_replay` registration of any capability, as the `operation`
+ *        category sees it (JSON object keyed by name).
+ *
+ * `registry("operation")` is the entries declared as operations plus these;
+ * exposed so a consumer can tell the two apart. Declared here as well as in
+ * AlgorithmRegistry.h for the same reason as algorithms_json.
+ */
+std::string algorithm_operations_json();
 
 } // namespace tttrlib
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "PluginHost.h"
+#include "AlgorithmRegistry.h"
 
 #include <algorithm>
 #include <array>
@@ -187,6 +188,9 @@ std::string plugin_name_of(const fs::path& file) {
 /// Everything one plugin registered, so it can all be undone if its init fails.
 struct Journal {
     std::vector<std::string> container_names;
+    /// Registry keys this plugin registered (burst searches, fits, operations,
+    /// correlation methods, priors) -- undone on a failed init.
+    std::vector<std::string> registry_keys;
     std::size_t decay_fits_before = 0;
     std::size_t burst_searches_before = 0;
     std::size_t operations_before = 0;
@@ -310,6 +314,43 @@ int host_register_container(const tttrlib_container_v1* c) noexcept {
     return TTTRLIB_OK;
 }
 
+// A JSON string literal from a C string (NULL -> the fallback).
+std::string jstr(const char* v, const char* fallback) {
+    const char* p = v != nullptr ? v : fallback;
+    std::string out = "\"";
+    for (; *p != '\0'; ++p) {
+        switch (*p) {
+            case '"':  out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (static_cast<unsigned char>(*p) < 0x20) { char b[8]; std::snprintf(b, sizeof b, "\\u%04x", *p); out += b; }
+                else out += *p;
+        }
+    }
+    return out + "\"";
+}
+
+// Every plugin capability is an entry in the ONE registry (register_algorithm,
+// module `algorithm`), the same one the built-ins declare themselves in -- so
+// `registry("burst_search")` lists a plugin's search beside the sliding window
+// with no splicing anywhere. A built-in already owning the key refuses the
+// plugin (the registry rejects duplicates), and a failed init rolls the key
+// back through the journal.
+bool register_in_registry(const char* what, const std::string& capability,
+                          const std::string& name, const std::string& entry_json) {
+    if (!register_algorithm_json(capability, name, entry_json)) {
+        const std::string taken = std::string(what) + ": the name '" + name +
+                                  "' is already taken";
+        host_set_error(taken.c_str());
+        return false;
+    }
+    if (state().journal != nullptr) state().journal->registry_keys.push_back(name);
+    return true;
+}
+
 int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
     if (f == nullptr || f->struct_size < sizeof(tttrlib_decay_fit_v1) ||
         f->name == nullptr || f->name[0] == '\0' ||
@@ -337,10 +378,18 @@ int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
     // model silently vanish depending on what the caller happened to do first.
     // So the table is always recorded, and set_decay_fit_registrar() replays
     // whatever accumulated before it arrived.
+    {
+        std::string entry = "{\"name\": " + jstr(f->name, "") +
+            ", \"label\": " + jstr(f->label, f->name) +
+            ", \"summary\": " + jstr(f->summary, "A decay fit model provided by a plugin.") +
+            ", \"provider\": \"plugin\", \"params_schema\": " + f->params_schema + "}";
+        if (!register_in_registry("register_decay_fit", "fit", f->name, entry)) return TTTRLIB_INVALID;
+    }
     state().decay_fits.push_back(f);
     if (state().decay_fit_registrar != nullptr &&
         !state().decay_fit_registrar(f)) {
         state().decay_fits.pop_back();
+        unregister_algorithm(f->name);
         const std::string taken = std::string("register_decay_fit: the name '") +
                                   f->name + "' is already taken";
         host_set_error(taken.c_str());
@@ -370,6 +419,16 @@ int host_register_burst_search(const tttrlib_burst_search_v1* s) noexcept {
             return TTTRLIB_INVALID;
         }
     }
+    {
+        // No `method`: its ABSENCE is what routes burst_search_by_name to the
+        // by-name plugin path instead of a TTTR attribute.
+        std::string entry = "{\"name\": " + jstr(s->name, "") +
+            ", \"label\": " + jstr(s->label, s->name) +
+            ", \"summary\": " + jstr(s->summary, "A burst search provided by a plugin.") +
+            ", \"provider\": \"plugin\", \"params_schema\": " + s->params_schema + "}";
+        if (!register_in_registry("register_burst_search", "burst_search", s->name, entry))
+            return TTTRLIB_INVALID;
+    }
     state().burst_searches.push_back(s);
     return TTTRLIB_OK;
 }
@@ -396,6 +455,20 @@ int host_register_operation(const tttrlib_operation_v1* o) noexcept {
             return TTTRLIB_INVALID;
         }
     }
+    {
+        std::string entry = "{\"name\": " + jstr(o->name, "") +
+            ", \"label\": " + jstr(o->label, o->name) +
+            ", \"summary\": " + jstr(o->summary, "A pipeline operation provided by a plugin.") +
+            ", \"category\": " + jstr(o->category, "operation") +
+            ", \"provider\": \"plugin\", \"can_replay\": " + (o->can_replay ? "true" : "false");
+        entry += ", \"settings_schema\": " + std::string(o->settings_schema);
+        if (o->inputs_json != nullptr) entry += ", \"inputs\": " + std::string(o->inputs_json);
+        if (o->outputs_json != nullptr) entry += ", \"outputs\": " + std::string(o->outputs_json);
+        if (o->row_grain != nullptr) entry += ", \"row_grain\": " + jstr(o->row_grain, "");
+        entry += "}";
+        if (!register_in_registry("register_operation", "operation", o->name, entry))
+            return TTTRLIB_INVALID;
+    }
     state().operations.push_back(o);
     return TTTRLIB_OK;
 }
@@ -415,6 +488,14 @@ int host_register_correlation_method(const tttrlib_correlation_method_v1* m) noe
             host_set_error(taken.c_str());
             return TTTRLIB_INVALID;
         }
+    }
+    {
+        std::string entry = "{\"name\": " + jstr(m->name, "") +
+            ", \"label\": " + jstr(m->label, m->name) +
+            ", \"summary\": " + jstr(m->summary, "A correlation kernel provided by a plugin.") +
+            ", \"provider\": \"plugin\"}";
+        if (!register_in_registry("register_correlation_method", "correlation_method", m->name, entry))
+            return TTTRLIB_INVALID;
     }
     state().correlation_methods.push_back(m);
     return TTTRLIB_OK;
@@ -436,6 +517,15 @@ int host_register_decay_prior(const tttrlib_decay_prior_v1* p) noexcept {
             host_set_error(taken.c_str());
             return TTTRLIB_INVALID;
         }
+    }
+    {
+        std::string entry = "{\"name\": " + jstr(p->kind, "") +
+            ", \"label\": " + jstr(p->label, p->kind) +
+            ", \"summary\": " + jstr(p->summary, "A prior kind provided by a plugin.") +
+            ", \"provider\": \"plugin\", \"params_schema\": " +
+            (p->params_schema != nullptr ? std::string(p->params_schema) : std::string("{}")) + "}";
+        if (!register_in_registry("register_decay_prior", "prior", p->kind, entry))
+            return TTTRLIB_INVALID;
     }
     state().decay_priors.push_back(p);
     return TTTRLIB_OK;
@@ -459,6 +549,7 @@ const tttrlib_host_v1& host_table() {
 }
 
 void roll_back(const Journal& journal) {
+    for (const std::string& key : journal.registry_keys) unregister_algorithm(key);
     // Fit models: the fitting layer's own table is left alone deliberately.
     // Un-registering a factory another thread may already be constructing
     // through is a worse failure than leaving one unreachable model behind, and
@@ -775,27 +866,6 @@ const std::vector<const tttrlib_burst_search_v1*>& PluginHost::burst_searches() 
     return state().burst_searches;
 }
 
-std::string PluginHost::burst_searches_json() {
-    std::string out;
-    for (const tttrlib_burst_search_v1* s : burst_searches()) {
-        if (!out.empty()) out += ",\n";
-        out += "  \"";
-        out += s->name;
-        out += "\": {\"name\": \"";
-        out += s->name;
-        out += "\", \"label\": \"";
-        out += (s->label != nullptr ? s->label : s->name);
-        out += "\", \"summary\": \"";
-        out += (s->summary != nullptr ? s->summary
-                                      : "A burst search provided by a plugin.");
-        // No "method": a plugin search has no attribute on TTTR to call, and
-        // its absence is exactly how a caller knows to dispatch by name.
-        out += "\", \"provider\": \"plugin\", \"params_schema\": ";
-        out += s->params_schema;
-        out += "}";
-    }
-    return out;
-}
 
 // ── generic operations ────────────────────────────────────────────────
 
@@ -840,67 +910,6 @@ const std::vector<const tttrlib_decay_prior_v1*>& PluginHost::decay_priors() {
     return state().decay_priors;
 }
 
-std::string PluginHost::operations_json() {
-    std::string out;
-    for (const tttrlib_operation_v1* o : operations()) {
-        if (!out.empty()) out += ",\n";
-        out += "  \"";
-        out += o->name;
-        out += "\": {\"name\": \"";
-        out += o->name;
-        out += "\", \"label\": \"";
-        out += (o->label != nullptr ? o->label : o->name);
-        out += "\", \"summary\": \"";
-        out += (o->summary != nullptr ? o->summary
-                                      : "A pipeline operation provided by a plugin.");
-        out += "\", \"category\": \"";
-        out += (o->category != nullptr ? o->category : "operation");
-        out += "\", \"provider\": \"plugin\", \"can_replay\": ";
-        out += (o->can_replay ? "true" : "false");
-        if (o->settings_schema != nullptr) {
-            out += ", \"settings_schema\": ";
-            out += o->settings_schema;
-        }
-        if (o->inputs_json != nullptr) {
-            out += ", \"inputs\": ";
-            out += o->inputs_json;
-        }
-        if (o->outputs_json != nullptr) {
-            out += ", \"outputs\": ";
-            out += o->outputs_json;
-        }
-        if (o->row_grain != nullptr) {
-            out += ", \"row_grain\": \"";
-            out += o->row_grain;
-            out += "\"";
-        }
-        out += "}";
-    }
-    return out;
-}
 
-std::string PluginHost::decay_fit_models_json() {
-    // Built here rather than in the fitting layer because everything it needs
-    // is in the C tables -- name, labels, and the schema the plugin already
-    // wrote. That is what lets the registry, which must not depend on the
-    // fitting stack, still publish a plugin's fit model.
-    std::string out;
-    for (const tttrlib_decay_fit_v1* f : decay_fits()) {
-        if (!out.empty()) out += ",\n";
-        out += "  \"";
-        out += f->name;
-        out += "\": {\"name\": \"";
-        out += f->name;
-        out += "\", \"label\": \"";
-        out += (f->label != nullptr ? f->label : f->name);
-        out += "\", \"summary\": \"";
-        out += (f->summary != nullptr ? f->summary
-                                      : "A decay fit model provided by a plugin.");
-        out += "\", \"provider\": \"plugin\", \"params_schema\": ";
-        out += f->params_schema;
-        out += "}";
-    }
-    return out;
-}
 
 }  // namespace tttrlib

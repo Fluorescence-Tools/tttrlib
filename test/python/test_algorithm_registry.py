@@ -110,13 +110,63 @@ def test_replayable_algorithms_reach_the_operation_category(registry, capability
             assert ops[name]["settings_schema"] == e["settings_schema"]
 
 
-def test_hand_authored_operations_are_still_there(registry):
-    """The literals have not been retired yet, and the live registrations are
-    additive — a consumer that reads the operation category must not lose the
-    entries it already depended on."""
-    for name in ("burst_selection", "tcspc_calibration", "mle_green", "bva",
-                 "kde_cde", "burst_fusion", "burst_fcs"):
+def test_the_former_literal_operations_are_still_there(registry):
+    """The eight pipeline operations used to be a hand-authored literal; they
+    now register themselves next to their code. A consumer that reads the
+    operation category must not have lost one in the move."""
+    for name in ("burst_selection", "tcspc_calibration", "mle_green", "mle_red",
+                 "bva", "kde_cde", "burst_fusion", "burst_fcs"):
         assert name in registry["operation"], f"{name} disappeared"
+        assert registry["operation"][name]["provider"] == "builtin"
+
+
+# ---------------------------------------------------------- one registry ------
+
+ONE_REGISTRY_CATEGORIES = ("burst_search", "fit", "fit_setup", "objective",
+                           "operation", "fcs", "hmm", "pda")
+
+
+@pytest.mark.parametrize("capability", ONE_REGISTRY_CATEGORIES)
+def test_every_algorithm_category_is_served_by_the_one_registry(registry, capability):
+    """There is one registry. Every category that describes an algorithm, a
+    fit model, a setup block, an objective or an operation is exactly what
+    `algorithms_json(capability)` returns -- nothing is spliced in from a
+    literal or a side table, so nothing can drift from what registered."""
+    direct = json.loads(tttrlib.algorithms_json(capability))
+    assert direct, f"{capability} has no registrations"
+    for name, entry in direct.items():
+        assert registry[capability][name] == entry
+    # and nothing in the category came from anywhere else -- `operation` is
+    # the union with every can_replay registration of any capability, which
+    # is still the one registry (algorithm_operations_json)
+    others = set()
+    if capability == "operation":
+        others = set(json.loads(tttrlib.algorithm_operations_json()))
+    assert set(registry[capability]) == set(direct) | others, (
+        f"{capability} carries entries that did not register: "
+        f"{sorted(set(registry[capability]) - set(direct) - others)}")
+
+
+def test_no_registry_literal_remains_in_the_tree():
+    """Rule 1 of the migration: no hand-authored registry JSON literal. The
+    registry module assembles; it declares nothing. (Entries declared next to
+    their code as raw JSON strings are registrations, not a parallel table --
+    they go through register_algorithm_json.)"""
+    import pathlib
+    registry_src = pathlib.Path(tttrlib.__file__).resolve().parents[3] / "modules" / "registry" / "src"
+    if not registry_src.exists():
+        pytest.skip("source tree not available")
+    for f in registry_src.glob("*.cpp"):
+        assert 'R"JSON(' not in f.read_text(), f"{f.name} still holds a registry literal"
+
+
+def test_fit_parameter_order_is_the_declared_order(registry):
+    """The flattening rule: `params_schema.properties` order IS the flat
+    initial_values layout. The entries are registered next to the models
+    (DecayFitModelFit2x.cpp); a round trip through a sorting JSON type would
+    silently reorder them, so pin the order here."""
+    assert list(registry["fit"]["fit23"]["params_schema"]["properties"]) == ["tau", "gamma", "r0", "rho"]
+    assert list(registry["fit_setup"]["fit2x"]["params_schema"]["properties"])[:2] == ["dt", "period"]
 
 
 def test_operation_names_are_unique_across_both_sources(registry):

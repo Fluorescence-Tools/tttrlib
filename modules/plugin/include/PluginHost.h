@@ -148,18 +148,6 @@ public:
     /// Every decay fit model registered by a plugin, in registration order.
     static const std::vector<const tttrlib_decay_fit_v1*>& decay_fits();
 
-    /*!
-     * \brief Those models as registry entries, ready to splice into `fit`.
-     *
-     * Built here, from the C tables, because everything needed is already in
-     * them -- the plugin wrote the schema. That is what lets the registry
-     * publish a plugin's fit model without the registry depending on the
-     * fitting stack, which would be a cycle.
-     *
-     * Returns "" when no plugin provides one, so the caller can skip the splice
-     * entirely in the overwhelmingly common case.
-     */
-    static std::string decay_fit_models_json();
 
     /// The burst search registered under \p name, or nullptr.
     static const tttrlib_burst_search_v1* burst_search(const std::string& name);
@@ -167,17 +155,6 @@ public:
     /// Every burst search a plugin registered, in registration order.
     static const std::vector<const tttrlib_burst_search_v1*>& burst_searches();
 
-    /*!
-     * \brief Those searches as registry entries, ready to splice into
-     *        `burst_search`.
-     *
-     * As \ref decay_fit_models_json, and for the same reason: everything needed
-     * is already in the C table, so the category can publish a plugin's search
-     * without depending on anything above this module. Entries carry
-     * ``"provider": "plugin"`` and no ``method``, which is how a caller knows to
-     * dispatch by name rather than by attribute.
-     */
-    static std::string burst_searches_json();
 
     // ── generic operations ─────────────────────────────────────────
 
@@ -187,14 +164,6 @@ public:
     /// Every operation a plugin registered, in registration order.
     static const std::vector<const tttrlib_operation_v1*>& operations();
 
-    /*!
-     * \brief Plugin operations as registry entries, ready to splice into the
-     *        ``operation`` category.
-     *
-     * Same shape as \ref burst_searches_json: everything needed is in the C
-     * table. Entries carry ``"provider": "plugin"``.
-     */
-    static std::string operations_json();
 
     // ── correlation methods / decay priors ─────────────────────────
 

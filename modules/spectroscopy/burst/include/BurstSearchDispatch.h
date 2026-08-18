@@ -88,6 +88,11 @@ std::vector<std::string> burst_search_dispatch_names();
 /// is where each search now declares itself.
 void register_builtin_burst_searches();
 
+/// Register the burst module's pipeline-operation registry entries
+/// (`burst_selection`, `bva`, `kde_cde`, `burst_fusion`) -- each declared next
+/// to the code that performs it. Idempotent.
+void register_burst_operations();
+
 } // namespace tttrlib
 
 #endif // TTTRLIB_BURST_SEARCH_DISPATCH_H

@@ -1,43 +1,52 @@
 # `registry` — Global Algorithm and Model Registry
 
-Central registry for decay fit models, burst algorithms, and format schemas.
+Assembles `registry()` from the one algorithm registry plus the format and plugin catalogs; holds no table of its own.
 
 ## Contents
 
-- **`Registry.h` / `Registry.cpp`**: Global algorithm registry, schema validator, and factory functions.
+- **`Registry.h` / `Registry.cpp`**: `registry_json()` / `registry_category_json()` and the category views (`fit_models_json`, ...); primes every module's registrations.
 
 ## Dependencies
 
-- Depends on `util`.
+- Depends on `io`, `plugin`, `util`, `core`, `burst`, `decay`, `fcs`, `algorithm` -- everything that declares registry entries.
 
-## Two sources, one output
+## One registry
 
-The registry is assembled from two places, and is migrating from one to the
-other:
+There is exactly one registry: the `register_algorithm` table in the
+`algorithm` module (`AlgorithmRegistry.h`). Every built-in algorithm, fit
+model, fit-setup block, objective and pipeline operation registers itself
+there **next to its code** (`register_algorithm`, or `register_algorithm_json`
+with a complete JSON entry), and so does every capability a plugin brings
+(the plugin host registers it as the plugin loads, and unregisters it if the
+plugin's init fails). This module does not hold a table of its own and no
+hand-authored registry literal exists anywhere any more: `registry()` is
+assembled from `algorithms_json(<capability>)` for each capability that
+registered, plus the three catalogs that are not algorithms (`file_container`
+from the I/O format table, `table_format`, and `plugin` status).
 
-- **Hand-authored literals** — `kFitRegistry`, `kOperationRegistry`. A
-  `const char*` of JSON, kept in sync with the code by hand. This is what decay
-  fits and pipeline operations still use.
-- **Live registrations** — `register_algorithm(AlgorithmDescriptor)` in
-  `AlgorithmRegistry.h`. The algorithm declares itself; the registry serves
-  what registered. FCS, HMM, PDA and **burst searches** use this.
+Who registers what, and where:
 
-`kBurstSearchRegistry` is gone. Its seven searches now declare
-description and dispatch function in one `register_burst_search(descriptor, fn)`
-call in `BurstSearchRegistry.cpp`, so the two cannot drift — which they had:
-`bocpd` and `coincident` were advertised with a `method` the dispatcher had
-never heard of, and calling them ran the sliding window instead.
+| category | declared in |
+|---|---|
+| `burst_search` (7) | `spectroscopy/burst/src/BurstSearchRegistry.cpp` (`register_burst_search(descriptor, fn)`: description and dispatch in one call) |
+| `fit` (5), `fit_setup` (2) | next to the models: `spectroscopy/decay/src/DecayFitModelFit2x.cpp`, `DecayFitModelNExp.cpp` |
+| `objective` (4) | `spectroscopy/decay/src/DecayStatistics.cpp` |
+| `operation` (8 built-in) | next to the code performing each: `BurstSearchRegistry.cpp` (burst_selection), `BVA.cpp`, `TwoCDE.cpp`, `RecurrenceAnalysis.cpp` (burst_fusion), `fcs/src/Correlator.cpp` (burst_fcs), `decay/src/DecayFitDescriptors.cpp` (tcspc_calibration, mle_green, mle_red) |
+| `fcs`, `hmm`, `pda` | `algorithm/src/BuiltinAlgorithms.cpp` |
+| plugin `burst_search` / `fit` / `operation` / `correlation_method` / `prior` | `plugin/src/PluginHost.cpp`, at load |
 
-The literals are the reason FCS, HMM and PDA were missing entirely: not a
-design decision, just three families nobody wrote a literal for. Being missing
-is not cosmetic — a UI cannot enumerate what is not listed, `.pto` provenance
-has no schema to validate an `operation_type` against or to replay from, and a
-plugin has no name under which to offer a competing implementation.
+`Registry.cpp::prime_registrations()` asks each of those modules to register
+before anything is enumerated — explicitly, because a static initialiser in an
+archive member nothing references is dropped by the linker and its category
+would silently be empty. `fit_models_json()`, `fit_setup_json()`,
+`fit_objectives_json()` and `operation_registry_json()` are category views over
+that one table, kept because the bindings and the decay module call them.
 
-`build()` merges the two **additively**: a live registration is added to a
-category only under a name the literal does not already use. A collision is
-left visible rather than resolved, because during a migration both sides are
-real and picking a winner by load order turns a mistake into a behaviour.
+The `operation` category is the union of the entries declared as operations
+and every `can_replay` registration of any capability, so a consumer reads one
+category whichever way an operation was declared. A registry key is unique
+across the whole table (`AlgorithmDescriptor::name`, defaulting to
+`operation_type`); a duplicate is refused, never resolved by load order.
 
 ### Adding an algorithm
 

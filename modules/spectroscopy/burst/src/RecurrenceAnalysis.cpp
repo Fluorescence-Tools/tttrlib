@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "RecurrenceAnalysis.h"
 
+#include "AlgorithmRegistry.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -132,6 +133,49 @@ std::vector<double> recurrence_efficiencies(
         }
     }
     return out;
+}
+
+
+// ---- registry("operation") entry ------------------------------------------
+// Same-molecule recurrence fusion as a pipeline step, next to the analysis it uses.
+namespace {
+const char* const kBurstFusionEntry = R"JSON({
+  "name": "burst_fusion",
+  "label": "Recurrence burst fusion",
+  "summary": "Estimates same-molecule probability from inter-burst time gaps and fuses bursts from the same molecule passage (Hoffmann et al.).",
+  "operation_type": "burst_fusion",
+  "data_format": "dstore",
+  "row_grain": "burst",
+  "kind": "burst_table",
+  "inputs": {
+    "required": [
+      "burst_selection"
+    ],
+    "description": "Burst table with macro-time gaps."
+  },
+  "outputs": {
+    "columns": [
+      "Fused Bursts",
+      "Fused Gap Photons"
+    ]
+  },
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "max_lag_ms": {
+        "type": "number",
+        "default": 10.0,
+        "unit": "ms"
+      }
+    }
+  },
+  "can_replay": true
+})JSON";
+}  // namespace
+
+/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
+void register_operation_burst_fusion() {
+    register_algorithm_json("operation", "burst_fusion", kBurstFusionEntry);
 }
 
 } // namespace tttrlib

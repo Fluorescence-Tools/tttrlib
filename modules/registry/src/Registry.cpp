@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "Registry.h"
 #include "AlgorithmRegistry.h"
+#include "DecayFitDescriptors.h"
+#include "BurstSearchDispatch.h"
+#include "Correlator.h"
 
 #include <nlohmann/json.hpp>
 
@@ -187,6 +190,19 @@ json table_format_entries() {
     return out;
 }
 
+// Every module that declares registry entries about itself is asked to do so
+// before anything is enumerated. Explicit rather than static-initialised for
+// the reason recorded in DecayFitModelRegistration.h: an archive member nothing
+// references is dropped by the linker and its category silently empties.
+void prime_registrations() {
+    tttrlib::register_builtin_algorithms();      // fcs / hmm / pda descriptors
+    tttrlib::register_builtin_burst_searches();
+    tttrlib::register_burst_operations();
+    tttrlib::register_decay_descriptors();       // fit, fit_setup, objective, MLE/IRF ops
+    tttrlib::register_operation_burst_fcs();
+    tttrlib::PluginHost::ensure_loaded();        // a plugin's entries register as it loads
+}
+
 json build() {
     // Before anything is enumerated, not after. Asking the registry what
     // tttrlib can do is one of the three moments a plugin has to already be
@@ -195,30 +211,21 @@ json build() {
     // it, left `file_container` listing the built-ins only: the plugin was
     // loaded and its format registered a few lines too late to be seen.
     tttrlib::PluginHost::ensure_loaded();
+    prime_registrations();
 
     json root = json::object();
     root["burst_search"] = json::parse(TTTR::burst_search_algorithms_json());
     root["file_container"] = file_container_entries();
     root["table_format"] = table_format_entries();
     root["plugin"] = plugin_entries();
-    root["fit"] = json::parse(fit_models_json());
-    root["fit_setup"] = json::parse(fit_setup_json());
-    root["objective"] = json::parse(fit_objectives_json());
-    root["operation"] = json::parse(operation_registry_json());
-
-    // Categories built from live `register_algorithm` calls
-    // rather than from a hand-authored literal. These three families worked and
-    // were invisible -- no entry meant no UI listing, no schema for the
-    // provenance system to validate or replay against, and no name for a plugin
-    // to offer a competing implementation under.
+    // Everything else is a category of the ONE registry: every built-in
+    // algorithm, fit model, setup block, objective and pipeline operation
+    // registered itself there (next to its code), and so did every plugin
+    // capability when the plugin host loaded it. Nothing is spliced.
     for (const std::string& capability : tttrlib::algorithm_capabilities()) {
         json entries = json::parse(tttrlib::algorithms_json(capability));
         if (entries.empty()) continue;
         if (root.contains(capability)) {
-            // A live registration is additive to a category that still has a
-            // literal behind it, and never silently replaces an entry there:
-            // during the migration both sources are real, and a name collision
-            // is a mistake to surface, not to resolve by ordering.
             json merged = root[capability];
             for (auto it = entries.begin(); it != entries.end(); ++it)
                 if (!merged.contains(it.key())) merged[it.key()] = it.value();
@@ -227,25 +234,14 @@ json build() {
             root[capability] = entries;
         }
     }
-
-    // The `operation` category is the union of the hand-authored entries and
-    // every `can_replay` registration, so a consumer reads one category
-    // whichever side an operation was declared on.
+    // The `operation` category is every entry declared as an operation plus
+    // every `can_replay` registration of any capability, so a consumer reads
+    // one category whichever way an operation was declared.
     {
-        json ops = root["operation"];
+        json ops = root.contains("operation") ? root["operation"] : json::object();
         json live = json::parse(tttrlib::algorithm_operations_json());
         for (auto it = live.begin(); it != live.end(); ++it)
             if (!ops.contains(it.key())) ops[it.key()] = it.value();
-        root["operation"] = ops;
-    }
-
-    // Splice plugin-provided operations into the operation category
-    std::string plugin_ops = tttrlib::PluginHost::operations_json();
-    if (!plugin_ops.empty()) {
-        json ops = root["operation"];
-        json extra = json::parse("{" + plugin_ops + "}");
-        for (auto it = extra.begin(); it != extra.end(); ++it)
-            ops[it.key()] = it.value();
         root["operation"] = ops;
     }
     return root;
@@ -277,6 +273,28 @@ std::vector<std::string> registry_categories() {
     out.reserve(root.size());
     for (const auto& item : root.items()) out.push_back(item.key());
     return out;
+}
+
+// Category views over the one registry, kept because they are the API the
+// bindings and the decay module have always called.
+std::string fit_models_json() {
+    prime_registrations();
+    return algorithms_json("fit");
+}
+
+std::string fit_setup_json() {
+    prime_registrations();
+    return algorithms_json("fit_setup");
+}
+
+std::string fit_objectives_json() {
+    prime_registrations();
+    return algorithms_json("objective");
+}
+
+std::string operation_registry_json() {
+    prime_registrations();
+    return algorithms_json("operation");
 }
 
 } // namespace tttrlib

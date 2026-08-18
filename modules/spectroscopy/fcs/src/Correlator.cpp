@@ -6,6 +6,7 @@
 
 // OpenMP for parallel processing
 #ifdef _OPENMP
+#include "AlgorithmRegistry.h"
 #include <omp.h>
 #endif
 
@@ -697,6 +698,54 @@ if (is_verbose()) {
     auto it = correlation_methods().find(correlator->correlation_method);
     if (it != correlation_methods().end() && it->second.normalise)
         it->second.normalise(*correlator, curve);
+}
+
+
+// ---- registry("operation") entry ------------------------------------------
+// Burst-wise FCS as a pipeline step, next to the correlator that computes it.
+namespace {
+const char* const kBurstFcsEntry = R"JSON({
+  "name": "burst_fcs",
+  "label": "Burst-wise FCS",
+  "summary": "Per-burst autocorrelation/cross-correlation curves fitted for diffusion time. Produces td4 companion.",
+  "operation_type": "burst_correlation",
+  "data_format": "dstore",
+  "row_grain": "burst",
+  "kind": "burst_table",
+  "inputs": {
+    "required": [
+      "tttr_photon_stream",
+      "burst_selection"
+    ],
+    "description": "Photon stream for correlation, burst indices for per-burst correlation."
+  },
+  "outputs": {
+    "columns": [
+      "Burst Index",
+      "td_mean",
+      "td_peak"
+    ]
+  },
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "fit_model": {
+        "type": "string",
+        "default": "3d_gaussian",
+        "enum": [
+          "3d_gaussian",
+          "maxent"
+        ]
+      }
+    }
+  },
+  "can_replay": true
+})JSON";
+}  // namespace
+
+/// Register this operation's registry entry. Idempotent (a duplicate key is refused).
+void tttrlib::register_operation_burst_fcs() {
+    tttrlib::register_algorithm_json("operation", "burst_fcs", kBurstFcsEntry);
 }
 
 // ---- the method table -------------------------------------------------------

@@ -33,6 +33,11 @@
 #include "CorrelatorCurve.h"
 
 
+namespace tttrlib {
+/// Register the `burst_fcs` pipeline-operation registry entry (registry("operation")). Idempotent.
+void register_operation_burst_fcs();
+}
+
 class Correlator {
 
     friend class CorrelatorCurve;

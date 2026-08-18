@@ -24,6 +24,8 @@
 #include <limits>
 #include <vector>
 
+#include "AlgorithmRegistry.h"
+
 #include "DecayFit23.h"
 #include "DecayFit24.h"
 #include "DecayFit25.h"
@@ -35,7 +37,8 @@ namespace {
 /*!
  * \brief Slots of the shared `fit2x` setup block.
  *
- * Must match the declaration order of `fit_setup/fit2x` in FitRegistry.cpp,
+ * Must match the declaration order of the `fit_setup/fit2x` entry registered
+ * at the end of this file (kFit2xEntry),
  * which is what the flattening rule makes normative. A test compares the two so
  * a reordering of the JSON cannot silently mean something else here.
  */
@@ -454,6 +457,507 @@ public:
  * unreferenced initialiser lets the linker drop this whole object file out of
  * libtttrlib_static.a. See src/DecayFitModelRegistration.h.
  */
+namespace {
+
+// What registry("fit") / registry("fit_setup") say about this family. Declared
+// here, next to the models that implement it, and registered through the one
+// registry (register_algorithm_json) -- there is no registry literal to keep
+// in step with the code any more. The parameter order in `params_schema` IS
+// the flat initial_values layout (DecayFitSetup.cpp derives it from here), so
+// these blocks are normative, not documentation.
+const char* const kFit23Entry = R"JSON({
+  "name": "fit23",
+  "n_patterns": 0,
+  "label": "Single lifetime + anisotropy (Fit23)",
+  "summary": "Poisson MLE of one fluorescence lifetime with time-resolved anisotropy.",
+  "description": "The single-molecule burst-MLE workhorse. Fits one lifetime to a polarization-resolved (Jordi VV|VH) decay by maximum likelihood, jointly modelling the anisotropy decay so the parallel and perpendicular channels are described together. Scatter (gamma) and anisotropy (r0, rho) are barely identifiable from a short burst decay against an auto-extracted background, so only tau is free by default; free the others when a measured IRF/background makes them meaningful. tau, gamma, r0, rho map to initial_values in that order.",
+  "setup": {
+    "category": "fit_setup",
+    "name": "fit2x"
+  },
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "tau",
+      "gamma",
+      "r0",
+      "rho"
+    ],
+    "properties": {
+      "tau": {
+        "type": "number",
+        "title": "Lifetime tau (ns)",
+        "default": 2.0,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": false,
+        "description": "Fluorescence lifetime. The one parameter fit by default."
+      },
+      "gamma": {
+        "type": "number",
+        "title": "Scatter fraction",
+        "default": 0.1,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "fixed_default": true,
+        "description": "Fraction of the signal explained by the background/scatter pattern rather than the decay. Not identifiable against an auto-extracted (scatter-shaped) background, so fixed by default."
+      },
+      "r0": {
+        "type": "number",
+        "title": "Fundamental anisotropy r0",
+        "default": 0.38,
+        "minimum": -0.2,
+        "maximum": 0.4,
+        "fixed_default": true,
+        "description": "Anisotropy at time zero, set by the dye's absorption/emission dipole angle (0.4 for parallel dipoles). A known photophysical constant, so fixed by default."
+      },
+      "rho": {
+        "type": "number",
+        "title": "Rotational correlation time rho (ns)",
+        "default": 1.22,
+        "minimum": 0.01,
+        "maximum": 100.0,
+        "unit": "ns",
+        "fixed_default": true,
+        "description": "Rotational correlation time of the anisotropy decay. Left free against a short burst decay it rails to zero, so fixed by default; free it with a measured IRF/background to fit anisotropy."
+      }
+    }
+  },
+  "supports_lnprob": true,
+  "supports_gradient": false,
+  "results_schema": {
+    "type": "object",
+    "properties": {
+      "twoIstar": {
+        "type": "number",
+        "title": "2I*",
+        "description": "Goodness of the optimised fit: -2 ln(L(C|M)/L(C|C)), the Poisson deviance against a perfectly fitting model. Around 1 for a good fit to counting data; large values mean the model cannot describe the decay."
+      },
+      "converged": {
+        "type": "boolean",
+        "title": "Converged",
+        "description": "Whether the optimiser reached its tolerance rather than stopping on the iteration limit. Carried as 0.0 or 1.0 in the flat result vector."
+      },
+      "iterations": {
+        "type": "integer",
+        "title": "Iterations",
+        "description": "Objective evaluations the optimiser needed. A row that ran to the limit is worth looking at even when its 2I* looks acceptable."
+      },
+      "r_scatter": {
+        "type": "number",
+        "title": "Anisotropy (scatter-corrected)",
+        "description": "Steady-state anisotropy computed from the integrated signals after removing the background/scatter contribution."
+      },
+      "r_experimental": {
+        "type": "number",
+        "title": "Anisotropy (uncorrected)",
+        "description": "Steady-state anisotropy computed from the raw integrated signals, without background subtraction."
+      }
+    }
+  }
+})JSON";
+
+const char* const kFit24Entry = R"JSON({
+  "name": "fit24",
+  "n_patterns": 0,
+  "label": "Bi-exponential (Fit24)",
+  "summary": "Poisson MLE of two lifetimes with a mixing fraction, scatter and a constant offset.",
+  "description": "Two-lifetime maximum-likelihood fit for a decay that a single exponential cannot describe — a mixture of two states (e.g. FRET and no-FRET donor populations) with distinct lifetimes. The second component's amplitude fraction A2, a scatter fraction gamma and a constant offset are fit alongside the two lifetimes. Parameters map to initial_values as [tau1, gamma, tau2, A2, offset].",
+  "setup": {
+    "category": "fit_setup",
+    "name": "fit2x"
+  },
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "tau1",
+      "gamma",
+      "tau2",
+      "A2",
+      "offset"
+    ],
+    "properties": {
+      "tau1": {
+        "type": "number",
+        "title": "Lifetime 1 tau1 (ns)",
+        "default": 1.0,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": false,
+        "description": "First (shorter) fluorescence lifetime."
+      },
+      "gamma": {
+        "type": "number",
+        "title": "Scatter fraction",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "fixed_default": false,
+        "description": "Fraction of the signal explained by the background/scatter pattern."
+      },
+      "tau2": {
+        "type": "number",
+        "title": "Lifetime 2 tau2 (ns)",
+        "default": 4.0,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": false,
+        "description": "Second (longer) fluorescence lifetime."
+      },
+      "A2": {
+        "type": "number",
+        "title": "Fraction of tau2",
+        "default": 0.5,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "fixed_default": false,
+        "description": "Amplitude fraction of the second lifetime component."
+      },
+      "offset": {
+        "type": "number",
+        "title": "Constant offset",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 1000000.0,
+        "fixed_default": true,
+        "description": "Flat baseline added to every channel (uncorrelated dark counts)."
+      }
+    }
+  },
+  "supports_lnprob": true,
+  "supports_gradient": false,
+  "results_schema": {
+    "type": "object",
+    "properties": {
+      "twoIstar": {
+        "type": "number",
+        "title": "2I*",
+        "description": "Poisson deviance of the optimised fit against a perfectly fitting model."
+      },
+      "converged": {
+        "type": "boolean",
+        "title": "Converged",
+        "description": "Whether the optimiser reached its tolerance. Carried as 0.0 or 1.0."
+      },
+      "iterations": {
+        "type": "integer",
+        "title": "Iterations",
+        "description": "Objective evaluations the optimiser needed."
+      },
+      "r_scatter": {
+        "type": "number",
+        "title": "Anisotropy (scatter-corrected)",
+        "description": "Steady-state anisotropy from the integrated signals with the background/scatter contribution removed."
+      },
+      "r_experimental": {
+        "type": "number",
+        "title": "Anisotropy (uncorrected)",
+        "description": "Steady-state anisotropy from the raw integrated signals."
+      }
+    }
+  }
+})JSON";
+
+const char* const kFit25Entry = R"JSON({
+  "name": "fit25",
+  "n_patterns": 0,
+  "label": "Best of four fixed lifetimes (Fit25)",
+  "summary": "Selects which of four fixed lifetimes best describes the decay.",
+  "description": "A discrete selection rather than a continuous fit: the four lifetimes are held fixed, each is scored against the data, and the one best describing the decay is returned (with its scatter fraction). Useful when the sample is known to occupy one of a few discrete states and the goal is to classify rather than to measure a continuous lifetime. Parameters map to initial_values as [tau1, tau2, tau3, tau4, gamma, r0]; the four lifetimes are always fixed.",
+  "setup": {
+    "category": "fit_setup",
+    "name": "fit2x"
+  },
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "tau1",
+      "tau2",
+      "tau3",
+      "tau4",
+      "gamma",
+      "r0"
+    ],
+    "properties": {
+      "tau1": {
+        "type": "number",
+        "title": "Candidate lifetime 1 (ns)",
+        "default": 0.5,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": true,
+        "description": "First candidate lifetime (always fixed)."
+      },
+      "tau2": {
+        "type": "number",
+        "title": "Candidate lifetime 2 (ns)",
+        "default": 1.5,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": true,
+        "description": "Second candidate lifetime (always fixed)."
+      },
+      "tau3": {
+        "type": "number",
+        "title": "Candidate lifetime 3 (ns)",
+        "default": 2.5,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": true,
+        "description": "Third candidate lifetime (always fixed)."
+      },
+      "tau4": {
+        "type": "number",
+        "title": "Candidate lifetime 4 (ns)",
+        "default": 4.0,
+        "minimum": 0.01,
+        "maximum": 20.0,
+        "unit": "ns",
+        "fixed_default": true,
+        "description": "Fourth candidate lifetime (always fixed)."
+      },
+      "gamma": {
+        "type": "number",
+        "title": "Scatter fraction",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "fixed_default": false,
+        "description": "Fraction of the signal explained by the background/scatter pattern."
+      },
+      "r0": {
+        "type": "number",
+        "title": "Fundamental anisotropy r0",
+        "default": 0.38,
+        "minimum": 0.0,
+        "maximum": 0.4,
+        "fixed_default": true,
+        "description": "Fundamental anisotropy (fixed input; part of the initial_values vector)."
+      }
+    }
+  },
+  "supports_lnprob": true,
+  "supports_gradient": false,
+  "results_schema": {
+    "type": "object",
+    "properties": {
+      "twoIstar": {
+        "type": "number",
+        "title": "2I*",
+        "description": "Poisson deviance of the winning candidate against a perfectly fitting model."
+      },
+      "converged": {
+        "type": "boolean",
+        "title": "Converged",
+        "description": "Whether the scatter optimisation for the winning candidate reached its tolerance. Carried as 0.0 or 1.0."
+      },
+      "iterations": {
+        "type": "integer",
+        "title": "Iterations",
+        "description": "Objective evaluations summed over the candidates scored."
+      },
+      "selected_index": {
+        "type": "integer",
+        "title": "Winning candidate",
+        "description": "Which of the four candidate lifetimes best described the decay, as a 0-based index. This model classifies rather than measures, so the index is the answer; previously it could only be recovered by comparing the returned lifetime against the four inputs."
+      },
+      "r_scatter": {
+        "type": "number",
+        "title": "Anisotropy (scatter-corrected)",
+        "description": "Steady-state anisotropy with the background/scatter contribution removed."
+      },
+      "r_experimental": {
+        "type": "number",
+        "title": "Anisotropy (uncorrected)",
+        "description": "Steady-state anisotropy from the raw integrated signals."
+      }
+    }
+  }
+})JSON";
+
+const char* const kFit26Entry = R"JSON({
+  "name": "fit26",
+  "n_patterns": 2,
+  "label": "Two-pattern mixture (Fit26)",
+  "summary": "Fits the mixing fraction between two fixed reference patterns.",
+  "description": "A one-parameter mixture: the model is a linear combination of two fixed reference decay patterns and only their mixing fraction x1 is fit. Used for species fractioning when the pure-component decays are known (e.g. two conformational states measured separately). The single parameter maps to initial_values as [x1].",
+  "setup": {
+    "category": "fit_setup",
+    "name": "fit2x"
+  },
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "x1"
+    ],
+    "properties": {
+      "x1": {
+        "type": "number",
+        "title": "Fraction of pattern 1",
+        "default": 0.5,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "fixed_default": false,
+        "description": "Amplitude fraction of the first reference pattern; the second is 1 - x1."
+      }
+    }
+  },
+  "supports_lnprob": true,
+  "supports_gradient": false,
+  "results_schema": {
+    "type": "object",
+    "properties": {
+      "twoIstar": {
+        "type": "number",
+        "title": "2I*",
+        "description": "Poisson deviance of the optimised mixture against a perfectly fitting model."
+      },
+      "converged": {
+        "type": "boolean",
+        "title": "Converged",
+        "description": "Whether the optimiser reached its tolerance. Carried as 0.0 or 1.0."
+      },
+      "iterations": {
+        "type": "integer",
+        "title": "Iterations",
+        "description": "Objective evaluations the optimiser needed."
+      }
+    }
+  }
+})JSON";
+
+const char* const kFit2xEntry = R"JSON({
+  "name": "fit2x",
+  "label": "Fit2x construction inputs",
+  "summary": "Inputs set once when a Fit2x model is built (not optimised).",
+  "description": "The instrument description and correction factors shared by every Fit2x model (Fit23/24/25/26). Supplied to the model constructor; the IRF and background are Jordi (VV|VH) histograms the same length as the data. Referenced from each fit entry's 'setup' link.",
+  "params_schema": {
+    "type": "object",
+    "required": [
+      "dt",
+      "period",
+      "g_factor",
+      "l1",
+      "l2",
+      "convolution_stop",
+      "soft_bifl_scatter_flag",
+      "p2s_twoIstar_flag"
+    ],
+    "properties": {
+      "dt": {
+        "type": "number",
+        "title": "Micro-time bin width (ns)",
+        "default": 0.032,
+        "minimum": 1e-06,
+        "maximum": 1000.0,
+        "unit": "ns",
+        "description": "Time width of one micro-time channel. tau is reported in these units, so it must be in nanoseconds for the lifetime to be in nanoseconds."
+      },
+      "period": {
+        "type": "number",
+        "title": "Excitation period (ns)",
+        "default": 13.5,
+        "minimum": 0.001,
+        "maximum": 10000.0,
+        "unit": "ns",
+        "description": "Time between excitation pulses. The decay is convolved over one period (wrap-around), so a lifetime longer than the period cannot be measured."
+      },
+      "g_factor": {
+        "type": "number",
+        "title": "G-factor",
+        "default": 1.0,
+        "minimum": 0.0,
+        "maximum": 100.0,
+        "description": "Detection-efficiency ratio between the parallel and perpendicular channels, used only for the anisotropy."
+      },
+      "l1": {
+        "type": "number",
+        "title": "Mixing l1",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "advanced": true,
+        "description": "Depolarisation/mixing correction between the parallel and perpendicular detection channels."
+      },
+      "l2": {
+        "type": "number",
+        "title": "Mixing l2",
+        "default": 0.0,
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "advanced": true,
+        "description": "Second depolarisation/mixing correction factor."
+      },
+      "convolution_stop": {
+        "type": "integer",
+        "title": "Convolution stop (channel)",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "Last micro-time channel included in the convolution. -1 uses the full IRF length."
+      },
+      "soft_bifl_scatter_flag": {
+        "type": "boolean",
+        "title": "Discount background photons",
+        "default": true,
+        "description": "When true the reported score is reduced by the background photon contribution (background photons carry no lifetime information)."
+      },
+      "objective": {
+        "type": "string",
+        "title": "Objective",
+        "default": "poisson_mle",
+        "enum": [
+          "poisson_mle",
+          "p2s_mle",
+          "neyman_lsq",
+          "gehrels_lsq"
+        ],
+        "entries_of": {
+          "category": "objective"
+        },
+        "description": "Which statistic the fit minimises, by name from the 'objective' category. 'p2s_mle' scores the anisotropy-free sum P + 2S; the default scores the parallel and perpendicular channels individually in a global fit. Replaces the former p2s_twoIstar_flag, so that adding a statistic does not mean adding a flag to every model."
+      },
+      "fit_start": {
+        "type": "integer",
+        "title": "First fitted channel",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "First micro-time channel included in the objective. Non-zero makes this a tail fit."
+      },
+      "fit_stop": {
+        "type": "integer",
+        "title": "Last fitted channel",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 1000000,
+        "advanced": true,
+        "description": "One past the last micro-time channel included in the objective; -1 fits to the end."
+      }
+    }
+  }
+})JSON";
+
+
+}  // namespace
+
+/// Register the Fit2x registry entries (fit23..fit26 and the fit2x setup block). Idempotent.
+void register_fit_descriptors_fit2x() {
+    tttrlib::register_algorithm_json("fit", "fit23", kFit23Entry);
+    tttrlib::register_algorithm_json("fit", "fit24", kFit24Entry);
+    tttrlib::register_algorithm_json("fit", "fit25", kFit25Entry);
+    tttrlib::register_algorithm_json("fit", "fit26", kFit26Entry);
+    tttrlib::register_algorithm_json("fit_setup", "fit2x", kFit2xEntry);
+}
+
 void register_decay_fit_models_fit2x() {
     register_decay_fit("fit23", [](const std::vector<double> &s, const std::vector<double> &irf) {
         return std::make_shared<const Fit23Model>(s, irf);

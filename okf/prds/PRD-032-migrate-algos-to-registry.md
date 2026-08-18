@@ -1,6 +1,6 @@
 # PRD-032 — Migrate existing algorithms onto register_algorithm
 
-> **PRD #:** 032 · **Status:** 🟡 In Progress · **Created:** 2026-08-09 · **Updated:** 2026-08-10 · **Owner:** tpeulen
+> **PRD #:** 032 · **Status:** ✅ Implemented (2026-08-18) · **Created:** 2026-08-09 · **Updated:** 2026-08-10 · **Owner:** tpeulen
 >
 > **Depends on:** [PRD-027](PRD-027-modular-algorithm-registry.md) — the
 > `register_operation` ABI is now live (2026-08-09). This PRD is the
@@ -38,6 +38,25 @@
 > so an algorithm module that wanted to register itself could not depend on
 > `registry` without closing a cycle. Nothing could have migrated while the
 > mechanism lived above the algorithms.
+>
+> **2026-08-18, later — DONE. One registry.** Owner's ruling: "there should be
+> only one registry", "no per-module registry files". Implemented as: the
+> `algorithm` module's `register_algorithm` table is the registry; `kFitRegistry`
+> and `kOperationRegistry` are deleted, their entries registered next to the code
+> (fits/setups in the model TUs, objectives in `DecayStatistics.cpp`, operations
+> in `BurstSearchRegistry.cpp` / `BVA.cpp` / `TwoCDE.cpp` / `RecurrenceAnalysis.cpp`
+> / `Correlator.cpp` / `DecayFitDescriptors.cpp`); the plugin host registers every
+> plugin capability into the same table at load (journal-rolled-back on a failed
+> init) and the three text splices (`burst_searches_json`, `operations_json`,
+> `decay_fit_models_json`) are deleted; `Registry.cpp` only assembles and primes.
+> The layering worry below dissolved: `decay` now depends on `algorithm` (below
+> it) and reads its own registrations back; `registry` depends on `decay`.
+> Criterion 5: 0 removed, 0 changed, 143 generic keys added; `params_schema`
+> property order identical to the literals (pinned in
+> `test_algorithm_registry.py`). The stale `burst_selection` columns are kept
+> verbatim (criterion 5) with a note next to the entry that they are the
+> two-detector default and a `--setup` names its own -- changing the contract
+> is a separate, consumer-visible decision.
 >
 > **2026-08-18 — obstacle 2 is lifted, and the literal is now known to be stale.**
 > PRD-026's C++ port has landed (`modules/cli/src/cmd_sm.cpp`, board

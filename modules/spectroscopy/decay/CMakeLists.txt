@@ -27,6 +27,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitModelFit2x.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitModelNExp.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitPlugin.cpp"
+             "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitDescriptors.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitNExp.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitPrior.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayFitProblem.cpp"
@@ -36,7 +37,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MaxEntTcspc.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayPatternFit.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  math registry plugin
+    DEPENDS  math plugin algorithm
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES DecayFit.i DecayConvolution.i BlindIRF.i MaxEntTcspc.i DecayPatternFit.i
     TEST_DIR test/python/decayfit
