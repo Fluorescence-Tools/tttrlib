@@ -112,6 +112,24 @@ deposit CIF can embed it verbatim. The tttrlib operation name travels as the
 a workflow that stitches tttrlib with FRETBursts or a command-line tool loads
 here as its tttrlib steps, since only their owner can run the others.
 
+From the command line
+---------------------
+
+``tttr sm`` writes the document into the ``.pto`` it produces, so the artifact
+carries the recipe::
+
+    tttr sm data.spc --setup setups.json -o run.pto
+    python -c "import tttrlib; print(tttrlib.Pipeline.from_pto('run.pto').describe())"
+
+and it can run one instead of options::
+
+    tttr sm data.spc --write-pipeline recipe.json   # emit, do not read the data
+    tttr sm data.spc --pipeline recipe.json -o run.pto
+    tttr sm data.spc --pipeline previous.pto -o rerun.pto   # repeat an earlier run
+
+The document records the search *and* the companions that actually ran (BVA,
+FRET-2CDE, per-detector MLE), each with the burst table as its input.
+
 Run and replay
 --------------
 

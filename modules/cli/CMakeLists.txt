@@ -39,7 +39,10 @@ tttrlib_add_module(
     # decay: cmd_sm.cpp fits one lifetime per burst through DecayFitModel.h.
     DEPENDS  util core simulation fcs clsm superres localization burst decay io io_store io_pto io_image io_csv
     EXTERNAL_DEPS tttrlib::json tttrlib::cxxopts
+    # The pipeline document a run writes names the tttrlib that produced it.
 )
+
+TARGET_COMPILE_DEFINITIONS(tttrlib_cli_objects PRIVATE TTTRLIB_VERSION_STRING="${PROJECT_VERSION}")
 
 # No cli module, no tttr binary: main.cpp is the module's front door.
 IF(BUILD_LIBRARY AND WITH_CLI)

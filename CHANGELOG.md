@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+- **`tttr sm` writes the pipeline that produced its output**, and can run one.
+  The `.pto` it writes carries a replayable document under
+  `_mmfdb_workflow.definition` (search plus the companions that actually ran:
+  BVA, FRET-2CDE, per-detector MLE), so `tttrlib.Pipeline.from_pto(...)` — or
+  mmfdb — can re-run the analysis from its own artifact. New options:
+  `--write-pipeline FILE` emits the recipe an invocation *would* run without
+  reading the data (reviewable, version-controllable), and `--pipeline FILE`
+  runs one (a `.json`, or a `.pto` that carries one — `tttr sm data.spc
+  --pipeline previous.pto`). A document from a newer format version is refused
+  with the writing tttrlib version named.
+- **Removed `bin/tttrlib`**, the Python/click CLI the native `tttr` binary
+  replaced: no duplicate implementation, and no click / matplotlib /
+  scikit-image at run time. The upstream bioconda recipe installs
+  `$SRC_DIR/bin/*` and tests `tttrlib --help`; it must install nothing from
+  `bin/` and test `tttr --help` instead (`recipes/cli` already does).
+
 - **Pipelines are documents** (`tttrlib.Pipeline`): a processing chain is a
   list of registered operations plus parameters, exportable and importable as
   **JSON**, inside a **`.pto`** container (under mmfdb's own

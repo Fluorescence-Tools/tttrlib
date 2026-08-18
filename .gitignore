@@ -28,7 +28,6 @@ venv
 # root-level build/install copy only — must not match nested package dirs
 # such as ext/**/io/github/fluorescencetools/tttrlib/ or ext/python/tttrlib.*
 /tttrlib
-!bin/tttrlib
 
 # Local planning and agent state
 .omx/

@@ -108,6 +108,61 @@ json load_config(const std::string& path, std::string* err) {
     }
 }
 
+/// A pipeline document, from a `.json` file or from the
+/// `_mmfdb_workflow.definition` tag of a `.pto` container -- the two carriers
+/// `tttrlib.Pipeline` writes. The format is checked, and a document from a
+/// newer format version is refused rather than half-understood.
+json load_pipeline_document(const std::string& path, std::string* err) {
+    json doc = json::object();
+    if (tttr::io::is_pto_file(path)) {
+        tttr::io::PtoFile pto;
+        if (!pto.open(path)) {
+            *err = "cannot read pipeline container " + path + ": " + pto.error();
+            return doc;
+        }
+        std::string text;
+        for (const auto& tag : pto.tags()) {
+            if (tag.name == "_mmfdb_workflow.definition") { text = tag.text; break; }
+        }
+        pto.close();
+        if (text.empty()) {
+            *err = path + " carries no _mmfdb_workflow.definition";
+            return doc;
+        }
+        try {
+            doc = json::parse(text);
+        } catch (const json::parse_error& e) {
+            *err = std::string("pipeline parse error: ") + e.what();
+            return doc;
+        }
+    } else {
+        std::ifstream ifs(path);
+        if (!ifs) {
+            *err = "cannot read pipeline " + path;
+            return doc;
+        }
+        try {
+            doc = json::parse(ifs);
+        } catch (const json::parse_error& e) {
+            *err = std::string("pipeline parse error: ") + e.what();
+            return doc;
+        }
+    }
+    const std::string format = doc.value("format", std::string("tttrlib.pipeline"));
+    if (format != "tttrlib.pipeline") {
+        *err = path + " is not a tttrlib.pipeline document (format=" + format + ")";
+        return json::object();
+    }
+    if (doc.value("format_version", 1) > 1) {
+        *err = path + " is a pipeline of format version " +
+               std::to_string(doc.value("format_version", 1)) +
+               ", newer than this tttrlib understands (1); written by tttrlib " +
+               doc.value("software", json::object()).value("version", std::string("unknown"));
+        return json::object();
+    }
+    return doc;
+}
+
 /// Python's `str.capitalize`: first character upper, the rest lower. The rate
 /// column is spelled `Green Count Rate (KHz)`, so a detector named `GREEN` and
 /// one named `green` must produce the same header.
@@ -607,6 +662,63 @@ std::string tag_of(const PtoFile& pto, std::uint64_t uid,
 /// with the same settings, or 0 for "add a new one".
 ///
 /// This is what keeps a container from accumulating one artifact per re-run.
+
+/// The run as a **pipeline document** -- the same schema
+/// `tttrlib.Pipeline` writes and mmfdb's workflow reads (`version: 1`,
+/// `sources` + `steps`). Stored in the container under
+/// `_mmfdb_workflow.definition`, so the artifact carries the recipe that
+/// produced it and `Pipeline.from_pto()` (or `mmfdb workflow run`) can replay
+/// it. The per-artifact `_mmfdb_operation.*` tags say what each table IS; this
+/// says how the whole run was invoked, which is the part a replay needs.
+json pipeline_document(const std::string& input_path,
+                       const std::string& input_format,
+                       const json& search_settings,
+                       const std::vector<json>& companion_steps) {
+    const std::string version = TTTRLIB_VERSION_STRING;
+    json software = {{"package", "tttrlib"}, {"version", version}};
+    json steps = json::array();
+
+    json search_params = search_settings;
+    search_params["tttrlib_operation"] = "burst_selection";
+    steps.push_back({{"id", "burst_selection"},
+                     {"operation", "burst_selection"},
+                     {"operation_type", "burst_selection"},
+                     {"params", search_params},
+                     {"inputs", {{"photons", "raw"}}},
+                     {"outputs", json::object()},
+                     {"python", "tttrlib.pipeline:run_step"},
+                     {"software", software}});
+    for (const json& step : companion_steps) steps.push_back(step);
+
+    return json{{"format", "tttrlib.pipeline"},
+                {"format_version", 1},
+                {"version", 1},                       // the mmfdb workflow schema
+                {"name", "tttr-sm"},
+                {"description", "tttr sm burst analysis"},
+                {"software", software},
+                {"sources", {{"raw", {{"path", input_path},
+                                      {"kind", "raw_measurement"},
+                                      {"metadata", {{"file_type", input_format}}}}}}},
+                {"steps", steps}};
+}
+
+/// One companion step of the document, in the same shape.
+json pipeline_step(const std::string& id, const std::string& operation,
+                   const std::string& operation_type, const json& settings,
+                   const std::string& after) {
+    json params = settings;
+    params["tttrlib_operation"] = operation;
+    return json{{"id", id},
+                {"operation", operation},
+                {"operation_type", operation_type},
+                {"params", params},
+                {"inputs", {{"bursts", after + ".output"}}},
+                {"outputs", json::object()},
+                {"python", "tttrlib.pipeline:run_step"},
+                {"software", {{"package", "tttrlib"},
+                              {"version", TTTRLIB_VERSION_STRING}}}};
+}
+
 std::uint64_t find_run(const PtoFile& pto, const std::string& operation,
                        const std::string& run_hash) {
     for (const auto& obj : pto.objects()) {
@@ -849,6 +961,13 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
         ("file", "input TTTR file, or - for stdin", cxxopts::value<std::string>())
         ("config", "JSON config with search parameters and output paths",
          cxxopts::value<std::string>())
+        ("pipeline", "run the pipeline document in this file (.json, or a .pto "
+                     "that carries one): its burst_selection parameters replace "
+                     "the search options",
+         cxxopts::value<std::string>())
+        ("write-pipeline", "write the pipeline document this run WOULD execute "
+                           "to this file and exit, without reading the data",
+         cxxopts::value<std::string>())
         ("method", "search method: sliding_window, cusum_sprt, maxtree",
          cxxopts::value<std::string>())
         ("min-photons", "minimum photons in a burst (L)", cxxopts::value<int>())
@@ -933,6 +1052,37 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
         int mle_min_photons = 20;
         int mle_bins = 128;
 
+        // A pipeline document (`tttrlib.Pipeline`, or the one a previous run
+        // wrote into its .pto) IS the configuration: its `burst_selection`
+        // step carries the parameters, so re-running an analysis is
+        // `tttr sm data.spc --pipeline previous.pto`. Read before --config and
+        // the flags, both of which still override it.
+        if (r.count("pipeline")) {
+            std::string err;
+            const json doc = load_pipeline_document(r["pipeline"].as<std::string>(), &err);
+            if (!err.empty()) {
+                std::cerr << "error: " << err << std::endl;
+                return 1;
+            }
+            for (const auto& step : doc.value("steps", json::array())) {
+                if (step.value("operation", std::string()) != "burst_selection") continue;
+                const json params = step.value("params", json::object());
+                if (params.contains("method")) method = params["method"].get<std::string>();
+                if (params.contains("min_photons")) L = params["min_photons"].get<int>();
+                if (params.contains("rate_window")) m = params["rate_window"].get<int>();
+                if (params.contains("time_separation"))
+                    T = params["time_separation"].get<double>();
+                if (params.contains("channels")) {
+                    channels.clear();
+                    for (const auto& c : params["channels"]) {
+                        if (!channels.empty()) channels += ",";
+                        channels += std::to_string(c.get<int>());
+                    }
+                }
+                break;
+            }
+        }
+
         if (r.count("config")) {
             std::string err;
             json cfg = load_config(r["config"].as<std::string>(), &err);
@@ -1012,6 +1162,32 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
         progress.begin();
 
         std::cout << "Loading: " << file << std::endl;
+        // --write-pipeline: emit the document this invocation would run and
+        // stop. Nothing is read, so a recipe can be written, reviewed, edited
+        // and version-controlled before it ever touches a measurement -- and
+        // handed to `mmfdb workflow run` or to `tttrlib.Pipeline`.
+        if (r.count("write-pipeline")) {
+            json settings = {{"method", method},
+                             {"min_photons", L},
+                             {"rate_window", m},
+                             {"time_separation", T}};
+            if (!channels.empty()) {
+                json ch = json::array();
+                for (int c : parse_channels(channels)) ch.push_back(c);
+                settings["channels"] = ch;
+            }
+            const std::string target = r["write-pipeline"].as<std::string>();
+            std::ofstream ofs(target);
+            if (!ofs) {
+                std::cerr << "error: cannot write " << target << std::endl;
+                return 1;
+            }
+            ofs << pipeline_document(file, tttr_format_term(file), settings, {}).dump(2)
+                << std::endl;
+            std::cout << "Wrote pipeline " << target << std::endl;
+            return 0;
+        }
+
         // `-` is stdin, so `tttr sim ... | tttr sm - ...` needs no
         // intermediate file from the user. It is spooled, not streamed -- see
         // InputPath.
@@ -1368,6 +1544,10 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
                 output.size() >= 4 && output.substr(output.size() - 4) == ".pto";
 
         if (to_pto) {
+            // The steps this run actually performed, for the pipeline
+            // document written at the end.
+            std::vector<json> pipeline_steps;
+
             PtoFile pto;
             const bool reopened = tttr::io::is_pto_file(output);
             if (reopened) {
@@ -1505,6 +1685,9 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
                 put_table(pto, "mle/" + base + "." + nm, mle_store,
                           "burst_lifetime_fitting", s, "burst",
                           {table_uid}, "derived_from", "mle");
+                pipeline_steps.push_back(pipeline_step(
+                        "mle_" + nm, "mle_green", "burst_lifetime_fitting", s,
+                        "burst_selection"));
             }
 
             if (!bva_std.empty() && bva_std.size() == n_bursts) {
@@ -1519,6 +1702,8 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
                 put_table(pto, "bv4/" + base + ".bv4", bva_store,
                           "burst_variance_analysis", s, "burst",
                           {table_uid}, "derived_from", "variance");
+                pipeline_steps.push_back(pipeline_step(
+                        "bva", "bva", "burst_variance_analysis", s, "burst_selection"));
             }
             if (!fret_2cde.empty() && fret_2cde.size() == n_bursts) {
                 DataStore cde_store("kde_cde");
@@ -1531,6 +1716,20 @@ int tttrlib::cli::cmd_sm(int argc, char** argv) {
                           {"bursts", parent_run}};
                 put_table(pto, "2c4/" + base + ".2c4", cde_store, "burst_2cde", s,
                           "burst", {table_uid}, "derived_from", "kernel_density");
+                pipeline_steps.push_back(pipeline_step(
+                        "kde_cde", "kde_cde", "burst_2cde", s, "burst_selection"));
+            }
+
+            // The run as a replayable pipeline document. `tttrlib.Pipeline`
+            // and mmfdb read the same schema, so the container answers "how
+            // was this made?" with something that can be run again rather
+            // than only with per-table settings.
+            {
+                const json document = pipeline_document(
+                        file, tttr_format_term(file), search_settings, pipeline_steps);
+                tag_text(pto, 0, "_mmfdb_workflow.definition", document.dump());
+                tag_text(pto, 0, "_mmfdb_workflow.name", "tttr-sm");
+                tag_text(pto, 0, "_mmfdb_workflow.version", "1");
             }
 
             if (!pto.commit()) {

@@ -803,3 +803,91 @@ def test_window_columns_come_out_in_file_order(sim_file, tmp_path):
     assert order == ["prompt", "delayed"], (
         f"window columns are in {order}, the file says ['prompt', 'delayed'] "
         f"— alphabetical order would give ['delayed', 'prompt']")
+
+
+# ------------------------------------------------- the pipeline document --
+#
+# A run writes the recipe that produced it, and the recipe runs again. That is
+# what makes the analysis reproducible rather than merely recorded: the .pto
+# answers "how was this made?" with something executable.
+
+
+def test_the_container_carries_the_pipeline_that_produced_it(two_detector):
+    """`_mmfdb_workflow.definition` -- mmfdb's item for a verbatim workflow --
+    holds the document, and `tttrlib.Pipeline` reads it straight out."""
+    import tttrlib
+    pto, _table, _header = two_detector
+    pipeline = tttrlib.Pipeline.from_pto(str(pto))
+    operations = [s["operation"] for s in pipeline.steps]
+    assert "burst_selection" in operations
+    params = pipeline.steps[0]["params"]
+    assert params["method"] and params["min_photons"] and params["rate_window"]
+    document = pipeline.to_dict()
+    assert document["software"]["package"] == "tttrlib"
+    assert document["sources"]["raw"]["path"].endswith(".spc")
+
+
+def test_the_companions_it_computed_are_steps_of_the_document(two_detector):
+    """The document is the run, not the search alone: BVA and FRET-2CDE ran,
+    so they are steps -- with the burst table as their input."""
+    import tttrlib
+    pto, _table, _header = two_detector
+    pipeline = tttrlib.Pipeline.from_pto(str(pto))
+    operations = [s["operation"] for s in pipeline.steps]
+    assert "bva" in operations and "kde_cde" in operations
+    for step in pipeline.steps[1:]:
+        assert step["inputs"] == {"bursts": "burst_selection.output"}
+
+
+def test_write_pipeline_emits_the_recipe_without_reading_the_data(sim_file, tmp_path):
+    """A recipe can be written, reviewed and version-controlled before it ever
+    touches a measurement."""
+    import tttrlib
+    recipe = tmp_path / "recipe.json"
+    _run("sm", str(sim_file), "--min-photons", "45", "--rate-window", "7",
+         "--write-pipeline", str(recipe))
+    document = json.loads(recipe.read_text())
+    assert document["format"] == "tttrlib.pipeline"
+    assert document["steps"][0]["params"]["min_photons"] == 45
+    assert document["steps"][0]["params"]["rate_window"] == 7
+    # and it is a pipeline tttrlib can read back
+    assert tttrlib.Pipeline.from_json(recipe.read_text()).steps[0]["operation"] \
+        == "burst_selection"
+
+
+def test_a_run_from_a_recipe_uses_the_recipes_parameters(sim_file, tmp_path):
+    import tttrlib
+    recipe, out = tmp_path / "recipe.json", tmp_path / "from_recipe.pto"
+    _run("sm", str(sim_file), "--min-photons", "45", "--rate-window", "7",
+         "--write-pipeline", str(recipe))
+    _run("sm", str(sim_file), "--pipeline", str(recipe), "--output", str(out))
+    written = tttrlib.Pipeline.from_pto(str(out))
+    assert written.steps[0]["params"]["min_photons"] == 45
+    assert written.steps[0]["params"]["rate_window"] == 7
+
+
+def test_a_run_can_be_repeated_from_the_container_it_produced(sim_file, tmp_path):
+    """`--pipeline previous.pto` re-runs an analysis from its own artifact --
+    no config file to keep, and no parameters to remember."""
+    import tttrlib
+    first, second = tmp_path / "first.pto", tmp_path / "second.pto"
+    _run("sm", str(sim_file), "--min-photons", "40", "--output", str(first))
+    _run("sm", str(sim_file), "--pipeline", str(first), "--output", str(second))
+    a = tttrlib.Pipeline.from_pto(str(first)).steps[0]["params"]
+    b = tttrlib.Pipeline.from_pto(str(second)).steps[0]["params"]
+    assert a == b
+
+
+def test_a_pipeline_from_a_newer_format_is_refused(sim_file, tmp_path):
+    recipe = tmp_path / "future.json"
+    recipe.write_text(json.dumps({"format": "tttrlib.pipeline", "format_version": 99,
+                                  "steps": []}))
+    env = dict(os.environ)
+    if _LIB_DIR:
+        for var in ("DYLD_LIBRARY_PATH", "LD_LIBRARY_PATH"):
+            env[var] = _LIB_DIR + os.pathsep + env.get(var, "")
+    result = subprocess.run([TTTR_BIN, "sm", str(sim_file), "--pipeline", str(recipe),
+                             "--output", str(tmp_path / "x.pto")],
+                            capture_output=True, text=True, env=env)
+    assert result.returncode != 0
+    assert "newer than this tttrlib understands" in result.stderr

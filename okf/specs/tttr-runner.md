@@ -1,7 +1,7 @@
 # tttr — the compiled runner
 
 `tttr` is a small C++17 command built with cxxopts and the project's
-`tttrlib_add_module` machinery. It replaces `bin/tttrlib` entirely. One binary
+`tttrlib_add_module` machinery. It replaces `bin/tttrlib` entirely -- that script is **deleted** (2026-08-18); the upstream bioconda recipe, which installed `$SRC_DIR/bin/*` and tested `tttrlib --help`, must install nothing from `bin/` and test `tttr --help` instead (the in-tree `recipes/cli` already does). One binary
 next to `libtttrlib.dylib` (or `.so`), resolving its library via an `@rpath`/
 `$ORIGIN` relative install RPATH so it finds the lib from a conda prefix without
 `DYLD_LIBRARY_PATH`.
