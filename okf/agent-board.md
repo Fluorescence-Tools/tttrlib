@@ -153,8 +153,12 @@ are still claims and still binding.
     `activation_from_string`. Objectives are DONE (2026-08-17: neyman/gehrels
     reach the kernels). **Correlator DONE 2026-08-18** (`correlation_methods()`
     table, unknown name refused at set time, `get_fcs_image` already mapped
-    "default"→wahl). Left: SuperResMethod, DecayFitPrior::from_json,
-    activation_from_string, and the plugin-host tables for all of them.
+    "default"→wahl). **DecayFitPrior kinds table + `reassign_photons` refusal
+    DONE 2026-08-18.** `activation_from_string`: closed as won't-do — the
+    `Activation` enum is a public API type and a hot-loop switch, and the four
+    sklearn names are the only names; a table would add a function pointer per
+    layer for nothing. Left: the plugin-host tables (correlation methods, prior
+    kinds) so a drop-in library can register one.
   - Done when: each is a `std::map<std::string, fn>` with a `register_*`
     entry through the plugin host, the Python names unchanged, and the
     `get_fcs_image` default is a real method.

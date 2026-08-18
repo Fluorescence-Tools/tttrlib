@@ -690,3 +690,21 @@ class TestModelCurveRejectsAMalformedProblem(unittest.TestCase):
 
             del fit, other, problem, second, curve, out
             gc.collect()
+
+
+class TestPriorKindsAreARegistry(unittest.TestCase):
+    """`DecayFitPrior::from_json` dispatches through a kind table
+    (T-20260818-05): the nine analytic kinds plus 'callable' are listed, and an
+    unknown kind is refused naming them."""
+
+    def test_the_kinds(self):
+        self.assertEqual(list(tttrlib.DecayFitPrior.kinds()),
+                         ["beta", "callable", "exponential", "gamma", "half_normal", "lognormal",
+                          "normal", "product", "truncated_normal", "uniform"])
+
+    def test_an_unknown_kind_is_refused_with_the_list(self):
+        import json
+        constraints = tttrlib.DecayFitConstraints(tttrlib.VectorInt32([0]))
+        with self.assertRaises(ValueError) as cm:
+            constraints.set_prior_json(0, json.dumps({"kind": "gaussian"}))
+        self.assertIn("registered: beta, callable", str(cm.exception))

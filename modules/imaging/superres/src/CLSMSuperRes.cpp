@@ -325,14 +325,21 @@ TTTR* CLSMSuperRes::reassign_photons(
         std::string m(method);
         std::transform(m.begin(), m.end(), m.begin(),
             [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        if (m == "uniform") sr_method = SuperResMethod::UNIFORM;
+        if (m == "esrrf" || m.empty()) sr_method = SuperResMethod::ESRRF;
+        else if (m == "uniform") sr_method = SuperResMethod::UNIFORM;
         else if (m == "sofi") sr_method = SuperResMethod::SOFI;
         else if (m == "ism") sr_method = SuperResMethod::ISM;
         else if (m == "esrrf+ism" || m == "esrrf_ism" || m == "ism+esrrf" || m == "ism_esrrf") sr_method = SuperResMethod::ESRRF_ISM;
+        else
+            // An unknown name used to fall through to eSRRF silently -- a typo
+            // in "uniform" ran the RGC prior and nothing said so.
+            throw std::invalid_argument("reassign_photons: unknown method '" + std::string(method) +
+                                        "'; known: esrrf, uniform, ism, esrrf+ism (sofi is reserved)");
     }
 
     if (sr_method == SuperResMethod::SOFI) {
-        throw std::runtime_error("SOFI reassignment not yet implemented (reserved)");
+        throw std::invalid_argument("reassign_photons: 'sofi' is reserved and not implemented; "
+                                    "use esrrf, uniform, ism or esrrf+ism");
     }
 
     int n_channels = clsm->get_n_channels();

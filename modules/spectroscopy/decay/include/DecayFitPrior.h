@@ -52,6 +52,8 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <map>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -122,6 +124,20 @@ public:
 
     /*! Rebuild a prior from a `to_json()` / Python `get_state()` payload. */
     static std::shared_ptr<DecayFitPrior> from_json(const json &state);
+
+    /*!
+     * \brief One `kind` of prior: builds it from its JSON state.
+     *
+     * `from_json` dispatches on the `kind` key through this table; the nine
+     * built-ins are entries, `register_kind` adds one more (a plugin, a
+     * project-specific prior), `kinds()` lists them. `"callable"` is
+     * registered too, as a factory that explains why it cannot be evaluated
+     * natively.
+     */
+    using Factory = std::function<std::shared_ptr<DecayFitPrior>(const json &state)>;
+    static std::map<std::string, Factory> &kinds_table();
+    static void register_kind(const std::string &kind, Factory factory);
+    static std::vector<std::string> kinds();
 
     /*! Penalty standing in for an infinite residual outside the support. */
     static constexpr double kOutsideSupportResidual = 1e12;

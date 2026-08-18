@@ -90,3 +90,15 @@ def test_unimplemented_method_is_reported():
     clsm = tttrlib.CLSMImage(PTU_FILE, build_pixels=True, fill=True)
     with pytest.raises(Exception):
         tttrlib.CLSMSuperRes.reassign_photons(clsm, t_src, method="sofi")
+
+
+def test_an_unknown_reassignment_method_is_refused():
+    """A misspelt method used to fall through to eSRRF silently; 'sofi' parsed
+    and then threw a RuntimeError. Both are ValueErrors that name the methods."""
+    t_src = tttrlib.TTTR(PTU_FILE)
+    clsm = tttrlib.CLSMImage(PTU_FILE, build_pixels=True, fill=True)
+    for bad in ("unifrom", "sofi"):
+        with pytest.raises(ValueError, match="esrrf, uniform, ism"):
+            tttrlib.CLSMSuperRes.reassign_photons(
+                clsm, t_src, magnification=2, fwhm=1.0, sensitivity=0,
+                search_radius=1.0, seed=1, method=bad)

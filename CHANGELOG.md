@@ -54,6 +54,13 @@
   property) now refuses an unknown name with a `ValueError` naming the
   registered ones -- an unknown method used to warn at `run()` and hand back
   an all-zero curve. `"default"` and `""` mean `wahl`.
+- **Prior kinds are a registry** (`DecayFitPrior.kinds()`, `register_kind`):
+  `from_json` dispatches through it and refuses an unknown `kind` naming the
+  registered ones.
+- **`reassign_photons` refuses an unknown method** (`ValueError` naming
+  esrrf / uniform / ism / esrrf+ism); a misspelt name used to fall through to
+  eSRRF silently, and the reserved `"sofi"` parsed and then threw a
+  `RuntimeError`.
 
 ### Added
 - **`TTTRLIB_PYTHON_SPLIT` (CMake option, preset `dev-split`): the Python
