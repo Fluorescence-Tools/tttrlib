@@ -140,7 +140,7 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | BurstSearchMaxTree.h | `build_max_tree_1d` (`max_tree_1d` binding) | **skimage 0.25.2 `morphology.max_tree`** (recorded, 6 signals; live on the 2 M-sample bench signal) | component set (level, lo, hi, parent) identical, 1.9 M components; 11× | PASS |
 | BurstSearchMaxTree.h | `burst_search_maxtree` (attribute filter + MSER) | — | injected-burst recovery (`test_burst_search_maxtree.py`) | KNOWN-ANSWER |
 | StreamingBurstDetector.h | streaming search | batch / FRETBursts rule | identical | EQUIVALENCE |
-| BurstFeature.h | KDE stream builder | — | — | NO-REF, not marked |
+| BurstFeature.h | `build_kde` (Laplace 5τ / Gaussian 3τ two-pointer window) | FRETBursts `kde_laplace`/`kde_gaussian` live, through TwoCDE (the only caller) | 1e-9 | PASS (via TwoCDE); stream builder / reduction is plumbing |
 
 ### HMM, kinetics, PDA — `test/python/hmm/test_ab_hmm_reference.py`, `kinetics/test_ab_kinetics_reference.py`, `pda/test_ab_pda_reference.py`
 

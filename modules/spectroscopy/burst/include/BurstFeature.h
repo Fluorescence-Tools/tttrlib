@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #ifndef TTTRLIB_BURSTFEATURE_H
 #define TTTRLIB_BURSTFEATURE_H
+// Validation: A/B-TESTED (via TwoCDE) 2026-08-17 -- build_kde is the one KDE in the library
+//   (kde_eval: Laplace 5*tau / Gaussian 3*tau two-pointer window, the same rule as FRETBursts
+//   phrates_numba); TwoCDE::compute calls it and its result agrees with FRETBursts' own
+//   kde_laplace / kde_gaussian run live to 1e-9 -- test/python/bva/test_ab_bva_2cde_recurrence_reference.py.
+//   The stream builder / for_each_burst reduction is plumbing (NumPy-transcribed in test_twocde.py).
+//   Register: okf/testing/algorithm-validation.md
 
 #include <vector>
 #include <memory>
