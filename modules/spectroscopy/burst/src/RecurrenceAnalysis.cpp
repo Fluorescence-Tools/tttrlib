@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "RecurrenceAnalysis.h"
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>

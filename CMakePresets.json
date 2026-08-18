@@ -99,8 +99,6 @@
         "WITH_KINETICS": "OFF",
         "WITH_FLUCTUATION": "OFF",
         "WITH_CORRECTIONS": "OFF",
-        "WITH_REGISTRY": "OFF",
-        "WITH_ALGORITHM": "OFF",
         "WITH_IO_IMAGE": "OFF"
       }
     },
@@ -127,9 +125,7 @@
         "WITH_PDA": "OFF",
         "WITH_KINETICS": "OFF",
         "WITH_FLUCTUATION": "OFF",
-        "WITH_CORRECTIONS": "OFF",
-        "WITH_REGISTRY": "OFF",
-        "WITH_ALGORITHM": "OFF"
+        "WITH_CORRECTIONS": "OFF"
       }
     },
     {

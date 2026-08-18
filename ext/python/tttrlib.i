@@ -133,9 +133,7 @@ def experimental(cls):
 
 %include "info.h"
 %include "misc_types.i"
-#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
-#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"

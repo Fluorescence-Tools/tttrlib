@@ -22,11 +22,13 @@ them, once per process.
   back), and the lookups the layers above call (`burst_search(name)`,
   `correlation_method(name)`, `decay_prior(kind)`, …).
 
-Every registered capability is also an entry in the **one registry**
-(`register_algorithm_json`, module `algorithm`) the moment it registers --
-`registry("fit")["exp1_plugin"]` sits beside `fit23` with `provider: plugin`
--- and is unregistered again if the plugin's init later fails. Nothing is
-spliced into the registry from here. The last two tables are looked up by
+Every registered capability is also declared for the **one registry**
+(core, `Registry.h`): the host records the entry (`PluginHost::registry_entries`,
+this module sits beneath core so it cannot register directly) and the registry
+pulls it into the same table the built-ins use, so `registry("fit")["exp1_plugin"]`
+sits beside `fit23` with `provider: plugin`; a plugin whose init fails has its
+declarations dropped with the journal before anyone can have pulled them.
+Nothing is spliced into the registry from here. The last two tables are looked up by
 `fcs` and `decay` when their own built-in table misses -- per call, never
 cached -- so a rolled-back plugin simply stops being found.
 
@@ -36,4 +38,4 @@ cached -- so a rolled-back plugin simply stops being found.
 
 ## Dependencies
 
-- Depends on `util`, `io`, `algorithm`.
+- Depends on `util`, `io`.

@@ -366,7 +366,22 @@ function(tttrlib_link_all_modules target)
     foreach(m IN LISTS modules)
         target_link_libraries(${target} tttrlib::${m})
     endforeach()
-
+    # STATIC modules: link every module's objects, not just what the archive
+    # search would pull. Each module registers what it can do in the registry
+    # (core, Registry.h) from a static initialiser next to the code, and an
+    # archive member nothing references is dropped -- with its entries, and its
+    # decay-fit factories -- so a JNI/R-style single native built from static
+    # modules would silently offer less than the shared build. Linking the
+    # objects directly is the in-tree form of `--whole-archive`; the archives
+    # stay on the link line only for their usage requirements (includes,
+    # third-party deps). Object files already present are not pulled again
+    # from the archive, so nothing is duplicated.
+    if(TTTRLIB_MODULE_TYPE STREQUAL "STATIC")
+        get_property(objs GLOBAL PROPERTY TTTRLIB_MODULE_OBJECT_TARGETS)
+        foreach(o IN LISTS objs)
+            target_sources(${target} PRIVATE $<TARGET_OBJECTS:${o}>)
+        endforeach()
+    endif()
 endfunction()
 
 

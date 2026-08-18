@@ -22,7 +22,7 @@
 #include <cmath>
 #include <vector>
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include "DecayFitModel.h"
 #include "DecayFitNExp.h"
 #include "DecayStatistics.h"

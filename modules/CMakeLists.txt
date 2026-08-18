@@ -17,11 +17,10 @@
 #                           plus histograms: binning a photon property is as basic
 #                           as the properties themselves, and everything above
 #                           core does it
-#   registry                capability descriptions, by name
 #   imaging                 CLSM + correlator + phasor, and the things that take an
 #                           image and give back a better one: super-resolution
 #                           and single-molecule localization
-#   decay                   decay fitting (does NOT depend on core)
+#   decay                   decay fitting (registers its models in core's registry)
 #   burst                   burst selection and features
 #   sim                     the simulator (depends on nothing above util)
 #   hmm                     photon-by-photon HMMs -- the top of the graph
@@ -30,7 +29,6 @@
 # The order in which they were EXTRACTED is not this order and is not the one
 # originally planned: core had to come first, because everything else sits on
 # both ends of an edge with the residual `legacy` module until it moves out.
-add_subdirectory(algorithm)  # the algorithm descriptor + register_algorithm; depends on nothing
 add_subdirectory(util)
 add_subdirectory(math)   # Mat.h, NeuralNet, i_lbfgs, RNGs — depends on util
 add_subdirectory(streaming)  # online/streaming consumers — header-only
@@ -41,7 +39,6 @@ add_subdirectory(core)
 
 add_subdirectory(spectroscopy) # declares fcs, burst, decay, hmm, pda
 add_subdirectory(imaging)      # declares clsm, superres, localization
-add_subdirectory(registry)     # calls into burst
 
 # The tttr CLI. Last: it reads the module include-dir property, which is only
 # complete once every other module has declared itself.

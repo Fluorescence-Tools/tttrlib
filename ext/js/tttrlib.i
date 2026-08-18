@@ -72,9 +72,7 @@
 // wrappers generate, not that they expose the same API.
 %include "info.h"
 %include "misc_types.i"
-#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
-#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"

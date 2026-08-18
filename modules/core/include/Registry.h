@@ -1,24 +1,35 @@
 // SPDX-License-Identifier: BSD-3-Clause
-#ifndef TTTRLIB_ALGORITHM_REGISTRY_H
-#define TTTRLIB_ALGORITHM_REGISTRY_H
+#ifndef TTTRLIB_REGISTRY_H
+#define TTTRLIB_REGISTRY_H
 
 #include <string>
 #include <vector>
 
-/// One descriptor and one registration call for every
-/// algorithm, whether it is compiled into the core library or arrives in a
-/// plugin.
-///
-/// The problem this solves first: FCS, HMM and PDA *work*, and are invisible.
-/// The registry does not list them, so a UI cannot offer them, the `.pto`
-/// provenance system has no schema to validate or replay them against, and no
-/// plugin can contribute a competing implementation. They were invisible for
-/// the same reason burst searches and decay fits were visible — someone wrote a
-/// JSON literal for those two by hand, and nobody wrote one for these.
-///
-/// So the descriptor is the algorithm's own declaration, made where the
-/// algorithm lives, and the registry is assembled from what actually
-/// registered rather than from a literal that has to be kept in sync.
+/*!
+ * \file Registry.h
+ * \brief The registry: what tttrlib can do, by name, as data.
+ *
+ * There is ONE registry, and it lives here in core. Every algorithm, fit
+ * model, fit-setup block, objective, prior kind, correlation method and
+ * pipeline operation registers itself in it -- next to its own code, when its
+ * library loads (`register_algorithm` / `register_algorithm_json`) -- and so
+ * does every capability a plugin brings (the plugin host records the
+ * declaration, the registry pulls it). Nothing is described in a literal
+ * anywhere else, so nothing can drift from what actually registered.
+ *
+ * `registry_json()` assembles the whole thing: one JSON object per capability
+ * that registered, keyed by name, plus the three catalogs that are not
+ * algorithms -- `file_container` (the I/O format table), `table_format` and
+ * `plugin` (load status). Each entry carries at least `name`, `label`,
+ * `summary`, `provider`; a callable one also `method` and `params_schema`.
+ *
+ * Registration happens when a module's library is loaded (a static
+ * initialiser next to the registration), which is why a consumer that links
+ * `libtttrlib_static.a` must link it whole (`--whole-archive` /
+ * `-force_load`; the R package does) -- an archive member nothing references
+ * is otherwise dropped, and its entries with it. In-tree static builds link
+ * the module objects for the same reason.
+ */
 
 namespace tttrlib {
 
@@ -133,14 +144,6 @@ bool register_algorithm(const AlgorithmDescriptor& desc);
 bool register_algorithm_json(const std::string& capability, const std::string& key,
                              const std::string& entry_json);
 
-/*!
- * \brief Remove the entry registered under \p key.
- *
- * Exists for exactly one caller: the plugin host rolling back a plugin whose
- * init failed after it had registered something. Nothing built in is ever
- * unregistered. \return whether an entry was removed.
- */
-bool unregister_algorithm(const std::string& key);
 
 std::string algorithms_json(const std::string& capability);
 
@@ -156,17 +159,71 @@ const AlgorithmDescriptor* find_algorithm(const std::string& key);
 /// hand-authored entries through one accessor.
 std::string algorithm_operations_json();
 
+// ---------------------------------------------------------------- assembly --
+
 /*!
- * \brief Register the algorithms compiled into this library.
+ * \brief The whole registry: `{category: {name: entry}}`, as a JSON string.
  *
- * Called explicitly rather than from a static initialiser. The lesson is
- * already recorded in `DecayFitModelRegistration.h`: a static initialiser in a
- * translation unit that nothing else references is dropped when the library is
- * linked as a static archive, and the algorithm then silently does not exist.
- * Idempotent — calling it twice registers nothing twice.
+ * Each entry carries at least `name`, `label` and `summary`; entries describing
+ * something callable also carry `method` and a `params_schema`.
  */
-void register_builtin_algorithms();
+std::string registry_json();
+
+/*!
+ * \brief The lifetime fit models (`fit` category), as a JSON string.
+ *
+ * Assembled from the entries the decay module registered about its models
+ * (the entries in `DecayFitModelFit2x.cpp` / `DecayFitModelNExp.cpp`), plus a plugin's. Each
+ * carries `params_schema` in `initial_values` order and a `setup` link to the
+ * shared construction inputs.
+ */
+std::string fit_models_json();
+
+/*!
+ * \brief The shared construction inputs (`fit_setup` category), as JSON.
+ *
+ * Referenced by each `fit` entry's `setup` link; declared next to the models.
+ */
+std::string fit_setup_json();
+
+/*!
+ * \brief The selectable fit objectives (`objective` category), as a JSON string.
+ *
+ * Which statistic a fit minimises, named rather than encoded as flags. From
+ * declared next to the statistics (`DecayStatistics.cpp`).
+ */
+std::string fit_objectives_json();
+
+/*!
+ * \brief The pipeline operation catalog (`operation` category), as JSON.
+ *
+ * Describes each analysis step that can appear in a burst pipeline .pto:
+ * its operation_type (matching ``_mmfdb_operation.operation_type`` in PTO
+ * tags), inputs, outputs (column names matching mmfdb.dic), data_format,
+ * row_grain and settings schema -- the machine-readable contract between the
+ * ``tttr`` CLI that writes .pto artifacts, chiSurf plugins that read/produce
+ * them, ndx that consumes the output columns and the provenance reader that
+ * replays a pipeline. ``data_format`` is **storage** and is ``dstore`` for
+ * every built-in (never a legacy companion suffix; mmfdb declares none).
+ *
+ * Every entry is a registration made next to the code that performs the
+ * operation (burst, decay, fcs modules) or by a plugin
+ * (`tttrlib_operation_v1`); the built-in ones are the `can_replay`
+ * registrations of the `operation` capability.
+ */
+std::string operation_registry_json();
+
+/*!
+ * \brief One category of the registry, as a JSON string.
+ * \return `{}` when the category does not exist.
+ */
+std::string registry_category_json(const std::string& category);
+
+/*!
+ * \brief Names of the available registry categories.
+ */
+std::vector<std::string> registry_categories();
 
 } // namespace tttrlib
 
-#endif // TTTRLIB_ALGORITHM_REGISTRY_H
+#endif // TTTRLIB_REGISTRY_H

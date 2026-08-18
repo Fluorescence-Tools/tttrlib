@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "PluginHost.h"
-#include "AlgorithmRegistry.h"
 
 #include <algorithm>
 #include <array>
@@ -188,9 +187,9 @@ std::string plugin_name_of(const fs::path& file) {
 /// Everything one plugin registered, so it can all be undone if its init fails.
 struct Journal {
     std::vector<std::string> container_names;
-    /// Registry keys this plugin registered (burst searches, fits, operations,
-    /// correlation methods, priors) -- undone on a failed init.
-    std::vector<std::string> registry_keys;
+    /// How many registry declarations existed before this plugin's init --
+    /// the ones it added are dropped on a failed init.
+    std::size_t registry_entries_before = 0;
     std::size_t decay_fits_before = 0;
     std::size_t burst_searches_before = 0;
     std::size_t operations_before = 0;
@@ -226,6 +225,12 @@ struct HostState {
     // pushed upward and nothing dangles when a failed plugin is rolled back.
     std::vector<const tttrlib_correlation_method_v1*> correlation_methods;
     std::vector<const tttrlib_decay_prior_v1*> decay_priors;
+
+    /// What the plugins declared for the registry (one entry per capability
+    /// registered), in registration order. The registry (core, above this
+    /// module) pulls these into its table; the host only records them, which
+    /// is what keeps this module beneath core.
+    std::vector<PluginHost::RegistryEntry> registry_entries;
 };
 
 HostState& state() {
@@ -333,22 +338,18 @@ std::string jstr(const char* v, const char* fallback) {
     return out + "\"";
 }
 
-// Every plugin capability is an entry in the ONE registry (register_algorithm,
-// module `algorithm`), the same one the built-ins declare themselves in -- so
+// Every plugin capability is declared for the ONE registry (core's
+// register_algorithm) -- the same table the built-ins register in, so
 // `registry("burst_search")` lists a plugin's search beside the sliding window
-// with no splicing anywhere. A built-in already owning the key refuses the
-// plugin (the registry rejects duplicates), and a failed init rolls the key
-// back through the journal.
-bool register_in_registry(const char* what, const std::string& capability,
-                          const std::string& name, const std::string& entry_json) {
-    if (!register_algorithm_json(capability, name, entry_json)) {
-        const std::string taken = std::string(what) + ": the name '" + name +
-                                  "' is already taken";
-        host_set_error(taken.c_str());
-        return false;
-    }
-    if (state().journal != nullptr) state().journal->registry_keys.push_back(name);
-    return true;
+// with no splicing anywhere. This module sits beneath core, so it cannot call
+// the registry; it records the declaration and the registry pulls it
+// (PluginHost::registry_entries). A failed init drops the declarations through
+// the journal before anyone can have pulled them (loading is atomic under the
+// host lock). A key already taken by a built-in is refused when the registry
+// pulls; the plugin's own table stays usable by name.
+void declare_for_registry(const std::string& capability, const std::string& name,
+                          const std::string& entry_json) {
+    state().registry_entries.push_back({capability, name, entry_json});
 }
 
 int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
@@ -383,13 +384,13 @@ int host_register_decay_fit(const tttrlib_decay_fit_v1* f) noexcept {
             ", \"label\": " + jstr(f->label, f->name) +
             ", \"summary\": " + jstr(f->summary, "A decay fit model provided by a plugin.") +
             ", \"provider\": \"plugin\", \"params_schema\": " + f->params_schema + "}";
-        if (!register_in_registry("register_decay_fit", "fit", f->name, entry)) return TTTRLIB_INVALID;
+        declare_for_registry("fit", f->name, entry);
     }
     state().decay_fits.push_back(f);
     if (state().decay_fit_registrar != nullptr &&
         !state().decay_fit_registrar(f)) {
         state().decay_fits.pop_back();
-        unregister_algorithm(f->name);
+        state().registry_entries.pop_back();
         const std::string taken = std::string("register_decay_fit: the name '") +
                                   f->name + "' is already taken";
         host_set_error(taken.c_str());
@@ -426,8 +427,7 @@ int host_register_burst_search(const tttrlib_burst_search_v1* s) noexcept {
             ", \"label\": " + jstr(s->label, s->name) +
             ", \"summary\": " + jstr(s->summary, "A burst search provided by a plugin.") +
             ", \"provider\": \"plugin\", \"params_schema\": " + s->params_schema + "}";
-        if (!register_in_registry("register_burst_search", "burst_search", s->name, entry))
-            return TTTRLIB_INVALID;
+        declare_for_registry("burst_search", s->name, entry);
     }
     state().burst_searches.push_back(s);
     return TTTRLIB_OK;
@@ -466,8 +466,7 @@ int host_register_operation(const tttrlib_operation_v1* o) noexcept {
         if (o->outputs_json != nullptr) entry += ", \"outputs\": " + std::string(o->outputs_json);
         if (o->row_grain != nullptr) entry += ", \"row_grain\": " + jstr(o->row_grain, "");
         entry += "}";
-        if (!register_in_registry("register_operation", "operation", o->name, entry))
-            return TTTRLIB_INVALID;
+        declare_for_registry("operation", o->name, entry);
     }
     state().operations.push_back(o);
     return TTTRLIB_OK;
@@ -494,8 +493,7 @@ int host_register_correlation_method(const tttrlib_correlation_method_v1* m) noe
             ", \"label\": " + jstr(m->label, m->name) +
             ", \"summary\": " + jstr(m->summary, "A correlation kernel provided by a plugin.") +
             ", \"provider\": \"plugin\"}";
-        if (!register_in_registry("register_correlation_method", "correlation_method", m->name, entry))
-            return TTTRLIB_INVALID;
+        declare_for_registry("correlation_method", m->name, entry);
     }
     state().correlation_methods.push_back(m);
     return TTTRLIB_OK;
@@ -524,8 +522,7 @@ int host_register_decay_prior(const tttrlib_decay_prior_v1* p) noexcept {
             ", \"summary\": " + jstr(p->summary, "A prior kind provided by a plugin.") +
             ", \"provider\": \"plugin\", \"params_schema\": " +
             (p->params_schema != nullptr ? std::string(p->params_schema) : std::string("{}")) + "}";
-        if (!register_in_registry("register_decay_prior", "prior", p->kind, entry))
-            return TTTRLIB_INVALID;
+        declare_for_registry("prior", p->kind, entry);
     }
     state().decay_priors.push_back(p);
     return TTTRLIB_OK;
@@ -549,7 +546,8 @@ const tttrlib_host_v1& host_table() {
 }
 
 void roll_back(const Journal& journal) {
-    for (const std::string& key : journal.registry_keys) unregister_algorithm(key);
+    if (state().registry_entries.size() > journal.registry_entries_before)
+        state().registry_entries.resize(journal.registry_entries_before);
     // Fit models: the fitting layer's own table is left alone deliberately.
     // Un-registering a factory another thread may already be constructing
     // through is a worse failure than leaving one unreachable model behind, and
@@ -698,6 +696,7 @@ void load_one(PluginRecord& record) {
     journal.operations_before = state().operations.size();
     journal.correlation_methods_before = state().correlation_methods.size();
     journal.decay_priors_before = state().decay_priors.size();
+    journal.registry_entries_before = state().registry_entries.size();
     state().journal = &journal;
     state().error.clear();
 
@@ -883,6 +882,11 @@ const std::vector<const tttrlib_operation_v1*>& PluginHost::operations() {
 }
 
 // ── correlation methods / decay priors ───────────────────────────────
+
+const std::vector<PluginHost::RegistryEntry>& PluginHost::registry_entries() {
+    ensure_loaded();
+    return state().registry_entries;
+}
 
 const tttrlib_correlation_method_v1* PluginHost::correlation_method(const std::string& name) {
     ensure_loaded();

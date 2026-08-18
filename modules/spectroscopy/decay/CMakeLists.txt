@@ -37,7 +37,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/MaxEntTcspc.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/DecayPatternFit.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  math plugin algorithm
+    DEPENDS  math core plugin
     EXTERNAL_DEPS tttrlib::json tttrlib::pocketfft
     SWIG_INTERFACES DecayFit.i DecayConvolution.i BlindIRF.i MaxEntTcspc.i DecayPatternFit.i
     TEST_DIR test/python/decayfit

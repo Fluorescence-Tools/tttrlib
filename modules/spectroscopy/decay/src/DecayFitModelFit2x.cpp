@@ -24,7 +24,7 @@
 #include <limits>
 #include <vector>
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 
 #include "DecayFit23.h"
 #include "DecayFit24.h"

@@ -649,3 +649,108 @@ if (is_verbose()) {
     *dim1 = n_dim;
     *dim2 = n_dim;
 }
+
+// ---- registry("pda") entries -----------------------------------------------
+//
+// Declared next to the code, registered when this library loads (Registry.h).
+#include "Registry.h"
+namespace {
+const char* kPdaReferences = R"JSON([
+  {"type": "journal",
+   "authors": "Antonik, M., Felekyan, S., Gaiduk, A., Seidel, C. A. M.",
+   "title": "Separating structural heterogeneities from stochastic variations in fluorescence resonance energy transfer distributions via photon distribution analysis",
+   "journal": "The Journal of Physical Chemistry B", "year": 2006, "volume": "110",
+   "note": "transcribed from the literature, not from the source; confirm before citing"}
+])JSON";
+
+bool register_pda_descriptors() {
+    using tttrlib::AlgorithmDescriptor;
+    using tttrlib::register_algorithm;
+    {
+        AlgorithmDescriptor d;
+        d.operation_type = "pda_histogram_computation";
+        d.display_name = "Photon distribution analysis (histogram)";
+        d.capability = "pda";
+        d.summary = "Predicts the photon-count distribution of a FRET mixture, so a "
+                    "measured histogram can be fitted rather than merely described.";
+        d.description =
+            "Computes the distribution of photon counts across two channels expected "
+            "from a given mixture of species, given the burst-size distribution of the "
+            "measurement. Comparing that prediction with the measured histogram "
+            "separates the width that is shot noise -- which is fixed by the number of "
+            "photons and carries no information -- from the width that is genuine "
+            "structural or dynamic heterogeneity.\n\n"
+            "This is what makes a broad FRET peak interpretable: a single species "
+            "observed with few photons produces a broad peak too, and only the "
+            "predicted shot-noise width tells the two apart.\n\n"
+            "Assumes the species do not interconvert within a burst. Exchange faster "
+            "than the burst duration averages the species out and is a dynamic-PDA "
+            "problem, not this one.";
+        d.references_json = kPdaReferences;
+        d.row_grain = "histogram_bin";
+        d.settings_schema = R"JSON({
+          "type": "object",
+          "properties": {
+            "n_bins": {"type": "integer", "default": 81, "minimum": 2},
+            "x_min": {"type": "number", "default": 0.0},
+            "x_max": {"type": "number", "default": 1.0},
+            "log_x": {"type": "boolean", "default": false},
+            "n_min": {"type": "integer", "default": 20, "minimum": 1,
+                      "description": "Smallest burst size entering the histogram."},
+            "skip_zero_photon": {"type": "boolean", "default": true},
+            "background_ch1": {"type": "number", "default": 0.0, "unit": "kHz"},
+            "background_ch2": {"type": "number", "default": 0.0, "unit": "kHz"}
+          }
+        })JSON";
+        d.inputs_json = R"JSON({
+          "required": ["burst_table"],
+          "optional": ["probability_spectrum"],
+          "description": "Burst-wise photon counts per channel, plus the species amplitudes and distances to predict from."
+        })JSON";
+        d.outputs_json = R"JSON({
+          "columns": ["Bin", "Model probability", "Experimental probability"]
+        })JSON";
+        d.can_replay = true;
+        register_algorithm(d);
+    }
+    {
+        AlgorithmDescriptor d;
+        d.operation_type = "pda_burst_likelihood";
+        d.display_name = "PDA burst likelihood (K-channel)";
+        d.capability = "pda";
+        d.summary = "Burst-wise photon-partition maximum likelihood over K channels — "
+                    "the likelihood a multi-colour PDA fit maximises.";
+        d.description =
+            "Evaluates the likelihood of the observed photon partition of each burst "
+            "under a model of per-channel probabilities, for an arbitrary number of "
+            "channels. Where the histogram path compares binned distributions, this "
+            "path scores each burst individually, so no information is lost to "
+            "binning and bursts of different sizes contribute according to how much "
+            "they actually constrain the model.\n\n"
+            "This is the hot path of a three-colour PDA fit; the enclosing model "
+            "supplies the per-channel probabilities and this evaluates them against "
+            "the data.";
+        d.references_json = kPdaReferences;
+        d.row_grain = "burst";
+        d.settings_schema = R"JSON({
+          "type": "object",
+          "properties": {
+            "n_channels": {"type": "integer", "default": 3, "minimum": 2},
+            "background": {"type": "array", "items": {"type": "number"},
+                           "description": "Per-channel background rate, kHz."}
+          }
+        })JSON";
+        d.inputs_json = R"JSON({
+          "required": ["burst_table", "channel_probabilities"],
+          "description": "Per-burst photon counts per channel, and the model probabilities to score them against."
+        })JSON";
+        d.outputs_json = R"JSON({
+          "columns": ["Log likelihood"]
+        })JSON";
+        d.can_replay = true;
+        register_algorithm(d);
+    }
+    return true;
+}
+const bool kPdaRegistered = register_pda_descriptors();
+}  // namespace

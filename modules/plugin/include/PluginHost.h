@@ -165,6 +165,28 @@ public:
     static const std::vector<const tttrlib_operation_v1*>& operations();
 
 
+    // ── the registry ───────────────────────────────────────────────
+
+    /// One declaration a plugin made for the registry: the capability
+    /// (`burst_search`, `fit`, `operation`, `correlation_method`, `prior`),
+    /// the key, and the complete JSON entry.
+    struct RegistryEntry {
+        std::string capability;
+        std::string name;
+        std::string entry_json;
+    };
+
+    /*!
+     * \brief Everything the loaded plugins declared for the registry, in
+     *        registration order.
+     *
+     * The registry lives in core, above this module, and pulls these into its
+     * one table (`register_algorithm_json`, refusing a key a built-in owns).
+     * A plugin whose init failed has none here: they are dropped with the
+     * journal before loading returns.
+     */
+    static const std::vector<RegistryEntry>& registry_entries();
+
     // ── correlation methods / decay priors ─────────────────────────
 
     /// The correlation kernel registered under \p name, or nullptr.

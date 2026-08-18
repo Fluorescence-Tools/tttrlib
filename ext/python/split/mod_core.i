@@ -19,9 +19,7 @@ _tttrlib = _core   # hand-written helpers below call the C module by this name
 #ifndef TTTRLIB_CORE_IS_IMPORTED
 %include "misc_types.i"    // the importing module has already included it itself
 #endif
-#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
-#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"

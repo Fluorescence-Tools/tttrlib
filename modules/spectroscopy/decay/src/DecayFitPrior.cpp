@@ -5,7 +5,7 @@
 // <nlohmann/json_fwd.hpp> rather than the ~41k preprocessed lines of json.hpp.
 #include "DecayFitPrior.h"
 #include "PluginHost.h"
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 
 #include <nlohmann/json.hpp>
 #include <algorithm>

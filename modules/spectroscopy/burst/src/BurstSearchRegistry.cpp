@@ -39,7 +39,7 @@
 #include "TTTR.h"
 #include "TTTRHeader.h"
 #include "PluginHost.h"
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include "BurstSearchDispatch.h"
 #include "BurstSearchBayesianBlocks.h"
 #include "BurstSearchKalman.h"
@@ -895,6 +895,13 @@ void register_burst_operations() {
         register_operation_kde_cde();
         register_operation_burst_fusion();
     });
+}
+
+// Registered when this library loads: the searches (description + dispatch)
+// and the burst pipeline operations. See Registry.h on why a static consumer
+// links the archive whole.
+namespace {
+const bool kBurstRegistered = (register_builtin_burst_searches(), register_burst_operations(), true);
 }
 
 } // namespace tttrlib

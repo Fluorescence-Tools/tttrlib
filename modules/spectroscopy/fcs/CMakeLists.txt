@@ -9,7 +9,7 @@ tttrlib_add_module(
              "${CMAKE_CURRENT_SOURCE_DIR}/src/CorrelatorPhotonStream.cpp"
              "${CMAKE_CURRENT_SOURCE_DIR}/src/Fdc2D.cpp"
     HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    DEPENDS  util core plugin algorithm
+    DEPENDS  util core plugin
     SWIG_INTERFACES Correlator.i Fdc2D.i
     TEST_DIR test/python/clsm
 )

@@ -9,7 +9,7 @@ Algorithms for identifying photon bursts and computing burst metrics in single-m
 - **`BurstSearchBOCPD.h` / `BurstSearchBOCPD.cpp`**: Bayesian Online Changepoint Detection (Adams & MacKay 2007) with Gamma-Poisson conjugate model.
 - **`BurstSearchMaxTree.h` / `BurstSearchMaxTree.cpp`**: Max-tree attribute filtering burst search (threshold-free).
 - **`BurstSearchBayesianBlocks.h` / `BurstSearchBayesianBlocks.cpp`**: Bayesian blocks burst search.
-- **`BurstSearchRegistry.cpp`**: Machine-readable JSON registry of all burst searches.
+- **`BurstSearchRegistry.cpp`**: registers every built-in burst search (description + dispatch in one call) and the burst pipeline operations in the one registry (core, `Registry.h`) when the library loads.
 - **`BurstSignificance.h`**: Exact Poisson and Li & Ma significance statistics.
 - **`BurstFeature.h` / `BurstFeatureExtractor.h`**: Feature extraction algorithms for detected bursts (brightness, anisotropy, FRET efficiency, 2CDE).
 - **`BVA.h` / `BVA.cpp`**: Burst Variance Analysis (BVA).

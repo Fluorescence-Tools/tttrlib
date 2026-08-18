@@ -22,7 +22,7 @@ rejects outright between shared libraries:
 `nn` has the same shape. The general rule: **nothing above `core` can come out
 while `core` is still inside the residual module**, because the residual sits on
 both ends of every edge. Order actually used: `io_image`, `opt`, `hist`, `sim`,
-`pda`, `superres`, `localization`, `util`, `core`, `imaging`, `registry`,
+`pda`, `superres`, `localization`, `util`, `core`, `imaging`, `registry` (since 2026-08-18 folded into `core`),
 `decay`, then `burst`, `nn`, `hmm`, `graph`.
 
 Two edges only the linker or the compiler found, not a reading of the headers:

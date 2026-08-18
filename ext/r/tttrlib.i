@@ -117,9 +117,7 @@ TTTRLIB_R_UINT64_TYPEMAPS
 %include "misc_types.i"
 /* The registry: pure data, identical in every language, and the one case
    that covers a lot of surface at once. */
-#ifndef TTTRLIB_WITHOUT_REGISTRY
 %include "Registry.i"
-#endif
 %include "FileCheck.i"
 %include "TTTRHeader.i"
 %include "TTTRRange.i"

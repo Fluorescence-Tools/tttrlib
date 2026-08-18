@@ -154,10 +154,10 @@ def test_no_registry_literal_remains_in_the_tree():
     their code as raw JSON strings are registrations, not a parallel table --
     they go through register_algorithm_json.)"""
     import pathlib
-    registry_src = pathlib.Path(tttrlib.__file__).resolve().parents[3] / "modules" / "registry" / "src"
+    registry_src = pathlib.Path(tttrlib.__file__).resolve().parents[3] / "modules" / "core" / "src"
     if not registry_src.exists():
         pytest.skip("source tree not available")
-    for f in registry_src.glob("*.cpp"):
+    for f in [registry_src / "Registry.cpp"]:
         assert 'R"JSON(' not in f.read_text(), f"{f.name} still holds a registry literal"
 
 

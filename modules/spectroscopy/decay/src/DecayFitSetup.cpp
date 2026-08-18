@@ -22,7 +22,7 @@
 
 #include "DecayFitModel.h"
 #include "DecayFitDescriptors.h"
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include "PluginHost.h"
 
 // **ordered**_json, not plain json: the flattening rule says slots are laid out in

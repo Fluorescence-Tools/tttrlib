@@ -65,9 +65,18 @@ for d in "${ROOT}"/modules/*/include "${ROOT}"/modules/*/*/include; do
   [ -d "$d" ] && MODULE_INCDIRS="${MODULE_INCDIRS} -I${d}"
 done
 INCDIRS="-I${ROOT}/include -I${ROOT}/src${MODULE_INCDIRS} -I${ROOT}/thirdparty -I${ROOT}/thirdparty/nlohmann_json/include -I${ROOT}/thirdparty/HighFive/include -I${PREFIX}/include"
+# The static core must be linked WHOLE: every module registers what it can do
+# in the registry (core, Registry.h) from a static initialiser next to the
+# code, and an archive member nothing in the wrapper references would otherwise
+# be dropped -- with its registry entries and its decay-fit models. Linux/GNU
+# ld and macOS ld64 spell it differently.
+case "$(uname -s)" in
+  Darwin) TTTRLIB_LIBS="-Wl,-force_load,${STATIC}" ;;
+  *)      TTTRLIB_LIBS="-Wl,--whole-archive ${STATIC} -Wl,--no-whole-archive" ;;
+esac
 sed -e "s|@TTTRLIB_INCLUDE@|${ROOT}|g" \
     -e "s|@HDF5_CFLAGS@|${INCDIRS}|g" \
-    -e "s|@TTTRLIB_LIBS@|${STATIC}|g" \
+    -e "s|@TTTRLIB_LIBS@|${TTTRLIB_LIBS}|g" \
     -e "s|@HDF5_LIBS@|-L${PREFIX}/lib -lhdf5 -ltiff|g" \
     ext/r/pkg/src/Makevars.in > ext/r/pkg/src/Makevars
 rm -f ext/r/pkg/src/Makevars.in

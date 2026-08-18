@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #include "TwoCDE.h"
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include <cmath>
 
 namespace tttrlib {

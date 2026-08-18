@@ -1891,3 +1891,60 @@ HmmModel HMM::fit(
 }
 
 } // namespace tttrlib
+
+// ---- registry("hmm") entry --------------------------------------------------
+//
+// Declared next to the code, registered when this library loads (Registry.h).
+#include "Registry.h"
+namespace {
+const char* kHmmReferences = R"JSON([
+  {"type": "journal",
+   "authors": "Pirchi, M., Tsukanov, R., Khamis, R., Tomov, T. E., Berger, Y., Khara, D. C., Volkov, H., Haran, G., Nir, E.",
+   "title": "Photon-by-photon hidden Markov model analysis for microsecond single-molecule FRET kinetics",
+   "journal": "The Journal of Physical Chemistry B", "year": 2016, "volume": "120", "pages": "13065"}
+])JSON";
+
+bool register_hmm_descriptor() {
+    tttrlib::AlgorithmDescriptor d;
+    d.operation_type = "photon_hmm";
+    d.display_name = "Photon-by-photon hidden Markov model (H2MM)";
+    d.capability = "hmm";
+    d.summary = "Maximum-likelihood hidden Markov inference on individual photon "
+                "arrivals, resolving kinetics faster than the burst duration.";
+    d.description =
+        "Fits a hidden Markov model whose observations are individual photons "
+        "rather than binned intensities, so the accessible kinetics are limited by "
+        "the photon rate rather than by a bin width. State assignment is available "
+        "as a Viterbi path (one state per photon) or as a posterior distribution.\n\n"
+        "Because the likelihood is over inter-photon times, the propagator "
+        "A^(delta t) is needed for every observed gap; it is cached per unique gap, "
+        "which is what makes the fit tractable on millions of photons.\n\n"
+        "Model selection is the part that goes wrong quietly: the likelihood "
+        "always improves with more states, so the state count has to be chosen "
+        "with a criterion (BIC and its variants) rather than by fitting until the "
+        "residual looks good.";
+    d.references_json = kHmmReferences;
+    d.row_grain = "photon";
+    d.settings_schema = R"JSON({
+      "type": "object",
+      "properties": {
+        "n_states": {"type": "integer", "default": 2, "minimum": 1},
+        "max_iter": {"type": "integer", "default": 500, "minimum": 1},
+        "tolerance": {"type": "number", "default": 1e-8, "minimum": 0.0},
+        "decoder": {"type": "string", "enum": ["viterbi", "jitter", "ffbs"], "default": "viterbi"}
+      }
+    })JSON";
+    d.inputs_json = R"JSON({
+      "required": ["tttr_photon_stream"],
+      "optional": ["burst_table"],
+      "description": "A photon stream, optionally partitioned into bursts."
+    })JSON";
+    d.outputs_json = R"JSON({
+      "columns": ["State", "Log likelihood", "Transition rate matrix", "Emission probabilities"]
+    })JSON";
+    d.can_replay = true;
+    tttrlib::register_algorithm(d);
+    return true;
+}
+const bool kHmmRegistered = register_hmm_descriptor();
+}  // namespace

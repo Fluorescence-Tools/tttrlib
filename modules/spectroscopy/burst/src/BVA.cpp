@@ -2,7 +2,7 @@
 #include "BVA.h"
 #include "BurstFilter.h"
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>

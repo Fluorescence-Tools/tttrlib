@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 
 class TTTR;
 

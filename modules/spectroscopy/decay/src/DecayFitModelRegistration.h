@@ -30,4 +30,11 @@ void register_decay_fit_models_fit2x();
 /// Register fit_nexp. Idempotent.
 void register_decay_fit_models_nexp();
 
+// Note (2026-08-18): the registry entries (Registry.h, core) DO register from
+// static initialisers next to the code -- the archive problem above is solved
+// at the link instead: in-tree static builds link the module objects
+// (tttrlib_link_all_modules) and the R package links the archive whole. The
+// factories keep the explicit path as well; it costs nothing and a fit works
+// even in a consumer that gets the link wrong.
+
 #endif  // TTTRLIB_DECAYFITMODELREGISTRATION_H

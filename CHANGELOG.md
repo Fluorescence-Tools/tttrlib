@@ -2,7 +2,15 @@
 
 ## [Unreleased]
 
-- **One registry.** The last two hand-authored registry literals are gone:
+- **One registry, in core.** `Registry.h` (module `core`) is the registry:
+  the `algorithm` and `registry` modules are folded into it, and every entry
+  registers itself next to its code from a static initialiser when its
+  library loads (fcs / hmm / pda descriptors moved into their modules from
+  the former `BuiltinAlgorithms.cpp`). Consequence for static consumers: the
+  R package links `libtttrlib_static.a` whole (`recipes/r/build.sh`) and
+  in-tree `TTTRLIB_MODULE_TYPE=STATIC` builds link the module objects, so no
+  archive member -- and no entry -- is dropped.
+- **No registry literal.** The last two hand-authored registry literals are gone:
   the decay fit models, their setup blocks and the objectives declare their
   entries next to their code (`DecayFitModelFit2x.cpp`, `DecayFitModelNExp.cpp`,
   `DecayStatistics.cpp`) and the eight burst-pipeline operations next to the

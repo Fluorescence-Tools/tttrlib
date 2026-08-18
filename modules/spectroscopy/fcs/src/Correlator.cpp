@@ -6,7 +6,7 @@
 
 // OpenMP for parallel processing
 #ifdef _OPENMP
-#include "AlgorithmRegistry.h"
+#include "Registry.h"
 #include <omp.h>
 #endif
 
@@ -17,6 +17,7 @@
 static bool g_use_avx = tttrlib::cpu_features::get_avx_enabled();
 
 #include <thread>
+#include <mutex>
 #include <cstdlib>
 #include <algorithm>
 
@@ -743,6 +744,24 @@ const char* const kBurstFcsEntry = R"JSON({
 })JSON";
 }  // namespace
 
+// References for the fcs_correlation entry.
+namespace {
+const char* kFcsReferences = R"JSON([
+  {"type": "journal",
+   "authors": "Wahl, M., Gregor, I., Patting, M., Enderlein, J.",
+   "title": "Fast calculation of fluorescence correlation data with asynchronous time-correlated single-photon counting",
+   "journal": "Optics Express", "year": 2003, "volume": "11", "pages": "3383"},
+  {"type": "journal",
+   "authors": "Felekyan, S., Kuehnemuth, R., Kudryavtsev, V., Sandhagen, C., Becker, W., Seidel, C. A. M.",
+   "title": "Full correlation from picoseconds to seconds by time-resolved and time-correlated single photon detection",
+   "journal": "Review of Scientific Instruments", "year": 2005, "volume": "76", "pages": "083104"},
+  {"type": "journal",
+   "authors": "Laurence, T. A., Fore, S., Huser, T.",
+   "title": "Fast, flexible algorithm for calculating photon correlations",
+   "journal": "Optics Letters", "year": 2006, "volume": "31", "pages": "829-831"}
+])JSON";
+}  // namespace
+
 // The three built-in kernels of Correlator::correlation_methods(), described
 // for the one registry (a plugin's kernel registers into the same category
 // when it loads); a caller sees every name set_correlation_method accepts.
@@ -857,11 +876,70 @@ const char* const kLaurenceMethodEntry = R"JSON({
 /// Register the fcs module's registry entries: the burst_fcs operation and the
 /// three built-in correlation methods. Idempotent (a duplicate key is refused).
 void tttrlib::register_fcs_descriptors() {
+    static std::once_flag once;
+    std::call_once(once, [] {
+    {
+        // The `fcs` capability: what a correlation is, for a UI and for
+        // .pto provenance (operation_type fcs_correlation).
+        using tttrlib::AlgorithmDescriptor;
+        using tttrlib::register_algorithm;
+        AlgorithmDescriptor d;
+        d.operation_type = "fcs_correlation";
+        d.display_name = "Fluorescence correlation (multi-tau)";
+        d.capability = "fcs";
+        d.summary = "Multi-tau auto- or cross-correlation of a photon stream, on a "
+                    "logarithmically coarsening lag axis.";
+        d.description =
+            "Correlates one or two photon streams on the multi-tau lag axis: the lag "
+            "spacing doubles every n_bins channels, so a curve spanning nanoseconds to "
+            "seconds costs a few hundred points rather than a few billion.\n\n"
+            "Three kernels compute the same curve and differ in how they get there. "
+            "'wahl' coarsens the photon times themselves once per cascade and is the "
+            "default. 'felekyan' is the time-resolved/time-correlated formulation, and "
+            "is what filtered-FCS builds on. 'laurence' walks the two streams with a "
+            "per-lag pointer and is fastest when the streams are very sparse.\n\n"
+            "Correlating micro times as well as macro times ('make_fine') extends the "
+            "curve below the macro-time resolution, at the cost of correlating a much "
+            "longer effective time axis.\n\n"
+            "Assumes a stationary signal over the correlated interval: the "
+            "normalisation divides by the mean count rate of the whole record, so a "
+            "photobleaching trend or a drifting focus shows up as an upturn at long "
+            "lag rather than as an error.";
+        d.references_json = kFcsReferences;
+        d.row_grain = "curve_point";
+        d.settings_schema = R"JSON({
+          "type": "object",
+          "properties": {
+            "method": {"type": "string", "enum": ["wahl", "felekyan", "laurence"], "default": "wahl"},
+            "n_casc": {"type": "integer", "default": 25, "minimum": 1,
+                       "description": "Number of cascades; the lag axis doubles its spacing once per cascade."},
+            "n_bins": {"type": "integer", "default": 17, "minimum": 2,
+                       "description": "Linear channels per cascade."},
+            "make_fine": {"type": "boolean", "default": false,
+                          "description": "Correlate micro times as well, extending the curve below the macro-time resolution."}
+          }
+        })JSON";
+        d.inputs_json = R"JSON({
+          "required": ["tttr_photon_stream"],
+          "optional": ["tttr_photon_stream_2", "weights"],
+          "description": "One stream for an autocorrelation, two for a cross-correlation."
+        })JSON";
+        d.outputs_json = R"JSON({
+          "columns": ["Lag time (s)", "G(tau)", "G(tau) normalized"]
+        })JSON";
+        d.can_replay = true;
+        register_algorithm(d);
+    }
     tttrlib::register_algorithm_json("operation", "burst_fcs", kBurstFcsEntry);
     tttrlib::register_algorithm_json("correlation_method", "wahl", kWahlMethodEntry);
     tttrlib::register_algorithm_json("correlation_method", "felekyan", kFelekyanMethodEntry);
     tttrlib::register_algorithm_json("correlation_method", "laurence", kLaurenceMethodEntry);
+    });
 }
+
+// Registered when this library loads (see Registry.h on why a static
+// consumer links the archive whole).
+namespace { const bool kFcsRegistered = (tttrlib::register_fcs_descriptors(), true); }
 
 // ---- the method table -------------------------------------------------------
 
