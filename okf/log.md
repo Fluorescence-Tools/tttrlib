@@ -23,6 +23,10 @@
   out to be two dead lines. Left open: T-04 export macros (needs Windows CI to
   verify; no `__declspec` yet) and T-01 flipping the split to default (needs
   a CI wheel).
+  Later the same day: JS (Node-API) and Java (`TTTRLIB_MODULE_TYPE=STATIC`, as
+  CI builds it) both compile from the object-library layout with the guarded
+  interfaces; `HmmLattice.i` offered to R/Java/JS and `hmm_forward_log` gives
+  the Python value bit-for-bit from Node (`-2.3496767005278962`).
 
 ## 2026-08-18 (46th entry)
 
