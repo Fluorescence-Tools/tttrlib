@@ -1,5 +1,29 @@
 # Bundle update log
 
+## 2026-08-18 (47th entry)
+
+* **Modularization tickets T-03, T-05, T-06, T-07 closed** (commits 0e2d34d73,
+  7ec9fe82c, e1c97644a, 70df77cf2, b9c6597a6). Every source now compiles once:
+  each module owns an OBJECT library and the module `.so`, `libtttrlib.so` and
+  `libtttrlib_static.a` are links over the same objects -- an extraction can no
+  longer subtract from the aggregates (`MODULE-DEBT.md` §2). The static archive
+  needed thought: GCC gets `-ffat-lto-objects` (bitcode + code in one object),
+  Apple's ld64 reads bitcode archives natively (a Release+LTO consumer link was
+  the check), any other LTO toolchain keeps the archive's own `-fno-lto` compile.
+  Every module has a `WITH_<NAME>` switch, the four `tttrlib.i` and the split
+  `mod_*.i` guard each fragment with `#ifndef TTTRLIB_WITHOUT_<NAME>`, and
+  presets `dev-sim` / `dev-clsm` / `dev-hmm` build ~15 of 35 modules and import;
+  a module whose dependency is off fails the configure naming both switches,
+  checked at finalize because declaration order is not dependency order (decay
+  is declared before registry). The last two dispatch chains became registries
+  earlier in the day (Correlator methods, DecayFitPrior kinds) and both are now
+  plugin capabilities in the C ABI (`tttrlib_correlation_method_v1`,
+  `tttrlib_decay_prior_v1`), looked up by fcs/decay on a table miss so a
+  rolled-back plugin leaves nothing dangling. The `friend` "cycle" of §6 turned
+  out to be two dead lines. Left open: T-04 export macros (needs Windows CI to
+  verify; no `__declspec` yet) and T-01 flipping the split to default (needs
+  a CI wheel).
+
 ## 2026-08-18 (46th entry)
 
 * **The Python bindings as six SWIG extensions** (`TTTRLIB_PYTHON_SPLIT`, preset
