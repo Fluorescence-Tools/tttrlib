@@ -506,16 +506,27 @@ class TestRunMemAgainstScipy(unittest.TestCase):
             p, _ = self._solve(nu)
             Q, dQ = _mem_Q(self.H, self.g0, self.c, self.m, nu)
             r = _scipy_bounded_min(Q, dQ, self.m.copy(), 1e-12)
-            # L-BFGS-B stalls a few 1e-8 relative above the optimum on the
-            # cases with clamped coordinates (a projected quasi-Newton is
-            # weak exactly there); the kernel may be lower, never higher.
+            # The claim that holds on every platform: the kernel is never
+            # WORSE than L-BFGS-B from the same start.
             self.assertLessEqual(Q(p), r.fun + 1e-9 * abs(r.fun), f"nu={nu}")
-            self.assertAlmostEqual(Q(p), r.fun, delta=1e-6 * abs(r.fun), msg=f"nu={nu}")
-            # Q is flat along the clamped directions, so where L-BFGS-B stops
-            # in p is loose (~1e-3 of the peak) even when its Q is 1e-8 off;
-            # the tight statement about p is the KKT test above.
-            np.testing.assert_allclose(p, r.x, rtol=0, atol=5e-3 * p.max(),
-                                       err_msg=f"nu={nu}")
+            if Q(p) >= r.fun - 1e-6 * abs(r.fun):
+                # Same point. Q is flat along the clamped directions, so where
+                # L-BFGS-B stops in p is loose (~1e-3 of the peak) even when
+                # its Q is 1e-8 off; the tight statement about p is the KKT
+                # test above.
+                np.testing.assert_allclose(p, r.x, rtol=0, atol=5e-3 * p.max(),
+                                           err_msg=f"nu={nu}")
+            else:
+                # L-BFGS-B stalled above the kernel's point -- a projected
+                # quasi-Newton is weak exactly where coordinates clamp, and
+                # how far it gets depends on the BLAS (CI stalls ~4e-3
+                # relative at nu=0.1 where this machine does not). "Ours is
+                # lower" is only meaningful if ours is also stationary, so
+                # restart scipy FROM our point: it must not find anything
+                # lower.
+                back = _scipy_bounded_min(Q, dQ, p.copy(), 1e-12)
+                self.assertGreaterEqual(back.fun, Q(p) - 1e-9 * abs(Q(p)),
+                                        f"nu={nu}: scipy improved on the kernel's point")
 
     def test_lbfgsb_cannot_improve_on_the_returned_point(self):
         for nu in (0.1, 1.0, 10.0, 100.0):

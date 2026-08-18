@@ -290,6 +290,10 @@ def test_tifffile_sees_the_imagej_hyperstack_we_write(tmp_path, axes, shape):
     """tifffile decodes the ImageJ description into series axes and reshapes;
     the pixels must land in the same (t, z, c) cells."""
     tifffile = pytest.importorskip("tifffile")
+    if not HAVE_IMAGECODECS:
+        # `imwrite` compresses with lzw, which tifffile can write but only
+        # decode with imagecodecs installed. Writing is ours; decoding is not.
+        pytest.skip("tifffile needs imagecodecs to DECODE lzw")
     path = str(tmp_path / "hs.tif")
     arr = _sample(np.float32, shape)
     tttrlib.imwrite(path, arr, axes=axes)

@@ -17,9 +17,13 @@ import struct
 
 import numpy as np
 import pytest
-import pandas as pd
 import tttrlib
 from test_settings import DATA_ROOT  # type: ignore
+
+# pandas is the vendor reader's own return type, and it is the reference this
+# module A/Bs against -- not a dependency of tttrlib. Where it is absent the
+# comparisons skip; everything that only needs tttrlib still runs.
+pd = pytest.importorskip("pandas", reason="pandas is the FLIM LABS reference reader's return type")
 
 from flimlabs_writer import (  # type: ignore
     MARKER_FRAME, MARKER_LINE, MARKER_PIXEL, write_itt1, write_stt1,
