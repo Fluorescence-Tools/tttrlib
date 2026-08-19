@@ -1035,12 +1035,34 @@ jobs:
       # only HDF5 has to be installed by hand.
       - name: Install HDF5 (Linux)
         if: runner.os == 'Linux'
-        # Its own timeout as well: a hung mirror is the one step that has
-        # actually done this, and 10 minutes is generous for two packages.
-        timeout-minutes: 10
+        # A hung Ubuntu mirror is the most common infrastructure failure in this
+        # workflow, and the only one that has ever cost a whole run: apt sits on
+        # an unresponsive host until something kills it. The step timeout turned
+        # that from a lost afternoon into a 10-minute failure, which is better
+        # but still a red run with nothing wrong in the code -- it happened
+        # again on 2026-08-19.
+        #
+        # So a hang is now retried instead of being fatal. Each attempt gets its
+        # own wall clock via `timeout`, because the failure mode is hanging
+        # rather than exiting non-zero and a plain `||` retry would never fire.
+        # Three attempts at two minutes a command fit inside the step budget
+        # with room to spare; the normal case is one attempt in well under one.
+        timeout-minutes: 15
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev cmake
+          set -uo pipefail
+          for attempt in 1 2 3; do
+            echo "::group::apt attempt $attempt"
+            if timeout 120 sudo apt-get update && \
+               timeout 120 sudo apt-get install -y libhdf5-dev cmake; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning::apt attempt $attempt hung or failed; retrying"
+            sleep 10
+          done
+          echo "::error::apt failed three times -- the Ubuntu mirrors are unreachable from this runner, not a defect in this commit."
+          exit 1
       - name: Install HDF5 (macOS)
         if: runner.os == 'macOS'
         run: |
