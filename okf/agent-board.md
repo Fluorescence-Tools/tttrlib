@@ -679,26 +679,24 @@ retired so nobody works the same thing twice.)*
     `okf/testing/math-kernel-validation.md`, modules/math README, CHANGELOG.
 
 - **T-20260819-02 · [imp.bff] PRD-115 stage 0: `diffusion_propagate_adjoint` — hand adjoint of the lattice field solver, checkpointed, dot-product-tested**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-19 · Picked: — · Done: —
-  - Why: every gradient through `IMP.bff`'s field solver is a finite
-    difference of a 1–10 s forward (`benchmark/quenching_identifiability.py`),
-    which caps the model at a handful of parameters; PRD-111 showed the data
-    determine the mobility *field*, and PRD-115 (`imp.bff/okf/prds/prd-115.md`)
-    wants to fit it (learned `D(r)`/`k(r)` on the vendored `MlpCore.h`). The
-    adjoint is the prerequisite for everything after it.
-  - Done when: `diffusion_propagate_adjoint(cur, d, decay, bounds, ng,
-    flux_form, n_steps, n_out, dL_dF) -> dL_dd, dL_ddecay, dL_dcur0` for both
-    flux forms (Smoluchowski self-adjoint up to the `bounds` mask, Itô not),
-    √n checkpointing on the `n_out` states (no full-history storage), SWIG
-    argout bindings; `test/quenching/test_diffusion_adjoint.py`: dot-product
-    identity ⟨p̄,(∂F/∂d)v⟩ = ⟨(∂F/∂d)ᵀp̄,v⟩ vs central differences of
-    `diffusion_propagate` ≤ 1e-8 rel. on the PRD-111 A124 site at ng=41,
-    agreement with `quenching_identifiability.py::jacobian()` on its five θ
-    (chain rule through the numpy map builders), cost ≤ 3× one forward.
-    Invariants: outer shell written to zero; rate as `exp(-k dt)`; the
-    θ-independent time step.
+  - Status: ✅ done — imp.bff `317fc38`
+  - Owner: `fable-5/1560c198`
+  - Opened: 2026-08-19 · Picked: 2026-08-19 · Done: 2026-08-19
+  - Why: every gradient through `IMP.bff`'s field solver was a finite
+    difference of a 1–10 s forward, one per parameter; PRD-115 wants to fit
+    the mobility *field* (or a network's weights through the vendored
+    `MlpCore.h`).
+  - Result: `diffusion_propagate_adjoint` (gather-form transposed sweep,
+    templated on the flux form, √n checkpointing, exact for a domain on the
+    shell, numpy `out_view` overload) + `GridDiffusionSolver.gradient()`
+    (chain rule through the folding and normalisation) +
+    `test/quenching/test_diffusion_adjoint.py`. Dot-product identity vs the
+    forward 1e-8–1e-12 rel. (both forms, both checkpoint layouts, shell
+    case), 1e-7 through Python, PRD-111 θ Jacobian to 1e-4. Cost **4.4×** one
+    forward on 41³ (the ≤ 3× guess was wrong: 1 forward + 1 re-run + a
+    memory-bound sweep at ~2.5×; a tabulated variant was slower) —
+    `okf/validation/diffusion_adjoint.md`. Next: stage 1 (voxel features)
+    and 2 (learned field on the six PRD-111 sites), unowned.
   - Touching: `imp.bff/include/DiffusionSolver.h`, `imp.bff/src/DiffusionSolver.cpp`,
     `imp.bff/pyext/IMP_bff.types.i`, `imp.bff/pyext/src/sampling/smoluchowski.py`,
     `imp.bff/test/quenching/`, PRD-115.
