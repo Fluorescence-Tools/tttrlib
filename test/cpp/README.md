@@ -41,6 +41,20 @@ Build them with `-Xpreprocessor -fopenmp` too when touching `QREigen.h`: the
 per-eigenvector loop is parallel above n = 32, and a data race there would not
 show up in a serial build.
 
+## In CI
+
+The `Header-only C++ tests (lnx)` job compiles and runs all of these on every
+push, plus `test_decay_likelihood` and a compile of `ab_numerics_harness`. It
+invokes the compiler directly, the way the first block above does, because
+that is the property these tests are written for — no library, no Python, no
+test data — and it keeps the job under a minute.
+
+Until 2026-08-19 CI ran none of them: `TTTRLIB_BUILD_CPP_TESTS` defaults to
+OFF and no workflow set it, so every assertion here ran only where somebody
+remembered to pass the flag. If you add a test, add it to the `FOREACH` list
+in `CMakeLists.txt` *and* to that job, or it goes back to being a file nobody
+executes.
+
 ## What they check, and why that way
 
 Properties, not stored numbers:

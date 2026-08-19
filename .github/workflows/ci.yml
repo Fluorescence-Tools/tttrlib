@@ -1168,6 +1168,65 @@ jobs:
         continue-on-error: true
         run: sccache --show-stats
 
+  # ── The header-only C++ tests ─────────────────────────────────────────────
+  #
+  # These existed and CI had never once built them: they sit behind
+  # TTTRLIB_BUILD_CPP_TESTS, which defaults to OFF and which no workflow set,
+  # so seven executables' worth of assertions ran only on the machine of
+  # whoever remembered to pass the flag. A test nothing runs is not a test.
+  #
+  # Its own job rather than a step in the matrix above, for what it does not
+  # need: no Python, no HDF5, no test data, and nothing that varies with the
+  # Python version -- so running it inside that matrix would pay for it six
+  # times and report it as somebody else's failure. Compiled directly instead
+  # of through CMake for the same reason the tests are written the way they
+  # are (CMakeLists.txt: "a compiler -- no library, no Python, no test data --
+  # so they are also runnable by hand"); the whole job is under a minute.
+  #
+  # The include paths mirror the targets in CMakeLists.txt. If a test gains a
+  # dependency there, it has to gain it here too -- which is the one thing
+  # this duplication costs, and it is cheaper than configuring the project.
+  cpp_tests:
+    name: Header-only C++ tests (lnx)
+    needs: setup
+    if: needs.setup.outputs.has_src == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+      - name: Compile and run
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=$(mktemp -d)
+          M=modules/math/include
+          D=modules/spectroscopy/decay/include
+          U=modules/util/include
+          # header-only, math only
+          for t in test_mat_linalg test_qreigen test_mlp_core test_lattice_diffusion; do
+            echo "== $t"
+            c++ -std=c++17 -O1 -Wall -I"$M" -o "$out/$t" "test/cpp/$t.cpp"
+            "$out/$t"
+          done
+          # also reaches into the decay module's header-only templates
+          echo "== test_ad_gradient"
+          c++ -std=c++17 -O1 -Wall -I"$M" -I"$D" -o "$out/test_ad_gradient" test/cpp/test_ad_gradient.cpp
+          "$out/test_ad_gradient"
+          # the Poisson likelihoods are not header-only, so it compiles the two
+          # translation units it needs rather than linking the decay module
+          echo "== test_decay_likelihood"
+          c++ -std=c++17 -O1 -Wall -I"$D" -I"$U" -o "$out/test_decay_likelihood" \
+            test/cpp/test_decay_likelihood.cpp \
+            modules/spectroscopy/decay/src/DecayStatistics.cpp \
+            modules/util/src/Verbose.cpp
+          "$out/test_decay_likelihood"
+          # not a test but the C++ half of one (test_math_ab_numerics.py drives
+          # it against numpy/scipy); built so it cannot rot unnoticed
+          echo "== ab_numerics_harness (compile only)"
+          c++ -std=c++17 -O1 -Wall -I"$M" -I"$U" -o "$out/ab_numerics_harness" test/cpp/ab_numerics_harness.cpp
+
   # ── Publish the conformance coverage matrix ───────────────────────────────
   #
   # The table is an artefact, not a checked-in file to diff against: which cases
