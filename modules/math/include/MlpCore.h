@@ -59,6 +59,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -1010,6 +1014,423 @@ inline Json model_to_json(const MlpModel& m) {
     }
     j["layers"] = std::move(layers);
     return j;
+}
+
+// ---------------------------------------------------------------------------
+// ONNX import: the MLP subset, through a minimal protobuf wire-format reader
+// ---------------------------------------------------------------------------
+//
+// A network trained anywhere -- PyTorch, JAX, Keras, scikit-learn via skl2onnx
+// -- can be saved as ONNX, and an MLP's ONNX graph is small: Gemm (or
+// MatMul + Add) nodes carrying the weights as initializers, and elementwise
+// activation nodes between them. Reading that needs no ONNX or protobuf
+// library, only the wire format (varints and length-delimited fields), so the
+// reader below keeps this header std-only. What it accepts:
+//
+//   * Gemm with alpha = beta = 1, transA = 0; transB = 1 (weights n_out x n_in,
+//     PyTorch's layout) or 0 (n_in x n_out, transposed on read)
+//   * MatMul followed by Add with a 1-D initializer (the bias), or no Add
+//   * Relu, Tanh, Sigmoid, Softplus, Sin as the activation after a layer, the
+//     SiLU pattern Sigmoid + Mul(x, Sigmoid(x)) that exporters emit for
+//     nn.SiLU / swish, and the Softplus + Greater + Where pattern PyTorch's
+//     new exporter emits for nn.Softplus's threshold
+//   * Identity, Cast, Flatten, Reshape, Squeeze, Unsqueeze passed through
+//   * initializers of type FLOAT (1) or DOUBLE (11), in raw_data or the typed
+//     repeated fields
+//
+// Anything else -- a second input, a branch, an op outside that list -- throws
+// with the op named. No scalers: an ONNX model normalises inside its graph or
+// not at all, so the returned MlpModel has none. A float32 model is read into
+// double and evaluates as the float32 model it is.
+
+namespace onnx_detail {
+
+struct Reader {
+    const unsigned char* p;
+    const unsigned char* end;
+    bool done() const { return p >= end; }
+    std::uint64_t varint() {
+        std::uint64_t v = 0;
+        int shift = 0;
+        while (true) {
+            if (p >= end) throw std::runtime_error("ONNX: truncated varint");
+            const unsigned char b = *p++;
+            v |= static_cast<std::uint64_t>(b & 0x7f) << shift;
+            if (!(b & 0x80)) break;
+            shift += 7;
+            if (shift > 63) throw std::runtime_error("ONNX: varint too long");
+        }
+        return v;
+    }
+    /// Read one field header; returns false at the end of the message.
+    bool field(unsigned& number, unsigned& wire) {
+        if (done()) return false;
+        const std::uint64_t tag = varint();
+        number = static_cast<unsigned>(tag >> 3);
+        wire = static_cast<unsigned>(tag & 7);
+        return true;
+    }
+    /// A length-delimited payload as a sub-reader.
+    Reader bytes() {
+        const std::uint64_t n = varint();
+        if (n > static_cast<std::uint64_t>(end - p)) throw std::runtime_error("ONNX: truncated field");
+        Reader r{p, p + n};
+        p += n;
+        return r;
+    }
+    std::string str() { Reader r = bytes(); return std::string(reinterpret_cast<const char*>(r.p), static_cast<size_t>(r.end - r.p)); }
+    float fixed32() {
+        if (end - p < 4) throw std::runtime_error("ONNX: truncated fixed32");
+        float f; std::memcpy(&f, p, 4); p += 4; return f;
+    }
+    double fixed64() {
+        if (end - p < 8) throw std::runtime_error("ONNX: truncated fixed64");
+        double d; std::memcpy(&d, p, 8); p += 8; return d;
+    }
+    void skip(unsigned wire) {
+        switch (wire) {
+            case 0: varint(); return;
+            case 1: fixed64(); return;
+            case 2: bytes(); return;
+            case 5: fixed32(); return;
+            default: throw std::runtime_error("ONNX: unsupported wire type " + std::to_string(wire));
+        }
+    }
+};
+
+struct Tensor {
+    std::string name;
+    std::vector<std::int64_t> dims;
+    std::vector<double> data;
+};
+
+struct Node {
+    std::string op;
+    std::vector<std::string> inputs, outputs;
+    double alpha = 1.0, beta = 1.0;
+    std::int64_t transA = 0, transB = 0;
+};
+
+inline Tensor parse_tensor(Reader r) {
+    Tensor t;
+    std::int64_t dtype = 1;
+    std::vector<unsigned char> raw;
+    std::vector<double> typed;
+    unsigned num, wire;
+    while (r.field(num, wire)) {
+        if (num == 1) {  // dims: packed or repeated varint
+            if (wire == 2) { Reader d = r.bytes(); while (!d.done()) t.dims.push_back(static_cast<std::int64_t>(d.varint())); }
+            else t.dims.push_back(static_cast<std::int64_t>(r.varint()));
+        } else if (num == 2 && wire == 0) {
+            dtype = static_cast<std::int64_t>(r.varint());
+        } else if (num == 8 && wire == 2) {
+            t.name = r.str();
+        } else if (num == 9 && wire == 2) {
+            Reader d = r.bytes();
+            raw.assign(d.p, d.end);
+        } else if (num == 4) {  // float_data
+            if (wire == 2) { Reader d = r.bytes(); while (!d.done()) typed.push_back(d.fixed32()); }
+            else typed.push_back(r.fixed32());
+        } else if (num == 10) {  // double_data
+            if (wire == 2) { Reader d = r.bytes(); while (!d.done()) typed.push_back(d.fixed64()); }
+            else typed.push_back(r.fixed64());
+        } else {
+            r.skip(wire);
+        }
+    }
+    if (!raw.empty()) {
+        if (dtype == 1) {
+            if (raw.size() % 4) throw std::runtime_error("ONNX: initializer '" + t.name + "' raw_data is not float32");
+            t.data.resize(raw.size() / 4);
+            for (size_t i = 0; i < t.data.size(); ++i) { float f; std::memcpy(&f, raw.data() + 4 * i, 4); t.data[i] = f; }
+        } else if (dtype == 11) {
+            if (raw.size() % 8) throw std::runtime_error("ONNX: initializer '" + t.name + "' raw_data is not float64");
+            t.data.resize(raw.size() / 8);
+            std::memcpy(t.data.data(), raw.data(), raw.size());
+        } else {
+            throw std::runtime_error("ONNX: initializer '" + t.name + "' has data_type " + std::to_string(dtype) +
+                                     "; only FLOAT (1) and DOUBLE (11) are supported");
+        }
+    } else {
+        t.data = typed;
+    }
+    return t;
+}
+
+inline Node parse_node(Reader r) {
+    Node n;
+    unsigned num, wire;
+    while (r.field(num, wire)) {
+        if (num == 1 && wire == 2) n.inputs.push_back(r.str());
+        else if (num == 2 && wire == 2) n.outputs.push_back(r.str());
+        else if (num == 4 && wire == 2) n.op = r.str();
+        else if (num == 5 && wire == 2) {
+            Reader a = r.bytes();
+            std::string aname; double f = 0; std::int64_t i = 0; bool has_f = false, has_i = false;
+            unsigned an, aw;
+            while (a.field(an, aw)) {
+                if (an == 1 && aw == 2) aname = a.str();
+                else if (an == 2 && aw == 5) { f = a.fixed32(); has_f = true; }
+                else if (an == 3 && aw == 0) { i = static_cast<std::int64_t>(a.varint()); has_i = true; }
+                else a.skip(aw);
+            }
+            if (aname == "alpha" && has_f) n.alpha = f;
+            else if (aname == "beta" && has_f) n.beta = f;
+            else if (aname == "transA" && has_i) n.transA = i;
+            else if (aname == "transB" && has_i) n.transB = i;
+        } else {
+            r.skip(wire);
+        }
+    }
+    return n;
+}
+
+}  // namespace onnx_detail
+
+/// Build a model from the bytes of an ONNX file (see the subset above).
+inline MlpModel model_from_onnx(const unsigned char* data, size_t n) {
+    using namespace onnx_detail;
+    Reader model{data, data + n};
+    bool have_graph = false;
+    std::vector<Node> nodes;
+    std::map<std::string, Tensor> inits;
+    std::vector<std::string> graph_inputs, graph_outputs;
+    unsigned num, wire;
+    while (model.field(num, wire)) {
+        if (num == 7 && wire == 2) {  // ModelProto.graph
+            have_graph = true;
+            Reader g = model.bytes();
+            unsigned gn, gw;
+            while (g.field(gn, gw)) {
+                if (gn == 1 && gw == 2) nodes.push_back(parse_node(g.bytes()));
+                else if (gn == 5 && gw == 2) { Tensor t = parse_tensor(g.bytes()); inits[t.name] = std::move(t); }
+                else if ((gn == 11 || gn == 12) && gw == 2) {  // ValueInfoProto: field 1 name
+                    Reader v = g.bytes();
+                    unsigned vn, vw;
+                    std::string name;
+                    while (v.field(vn, vw)) { if (vn == 1 && vw == 2) name = v.str(); else v.skip(vw); }
+                    (gn == 11 ? graph_inputs : graph_outputs).push_back(name);
+                } else g.skip(gw);
+            }
+        } else {
+            model.skip(wire);
+        }
+    }
+    if (!have_graph) throw std::runtime_error("ONNX: no graph in the model (is this an ONNX file?)");
+
+    // The graph input is the one that is not an initializer.
+    std::string cur;
+    for (const auto& name : graph_inputs) if (!inits.count(name)) { cur = name; break; }
+    if (cur.empty()) throw std::runtime_error("ONNX: the graph has no non-initializer input");
+
+    auto weight_of = [&](const std::string& name) -> const Tensor& {
+        auto it = inits.find(name);
+        if (it == inits.end()) throw std::runtime_error("ONNX: '" + name + "' is not an initializer; only constant weights are supported");
+        return it->second;
+    };
+    auto set_activation = [&](std::vector<DenseLayer>& layers, Activation a, const std::string& op) {
+        if (layers.empty()) throw std::runtime_error("ONNX: activation '" + op + "' before the first layer is not supported");
+        if (layers.back().activation != Activation::Identity)
+            throw std::runtime_error("ONNX: two activations in a row ('" + op + "') are not supported");
+        layers.back().activation = a;
+    };
+
+    MlpModel m;
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        const Node& nd = nodes[i];
+        if (nd.inputs.empty() || nd.outputs.empty()) throw std::runtime_error("ONNX: node '" + nd.op + "' without inputs/outputs");
+        const std::string& op = nd.op;
+        if (op == "Gemm") {
+            if (nd.inputs[0] != cur) throw std::runtime_error("ONNX: Gemm does not consume the running tensor; only a chain is supported");
+            if (nd.alpha != 1.0 || nd.beta != 1.0 || nd.transA != 0)
+                throw std::runtime_error("ONNX: Gemm with alpha/beta != 1 or transA != 0 is not supported");
+            const Tensor& W = weight_of(nd.inputs[1]);
+            if (W.dims.size() != 2) throw std::runtime_error("ONNX: Gemm weight '" + W.name + "' is not 2-D");
+            DenseLayer l;
+            if (nd.transB) { l.n_out = static_cast<int>(W.dims[0]); l.n_in = static_cast<int>(W.dims[1]); l.weight = W.data; }
+            else {
+                l.n_in = static_cast<int>(W.dims[0]); l.n_out = static_cast<int>(W.dims[1]);
+                l.weight.resize(W.data.size());
+                for (int r = 0; r < l.n_in; ++r) for (int c = 0; c < l.n_out; ++c)
+                    l.weight[static_cast<size_t>(c) * l.n_in + r] = W.data[static_cast<size_t>(r) * l.n_out + c];
+            }
+            l.bias.assign(static_cast<size_t>(l.n_out), 0.0);
+            if (nd.inputs.size() > 2 && !nd.inputs[2].empty()) {
+                const Tensor& b = weight_of(nd.inputs[2]);
+                if (b.data.size() != static_cast<size_t>(l.n_out)) throw std::runtime_error("ONNX: Gemm bias '" + b.name + "' has the wrong length");
+                l.bias = b.data;
+            }
+            l.activation = Activation::Identity;
+            m.layers.push_back(std::move(l));
+            cur = nd.outputs[0];
+        } else if (op == "MatMul") {
+            if (nd.inputs[0] != cur) throw std::runtime_error("ONNX: MatMul does not consume the running tensor; only a chain is supported");
+            const Tensor& W = weight_of(nd.inputs[1]);
+            if (W.dims.size() != 2) throw std::runtime_error("ONNX: MatMul weight '" + W.name + "' is not 2-D");
+            DenseLayer l;
+            l.n_in = static_cast<int>(W.dims[0]); l.n_out = static_cast<int>(W.dims[1]);
+            l.weight.resize(W.data.size());
+            for (int r = 0; r < l.n_in; ++r) for (int c = 0; c < l.n_out; ++c)
+                l.weight[static_cast<size_t>(c) * l.n_in + r] = W.data[static_cast<size_t>(r) * l.n_out + c];
+            l.bias.assign(static_cast<size_t>(l.n_out), 0.0);
+            l.activation = Activation::Identity;
+            cur = nd.outputs[0];
+            // An Add with a 1-D initializer right after is the bias.
+            if (i + 1 < nodes.size() && nodes[i + 1].op == "Add" && nodes[i + 1].inputs.size() == 2) {
+                const Node& ad = nodes[i + 1];
+                const std::string other = ad.inputs[0] == cur ? ad.inputs[1] : ad.inputs[1] == cur ? ad.inputs[0] : "";
+                if (!other.empty() && inits.count(other)) {
+                    const Tensor& b = inits[other];
+                    if (b.data.size() == static_cast<size_t>(l.n_out)) { l.bias = b.data; cur = ad.outputs[0]; ++i; }
+                }
+            }
+            m.layers.push_back(std::move(l));
+        } else if (op == "Relu" || op == "Tanh" || op == "Softplus" || op == "Sin" || op == "Sigmoid") {
+            if (nd.inputs[0] != cur) throw std::runtime_error("ONNX: '" + op + "' does not consume the running tensor; only a chain is supported");
+            if (op == "Sigmoid" && i + 1 < nodes.size() && nodes[i + 1].op == "Mul" && nodes[i + 1].inputs.size() == 2) {
+                // SiLU: x * sigmoid(x)
+                const Node& mul = nodes[i + 1];
+                const bool silu = (mul.inputs[0] == cur && mul.inputs[1] == nd.outputs[0]) ||
+                                  (mul.inputs[1] == cur && mul.inputs[0] == nd.outputs[0]);
+                if (silu) { set_activation(m.layers, Activation::SiLU, "SiLU"); cur = mul.outputs[0]; ++i; continue; }
+            }
+            set_activation(m.layers, op == "Relu" ? Activation::ReLU : op == "Tanh" ? Activation::Tanh :
+                                     op == "Softplus" ? Activation::Softplus : op == "Sin" ? Activation::Sin :
+                                     Activation::Sigmoid, op);
+            const std::string x_in = cur;
+            cur = nd.outputs[0];
+            // PyTorch's nn.Softplus(threshold) exports as Softplus(x) then
+            // Greater(x, threshold) and Where(greater, x, softplus(x)) -- the
+            // linear regime above the threshold, which our softplus already
+            // handles exactly. Fold the pattern.
+            if (op == "Softplus" && i + 2 < nodes.size() && nodes[i + 1].op == "Greater" && nodes[i + 2].op == "Where" &&
+                nodes[i + 1].inputs.size() == 2 && nodes[i + 1].inputs[0] == x_in && nodes[i + 2].inputs.size() == 3 &&
+                nodes[i + 2].inputs[0] == nodes[i + 1].outputs[0] && nodes[i + 2].inputs[1] == x_in &&
+                nodes[i + 2].inputs[2] == cur) {
+                cur = nodes[i + 2].outputs[0];
+                i += 2;
+            }
+        } else if (op == "Identity" || op == "Cast" || op == "Flatten" || op == "Reshape" || op == "Squeeze" || op == "Unsqueeze") {
+            if (nd.inputs[0] != cur) throw std::runtime_error("ONNX: '" + op + "' does not consume the running tensor; only a chain is supported");
+            cur = nd.outputs[0];
+        } else {
+            throw std::runtime_error("ONNX: unsupported op '" + op + "'; the MLP reader accepts Gemm, MatMul(+Add), Relu, Tanh, Sigmoid, Softplus, Sin, the SiLU pattern, and pass-through reshapes");
+        }
+    }
+    if (m.layers.empty()) throw std::runtime_error("ONNX: no dense layer found in the graph");
+    m.validate();
+    return m;
+}
+
+inline MlpModel model_from_onnx(const std::string& bytes) {
+    return model_from_onnx(reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size());
+}
+
+// ---------------------------------------------------------------------------
+// safetensors import: weights only, PyTorch state_dict names
+// ---------------------------------------------------------------------------
+//
+// safetensors is the plain weights format (an 8-byte little-endian header
+// length, a JSON header, then the tensor bytes). It carries no architecture,
+// so the reader takes the conventions a PyTorch `nn.Sequential` / `nn.Linear`
+// state_dict follows -- `<prefix>.weight` of shape (n_out, n_in) with an
+// optional `<prefix>.bias`, layers ordered by the first integer in the prefix
+// (then by name) -- and the activations from either the `__metadata__` map
+// (`"activations": "tanh,tanh,identity"` per layer, or `"activation":
+// "tanh"` for every hidden layer) or the `hidden_activation` argument, the
+// output layer being linear. `Json` is any nlohmann-compatible type, as for
+// model_from_json. dtypes F32 and F64.
+
+template <class Json>
+inline MlpModel model_from_safetensors(const unsigned char* data, size_t n,
+                                       const std::string& hidden_activation = "tanh") {
+    if (n < 8) throw std::runtime_error("safetensors: file shorter than its header length");
+    std::uint64_t hlen = 0;
+    for (int i = 7; i >= 0; --i) hlen = (hlen << 8) | data[i];
+    if (hlen > n - 8) throw std::runtime_error("safetensors: header length exceeds the file");
+    const std::string header(reinterpret_cast<const char*>(data + 8), static_cast<size_t>(hlen));
+    const unsigned char* body = data + 8 + hlen;
+    const size_t body_n = n - 8 - static_cast<size_t>(hlen);
+    Json j = Json::parse(header);
+
+    std::string act_hidden = hidden_activation, act_list;
+    if (j.contains("__metadata__")) {
+        const Json& md = j.at("__metadata__");
+        if (md.contains("activation")) act_hidden = md.at("activation").template get<std::string>();
+        if (md.contains("activations")) act_list = md.at("activations").template get<std::string>();
+    }
+
+    struct Entry { std::string prefix; long order; };
+    std::vector<Entry> entries;
+    for (auto it = j.begin(); it != j.end(); ++it) {
+        const std::string key = it.key();
+        if (key == "__metadata__") continue;
+        const std::string suffix = ".weight";
+        if (key.size() > suffix.size() && key.compare(key.size() - suffix.size(), suffix.size(), suffix) == 0) {
+            const std::string prefix = key.substr(0, key.size() - suffix.size());
+            long order = -1;
+            for (size_t k = 0; k < prefix.size(); ++k)
+                if (prefix[k] >= '0' && prefix[k] <= '9') { order = std::atol(prefix.c_str() + k); break; }
+            entries.push_back({prefix, order});
+        }
+    }
+    if (entries.empty()) throw std::runtime_error("safetensors: no '<name>.weight' tensor found");
+    std::sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) {
+        return a.order != b.order ? a.order < b.order : a.prefix < b.prefix; });
+
+    auto read = [&](const std::string& key, std::vector<std::int64_t>& shape) {
+        const Json& t = j.at(key);
+        const std::string dtype = t.at("dtype").template get<std::string>();
+        shape.clear();
+        for (const auto& d : t.at("shape")) shape.push_back(d.template get<std::int64_t>());
+        const std::uint64_t a = t.at("data_offsets").at(0).template get<std::uint64_t>();
+        const std::uint64_t b = t.at("data_offsets").at(1).template get<std::uint64_t>();
+        if (b < a || b > body_n) throw std::runtime_error("safetensors: data_offsets of '" + key + "' out of range");
+        std::vector<double> v;
+        if (dtype == "F32") {
+            v.resize(static_cast<size_t>((b - a) / 4));
+            for (size_t i = 0; i < v.size(); ++i) { float f; std::memcpy(&f, body + a + 4 * i, 4); v[i] = f; }
+        } else if (dtype == "F64") {
+            v.resize(static_cast<size_t>((b - a) / 8));
+            std::memcpy(v.data(), body + a, static_cast<size_t>(b - a));
+        } else {
+            throw std::runtime_error("safetensors: '" + key + "' has dtype " + dtype + "; only F32 and F64 are supported");
+        }
+        return v;
+    };
+
+    // Per-layer activations from the list, else hidden/identity.
+    std::vector<std::string> acts;
+    if (!act_list.empty()) {
+        std::string cur;
+        for (char c : act_list) { if (c == ',') { acts.push_back(cur); cur.clear(); } else if (c != ' ') cur += c; }
+        acts.push_back(cur);
+        if (acts.size() != entries.size())
+            throw std::runtime_error("safetensors: 'activations' lists " + std::to_string(acts.size()) +
+                                     " entries for " + std::to_string(entries.size()) + " layers");
+    }
+
+    MlpModel m;
+    for (size_t li = 0; li < entries.size(); ++li) {
+        DenseLayer l;
+        std::vector<std::int64_t> shape;
+        l.weight = read(entries[li].prefix + ".weight", shape);
+        if (shape.size() != 2) throw std::runtime_error("safetensors: '" + entries[li].prefix + ".weight' is not 2-D");
+        l.n_out = static_cast<int>(shape[0]);
+        l.n_in = static_cast<int>(shape[1]);
+        const std::string bkey = entries[li].prefix + ".bias";
+        if (j.contains(bkey)) {
+            std::vector<std::int64_t> bshape;
+            l.bias = read(bkey, bshape);
+        } else {
+            l.bias.assign(static_cast<size_t>(l.n_out), 0.0);
+        }
+        const std::string a = !acts.empty() ? acts[li] : (li + 1 == entries.size() ? "identity" : act_hidden);
+        l.activation = activation_from_string(a);
+        m.layers.push_back(std::move(l));
+    }
+    m.validate();
+    return m;
 }
 
 }  // namespace mlpcore

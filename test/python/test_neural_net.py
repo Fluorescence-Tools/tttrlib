@@ -494,3 +494,79 @@ def test_pinn_poisson_1d():
     xt = np.linspace(0, 1, 101)[:, None]
     err = np.abs(net.predict_batch_np(xt).ravel() - np.sin(np.pi * xt.ravel())).max()
     assert err < 2e-2, (err, res.message)
+
+
+# ---------------------------------------------------------------------------
+# Standard file formats in: ONNX and safetensors, as PyTorch writes them
+# ---------------------------------------------------------------------------
+
+_FIXTURES = os.path.join(os.path.dirname(__file__), "misc", "fixtures", "nn")
+
+
+def _expected():
+    with open(os.path.join(_FIXTURES, "expected.json")) as fh:
+        e = json.load(fh)
+    return (np.asarray(e["X"]), np.asarray(e["Y_double"]), np.asarray(e["Y_float32"]),
+            np.asarray(e["Y_relu"]))
+
+
+@pytest.mark.parametrize("name,which,tol", [
+    ("mlp_torch_legacy.onnx", "float32", 1e-6),   # torch.onnx.export(dynamo=False): Gemm + Tanh / Sigmoid·Mul / Softplus
+    ("mlp_torch_dynamo.onnx", "float32", 1e-6),   # torch.onnx.export(dynamo=True): + Greater/Where softplus threshold
+    ("mlp_matmul_add.onnx", "double", 1e-12),     # MatMul + Add graph with (n_in, n_out) weights, double
+])
+def test_from_onnx_file_matches_pytorch(name, which, tol):
+    """An MLP exported from PyTorch (either exporter) or built as MatMul+Add
+    loads through the std-only wire reader and reproduces PyTorch's outputs."""
+    X, Yd, Yf, _ = _expected()
+    net = tttrlib.NeuralNet.from_onnx_file(os.path.join(_FIXTURES, name))
+    assert net.n_layers() == 4 and net.n_inputs() == 2 and net.n_outputs() == 2
+    acts = [tttrlib.activation_to_string(net.get_layers()[i].activation) for i in range(4)]
+    assert acts == ["tanh", "silu", "softplus", "identity"]
+    np.testing.assert_allclose(net.predict_batch_np(X), Yf if which == "float32" else Yd, atol=tol)
+    # and it is a full citizen: derivatives, parameters, JSON round trip
+    J = net.jacobian_np(X[0])
+    assert J.shape == (2, 2)
+    again = tttrlib.NeuralNet.from_json_string(net.to_json_string())
+    np.testing.assert_allclose(again.predict_batch_np(X), net.predict_batch_np(X), atol=0)
+
+
+def test_from_safetensors_file_matches_pytorch():
+    """A PyTorch state_dict saved with safetensors, activations from the file's
+    metadata or from the argument."""
+    X, Yd, _, Yrelu = _expected()
+    net = tttrlib.NeuralNet.from_safetensors_file(os.path.join(_FIXTURES, "mlp_state_dict.safetensors"))
+    np.testing.assert_allclose(net.predict_batch_np(X), Yd, atol=1e-12)
+    relu = tttrlib.NeuralNet.from_safetensors_file(
+        os.path.join(_FIXTURES, "mlp_relu_nometa.safetensors"), hidden_activation="relu")
+    assert relu.n_layers() == 2
+    np.testing.assert_allclose(relu.predict_batch_np(X), Yrelu, atol=1e-12)
+
+
+def test_unsupported_onnx_is_refused_clearly():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "bad.onnx")
+        with open(path, "wb") as fh:
+            fh.write(b"\x00\x01not onnx")
+        with pytest.raises(RuntimeError, match="ONNX"):
+            tttrlib.NeuralNet.from_onnx_file(path)
+
+
+@pytest.mark.slow
+def test_roundtrip_through_pytorch_live():
+    """When PyTorch and onnx are installed: build, export and compare live, so
+    a change in the exporter's graph shape shows up here before a user sees it."""
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("onnx")
+    nn = torch.nn
+    torch.manual_seed(3)
+    m = nn.Sequential(nn.Linear(3, 7), nn.Sigmoid(), nn.Linear(7, 5), nn.ReLU(), nn.Linear(5, 2)).double()
+    X = torch.rand(9, 3, dtype=torch.float64) * 2 - 1
+    with torch.no_grad():
+        Y = m(X).numpy()
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "m.onnx")
+        torch.onnx.export(m, X[:1], path, dynamo=False, input_names=["x"], output_names=["y"],
+                          opset_version=17, dynamic_axes={"x": {0: "n"}, "y": {0: "n"}})
+        net = tttrlib.NeuralNet.from_onnx_file(path)
+    np.testing.assert_allclose(net.predict_batch_np(X.numpy()), Y, atol=1e-12)

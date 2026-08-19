@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+- **`NeuralNet.from_onnx_file` and `from_safetensors_file`: a network trained
+  anywhere loads here (and in imp.bff), no ONNX/protobuf library involved.**
+  The MLP subset of ONNX — `Gemm` or `MatMul`+`Add` with constant weights,
+  `Relu`/`Tanh`/`Sigmoid`/`Softplus`/`Sin`, the `Sigmoid`·`Mul` pattern for
+  SiLU, PyTorch's `Softplus`+`Greater`+`Where` threshold, pass-through
+  reshapes — is read straight from the protobuf wire format in `MlpCore.h`
+  (`model_from_onnx`, std-only, so the vendored copy in imp.bff has it too);
+  safetensors reads a PyTorch `state_dict` with activations from the file's
+  `__metadata__` or an argument. Anything outside the subset throws naming the
+  op. Fixtures written by both PyTorch exporters and a hand-built MatMul+Add
+  graph are committed with PyTorch's outputs (`test/python/misc/fixtures/nn/`):
+  float32 models agree to 6e-8, the double one to 2e-16; a live round trip
+  runs when PyTorch is installed.
+
 - **`LatticeDiffusion.h`: the masked-lattice diffusion solver and its adjoint,
   header-only, shared with imp.bff.** Explicit propagation of
   `dp/dt = ∇·(D∇p) − kp` on a cubic grid (7-point stencil, rate as the factor

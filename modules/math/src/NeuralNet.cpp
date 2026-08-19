@@ -525,6 +525,31 @@ NeuralNet NeuralNet::from_json_string(const std::string& text) {
     return net;
 }
 
+namespace {
+std::string read_file_bytes(const std::string& path, const char* who) {
+    std::ifstream fh(path, std::ios::binary);
+    if (!fh) throw std::runtime_error(std::string("NeuralNet::") + who + ": cannot open '" + path + "'");
+    std::stringstream ss;
+    ss << fh.rdbuf();
+    return ss.str();
+}
+}  // namespace
+
+NeuralNet NeuralNet::from_onnx_file(const std::string& path) {
+    const std::string bytes = read_file_bytes(path, "from_onnx_file");
+    NeuralNet net;
+    net.model_ = mlpcore::model_from_onnx(bytes);  // validates
+    return net;
+}
+
+NeuralNet NeuralNet::from_safetensors_file(const std::string& path, const std::string& hidden_activation) {
+    const std::string bytes = read_file_bytes(path, "from_safetensors_file");
+    NeuralNet net;
+    net.model_ = mlpcore::model_from_safetensors<json>(
+        reinterpret_cast<const unsigned char*>(bytes.data()), bytes.size(), hidden_activation);
+    return net;
+}
+
 NeuralNet NeuralNet::from_json_file(const std::string& path) {
     std::ifstream fh(path);
     if (!fh) throw std::runtime_error("NeuralNet: cannot open '" + path + "'");
@@ -552,7 +577,7 @@ const char* const kNeuralNetEntry = R"JSON({
   "name": "neural_net",
   "label": "Feed-forward neural network (dense layers, training, derivatives, standard scaler)",
   "summary": "A small dense network with sklearn's activations plus softplus / silu / sin, mini-batch training, a StandardScaler, and exact derivatives -- of the loss with respect to the weights for any caller-supplied loss, and of the outputs with respect to the inputs to second order -- for surrogates and physics-informed models inside the library.",
-  "description": "Dense layers with relu / tanh / logistic / identity activations (sklearn's names) and the smooth softplus / silu / sin, backpropagation training with the usual options, JSON round trip, and a scaler; validated against sklearn's MLP on the same weights. The same forward and backward passes are exposed as a differentiable building block: backward() maps the adjoint of the outputs to the adjoint of weights and inputs; predict_derivatives() / backward_derivatives() carry a directional Taylor expansion of the input to second order so a loss on dy/dx and d2y/dx2 (a PDE residual) can be trained through; jacobian() / hessian() give the full input derivatives of one sample; get_parameters() / set_parameters() expose the flat parameter vector for an outside optimiser such as L-BFGS. The kernels are header-only in MlpCore.h and shared verbatim with imp.bff.",
+  "description": "Dense layers with relu / tanh / logistic / identity activations (sklearn's names) and the smooth softplus / silu / sin, backpropagation training with the usual options, JSON round trip, and a scaler; validated against sklearn's MLP on the same weights. The same forward and backward passes are exposed as a differentiable building block: backward() maps the adjoint of the outputs to the adjoint of weights and inputs; predict_derivatives() / backward_derivatives() carry a directional Taylor expansion of the input to second order so a loss on dy/dx and d2y/dx2 (a PDE residual) can be trained through; jacobian() / hessian() give the full input derivatives of one sample; get_parameters() / set_parameters() expose the flat parameter vector for an outside optimiser such as L-BFGS. The kernels are header-only in MlpCore.h and shared verbatim with imp.bff. Models trained elsewhere load from ONNX (the MLP subset, read without an ONNX library) or safetensors.",
   "operation_type": "model_fitting",
   "method": "predict",
   "params_schema": {
@@ -622,6 +647,8 @@ const char* const kNeuralNetEntry = R"JSON({
     "NeuralNet.hessian",
     "NeuralNet.get_parameters",
     "NeuralNet.set_parameters",
+    "NeuralNet.from_onnx_file",
+    "NeuralNet.from_safetensors_file",
     "NeuralNetBackward",
     "NeuralNetDerivatives"
   ],

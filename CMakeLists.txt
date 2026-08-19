@@ -599,6 +599,10 @@ IF(TTTRLIB_BUILD_CPP_TESTS)
         ADD_TEST(NAME ${_cpp_test} COMMAND ${_cpp_test})
     ENDFOREACH()
 
+    # test_mlp_core reads the ONNX fixtures PyTorch wrote (skips if absent).
+    SET_TESTS_PROPERTIES(test_mlp_core PROPERTIES
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
     # test_ad_gradient also exercises DecayFit23's objective (fconv_per_cs_ad,
     # Wcm_ad/log_m_ext_ad), which are header-only templates in the decay
     # module -- so it needs that include path too, on top of modules/math's.

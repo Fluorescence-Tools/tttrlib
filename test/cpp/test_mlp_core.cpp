@@ -25,6 +25,8 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdint>
+#include <cstdlib>
+#include <string>
 #include <vector>
 
 using tttrlib::Activation;
@@ -448,7 +450,66 @@ static void test_model_scalers() {
     }
 }
 
-int main() {
+// --------------------------------------------------------------------------
+// 8. ONNX import: the fixtures PyTorch wrote, against the outputs it computed
+// --------------------------------------------------------------------------
+#include <fstream>
+#include <sstream>
+static std::string slurp(const std::string& path) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return std::string();
+    std::stringstream ss; ss << f.rdbuf(); return ss.str();
+}
+
+static void test_onnx_import(const std::string& fixture_dir) {
+    std::printf("ONNX import (fixtures in %s)\n", fixture_dir.c_str());
+    // expected.json is read by a tiny ad-hoc scan to keep this test std-only:
+    // X is 7x2, Y_double / Y_float32 are 7x2. The Python test checks the same
+    // files through NeuralNet with a real JSON parser.
+    const std::string exp = slurp(fixture_dir + "/expected.json");
+    if (exp.empty()) { std::printf("  skip  fixtures not found\n"); return; }
+    auto numbers_after = [&](const char* key) {
+        std::vector<double> v;
+        size_t p = exp.find(key);
+        if (p == std::string::npos) return v;
+        p = exp.find('[', p);
+        size_t depth = 0;
+        std::string num;
+        for (; p < exp.size(); ++p) {
+            const char c = exp[p];
+            if (c == '[') { ++depth; continue; }
+            if (c == ']') { if (!num.empty()) { v.push_back(std::atof(num.c_str())); num.clear(); } if (--depth == 0) break; continue; }
+            if (c == ',') { if (!num.empty()) { v.push_back(std::atof(num.c_str())); num.clear(); } continue; }
+            if (c != ' ' && c != '\n') num += c;
+        }
+        return v;
+    };
+    const std::vector<double> X = numbers_after("\"X\""), Yd = numbers_after("\"Y_double\""), Yf = numbers_after("\"Y_float32\"");
+    report(X.size() == 14 && Yd.size() == 14 && Yf.size() == 14, "expected.json parsed", double(X.size()), 14);
+    struct Case { const char* file; const std::vector<double>* Y; double tol; };
+    const Case cases[] = {{"mlp_torch_legacy.onnx", &Yf, 1e-6}, {"mlp_torch_dynamo.onnx", &Yf, 1e-6}, {"mlp_matmul_add.onnx", &Yd, 1e-12}};
+    for (const Case& c : cases) {
+        const std::string bytes = slurp(fixture_dir + "/" + c.file);
+        if (bytes.empty()) { std::printf("  skip  %s not found\n", c.file); continue; }
+        try {
+            tttrlib::MlpModel m = mc::model_from_onnx(bytes);
+            std::vector<double> y, d1, d2;
+            mc::model_predict(m, X.data(), 7, 0, nullptr, y, d1, d2);
+            double worst = 0; for (size_t i = 0; i < y.size(); ++i) worst = std::max(worst, std::abs(y[i] - (*c.Y)[i]));
+            char buf[96]; std::snprintf(buf, sizeof buf, "%s: 4 layers tanh/silu/softplus/linear, outputs vs PyTorch", c.file);
+            report(m.layers.size() == 4 && m.layers[0].activation == Activation::Tanh && m.layers[1].activation == Activation::SiLU &&
+                   m.layers[2].activation == Activation::Softplus && m.layers[3].activation == Activation::Identity && worst < c.tol,
+                   buf, worst, c.tol);
+        } catch (const std::exception& e) {
+            std::printf("  FAIL  %s: %s\n", c.file, e.what()); ++g_failures;
+        }
+    }
+    bool threw = false;
+    try { mc::model_from_onnx(std::string("not an onnx file")); } catch (const std::exception&) { threw = true; }
+    report(threw, "garbage input throws", 0, 0);
+}
+
+int main(int argc, char** argv) {
     test_activation_derivatives();
     test_dual_ops();
     test_gemm();
@@ -461,6 +522,8 @@ int main() {
     // ReLU: only the order-0/1 paths are meaningful (f'' == 0), but they must work.
     test_backward(Activation::ReLU);
     test_model_scalers();
+    // fixture dir: argv[1], else the repo-relative default when run from the root
+    test_onnx_import(argc > 1 ? argv[1] : "test/python/misc/fixtures/nn");
     std::printf("%d failure(s)\n", g_failures);
     return g_failures;
 }

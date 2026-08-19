@@ -113,6 +113,30 @@ public:
     static NeuralNet from_json_string(const std::string& json);
     /// Read a ``tttrlib.neural_net`` JSON file.
     static NeuralNet from_json_file(const std::string& path);
+    /**
+     * @brief Read an ONNX file holding a dense network.
+     *
+     * The MLP subset every exporter emits: ``Gemm`` (or ``MatMul`` + ``Add``)
+     * with constant weights, ``Relu`` / ``Tanh`` / ``Sigmoid`` / ``Softplus`` /
+     * ``Sin`` between layers, the ``Sigmoid`` + ``Mul`` pattern for SiLU, and
+     * pass-through reshapes -- PyTorch (both exporters), Keras, JAX,
+     * scikit-learn via skl2onnx. Anything else throws with the op named. No
+     * ONNX or protobuf library is involved; the wire format is read directly.
+     * The model carries no scalers (an ONNX graph normalises inside or not
+     * at all) and a float32 model evaluates as the float32 model it is.
+     */
+    static NeuralNet from_onnx_file(const std::string& path);
+    /**
+     * @brief Read a safetensors file holding a PyTorch-style ``state_dict``.
+     *
+     * ``<prefix>.weight`` of shape ``(n_out, n_in)`` with optional
+     * ``<prefix>.bias``, layers ordered by the first integer in the prefix;
+     * activations from the file's ``__metadata__`` (``"activations":
+     * "tanh,tanh,identity"`` per layer or ``"activation": "tanh"`` for the
+     * hidden layers) or else ``hidden_activation``, the output layer linear.
+     */
+    static NeuralNet from_safetensors_file(const std::string& path,
+                                           const std::string& hidden_activation = "tanh");
     /// Serialise to JSON; ``indent < 0`` emits the compact form.
     std::string to_json_string(int indent = -1) const;
     /// Write the JSON document to ``path``.

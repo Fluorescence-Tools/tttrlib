@@ -170,6 +170,15 @@ takes, and nothing more:
   elsewhere in the library calls when a network is one of its terms.
 - **Flat parameters**: `flatten` / `unflatten`, layer by layer, weight then
   bias — the vector `i_lbfgs.h` or scipy's L-BFGS works on.
+- **Standard formats in**: `model_from_onnx` reads the MLP subset of ONNX
+  (Gemm / MatMul+Add, Relu/Tanh/Sigmoid/Softplus/Sin, the SiLU and
+  softplus-threshold patterns, pass-through reshapes — what PyTorch's two
+  exporters, Keras, JAX and skl2onnx emit) through a minimal protobuf
+  wire-format reader, so no ONNX or protobuf library; `model_from_safetensors`
+  reads a PyTorch `state_dict` (weights only, activations from `__metadata__`
+  or an argument). Checked against PyTorch's own outputs on committed fixtures
+  (`test/python/misc/fixtures/nn/`) and live when PyTorch is installed. So
+  the network need not be trained here at all: train anywhere, export, load.
 - **A whole model, and its file format**: `MlpModel` = layers + input/output
   `StandardScaler`s; `model_predict` / `model_backward` apply the scalers and
   their chain rule so a consumer stays in physical units; `model_from_json` /
