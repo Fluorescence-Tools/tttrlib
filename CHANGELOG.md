@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+- **`LatticeDiffusion.h`: the masked-lattice diffusion solver and its adjoint,
+  header-only, shared with imp.bff.** Explicit propagation of
+  `dp/dt = ∇·(D∇p) − kp` on a cubic grid (7-point stencil, rate as the factor
+  `e^{−k dt}`, Smoluchowski or Itô flux) and `lattice_propagate_adjoint`: the
+  transposed stencil run backwards through √n-checkpointed forward states,
+  returning `dL/dD`, `dL/dk`, `dL/dp₀` for every voxel from one pass at ~4×
+  the forward's cost — against one forward *per parameter* by finite
+  differences. No tape, no autodiff dependency; the sweep is linear in the
+  density, so the adjoint is exact for the discrete scheme. imp.bff's dye
+  quenching field model (`GridDiffusionSolver`) is the consumer and vendors
+  the header verbatim (its `DiffusionSolver.cpp` is now a wrapper), like
+  `MlpCore.h`. Validated by the dot-product identity against the forward
+  (`test/cpp/test_lattice_diffusion.cpp`, 1e-8–1e-12; both flux forms,
+  checkpoint layouts, a domain on the shell).
+
 - **ChiSurf is no longer a validation reference** (it moves, and this library
   is its upstream, so agreement between the two proves nothing). Every kernel
   that rested on it now rests on an upstream package or on ground truth:

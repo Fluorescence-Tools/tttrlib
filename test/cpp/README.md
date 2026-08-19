@@ -23,14 +23,16 @@ c++ -std=c++17 -O2 -I modules/math/include \
     test/cpp/test_ad_gradient.cpp -o /tmp/test_ad_gradient && /tmp/test_ad_gradient
 c++ -std=c++17 -O2 -I modules/math/include \
     test/cpp/test_mlp_core.cpp -o /tmp/test_mlp_core && /tmp/test_mlp_core
+c++ -std=c++17 -O2 -I modules/math/include \
+    test/cpp/test_lattice_diffusion.cpp -o /tmp/test_lattice_diffusion && /tmp/test_lattice_diffusion
 ```
 
 Or through CMake:
 
 ```bash
 cmake -S . -B build -DTTTRLIB_BUILD_CPP_TESTS=ON
-cmake --build build --target test_mat_linalg test_qreigen test_ad_gradient test_mlp_core
-ctest --test-dir build -R 'test_mat_linalg|test_qreigen|test_ad_gradient|test_mlp_core'
+cmake --build build --target test_mat_linalg test_qreigen test_ad_gradient test_mlp_core test_lattice_diffusion
+ctest --test-dir build -R 'test_mat_linalg|test_qreigen|test_ad_gradient|test_mlp_core|test_lattice_diffusion'
 ```
 
 Exit status is the number of failed checks.
@@ -123,6 +125,22 @@ same two ways (raw layers on standardised input, central differences of
 `model_predict`); the JSON round trip is templated on the JSON type and is
 exercised through `NeuralNet` in Python and, with a different nlohmann
 version, by imp.bff's `test/test_vendored_mlpcore.py`.
+
+## The lattice solver and its adjoint (`test_lattice_diffusion`)
+
+`LatticeDiffusion.h` is the explicit solver of `dp/dt = ∇·(D∇p) − kp` on a
+masked cubic grid — the field model of dye quenching in imp.bff, which vendors
+the header — and its adjoint: the transposed stencil run backwards through
+checkpointed forward states, giving `dL/dD`, `dL/dk` and `dL/dp₀` for every
+voxel from one pass. The forward is checked for conservation without decay and
+for `exp(−kt)` with a uniform rate. The adjoint is checked by the dot-product
+identity against the forward, which shares no code with the reverse sweep:
+`⟨dL/dθ, v⟩` from the adjoint against a central difference of the forward
+along a random `v`, for the mobility, the decay factor and the initial density,
+both flux forms, checkpoint lengths that do and do not divide `n_steps`, and a
+domain touching the shell. A wrong transpose, a dropped `bounds` factor, a
+mis-seeded report or a checkpoint restart off by one fails at 1e-3 or worse;
+the agreement is 1e-8 to 1e-12 (the FD's own truncation).
 
 ## The likelihood floor (`test_decay_likelihood`)
 

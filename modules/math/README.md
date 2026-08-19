@@ -8,6 +8,7 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`QREigen.h`**: Eigendecomposition of real non-symmetric matrices — Parlett-Reinsch balancing, Householder Hessenberg reduction, Francis double-shift QR with LAPACK's exceptional shift, and eigenvectors by inverse iteration on the Hessenberg form. Plus the complex dense kernels (`zmatmul`, `zmatvec`, `zinv`). Used by `BurstML` and `GopichSzabo`.
 - **`NelderMead.h`**: Header-only simplex optimiser for derivative-free problems.
 - **`NeuralNet.h` / `NeuralNet.cpp`**: Feed-forward multilayer perceptron with Adam training, explicit backprop, StandardScaler, JSON serialisation, and the derivative entry points a caller needs to use the network as one term of a larger differentiable model: `backward` (adjoint of the outputs → adjoint of the weights and inputs, for any loss), `predict_derivatives` / `backward_derivatives` (the same for a loss on `dy/dx` and `d²y/dx²`, e.g. a PDE residual), `jacobian` / `hessian`, `get_parameters` / `set_parameters` (the flat vector an outside optimiser such as L-BFGS works on). Uses `Mat.h` for the batch GEMMs. All the arithmetic is in `MlpCore.h`.
+- **`LatticeDiffusion.h`**: Explicit propagation of a density on a masked cubic lattice — `dp/dt = ∇·(D∇p) − kp`, 7-point stencil, rate as the factor `e^{−k dt}`, Smoluchowski or Itô flux — and its **adjoint**: the transposed stencil run backwards through √n-checkpointed forward states, returning `dL/dD`, `dL/dk`, `dL/dp₀` for every voxel from one pass (no tape). Header-only, std-only; imp.bff vendors it verbatim as the field model of dye quenching (`GridDiffusionSolver`) and its gradient. See below.
 - **`MlpCore.h`**: Header-only, std-only kernels of the dense network — activations with derivatives to third order (sklearn's four plus `softplus`, `silu`, `sin`), the batch forward and reverse passes, and both augmented with a directional Taylor expansion of the input to second order (so `J v` and `vᵀ H v` come out of the forward pass and a loss on them can be backpropagated to the weights), a scalar-templated single-sample forward for `Dual`, and the flat parameter layout. The GEMM is a template policy: `NeuralNet.cpp` plugs in `Mat.h`, and imp.bff carries a verbatim copy of this header that runs on the portable loops. See below.
 - **`i_lbfgs.h`**: Header-only limited-memory BFGS optimiser with central-difference numerical gradients and Armijo backtracking line search. A consumer may supply an exact gradient instead; `imaging/localization` does.
 - **`Dual.h`**: Forward-mode dual number, `val + eps*grad` with `eps^2 = 0`, templated on what sits in the derivative slot. `Dual<double>` is one directional derivative; `Dual<GradVec<N>>` is a whole gradient from one pass. See below.
@@ -69,8 +70,9 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 No Eigen, no autodiff, and no other external numerics. `Mat.h` and `GradVec.h`
 between them removed the last two Eigen consumers, and `Dual.h` removed the
 vendored autodiff package; see below and `benchmarks/bench_mat.cpp`.
-`MlpCore.h` has no dependency at all, not even on the rest of this module: that
-is the condition for imp.bff to vendor it (see below).
+`MlpCore.h` and `LatticeDiffusion.h` have no dependency at all, not even on the
+rest of this module: that is the condition for imp.bff to vendor them (see
+below).
 
 ## Why a separate module?
 
@@ -212,6 +214,30 @@ first version in the same pass. Every gradient path is checked in
 `test/python/test_neural_net.py::test_pinn_poisson_1d` — a 1-16-16-1 tanh net
 fitted to `u'' = -π² sin(πx)`, `u(0) = u(1) = 0`, by L-BFGS on the residual
 loss, gradient from `backward_derivatives`: max error 9e-6 in 0.5 s.
+
+## `LatticeDiffusion.h` — a differentiable field solver, shared with imp.bff
+
+The other half of the "learned physics" toolkit next to `MlpCore.h`. imp.bff's
+dye-quenching field model is `dp/dt = ∇·(D∇p) − kp` on the accessible-volume
+lattice, and calibrating it — or a network that parametrises `D(r)`, `k(r)` —
+needs `dL/dD`, `dL/dk` for every voxel. Finite differences cost one solve per
+parameter; this header's `lattice_propagate_adjoint` costs about four forwards
+for all of them: the sweep is linear in the density (`p_{n+1} = A p_n`), so the
+adjoint density obeys `p̄_n = Aᵀ p̄_{n+1}` — the transposed 7-point stencil run
+backwards — and the parameter gradients are local products of forward state
+and adjoint at each step. Written as a gather (each output voxel owned by one
+iteration), templated on the flux form, √n-checkpointed with segment re-run.
+Measured 4.4× one forward on 41³ (imp.bff `okf/validation/diffusion_adjoint.md`:
+one checkpointed forward, one re-run, a memory-bound reverse sweep at ~2.5×;
+a tabulated-stencil variant was slower). Validated by the dot-product identity
+against the forward (`test/cpp/test_lattice_diffusion.cpp`, 1e-8–1e-12).
+
+Why here and not only in imp.bff: it is a numerical kernel with no notion of a
+dye, the same family as the 3-D deconvolution and the HMM lattice already in
+this module, and imp.bff's rule (one shared NN codebase; header vendored,
+tttrlib the source) applies to it verbatim. imp.bff's `src/DiffusionSolver.cpp`
+is a thin IMP-facing wrapper over the copy; `test/test_vendored_headers.py`
+there fails when the copies diverge.
 
 ## Validation status
 
