@@ -726,7 +726,7 @@ void register_builtin_burst_searches() {
               "maximum": 100000,
               "unit": "photons",
               "advanced": true,
-              "description": "Background context added each side of a candidate run. Load-bearing rather than slack: given only in-burst photons the segmentation finds one block and refines nothing, so it needs flanks to place an edge against. This is the dominant cost knob - lowering it to 16 roughly 2.5x the speed for about 0.03 less completeness."
+              "description": "Background context added each side of a candidate run. Load-bearing rather than slack: given only in-burst photons the segmentation finds one block and refines nothing, so it needs flanks to place an edge against. This is the dominant cost knob - lowering it to 16 roughly 2.5x the speed for about 0.03 less completeness. It is bounded above by the data as well: padded regions that touch are merged, so a padding wider than the background between two transits joins them into one region and returns them as one burst. Keep it well under the photons you expect between bursts - on a stream carrying only 20-60 background photons between transits the default of 64 recovered 16 of 40 bursts, and 8 recovered 38."
             },
             "max_region_photons": {
               "type": "integer",

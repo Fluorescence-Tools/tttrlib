@@ -102,6 +102,12 @@
 // Validation: A/B-TESTED 2026-08-17 -- bayesian_blocks_events vs astropy.stats.bayesian_blocks(fitness='events')
 //   on 7 recorded photon sets (change points identical), ncp_prior_from_p0 vs Scargle
 //   2013 eq. 21 (1e-12); the two-stage search known-answer on injected bursts. test/python/burstfilter/test_ab_burst_reference.py.
+// Validation: GROUND TRUTH 2026-08-19 -- on a dilute simulated measurement, 3 seeds: 36-39 detections
+//   for 40 known transits, precision 100 %, recall 90-98 % at the registry defaults. That suite
+//   measured the two-sided constraint on `pad_photons` now recorded in its schema: too small and the
+//   segmentation has no flank to place an edge against, too large and padded regions merge, so
+//   neighbouring transits are returned as one burst.
+//   test/python/burstfilter/test_burst_search_ground_truth.py
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
