@@ -143,15 +143,70 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | BurstSearchKalman.h | `burst_search_kalman` | **ground truth** (40 injected bursts per case) + **filterpy 1.4.5** running the filter with the detection in NumPy (recorded fixture) | precision 100 % (every burst found was injected), recall 73–98 %, and identical to the filterpy reference on 4 configurations | PASS |
 | BurstSearchBOCPD.h | `burst_search_bocpd` | Adams & MacKay 2007 run-length recursion transcribed in NumPy from the paper (plug-in Poisson predictive) | identical | PASS (header says Negative-Binomial; the code is plug-in Poisson) |
 | BurstSearchBayesianBlocks.h | `bayesian_blocks_events`, `ncp_prior_from_p0` | astropy `bayesian_blocks(fitness='events')` recorded; Scargle 2013 eq. 21 | change points identical on 7 sets; 1e-12 | PASS |
-| BurstSearchBayesianBlocks.h | full two-stage search | — | injected bursts found, ≤ 6 detections | KNOWN-ANSWER |
+| BurstSearchBayesianBlocks.h | full two-stage search | — | injected bursts found, ≤ 6 detections; **ground truth** below (36–39 detections for 40 bursts, precision 100 %, recall 90–98 %) | KNOWN-ANSWER |
 | BurstSignificance.h | Li & Ma, Poisson tails, σ conversions, trials | Li & Ma 1983 eq. 17; scipy.stats | 1e-10 / 1e-8 | PASS |
 | BurstConfidence.h | `burst_confidence` (3 modes) | NumPy transcription | 1e-9 | PASS |
 | BurstFilter.h / BurstFeatureExtractor.h | `find_bursts`, properties, filters, E | NumPy; FRETBursts size/width | exact / 1e-12 | PASS |
 | BurstML.h | `neg_log_likelihood` | **the original FRET_burstML MEX compiled natively** (GSL, shims in `test/cpp/burstml_mex_shim/`) | ratio 1 ± 1e-12; 2–3 states, 2–3 colours | PASS |
 | BurstSearchMaxTree.h | `build_max_tree_1d` (`max_tree_1d` binding) | **skimage 0.25.2 `morphology.max_tree`** (recorded, 6 signals; live on the 2 M-sample bench signal) | component set (level, lo, hi, parent) identical, 1.9 M components; 11× | PASS |
-| BurstSearchMaxTree.h | `burst_search_maxtree` (attribute filter + MSER) | — | injected-burst recovery (`test_burst_search_maxtree.py`) | KNOWN-ANSWER |
+| BurstSearchMaxTree.h | `burst_search_maxtree` (attribute filter + MSER) | — | injected-burst recovery (`test_burst_search_maxtree.py`); **ground truth** below (recall 100 %, precision 95–100 %, 3 false positives in background-only) | KNOWN-ANSWER |
 | StreamingBurstDetector.h | streaming search | batch / FRETBursts rule | identical | EQUIVALENCE |
 | BurstFeature.h | `build_kde` (Laplace 5τ / Gaussian 3τ two-pointer window) | FRETBursts `kde_laplace`/`kde_gaussian` live, through TwoCDE (the only caller) | 1e-9 | PASS (via TwoCDE); stream builder / reduction is plumbing |
+
+#### Every search against simulation ground truth — `test/python/burstfilter/test_burst_search_ground_truth.py`
+
+The rows above ask whether a search agrees with somebody else's implementation.
+This suite asks the question two agreeing implementations can both fail: the
+stream is simulated, so the bursts in it are known — are those the ones that come
+back? It is driven from the registry, so a search added later is measured the day
+it registers, and it runs on three seeds because a floor that holds for one seed
+is a floor somebody tuned.
+
+Workload: 40 transits of 60–200 photons over 100–400 µs (0.25–1.5 MHz), 3–8 ms
+apart, on a 50 kHz Poisson background — ~16 000 photons, ~30 % of them in a burst.
+
+| Search | Detections (40 bursts) | Precision | Recall | Widest detection |
+|---|---|---|---|---|
+| `sliding_window` | 51–60 | 100 % | 95–100 % | 1.2 % of the stream |
+| `cusum_sprt` | 41 | 100 % | 92–100 % | 1.2 % |
+| `kalman` | 38–40 | 100 % | 95–100 % | 1.2 % |
+| `bocpd` | 44–46 | 98–100 % | 95–100 % | 1.3 % |
+| `maxtree` | 40–42 | 95–100 % | 100 % | 1.3 % |
+| `bayesian_blocks` | 36–39 | 100 % | 90–98 % | 1.2 % |
+
+Verdict: **PASS** (all six searches, three seeds). What the suite is for is the
+three failures it produced before it passed, none of which an A/B could have
+found:
+
+* **The workload has to be the regime the method documents.** A first version
+  left 77 % of photons inside a burst; the max-tree recovered 55 % of them and
+  Bayesian blocks 57 % whatever it was asked. `BurstSearchMaxTree.h` states the
+  assumption — its baseline is a median rate, so its contrast and significance
+  filters are background filters only while bursts are a *minority* of the trace,
+  and it records the inversion (F1 0.95 at ~24 % occupancy, 0.63 at ~69 %). At
+  77 % both methods were measuring bursts against bursts. `simulate()` is now
+  dilute and the suite asserts the occupancy so a later edit cannot quietly
+  re-create the wrong regime.
+* **`q` is not a universal constant.** The Kalman search's process noise is in
+  (counts/s)² per bin — how fast the *background* may drift. At q = 1e9 (32 kHz
+  per bin against a 50 kHz background) the filter simply follows the burst up and
+  reports no innovation: recall 48 %. At q = 1e7 it is 100 %.
+* **A per-component σ is not a false-alarm rate.** The max-tree at 3σ with a
+  loosened window flagged 22 bursts in pure Poisson background — which is what an
+  uncorrected 3σ over ~12 000 positions means (≈16 expected). At its registry
+  defaults it flags 3. `max_false_alarm_rate` is the documented control and the
+  suite verifies it the only way its own schema says it can be verified, against
+  a background-only measurement: 10 → 1 → 0.1 per second gives monotonically
+  fewer false alarms at no cost in recall. The absolute rate is optimistic by
+  about an order of magnitude (0.1/s over 0.25 s predicts 0.025, delivers 1),
+  which is why the test pins the direction and the schema calls the trials
+  correction approximate.
+
+A fourth is recorded but not asserted as a defect: `bocpd`'s hazard rate must be
+read together with its bin width. At 20 µs bins, `changepoint_prob` 0.2 resolves
+the transits and ≤ 0.02 returns the whole measurement as one burst — the
+degenerate answer that scores 100 % recall by overlap, which is why
+`test_a_detection_is_not_the_whole_measurement` exists as its own test.
 
 ### HMM, kinetics, PDA — `test/python/hmm/test_ab_hmm_reference.py`, `kinetics/test_ab_kinetics_reference.py`, `pda/test_ab_pda_reference.py`
 

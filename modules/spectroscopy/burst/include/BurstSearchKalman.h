@@ -36,6 +36,9 @@
 //   (2) filterpy 1.4.5 running the filter with the detection in NumPy, both from this header's definition
 //   (recorded fixture): identical on 4 configurations, 1 and 2 channels. ChiSurf is NOT a reference.
 //   test/python/burstfilter/test_ab_burst_reference.py, gen_ab_kalman_burst_filterpy_reference.py.
+//   (3) GROUND TRUTH on a dilute simulated measurement, 3 seeds: 38-40 detections for 40 transits,
+//   precision 100 %, recall 95-100 %. That suite is what measured the `q` scaling documented below.
+//   test/python/burstfilter/test_burst_search_ground_truth.py
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
@@ -62,6 +65,16 @@ struct KalmanBurstSettings {
     /// error. The default was chosen to be non-degenerate on both a realistic
     /// simulated single-molecule trace and a sparse synthetic one; on data with
     /// very different rates it may need scaling with them.
+    ///
+    /// Set far too *large* it fails the other way, and silently: the units are
+    /// (counts/s)² per bin, so `sqrt(q)` is how far the background rate is
+    /// allowed to move between bins. Once that is a sizeable fraction of the
+    /// burst-to-background rate difference the filter simply follows the burst
+    /// up, the innovation stays small, and no burst is reported. Measured
+    /// against a simulated ground truth with a 50 kHz background and 0.25-1.5
+    /// MHz transits, `q = 1e9` (32 kHz per bin) recovers 48 % of them and
+    /// `q = 1e7` (3 kHz per bin) recovers 100 %. A usable rule: keep `sqrt(q)`
+    /// around a tenth of the background rate.
     double q = 100.0;
     /// Measurement-noise scale on the Poisson variance `rate / dt`. 1.0 trusts
     /// shot noise exactly; larger tolerates extra technical noise.

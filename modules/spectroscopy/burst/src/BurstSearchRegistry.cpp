@@ -274,6 +274,15 @@ void register_builtin_burst_searches() {
               "title": "Track channels separately",
               "default": true,
               "description": "Track one rate per routing channel, so a rise seen across detectors at once scores higher than an uncorrelated one. Ignored for single-channel data."
+            },
+            "warmup_bins": {
+              "type": "integer",
+              "title": "Warm-up bins",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 1000000,
+              "group": "Advanced",
+              "description": "Seed the filter from the first N bins (x0 = their mean rate, P0 its Poisson variance) and report no burst inside them. 0 is the legacy zero start, which flags one or two spurious bursts at t = 0 because R is ~0 on the first update. The method takes this argument; it was missing from this schema until 2026-08-19, so burst_search_by_name refused it."
             }
           }
         })SCHEMA";

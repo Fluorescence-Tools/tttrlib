@@ -63,6 +63,12 @@
 //   benchmarks/check_sciref.py); test/python/burstfilter/test_ab_burst_reference.py. The full
 //   search (attribute filter + MSER selection) has no independent implementation: injected bursts
 //   recovered, significance filters, dispatch in test/python/test_burst_search_maxtree.py.
+// Validation: GROUND TRUTH 2026-08-19 -- against a simulated dilute measurement (40 known transits,
+//   ~30% occupancy) it recovers 100% of them at 95-100% precision with its registry defaults, and
+//   flags 3 bursts in a background-only stream of the same rate; max_false_alarm_rate verified the
+//   way the schema asks (10 -> 1 -> 0.1 per second gives monotonically fewer false alarms at no
+//   cost in recall). The occupancy assumption stated above is load-bearing and was measured: at
+//   77% occupancy recall falls to 55%. test/python/burstfilter/test_burst_search_ground_truth.py
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
