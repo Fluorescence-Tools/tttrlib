@@ -611,6 +611,69 @@ retired so nobody works the same thing twice.)*
     `ext/python/<i-file>`, test in `test/python/misc/`, PRD-037, CHANGELOG,
     board.
 
+- **T-20260819-01 · [tttrlib] Differentiable MLP core shared with imp.bff: `backward(dL/dy)`, flat params, smooth activations, scalar-templated forward**
+  - Status: ✅ done — in the working tree of `fable-5/1560c198`, **not yet committed** (user to commit)
+  - Owner: `fable-5/1560c198`
+  - Opened: 2026-08-19 · Picked: 2026-08-19 · Done: 2026-08-19
+  - Progress: landed as specified plus the Taylor-augmented passes (orders 1-2:
+    `J v`, `vᵀ H v` and their adjoint, so a PDE-residual loss backpropagates to
+    the weights — no tape). New `modules/math/include/MlpCore.h` (header-only,
+    std-only, GEMM policy; `NeuralNet.cpp` plugs in Mat.h), `NeuralNet`
+    gained `backward`, `backward_derivatives`, `predict_derivatives`,
+    `jacobian`, `hessian`, `get/set_parameters`; activations `softplus`,
+    `silu`, `sin`; `Dual.h` gained `tanh sin cos sqrt pow min max` + comparisons.
+    `train()` runs on the same kernels: predictions identical to 1e-15 vs the
+    previous build on the same seed, not slower. Tests: `test/cpp/test_mlp_core.cpp`
+    (90 checks, dot-product identity + FD), 12 new Python tests incl.
+    `test_pinn_poisson_1d` (9e-6 in 0.5 s); `test_neural_net.py` 41/41,
+    `test_math_ab_numerics.py`, `hmm/test_surrogate.py`, `burstfilter/test_burstml.py`
+    green. Docs: modules/math/README.md, test/cpp/README.md, CHANGELOG,
+    validation register rows. imp.bff: `include/internal/MlpCore.h` (already
+    tracked there, swept into commit `a1b4135`) + `test/test_vendored_mlpcore.py`
+    (sha256 vs `../tttrlib`). Follow-up same day: argout NumPy typemaps for the
+    derivative entry points (`*_out` methods; 30 ms → 5 ms per call), and three
+    gallery examples + executed notebooks in `examples/miscellaneous/`
+    (`plot_neural_net_differentiable`, `plot_pinn_heat_equation`,
+    `plot_pinn_burgers`) with smoke tests `test/python/misc/test_neural_net_examples.py`.
+  - Why: imp.bff wants a physics-informed / UDE use of a small MLP — the net
+    parametrises an unknown field (dye–surface potential, k_Q, orienting
+    potential) *inside* a differentiable lattice solver
+    (`imp.bff/src/DiffusionSolver.cpp`, hand adjoint of the linear explicit
+    stencil). `NeuralNet` (`modules/math/include/NeuralNet.h`) has forward +
+    Adam training, but backprop is inlined in `train()` (`NeuralNet.cpp`
+    ~L452-467) and consumed by `adam_step` at once: no external-upstream-
+    gradient entry, no dL/dx (computed at L457, thrown away for `li==0`), no
+    flat parameter vector for `i_lbfgs.h`, activations Identity/ReLU/Tanh/
+    Sigmoid only with the derivative-from-output contract (`NeuralNet.cpp`
+    L45-66) that cannot hold softplus/SiLU/sin. Both repos must share ONE
+    NN codebase; today `NeuralNet.cpp` pulls `nlohmann/json.hpp`,
+    `Registry.h`, `SimPcgRandom.h`, which blocks verbatim sharing.
+  - Survey of external templates (cloned git-stripped to
+    `imp.bff/junk/nn-templates/` (gitignored), verdict in `imp.bff/junk/nn-templates/PORTING.md`):
+    nothing worth vendoring; port *shapes* only — MiniDNN's `apply_jacobian`
+    VJP + `get/set_parameters/get_derivatives` (MPL-2, reimplement, don't
+    copy), nn_cpp's `backward(upstream)` signature (MIT), tiny-dnn's
+    numerically-safe softplus (BSD-3), MiniDNN's `check_gradient` FD
+    validator for the A/B banner. Reverse-mode tapes (had/autodiff/FastAD)
+    rejected: tape is ~4 orders too big for the lattice; hand adjoint +
+    existing `Dual.h` dot-product test is the validator.
+  - Done when: (1) header-only, std-only `MlpCore.h` (forward templated on
+    scalar T so `Dual<GradVec<N>>` gives dy/dx; `backward(X, dL_dy) →
+    {dparams, dx}`; `get_parameters/set_parameters/get_gradients`;
+    Softplus/SiLU/Sin added to `Activation` with a (Z,A)-cached VJP), with
+    `NeuralNet.h/.cpp` reduced to JSON/Registry/train shell over it; (2)
+    `train()` calls `backward()` and A/B numbers unchanged (sklearn 1e-10
+    round-trip still green); (3) FD gradient check + `Dual` dot-product test
+    in `test/cpp/`, banner + `okf/testing/math-kernel-validation.md` row;
+    (4) `Dual.h` gains `tanh`, `sqrt`, `pow(Dual,double)`, `min/max`, the
+    missing `<= >= == !=` vs double; (5) imp.bff vendors `MlpCore.h` into
+    `include/internal/` (same pattern as pcg/json) with a sync test against
+    `../tttrlib` when present — single source of truth stays here.
+  - Touching: `modules/math/include/{NeuralNet.h,MlpCore.h(new),Dual.h}`,
+    `modules/math/src/NeuralNet.cpp`, `ext/python/NeuralNet.i`,
+    `test/cpp/test_ad_gradient.cpp`, `test/cpp/test_mlp_core.cpp(new)`,
+    `okf/testing/math-kernel-validation.md`, modules/math README, CHANGELOG.
+
 ---
 
 ## Active
@@ -1034,6 +1097,27 @@ retired so nobody works the same thing twice.)*
     ground-truth verified, gallery recaptured, OKF chigame.md updated.
     Still open: y-sort the wall layers with actors (reference
     y_sort_origin -5) so players render behind front walls.
+  - Follow-up (2026-08-17, "res and tiles like the ninja game; missing
+    clouds/leaves; city ugly") — SAME SESSION, NOT COMMITTED: lumis view
+    330→176 (11 tiles) with `BATTLE_VIEW = 330` keeping the fight's framing;
+    per-material tile variant families (grass x5, sand x4, road x3, water x2,
+    positional-hash picker in `_draw_tiles`); weather was DEAD CODE
+    (`_weather_kinds` read a `Region.state` that never existed) — now a
+    worst-first `Region.state` property, `Weather.clouds()` accessor, CLOUD
+    actually drawn in `_draw_weather`, kinds widened (wild = leaf+cloud,
+    scouted = cloud); two more CC0 buildings (`house_temple`, `house_lodge`,
+    bleed-verified crops) making four house styles. 524 games+chigame tests
+    green (red `test_pyqtgraph_seam` is the chimol front). OKF chigame.md
+    pickup + log bullet updated.
+  - Follow-up (2026-08-17, "ninja game not matching the template"): the
+    wall y-sort gap below is CLOSED — wall layers (0/1) merge into the
+    actors' painter queue keyed centre-y+3 (`y_sort_origin -5`), floors stay
+    bulk; tiles-only render proven 100% pixel-exact by an independent
+    ground-truth walker. NOT committed (crush session 2026-08-17): game.py
+    y-sort + regenerated ninja_village renders + lumis_quest fixes
+    (`settings.py` -> `chimol.cmtk.style.format_value`, slider test ->
+    `nudge()`, `_passage` decision-position bug that hitched NPCs into
+    walls). OKF chigame.md pickup + log bullet updated.
   - Follow-up (2026-08-15, "still the tiles are shit"): the layer fix was
     only half of it — the importer decoded Godot's atlas coords transposed
     (atlas_y from int2's high bits, atlas_x from int3's low ones; tile_map.cpp

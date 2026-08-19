@@ -290,3 +290,207 @@ def test_matches_sklearn_forward_pass():
 
     expect = ys.inverse_transform(mlp.predict(xs.transform(X)))
     np.testing.assert_allclose(net.predict_batch_np(X), expect, rtol=0, atol=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# Derivatives: the network as a differentiable building block (MlpCore.h)
+# ---------------------------------------------------------------------------
+
+
+def _scaled_net(seed=11, act="tanh"):
+    """A trained net, so both scalers are active and the chain rule through
+    them is exercised, not just the raw layers."""
+    X, Y = _toy_problem(n=300, seed=seed)
+    opt = _small_options(max_iter=30)
+    opt.hidden_layer_sizes = tttrlib.VectorInt32([8, 8])
+    opt.activation = tttrlib.activation_from_string(act)
+    return tttrlib.NeuralNet.train_np(X, Y, opt)
+
+
+@pytest.mark.parametrize("act", ["tanh", "logistic", "softplus", "silu", "sin"])
+def test_new_activations_forward_and_json(act):
+    """softplus / silu / sin evaluate to the textbook expression and round-trip
+    through JSON under their own names."""
+    fn = {
+        "tanh": np.tanh,
+        "logistic": lambda z: 1.0 / (1.0 + np.exp(-z)),
+        "softplus": lambda z: np.logaddexp(0.0, z),
+        "silu": lambda z: z / (1.0 + np.exp(-z)),
+        "sin": np.sin,
+    }[act]
+    rng = np.random.default_rng(1)
+    w1, b1 = rng.normal(size=(5, 3)), rng.normal(size=5)
+    w2, b2 = rng.normal(size=(2, 5)), rng.normal(size=2)
+    net = _handmade_net(w1, b1, w2, b2, act=act)
+    x = rng.normal(size=3)
+    np.testing.assert_allclose(net.predict_np(x), w2 @ fn(w1 @ x + b1) + b2, atol=1e-12)
+    again = tttrlib.NeuralNet.from_json_string(net.to_json_string())
+    assert json.loads(again.to_json_string())["layers"][0]["activation"] == act
+    np.testing.assert_allclose(again.predict_np(x), net.predict_np(x), atol=0)
+
+
+@pytest.mark.parametrize("act", ["softplus", "silu", "sin"])
+def test_training_works_for_smooth_activations(act):
+    X, Y = _toy_problem(n=800)
+    opt = _small_options(max_iter=120)
+    opt.activation = tttrlib.activation_from_string(act)
+    net = tttrlib.NeuralNet.train_np(X, Y, opt)
+    assert net.loss_curve_[-1] < 0.5 * net.loss_curve_[0]
+
+
+def test_parameters_round_trip_and_drive_predictions():
+    net = _scaled_net()
+    p = net.parameters
+    assert p.shape == (net.n_parameters(),)
+    # layout: layer 0 weight (row-major), layer 0 bias, layer 1 weight, ...
+    w0 = net.layer_weights(0)
+    np.testing.assert_array_equal(p[: w0.size], w0.ravel())
+    x = np.array([0.2, -0.4])
+    before = net.predict_np(x)
+    net.parameters = p * 1.1
+    assert not np.allclose(net.predict_np(x), before)
+    net.parameters = p
+    np.testing.assert_array_equal(net.predict_np(x), before)
+    with pytest.raises(RuntimeError):
+        net.set_parameters(p[:-1].tolist())
+
+
+def _fd_grad(f, x, h=1e-6):
+    g = np.zeros_like(x)
+    for i in range(x.size):
+        xp, xm = x.copy(), x.copy()
+        xp[i] += h
+        xm[i] -= h
+        g[i] = (f(xp) - f(xm)) / (2 * h)
+    return g
+
+
+@pytest.mark.parametrize("act", ["tanh", "softplus", "silu", "sin"])
+def test_backward_matches_finite_differences(act):
+    """dL/dparams and dL/dx from backward() for an arbitrary loss, through the
+    stored scalers, against central differences."""
+    net = _scaled_net(act=act)
+    rng = np.random.default_rng(2)
+    X = rng.uniform(-1, 1, size=(6, 2))
+    W = rng.normal(size=(6, net.n_outputs()))       # L = <W, y>
+    dparams, dx, _ = net.backward_np(X, W)
+
+    def loss_params(p):
+        net.parameters = p
+        return float(np.sum(W * net.predict_batch_np(X)))
+
+    p0 = net.parameters
+    fd = _fd_grad(loss_params, p0)
+    net.parameters = p0
+    np.testing.assert_allclose(dparams, fd, rtol=1e-6, atol=1e-8)
+
+    def loss_x(xflat):
+        return float(np.sum(W * net.predict_batch_np(xflat.reshape(X.shape))))
+
+    np.testing.assert_allclose(dx.ravel(), _fd_grad(loss_x, X.ravel()), rtol=1e-6, atol=1e-8)
+
+
+def test_jacobian_and_hessian_match_finite_differences():
+    net = _scaled_net(act="tanh")
+    x = np.array([0.3, -0.2])
+    J = net.jacobian_np(x)
+    assert J.shape == (net.n_outputs(), net.n_inputs())
+    for k in range(net.n_outputs()):
+        fd = _fd_grad(lambda xx: net.predict_np(xx)[k], x)
+        np.testing.assert_allclose(J[k], fd, rtol=1e-6, atol=1e-8)
+        H = net.hessian_np(x, k)
+        assert H.shape == (2, 2)
+        np.testing.assert_allclose(H, H.T, atol=1e-12)
+        fdH = np.array([_fd_grad(lambda xx: net.jacobian_np(xx)[k, i], x, h=1e-5) for i in range(2)])
+        np.testing.assert_allclose(H, fdH, rtol=1e-5, atol=1e-6)
+
+
+def test_predict_derivatives_orders():
+    net = _scaled_net(act="silu")
+    rng = np.random.default_rng(4)
+    X = rng.uniform(-1, 1, size=(5, 2))
+    V = rng.normal(size=(5, 2))
+    y0, d1, d2 = net.predict_derivatives_np(X, V, order=2)
+    np.testing.assert_allclose(y0, net.predict_batch_np(X), atol=1e-13)
+    # J v and v^T H v per sample from jacobian/hessian
+    for r in range(5):
+        J = net.jacobian_np(X[r])
+        np.testing.assert_allclose(d1[r], J @ V[r], rtol=1e-10, atol=1e-12)
+        for k in range(net.n_outputs()):
+            H = net.hessian_np(X[r], k)
+            np.testing.assert_allclose(d2[r, k], V[r] @ H @ V[r], rtol=1e-8, atol=1e-10)
+    y_only, none1, none2 = net.predict_derivatives_np(X, order=0)
+    assert none1 is None and none2 is None
+    np.testing.assert_allclose(y_only, y0, atol=0)
+
+
+def test_backward_derivatives_matches_finite_differences():
+    """The adjoint of the Taylor-augmented pass: a loss on y, J v and v^T H v,
+    differentiated with respect to the parameters, inputs and directions."""
+    net = _scaled_net(act="tanh")
+    rng = np.random.default_rng(6)
+    X = rng.uniform(-1, 1, size=(4, 2))
+    V = rng.normal(size=(4, 2))
+    C0, C1, C2 = (rng.normal(size=(4, net.n_outputs())) for _ in range(3))
+
+    def loss(p=None, Xa=None, Va=None):
+        if p is not None:
+            net.parameters = p
+        y, d1, d2 = net.predict_derivatives_np(X if Xa is None else Xa,
+                                               V if Va is None else Va, order=2)
+        return float(np.sum(C0 * y) + np.sum(C1 * d1) + np.sum(C2 * d2))
+
+    dparams, dx, dv = net.backward_np(X, C0, V=V, dY1=C1, dY2=C2)
+    p0 = net.parameters
+    fd = _fd_grad(lambda p: loss(p=p), p0, h=1e-5)
+    net.parameters = p0
+    np.testing.assert_allclose(dparams, fd, rtol=1e-5, atol=1e-7)
+    np.testing.assert_allclose(dx.ravel(), _fd_grad(lambda xf: loss(Xa=xf.reshape(X.shape)), X.ravel(), h=1e-5),
+                               rtol=1e-5, atol=1e-7)
+    np.testing.assert_allclose(dv.ravel(), _fd_grad(lambda vf: loss(Va=vf.reshape(V.shape)), V.ravel(), h=1e-5),
+                               rtol=1e-5, atol=1e-7)
+
+
+def test_pinn_poisson_1d():
+    """End to end: a physics-informed fit of u'' = f on [0, 1], u(0) = u(1) = 0,
+    with f = -pi^2 sin(pi x), so u = sin(pi x). The loss is the PDE residual at
+    collocation points plus the boundary values; its gradient with respect to
+    the weights comes from backward_derivatives (order 2, direction v = 1) and
+    goes into L-BFGS. This is the whole reason the derivative API exists."""
+    scipy = pytest.importorskip("scipy")
+    from scipy.optimize import minimize
+
+    # Untrained net with the right shape and smooth activations: build it from
+    # a one-epoch training call on dummy data, then drop the scalers by
+    # rebuilding from JSON without them.
+    rng = np.random.default_rng(0)
+    xc = np.linspace(0.0, 1.0, 41)[:, None]                 # collocation points
+    xb = np.array([[0.0], [1.0]])                            # boundary points
+    f = -np.pi ** 2 * np.sin(np.pi * xc)
+    doc = {"format": "tttrlib.neural_net", "version": 1, "layers": []}
+    dims = [1, 16, 16, 1]
+    for i in range(3):
+        n_in, n_out = dims[i], dims[i + 1]
+        w = rng.normal(size=(n_out, n_in)) * np.sqrt(2.0 / (n_in + n_out))
+        doc["layers"].append({"n_in": n_in, "n_out": n_out,
+                              "activation": "tanh" if i < 2 else "identity",
+                              "weight": w.ravel().tolist(), "bias": np.zeros(n_out).tolist()})
+    net = tttrlib.NeuralNet.from_json_string(json.dumps(doc))
+    ones = np.ones_like(xc)
+
+    def objective(p):
+        net.parameters = p
+        _, _, u_xx = net.predict_derivatives_np(xc, ones, order=2)
+        ub, _, _ = net.predict_derivatives_np(xb, order=0)
+        r = u_xx - f
+        loss = np.mean(r ** 2) + 10.0 * np.mean(ub ** 2)
+        g_c, _, _ = net.backward_np(xc, np.zeros_like(r), V=ones, dY2=2 * r / r.size)
+        g_b, _, _ = net.backward_np(xb, 10.0 * 2 * ub / ub.size)
+        return loss, g_c + g_b
+
+    res = minimize(objective, net.parameters, jac=True, method="L-BFGS-B",
+                   options={"maxiter": 800, "ftol": 1e-14, "gtol": 1e-10})
+    net.parameters = res.x
+    xt = np.linspace(0, 1, 101)[:, None]
+    err = np.abs(net.predict_batch_np(xt).ravel() - np.sin(np.pi * xt.ravel())).max()
+    assert err < 2e-2, (err, res.message)

@@ -7,7 +7,8 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 - **`Mat.h`**: Standalone, dependency-free dense matrix library with Armadillo-flavoured syntax. SIMD GEMM (NEON / SSE2 / AVX) with register-blocked micro-kernel, cache-blocked transpose, and zero-copy transpose proxy. Element-wise math, reductions, broadcasting. Also the shared dense solvers: `mat_solve` (Gaussian elimination with partial pivoting), `mat_lstsq_minnorm` (one-sided Jacobi SVD, minimum-norm least squares), `mat_inverse_inplace` (Gauss-Jordan, with an allocation-free overload for per-bin loops) and `mat_power`.
 - **`QREigen.h`**: Eigendecomposition of real non-symmetric matrices — Parlett-Reinsch balancing, Householder Hessenberg reduction, Francis double-shift QR with LAPACK's exceptional shift, and eigenvectors by inverse iteration on the Hessenberg form. Plus the complex dense kernels (`zmatmul`, `zmatvec`, `zinv`). Used by `BurstML` and `GopichSzabo`.
 - **`NelderMead.h`**: Header-only simplex optimiser for derivative-free problems.
-- **`NeuralNet.h` / `NeuralNet.cpp`**: Feed-forward multilayer perceptron with Adam training, explicit backprop, StandardScaler, and JSON serialisation. Uses `Mat.h` for all dense linear algebra.
+- **`NeuralNet.h` / `NeuralNet.cpp`**: Feed-forward multilayer perceptron with Adam training, explicit backprop, StandardScaler, JSON serialisation, and the derivative entry points a caller needs to use the network as one term of a larger differentiable model: `backward` (adjoint of the outputs → adjoint of the weights and inputs, for any loss), `predict_derivatives` / `backward_derivatives` (the same for a loss on `dy/dx` and `d²y/dx²`, e.g. a PDE residual), `jacobian` / `hessian`, `get_parameters` / `set_parameters` (the flat vector an outside optimiser such as L-BFGS works on). Uses `Mat.h` for the batch GEMMs. All the arithmetic is in `MlpCore.h`.
+- **`MlpCore.h`**: Header-only, std-only kernels of the dense network — activations with derivatives to third order (sklearn's four plus `softplus`, `silu`, `sin`), the batch forward and reverse passes, and both augmented with a directional Taylor expansion of the input to second order (so `J v` and `vᵀ H v` come out of the forward pass and a loss on them can be backpropagated to the weights), a scalar-templated single-sample forward for `Dual`, and the flat parameter layout. The GEMM is a template policy: `NeuralNet.cpp` plugs in `Mat.h`, and imp.bff carries a verbatim copy of this header that runs on the portable loops. See below.
 - **`i_lbfgs.h`**: Header-only limited-memory BFGS optimiser with central-difference numerical gradients and Armijo backtracking line search. A consumer may supply an exact gradient instead; `imaging/localization` does.
 - **`Dual.h`**: Forward-mode dual number, `val + eps*grad` with `eps^2 = 0`, templated on what sits in the derivative slot. `Dual<double>` is one directional derivative; `Dual<GradVec<N>>` is a whole gradient from one pass. See below.
 - **`GradVec.h`**: Fixed-size vector of doubles used as the *derivative part* of a vectorized forward-mode dual number, so one pass through an objective yields all N partial derivatives. See below.
@@ -52,6 +53,9 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 ## Examples
 
 - `examples/miscellaneous/plot_watershed_marching_squares.py` (+ `.ipynb`): `watershed` and `marching_squares` on a simulated field of touching cells -- markers, mask, labels as ROIs, iso-contour outlines, connectivity 1 vs 2.
+- `examples/miscellaneous/plot_neural_net_differentiable.py` (+ `.ipynb`): `NeuralNet` as a differentiable building block -- XOR and a sine by `train`, `backward` / `jacobian` / `hessian` checked against finite differences, and a Sobolev fit (values *and* derivative in the loss) through `backward_derivatives` + SciPy L-BFGS on `parameters`.
+- `examples/miscellaneous/plot_pinn_heat_equation.py` (+ `.ipynb`): physics-informed fit of `u_t = α u_xx` -- `u_xx` from an order-2 pass along `(1,0)`, `u_t` from an order-1 pass along `(0,1)`, residual + initial/boundary loss, gradient assembled from three `backward` calls; scored against `sin(πx) e^{-απ²t}` (5e-3 in ~5 s).
+- `examples/miscellaneous/plot_pinn_burgers.py` (+ `.ipynb`): the canonical PINN benchmark, viscous Burgers `u_t + u u_x = ν u_xx` (Raissi et al. 2019), scored against the Cole-Hopf solution by Gauss-Hermite quadrature; sized to `ν = 0.05`, 2-20-20-20-1, 2000 points, ~1 min, 1e-3 relative error.
 - `examples/miscellaneous/plot_richardson_lucy_deconvolution.py` (+ `.ipynb`): `richardson_lucy_2d` on a simulated blurred, Poisson-noised image -- the iteration count as the regularisation (error-vs-truth minimum), `wiener_deconvolve_2d` for comparison, and the list-mode `richardson_lucy_events_2d` on photon coordinates.
 - `examples/single_molecule/plot_burst_feature_clustering.py` (+ `.ipynb`): `kmeans` (caller-owned uniforms) and the HDBSCAN pipeline `core_distances` -> `mutual_reachability_mst` -> `hdbscan_condensed_tree` -> excess-of-mass selection (in the caller) -> `hdbscan_label_points` on a simulated burst table with two FRET populations and noise.
 - `examples/single_molecule/plot_kalman_burst_detection.py` (+ `.ipynb`): `kalman_filter` on a simulated two-channel count trace -- filtered background rate, Mahalanobis distance as burst score, and `TTTR.burst_search_kalman` on the same photons.
@@ -65,6 +69,8 @@ The `math` module houses tttrlib's shared numerical infrastructure: dense linear
 No Eigen, no autodiff, and no other external numerics. `Mat.h` and `GradVec.h`
 between them removed the last two Eigen consumers, and `Dual.h` removed the
 vendored autodiff package; see below and `benchmarks/bench_mat.cpp`.
+`MlpCore.h` has no dependency at all, not even on the rest of this module: that
+is the condition for imp.bff to vendor it (see below).
 
 ## Why a separate module?
 
@@ -127,6 +133,61 @@ ways — vectorized dual, scalar dual, long-double dual, central differences —
 requires agreement. The layering matters because the failure mode here is
 silent: a sign, an aliasing bug in `*=`, a missing term in the product rule
 compiles, runs, and converges to the wrong place.
+
+## `MlpCore.h` — the network as a differentiable building block
+
+`NeuralNet` used to be a regressor: train on `(X, Y)`, predict. That is enough
+for a surrogate that replaces an EM fit, and not enough for a network that
+*parametrises an unknown field inside a physical model* — a potential of mean
+force, a position-dependent rate, an orienting potential — where the loss is
+computed by a solver downstream of the network and the network's derivatives
+with respect to its **input** are part of that loss. `MlpCore.h` is what that
+takes, and nothing more:
+
+- **`backward(dL/dy)`**: the reverse pass with the upstream adjoint supplied by
+  the caller instead of a target. Returns `dL/dparams` (flat) and `dL/dx`. The
+  training loop is a caller of this same function.
+- **Taylor-augmented passes**: give each sample a direction `v` and the forward
+  pass carries `a1 = da/dv` and `a2 = d²a/dv²` next to every activation, so
+  `J v` and `vᵀ H v` come out of the output layer at ~3× the cost of a plain
+  forward. Because the companions are ordinary elementwise and linear
+  operations, the adjoint of the augmented pass is another backward pass with
+  the same GEMMs plus `f''` and `f'''` — which is what a loss on `y`, `∇y`
+  and `Δy` (a PDE residual) needs to be differentiated with respect to the
+  weights. A Laplacian is `n_in` unit-direction passes. **No tape.** A tape
+  for this problem would be four orders of magnitude too large once the
+  network sits inside a lattice solver; the Taylor adjoint is O(batch).
+- **Smooth activations**: `softplus`, `silu`, `sin` alongside sklearn's four,
+  each with `f'`, `f''`, `f'''`. ReLU has `f'' ≡ 0`, so a diffusion residual
+  cannot train through it — that is the reason these exist.
+- **`predict_scalar<T>`**: the single-sample forward templated on the scalar,
+  so `Dual<GradVec<N>>` returns the full input Jacobian in one pass. This is
+  the *independent* reference the reverse pass is tested against (forward mode
+  and reverse mode share no code beyond `f`), through the dot-product
+  identity `<w, J v> = <Jᵀ w, v>`; and it is what a Dual-templated objective
+  elsewhere in the library calls when a network is one of its terms.
+- **Flat parameters**: `flatten` / `unflatten`, layer by layer, weight then
+  bias — the vector `i_lbfgs.h` or scipy's L-BFGS works on.
+
+The GEMM is a template policy. `NeuralNet.cpp` plugs in `Mat.h`'s SIMD
+kernels; the header itself ships portable loops. That split is what makes it
+shareable: **imp.bff carries a verbatim copy** of `MlpCore.h` under its
+`include/internal/` (the way pcg and nlohmann/json are vendored there) and a
+test that fails when the copies diverge, so a network trained here can be
+evaluated and differentiated inside a coordinate-space solver without linking
+tttrlib. Keep the header free of anything that would break the copy: no
+`Mat.h`, no json, no registry, no OpenMP beyond the `simd` hint.
+
+Numerics: the refactor of `NeuralNet::train` onto these kernels reproduces the
+previous implementation's predictions to 1e-15 on the same seed (same GEMM
+kernels, same operation order), and is not slower — the small-net timing went
+from 0.17/0.32/0.71 s to 0.13–0.19/0.23–0.26/0.47–0.56 s (relu/tanh/logistic,
+200 epochs, 1500 × 2) after the workspace stopped re-allocating per batch; the
+256-256-128 default net from 3.7 s to 3.3 s for 30 epochs. Every gradient path
+is checked in `test/cpp/test_mlp_core.cpp`; the end-to-end demonstration is
+`test/python/test_neural_net.py::test_pinn_poisson_1d` — a 1-16-16-1 tanh net
+fitted to `u'' = -π² sin(πx)`, `u(0) = u(1) = 0`, by L-BFGS on the residual
+loss, gradient from `backward_derivatives`: max error 9e-6 in 0.5 s.
 
 ## Validation status
 

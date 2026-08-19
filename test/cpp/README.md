@@ -21,14 +21,16 @@ c++ -std=c++17 -O2 -I modules/math/include test/cpp/test_qreigen.cpp \
     -o /tmp/test_qreigen && /tmp/test_qreigen
 c++ -std=c++17 -O2 -I modules/math/include \
     test/cpp/test_ad_gradient.cpp -o /tmp/test_ad_gradient && /tmp/test_ad_gradient
+c++ -std=c++17 -O2 -I modules/math/include \
+    test/cpp/test_mlp_core.cpp -o /tmp/test_mlp_core && /tmp/test_mlp_core
 ```
 
 Or through CMake:
 
 ```bash
 cmake -S . -B build -DTTTRLIB_BUILD_CPP_TESTS=ON
-cmake --build build --target test_mat_linalg test_qreigen test_ad_gradient
-ctest --test-dir build -R 'test_mat_linalg|test_qreigen|test_ad_gradient'
+cmake --build build --target test_mat_linalg test_qreigen test_ad_gradient test_mlp_core
+ctest --test-dir build -R 'test_mat_linalg|test_qreigen|test_ad_gradient|test_mlp_core'
 ```
 
 Exit status is the number of failed checks.
@@ -92,6 +94,31 @@ Two findings from writing it, both worth not rediscovering:
   contracts a multiply-add depends on the shape it inlines into, so
   `-ffp-contract=off` and clang's default disagree by 1 ulp on one component.
   Asserting bitwise equality would make a legal optimisation a build failure.
+
+## The differentiable MLP core (`test_mlp_core`)
+
+`MlpCore.h` is the forward and reverse pass of the dense network behind
+`NeuralNet`, plus the same two augmented with a directional Taylor expansion of
+the input to second order — so a loss on `dy/dx` and `d²y/dx²` (a physics
+residual) can still be differentiated with respect to the weights by
+backpropagation. It is header-only and std-only because imp.bff carries a
+verbatim copy. The failure mode is the same as `Dual`'s: a wrong `f''` or a
+dropped term in the Taylor adjoint trains fine, to the wrong minimum.
+
+Every derivative is therefore checked two independent ways. The activation
+derivatives `f'`, `f''`, `f'''` against central differences of `f`. The input
+derivatives against the forward-mode `Dual` pass through the dot-product
+identity `<w, J v> == <J^T w, v>` — forward mode and reverse mode share no code
+beyond the activation value, so a transposition or an off-by-one layer in the
+reverse sweep cannot cancel. The Taylor companions of orders 1 and 2 against
+first and second central differences along the same direction, and a
+`Dual<GradVec<3>>` pass against three order-1 passes for the full Jacobian.
+Finally the adjoint of the augmented pass — `dL/dparams`, `dL/dx`, `dL/dv` for a
+loss that uses all three outputs — against central differences of that loss,
+parameter by parameter, for every smooth activation and for ReLU. The
+`PortableGemm` policy is checked against naive triple loops; the Mat.h policy
+the library itself uses is validated by the Python suite (`test_neural_net.py`)
+through the same entry points.
 
 ## The likelihood floor (`test_decay_likelihood`)
 

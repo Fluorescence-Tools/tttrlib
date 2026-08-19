@@ -41,7 +41,13 @@
   tests through the scalers, and `test_pinn_poisson_1d` -- a 1-16-16-1 tanh
   net solving `u'' = -π² sin πx` to 9e-6 by L-BFGS in half a second. Python:
   `backward_np`, `predict_derivatives_np`, `jacobian_np`, `hessian_np`, the
-  `parameters` property.
+  `parameters` property -- all through argout NumPy arrays (the `std::vector`
+  proxies cost 30 ms per call on a 1000-point batch whose kernel takes 1 ms;
+  now 5 ms). Examples, as `.py` and executed `.ipynb`:
+  `miscellaneous/plot_neural_net_differentiable` (XOR, sine, derivative checks,
+  a Sobolev fit), `plot_pinn_heat_equation` and `plot_pinn_burgers` (the
+  Raissi et al. benchmark against the Cole-Hopf solution), with smoke tests in
+  `test/python/misc/test_neural_net_examples.py`.
 
 - **Module READMEs describe what is actually in the module**, and a test keeps
   them that way (`test/python/test_module_readmes.py`: every leaf module names

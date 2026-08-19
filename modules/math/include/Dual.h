@@ -2,8 +2,9 @@
 #ifndef TTTRLIB_DUAL_H
 #define TTTRLIB_DUAL_H
 
-// Validation: A/B-TESTED 2026-08-17 -- vs autodiff (A/B before autodiff was deleted), a long-double dual and central
-//   differences on the localization objective. test/cpp/test_ad_gradient.cpp.
+// Validation: A/B-TESTED 2026-08-19 -- vs autodiff (A/B before autodiff was deleted), a long-double dual and central
+//   differences on the localization objective; tanh/sin/cos/sqrt/pow/min/max vs hand derivatives and central
+//   differences. test/cpp/test_ad_gradient.cpp, test/cpp/test_mlp_core.cpp.
 //   Register: okf/testing/math-kernel-validation.md
 
 #include <cmath>
@@ -44,9 +45,10 @@
 ///
 /// Only the operators the objectives use are defined: `+ - * /` in every
 /// dual/scalar combination, unary minus, compound assignment, comparison on the
-/// value, `exp` and `log`. Nothing speculative -- an operator with no consumer
-/// has no test that would notice it being wrong, which is the trap this header
-/// is replacing.
+/// value, `exp`, `log`, and -- for the network activations in MlpCore.h --
+/// `tanh`, `sin`, `cos`, `sqrt`, `pow(dual, double)`, `min`, `max`. Nothing
+/// speculative -- an operator with no consumer has no test that would notice
+/// it being wrong, which is the trap this header is replacing.
 
 namespace tttrlib {
 
@@ -184,8 +186,22 @@ template <typename G> inline bool operator==(const Dual<G>& a, const Dual<G>& b)
 template <typename G> inline bool operator!=(const Dual<G>& a, const Dual<G>& b) { return a.val != b.val; }
 template <typename G> inline bool operator<(const Dual<G>& a, double s) { return a.val < s; }
 template <typename G> inline bool operator>(const Dual<G>& a, double s) { return a.val > s; }
+template <typename G> inline bool operator<=(const Dual<G>& a, double s) { return a.val <= s; }
+template <typename G> inline bool operator>=(const Dual<G>& a, double s) { return a.val >= s; }
+template <typename G> inline bool operator==(const Dual<G>& a, double s) { return a.val == s; }
+template <typename G> inline bool operator!=(const Dual<G>& a, double s) { return a.val != s; }
 template <typename G> inline bool operator<(double s, const Dual<G>& a) { return s < a.val; }
 template <typename G> inline bool operator>(double s, const Dual<G>& a) { return s > a.val; }
+template <typename G> inline bool operator<=(double s, const Dual<G>& a) { return s <= a.val; }
+template <typename G> inline bool operator>=(double s, const Dual<G>& a) { return s >= a.val; }
+template <typename G> inline bool operator==(double s, const Dual<G>& a) { return s == a.val; }
+template <typename G> inline bool operator!=(double s, const Dual<G>& a) { return s != a.val; }
+
+/// `min`/`max` select by value and carry the winner's derivative: the
+/// subgradient at a tie is the second argument's, which is what `a < b ? a : b`
+/// gives and what a branch in a templated objective would give too.
+template <typename G> inline Dual<G> min(const Dual<G>& a, const Dual<G>& b) { return a.val < b.val ? a : b; }
+template <typename G> inline Dual<G> max(const Dual<G>& a, const Dual<G>& b) { return a.val > b.val ? a : b; }
 
 /// d/dx exp(x) = exp(x) -- the value is the multiplier, so it is computed first.
 template <typename G>
@@ -201,6 +217,48 @@ inline Dual<G> log(const Dual<G>& a) {
     const double inv = 1.0 / a.val;
     Dual<G> r(std::log(a.val), a.grad);
     r.grad *= inv;
+    return r;
+}
+
+/// d/dx tanh(x) = 1 - tanh(x)^2.
+template <typename G>
+inline Dual<G> tanh(const Dual<G>& a) {
+    const double t = std::tanh(a.val);
+    Dual<G> r(t, a.grad);
+    r.grad *= 1.0 - t * t;
+    return r;
+}
+
+/// d/dx sin(x) = cos(x).
+template <typename G>
+inline Dual<G> sin(const Dual<G>& a) {
+    Dual<G> r(std::sin(a.val), a.grad);
+    r.grad *= std::cos(a.val);
+    return r;
+}
+
+/// d/dx cos(x) = -sin(x).
+template <typename G>
+inline Dual<G> cos(const Dual<G>& a) {
+    Dual<G> r(std::cos(a.val), a.grad);
+    r.grad *= -std::sin(a.val);
+    return r;
+}
+
+/// d/dx sqrt(x) = 1 / (2 sqrt(x)).
+template <typename G>
+inline Dual<G> sqrt(const Dual<G>& a) {
+    const double s = std::sqrt(a.val);
+    Dual<G> r(s, a.grad);
+    r.grad *= 0.5 / s;
+    return r;
+}
+
+/// d/dx x^p = p x^(p-1), for a constant exponent.
+template <typename G>
+inline Dual<G> pow(const Dual<G>& a, double p) {
+    Dual<G> r(std::pow(a.val, p), a.grad);
+    r.grad *= p * std::pow(a.val, p - 1.0);
     return r;
 }
 

@@ -592,7 +592,7 @@ ADD_SUBDIRECTORY(examples/plugin)
 OPTION(TTTRLIB_BUILD_CPP_TESTS "Build the header-only C++ math tests" OFF)
 IF(TTTRLIB_BUILD_CPP_TESTS)
     ENABLE_TESTING()
-    FOREACH(_cpp_test test_mat_linalg test_qreigen test_ad_gradient)
+    FOREACH(_cpp_test test_mat_linalg test_qreigen test_ad_gradient test_mlp_core)
         ADD_EXECUTABLE(${_cpp_test} "${PROJECT_SOURCE_DIR}/test/cpp/${_cpp_test}.cpp")
         TARGET_INCLUDE_DIRECTORIES(${_cpp_test}
             PRIVATE "${PROJECT_SOURCE_DIR}/modules/math/include")
