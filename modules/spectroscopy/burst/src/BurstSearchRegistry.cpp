@@ -361,7 +361,7 @@ void register_builtin_burst_searches() {
               "maximum": 1.0,
               "scale": "log",
               "group": "Model",
-              "description": "Hazard rate \u2014 probability of a changepoint in any bin. Larger detects more, shorter segments."
+              "description": "Hazard rate \u2014 probability of a changepoint in any bin. Larger detects more, shorter segments. It is not scale-free and has to be read together with the bin width: set it near 1/(bins you expect a burst to span), so a 200 us transit in 20 us bins wants about 0.1-0.2. Set well below that and the run length never resets, and the search returns the whole measurement as a single burst \u2014 a failure that looks like a detection rather than an error. Measured on a simulated dilute stream at dt = 20 us: 0.2 recovers 100% of the transits individually, 0.02 returns one burst spanning everything."
             },
             "max_run": {
               "type": "integer",

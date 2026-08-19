@@ -34,10 +34,17 @@
 #ifndef TTTRLIB_BURSTSEARCHBOCPD_H
 #define TTTRLIB_BURSTSEARCHBOCPD_H
 
-// Validation: A/B-TESTED 2026-08-17 -- vs Adams & MacKay 2007 in NumPy with the plug-in Poisson predictive
-//   (transcribed from the pre-delegation ChiSurf numba code, chisurf fffe299c3): bursts
-//   identical, 1 and 2 channels, priors, run cap. NB the predictive is the plug-in
-//   Poisson at alpha/beta, not the Negative-Binomial the file comment names. test/python/burstfilter/test_ab_burst_reference.py.
+// Validation: A/B-TESTED 2026-08-19 -- (1) vs the Adams & MacKay 2007 run-length recursion transcribed
+//   in NumPy from the paper, with a per-channel Gamma-Poisson model and the plug-in Poisson
+//   predictive (`bocpd_reference` in the test): bursts identical, 1 and 2 channels, priors, run cap.
+//   NB the predictive is the plug-in Poisson at alpha/beta, not the Negative-Binomial the file
+//   comment names. ChiSurf is NOT a reference; this comment credited its numba code until 2026-08-19,
+//   after the reference had already been rewritten from the paper.
+//   (2) GROUND TRUTH on a dilute simulated measurement, 3 seeds: 44-46 detections for 40 known
+//   transits, precision 98-100 %, recall 95-100 % at dt = 20 us and a hazard rate of 0.2. The hazard
+//   rate is not scale-free -- see `changepoint_prob` in the registry schema for what a value too
+//   small for the bin width does, which is to return the whole measurement as one burst.
+//   test/python/burstfilter/test_ab_burst_reference.py, test_burst_search_ground_truth.py.
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>
