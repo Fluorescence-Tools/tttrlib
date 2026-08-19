@@ -47,6 +47,14 @@
 // The GEMM is a template policy so the library can route the batch products
 // through Mat.h's SIMD kernels while a vendored copy runs on the portable
 // loops below. Both are validated against each other by test_mlp_core.cpp.
+//
+// A whole trained model -- layers plus the input/output StandardScalers -- is
+// `MlpModel`; `model_predict` / `model_backward` apply the scalers and their
+// chain rule so a caller stays in physical units, and `model_from_json` /
+// `model_to_json` (templated on the JSON type, so still std-only here) read
+// and write the `tttrlib.neural_net` document. That is the complete contract
+// a consumer needs to take a network trained by `NeuralNet::train` or
+// scikit-learn and evaluate and differentiate it elsewhere.
 
 #include <algorithm>
 #include <cmath>
@@ -117,6 +125,108 @@ struct DenseLayer {
     int n_in = 0;
     int n_out = 0;
     Activation activation = Activation::ReLU;
+};
+
+/// Elementwise standardisation, `(x - mean) / scale`.
+///
+/// Mirrors scikit-learn's `StandardScaler` so a net trained in Python and one
+/// trained here are interchangeable. Empty `mean`/`scale` means "identity" -- a
+/// model may carry no scaler at all.
+struct StandardScaler {
+    std::vector<double> mean;
+    std::vector<double> scale;
+
+    /// Whether this scaler does anything (non-empty mean/scale).
+    bool active() const { return !mean.empty(); }
+    /// Number of features; 0 when inactive.
+    int size() const { return static_cast<int>(mean.size()); }
+
+    /// Fit mean/scale from `X` (row-major, `n_rows x n_cols`); population
+    /// standard deviation (ddof = 0) and a zero-variance column gets scale 1,
+    /// both as scikit-learn does.
+    void fit(const double* X, int n_rows, int n_cols) {
+        mean.assign(static_cast<size_t>(n_cols), 0.0);
+        scale.assign(static_cast<size_t>(n_cols), 1.0);
+        if (n_rows <= 0 || n_cols <= 0) return;
+        for (int i = 0; i < n_rows; ++i)
+            for (int j = 0; j < n_cols; ++j)
+                mean[static_cast<size_t>(j)] += X[static_cast<size_t>(i) * n_cols + j];
+        for (int j = 0; j < n_cols; ++j) mean[static_cast<size_t>(j)] /= n_rows;
+        for (int j = 0; j < n_cols; ++j) {
+            double var = 0.0;
+            for (int i = 0; i < n_rows; ++i) {
+                const double d = X[static_cast<size_t>(i) * n_cols + j] - mean[static_cast<size_t>(j)];
+                var += d * d;
+            }
+            const double sd = std::sqrt(var / static_cast<double>(n_rows));
+            scale[static_cast<size_t>(j)] = (sd == 0.0) ? 1.0 : sd;
+        }
+    }
+    /// Apply `(x - mean) / scale` to `v` in place.
+    void transform(std::vector<double>& v) const {
+        if (!active()) return;
+        if (v.size() != mean.size())
+            throw std::runtime_error("StandardScaler::transform: length mismatch");
+        for (size_t i = 0; i < v.size(); ++i) v[i] = (v[i] - mean[i]) / scale[i];
+    }
+    /// Apply `x * scale + mean` to `v` in place.
+    void inverse_transform(std::vector<double>& v) const {
+        if (!active()) return;
+        if (v.size() != mean.size())
+            throw std::runtime_error("StandardScaler::inverse_transform: length mismatch");
+        for (size_t i = 0; i < v.size(); ++i) v[i] = v[i] * scale[i] + mean[i];
+    }
+};
+
+/// A complete model: the layers plus the input and output scalers a trained
+/// network carries. This is what a `tttrlib.neural_net` JSON document holds,
+/// and what mlpcore's scaler-aware entry points below operate on -- so a
+/// network trained by `NeuralNet::train` (or scikit-learn) evaluates and
+/// differentiates identically wherever this header is compiled.
+struct MlpModel {
+    std::vector<DenseLayer> layers;
+    StandardScaler x_scaler;
+    StandardScaler y_scaler;
+
+    int n_inputs() const { return layers.empty() ? 0 : layers.front().n_in; }
+    int n_outputs() const { return layers.empty() ? 0 : layers.back().n_out; }
+
+    /// Throw unless the layers chain and the scalers match the ends: a
+    /// malformed model fails at load rather than producing silent nonsense
+    /// mid-forward.
+    void validate() const {
+        if (layers.empty()) throw std::runtime_error("NeuralNet: model has no layers");
+        for (size_t i = 0; i < layers.size(); ++i) {
+            const DenseLayer& l = layers[i];
+            if (l.n_in <= 0 || l.n_out <= 0)
+                throw std::runtime_error("NeuralNet: layer " + std::to_string(i) +
+                                         " has a non-positive dimension");
+            const size_t want_w = static_cast<size_t>(l.n_in) * static_cast<size_t>(l.n_out);
+            if (l.weight.size() != want_w)
+                throw std::runtime_error(
+                    "NeuralNet: layer " + std::to_string(i) + " weight has " +
+                    std::to_string(l.weight.size()) + " entries, expected " +
+                    std::to_string(want_w) + " (n_out*n_in)");
+            if (l.bias.size() != static_cast<size_t>(l.n_out))
+                throw std::runtime_error(
+                    "NeuralNet: layer " + std::to_string(i) + " bias has " +
+                    std::to_string(l.bias.size()) + " entries, expected " +
+                    std::to_string(l.n_out));
+            if (i + 1 < layers.size() && l.n_out != layers[i + 1].n_in)
+                throw std::runtime_error(
+                    "NeuralNet: layer " + std::to_string(i) + " outputs " +
+                    std::to_string(l.n_out) + " but layer " + std::to_string(i + 1) +
+                    " expects " + std::to_string(layers[i + 1].n_in));
+        }
+        if (x_scaler.active() && x_scaler.size() != n_inputs())
+            throw std::runtime_error("NeuralNet: x_scaler length " +
+                                     std::to_string(x_scaler.size()) +
+                                     " != n_inputs " + std::to_string(n_inputs()));
+        if (y_scaler.active() && y_scaler.size() != n_outputs())
+            throw std::runtime_error("NeuralNet: y_scaler length " +
+                                     std::to_string(y_scaler.size()) +
+                                     " != n_outputs " + std::to_string(n_outputs()));
+    }
 };
 
 #ifndef SWIG  // the kernels are C++-only; the bindings go through NeuralNet
@@ -570,6 +680,215 @@ inline void predict_scalar(const std::vector<DenseLayer>& layers,
         cur.swap(nxt);
     }
     y.swap(cur);
+}
+
+// ---------------------------------------------------------------------------
+// Scaler-aware entry points on a whole MlpModel
+// ---------------------------------------------------------------------------
+//
+// The layers see standardised inputs and produce standardised outputs; these
+// wrappers apply the scalers on the way in and undo them (and their chain
+// rule) on the way out, so a caller works in physical units throughout:
+//   x_s = (x - mu_x) / sigma_x,   v_s = v / sigma_x
+//   y = yhat * sigma_y + mu_y,     Jv = Jhat v_s * sigma_y,   v^T H v likewise
+//   adjoints: dL/dyhat = dL/dy * sigma_y ; dL/dx = dL/dx_s / sigma_x ; dL/dv = dL/dv_s / sigma_x
+
+namespace detail {
+inline void scale_in(std::vector<double>& X, int n_rows, int n_cols, const StandardScaler& s) {
+    if (!s.active()) return;
+    for (int r = 0; r < n_rows; ++r) {
+        double* row = X.data() + static_cast<size_t>(r) * n_cols;
+        for (int j = 0; j < n_cols; ++j)
+            row[j] = (row[j] - s.mean[static_cast<size_t>(j)]) / s.scale[static_cast<size_t>(j)];
+    }
+}
+inline void scale_by(std::vector<double>& X, int n_rows, int n_cols, const StandardScaler& s, bool divide) {
+    if (!s.active()) return;
+    for (int r = 0; r < n_rows; ++r) {
+        double* row = X.data() + static_cast<size_t>(r) * n_cols;
+        for (int j = 0; j < n_cols; ++j) {
+            const double f = s.scale[static_cast<size_t>(j)];
+            row[j] = divide ? row[j] / f : row[j] * f;
+        }
+    }
+}
+inline void unscale_out(std::vector<double>& Y, int n_rows, int n_cols, const StandardScaler& s) {
+    if (!s.active()) return;
+    for (int r = 0; r < n_rows; ++r) {
+        double* row = Y.data() + static_cast<size_t>(r) * n_cols;
+        for (int j = 0; j < n_cols; ++j)
+            row[j] = row[j] * s.scale[static_cast<size_t>(j)] + s.mean[static_cast<size_t>(j)];
+    }
+}
+}  // namespace detail
+
+/// Values and directional derivatives of a model, in physical units.
+///
+/// `X` is `n_rows x n_inputs`; `V` (`order >= 1`) the per-sample direction.
+/// On return `y` is `n_rows x n_outputs`; `dy_dv` (`order >= 1`) is `J v` and
+/// `d2y_dv2` (`order == 2`) is `v^T H v`, each `n_rows x n_outputs`; the higher
+/// ones are left empty below their order.
+template <class Gemm = PortableGemm>
+inline void model_predict(const MlpModel& m, const double* X, int n_rows, int order,
+                          const double* V,
+                          std::vector<double>& y, std::vector<double>& dy_dv,
+                          std::vector<double>& d2y_dv2) {
+    const int n_in = m.n_inputs(), n_out = m.n_outputs();
+    if (order < 0 || order > 2) throw std::runtime_error("mlpcore::model_predict: order must be 0, 1 or 2");
+    if (order >= 1 && V == nullptr) throw std::runtime_error("mlpcore::model_predict: order >= 1 needs directions V");
+    y.clear(); dy_dv.clear(); d2y_dv2.clear();
+    if (n_rows <= 0) return;
+    std::vector<double> Xs(X, X + static_cast<size_t>(n_rows) * n_in), Vs;
+    detail::scale_in(Xs, n_rows, n_in, m.x_scaler);
+    if (order >= 1) {
+        Vs.assign(V, V + static_cast<size_t>(n_rows) * n_in);
+        detail::scale_by(Vs, n_rows, n_in, m.x_scaler, true);
+    }
+    Workspace ws;
+    forward<Gemm>(m.layers, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
+    y = ws.output();
+    detail::unscale_out(y, n_rows, n_out, m.y_scaler);
+    if (order >= 1) { dy_dv = ws.output_d1(); detail::scale_by(dy_dv, n_rows, n_out, m.y_scaler, false); }
+    if (order >= 2) { d2y_dv2 = ws.output_d2(); detail::scale_by(d2y_dv2, n_rows, n_out, m.y_scaler, false); }
+}
+
+/// Reverse pass of a model for a loss on `y` (and, with `dY1`/`dY2`, on `J v`
+/// and `v^T H v`), in physical units.
+///
+/// `dY0` is required (`n_rows x n_outputs`); `dY1`, `dY2` may be null (zero);
+/// the Taylor order is 2 if `dY2` is given, 1 if only `dY1`, else 0, and `V`
+/// is required for order >= 1. Returns `dparams` (flatten() layout, length
+/// n_parameters(), overwritten), and `dX`, `dV` (`n_rows x n_inputs`; `dV`
+/// is zero for order 0).
+template <class Gemm = PortableGemm>
+inline void model_backward(const MlpModel& m, const double* X, int n_rows, const double* V,
+                           const double* dY0, const double* dY1, const double* dY2,
+                           std::vector<double>& dparams, std::vector<double>& dX,
+                           std::vector<double>& dV) {
+    const int n_in = m.n_inputs(), n_out = m.n_outputs();
+    if (dY0 == nullptr) throw std::runtime_error("mlpcore::model_backward: dY0 is required");
+    const int order = dY2 ? 2 : (dY1 ? 1 : 0);
+    if (order >= 1 && V == nullptr) throw std::runtime_error("mlpcore::model_backward: derivative adjoints given but V is null");
+    dparams.assign(n_parameters(m.layers), 0.0);
+    dX.assign(static_cast<size_t>(std::max(n_rows, 0)) * n_in, 0.0);
+    dV.assign(static_cast<size_t>(std::max(n_rows, 0)) * n_in, 0.0);
+    if (n_rows <= 0) return;
+
+    std::vector<double> Xs(X, X + static_cast<size_t>(n_rows) * n_in), Vs;
+    detail::scale_in(Xs, n_rows, n_in, m.x_scaler);
+    if (order >= 1) {
+        Vs.assign(V, V + static_cast<size_t>(n_rows) * n_in);
+        detail::scale_by(Vs, n_rows, n_in, m.x_scaler, true);
+    }
+    std::vector<double> d0(dY0, dY0 + static_cast<size_t>(n_rows) * n_out), d1, d2;
+    detail::scale_by(d0, n_rows, n_out, m.y_scaler, false);
+    if (dY1) { d1.assign(dY1, dY1 + static_cast<size_t>(n_rows) * n_out); detail::scale_by(d1, n_rows, n_out, m.y_scaler, false); }
+    if (dY2) { d2.assign(dY2, dY2 + static_cast<size_t>(n_rows) * n_out); detail::scale_by(d2, n_rows, n_out, m.y_scaler, false); }
+
+    Workspace ws;
+    forward<Gemm>(m.layers, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
+    backward<Gemm>(m.layers, ws, d0.data(), dY1 ? d1.data() : nullptr, dY2 ? d2.data() : nullptr,
+                   dparams.data(), dX.data(), order >= 1 ? dV.data() : nullptr);
+    detail::scale_by(dX, n_rows, n_in, m.x_scaler, true);
+    if (order >= 1) detail::scale_by(dV, n_rows, n_in, m.x_scaler, true);
+}
+
+// ---------------------------------------------------------------------------
+// JSON round trip, templated on the JSON type
+// ---------------------------------------------------------------------------
+//
+// The document is the `tttrlib.neural_net` format, version 1:
+//   { "format": "tttrlib.neural_net", "version": 1,
+//     "x_scaler": {"mean": [...], "scale": [...]} | {},
+//     "y_scaler": {...},
+//     "layers": [ {"n_in", "n_out", "activation", "weight" (row-major n_out x n_in), "bias"}, ... ] }
+// `Json` is any nlohmann::json-compatible type (`contains`, `at`, `is_array`,
+// `is_number`, `get<T>()`, `push_back`, `Json::array()`, `Json::object()`).
+// Templating on it keeps this header std-only while both tttrlib and imp.bff
+// deserialise with the nlohmann copy they already vendor.
+
+template <class Json>
+inline std::vector<double> json_doubles(const Json& j, const std::string& field) {
+    if (!j.is_array())
+        throw std::runtime_error("NeuralNet: field '" + field + "' must be an array");
+    std::vector<double> v;
+    v.reserve(j.size());
+    for (const auto& e : j) {
+        if (!e.is_number())
+            throw std::runtime_error("NeuralNet: field '" + field + "' must contain only numbers");
+        v.push_back(e.template get<double>());
+    }
+    return v;
+}
+
+template <class Json>
+inline StandardScaler scaler_from_json(const Json& j) {
+    StandardScaler s;
+    if (j.is_null() || j.empty()) return s;
+    s.mean = json_doubles(j.at("mean"), "scaler.mean");
+    s.scale = json_doubles(j.at("scale"), "scaler.scale");
+    if (s.mean.size() != s.scale.size())
+        throw std::runtime_error("NeuralNet: scaler mean/scale length mismatch");
+    for (auto& v : s.scale)   // sklearn maps zero variance to scale 1
+        if (v == 0.0) v = 1.0;
+    return s;
+}
+
+template <class Json>
+inline Json scaler_to_json(const StandardScaler& s) {
+    if (!s.active()) return Json::object();
+    Json j = Json::object();
+    j["mean"] = s.mean;
+    j["scale"] = s.scale;
+    return j;
+}
+
+/// Parse a `tttrlib.neural_net` document; validates before returning.
+template <class Json>
+inline MlpModel model_from_json(const Json& j) {
+    if (j.contains("format") && j.at("format").template get<std::string>() != "tttrlib.neural_net")
+        throw std::runtime_error("NeuralNet: unexpected format '" +
+                                 j.at("format").template get<std::string>() +
+                                 "', expected 'tttrlib.neural_net'");
+    if (!j.contains("layers"))
+        throw std::runtime_error("NeuralNet: document has no 'layers' array");
+    MlpModel m;
+    for (const auto& lj : j.at("layers")) {
+        DenseLayer l;
+        l.n_in = lj.at("n_in").template get<int>();
+        l.n_out = lj.at("n_out").template get<int>();
+        l.weight = json_doubles(lj.at("weight"), "layer.weight");
+        l.bias = json_doubles(lj.at("bias"), "layer.bias");
+        l.activation = activation_from_string(
+            lj.contains("activation") ? lj.at("activation").template get<std::string>() : "relu");
+        m.layers.push_back(std::move(l));
+    }
+    if (j.contains("x_scaler")) m.x_scaler = scaler_from_json(j.at("x_scaler"));
+    if (j.contains("y_scaler")) m.y_scaler = scaler_from_json(j.at("y_scaler"));
+    m.validate();
+    return m;
+}
+
+/// Serialise to a `tttrlib.neural_net` document.
+template <class Json>
+inline Json model_to_json(const MlpModel& m) {
+    Json j = Json::object();
+    j["format"] = "tttrlib.neural_net";
+    j["version"] = 1;
+    j["x_scaler"] = scaler_to_json<Json>(m.x_scaler);
+    j["y_scaler"] = scaler_to_json<Json>(m.y_scaler);
+    Json layers = Json::array();
+    for (const DenseLayer& l : m.layers) {
+        Json lj = Json::object();
+        lj["n_in"] = l.n_in;
+        lj["n_out"] = l.n_out;
+        lj["activation"] = activation_to_string(l.activation);
+        lj["weight"] = l.weight;
+        lj["bias"] = l.bias;
+        layers.push_back(std::move(lj));
+    }
+    j["layers"] = std::move(layers);
+    return j;
 }
 
 }  // namespace mlpcore

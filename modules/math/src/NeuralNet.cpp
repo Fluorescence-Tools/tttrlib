@@ -60,39 +60,6 @@ void adam_step(double* pp, const double* gp, double* mp, double* vp, size_t n,
     }
 }
 
-/// Read a JSON array of numbers into a vector, with a helpful error on misuse.
-std::vector<double> as_double_vector(const json& j, const std::string& field) {
-    if (!j.is_array())
-        throw std::runtime_error("NeuralNet: field '" + field + "' must be an array");
-    std::vector<double> v;
-    v.reserve(j.size());
-    for (const auto& e : j) {
-        if (!e.is_number())
-            throw std::runtime_error("NeuralNet: field '" + field + "' must contain only numbers");
-        v.push_back(e.get<double>());
-    }
-    return v;
-}
-
-StandardScaler scaler_from_json(const json& j) {
-    StandardScaler s;
-    if (j.is_null() || j.empty()) return s;
-    s.mean = as_double_vector(j.at("mean"), "scaler.mean");
-    s.scale = as_double_vector(j.at("scale"), "scaler.scale");
-    if (s.mean.size() != s.scale.size())
-        throw std::runtime_error("NeuralNet: scaler mean/scale length mismatch");
-    // A zero scale would divide by zero; sklearn maps zero-variance features to
-    // a scale of 1, so mirror that rather than producing infinities.
-    for (auto& v : s.scale)
-        if (v == 0.0) v = 1.0;
-    return s;
-}
-
-json scaler_to_json(const StandardScaler& s) {
-    if (!s.active()) return json::object();
-    return json{{"mean", s.mean}, {"scale", s.scale}};
-}
-
 /// Copy ``count`` rows from ``src`` selected by ``order[from .. from+count)``
 /// into a new row-major matrix.
 Mat gather_rows(const Mat& src, const std::vector<int>& order,
@@ -111,162 +78,37 @@ Mat gather_rows(const Mat& src, const std::vector<int>& order,
 } // namespace
 
 // ---------------------------------------------------------------------------
-// StandardScaler
-// ---------------------------------------------------------------------------
-
-void StandardScaler::fit(const double* X, int n_rows, int n_cols) {
-    mean.assign(static_cast<size_t>(n_cols), 0.0);
-    scale.assign(static_cast<size_t>(n_cols), 1.0);
-    if (n_rows <= 0 || n_cols <= 0) return;
-
-    // two-pass column statistics: avoids naming the Mat.h free function
-    // ``mean()`` here, which collides with this struct's ``mean`` member.
-    for (int i = 0; i < n_rows; ++i)
-        for (int j = 0; j < n_cols; ++j)
-            mean[static_cast<size_t>(j)] += X[static_cast<size_t>(i) * n_cols + j];
-    for (int j = 0; j < n_cols; ++j)
-        mean[static_cast<size_t>(j)] /= n_rows;
-
-    // Population standard deviation (ddof=0), matching sklearn's StandardScaler.
-    for (int j = 0; j < n_cols; ++j) {
-        double var = 0.0;
-        for (int i = 0; i < n_rows; ++i) {
-            double d = X[static_cast<size_t>(i) * n_cols + j] - mean[static_cast<size_t>(j)];
-            var += d * d;
-        }
-        double sd = std::sqrt(var / static_cast<double>(n_rows));
-        scale[static_cast<size_t>(j)] = (sd == 0.0) ? 1.0 : sd;
-    }
-}
-
-void StandardScaler::transform(std::vector<double>& v) const {
-    if (!active()) return;
-    if (v.size() != mean.size())
-        throw std::runtime_error("StandardScaler::transform: length mismatch");
-    for (size_t i = 0; i < v.size(); ++i) v[i] = (v[i] - mean[i]) / scale[i];
-}
-
-void StandardScaler::inverse_transform(std::vector<double>& v) const {
-    if (!active()) return;
-    if (v.size() != mean.size())
-        throw std::runtime_error("StandardScaler::inverse_transform: length mismatch");
-    for (size_t i = 0; i < v.size(); ++i) v[i] = v[i] * scale[i] + mean[i];
-}
-
-// ---------------------------------------------------------------------------
 // NeuralNet — construction and validation
 // ---------------------------------------------------------------------------
 
 NeuralNet::NeuralNet(std::vector<DenseLayer> layers,
                      StandardScaler x_scaler,
-                     StandardScaler y_scaler)
-    : layers_(std::move(layers)),
-      x_scaler_(std::move(x_scaler)),
-      y_scaler_(std::move(y_scaler)) {
+                     StandardScaler y_scaler) {
+    model_.layers = std::move(layers);
+    model_.x_scaler = std::move(x_scaler);
+    model_.y_scaler = std::move(y_scaler);
     validate();
 }
 
-void NeuralNet::validate() const {
-    if (layers_.empty())
-        throw std::runtime_error("NeuralNet: model has no layers");
-
-    for (size_t i = 0; i < layers_.size(); ++i) {
-        const DenseLayer& l = layers_[i];
-        if (l.n_in <= 0 || l.n_out <= 0)
-            throw std::runtime_error("NeuralNet: layer " + std::to_string(i) +
-                                     " has a non-positive dimension");
-        const size_t want_w = static_cast<size_t>(l.n_in) * static_cast<size_t>(l.n_out);
-        if (l.weight.size() != want_w)
-            throw std::runtime_error(
-                "NeuralNet: layer " + std::to_string(i) + " weight has " +
-                std::to_string(l.weight.size()) + " entries, expected " +
-                std::to_string(want_w) + " (n_out*n_in)");
-        if (l.bias.size() != static_cast<size_t>(l.n_out))
-            throw std::runtime_error(
-                "NeuralNet: layer " + std::to_string(i) + " bias has " +
-                std::to_string(l.bias.size()) + " entries, expected " +
-                std::to_string(l.n_out));
-        if (i + 1 < layers_.size() && l.n_out != layers_[i + 1].n_in)
-            throw std::runtime_error(
-                "NeuralNet: layer " + std::to_string(i) + " outputs " +
-                std::to_string(l.n_out) + " but layer " + std::to_string(i + 1) +
-                " expects " + std::to_string(layers_[i + 1].n_in));
-    }
-
-    if (x_scaler_.active() && x_scaler_.size() != n_inputs())
-        throw std::runtime_error("NeuralNet: x_scaler length " +
-                                 std::to_string(x_scaler_.size()) +
-                                 " != n_inputs " + std::to_string(n_inputs()));
-    if (y_scaler_.active() && y_scaler_.size() != n_outputs())
-        throw std::runtime_error("NeuralNet: y_scaler length " +
-                                 std::to_string(y_scaler_.size()) +
-                                 " != n_outputs " + std::to_string(n_outputs()));
-}
+void NeuralNet::validate() const { model_.validate(); }
 
 long long NeuralNet::n_parameters() const {
-    long long n = 0;
-    for (const auto& l : layers_)
-        n += static_cast<long long>(l.weight.size() + l.bias.size());
-    return n;
+    return static_cast<long long>(mlpcore::n_parameters(model_.layers));
 }
 
 // ---------------------------------------------------------------------------
 // NeuralNet — inference
 // ---------------------------------------------------------------------------
 
-namespace {
-
-/// Standardise a batch in place with a scaler (no-op when inactive).
-void scale_rows(std::vector<double>& X, int n_rows, int n_cols, const StandardScaler& s) {
-    if (!s.active()) return;
-    for (int r = 0; r < n_rows; ++r) {
-        double* row = X.data() + static_cast<size_t>(r) * n_cols;
-        for (int j = 0; j < n_cols; ++j)
-            row[j] = (row[j] - s.mean[static_cast<size_t>(j)]) / s.scale[static_cast<size_t>(j)];
-    }
-}
-
-/// Multiply every row elementwise by ``s.scale`` (``inverse``: divide).
-void scale_rows_by(std::vector<double>& X, int n_rows, int n_cols,
-                   const StandardScaler& s, bool inverse) {
-    if (!s.active()) return;
-    for (int r = 0; r < n_rows; ++r) {
-        double* row = X.data() + static_cast<size_t>(r) * n_cols;
-        for (int j = 0; j < n_cols; ++j) {
-            const double f = s.scale[static_cast<size_t>(j)];
-            row[j] = inverse ? row[j] / f : row[j] * f;
-        }
-    }
-}
-
-/// Undo the output scaler: ``y = yhat * scale + mean``.
-void unscale_outputs(std::vector<double>& Y, int n_rows, int n_cols, const StandardScaler& s) {
-    if (!s.active()) return;
-    for (int r = 0; r < n_rows; ++r) {
-        double* row = Y.data() + static_cast<size_t>(r) * n_cols;
-        for (int j = 0; j < n_cols; ++j)
-            row[j] = row[j] * s.scale[static_cast<size_t>(j)] + s.mean[static_cast<size_t>(j)];
-    }
-}
-
-}  // namespace
-
 std::vector<double> NeuralNet::predict_batch(const double* X, int n_rows, int n_cols) const {
-    if (layers_.empty()) throw std::runtime_error("NeuralNet::predict: model has no layers");
+    if (model_.layers.empty()) throw std::runtime_error("NeuralNet::predict: model has no layers");
     if (n_cols != n_inputs())
         throw std::runtime_error("NeuralNet::predict: got " + std::to_string(n_cols) +
                                  " features, expected " + std::to_string(n_inputs()));
     if (n_rows <= 0) return {};
-
-    std::vector<double> Xs(X, X + static_cast<size_t>(n_rows) * n_cols);
-    scale_rows(Xs, n_rows, n_cols, x_scaler_);
-
-    mlpcore::Workspace ws;
-    mlpcore::forward<MatGemm>(layers_, Xs.data(), n_rows, ws, 0);
-
-    std::vector<double> Y = ws.output();
-    unscale_outputs(Y, n_rows, n_outputs(), y_scaler_);
-    return Y;
+    std::vector<double> y, d1, d2;
+    mlpcore::model_predict<MatGemm>(model_, X, n_rows, 0, nullptr, y, d1, d2);
+    return y;
 }
 
 std::vector<double> NeuralNet::predict(const std::vector<double>& x) const {
@@ -297,7 +139,7 @@ void check_batch(const char* who, int n_rows, int n_cols, int want_cols,
 NeuralNet::Derivatives NeuralNet::predict_derivatives(
         const double* X, int n_rows, int n_cols,
         const double* V, int n_rows_v, int n_cols_v, int order) const {
-    if (layers_.empty()) throw std::runtime_error("NeuralNet::predict_derivatives: model has no layers");
+    if (model_.layers.empty()) throw std::runtime_error("NeuralNet::predict_derivatives: model has no layers");
     if (order < 0 || order > 2)
         throw std::runtime_error("NeuralNet::predict_derivatives: order must be 0, 1 or 2");
     check_batch("predict_derivatives", n_rows, n_cols, n_inputs(), "X");
@@ -308,30 +150,8 @@ NeuralNet::Derivatives NeuralNet::predict_derivatives(
                                      " rows but V has " + std::to_string(n_rows_v));
     }
     Derivatives out;
-    if (n_rows == 0) return out;
-
-    std::vector<double> Xs(X, X + static_cast<size_t>(n_rows) * n_cols);
-    scale_rows(Xs, n_rows, n_cols, x_scaler_);
-    std::vector<double> Vs;
-    if (order >= 1) {
-        Vs.assign(V, V + static_cast<size_t>(n_rows) * n_cols);
-        scale_rows_by(Vs, n_rows, n_cols, x_scaler_, /*inverse=*/true);   // dx_scaled = dx / sigma
-    }
-
-    mlpcore::Workspace ws;
-    mlpcore::forward<MatGemm>(layers_, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
-
-    const int n_out = n_outputs();
-    out.y = ws.output();
-    unscale_outputs(out.y, n_rows, n_out, y_scaler_);
-    if (order >= 1) {
-        out.dy_dv = ws.output_d1();
-        scale_rows_by(out.dy_dv, n_rows, n_out, y_scaler_, false);       // dy = dyhat * sigma_y
-    }
-    if (order >= 2) {
-        out.d2y_dv2 = ws.output_d2();
-        scale_rows_by(out.d2y_dv2, n_rows, n_out, y_scaler_, false);
-    }
+    mlpcore::model_predict<MatGemm>(model_, X, n_rows, order, order >= 1 ? V : nullptr,
+                                    out.y, out.dy_dv, out.d2y_dv2);
     return out;
 }
 
@@ -406,7 +226,7 @@ NeuralNet::Backward NeuralNet::backward_derivatives(
         const double* dY, int n_rows_y, int n_cols_y,
         const double* dY1, int n_rows_y1, int n_cols_y1,
         const double* dY2, int n_rows_y2, int n_cols_y2) const {
-    if (layers_.empty()) throw std::runtime_error("NeuralNet::backward: model has no layers");
+    if (model_.layers.empty()) throw std::runtime_error("NeuralNet::backward: model has no layers");
     const int n_in = n_inputs(), n_out = n_outputs();
     check_batch("backward", n_rows, n_cols, n_in, "X");
     check_batch("backward", n_rows_y, n_cols_y, n_out, "dY");
@@ -429,47 +249,10 @@ NeuralNet::Backward NeuralNet::backward_derivatives(
         if (n_rows_v != n_rows || V == nullptr)
             throw std::runtime_error("NeuralNet::backward: derivative adjoints given but V is missing or has the wrong row count");
     }
-
     Backward out;
-    out.dparams.assign(mlpcore::n_parameters(layers_), 0.0);
-    out.dx.assign(static_cast<size_t>(n_rows) * n_in, 0.0);
-    out.dv.assign(static_cast<size_t>(n_rows) * n_in, 0.0);
-    if (n_rows == 0) return out;
-
-    std::vector<double> Xs(X, X + static_cast<size_t>(n_rows) * n_in);
-    scale_rows(Xs, n_rows, n_in, x_scaler_);
-    std::vector<double> Vs;
-    if (order >= 1) {
-        Vs.assign(V, V + static_cast<size_t>(n_rows) * n_in);
-        scale_rows_by(Vs, n_rows, n_in, x_scaler_, true);
-    }
-
-    // The network's own outputs are yhat = (y - mu_y) / sigma_y, so the adjoint
-    // of yhat is sigma_y times the adjoint of y; the same factor applies to the
-    // derivative outputs, which are linear in yhat.
-    std::vector<double> dY0s(dY, dY + static_cast<size_t>(n_rows) * n_out);
-    scale_rows_by(dY0s, n_rows, n_out, y_scaler_, false);
-    std::vector<double> dY1s, dY2s;
-    if (have1) {
-        dY1s.assign(dY1, dY1 + static_cast<size_t>(n_rows) * n_out);
-        scale_rows_by(dY1s, n_rows, n_out, y_scaler_, false);
-    }
-    if (have2) {
-        dY2s.assign(dY2, dY2 + static_cast<size_t>(n_rows) * n_out);
-        scale_rows_by(dY2s, n_rows, n_out, y_scaler_, false);
-    }
-
-    mlpcore::Workspace ws;
-    mlpcore::forward<MatGemm>(layers_, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
-    mlpcore::backward<MatGemm>(layers_, ws, dY0s.data(),
-                               have1 ? dY1s.data() : nullptr,
-                               have2 ? dY2s.data() : nullptr,
-                               out.dparams.data(), out.dx.data(),
-                               order >= 1 ? out.dv.data() : nullptr);
-
-    // Back through the input scaler: x_scaled = (x - mu) / sigma, v_scaled = v / sigma.
-    scale_rows_by(out.dx, n_rows, n_in, x_scaler_, true);
-    if (order >= 1) scale_rows_by(out.dv, n_rows, n_in, x_scaler_, true);
+    mlpcore::model_backward<MatGemm>(model_, X, n_rows, order >= 1 ? V : nullptr,
+                                     dY, have1 ? dY1 : nullptr, have2 ? dY2 : nullptr,
+                                     out.dparams, out.dx, out.dv);
     return out;
 }
 
@@ -524,20 +307,20 @@ void NeuralNet::get_parameters_out(double** out_params, int* n_out_params) const
 }
 
 void NeuralNet::set_parameters(const double* params, int n_params) {
-    if (layers_.empty()) throw std::runtime_error("NeuralNet::set_parameters: model has no layers");
+    if (model_.layers.empty()) throw std::runtime_error("NeuralNet::set_parameters: model has no layers");
     if (n_params < 0) throw std::runtime_error("NeuralNet::set_parameters: negative length");
-    mlpcore::unflatten(layers_, params, static_cast<size_t>(n_params));
+    mlpcore::unflatten(model_.layers, params, static_cast<size_t>(n_params));
 }
 
 std::vector<double> NeuralNet::get_parameters() const {
     std::vector<double> p;
-    mlpcore::flatten(layers_, p);
+    mlpcore::flatten(model_.layers, p);
     return p;
 }
 
 void NeuralNet::set_parameters(const std::vector<double>& params) {
-    if (layers_.empty()) throw std::runtime_error("NeuralNet::set_parameters: model has no layers");
-    mlpcore::unflatten(layers_, params.data(), params.size());
+    if (model_.layers.empty()) throw std::runtime_error("NeuralNet::set_parameters: model has no layers");
+    mlpcore::unflatten(model_.layers, params.data(), params.size());
 }
 
 // ---------------------------------------------------------------------------
@@ -559,18 +342,18 @@ NeuralNet NeuralNet::train(
 
     // --- standardise inputs and targets, keeping the scalers with the model
     NeuralNet net;
-    net.x_scaler_.fit(X, n_samples, n_features);
-    net.y_scaler_.fit(Y, n_samples, n_targets);
+    net.model_.x_scaler.fit(X, n_samples, n_features);
+    net.model_.y_scaler.fit(Y, n_samples, n_targets);
 
     Mat Xs(n_samples, n_features, X);
     Mat Ys(n_samples, n_targets, Y);
     {
-        Mat xm(1, n_features, net.x_scaler_.mean.data());
-        Mat xs(1, n_features, net.x_scaler_.scale.data());
+        Mat xm(1, n_features, net.model_.x_scaler.mean.data());
+        Mat xs(1, n_features, net.model_.x_scaler.scale.data());
         Xs.each_row() -= xm;
         Xs.each_row() /= xs;
-        Mat ym(1, n_targets, net.y_scaler_.mean.data());
-        Mat ys(1, n_targets, net.y_scaler_.scale.data());
+        Mat ym(1, n_targets, net.model_.y_scaler.mean.data());
+        Mat ys(1, n_targets, net.model_.y_scaler.scale.data());
         Ys.each_row() -= ym;
         Ys.each_row() /= ys;
     }
@@ -589,9 +372,9 @@ NeuralNet NeuralNet::train(
     // Glorot-uniform init, as used by scikit-learn's MLP. Hidden layers use the
     // chosen nonlinearity; the output layer is linear because this is a
     // regressor.
-    net.layers_.resize(n_layers);
+    net.model_.layers.resize(n_layers);
     for (size_t l = 0; l < n_layers; ++l) {
-        DenseLayer& dl = net.layers_[l];
+        DenseLayer& dl = net.model_.layers[l];
         const int n_in = dims[l], n_out = dims[l + 1];
         const double limit = std::sqrt(6.0 / (n_in + n_out));
         dl.n_in = n_in;
@@ -606,14 +389,14 @@ NeuralNet NeuralNet::train(
 
     // --- flat parameter vector, its gradient, and the Adam state
     std::vector<double> params;
-    mlpcore::flatten(net.layers_, params);
+    mlpcore::flatten(net.model_.layers, params);
     const size_t n_params = params.size();
     std::vector<double> grad(n_params, 0.0), adam_m(n_params, 0.0), adam_v(n_params, 0.0);
     // Which flat entries are biases (no L2 on those).
     std::vector<char> is_bias(n_params, 0);
     {
         size_t p = 0;
-        for (const DenseLayer& dl : net.layers_) {
+        for (const DenseLayer& dl : net.model_.layers) {
             p += dl.weight.size();
             std::fill(is_bias.begin() + static_cast<std::ptrdiff_t>(p),
                       is_bias.begin() + static_cast<std::ptrdiff_t>(p + dl.bias.size()), 1);
@@ -643,7 +426,7 @@ NeuralNet NeuralNet::train(
     mlpcore::Workspace ws;
     auto mse = [&](const Mat& in, const Mat& target) {
         if (in.n_rows() == 0) return 0.0;
-        mlpcore::forward<MatGemm>(net.layers_, in.memptr(), in.n_rows(), ws, 0);
+        mlpcore::forward<MatGemm>(net.model_.layers, in.memptr(), in.n_rows(), ws, 0);
         const std::vector<double>& y = ws.output();
         double acc = 0.0;
         const double* t = target.memptr();
@@ -675,7 +458,7 @@ NeuralNet NeuralNet::train(
             Mat xb = gather_rows(Xtr, batch_order, start, bs);
             Mat yb = gather_rows(Ytr, batch_order, start, bs);
 
-            mlpcore::forward<MatGemm>(net.layers_, xb.memptr(), bs, ws, 0);
+            mlpcore::forward<MatGemm>(net.model_.layers, xb.memptr(), bs, ws, 0);
             const std::vector<double>& y = ws.output();
 
             // dL/dy for L = ||y - t||^2 / (2*bs), and the loss itself
@@ -690,7 +473,7 @@ NeuralNet NeuralNet::train(
             ++n_batches;
 
             std::fill(grad.begin(), grad.end(), 0.0);
-            mlpcore::backward<MatGemm>(net.layers_, ws, dY.data(), nullptr, nullptr, grad.data());
+            mlpcore::backward<MatGemm>(net.model_.layers, ws, dY.data(), nullptr, nullptr, grad.data());
 
             if (opt.alpha > 0.0)  // L2 on weights only
                 for (size_t i = 0; i < n_params; ++i)
@@ -701,7 +484,7 @@ NeuralNet NeuralNet::train(
             const double bc2 = 1.0 - std::pow(opt.beta2, static_cast<double>(adam_t));
             adam_step(params.data(), grad.data(), adam_m.data(), adam_v.data(), n_params,
                       opt.learning_rate, opt.beta1, opt.beta2, bc1, bc2, opt.epsilon);
-            mlpcore::unflatten(net.layers_, params.data(), n_params);
+            mlpcore::unflatten(net.model_.layers, params.data(), n_params);
         }
 
         net.loss_curve_.push_back(n_batches ? epoch_loss / n_batches : 0.0);
@@ -720,7 +503,7 @@ NeuralNet NeuralNet::train(
     }
 
     if (n_val > 0)  // restore the best-validation weights, as sklearn does
-        mlpcore::unflatten(net.layers_, best_params.data(), best_params.size());
+        mlpcore::unflatten(net.model_.layers, best_params.data(), best_params.size());
 
     net.validate();
     return net;
@@ -737,31 +520,9 @@ NeuralNet NeuralNet::from_json_string(const std::string& text) {
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("NeuralNet: invalid JSON: ") + e.what());
     }
-
-    if (j.contains("format") && j.at("format").get<std::string>() != "tttrlib.neural_net")
-        throw std::runtime_error("NeuralNet: unexpected format '" +
-                                 j.at("format").get<std::string>() +
-                                 "', expected 'tttrlib.neural_net'");
-    if (!j.contains("layers"))
-        throw std::runtime_error("NeuralNet: document has no 'layers' array");
-
-    std::vector<DenseLayer> layers;
-    for (const auto& lj : j.at("layers")) {
-        DenseLayer l;
-        l.n_in = lj.at("n_in").get<int>();
-        l.n_out = lj.at("n_out").get<int>();
-        l.weight = as_double_vector(lj.at("weight"), "layer.weight");
-        l.bias = as_double_vector(lj.at("bias"), "layer.bias");
-        l.activation = activation_from_string(
-            lj.contains("activation") ? lj.at("activation").get<std::string>() : "relu");
-        layers.push_back(std::move(l));
-    }
-
-    StandardScaler xs, ys;
-    if (j.contains("x_scaler")) xs = scaler_from_json(j.at("x_scaler"));
-    if (j.contains("y_scaler")) ys = scaler_from_json(j.at("y_scaler"));
-
-    return NeuralNet(std::move(layers), std::move(xs), std::move(ys));  // validates
+    NeuralNet net;
+    net.model_ = mlpcore::model_from_json(j);  // validates
+    return net;
 }
 
 NeuralNet NeuralNet::from_json_file(const std::string& path) {
@@ -773,24 +534,7 @@ NeuralNet NeuralNet::from_json_file(const std::string& path) {
 }
 
 std::string NeuralNet::to_json_string(int indent) const {
-    json j;
-    j["format"] = "tttrlib.neural_net";
-    j["version"] = 1;
-    j["x_scaler"] = scaler_to_json(x_scaler_);
-    j["y_scaler"] = scaler_to_json(y_scaler_);
-
-    json layers = json::array();
-    for (const DenseLayer& l : layers_) {
-        layers.push_back(json{
-            {"n_in", l.n_in},
-            {"n_out", l.n_out},
-            {"activation", activation_to_string(l.activation)},
-            {"weight", l.weight},
-            {"bias", l.bias},
-        });
-    }
-    j["layers"] = std::move(layers);
-    return j.dump(indent);
+    return mlpcore::model_to_json<json>(model_).dump(indent);
 }
 
 void NeuralNet::to_json_file(const std::string& path, int indent) const {

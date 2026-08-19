@@ -168,6 +168,13 @@ takes, and nothing more:
   elsewhere in the library calls when a network is one of its terms.
 - **Flat parameters**: `flatten` / `unflatten`, layer by layer, weight then
   bias — the vector `i_lbfgs.h` or scipy's L-BFGS works on.
+- **A whole model, and its file format**: `MlpModel` = layers + input/output
+  `StandardScaler`s; `model_predict` / `model_backward` apply the scalers and
+  their chain rule so a consumer stays in physical units; `model_from_json` /
+  `model_to_json` are templated on the JSON type (any nlohmann-compatible
+  object) so the header stays std-only while both repositories deserialise
+  the `tttrlib.neural_net` document with the nlohmann copy they vendor.
+  `NeuralNet` is now a shell over `MlpModel` (`get_model()`).
 
 The GEMM is a template policy. `NeuralNet.cpp` plugs in `Mat.h`'s SIMD
 kernels; the header itself ships portable loops. That split is what makes it
@@ -176,7 +183,12 @@ shareable: **imp.bff carries a verbatim copy** of `MlpCore.h` under its
 test that fails when the copies diverge, so a network trained here can be
 evaluated and differentiated inside a coordinate-space solver without linking
 tttrlib. Keep the header free of anything that would break the copy: no
-`Mat.h`, no json, no registry, no OpenMP beyond the `simd` hint.
+`Mat.h`, no json include, no registry, no OpenMP beyond the `simd` hint.
+imp.bff's `test/test_vendored_mlpcore.py` compiles a program against its
+vendored nlohmann copy + `MlpCore.h` (namespace `IMP::bff::internal` via
+`TTTRLIB_MLPCORE_NAMESPACE`), loads a model trained here and checks
+predictions to 1e-12 and the gradients against finite differences — that is
+the contract.
 
 Numerics: the refactor of `NeuralNet::train` onto these kernels reproduces the
 previous implementation's predictions to 1e-15 on the same seed (same GEMM

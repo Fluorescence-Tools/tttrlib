@@ -352,6 +352,102 @@ static void test_backward(Activation hidden) {
     }
 }
 
+// --------------------------------------------------------------------------
+// 7. MlpModel with active scalers: physical-unit predictions and adjoints
+// --------------------------------------------------------------------------
+static void test_model_scalers() {
+    std::printf("MlpModel with scalers: model_predict / model_backward vs raw layers and FD\n");
+    Lcg rng(44);
+    const int n_in = 2, n_out = 2, n = 4;
+    tttrlib::MlpModel m;
+    m.layers = make_net({n_in, 6, n_out}, {Activation::Tanh, Activation::Identity}, rng);
+    m.x_scaler.mean = {0.3, -1.2}; m.x_scaler.scale = {2.0, 0.5};
+    m.y_scaler.mean = {5.0, -2.0}; m.y_scaler.scale = {3.0, 0.25};
+    m.validate();
+    std::vector<double> X(n * n_in), V(n * n_in), W(n * n_out), C1(n * n_out), C2(n * n_out);
+    for (auto& v : X) v = rng.uniform();
+    for (auto& v : V) v = rng.uniform();
+    for (auto& v : W) v = rng.uniform();
+    for (auto& v : C1) v = rng.uniform();
+    for (auto& v : C2) v = rng.uniform();
+
+    // predictions equal the raw layers on standardised input, unstandardised after
+    std::vector<double> y, d1, d2;
+    mc::model_predict(m, X.data(), n, 2, V.data(), y, d1, d2);
+    {
+        double worst = 0;
+        for (int r = 0; r < n; ++r) {
+            std::vector<double> xs(n_in);
+            for (int i = 0; i < n_in; ++i) xs[i] = (X[r * n_in + i] - m.x_scaler.mean[i]) / m.x_scaler.scale[i];
+            std::vector<double> yr;
+            mc::predict_scalar(m.layers, xs.data(), yr);
+            for (int k = 0; k < n_out; ++k)
+                worst = std::max(worst, std::abs(yr[k] * m.y_scaler.scale[k] + m.y_scaler.mean[k] - y[r * n_out + k]));
+        }
+        report(worst < 1e-13, "y through the scalers", worst, 1e-13);
+    }
+    // directional derivatives in physical units vs central differences of model_predict
+    {
+        const double h = 1e-4;
+        double w1 = 0, w2 = 0;
+        std::vector<double> Xp(X), Xm(X), yp, ym, t1, t2;
+        for (size_t i = 0; i < X.size(); ++i) { Xp[i] += h * V[i]; Xm[i] -= h * V[i]; }
+        mc::model_predict(m, Xp.data(), n, 0, nullptr, yp, t1, t2);
+        mc::model_predict(m, Xm.data(), n, 0, nullptr, ym, t1, t2);
+        for (size_t i = 0; i < y.size(); ++i) {
+            w1 = std::max(w1, std::abs((yp[i] - ym[i]) / (2 * h) - d1[i]));
+            w2 = std::max(w2, std::abs((yp[i] - 2 * y[i] + ym[i]) / (h * h) - d2[i]));
+        }
+        report(w1 < 1e-6, "J v in physical units vs FD", w1, 1e-6);
+        report(w2 < 1e-4, "v^T H v in physical units vs FD", w2, 1e-4);
+    }
+    // adjoints of L = <W,y> + <C1,Jv> + <C2,vHv> vs central differences
+    auto loss = [&](const tttrlib::MlpModel& mm, const std::vector<double>& x, const std::vector<double>& v) {
+        std::vector<double> a, b, c;
+        mc::model_predict(mm, x.data(), n, 2, v.data(), a, b, c);
+        return dot(W, a) + dot(C1, b) + dot(C2, c);
+    };
+    std::vector<double> dp, dX, dV;
+    mc::model_backward(m, X.data(), n, V.data(), W.data(), C1.data(), C2.data(), dp, dX, dV);
+    const double h = 1e-5;
+    {
+        std::vector<double> p; mc::flatten(m.layers, p);
+        double worst = 0;
+        for (size_t i = 0; i < p.size(); ++i) {
+            auto mp = m, mm_ = m; auto pp = p, pm = p; pp[i] += h; pm[i] -= h;
+            mc::unflatten(mp.layers, pp.data(), pp.size()); mc::unflatten(mm_.layers, pm.data(), pm.size());
+            worst = std::max(worst, std::abs((loss(mp, X, V) - loss(mm_, X, V)) / (2 * h) - dp[i]));
+        }
+        report(worst < 1e-6, "dL/dparams through the scalers vs FD", worst, 1e-6);
+    }
+    {
+        double wx = 0, wv = 0;
+        for (size_t i = 0; i < X.size(); ++i) {
+            auto xp = X, xm = X; xp[i] += h; xm[i] -= h;
+            wx = std::max(wx, std::abs((loss(m, xp, V) - loss(m, xm, V)) / (2 * h) - dX[i]));
+            auto vp = V, vm = V; vp[i] += h; vm[i] -= h;
+            wv = std::max(wv, std::abs((loss(m, X, vp) - loss(m, X, vm)) / (2 * h) - dV[i]));
+        }
+        report(wx < 1e-6, "dL/dx through the scalers vs FD", wx, 1e-6);
+        report(wv < 1e-6, "dL/dv through the scalers vs FD", wv, 1e-6);
+    }
+    // StandardScaler::fit matches the two-pass population statistics
+    {
+        tttrlib::StandardScaler sc; sc.fit(X.data(), n, n_in);
+        double worst = 0;
+        for (int j = 0; j < n_in; ++j) {
+            double mu = 0; for (int r = 0; r < n; ++r) mu += X[r * n_in + j]; mu /= n;
+            double var = 0; for (int r = 0; r < n; ++r) var += (X[r * n_in + j] - mu) * (X[r * n_in + j] - mu);
+            worst = std::max(worst, std::abs(sc.mean[j] - mu) + std::abs(sc.scale[j] - std::sqrt(var / n)));
+        }
+        report(worst < 1e-15, "StandardScaler::fit", worst, 1e-15);
+        bool threw = false;
+        tttrlib::MlpModel bad = m; bad.x_scaler.mean.push_back(0.0); bad.x_scaler.scale.push_back(1.0);
+        try { bad.validate(); } catch (const std::exception&) { threw = true; }
+        report(threw, "validate() rejects a scaler of the wrong length", 0, 0);
+    }
+}
+
 int main() {
     test_activation_derivatives();
     test_dual_ops();
@@ -364,6 +460,7 @@ int main() {
     }
     // ReLU: only the order-0/1 paths are meaningful (f'' == 0), but they must work.
     test_backward(Activation::ReLU);
+    test_model_scalers();
     std::printf("%d failure(s)\n", g_failures);
     return g_failures;
 }

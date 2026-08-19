@@ -48,6 +48,12 @@
   a Sobolev fit), `plot_pinn_heat_equation` and `plot_pinn_burgers` (the
   Raissi et al. benchmark against the Cole-Hopf solution), with smoke tests in
   `test/python/misc/test_neural_net_examples.py`.
+  Follow-up: `StandardScaler`, the whole-model struct `MlpModel`, the
+  scaler-aware `model_predict` / `model_backward` and the `tttrlib.neural_net`
+  JSON reader/writer (templated on the JSON type) moved into `MlpCore.h`, so a
+  consumer of the vendored header can load a model trained here and evaluate
+  and differentiate it in physical units with nothing but its own nlohmann
+  copy; `NeuralNet` is a shell over `MlpModel` (`get_model()`), API unchanged.
 
 - **Module READMEs describe what is actually in the module**, and a test keeps
   them that way (`test/python/test_module_readmes.py`: every leaf module names

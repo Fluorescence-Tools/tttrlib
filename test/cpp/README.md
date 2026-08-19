@@ -118,7 +118,11 @@ loss that uses all three outputs — against central differences of that loss,
 parameter by parameter, for every smooth activation and for ReLU. The
 `PortableGemm` policy is checked against naive triple loops; the Mat.h policy
 the library itself uses is validated by the Python suite (`test_neural_net.py`)
-through the same entry points.
+through the same entry points. `MlpModel` with active scalers is checked the
+same two ways (raw layers on standardised input, central differences of
+`model_predict`); the JSON round trip is templated on the JSON type and is
+exercised through `NeuralNet` in Python and, with a different nlohmann
+version, by imp.bff's `test/test_vendored_mlpcore.py`.
 
 ## The likelihood floor (`test_decay_likelihood`)
 

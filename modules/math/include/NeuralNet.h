@@ -12,37 +12,14 @@
 #include <string>
 #include <vector>
 
-// Activation, DenseLayer, activation_from_string/activation_to_string and every
+// Activation, DenseLayer, StandardScaler, MlpModel, the JSON format and every
 // derivative kernel live in MlpCore.h (header-only, std-only, shared verbatim
-// with imp.bff). This header is the library shell around them: training, JSON,
-// scalers, and the batch entry points the bindings expose.
+// with imp.bff). This header is the library shell around them: training with
+// Adam, file I/O, the registry entry, and the batch entry points the bindings
+// expose.
 #include "MlpCore.h"
 
 namespace tttrlib {
-
-/**
- * @brief Elementwise standardisation, @f$ (x - \mu) / \sigma @f$.
- *
- * Mirrors the scikit-learn ``StandardScaler`` so a net trained in Python and one
- * trained here are interchangeable.  Empty ``mean``/``scale`` means "identity" —
- * a net may carry no scaler at all.
- */
-struct StandardScaler {
-    std::vector<double> mean;
-    std::vector<double> scale;
-
-    /// Whether this scaler does anything (non-empty mean/scale).
-    bool active() const { return !mean.empty(); }
-    /// Number of features; 0 when inactive.
-    int size() const { return static_cast<int>(mean.size()); }
-
-    /// Fit mean/scale from ``X`` (row-major, ``n_rows x n_cols``).
-    void fit(const double* X, int n_rows, int n_cols);
-    /// Apply @f$ (x-\mu)/\sigma @f$ to ``v`` in place.
-    void transform(std::vector<double>& v) const;
-    /// Apply @f$ x\sigma + \mu @f$ to ``v`` in place.
-    void inverse_transform(std::vector<double>& v) const;
-};
 
 /**
  * @brief Hyper-parameters for :func:`NeuralNet::train`.
@@ -283,14 +260,14 @@ public:
     const std::vector<double>& get_validation_curve() const { return validation_curve_; }
 
     // --- introspection ----------------------------------------------------
-    int n_inputs() const { return layers_.empty() ? 0 : layers_.front().n_in; }
-    int n_outputs() const { return layers_.empty() ? 0 : layers_.back().n_out; }
-    int n_layers() const { return static_cast<int>(layers_.size()); }
+    int n_inputs() const { return model_.n_inputs(); }
+    int n_outputs() const { return model_.n_outputs(); }
+    int n_layers() const { return static_cast<int>(model_.layers.size()); }
     /// Total number of weights plus biases.
     long long n_parameters() const;
-    const std::vector<DenseLayer>& get_layers() const { return layers_; }
-    const StandardScaler& get_x_scaler() const { return x_scaler_; }
-    const StandardScaler& get_y_scaler() const { return y_scaler_; }
+    const std::vector<DenseLayer>& get_layers() const { return model_.layers; }
+    const StandardScaler& get_x_scaler() const { return model_.x_scaler; }
+    const StandardScaler& get_y_scaler() const { return model_.y_scaler; }
 
     /**
      * @brief Throw unless the layers chain and the scalers match the ends.
@@ -300,10 +277,12 @@ public:
      */
     void validate() const;
 
+    /// The layers and scalers as one :struct:`MlpModel` -- what the header-only
+    /// kernels operate on, and what a vendored copy of MlpCore.h consumes.
+    const MlpModel& get_model() const { return model_; }
+
 private:
-    std::vector<DenseLayer> layers_;
-    StandardScaler x_scaler_;
-    StandardScaler y_scaler_;
+    MlpModel model_;
     std::vector<double> loss_curve_;
     std::vector<double> validation_curve_;
 };
