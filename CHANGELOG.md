@@ -34,7 +34,10 @@
   `modules/math/include/MlpCore.h`, which imp.bff vendors verbatim; the GEMM is
   a template policy (Mat.h here, portable loops in the copy). `train` now runs
   on the same kernels and reproduces its previous predictions to 1e-15 on the
-  same seed, and is not slower. `Dual.h` gained `tanh`, `sin`, `cos`, `sqrt`,
+  same seed, and at parity on thread-CPU time against the pre-refactor code
+  extracted from git (a first version was 10–45 % slower from a per-element
+  activation `switch` in the hot loops; hoisted, plus a thread-local
+  workspace — numbers in modules/math/README.md). `Dual.h` gained `tanh`, `sin`, `cos`, `sqrt`,
   `pow`, `min`, `max` and the missing comparisons against `double`.
   Validation: `test/cpp/test_mlp_core.cpp` (dot-product identity against the
   forward-mode Dual pass, central differences for every gradient), Python

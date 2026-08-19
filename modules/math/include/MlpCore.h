@@ -323,6 +323,92 @@ inline void act_derivs(double z, double a, Activation act,
     f1 = 1.0; f2 = 0.0; f3 = 0.0;
 }
 
+/// `a[i] = f(z[i])` for `n` doubles, the switch hoisted out of the loop so
+/// each case is a plain vectorisable loop (a per-element `switch` cost 20-45 %
+/// of a small-net training step, measured).
+inline void act_apply(const double* z, double* a, size_t n, Activation act) {
+    switch (act) {
+        case Activation::Identity:
+            if (a != z) std::copy(z, z + n, a);
+            return;
+        case Activation::ReLU:
+            TTTRLIB_MLPCORE_SIMD
+            for (size_t i = 0; i < n; ++i) a[i] = (z[i] > 0.0) ? z[i] : 0.0;
+            return;
+        case Activation::Tanh:
+            for (size_t i = 0; i < n; ++i) a[i] = std::tanh(z[i]);
+            return;
+        case Activation::Sigmoid:
+            for (size_t i = 0; i < n; ++i) a[i] = 1.0 / (1.0 + std::exp(-z[i]));
+            return;
+        case Activation::Softplus:
+            for (size_t i = 0; i < n; ++i)
+                a[i] = (z[i] > 0.0) ? z[i] + std::log(1.0 + std::exp(-z[i])) : std::log(1.0 + std::exp(z[i]));
+            return;
+        case Activation::SiLU:
+            for (size_t i = 0; i < n; ++i) a[i] = z[i] / (1.0 + std::exp(-z[i]));
+            return;
+        case Activation::Sin:
+            for (size_t i = 0; i < n; ++i) a[i] = std::sin(z[i]);
+            return;
+    }
+}
+
+/// `f1[i]`, and when `order >= 1` `f2[i]`, and when `order >= 2` `f3[i]`, for
+/// `n` doubles -- same formulas as act_derivs(), switch hoisted, only the
+/// orders a pass needs. `f2`/`f3` may be null below their order.
+inline void act_derivs_n(const double* z, const double* a, size_t n, Activation act, int order,
+                         double* f1, double* f2, double* f3) {
+    switch (act) {
+        case Activation::Identity:
+            std::fill(f1, f1 + n, 1.0);
+            if (order >= 1) std::fill(f2, f2 + n, 0.0);
+            if (order >= 2) std::fill(f3, f3 + n, 0.0);
+            return;
+        case Activation::ReLU:
+            TTTRLIB_MLPCORE_SIMD
+            for (size_t i = 0; i < n; ++i) f1[i] = (z[i] > 0.0) ? 1.0 : 0.0;
+            if (order >= 1) std::fill(f2, f2 + n, 0.0);
+            if (order >= 2) std::fill(f3, f3 + n, 0.0);
+            return;
+        case Activation::Tanh:
+            TTTRLIB_MLPCORE_SIMD
+            for (size_t i = 0; i < n; ++i) f1[i] = 1.0 - a[i] * a[i];
+            if (order >= 1) {
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < n; ++i) f2[i] = -2.0 * a[i] * f1[i];
+            }
+            if (order >= 2) {
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < n; ++i) f3[i] = -2.0 * f1[i] * (1.0 - 3.0 * a[i] * a[i]);
+            }
+            return;
+        case Activation::Sigmoid:
+            TTTRLIB_MLPCORE_SIMD
+            for (size_t i = 0; i < n; ++i) f1[i] = a[i] * (1.0 - a[i]);
+            if (order >= 1) {
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < n; ++i) f2[i] = f1[i] * (1.0 - 2.0 * a[i]);
+            }
+            if (order >= 2) {
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < n; ++i) f3[i] = f2[i] * (1.0 - 2.0 * a[i]) - 2.0 * f1[i] * f1[i];
+            }
+            return;
+        case Activation::Softplus:
+        case Activation::SiLU:
+        case Activation::Sin:
+            for (size_t i = 0; i < n; ++i) {
+                double d1, d2, d3;
+                act_derivs(z[i], a[i], act, d1, d2, d3);
+                f1[i] = d1;
+                if (order >= 1) f2[i] = d2;
+                if (order >= 2) f3[i] = d3;
+            }
+            return;
+    }
+}
+
 // ---------------------------------------------------------------------------
 // GEMM policy
 // ---------------------------------------------------------------------------
@@ -430,6 +516,8 @@ struct Workspace {
     std::vector<std::vector<double>> a, z;
     std::vector<std::vector<double>> a1, z1;
     std::vector<std::vector<double>> a2, z2;
+    /// Scratch for the activation derivatives (reused across calls).
+    std::vector<double> f1, f2, f3;
 
     /// The network output, `n_rows x n_out`.
     const std::vector<double>& output() const { return a.back(); }
@@ -492,7 +580,7 @@ inline void forward(const std::vector<DenseLayer>& layers,
         }
         // a0 = f(z0)
         ws.a[l + 1].resize(nz);
-        for (size_t i = 0; i < nz; ++i) ws.a[l + 1][i] = act_value(ws.z[l][i], ly.activation);
+        act_apply(ws.z[l].data(), ws.a[l + 1].data(), nz, ly.activation);
 
         if (order >= 1) {
             // z1 = a1 W^T ; a1 = f'(z0) z1
@@ -506,12 +594,21 @@ inline void forward(const std::vector<DenseLayer>& layers,
                     Gemm::nt(n_rows, ly.n_out, ly.n_in, ws.a2[l].data(), ly.weight.data(), ws.z2[l].data());
                 ws.a2[l + 1].resize(nz);
             }
-            for (size_t i = 0; i < nz; ++i) {
-                double f1, f2, f3;
-                act_derivs(ws.z[l][i], ws.a[l + 1][i], ly.activation, f1, f2, f3);
-                const double z1 = ws.z1[l][i];
-                ws.a1[l + 1][i] = f1 * z1;
-                if (order >= 2) ws.a2[l + 1][i] = f2 * z1 * z1 + f1 * ws.z2[l][i];
+            ws.f1.resize(nz);
+            if (order >= 2) ws.f2.resize(nz);
+            act_derivs_n(ws.z[l].data(), ws.a[l + 1].data(), nz, ly.activation, order - 1,
+                         ws.f1.data(), order >= 2 ? ws.f2.data() : nullptr, nullptr);
+            const double* f1 = ws.f1.data();
+            const double* z1 = ws.z1[l].data();
+            double* a1 = ws.a1[l + 1].data();
+            TTTRLIB_MLPCORE_SIMD
+            for (size_t i = 0; i < nz; ++i) a1[i] = f1[i] * z1[i];
+            if (order >= 2) {
+                const double* f2 = ws.f2.data();
+                const double* z2 = ws.z2[l].data();
+                double* a2 = ws.a2[l + 1].data();
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < nz; ++i) a2[i] = f2[i] * z1[i] * z1[i] + f1[i] * z2[i];
             }
         }
     }
@@ -571,7 +668,7 @@ inline void backward(const std::vector<DenseLayer>& layers, const Workspace& ws,
         else abar2.assign(static_cast<size_t>(n_rows) * n_out_last, 0.0);
     }
 
-    std::vector<double> zbar0, zbar1, zbar2, gW, tmp;
+    std::vector<double> zbar0, zbar1, zbar2, gW, tmp, f1, f2, f3;
 
     for (size_t l = L; l-- > 0;) {
         const DenseLayer& ly = layers[l];
@@ -583,23 +680,44 @@ inline void backward(const std::vector<DenseLayer>& layers, const Workspace& ws,
         if (order >= 1) zbar1.resize(nz);
         if (order >= 2) zbar2.resize(nz);
 
-        for (size_t i = 0; i < nz; ++i) {
-            double f1, f2, f3;
-            act_derivs(ws.z[l][i], ws.a[l + 1][i], ly.activation, f1, f2, f3);
-            double zb0 = abar0[i] * f1;
-            if (order >= 1) {
-                const double z1 = ws.z1[l][i];
-                double zb1 = abar1[i] * f1;
-                zb0 += abar1[i] * f2 * z1;
-                if (order >= 2) {
-                    const double z2 = ws.z2[l][i];
-                    zbar2[i] = abar2[i] * f1;
-                    zb1 += abar2[i] * 2.0 * f2 * z1;
-                    zb0 += abar2[i] * (f3 * z1 * z1 + f2 * z2);
+        f1.resize(nz);
+        if (order >= 1) f2.resize(nz);
+        if (order >= 2) f3.resize(nz);
+        act_derivs_n(ws.z[l].data(), ws.a[l + 1].data(), nz, ly.activation, order,
+                     f1.data(), order >= 1 ? f2.data() : nullptr, order >= 2 ? f3.data() : nullptr);
+        {
+            const double* F1 = f1.data();
+            const double* A0 = abar0.data();
+            double* Z0 = zbar0.data();
+            if (order == 0) {
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < nz; ++i) Z0[i] = A0[i] * F1[i];
+            } else if (order == 1) {
+                const double* F2 = f2.data();
+                const double* A1 = abar1.data();
+                const double* z1 = ws.z1[l].data();
+                double* Z1 = zbar1.data();
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < nz; ++i) {
+                    Z1[i] = A1[i] * F1[i];
+                    Z0[i] = A0[i] * F1[i] + A1[i] * F2[i] * z1[i];
                 }
-                zbar1[i] = zb1;
+            } else {
+                const double* F2 = f2.data();
+                const double* F3 = f3.data();
+                const double* A1 = abar1.data();
+                const double* A2 = abar2.data();
+                const double* z1 = ws.z1[l].data();
+                const double* z2 = ws.z2[l].data();
+                double* Z1 = zbar1.data();
+                double* Z2 = zbar2.data();
+                TTTRLIB_MLPCORE_SIMD
+                for (size_t i = 0; i < nz; ++i) {
+                    Z2[i] = A2[i] * F1[i];
+                    Z1[i] = A1[i] * F1[i] + A2[i] * 2.0 * F2[i] * z1[i];
+                    Z0[i] = A0[i] * F1[i] + A1[i] * F2[i] * z1[i] + A2[i] * (F3[i] * z1[i] * z1[i] + F2[i] * z2[i]);
+                }
             }
-            zbar0[i] = zb0;
         }
 
         // dW = zbar0^T a0 (+ zbar1^T a1 + zbar2^T a2), db = column sums of zbar0
@@ -744,7 +862,10 @@ inline void model_predict(const MlpModel& m, const double* X, int n_rows, int or
         Vs.assign(V, V + static_cast<size_t>(n_rows) * n_in);
         detail::scale_by(Vs, n_rows, n_in, m.x_scaler, true);
     }
-    Workspace ws;
+    // One workspace per thread, kept between calls: predict_batch is called
+    // per sample or per small batch in tight loops (the HMM surrogate), and
+    // re-allocating L+1 buffers each time was a measured 6 % on a small net.
+    static thread_local Workspace ws;
     forward<Gemm>(m.layers, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
     y = ws.output();
     detail::unscale_out(y, n_rows, n_out, m.y_scaler);
@@ -785,7 +906,7 @@ inline void model_backward(const MlpModel& m, const double* X, int n_rows, const
     if (dY1) { d1.assign(dY1, dY1 + static_cast<size_t>(n_rows) * n_out); detail::scale_by(d1, n_rows, n_out, m.y_scaler, false); }
     if (dY2) { d2.assign(dY2, dY2 + static_cast<size_t>(n_rows) * n_out); detail::scale_by(d2, n_rows, n_out, m.y_scaler, false); }
 
-    Workspace ws;
+    static thread_local Workspace ws;
     forward<Gemm>(m.layers, Xs.data(), n_rows, ws, order, order >= 1 ? Vs.data() : nullptr);
     backward<Gemm>(m.layers, ws, d0.data(), dY1 ? d1.data() : nullptr, dY2 ? d2.data() : nullptr,
                    dparams.data(), dX.data(), order >= 1 ? dV.data() : nullptr);

@@ -192,11 +192,23 @@ the contract.
 
 Numerics: the refactor of `NeuralNet::train` onto these kernels reproduces the
 previous implementation's predictions to 1e-15 on the same seed (same GEMM
-kernels, same operation order), and is not slower — the small-net timing went
-from 0.17/0.32/0.71 s to 0.13–0.19/0.23–0.26/0.47–0.56 s (relu/tanh/logistic,
-200 epochs, 1500 × 2) after the workspace stopped re-allocating per batch; the
-256-256-128 default net from 3.7 s to 3.3 s for 30 epochs. Every gradient path
-is checked in `test/cpp/test_mlp_core.cpp`; the end-to-end demonstration is
+kernels, same operation order). Performance was measured the way `AGENTS.md`
+asks — thread CPU time (`CLOCK_THREAD_CPUTIME_ID`), the pre-refactor
+`NeuralNet.cpp` extracted from git and compiled into the same benchmark,
+interleaved runs — because the first wall-clock numbers said "faster" while
+the machine was idle and "slower" while it was loaded, and neither was true.
+The first version *was* 10–45 % slower on training and 22 % on `predict_batch`
+for a ReLU 2-32-32-2 net: a per-element `switch` on the activation inside the
+hot loops (no vectorisation) and a fresh workspace per call. With the switch
+hoisted (`act_apply`, `act_derivs_n`) and a thread-local workspace in the
+model entry points, old vs new over four interleaved runs: train 2-32-32-2 ×
+200 epochs relu 109 → 107 ms, tanh 244 → 238 ms, logistic 617 → 596 ms; the
+256-256-128 default × 30 epochs 2 614 → 2 690 ms (±10 % run to run under
+load); `predict_batch(1500×2)` × 200: relu 116 → 109 ms, tanh 435 → 429 ms,
+logistic 340 → 345 ms. Parity within noise, and the derivative kernels
+(order-2 forward + backward, 5000 × 2-20×8-1) got 3–9 % faster than their
+first version in the same pass. Every gradient path is checked in
+`test/cpp/test_mlp_core.cpp`; the end-to-end demonstration is
 `test/python/test_neural_net.py::test_pinn_poisson_1d` — a 1-16-16-1 tanh net
 fitted to `u'' = -π² sin(πx)`, `u(0) = u(1) = 0`, by L-BFGS on the residual
 loss, gradient from `backward_derivatives`: max error 9e-6 in 0.5 s.
