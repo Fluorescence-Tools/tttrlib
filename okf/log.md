@@ -1,5 +1,50 @@
 # Bundle update log
 
+## 2026-08-19 (50th entry)
+
+* **The 77-commit push went red, then green in five rounds** (runs 32147106516
+  → 32203421001, fixes `f399ae160`, `1fc165d5f`, `2f6fb09e9`, `8f1e92a8b`,
+  `9de33ed25`). Worth writing down because every failure was a *class* of
+  mistake a local run cannot show:
+
+  1. **`#include "Registry.h"` inside `#ifdef _OPENMP`** (Correlator.cpp). My
+     automated include-insertion matched the first `#include <` in the file,
+     which happened to be `<omp.h>` inside that guard. Every local build has
+     libomp, so the branch was always taken; macOS CI has none and compiled the
+     file with no registry declared. A sweep for project headers inside
+     conditionals found this one and only this one.
+  2. **A pinned order that was really link order.** The registry's category
+     list was "historical block, then whatever registered next" -- and entries
+     register from static initialisers, so "next" is link order, which differs
+     between the Python extension, the R package and the JNI library. R, Java
+     and JS all failed the same conformance case at index 13. Now: historical
+     block, then **alphabetical**.
+  3. **`relaxation_times` dropped the stationary mode by an absolute
+     threshold** (`|Re λ| > 1e-15`). How close to zero the zero eigenvalue
+     lands is a property of the QR iteration on the platform's arithmetic: a
+     four-state scheme returned four times on macOS (the extra one 5.5e11 s)
+     and three here. Now it drops the single eigenvalue nearest zero, guarded
+     relative to the spectrum -- the mathematical statement, not a guess about
+     how small zero looks.
+  4. **A/B tests asserting more than the mathematics gives.** The MEM-vs-scipy
+     comparison demanded the coordinates agree to 0.5% where Q is flat along a
+     ridge: on macOS the largest component differed by 0.9% while the objective
+     agreed to 1e-6. It now compares what the objective determines (total mass,
+     where the mass sits, no mass where the other has none) plus the one-sided
+     "never worse, and scipy cannot improve from our point".
+  5. **Optional references without skip guards.** sklearn, ChiSurf,
+     imagecodecs, pandas (imported at module scope, so the whole group aborted)
+     and `numpy.trapz`, removed in NumPy 2. All from the 08-17 validation
+     sweep, which had never been through CI.
+  6. **A six-hour "cancelled" run with nothing to read**: `apt-get install
+     libhdf5-dev` hung and GitHub's job limit killed it. The job now has
+     `timeout-minutes: 90` and the apt step 10, so a hung mirror fails fast and
+     names itself.
+
+  The lesson under all six: a local suite tests the code, CI tests the
+  *assumptions* -- about the toolchain, the link order, the platform's
+  arithmetic, and what is installed. 24/24 green at `9de33ed25`.
+
 ## 2026-08-18 (49th entry)
 
 * **Every module registers; operations compose; a pipeline is a document**
