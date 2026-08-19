@@ -1346,6 +1346,40 @@ that support broader analysis workflows and development.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="A physics-informed neural network (PINN; Raissi, Perdikaris &amp; Karniadakis 2019) represents the solution of a differential equation by a network u(x, t) and trains it on the equation itself: the loss is the squared PDE residual at collocation points plus the initial and boundary conditions. Nothing is solved on a grid; the network&#x27;s derivatives with respect to its inputs are the ingredients, and the gradient of the residual loss with respect to the weights is what the optimiser needs.">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_pinn_heat_equation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_pinn_heat_equation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Physics-informed fit: the heat equation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib.NeuralNet is a small dense network -- the kind that replaces an expensive fit with a learned map (the HMM surrogate is built on it) or that parametrises an unknown function inside a physical model. This example shows the second use, which is what its derivative API exists for:">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_neural_net_differentiable_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_neural_net_differentiable`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">A neural network as a differentiable building block</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Everything tttrlib can do is in one registry (``tttrlib.registry()``): every algorithm, fit model, objective, prior, correlation method and pipeline operation registers itself there -- next to its own code -- when the library loads, and so does every capability a drop-in plugin brings. Nothing is listed by hand, so nothing can drift from what the code actually offers.">
 
 .. only:: html
@@ -1358,6 +1392,23 @@ that support broader analysis workflows and development.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">The registry: discover algorithms and compose a pipeline</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The canonical PINN benchmark (Raissi, Perdikaris &amp; Karniadakis 2019, Fig. 1): viscous Burgers&#x27; equation">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_pinn_burgers_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_pinn_burgers`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Physics-informed fit: Burgers' equation</div>
     </div>
 
 

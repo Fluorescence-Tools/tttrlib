@@ -1073,7 +1073,10 @@
 <li class="toctree-l3"><a class="reference internal" href="plot_watershed_marching_squares.html">Region segmentation: watershed and iso-contours</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_richardson_lucy_deconvolution.html">Richardson-Lucy deconvolution of an image</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pinn_heat_equation.html">Physics-informed fit: the heat equation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_neural_net_differentiable.html">A neural network as a differentiable building block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="plot_registry_composition.html">The registry: discover algorithms and compose a pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pinn_burgers.html">Physics-informed fit: Burgers’ equation</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1245,9 +1248,18 @@ that support broader analysis workflows and development.</p>
 </div><div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the tttrlib histogram routines outperform numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)"><img alt="" src="../../_images/sphx_glr_plot_histogram_benchmark_thumb.png" />
 <p><a class="reference internal" href="plot_histogram_benchmark.html"><span class="doc">Benchmark of histogram routines</span></a></p>
   <div class="sphx-glr-thumbnail-title">Benchmark of histogram routines</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="A physics-informed neural network (PINN; Raissi, Perdikaris &amp; Karniadakis 2019) represents the solution of a differential equation by a network u(x, t) and trains it on the equation itself: the loss is the squared PDE residual at collocation points plus the initial and boundary conditions. Nothing is solved on a grid; the network&#x27;s derivatives with respect to its inputs are the ingredients, and the gradient of the residual loss with respect to the weights is what the optimiser needs."><img alt="" src="../../_images/sphx_glr_plot_pinn_heat_equation_thumb.png" />
+<p><a class="reference internal" href="plot_pinn_heat_equation.html"><span class="doc">Physics-informed fit: the heat equation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Physics-informed fit: the heat equation</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="tttrlib.NeuralNet is a small dense network -- the kind that replaces an expensive fit with a learned map (the HMM surrogate is built on it) or that parametrises an unknown function inside a physical model. This example shows the second use, which is what its derivative API exists for:"><img alt="" src="../../_images/sphx_glr_plot_neural_net_differentiable_thumb.png" />
+<p><a class="reference internal" href="plot_neural_net_differentiable.html"><span class="doc">A neural network as a differentiable building block</span></a></p>
+  <div class="sphx-glr-thumbnail-title">A neural network as a differentiable building block</div>
 </div><div class="sphx-glr-thumbcontainer" tooltip="Everything tttrlib can do is in one registry (``tttrlib.registry()``): every algorithm, fit model, objective, prior, correlation method and pipeline operation registers itself there -- next to its own code -- when the library loads, and so does every capability a drop-in plugin brings. Nothing is listed by hand, so nothing can drift from what the code actually offers."><img alt="" src="../../_images/sphx_glr_plot_registry_composition_thumb.png" />
 <p><a class="reference internal" href="plot_registry_composition.html"><span class="doc">The registry: discover algorithms and compose a pipeline</span></a></p>
   <div class="sphx-glr-thumbnail-title">The registry: discover algorithms and compose a pipeline</div>
+</div><div class="sphx-glr-thumbcontainer" tooltip="The canonical PINN benchmark (Raissi, Perdikaris &amp; Karniadakis 2019, Fig. 1): viscous Burgers&#x27; equation"><img alt="" src="../../_images/sphx_glr_plot_pinn_burgers_thumb.png" />
+<p><a class="reference internal" href="plot_pinn_burgers.html"><span class="doc">Physics-informed fit: Burgers’ equation</span></a></p>
+  <div class="sphx-glr-thumbnail-title">Physics-informed fit: Burgers' equation</div>
 </div></div><div class="toctree-wrapper compound">
 </div>
 </section>

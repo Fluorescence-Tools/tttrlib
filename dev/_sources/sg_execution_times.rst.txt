@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 121 files **from all galleries**:
+**00:00.000** total execution time for 124 files **from all galleries**:
 
 .. container::
 
@@ -210,6 +210,15 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``../examples/miscellaneous/plot_histogram_benchmark.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_neural_net_differentiable.py` (``../examples/miscellaneous/plot_neural_net_differentiable.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_pinn_burgers.py` (``../examples/miscellaneous/plot_pinn_burgers.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_pinn_heat_equation.py` (``../examples/miscellaneous/plot_pinn_heat_equation.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_registry_composition.py` (``../examples/miscellaneous/plot_registry_composition.py``)
