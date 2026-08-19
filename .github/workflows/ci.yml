@@ -1035,25 +1035,38 @@ jobs:
       # only HDF5 has to be installed by hand.
       - name: Install HDF5 (Linux)
         if: runner.os == 'Linux'
-        # A hung Ubuntu mirror is the most common infrastructure failure in this
-        # workflow, and the only one that has ever cost a whole run: apt sits on
-        # an unresponsive host until something kills it. The step timeout turned
-        # that from a lost afternoon into a 10-minute failure, which is better
-        # but still a red run with nothing wrong in the code -- it happened
-        # again on 2026-08-19.
+        # This step is the most common infrastructure failure in the workflow
+        # and the only one that has cost whole runs -- twice by 2026-08-19,
+        # neither time with anything wrong in the commit under test.
         #
-        # So a hang is now retried instead of being fatal. Each attempt gets its
-        # own wall clock via `timeout`, because the failure mode is hanging
-        # rather than exiting non-zero and a plain `||` retry would never fire.
-        # Three attempts at two minutes a command fit inside the step budget
-        # with room to spare; the normal case is one attempt in well under one.
+        # The cause is specific, and worth writing down because "apt hung" sent
+        # us at the wrong fix once already. The runner's sources point at a
+        # *mirrorlist* (`mirror+file:/etc/apt/apt-mirrors.txt`) whose first
+        # entry is http://azure.archive.ubuntu.com. When that host is unwell it
+        # does not refuse connections, it black-holes them, so apt retries it
+        # with backoff -- Ign:, Ign:, Ign: -- and spends minutes there before
+        # falling back. The fallback, https://archive.ubuntu.com, answers
+        # immediately and correctly the whole time. So the run dies waiting on
+        # a mirror it does not need.
+        #
+        # Hence: drop the mirrorlist and go straight to the mirror that works.
+        # Guarded, because only the Azure-hosted images have that file.
+        #
+        # The retry stays as the second line of defence, for a slow archive
+        # rather than a dead one. `timeout` is what makes it work at all: the
+        # failure is a *hang*, not a non-zero exit, so a plain `||` retry would
+        # never fire and the job would sit there until it was killed.
         timeout-minutes: 15
         run: |
           set -uo pipefail
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            echo "mirrorlist was:"; cat /etc/apt/apt-mirrors.txt
+            echo "https://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt
+          fi
           for attempt in 1 2 3; do
             echo "::group::apt attempt $attempt"
-            if timeout 120 sudo apt-get update && \
-               timeout 120 sudo apt-get install -y libhdf5-dev cmake; then
+            if timeout 180 sudo apt-get update && \
+               timeout 180 sudo apt-get install -y libhdf5-dev cmake; then
               echo "::endgroup::"
               exit 0
             fi
@@ -1061,7 +1074,7 @@ jobs:
             echo "::warning::apt attempt $attempt hung or failed; retrying"
             sleep 10
           done
-          echo "::error::apt failed three times -- the Ubuntu mirrors are unreachable from this runner, not a defect in this commit."
+          echo "::error::apt failed three times even against archive.ubuntu.com -- infrastructure, not a defect in this commit."
           exit 1
       - name: Install HDF5 (macOS)
         if: runner.os == 'macOS'
