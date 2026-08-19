@@ -609,18 +609,21 @@ const char* const kNeuralNetEntry = R"JSON({
   ],
   "api": [
     "NeuralNet",
+    "MlpModel",
     "DenseLayer",
     "TrainOptions",
     "StandardScaler",
     "activation_from_string",
     "activation_to_string",
-    "NeuralNet::backward",
-    "NeuralNet::backward_derivatives",
-    "NeuralNet::predict_derivatives",
-    "NeuralNet::jacobian",
-    "NeuralNet::hessian",
-    "NeuralNet::get_parameters",
-    "NeuralNet::set_parameters"
+    "NeuralNet.backward",
+    "NeuralNet.backward_derivatives",
+    "NeuralNet.predict_derivatives",
+    "NeuralNet.jacobian",
+    "NeuralNet.hessian",
+    "NeuralNet.get_parameters",
+    "NeuralNet.set_parameters",
+    "NeuralNetBackward",
+    "NeuralNetDerivatives"
   ],
   "can_replay": false
 })JSON";

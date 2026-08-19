@@ -145,7 +145,14 @@ def test_plumbing_list_is_current(covered):
 
 def test_every_api_symbol_exists(covered):
     """An `api` name a registry entry claims must resolve in Python -- a
-    renamed method would otherwise leave the entry pointing at nothing."""
+    renamed method would otherwise leave the entry pointing at nothing.
+
+    The names are **Python** paths resolved with `getattr` from the `tttrlib`
+    module: `Class.method`, with a dot. C++ notation (`Class::method`) is the
+    mistake this catches most often -- it resolves to nothing, so the entry
+    silently documents an API that cannot be reached. A nested C++ type is
+    named by what SWIG calls it, not by its C++ path: `NeuralNet::Backward`
+    crosses as `NeuralNetBackward`."""
     reg = json.loads(tttrlib.registry_json())
     missing = []
     for category, entries in reg.items():
@@ -156,8 +163,15 @@ def test_every_api_symbol_exists(covered):
                     for part in a.split("."):
                         obj = getattr(obj, part)
                 except AttributeError:
-                    missing.append(f"{category}/{key}: {a}")
-    assert not missing, "\n".join(missing)
+                    hint = ""
+                    if "::" in a:
+                        hint = (f"  <- C++ notation; write "
+                                f"'{a.replace('::', '.')}' (a method) or "
+                                f"'{a.replace('::', '')}' (a nested type)")
+                    missing.append(f"{category}/{key}: {a}{hint}")
+    assert not missing, (
+        "registry entries name API symbols that do not resolve in Python:\n"
+        + "\n".join(missing))
 
 
 def test_every_module_registered_something():
