@@ -8,18 +8,24 @@ last_verified: 2026-08-17
 
 Every kernel in `modules/math` has been A/B-tested against an **independent**
 reference implementation — sklearn, scipy, scikit-image, numpy, hmmlearn,
-filterpy, Random123 / pcg32 known answers, and ChiSurf's own Python where the
-kernel is a port of it. The A/Bs are permanent tests, not one-off scripts, and
-each header carries a `// Validation: A/B-TESTED <date> -- ...` block after its
-include guard that names the reference and the test. This file is the register
-those blocks point at.
+filterpy, Random123 / pcg32 known answers. The A/Bs are permanent tests, not
+one-off scripts, and each header carries a `// Validation: A/B-TESTED <date>
+-- ...` block after its include guard that names the reference and the test.
+This file is the register those blocks point at.
 
 Rule applied (user, 2026-08-11): *a method reimplemented in-tree is A/B'd
 against the reference implementation and the A/B is kept as the acceptance
-test.* Where ChiSurf has a recorded fixture that is the *second* check; the
-primary one is a library the port did not copy from (PRD-037 requirement 6:
-a port checked only against what it replaces cannot tell a faithful port from
-a shared mistake).
+test.*
+
+**ChiSurf is not a reference (user, 2026-08-19: "no chisurf as ref, not
+stable").** It is a moving target that this library is also the upstream of,
+so "the two agree" says only that two things which change together still
+agree — and where a kernel began as a port of it, "bit-exact with ChiSurf" is
+a statement about a snapshot, not about the mathematics. Every row that rested
+on ChiSurf has been replaced by the upstream that was already checking the
+same claim (scipy, scikit-learn, filterpy) and the ChiSurf tests are deleted,
+not merely demoted. Being a port of ChiSurf is a fact about a kernel's
+history; it is not evidence that it is right.
 
 ## How to run
 
@@ -50,16 +56,11 @@ Verdicts: **PASS** = agrees with the reference to the stated metric.
 |---|---|---|---|---|---|
 | `Cluster.h` | `core_distances` | `sklearn.neighbors.NearestNeighbors` (k counts self on both sides) | max abs diff ≤ 4.4e-16, n 200–3000, d 2–8, k 1–15, duplicates | PASS | `test_math_ab_clustering.py::TestCoreDistancesAgainstSklearn` |
 | `Cluster.h` | `mutual_reachability_mst` | `scipy.sparse.csgraph.minimum_spanning_tree` on the dense MR matrix | sorted weight multiset bit-identical, total rel diff 0.0 | PASS | `…::TestMstAgainstScipy` |
-| `Cluster.h` | `mutual_reachability_mst` | ChiSurf `_hdbscan._prim_mst` | edge-for-edge under the total order | PASS | `…::TestMstAgainstChisurfPrim` |
-| `Cluster.h` | `hdbscan_condensed_tree` | ChiSurf `condense_tree(single_linkage_tree(mst))` | parent/child/lambda/size arrays bit-identical, 12 configs | PASS | `…::TestHdbscanAgainstChisurf::test_condensed_tree_bit_identical` |
 | `Cluster.h` | condense + EOM + `hdbscan_label_points` | `sklearn.cluster.HDBSCAN` fed its **own** single-linkage tree, and sklearn's downstream fed **our** MST | partition identity 36/36 | PASS | `…::TestHdbscanAgainstSklearn` (2 tests) |
 | `Cluster.h` | full HDBSCAN pipeline | `sklearn.cluster.HDBSCAN` end to end | 8/18 exact, ARI ≥ 0.88, cluster count within 1 — the residue is sklearn's unstable `np.argsort` on tied MST edges, not a kernel difference (either side's tree through the other's downstream is exact) | PASS (bounded) | `…::test_full_pipeline_agrees_up_to_mst_ties` |
-| `Cluster.h` | full HDBSCAN pipeline | ChiSurf `HDBSCAN` estimator | 18/18 identical partitions | PASS | `…::TestHdbscanAgainstChisurf::test_estimator_labels_identical` |
 | `KMeans.h` | `kmeans` | `sklearn.cluster.KMeans(algorithm='lloyd', n_init=1, tol=0)` from the same k-means++ seed | centres ≤ 1.1e-14, labels equal, inertia rel ≤ 8e-16; our final centres are a fixed point of sklearn | PASS | `…::TestKmeansAgainstSklearn` (2 tests) |
-| `KMeans.h` | `kmeans` | ChiSurf `_kmeans` live | bit-identical centres/labels/inertia/n_iter, 6 sets × n_init 1,3 | PASS | `…::TestKmeansAgainstChisurf` |
 | `Kalman.h` | `kalman_filter` | textbook NumPy filter (`np.linalg.inv`, plain `@`), dims 1/2/3 | x, P, D rel ≤ ~1e-14 | PASS | `test_math_ab_probabilistic.py::TestKalmanAgainstTheTextbook` |
 | `Kalman.h` | `kalman_filter` | filterpy `KalmanFilter` (Joseph-form update), recorded | ≤ 2.1e-14 | PASS | `…::TestKalmanAgainstFilterpy` |
-| `Kalman.h` | `kalman_filter` | ChiSurf `_kalman_filter_loop` live, 50 traces, dim 2 | bit-identical | PASS | `…::TestKalmanAgainstChiSurfLive` |
 | `HmmLattice.h` | `hmm_forward_log`, `hmm_backward_log`, `hmm_backward_posteriors_xi`, `hmm_viterbi_log` | hmmlearn `_hmmc`, recorded (K 2/3/5, T=1, forbidden transition, dead frame) | forward/backward/logprob/viterbi bit-identical; posteriors ≤ 1.1e-14; xi ≤ 1.6e-13 (fused-sweep accumulation order) | PASS | `…::TestHmmLatticeAgainstHmmlearn` |
 | `HmmLattice.h` | `hmm_estep_log` | hmmlearn `lengths` semantics + textbook recompute | 1e-9 / 1e-10 | PASS | `…::test_estep_over_the_concatenated_cases_is_the_sum` |
 | `HmmLattice.h` | all `hmm_*` | own NumPy forward-backward / Viterbi with `scipy.special.logsumexp`, K ≤ 8 | 1e-10 rel | PASS | `…::TestHmmLatticeAgainstTheTextbook` |
@@ -97,6 +98,14 @@ Verdicts: **PASS** = agrees with the reference to the stated metric.
 | `NeuralNet.h` | forward pass | sklearn `MLPRegressor` weights imported via JSON | 1e-10 | PASS | `test/python/test_neural_net.py::test_matches_sklearn_forward_pass` |
 | `NeuralNet.h` | training | sklearn `MLPRegressor` (64,64) ReLU/Adam, same hyper-parameters, 2-D smooth target | both < 2 % of variance test MSE, ours ≤ 3× sklearn | PASS (bounded) | `test_math_ab_numerics.py::TestNeuralNetAgainstSklearn` |
 | `Dual.h`, `GradVec.h` | forward-mode AD | autodiff (A/B before autodiff was deleted), long-double dual, central differences | agreement on the localization objective; every operator vs hand derivatives | PASS | `test/cpp/test_ad_gradient.cpp` |
+| `Dual.h` | `tanh`, `sin`, `cos`, `sqrt`, `pow`, `min`, `max`, comparisons vs double (added 2026-08-19) | hand derivatives; central differences through the network in `test_mlp_core` | 1e-14 | PASS | `test/cpp/test_mlp_core.cpp::test_dual_ops` |
+| `MlpCore.h` | activation `f'`, `f''`, `f'''` (identity, relu, tanh, logistic, softplus, silu, sin) | central differences of `f` | 1e-7 / 1e-5 / 1e-3 | PASS | `test/cpp/test_mlp_core.cpp::test_activation_derivatives` |
+| `MlpCore.h` | `PortableGemm` nn/nt/tn | naive triple loop | 1e-14 | PASS | `test/cpp/test_mlp_core.cpp::test_gemm` |
+| `MlpCore.h` | forward, Taylor orders 1-2 (`J v`, `vᵀ H v`) | forward-mode `Dual<double>` / `Dual<GradVec<3>>` through `predict_scalar`; first and second central differences along `v` | 1e-13 (Dual) / 1e-6, 1e-4 (FD) | PASS | `test/cpp/test_mlp_core.cpp::test_forward_taylor` |
+| `MlpCore.h` | backward: `dL/dparams`, `dL/dx`, `dL/dv` for a loss on `y`, `J v`, `vᵀ H v`; order-0 alone | dot-product identity `<w,Jv> = <Jᵀw,v>` vs the Dual pass; central differences of the loss, parameter by parameter | 1e-12 (identity) / 1e-6 (FD) | PASS | `test/cpp/test_mlp_core.cpp::test_backward` |
+| `NeuralNet.h` | `backward`, `jacobian`, `hessian`, `predict_derivatives`, `backward_derivatives` through the stored scalers; `get/set_parameters` | central differences in numpy; `jacobian`/`hessian` vs each other and vs `predict_derivatives` | 1e-6 | PASS | `test/python/test_neural_net.py::test_backward_*`, `::test_jacobian_and_hessian_*`, `::test_predict_derivatives_orders`, `::test_parameters_*` |
+| `NeuralNet.h` | `train` after the refactor onto `MlpCore.h` (`MatGemm` policy) | the pre-refactor implementation, same seed and options | predictions equal to 1.2e-15; not slower (see modules/math/README.md) | PASS | measured 2026-08-19; ongoing guard is `test_neural_net.py::test_training_is_deterministic_for_a_seed` + the sklearn A/B |
+| `NeuralNet.h` | end-to-end physics-informed fit: `u'' = -π² sin πx`, `u(0)=u(1)=0`, L-BFGS on the residual, gradient from `backward_derivatives` | analytic `sin πx` | max error 9e-6 (asserted < 2e-2) | PASS | `test/python/test_neural_net.py::test_pinn_poisson_1d` |
 
 ## What the A/B found
 

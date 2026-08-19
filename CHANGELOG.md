@@ -2,6 +2,47 @@
 
 ## [Unreleased]
 
+- **ChiSurf is no longer a validation reference** (it moves, and this library
+  is its upstream, so agreement between the two proves nothing). Every kernel
+  that rested on it now rests on an upstream package or on ground truth:
+  `kalman_filter` on filterpy + a textbook filter, `kmeans` on scikit-learn,
+  the HDBSCAN pipeline on scipy + scikit-learn, `burst_search_kalman` on a new
+  filterpy-based reference **and on the simulation's ground truth**, the
+  blind-IRF estimate on VicidominiLab's birfi, the HMM surrogate features and
+  the PDA/FIDA kernels on NumPy transcriptions of their definitions. The
+  ChiSurf tests are deleted rather than demoted.
+- **Ground truth found what agreement hid.** The Kalman burst search was
+  A/B'd in a regime where a burst was shorter than one time bin and the merge
+  gap exceeded the gaps between bursts: both implementations returned three
+  detections covering all forty injected bursts and agreed perfectly while
+  resolving nothing. The workload is now 10 us bins (a burst is 3-12 bins,
+  gaps 30-80), and the test asserts precision against the injected bursts
+  (every burst found was really there) and recall (73-98 % recovered
+  individually) *before* it asserts agreement with filterpy.
+
+- **`NeuralNet` is now a differentiable building block, not only a regressor.**
+  `backward(X, dL/dy)` returns the gradient of *any* caller-supplied loss with
+  respect to the flat parameter vector and the inputs; `predict_derivatives` /
+  `backward_derivatives` extend that to losses on `dy/dx` and `d²y/dx²` (a PDE
+  residual, a physics-informed fit) by carrying a directional Taylor expansion
+  of the input through the forward pass and its adjoint through the backward
+  one -- no tape, O(batch); `jacobian` / `hessian` give the full input
+  derivatives of one sample; `get_parameters` / `set_parameters` expose the
+  flat vector an outside optimiser (L-BFGS) works on. Three smooth activations
+  join sklearn's four: `softplus`, `silu`, `sin` (ReLU's `f'' ≡ 0` cannot train
+  a diffusion residual). Every kernel lives in the new header-only, std-only
+  `modules/math/include/MlpCore.h`, which imp.bff vendors verbatim; the GEMM is
+  a template policy (Mat.h here, portable loops in the copy). `train` now runs
+  on the same kernels and reproduces its previous predictions to 1e-15 on the
+  same seed, and is not slower. `Dual.h` gained `tanh`, `sin`, `cos`, `sqrt`,
+  `pow`, `min`, `max` and the missing comparisons against `double`.
+  Validation: `test/cpp/test_mlp_core.cpp` (dot-product identity against the
+  forward-mode Dual pass, central differences for every gradient), Python
+  tests through the scalers, and `test_pinn_poisson_1d` -- a 1-16-16-1 tanh
+  net solving `u'' = -π² sin πx` to 9e-6 by L-BFGS in half a second. Python:
+  `backward_np`, `predict_derivatives_np`, `jacobian_np`, `hessian_np`, the
+  `parameters` property.
+
 - **Module READMEs describe what is actually in the module**, and a test keeps
   them that way (`test/python/test_module_readmes.py`: every leaf module names
   every file it has, every aggregate names its submodules, and a file a README

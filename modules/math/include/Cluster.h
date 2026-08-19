@@ -2,10 +2,10 @@
 #ifndef TTTRLIB_CLUSTER_H
 #define TTTRLIB_CLUSTER_H
 
-// Validation: A/B-TESTED 2026-08-17 -- vs sklearn NearestNeighbors (core_distances, ulp), scipy minimum_spanning_tree
-//   (weight multiset bit-identical), ChiSurf _prim_mst (edge-for-edge), ChiSurf
-//   condense_tree (bit-identical) and sklearn.cluster.HDBSCAN (exact from either
-//   side's tree; end-to-end differs only on MST ties). test/python/misc/test_math_ab_clustering.py.
+// Validation: A/B-TESTED 2026-08-19 -- vs sklearn NearestNeighbors (core_distances, ulp), scipy
+//   minimum_spanning_tree (weight multiset bit-identical) and sklearn.cluster.HDBSCAN (labels exact
+//   from either side's tree; end-to-end differs only on MST ties). ChiSurf is NOT a reference.
+//   test/python/misc/test_math_ab_clustering.py.
 //   Benchmarked HDBSCAN pipeline vs sklearn on n=20k: 21x, identical partition (bench_sciref.py, check_sciref.py).
 //   Register: okf/testing/math-kernel-validation.md
 

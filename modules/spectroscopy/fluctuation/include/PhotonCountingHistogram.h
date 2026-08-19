@@ -34,7 +34,7 @@
 //   integral (3e-4, the C++ is a 1000-point Riemann sum); pch_open_system / pch_mixture vs an
 //   independent compound-Poisson PGF/FFT and vs the analytic moments (E[k] = N eps sqrt(2pi)/16,
 //   Mandel Q = eps/(2 sqrt 2), 1e-9); fida_pch vs an independent PGF inversion (1e-9), analytic
-//   moments (1e-10), Poisson for background only, ChiSurf's NumPy fida (1e-12), and equal to
+//   moments (1e-10), Poisson for background only, the FIDA generating function in NumPy (1e-12), and equal to
 //   pch_open_system under the x^2 dx <-> w(b) db change of variables with a converged profile.
 //   CAVEAT found: fida_pch's N is grid-relative -- the default 256-bin profile makes N ~6.8x
 //   the converged-profile N (shape unchanged to 3e-3). Independent implementation: pysimfcs (J. Unruh)

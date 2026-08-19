@@ -26,7 +26,7 @@
 //   correlate > 0.97 (0.978-0.999 observed), peaks within 0.15 ns, and never worse than birfi
 //   against the truth. Two reference conventions are pinned rather than copied: birfi's
 //   partial_convolution ifftshifts after every FFT product, so its IRF is rolled by n/2; and its
-//   Adam MSE lifetime fit does not converge (k 5-38% off) while the RL step forgives it. ChiSurf's
+//   Adam MSE lifetime fit does not converge (k 5-38% off) while the RL step forgives it. The
 //   port of birfi is a second check (corr > 0.95). Known answer: > 95% of the mass within +-0.5 ns
 //   of a 0.15 ns-sigma Gaussian IRF, corr > 0.99. The A/B found the port's own defects the same
 //   day: the SG derivative mixed a dt-scaled abscissa with unscaled weights (birfi uses scipy's

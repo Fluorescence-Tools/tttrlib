@@ -31,9 +31,11 @@
 #ifndef TTTRLIB_BURSTSEARCHKALMAN_H
 #define TTTRLIB_BURSTSEARCHKALMAN_H
 
-// Validation: A/B-TESTED 2026-08-17 -- vs ChiSurf's KalmanBurstDetector.detect (independent numpy filter, run
-//   extraction, gap merge) on the kernel's bins: bursts identical, 1 and 2 channels,
-//   several thresholds. test/python/burstfilter/test_ab_burst_reference.py.
+// Validation: A/B-TESTED 2026-08-19 -- (1) GROUND TRUTH: 40 bursts injected into a simulated stream per case;
+//   every burst found overlaps an injected one (precision 100 %) and 73-98 % are recovered individually.
+//   (2) filterpy 1.4.5 running the filter with the detection in NumPy, both from this header's definition
+//   (recorded fixture): identical on 4 configurations, 1 and 2 channels. ChiSurf is NOT a reference.
+//   test/python/burstfilter/test_ab_burst_reference.py, gen_ab_kalman_burst_filterpy_reference.py.
 //   Register: okf/testing/algorithm-validation.md
 
 #include <cstdint>

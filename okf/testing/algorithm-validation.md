@@ -25,9 +25,20 @@ Rule (user, 2026-08-11): a method reimplemented in-tree is A/B'd against the
 reference and the A/B is kept as the acceptance test — the **upstream code
 itself** where it exists (user, 2026-08-17: VicidominiLab's repos for the
 blind IRF, ISM, s2ISM kernels — cloned into `../chisurf/junk`, run live or in
-a subprocess), a transcription only when the code cannot run here. ChiSurf's Python, where
-the kernel is a port of it, is the *second* check; the primary one is a
-library or paper transcription the port did not copy from (PRD-037 req. 6).
+a subprocess), a transcription from the paper only when the code cannot run
+here.
+
+**ChiSurf is not a reference (user, 2026-08-19: "no chisurf as ref, not
+stable").** It moves, and this library is its upstream, so agreement between
+the two says only that two things which change together still agree; "bit-exact
+with ChiSurf" pins a snapshot, not the mathematics. Every kernel that rested on
+it now rests on an upstream package, a paper transcription, or -- best where it
+applies -- **ground truth from a simulation**: the burst searches are checked
+against the bursts that were injected, which no amount of agreement between two
+implementations can substitute for. (Ground truth found a real defect the
+agreement test had hidden: with the old settings both implementations returned
+three detections covering forty injected bursts and agreed perfectly while
+resolving nothing.)
 
 `modules/math` has its own register with the per-kernel rows:
 [`math-kernel-validation.md`](math-kernel-validation.md). Everything else is
@@ -93,7 +104,7 @@ BUGS.md entry. **NO-REF / not marked** — plumbing, or nothing to compare.
 | DecayFitPrior.h | 7 priors `lnpdf` | scipy.stats logpdf | 1e-10; TruncatedNormal = truncnorm up to the truncation constant | PASS / bounded |
 | DecayPatternFit.h | `decay_pattern_fit` | scipy.optimize.nnls | pre-existing | PASS |
 | MaxEntTcspc.h | `tcspc_*` | brute-force sum, known answer; scipy KKT (round 1) | pre-existing + round 1 | PASS |
-| BlindIRF.h | `blind_irf_estimate` | **VicidominiLab `birfi`** (junk checkout, subprocess; its n/2 `ifftshift` roll pinned and undone), ChiSurf port as second check, known answer | aligned IRFs corr 0.978–0.999 vs birfi over 4 configs × 30/500 iterations, peaks within 0.15 ns, never worse vs truth; > 95 % mass within ±0.5 ns — **was 25 %: the port's SG derivative abscissa mismatch and centroid-only lifetime, fixed 2026-08-17** (circular forward model is birfi's, kept, made exact for any n) | PASS (after fix) |
+| BlindIRF.h | `blind_irf_estimate` | **VicidominiLab `birfi`** (junk checkout, subprocess; its n/2 `ifftshift` roll pinned and undone), known answer | aligned IRFs corr 0.978–0.999 vs birfi over 4 configs × 30/500 iterations, peaks within 0.15 ns, never worse vs truth; > 95 % mass within ±0.5 ns — **was 25 %: the port's SG derivative abscissa mismatch and centroid-only lifetime, fixed 2026-08-17** (circular forward model is birfi's, kept, made exact for any n) | PASS (after fix) |
 | DecayPhasor.h | `compute_phasor_bincounts`, `phasor_of_bincounts`, g/s | phasorpy 0.4 (recorded), complex division | 1e-16 raw/IRF/calibrated, harmonics 1–2 | PASS |
 | StreamingDecayHistogram.h `StreamingPhasor` | raw phasor | phasorpy | 1e-11 | PASS |
 | DecayFitModel/Problem/Context.h | plumbing | — | — | not marked |
@@ -116,7 +127,7 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | PhotonCountingHistogram.h | `pch_single_species` | scipy.integrate.quad of the radial integral | 3e-4 (C++ is a 1000-pt Riemann sum) | PASS |
 | PhotonCountingHistogram.h | `pch_open_system`, `pch_mixture` | compound-Poisson PGF/FFT; analytic moments; np.convolve | 1e-4 / 1e-9 / 1e-12 | PASS |
 | PhotonCountingHistogram.h | `pch_single_species` / `pch_open_system` vs **pysimfcs** (J. Unruh's NumPy port of the Jay_Plugins PCH: Chen 1999 eq. 16, incomplete gamma) | independent implementation (junk/pysimfcs, live) | k ≥ 1 shape identical (ratio constant to 1e-5); open-system P(k) equal to 5e-5 once **`avg_n` = N_PSF·16/√(2π) = 6.38 N_PSF** — tttrlib references N to V0 = 4π w0³, Chen/pysimfcs to V_PSF; was undocumented, header now says so | PASS (bounded: N convention documented) |
-| PhotonCountingHistogram.h | `fida_dvdx_gaussian`, `fida_pch` | analytic dV/dx; PGF inversion; moments; ChiSurf fida | 1e-12 … 1e-9 | PASS |
+| PhotonCountingHistogram.h | `fida_dvdx_gaussian`, `fida_pch` | analytic dV/dx; PGF inversion; moments | 1e-12 … 1e-9 | PASS |
 | PhotonCountingHistogram.h | FIDA ≡ PCH | change of variables with a converged (65536-bin) profile | 5e-3; **the default 256-bin profile is an unconverged quadrature (N ~6.8× the converged N, shape same)** | PASS (bounded, caveat) |
 | BVA.h | `compute` (photon slices, time windows), static line | NumPy from Torella's definition; binomial line | 1e-12 | PASS |
 | TwoCDE.h | FRET-2CDE (Laplace/Gaussian), ALEX-2CDE | FRETBursts `kde_laplace`/`kde_gaussian` live + Tomov formulas | 1e-9 | PASS |
@@ -129,8 +140,8 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | TTTR.h / BurstSearchDispatch.h | sliding window | FRETBursts 0.8.3 `bsearch_c` + `bsearch_py` live | (istart, istop) identical, 6 streams × 5 settings | PASS |
 | TTTR (Python) | `burst_search_coincident` (DCBS) | FRETBursts `and_gate` | identical after fusing FRETBursts' overlapping outputs | PASS (bounded) |
 | TTTR.h | `burst_search_cusum_sprt` | Zhang & Yang 2005 in NumPy; PAM `CUSUM_burstsearch` in Octave | identical; Jaccard ≥ 0.85 vs PAM's discretised variant | PASS / behavioural |
-| BurstSearchKalman.h | `burst_search_kalman` | ChiSurf `KalmanBurstDetector.detect` live | identical, 1–2 channels, 3 threshold sets | PASS |
-| BurstSearchBOCPD.h | `burst_search_bocpd` | Adams & MacKay 2007 recursion in NumPy (plug-in Poisson predictive, per the pre-delegation ChiSurf numba) | identical | PASS (header says Negative-Binomial; the code is plug-in Poisson) |
+| BurstSearchKalman.h | `burst_search_kalman` | **ground truth** (40 injected bursts per case) + **filterpy 1.4.5** running the filter with the detection in NumPy (recorded fixture) | precision 100 % (every burst found was injected), recall 73–98 %, and identical to the filterpy reference on 4 configurations | PASS |
+| BurstSearchBOCPD.h | `burst_search_bocpd` | Adams & MacKay 2007 run-length recursion transcribed in NumPy from the paper (plug-in Poisson predictive) | identical | PASS (header says Negative-Binomial; the code is plug-in Poisson) |
 | BurstSearchBayesianBlocks.h | `bayesian_blocks_events`, `ncp_prior_from_p0` | astropy `bayesian_blocks(fitness='events')` recorded; Scargle 2013 eq. 21 | change points identical on 7 sets; 1e-12 | PASS |
 | BurstSearchBayesianBlocks.h | full two-stage search | — | injected bursts found, ≤ 6 detections | KNOWN-ANSWER |
 | BurstSignificance.h | Li & Ma, Poisson tails, σ conversions, trials | Li & Ma 1983 eq. 17; scipy.stats | 1e-10 / 1e-8 | PASS |
@@ -152,16 +163,16 @@ All decay surfaces are reachable from Python since 2026-08-17: `fconv_cs_time_ax
 | HMMVB.h | `digamma`; `fit_vb` fixed point + KL terms | scipy.special; closed-form Dirichlet KL | 1e-11; 2e-4 / 1e-8 | PASS |
 | HMMVB.h | `fit_vb` posterior + Beal bound | **hmmlearn 0.3.3 `VariationalCategoricalHMM`** (upstream VB-HMM; recorded fixture, dense dt = 1 streams, K = 2 and 3) | posterior α ≤ 2e-3 rel (1e-4 on the bench); hmmlearn's bound at our posterior = sub-stochastic forward − ΣKL to 2e-10 | PASS |
 | HMMVB.h | reported `elbo` | hmmlearn's lower bound | **fixed 2026-08-17**: `elbo` is now the sub-stochastic (Beal) bound at the returned posterior = hmmlearn's to 2e-10; the iteration's value is `elbo_normalised` = `elbo` + K(K−1)/2 nat (pinned at K = 2, 3) | PASS (`TestVariationalBayesAgainstHmmlearn`; brief: okf/design/hmmvb-elbo-decision.md) |
-| HMMSurrogate.h | features | NumPy + ChiSurf `surrogate.py` live | exact (pre-existing) | PASS |
+| HMMSurrogate.h | features | NumPy transcription from the feature definitions | exact | PASS |
 | HMMBayes.h | `HmmPosterior::rhat`, `ess` | **ArviZ 0.23.4** `rhat(method="split")`, `ess(method="mean")` (recorded synthetic chains: agreeing, offset, single) | R-hat 1e-10; **ESS ignored between-chain disagreement (reported ~N where ArviZ says 38) — replaced by the split-chain Vehtari 2021 estimator 2026-08-17**, now = ArviZ to 1e-9 | PASS (after fix) |
 | HMMBayes.h | `HMM::sample` blocked Gibbs | hmmlearn VB posterior (dense fixture) | means within 3 combined sd; sd 1.2–1.5× VB's (mean-field under-dispersion, expected direction); R-hat < 1.05 | PASS (statistical) |
 | HMMBayes.h | `gamma_variate`, `dirichlet` (batch bindings `gamma_variates` / `dirichlet_variates` — the scalar forms were uncallable: counter by reference) | scipy.stats gamma / beta marginals, KS on 20 000 | p > 1e-3, shapes 0.4–30 | PASS |
 | HMMConstraints/Restraints/Emission.h | constraints, restraints, product alphabet | — | existing known-answer suites | KNOWN-ANSWER |
 | CtmcKinetics.h | generator, equilibrium, round trips | NumPy, `scipy.linalg.null_space`, `expm` | 1e-14 / 1e-9 | PASS |
-| GopichSzabo.h | `log_likelihood`, `viterbi`, `relaxation_times`, `emission_from_efficiencies` | direct `scipy.linalg.expm` evaluation of GS-2009 eq. 3; NumPy max-product; `eig(Q)`; ChiSurf wiring | 1e-9 rel on 4 schemes; 100 % path; 1e-8 | PASS |
+| GopichSzabo.h | `log_likelihood`, `viterbi`, `relaxation_times`, `emission_from_efficiencies` | direct `scipy.linalg.expm` evaluation of GS-2009 eq. 3; NumPy max-product; `eig(Q)` | 1e-9 rel on 4 schemes; 100 % path; 1e-8 | PASS |
 | Pda.h | `s1s2` | **PAM `PDA_histogram.cpp` compiled from `../chisurf/junk/PAM`** (mex.h shim); Antonik 2006 NumPy (pre-existing) | ≤ 7e-18; 1e-14 | PASS |
 | PdaBurstLikelihood.h | burst likelihood | defining nested sum | pre-existing | PASS |
-| Pda3cCore.h | `transfer_matrix_3c`, `channel_probabilities_3c`, Gauss-Hermite grid, forward model | NumPy cascade formula (20 geometries); ChiSurf pda3c | 1e-12 / 1e-10 / 1e-8 | PASS |
+| Pda3cCore.h | `transfer_matrix_3c`, `channel_probabilities_3c`, Gauss-Hermite grid, forward model | NumPy cascade formula (20 geometries) | 1e-12 / 1e-10 / 1e-8 | PASS |
 | PdaCallback.h | interface | — | — | not marked |
 
 `dirichlet_kl(a, b)` is bound with two arrays (length mismatch raises) since 2026-08-17 and pinned to the scipy closed form.

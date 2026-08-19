@@ -2,8 +2,9 @@
 #ifndef TTTRLIB_KALMAN_H
 #define TTTRLIB_KALMAN_H
 
-// Validation: A/B-TESTED 2026-08-17 -- vs a textbook NumPy filter (1e-14, dims 1-3), filterpy KalmanFilter (recorded,
-//   2e-14) and ChiSurf _kalman_filter_loop live (bit-identical, dim 2). test/python/misc/test_math_ab_probabilistic.py.
+// Validation: A/B-TESTED 2026-08-19 -- vs a textbook NumPy filter (1e-14, dims 1-3) and filterpy KalmanFilter
+//   (recorded, 2e-14; 8.5e-14 on the burst-search workload). ChiSurf is NOT a reference.
+//   test/python/misc/test_math_ab_probabilistic.py.
 //   Benchmarked vs filterpy on 50k steps: 510x, identical (5e-16) (bench_sciref.py, check_sciref.py).
 //   Register: okf/testing/math-kernel-validation.md
 

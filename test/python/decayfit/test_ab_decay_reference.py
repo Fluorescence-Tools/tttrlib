@@ -861,61 +861,10 @@ class TestBlindIrfAgainstBirfi(unittest.TestCase):
                         self.assertGreater(c_got, c_ref - 0.02)
 
 
-@unittest.skipUnless(_load_chisurf_irf_estimator() is not None, "ChiSurf irf_estimation.py not importable")
-class TestBlindIrfAgainstChiSurf(unittest.TestCase):
-    """tttrlib.blind_irf_estimate vs the ChiSurf reference it was ported from
-    (find_t0_t1 -> fit_exponential (L-BFGS-B) -> generate_kernel ->
-    richardson_lucy_deconvolution, run step by step so ChiSurf's own Python
-    path is exercised, not its tttrlib delegation), on four simulated
-    configurations incl. a two-channel one. Not bit-exact by design -- the
-    lifetime estimator (weighted log-linear tail fit vs MSE fit from t0) and
-    the RL back-projection (exact adjoint vs reversed-kernel convolution)
-    differ -- so the A/B pins agreement of the estimated IRFs (correlation,
-    peak) and that neither side is worse against the truth."""
-
-    CASES = [dict(seed=11, tau=2.5, pos=2.0, sig=0.15, nph=1e6),
-             dict(seed=2, tau=4.0, pos=3.0, sig=0.4, nph=2e5),
-             dict(seed=3, tau=1.2, pos=1.5, sig=0.1, nph=5e5),
-             dict(seed=4, tau=6.0, pos=2.5, sig=0.25, nph=1e6, extra=[(3.0, 0.4, 2e5)])]
-
-    @staticmethod
-    def _sim(seed, tau, pos, sig, nph, n=256, dt=0.05, bg=20, extra=None):
-        rng = np.random.default_rng(seed)
-        t = np.arange(n) * dt
-        cols, irfs = [], []
-        for (p, s_, ph) in [(pos, sig, nph)] + (extra or []):
-            irf = np.exp(-0.5 * ((t - p) / s_) ** 2)
-            irf /= irf.sum()
-            irfs.append(irf)
-            d = np.convolve(irf, np.exp(-t / tau))[:n]
-            cols.append(rng.poisson(d / d.sum() * ph + bg).astype(float))
-        return t, np.stack(cols, axis=1), irfs
-
-    def test_estimated_irfs_agree_with_chisurf_and_the_truth(self):
-        mod = _load_chisurf_irf_estimator()
-        for cfg in self.CASES:
-            t, y, irfs = self._sim(**cfg)
-            n, nch = y.shape
-            est = mod.IRFEstimator(y.copy(), dt=0.05)
-            est.find_t0_t1()
-            est.fit_exponential()
-            est.generate_data_fit()
-            est.generate_kernel()
-            est.richardson_lucy_deconvolution(iterations=500, regularization=3)
-            ours = np.asarray(tttrlib.blind_irf_estimate(y.ravel().tolist(), n, nch, 0.05, 500, 3, 11, 3)).reshape(n, nch)
-            # the reference's own k (its MSE fit starts at the steepest descent,
-            # so it is a few % off on the wide-IRF case; 3.0% observed at tau=4)
-            self.assertAlmostEqual(est.params["k"], 1.0 / cfg["tau"], delta=0.05 / cfg["tau"])
-            for ch in range(nch):
-                with self.subTest(tau=cfg["tau"], channel=ch):
-                    ref = est.irf[:, ch] / est.irf[:, ch].sum()
-                    got = ours[:, ch] / ours[:, ch].sum()
-                    self.assertGreater(np.corrcoef(ref, got)[0, 1], 0.95)
-                    self.assertLessEqual(abs(t[np.argmax(ref)] - t[np.argmax(got)]), 0.15)
-                    c_ref = np.corrcoef(ref, irfs[ch])[0, 1]
-                    c_got = np.corrcoef(got, irfs[ch])[0, 1]
-                    self.assertGreater(c_got, min(0.95, c_ref - 0.01))   # never worse than the reference
-
+# The blind-IRF estimate is validated against VicidominiLab's **birfi**
+# (the implementation it reproduces) and against the known answer above.
+# ChiSurf used to be a second check here and is not a reference: a moving
+# target this library is the upstream of.
 
 # ---------------------------------------------------------------------------
 # Priors

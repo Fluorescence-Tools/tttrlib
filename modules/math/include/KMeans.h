@@ -4,7 +4,8 @@
 
 // Validation: A/B-TESTED 2026-08-17 -- benchmarked vs sklearn (5.9x same job, 2.9x Lloyd-only) with identical
 //   centres/labels/inertia (benchmarks/bench_sciref.py, check_sciref.py); vs sklearn KMeans(lloyd) from the same seed (centres 1e-14, labels equal) and
-//   ChiSurf _kmeans live (bit-identical). test/python/misc/test_math_ab_clustering.py.
+//   sklearn KMeans (lloyd, same start -> same fixed point). ChiSurf is NOT a reference.
+//   test/python/misc/test_math_ab_clustering.py.
 //   Register: okf/testing/math-kernel-validation.md
 
 // KMeans.h -- k-means++ seeding and Lloyd iterations, one whole fit per call.

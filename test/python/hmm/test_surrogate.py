@@ -172,22 +172,11 @@ def test_features_are_permutation_invariant():
     np.testing.assert_allclose(a, b, rtol=0, atol=1e-12)
 
 
-@pytest.mark.slow
-def test_matches_chisurf_reference():
-    """Cross-check against the actual ChiSurf implementation when importable."""
-    surrogate = pytest.importorskip(
-        "chisurf.plugins.burst.burst_h2mm.core.surrogate",
-        reason="ChiSurf not importable in this environment",
-    )
-    h2mm_py = pytest.importorskip("chisurf.plugins.burst.burst_h2mm.core.h2mm")
-
-    engine, times, streams = _make_dataset(30, 70, 2, seed=21)
-    data = h2mm_py.prepare_bursts([np.asarray(t) for t in times],
-                                  [np.asarray(s) for s in streams], 2)
-    expect = surrogate.extract_features(data)
-    got = tttrlib.HmmSurrogate.features(engine)
-    np.testing.assert_allclose(got, expect, rtol=0, atol=1e-12)
-
+# The surrogate's features are validated against the NumPy reference above,
+# written from their definition. A live check against ChiSurf's
+# `surrogate.py` used to sit here; ChiSurf is not a reference -- a moving
+# target this library is the upstream of -- and the NumPy transcription is
+# the statement that does not move.
 
 # ---------------------------------------------------------------------------
 # encode / decode

@@ -5,7 +5,7 @@ engine (`tcspc_quadpr_bound`, `tcspc_run_mem`, `maxent_invert`).
 Every kernel here already has a known-answer or fixture test of its own
 (`test_kalman.py`, `test_hmm_lattice.py`, `decayfit/test_maxent_tcspc.py`).
 What those cannot say is whether the kernel agrees with an implementation
-nobody here wrote. This file says it, three ways per kernel where three exist:
+nobody here wrote. This file says it, two ways per kernel where two exist:
 
 * **A library that is not tttrlib and not ChiSurf.** hmmlearn for the lattice,
   filterpy for the Kalman filter, scipy.optimize for the MaxEnt minimisers.
@@ -16,9 +16,12 @@ nobody here wrote. This file says it, three ways per kernel where three exist:
 * **A textbook implementation written here from the equations**, in NumPy,
   short enough to read in one sitting -- a second independent arrangement
   that catches a shared convention error between the kernel and the library.
-* **ChiSurf's implementation, live**, where the kernel is a port whose
-  contract is bit-exactness (the Kalman filter). Skipped when ChiSurf is not
-  checked out beside tttrlib.
+**ChiSurf is not a reference**, and no longer appears here. It is a moving
+target that this library is also the upstream of, so "the two agree" says only
+that two things which change together still agree -- and a port's contract
+("bit-exact with ChiSurf") is a statement about a snapshot, not about the
+mathematics. Where a kernel began as a port, the port is a fact about its
+history; what validates it is filterpy, hmmlearn, scipy or the equations.
 
 MaxEnt has no external twin: ChiSurf's ``core/math/optimization/mem.py``
 minimises a different functional (its objective value omits the entropy term
@@ -167,43 +170,12 @@ class TestKalmanAgainstFilterpy(unittest.TestCase):
                 self.assertLess(_rel(got_i, g(key)), 1e-11, f"{n} {key}")
 
 
-class TestKalmanAgainstChiSurfLive(unittest.TestCase):
-    """The port's contract is bit-exactness with ChiSurf's loop for two
-    channels. `test_kalman.py` pins one recorded trace; this runs the two
-    side by side on fifty random traces when ChiSurf is checked out beside
-    tttrlib, and is a skip otherwise (a fixture cannot age, a live check can
-    notice ChiSurf moving)."""
-
-    @classmethod
-    def setUpClass(cls):
-        if not os.path.exists(CHISURF_KALMAN):
-            raise unittest.SkipTest("chisurf not checked out beside tttrlib")
-        spec = importlib.util.spec_from_file_location("_cs_kalman_ab", CHISURF_KALMAN)
-        mod = importlib.util.module_from_spec(spec)
-        sys.modules["_cs_kalman_ab"] = mod
-        try:
-            spec.loader.exec_module(mod)
-        except Exception as e:  # pragma: no cover - environment dependent
-            raise unittest.SkipTest(f"chisurf kalman.py not importable: {e}")
-        if not hasattr(mod, "_kalman_filter_loop"):
-            raise unittest.SkipTest("chisurf no longer has _kalman_filter_loop")
-        cls.loop = staticmethod(mod._kalman_filter_loop)
-
-    def test_fifty_random_two_channel_traces_are_bit_identical(self):
-        rng = np.random.default_rng(1)
-        for _ in range(50):
-            T = int(rng.integers(50, 600))
-            rates = rng.uniform(1e3, 1e5, 2)
-            dt = 1e-3
-            y = rng.poisson(rates * dt, size=(T, 2)).astype(float) / dt
-            x0 = rates + rng.normal(0, 100, 2)
-            P0 = np.eye(2) * rng.uniform(1e3, 1e7)
-            Q = np.eye(2) * rng.uniform(1, 500)
-            r_scale = float(rng.uniform(0.5, 2))
-            got = tttrlib.kalman_filter(y, x0, P0, Q, dt, r_scale)
-            ref = self.loop(y, x0.copy(), P0.copy(), Q.copy(), dt, r_scale)
-            for g, r in zip(got, ref):
-                np.testing.assert_array_equal(g, r)
+# ChiSurf's `_kalman_filter_loop` used to be checked here as a third
+# reference. It is not one: it is a moving target that this library is the
+# upstream of, so agreement says only that two things which change together
+# still agree. The claim it made -- this recursion, bit for bit -- is the claim
+# `TestKalmanAgainstFilterpy` and `TestKalmanAgainstTheTextbook` make against
+# code that has never seen ours.
 
 
 # ---------------------------------------------------------------------------

@@ -230,28 +230,6 @@ class TestMstAgainstScipy(unittest.TestCase):
                     self.assertAlmostEqual(mst[:, 2].sum() / ref.sum(), 1.0, places=9)
 
 
-@unittest.skipUnless(HAVE_CHISURF, "chisurf not importable")
-class TestMstAgainstChisurfPrim(unittest.TestCase):
-    """ChiSurf's `_prim_mst` under the shared total edge order: the same tree,
-    edge for edge, not merely the same weight."""
-
-    def test_edge_for_edge(self):
-        H, _ = _CHISURF
-        rng = np.random.default_rng(1)
-        for n, d in [(150, 2), (300, 4)]:
-            x = rng.normal(size=(n, d))
-            x[:5] = x[5:10]
-            for k in (2, 5):
-                with self.subTest(n=n, d=d, k=k):
-                    core = np.asarray(tttrlib.core_distances(x, k))
-                    ours = np.column_stack(sorted_mst(x, k))
-                    s, t, w = H._prim_mst(x, core, 1.0)
-                    lo, hi = np.minimum(s, t), np.maximum(s, t)
-                    order = np.lexsort((hi, lo, w))
-                    theirs = np.column_stack([lo[order], hi[order], w[order]])
-                    np.testing.assert_array_equal(ours, theirs)
-
-
 # ---------------------------------------------------------------------------
 # hdbscan_condensed_tree + hdbscan_label_points
 # ---------------------------------------------------------------------------
@@ -340,47 +318,6 @@ class TestHdbscanAgainstSklearn(unittest.TestCase):
                                 "only %d of %d partitions exact" % (exact, total))
 
 
-@unittest.skipUnless(HAVE_CHISURF and HAVE_SKLEARN, "chisurf and scikit-learn needed")
-class TestHdbscanAgainstChisurf(unittest.TestCase):
-    """The origin of the port. The MST is shared (ChiSurf calls tttrlib for it
-    when importable) so this pins the condensation bit for bit and the whole
-    estimator's labels exactly, on the same six sets."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.H, _ = _CHISURF
-        cls.sets = {k: np.ascontiguousarray(v, dtype=np.float64)
-                    for k, v in ground_truth_sets().items()}
-
-    def test_condensed_tree_bit_identical(self):
-        H = self.H
-        rng = np.random.default_rng(1)
-        for n, d in [(150, 2), (300, 4)]:
-            x = rng.normal(size=(n, d))
-            x[:5] = x[5:10]
-            for k in (2, 5):
-                mst = np.asarray(tttrlib.mutual_reachability_mst(x, k, 1.0))
-                hierarchy = H.single_linkage_tree(mst)
-                src, tgt, w = sorted_mst(x, k)
-                for mcs in (3, 5, 10):
-                    with self.subTest(n=n, d=d, k=k, min_cluster_size=mcs):
-                        ref = H.condense_tree(hierarchy, mcs)
-                        p, c, v, s = tttrlib.hdbscan_condensed_tree(src, tgt, w, mcs)
-                        np.testing.assert_array_equal(p, ref["parent"])
-                        np.testing.assert_array_equal(c, ref["child"])
-                        np.testing.assert_array_equal(v, ref["value"])
-                        np.testing.assert_array_equal(s, ref["cluster_size"])
-
-    def test_estimator_labels_identical(self):
-        H = self.H
-        for name, x in self.sets.items():
-            for mcs, ms in HDBSCAN_SETTINGS:
-                with self.subTest(data=name, min_cluster_size=mcs, min_samples=ms):
-                    ours = tttrlib_hdbscan(x, mcs, ms)
-                    theirs = H.HDBSCAN(min_cluster_size=mcs, min_samples=ms).fit_predict(x)
-                    self.assertTrue(same_partition(ours, theirs))
-
-
 # ---------------------------------------------------------------------------
 # kmeans
 # ---------------------------------------------------------------------------
@@ -466,27 +403,9 @@ class TestKmeansAgainstSklearn(unittest.TestCase):
                 self.assertAlmostEqual(sk.inertia_ / s[0], 1.0, places=12)
 
 
-@unittest.skipUnless(HAVE_CHISURF, "chisurf not importable")
-class TestKmeansAgainstChisurf(unittest.TestCase):
-    """Live bit-for-bit against `_kmeans.py` (the committed fixture in
-    test_kmeans.py is the offline pin of the same contract): centres, labels,
-    inertia and sweep count, with restarts ranked on the inertia."""
-
-    def test_bit_identical(self):
-        _, K = _CHISURF
-        for x, k in kmeans_sets():
-            for n_init in (1, 3):
-                with self.subTest(n=len(x), k=k, n_init=n_init):
-                    seed = 1000 * len(x) + n_init
-                    u = uniforms_for(k, n_init, seed=seed)
-                    c, l, s = tttrlib.kmeans(x, k, u, n_init, 300, 1e-4)
-                    rc, rl, ri, rn = K._kmeans(x, k, np.random.default_rng(seed),
-                                               n_init=n_init, max_iter=300, tol=1e-4)
-                    np.testing.assert_array_equal(np.asarray(c), rc)
-                    np.testing.assert_array_equal(np.asarray(l, dtype=np.int64), rl)
-                    self.assertEqual(s[0], ri)
-                    self.assertEqual(int(s[1]), rn)
-
-
-if __name__ == "__main__":
-    unittest.main()
+# ChiSurf is not a reference here, deliberately: a moving target that this
+# library is also the upstream of, so agreement between the two says only
+# that two things which change together still agree. Every claim the removed
+# ChiSurf classes made -- the MST, the condensed tree, the HDBSCAN labels and
+# the k-means fixed point -- is made above against scipy and scikit-learn,
+# which have never seen this code.

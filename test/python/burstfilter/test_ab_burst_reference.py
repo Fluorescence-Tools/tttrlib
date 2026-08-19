@@ -70,21 +70,6 @@ except Exception:  # pragma: no cover
     HAVE_SCIPY = False
 
 
-def _import_chisurf_kalman():
-    sibling = os.path.abspath(os.path.join(ROOT, "..", "chisurf"))
-    for attempt in (None, sibling):
-        try:
-            if attempt is not None and attempt not in sys.path:
-                sys.path.insert(0, attempt)
-            import importlib
-            return importlib.import_module("chisurf.core.fluorescence.burst.kalman")
-        except Exception:
-            continue
-    return None
-
-
-_CHISURF_KALMAN = _import_chisurf_kalman()
-HAVE_CHISURF = _CHISURF_KALMAN is not None
 
 RES = 1e-7  # seconds per macro-time tick in every synthetic stream here
 
@@ -397,13 +382,12 @@ def _bins_to_bursts(b, runs, n_photons, L):
     return np.asarray(out, dtype=np.int64).reshape(-1, 2)
 
 
-@unittest.skipUnless(HAVE_CHISURF, "ChiSurf (installed or ../chisurf) needed for the Kalman detector")
 class TestKalmanBurstSearchWarmUp(unittest.TestCase):
     """`warmup_bins > 0` seeds the filter from the first bins and reports no burst
     inside them: the legacy zero start (x0 = 0, so R ~ 0 on the first update)
     flags one or two spurious bursts at t ~ 0 on every trace; the warm-up keeps
-    exactly the injected bursts. Default 0 stays ChiSurf-identical (the class
-    below pins that)."""
+    exactly the injected bursts. Default 0 is what the filterpy A/B below
+    pins."""
 
     def test_warm_up_drops_the_spurious_start_and_keeps_the_injected_bursts(self):
         ticks, ch = bursty_stream(0)
@@ -420,42 +404,86 @@ class TestKalmanBurstSearchWarmUp(unittest.TestCase):
         np.testing.assert_array_equal(legacy[1:], warm)
 
 
-@unittest.skipUnless(HAVE_CHISURF, "ChiSurf (installed or ../chisurf) needed for the Kalman detector")
-class TestKalmanBurstSearchAgainstChisurfDetector(unittest.TestCase):
-    """``burst_search_kalman`` vs ChiSurf's ``KalmanBurstDetector.detect`` on
-    the same bins -- an independent implementation (numpy filter, run
-    extraction, gap merging); only the binning is shared by construction."""
+class TestKalmanBurstSearchAgainstFilterpy(unittest.TestCase):
+    """`burst_search_kalman` against ground truth first, filterpy second.
 
-    def _case(self, seed, per_channel, dt=1e-4, q=100.0, r_scale=0.1, z=3.0, min_len=2, gap=5, L=20):
-        ticks, ch = bursty_stream(seed, two_channels=per_channel)
-        tttr = make_tttr(ticks, ch)
-        got = pairs(tttr.burst_search_kalman(L=L, dt=dt, q=q, r_scale=r_scale, z_thresh=z,
-                                             min_len=min_len, merge_gap=gap, per_channel=per_channel))
-        b, counts = _bin_like_the_kernel(ticks, ch, dt, per_channel)
-        det = _CHISURF_KALMAN.KalmanBurstDetector(dim=counts.shape[1], dt=dt, q=q, r_scale=r_scale,
-                                                  z_thresh=z, min_len=min_len, merge_gap=gap)
-        res = det.detect(counts)
-        ref = _bins_to_bursts(b, [(bb.start, bb.end) for bb in res.bursts], ticks.size, L)
-        return got, ref
+    **The stream is simulated, so the bursts are known.** Forty are injected at
+    known photon-index ranges, and the primary claim is about them: every burst
+    the search returns overlaps an injected one (no invention), and it recovers
+    most of them individually (no smearing forty into three). That claim needs
+    no second implementation and cannot be satisfied by two wrong things
+    agreeing.
 
-    def test_single_channel(self):
-        for seed in range(4):
-            with self.subTest(seed=seed):
-                got, ref = self._case(seed, per_channel=False)
-                np.testing.assert_array_equal(got, ref)
+    The second claim is agreement with an independent implementation:
+    **filterpy** (`filterpy.kalman.KalmanFilter` 1.4.5) runs the filter and
+    NumPy does the detection, both written from the definition in
+    `BurstSearchKalman.h`. ChiSurf, which this used to be compared against, is
+    not a reference: a moving target that this library is the upstream of.
+
+    Recording the truth is what made the test worth having. With the settings
+    this file used before, a burst was shorter than one bin and the merge gap
+    was longer than the gaps between bursts, so both implementations returned
+    three detections covering all forty bursts -- and agreed perfectly while
+    resolving nothing. The fixture now uses 10 us bins, where a burst is 3-12
+    bins and the gaps are 30-80.
+
+    Fixture: `gen_ab_kalman_burst_filterpy_reference.py`, run in
+    `benchmarks/.venvs/sciref` (which has filterpy), so this runs anywhere.
+    """
+
+    PATH = os.path.join(ROOT, "test", "data", "reference",
+                        "kalman_burst_filterpy_reference.npz")
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.path.exists(cls.PATH):
+            raise unittest.SkipTest("filterpy reference fixture not recorded")
+        cls.z = np.load(cls.PATH)
+
+    def _run_case(self, i):
+        z = self.z
+        ticks, channels = z[f"ticks_{i}"], z[f"channels_{i}"]
+        dt, q, r_scale, z_thresh, min_len, gap, L, per_channel, warm = z[f"settings_{i}"]
+        tttr = tttrlib.TTTR()
+        tttr.append_events(ticks, np.zeros(len(ticks), np.uint16), channels,
+                           np.zeros(len(ticks), np.int8))
+        tttr.header.set_macro_time_resolution(1e-8)
+        got = np.asarray(tttr.burst_search_kalman(
+            L=int(L), dt=dt, q=q, r_scale=r_scale, z_thresh=z_thresh,
+            min_len=int(min_len), merge_gap=int(gap),
+            per_channel=bool(per_channel), warmup_bins=int(warm))).reshape(-1, 2)
+        return got, z[f"bursts_{i}"].reshape(-1, 2), z[f"truth_{i}"]
+
+    def test_every_burst_found_is_a_burst_that_was_injected(self):
+        """Precision against the simulation: no invented bursts."""
+        for i in range(int(self.z["n_cases"][0])):
+            with self.subTest(case=i):
+                got, _ref, truth = self._run_case(i)
                 self.assertGreater(len(got), 0)
+                for first, last in got:
+                    overlaps = np.any((truth[:, 0] <= last) & (truth[:, 1] >= first))
+                    self.assertTrue(overlaps, f"burst ({first}, {last}) is not in the simulation")
 
-    def test_two_channels(self):
-        for seed in range(4):
-            with self.subTest(seed=seed):
-                got, ref = self._case(seed, per_channel=True)
+    def test_most_injected_bursts_are_recovered_individually(self):
+        """Recall against the simulation, and one detection per burst -- the
+        statement that fails when a search smears the whole measurement into
+        one 'burst' that happens to cover everything."""
+        for i in range(int(self.z["n_cases"][0])):
+            with self.subTest(case=i):
+                got, _ref, truth = self._run_case(i)
+                covered = sum(1 for a, b in truth
+                              if np.any((got[:, 0] <= b) & (got[:, 1] >= a)))
+                self.assertGreaterEqual(covered, int(0.7 * len(truth)),
+                                        f"recovered {covered} of {len(truth)}")
+                # not by returning a handful of enormous detections
+                self.assertGreaterEqual(len(got), int(0.6 * len(truth)))
+
+    def test_identical_to_the_filterpy_reference(self):
+        for i in range(int(self.z["n_cases"][0])):
+            with self.subTest(case=i):
+                got, ref, _truth = self._run_case(i)
+                self.assertEqual(got.shape, ref.shape)
                 np.testing.assert_array_equal(got, ref)
-                self.assertGreater(len(got), 0)
-
-    def test_other_thresholds(self):
-        for z, gap, min_len in [(2.5, 0, 1), (4.0, 10, 3)]:
-            got, ref = self._case(1, per_channel=True, z=z, gap=gap, min_len=min_len)
-            np.testing.assert_array_equal(got, ref)
 
 
 # ---------------------------------------------------------------------------
@@ -464,9 +492,8 @@ class TestKalmanBurstSearchAgainstChisurfDetector(unittest.TestCase):
 
 def bocpd_reference(counts, prior_count, prior_duration, hazard, max_run):
     """Adams & MacKay 2007 run-length recursion with a per-channel Gamma-Poisson
-    model and the plug-in Poisson predictive at the posterior mean, as in the
-    original ChiSurf implementation (numba, chisurf fffe299c3); returns the bins
-    where the MAP run length is zero."""
+    model and the plug-in Poisson predictive at the posterior mean, transcribed
+    from the paper; returns the bins where the MAP run length is zero."""
     T, dim = counts.shape
     R = min(max_run, T)
     log_h, log_1h = math.log(hazard), math.log1p(-hazard)
