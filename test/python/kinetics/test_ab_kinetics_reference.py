@@ -186,20 +186,14 @@ class TestGopichSzaboAgainstExpm(unittest.TestCase):
                 ref = _loglik_expm(M, em, t, c, off)
                 self.assertAlmostEqual(ll, ref, delta=1e-9 * abs(ref))
 
-    def test_log_likelihood_matches_chisurf_wiring(self):
-        try:
-            import sys
-            sys.path.insert(0, "/Users/tpeulen/dev/chisurf")
-            from chisurf.core.fluorescence.burst import gopich_szabo as gsm
-        except Exception as exc:  # pragma: no cover
-            self.skipTest(f"chisurf gopich_szabo not importable: {exc}")
-        name, M, em, (t, c, off) = self._cases()[0]
-        bursts = gsm.PhotonBursts.from_lists(
-            [t[off[b]:off[b + 1]] for b in range(len(off) - 1)],
-            [c[off[b]:off[b + 1]] for b in range(len(off) - 1)])
-        ll_c = gsm.log_likelihood(bursts, M, em)
-        gs = tttrlib.GopichSzabo(); gs.set_scheme(M.ravel().tolist(), em.ravel().tolist(), 2, 2)
-        self.assertAlmostEqual(ll_c, gs.log_likelihood(t.tolist(), c.tolist(), off.tolist()), delta=1e-9)
+    # `test_log_likelihood_matches_chisurf_wiring` was removed on 2026-08-19.
+    # It compared the same likelihood against ChiSurf's `gopich_szabo` module
+    # behind an absolute path to a checkout, so it skipped everywhere but one
+    # machine -- and where it did run it added nothing: `test_log_likelihood`
+    # above already pins the kernel to `_loglik_expm`, the matrix-exponential
+    # definition, which is the reference. What it actually tested was whether
+    # ChiSurf's own wrapper wires the arguments up correctly, which is
+    # ChiSurf's test to write, not this library's.
 
     def test_viterbi(self):
         for name, M, em, (t, c, off) in self._cases():

@@ -40,6 +40,25 @@ agreement test had hidden: with the old settings both implementations returned
 three detections covering forty injected bursts and agreed perfectly while
 resolving nothing.)
 
+The sweep was completed on 2026-08-19. Three places still rested on ChiSurf
+after the first pass, each hiding differently:
+
+* `BurstSearchBOCPD.h` credited ChiSurf's numba code in its validation comment
+  long after the reference had been rewritten from Adams & MacKay 2007. The
+  header was stale, not the test — but a header is what a reader checks.
+* `test/python/pda/test_pda3c_core.py` compared **every** kernel against
+  `chisurf.core.fluorescence.pda3c` behind
+  `sys.path.insert(0, '/Users/tpeulen/dev/chisurf')`. Three of its five tests
+  therefore skipped everywhere but one machine — a ChiSurf dependency and a
+  coverage hole in the same line. Rewritten against moment exactness, the
+  cascade formula and the defining composition; it now runs everywhere.
+* `test_ab_pda_reference.py::test_channel_probabilities_against_chisurf`, same
+  absolute path, same outcome.
+
+A second lesson from the same sweep: an invalid reference is often also an
+*absent* one. Grep for the skip as well as for the name — a test that skips is
+indistinguishable from a test that passes in a summary line.
+
 `modules/math` has its own register with the per-kernel rows:
 [`math-kernel-validation.md`](math-kernel-validation.md). Everything else is
 below.
@@ -227,7 +246,10 @@ degenerate answer that scores 100 % recall by overlap, which is why
 | GopichSzabo.h | `log_likelihood`, `viterbi`, `relaxation_times`, `emission_from_efficiencies` | direct `scipy.linalg.expm` evaluation of GS-2009 eq. 3; NumPy max-product; `eig(Q)` | 1e-9 rel on 4 schemes; 100 % path; 1e-8 | PASS |
 | Pda.h | `s1s2` | **PAM `PDA_histogram.cpp` compiled from `../chisurf/junk/PAM`** (mex.h shim); Antonik 2006 NumPy (pre-existing) | ≤ 7e-18; 1e-14 | PASS |
 | PdaBurstLikelihood.h | burst likelihood | defining nested sum | pre-existing | PASS |
-| Pda3cCore.h | `transfer_matrix_3c`, `channel_probabilities_3c`, Gauss-Hermite grid, forward model | NumPy cascade formula (20 geometries) | 1e-12 / 1e-10 / 1e-8 | PASS |
+| Pda3cCore.h | `transfer_matrix_3c` | NumPy competing-acceptor cascade (40 geometries); limits E → I at large R, E = ½ at R = R₀ | 1e-12 | PASS |
+| Pda3cCore.h | `gauss_hermite_grid` | **moment exactness** — an n-node rule is exact to degree 2n-1, so the grid for N(µ, Σ) must return µ, Σ and zero third moments (3, 5, 7 nodes; correlated Σ) | 1e-9 | PASS (no reference implementation involved) |
+| Pda3cCore.h | `channel_probabilities_3c` | `normalise(excitation @ transfer @ emission)` | 1e-12 | PASS |
+| Pda3cCore.h | `species_forward_model` | the composition of the three above, assembled in NumPy | 1e-10 | PASS |
 | PdaCallback.h | interface | — | — | not marked |
 
 `dirichlet_kl(a, b)` is bound with two arrays (length mismatch raises) since 2026-08-17 and pinned to the scipy closed form.

@@ -1,5 +1,5 @@
 """A/B of Photon Distribution Analysis against PAM's PDA histogram library and
-ChiSurf's three-colour physics.
+the defining formulae of the three-colour physics.
 
 * ``Pda.s1s2`` (2-channel PDA model matrix) against **PAM**
   (Schrimpf et al. 2018, ``functions/PDAFit/histogram_library/PDA_histogram.cpp``
@@ -12,11 +12,18 @@ ChiSurf's three-colour physics.
   Poisson background convolution) already pins ``Pda.s1s2`` to 1e-14 in
   ``test_pda_reference.py`` -- cited, not duplicated -- as does the defining
   nested sum for ``PdaBurstLikelihood`` in ``test_pda_burst_likelihood.py``.
-* ``channel_probabilities_3c`` against ChiSurf ``pda3c.physics.channel_probabilities``
-  (excitation row x transfer x emission mixing, renormalised); ``transfer_matrix_3c``
+* ``channel_probabilities_3c`` against the composition it is --
+  ``normalise(excitation @ transfer @ emission)`` -- and ``transfer_matrix_3c``
   against a NumPy transcription of the competing-acceptor cascade
-  E_ij = k_ij / (1 + sum_k k_ik), k = (R0/R)^6, propagated down the cascade,
-  and against ChiSurf (the latter is already in ``test_pda3c_core.py``).
+  E_ij = k_ij / (1 + sum_k k_ik), k = (R0/R)^6, propagated down the cascade.
+  ``test_pda3c_core.py`` carries the rest of the three-colour core: the
+  quadrature grid against moment exactness and the forward model against the
+  composition of the two.
+
+ChiSurf is deliberately **not** a reference in either file. This library is its
+upstream, so agreement establishes only that two things that move together
+still do; and the comparison needed an absolute path to a checkout, so it
+skipped everywhere except one machine.
 """
 import os
 import shutil
@@ -160,13 +167,22 @@ class TestAgainstPam(unittest.TestCase):
 
 class TestThreeColourPhysics(unittest.TestCase):
 
-    def _chisurf(self):
-        try:
-            sys.path.insert(0, "/Users/tpeulen/dev/chisurf")
-            from chisurf.core.fluorescence.pda3c import physics
-            return physics
-        except Exception as exc:  # pragma: no cover
-            self.skipTest(f"chisurf pda3c not importable: {exc}")
+    @staticmethod
+    def _channel_probabilities(transfer, excitation, emission):
+        """The defining composition, in one line of NumPy.
+
+        An excitation vector populates the dyes; the transfer matrix says which
+        dye each excitation is finally emitted by (row i = fate of an excitation
+        on dye i); the emission matrix routes a photon from a dye into a
+        detection channel. So the detected distribution is the product of the
+        three, renormalised to a probability:
+
+            p = normalise(excitation @ transfer @ emission)
+
+        Written from that statement rather than from any implementation of it,
+        which is the point of an A/B."""
+        p = np.asarray(excitation) @ np.asarray(transfer) @ np.asarray(emission)
+        return p / p.sum()
 
     @staticmethod
     def _cascade_transfer(dist, r0):
@@ -201,20 +217,53 @@ class TestThreeColourPhysics(unittest.TestCase):
                 np.testing.assert_allclose(got, self._cascade_transfer(D, R), rtol=1e-12, atol=1e-14)
                 np.testing.assert_allclose(got.sum(axis=1), 1.0, atol=1e-12)
 
-    def test_channel_probabilities_against_chisurf(self):
-        physics = self._chisurf()
-        setup = physics.ThreeColorSetup.from_scalars(r0_bg=47.0, r0_br=52.0, r0_gr=58.0)
+    def test_channel_probabilities_against_the_defining_composition(self):
+        """`channel_probabilities_3c` against `excitation @ transfer @ emission`.
+
+        This used to compare against ChiSurf's `pda3c.physics`, which is not a
+        valid reference -- this library is ChiSurf's upstream, so "we agree"
+        says only that two things that move together still agree -- and it
+        needed an absolute path to a checkout, so it skipped everywhere else.
+        The composition it is testing is three matrix products and a
+        normalisation, so it can simply be stated."""
+        r0 = [47.0, 52.0, 58.0]
+        # blue/green/red excitation by the blue laser, and an emission matrix
+        # with each dye mostly in its own channel plus realistic crosstalk
+        excitation = np.array([1.0, 0.06, 0.02])
+        emission = np.array([[0.88, 0.10, 0.02],
+                             [0.04, 0.85, 0.11],
+                             [0.01, 0.07, 0.92]])
         rng = np.random.default_rng(4)
         for trial in range(10):
             with self.subTest(trial=trial):
                 d = rng.uniform(30.0, 80.0, size=3)
-                ref = physics.channel_probabilities(physics.distances_to_matrix(d, 3), setup, laser=0)[0]
-                T = tttrlib.transfer_matrix_3c(d.tolist(), [47.0, 52.0, 58.0], 3)
+                T = tttrlib.transfer_matrix_3c(d.tolist(), r0, 3)
                 got = np.asarray(tttrlib.channel_probabilities_3c(
-                    list(T), setup.excitation[0].tolist(), setup.emission.flatten().tolist(),
-                    3, setup.emission.shape[1]))
-                np.testing.assert_allclose(got, ref, rtol=1e-10, atol=1e-12)
+                    list(T), excitation.tolist(), emission.flatten().tolist(), 3, 3))
+                ref = self._channel_probabilities(
+                    np.asarray(T).reshape(3, 3), excitation, emission)
+                np.testing.assert_allclose(got, ref, rtol=1e-12, atol=1e-14)
                 self.assertAlmostEqual(got.sum(), 1.0, places=12)
+
+    def test_channel_probabilities_are_not_trivially_the_excitation(self):
+        """The A/B above passes for a wrong kernel that ignores the transfer
+        matrix, unless the transfer matrix actually moves the answer. It does:
+        two different distance sets must give different channel
+        probabilities."""
+        r0 = [47.0, 52.0, 58.0]
+        excitation = [1.0, 0.06, 0.02]
+        emission = np.array([[0.88, 0.10, 0.02],
+                             [0.04, 0.85, 0.11],
+                             [0.01, 0.07, 0.92]])
+        near = np.asarray(tttrlib.channel_probabilities_3c(
+            list(tttrlib.transfer_matrix_3c([30.0, 35.0, 32.0], r0, 3)),
+            excitation, emission.flatten().tolist(), 3, 3))
+        far = np.asarray(tttrlib.channel_probabilities_3c(
+            list(tttrlib.transfer_matrix_3c([90.0, 95.0, 92.0], r0, 3)),
+            excitation, emission.flatten().tolist(), 3, 3))
+        assert np.max(np.abs(near - far)) > 0.1, (
+            f"close and distant dyes gave the same channel probabilities: "
+            f"{near} vs {far}")
 
 
 if __name__ == "__main__":
