@@ -635,6 +635,10 @@ retired so nobody works the same thing twice.)*
     gallery examples + executed notebooks in `examples/miscellaneous/`
     (`plot_neural_net_differentiable`, `plot_pinn_heat_equation`,
     `plot_pinn_burgers`) with smoke tests `test/python/misc/test_neural_net_examples.py`.
+    Committed `933a4cc7a`; follow-up `8ac9b0a52` moved StandardScaler, MlpModel,
+    scaler-aware model_predict/model_backward and the JSON format (templated on
+    the JSON type) into MlpCore.h — bff proves the contract in
+    `test/test_vendored_mlpcore.py` (bff's own nlohmann, 1e-12). imp.bff plan: PRD-115.
   - Why: imp.bff wants a physics-informed / UDE use of a small MLP — the net
     parametrises an unknown field (dye–surface potential, k_Q, orienting
     potential) *inside* a differentiable lattice solver
