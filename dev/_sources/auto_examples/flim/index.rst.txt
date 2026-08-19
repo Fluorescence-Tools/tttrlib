@@ -212,6 +212,23 @@ segmentation-driven decays, and common image operations.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="The phasor of a decay is its first Fourier coefficient at the excitation frequency, normalised by the photon count:">
+
+.. only:: html
+
+  .. image:: /auto_examples/flim/images/thumb/sphx_glr_plot_phasor_decay_stack_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/flim/plot_phasor_decay_stack`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Phasors of a stack of decays</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Lifetime analysis">
 
 .. only:: html
@@ -333,6 +350,7 @@ segmentation-driven decays, and common image operations.
    /auto_examples/flim/plot_pixel_masks
    /auto_examples/flim/plot_read_clsm_data
    /auto_examples/flim/plot_phasor
+   /auto_examples/flim/plot_phasor_decay_stack
    /auto_examples/flim/plot_mle_lifetime
    /auto_examples/flim/plot_tutorial_python
    /auto_examples/flim/plot_export_flim_tiff

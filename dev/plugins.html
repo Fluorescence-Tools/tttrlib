@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Plugins: adding a format without rebuilding" />
+<meta property="og:title" content="11. Drop-in plugins" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="plugins.html" />
 <meta property="og:site_name" content="tttrlib" />
-<meta property="og:description" content="Drop a compiled plugin into a directory and the capability it provides is there the next time tttrlib runs. No rebuild of tttrlib, no source, no change to the calling code: A plugin can add a file ..." />
+<meta property="og:description" content="tttrlib loads binary plugins at run time. A plugin is one shared library ( tttrlib_&lt;name&gt;.so/.dylib/.dll) that exports a single C function, tttrlib_plugin_init_v1; dropped into a directory tt..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_plugins_80986605.png" />
-<meta property="og:image:alt" content="Drop a compiled plugin into a directory and the capability it provides is there the next time tttrlib runs. No rebuild of tttrlib, no source, no change to the calling code: A plugin can add a file ..." />
-<meta name="description" content="Drop a compiled plugin into a directory and the capability it provides is there the next time tttrlib runs. No rebuild of tttrlib, no source, no change to the calling code: A plugin can add a file ..." />
+<meta property="og:image" content="_images/social_previews/summary_plugins_8d2c753f.png" />
+<meta property="og:image:alt" content="tttrlib loads binary plugins at run time. A plugin is one shared library ( tttrlib_&lt;name&gt;.so/.dylib/.dll) that exports a single C function, tttrlib_plugin_init_v1; dropped into a directory tt..." />
+<meta name="description" content="tttrlib loads binary plugins at run time. A plugin is one shared library ( tttrlib_&lt;name&gt;.so/.dylib/.dll) that exports a single C function, tttrlib_plugin_init_v1; dropped into a directory tt..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Plugins: adding a format without rebuilding &#8212; tttrlib v0.27.0</title>
+    <title>11. Drop-in plugins &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -252,9 +252,9 @@
 </li>
 
 
-<li class=" current active">
+<li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="#">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -337,6 +337,13 @@
 
 
 <li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
+  </a>
+</li>
+
+
+<li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="user_guide.html">
     User Guide
   </a>
@@ -613,9 +620,9 @@
 </li>
 
 
-<li class="nav-item current active">
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="#">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -698,6 +705,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
+  </a>
+</li>
+
+
+<li class="nav-item current active">
   <a class="nav-link nav-internal" href="user_guide.html">
     User Guide
   </a>
@@ -865,7 +879,284 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">1. Workflow Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file-formats.html">3. TTTR File Formats and Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="burst-analysis.html">4. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pda-guide.html">5. Photon Distribution Analysis (PDA)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcs-correlation.html">6. FCS and Correlation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="localization-guide.html">8. Image Localization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fit-guide.html">9. Fluorescence Decay Fitting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">10. Pipelines: reproducible data processing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">11. Drop-in plugins</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="tttr.html">12. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html">12.1. TTTR files</a></li>
+
+
+
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/tttr/index.html">12.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_transcode.html">12.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">12.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">12.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">12.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_pto_bundle_files.html">12.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">12.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_spcqc.html">12.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_write_read_roundtrip_simulated.html">12.6.8. Write a simulated photon stream, read it back</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">12.6.9. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">12.6.10. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">12.6.11. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">12.6.12. TTTR compression examples</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="single_molecule.html">13. Single-molecule fluorescence</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">13.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/features.html">13.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">13.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">13.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">13.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">13.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">13.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lattice_two_state.html">13.4.4. The HMM lattice on a two-state intensity trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">13.4.5. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_background_rate.html">13.4.6. Estimating the background count rate from inter-photon times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">13.4.7. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">13.4.8. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_surrogate.html">13.4.9. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_variational_bayes.html">13.4.10. Variational Bayes for the photon-stream HMM: posterior and ELBO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_esrrf.html">13.4.11. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_kalman_burst_detection.html">13.4.12. Kalman-filter burst detection on a count trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">13.4.13. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_limitations.html">13.4.14. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_two_cde.html">13.4.15. 2CDE: within-burst dynamics without a kinetic model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">13.4.16. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstml_two_state.html">13.4.17. BurstML: maximum-likelihood analysis of diffusing two-state FRET bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_resolution_curve.html">13.4.18. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_burst_pipeline.html">13.4.19. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_feature_clustering.html">13.4.20. Clustering burst features: k-means and HDBSCAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">13.4.21. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lifetime_posterior.html">13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">13.4.23. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">13.4.28. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">13.4.29. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_analysis.html">13.4.30. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_distance_refinement.html">13.4.31. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_bootstrap.html">13.4.32. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">13.4.33. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">13.4.41. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">13.4.42. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_state_channels.html">13.4.43. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_phasor_diagnostic.html">13.4.44. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">13.4.45. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_blinking_acceptor.html">13.4.46. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_coincidence.html">13.4.47. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">13.4.48. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">13.4.49. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_search_comparison.html">13.4.50. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="imaging.html">14. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html">14.1. Imaging</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging_mle.html">14.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">14.12. Image correlation spectroscopy</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">15. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verbosity.html">16. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zreferences.html">17. References</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/beginner/index.html">Beginner Examples for tttrlib</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_00_tttr_files.html">Basic operations with TTTR files</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_05_microscopy.html">Basic Example 5: Zeiss LSM 980 CLSM walkthrough</a></li>
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_01_reading_files.html">Basic Example 1: Reading TTTR data</a></li>
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_04_writing_files.html">Basic Example 4: Writing TTTR data and converting formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_02_basic_operations.html">Basic Example 2: Basic operations on TTTR objects (focused illustration)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/beginner/plot_03_selections.html">Basic Example 3: Selections — count-rate filter, bursts, and intensity trace</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/correlation/index.html">Fluorescence correlation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_estimate_noise.html">Estimating the noise of the correlation curves</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_sliced_correlation.html">Correlation of sliced TTTR objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_gated_correlation.html">Micro time gated correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_full_correlation.html">Full correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_fdc_2d.html">2D fluorescence-decay correlation (2D-FDC / 2D-FLCS)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_fdc_2d_microsecond_fret.html">Microsecond dynamics: 2D-FDC on a single FRET molecule, T3-mode TTTR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_fdc_2d_microsecond_fret_diffusion.html">Microsecond 2D-FDC with FREELY DIFFUSING molecules (tau_D = 2 ms)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/correlation/plot_fdc_2d_dynamics_resolution.html">How fast, and how complex: 2D-FDC dynamics resolution on ground truth</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_intensity_image.html">Intensity image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_crop.html">Image cropping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_rebin.html">Image rebinning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_marker.html">Marker in Scanning microscopy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_transform.html">Image transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mean_lifetime.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_lifetime_moments_bg.html">Mean lifetime images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_pixel_masks.html">Using Pixel masks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_phasor_decay_stack.html">Phasors of a stack of decays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_flim_pie.html">FLIM-PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_imaging_representations.html">TTTR Image representations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/flim/plot_segmentation_based_decays.html">Image-based segmentation of FLIM data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/fluorescence_decay/index.html">Fluorescence decays</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23.html">Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit26.html">Fit26: two-pattern mixture fitting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_decay_fit_irf_bg.html">Fluorescence decay analysis - 3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_blind_irf_estimation.html">Blind IRF estimation from a fluorescence decay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_convolution_methods.html">Convolving a decay: the recursion or the transform?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_decay_fit_interface.html">Fitting a decay: one interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/fluorescence_decay/plot_maxent_fret_recovery.html">Maximum-entropy FRET distance recovery, and picking nu</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_tttrlib.html">Computing ICS data by tttrlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_numpy.html">Computing ICS data by numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_benchmark.html">Image correlation spectroscopy - benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/image_correlation/plot_imaging_ics_fit.html">Fitting ICS data by a RICS model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_watershed_marching_squares.html">Region segmentation: watershed and iso-contours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_richardson_lucy_deconvolution.html">Richardson-Lucy deconvolution of an image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/miscellaneous/plot_registry_composition.html">The registry: discover algorithms and compose a pipeline</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/single_molecule/index.html">13.4. Single-molecule</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_mcs.html">13.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_pda_synthetic.html">13.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_burst_selection.html">13.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lattice_two_state.html">13.4.4. The HMM lattice on a two-state intensity trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_minimal.html">13.4.5. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_background_rate.html">13.4.6. Estimating the background count rate from inter-photon times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_with_selection.html">13.4.7. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example_fixed.html">13.4.8. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_surrogate.html">13.4.9. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_variational_bayes.html">13.4.10. Variational Bayes for the photon-stream HMM: posterior and ELBO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_esrrf.html">13.4.11. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_kalman_burst_detection.html">13.4.12. Kalman-filter burst detection on a count trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_1.html">13.4.13. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_limitations.html">13.4.14. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_two_cde.html">13.4.15. 2CDE: within-burst dynamics without a kinetic model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_json.html">13.4.16. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstml_two_state.html">13.4.17. BurstML: maximum-likelihood analysis of diffusing two-state FRET bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_clsm_superres_resolution_curve.html">13.4.18. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_burst_pipeline.html">13.4.19. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_feature_clustering.html">13.4.20. Clustering burst features: k-means and HDBSCAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_fret_burst_analysis.html">13.4.21. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_lifetime_posterior.html">13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced.html">13.4.23. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_selection_example.html">13.4.28. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_analysis_with_filter.html">13.4.29. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_analysis.html">13.4.30. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_distance_refinement.html">13.4.31. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_bootstrap.html">13.4.32. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_microtime_linearization.html">13.4.33. Microtime Linearization</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_01_burst_analysis.html">13.4.41. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_single_molecule_pda_2.html">13.4.42. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_state_channels.html">13.4.43. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_phasor_diagnostic.html">13.4.44. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_alex_sm.html">13.4.45. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_blinking_acceptor.html">13.4.46. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_hmm_coincidence.html">13.4.47. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_complete_burst_analysis_pipeline.html">13.4.48. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_selection_advanced.html">13.4.49. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/single_molecule/plot_burst_search_comparison.html">13.4.50. Benchmarking burst searches against a simulated ground truth</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="auto_examples/tttr/index.html">12.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_transcode.html">12.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_header.html">12.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_microtime_histogram.html">12.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_write.html">12.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_pto_bundle_files.html">12.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_file_conversion.html">12.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_spcqc.html">12.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_write_read_roundtrip_simulated.html">12.6.8. Write a simulated photon stream, read it back</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/t2_t3_conversion.html">12.6.9. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_read_benchmark.html">12.6.10. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/plot_tttr_files.html">12.6.11. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auto_examples/tttr/compression_example.html">12.6.12. TTTR compression examples</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="auto_examples/clsm_memory_usage_example.html">CLSM image memory usage reporting</a></li>
+</ul>
+</details></li>
+
+
+</ul>
+</div>
 </nav></div>
         <div class="sidebar-primary-item">
 
@@ -912,7 +1203,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Plugins: adding a format without rebuilding</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">11. </span>Drop-in plugins</span></li>
   </ul>
 </nav>
 </div>
@@ -929,166 +1220,133 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="plugins-adding-a-format-without-rebuilding">
-<span id="plugins"></span><h1>Plugins: adding a format without rebuilding<a class="headerlink" href="#plugins-adding-a-format-without-rebuilding" title="Link to this heading">#</a></h1>
-<p>Drop a compiled plugin into a directory and the capability it provides is there
-the next time tttrlib runs. No rebuild of tttrlib, no source, no change to the
-calling code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;measurement.mylab&quot;</span><span class="p">,</span> <span class="s2">&quot;MYLAB&quot;</span><span class="p">)</span>   <span class="c1"># by name</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;measurement.mylab&quot;</span><span class="p">)</span>            <span class="c1"># or by content</span>
-</pre></div>
-</div>
-<p>A plugin can add a <strong>file format</strong>, a <strong>decay fit model</strong> or a <strong>burst search</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DecayFit2</span><span class="p">(</span><span class="s2">&quot;mymodel&quot;</span><span class="p">)</span>                    <span class="c1"># a model from a plugin</span>
-<span class="n">bursts</span> <span class="o">=</span> <span class="n">tttr</span><span class="o">.</span><span class="n">burst_search_by_name</span><span class="p">(</span><span class="s2">&quot;mysearch&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">p</span><span class="p">)</span>   <span class="c1"># a search from one</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">)[</span><span class="s2">&quot;mymodel&quot;</span><span class="p">]</span>                    <span class="c1"># with its schema</span>
-</pre></div>
-</div>
-<p>All three are reachable through the entry points that already take a name, so
-nothing calling tttrlib has to know a plugin is involved.</p>
+  <section id="drop-in-plugins">
+<span id="plugins"></span><h1><span class="section-number">11. </span>Drop-in plugins<a class="headerlink" href="#drop-in-plugins" title="Link to this heading">#</a></h1>
+<p>tttrlib loads <strong>binary plugins</strong> at run time. A plugin is one shared library
+(<code class="docutils literal notranslate"><span class="pre">tttrlib_&lt;name&gt;.so</span></code> / <code class="docutils literal notranslate"><span class="pre">.dylib</span></code> / <code class="docutils literal notranslate"><span class="pre">.dll</span></code>) that exports a single C
+function, <code class="docutils literal notranslate"><span class="pre">tttrlib_plugin_init_v1</span></code>; dropped into a directory tttrlib
+searches, it adds capabilities without a rebuild, a Python package or any
+change to tttrlib itself. The interface is a versioned C ABI
+(<code class="docutils literal notranslate"><span class="pre">modules/plugin/include/tttrlib_plugin.h</span></code>), so a plugin can be built with
+any compiler and any language that can export a C symbol.</p>
+<p>Nothing loads at <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">tttrlib</span></code>. Plugins are loaded once per process, the
+first time a lookup could be answered by one (a file is opened by name, a
+registry category is listed, a correlation method is set, …).</p>
 <section id="where-tttrlib-looks">
-<h2>Where tttrlib looks<a class="headerlink" href="#where-tttrlib-looks" title="Link to this heading">#</a></h2>
-<p>In order, with the first match by plugin <em>name</em> winning:</p>
+<h2><span class="section-number">11.1. </span>Where tttrlib looks<a class="headerlink" href="#where-tttrlib-looks" title="Link to this heading">#</a></h2>
+<p>In this order; the first library of a given name wins:</p>
 <ol class="arabic simple">
-<li><p>every directory in <code class="docutils literal notranslate"><span class="pre">$TTTRLIB_PLUGIN_PATH</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&lt;the</span> <span class="pre">tttrlib</span> <span class="pre">package&gt;/plugins/</span></code></p></li>
-<li><p>the per-user directory: <code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME/tttrlib/plugins</span></code> (Linux),
-<code class="docutils literal notranslate"><span class="pre">~/Library/Application</span> <span class="pre">Support/tttrlib/plugins</span></code> (macOS),
-<code class="docutils literal notranslate"><span class="pre">%LOCALAPPDATA%\tttrlib\plugins</span></code> (Windows)</p></li>
+<li><p>every directory in <code class="docutils literal notranslate"><span class="pre">TTTRLIB_PLUGIN_PATH</span></code> (<code class="docutils literal notranslate"><span class="pre">:</span></code>-separated, <code class="docutils literal notranslate"><span class="pre">;</span></code> on
+Windows) – for trying a plugin out before installing it;</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">plugins/</span></code> directory beside the tttrlib package itself
+(<code class="docutils literal notranslate"><span class="pre">site-packages/tttrlib/plugins/</span></code>);</p></li>
+<li><p>the per-user directory: <code class="docutils literal notranslate"><span class="pre">~/.local/share/tttrlib/plugins</span></code> (Linux,
+<code class="docutils literal notranslate"><span class="pre">$XDG_DATA_HOME</span></code> honoured), <code class="docutils literal notranslate"><span class="pre">~/Library/Application</span> <span class="pre">Support/tttrlib/plugins</span></code>
+(macOS), <code class="docutils literal notranslate"><span class="pre">%LOCALAPPDATA%\tttrlib\plugins</span></code> (Windows).</p></li>
 </ol>
-<p>Only files named <code class="docutils literal notranslate"><span class="pre">tttrlib_&lt;name&gt;.{so,dylib,dll}</span></code> are probed, so a plugin’s own
-dependency libraries can sit beside it without being mistaken for plugins. Load
-order within a directory is case-folded filename order, so a bug is reproducible
-rather than filesystem-dependent.</p>
-<p>The current working directory and the directory of the file being opened are
-<strong>never</strong> searched. That pair is the whole of the DLL-hijacking attack – a
-shared instrument drive holding a data file and a helpful-looking library next
-to it – and it is the one case where the convenience is not worth it.</p>
-</section>
-<section id="controlling-it">
-<h2>Controlling it<a class="headerlink" href="#controlling-it" title="Link to this heading">#</a></h2>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">TTTRLIB_PLUGINS</span><span class="o">=</span><span class="m">0</span><span class="w">            </span><span class="c1"># load nothing</span>
-<span class="nv">TTTRLIB_PLUGINS</span><span class="o">=</span>only:mylab<span class="w">   </span><span class="c1"># load only this one</span>
+<p>World-writable directories are never searched, and neither is the current
+working directory. <code class="docutils literal notranslate"><span class="pre">TTTRLIB_PLUGINS=0</span></code> switches loading off;
+<code class="docutils literal notranslate"><span class="pre">TTTRLIB_PLUGINS=only:example,other</span></code> pins the set that may load.</p>
+<p>What loaded, and why something did not, is in the registry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">"plugin"</span><span class="p">)</span>
+<span class="go">{'example': {'status': 'loaded', 'version': '1.0.0', 'path': '...', 'sha256': '...'}}</span>
 </pre></div>
 </div>
-<p>Pinning matters more than it looks. A published result should not depend on what
-happened to be sitting in a directory the day it was produced, and
-<code class="docutils literal notranslate"><span class="pre">only:</span></code> is how an analysis says which capabilities it meant to use.</p>
+<p>A plugin whose <code class="docutils literal notranslate"><span class="pre">init</span></code> fails is rolled back completely: nothing it registered
+before failing stays visible, and its record says what went wrong.</p>
 </section>
-<section id="seeing-what-happened">
-<h2>Seeing what happened<a class="headerlink" href="#seeing-what-happened" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">&quot;plugin&quot;</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<section id="what-a-plugin-can-contribute">
+<h2><span class="section-number">11.2. </span>What a plugin can contribute<a class="headerlink" href="#what-a-plugin-can-contribute" title="Link to this heading">#</a></h2>
+<p>Six capability tables, each a C struct with a <code class="docutils literal notranslate"><span class="pre">struct_size</span></code> field so an old
+plugin keeps working against a newer host and vice versa:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Table</p></th>
+<th class="head"><p>Adds</p></th>
+<th class="head"><p>Reached from Python as</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_container_v1</span></code></p></td>
+<td><p>a file format: sniffer, header, record decoder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tttrlib.TTTR(path,</span> <span class="pre">&quot;NAME&quot;)</span></code>, auto-detection,
+<code class="docutils literal notranslate"><span class="pre">registry(&quot;file_container&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_decay_fit_v1</span></code></p></td>
+<td><p>a decay-fit model (create / evaluate; the host runs its own optimiser)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tttrlib.DecayFit2(&quot;model_name&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">registry(&quot;fit&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_burst_search_v1</span></code></p></td>
+<td><p>a burst search (arrival times in, index pairs out)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tttr.burst_search_by_name(&quot;name&quot;,</span> <span class="pre">**params)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tttr.burst_search(...,</span> <span class="pre">mode=&quot;name&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">registry(&quot;burst_search&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_operation_v1</span></code></p></td>
+<td><p>a self-describing pipeline operation (schema, inputs, outputs, execute)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">registry(&quot;operation&quot;)</span></code>, the burst pipeline</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_correlation_method_v1</span></code></p></td>
+<td><p>a correlation kernel on the host’s lag axis</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Correlator.method</span> <span class="pre">=</span> <span class="pre">&quot;name&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Correlator.correlation_method_names()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tttrlib_decay_prior_v1</span></code></p></td>
+<td><p>a prior kind for the decay fits (<code class="docutils literal notranslate"><span class="pre">lnpdf</span></code>, mode, support)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DecayFitPrior.from_json_string('{&quot;kind&quot;:</span> <span class="pre">&quot;name&quot;,</span> <span class="pre">...}')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DecayFitPrior.kinds()</span></code>, <code class="docutils literal notranslate"><span class="pre">DecayFitConstraints.set_prior_json</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="the-example-plugin">
+<h2><span class="section-number">11.3. </span>The example plugin<a class="headerlink" href="#the-example-plugin" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">examples/plugin/tttrlib_example.c</span></code> registers one of each from a single
+library and is what <code class="docutils literal notranslate"><span class="pre">test/python/plugin/test_plugins.py</span></code> exercises. Build it
+with nothing but a C compiler and the header:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cc</span> <span class="o">-</span><span class="n">shared</span> <span class="o">-</span><span class="n">fPIC</span> <span class="o">-</span><span class="n">O2</span> <span class="o">-</span><span class="n">o</span> <span class="n">tttrlib_example</span><span class="o">.</span><span class="n">so</span> <span class="n">examples</span><span class="o">/</span><span class="n">plugin</span><span class="o">/</span><span class="n">tttrlib_example</span><span class="o">.</span><span class="n">c</span> \
+   <span class="o">-</span><span class="n">I</span> <span class="n">modules</span><span class="o">/</span><span class="n">plugin</span><span class="o">/</span><span class="n">include</span>          <span class="c1"># .dylib on macOS; cl /LD on Windows</span>
 </pre></div>
 </div>
-<p>Every candidate is listed with its status – <code class="docutils literal notranslate"><span class="pre">loaded</span></code>, <code class="docutils literal notranslate"><span class="pre">failed</span></code>,
-<code class="docutils literal notranslate"><span class="pre">quarantined</span></code>, <code class="docutils literal notranslate"><span class="pre">shadowed</span></code> or <code class="docutils literal notranslate"><span class="pre">disabled</span></code> – plus its version, absolute path,
-sha256 and what it contributed. A plugin that fails to load is <strong>reported there
-rather than raised</strong>: importing tttrlib cannot be broken by whatever is in a
-plugin directory, and a diagnostic that scrolled past the terminal is not a
-diagnostic.</p>
-<p>The sha256 is there for provenance. “Which binary produced this figure” is a
-question a published result has to be able to answer.</p>
+<p>or with <code class="docutils literal notranslate"><span class="pre">-DTTTRLIB_BUILD_EXAMPLE_PLUGIN=ON</span></code> in a CMake build. Then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ TTTRLIB_PLUGIN_PATH=$PWD python
+&gt;&gt;&gt; import tttrlib, json, numpy as np
+&gt;&gt;&gt; tttrlib.registry("plugin")["example"]["status"]
+'loaded'
+&gt;&gt;&gt; "direct_plugin" in tttrlib.Correlator.correlation_method_names()
+True
+&gt;&gt;&gt; p = tttrlib.DecayFitPrior.from_json_string(json.dumps({"kind": "laplace", "mu": 1.5, "b": 0.5}))
+&gt;&gt;&gt; p.kind(), p.mode()
+('laplace', 1.5)
+&gt;&gt;&gt; t = tttrlib.TTTR("some.spc", "SPC-130")
+&gt;&gt;&gt; t.burst_search_by_name("interphoton_plugin", max_gap=500.0, min_photons=5)
+</pre></div>
+</div>
 </section>
 <section id="writing-one">
-<span id="plugin-abi"></span><h2>Writing one<a class="headerlink" href="#writing-one" title="Link to this heading">#</a></h2>
-<p>Include <code class="docutils literal notranslate"><span class="pre">tttrlib_plugin.h</span></code> and implement <code class="docutils literal notranslate"><span class="pre">tttrlib_plugin_init_v1</span></code>:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;tttrlib_plugin.h&quot;</span>
-
-<span class="k">static</span><span class="w"> </span><span class="n">tttrlib_container_v1</span><span class="w"> </span><span class="n">kContainer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">sizeof</span><span class="p">(</span><span class="n">tttrlib_container_v1</span><span class="p">),</span>
-<span class="w">    </span><span class="s">&quot;MYLAB&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;My Lab time tagger&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mylab&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">    </span><span class="n">my_sniff</span><span class="p">,</span><span class="w"> </span><span class="n">my_open</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">my_read</span><span class="p">,</span><span class="w"> </span><span class="n">my_close</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span>
-<span class="p">};</span>
-
-<span class="n">TTTRLIB_PLUGIN_EXPORT</span><span class="w"> </span><span class="kt">int</span>
-<span class="n">tttrlib_plugin_init_v1</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">tttrlib_host_v1</span><span class="o">*</span><span class="w"> </span><span class="n">host</span><span class="p">,</span><span class="w"> </span><span class="n">tttrlib_plugin_info_v1</span><span class="o">*</span><span class="w"> </span><span class="n">info</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">info</span><span class="o">-&gt;</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mylab&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="n">info</span><span class="o">-&gt;</span><span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1.0.0&quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">host</span><span class="o">-&gt;</span><span class="n">register_container</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kContainer</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cc<span class="w"> </span>-shared<span class="w"> </span>-fPIC<span class="w"> </span>-O2<span class="w"> </span>-o<span class="w"> </span>tttrlib_mylab.so<span class="w"> </span>mylab.c<span class="w"> </span>-I&lt;tttrlib&gt;/modules/plugin/include
-</pre></div>
-</div>
-<p>Note what is <em>not</em> on that command line: any tttrlib library. A plugin resolves
-nothing from the host at link time – everything it may call arrives as a
-function pointer in the host table – which is what lets it be built with a
-different compiler, standard library and runtime than tttrlib itself.</p>
-<p><code class="docutils literal notranslate"><span class="pre">examples/plugin/tttrlib_example.c</span></code> is a complete, commented, working example
-providing a container, a fit model and a burst search from one library. It is the same file the test suite
-loads to prove this page is true.</p>
-<p>A fit model implements <code class="docutils literal notranslate"><span class="pre">create</span></code>, <code class="docutils literal notranslate"><span class="pre">n_parameters</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> and
-<code class="docutils literal notranslate"><span class="pre">destroy</span></code>, and that is all. It does <strong>not</strong> implement the optimiser: the host
-wraps the objective in the library’s own bounded, constraint-aware L-BFGS, so a
-plugin fit and a built-in fit differ in the objective and in nothing else. That
-is deliberate — writing the optimiser is most of the work of a fit model and
-none of the photophysics, and every plugin doing it separately would mean every
-plugin doing it slightly differently.</p>
-<p>A model must publish a <code class="docutils literal notranslate"><span class="pre">params_schema</span></code>. Without one a caller is back to
-counting slots in a flat array, which is the thing the registry exists to
-abolish, so registration is refused rather than accepted with a gap.</p>
-<p>A burst search is the smallest table of the three – arrival times in, index
-ranges out, one call, no handle. It is dispatched by <em>name</em> rather than by
-attribute, because a plugin has no method on <code class="docutils literal notranslate"><span class="pre">TTTR</span></code> to reach: its registry
-entry carries <code class="docutils literal notranslate"><span class="pre">provider:</span> <span class="pre">&quot;plugin&quot;</span></code> and no <code class="docutils literal notranslate"><span class="pre">method</span></code>, and that absence is the
-signal. If it finds more bursts than the buffer it was given holds, it reports
-the total it would have written and the host calls again with a bigger one –
-returning the first N bursts of a measurement would be a wrong answer that
-looks like a right one.</p>
-</section>
-<section id="the-five-contracts">
-<h2>The five contracts<a class="headerlink" href="#the-five-contracts" title="Link to this heading">#</a></h2>
-<p>The boundary is plain C, and these are the rules that keep it stable. They are
-stated in full in <code class="docutils literal notranslate"><span class="pre">tttrlib_plugin.h</span></code>; in brief:</p>
-<p><strong>Version negotiation is by symbol name.</strong> The host looks up
-<code class="docutils literal notranslate"><span class="pre">tttrlib_plugin_init_v1</span></code>. A future ABI exports a <em>different</em> symbol, so a v1
-plugin keeps working forever and a v2-only plugin on an old host gets a clean
-“needs a newer tttrlib” rather than a crash.</p>
-<p><strong>Forward compatibility inside a version is by</strong> <code class="docutils literal notranslate"><span class="pre">struct_size</span></code>, the first field
-of every struct. Fields may only be appended. This is how the host table grows a
-<code class="docutils literal notranslate"><span class="pre">register_decay_fit</span></code> without disturbing a plugin compiled today.</p>
-<p><strong>Event buffers are always host-allocated.</strong> The plugin fills what it was given
-and says how much it wrote. It never frees host memory or vice versa, which
-makes the classic cross-runtime free mismatch structurally impossible on the
-path that runs once per photon.</p>
-<p><strong>No exception crosses, in either direction.</strong> Host callbacks are <code class="docutils literal notranslate"><span class="pre">noexcept</span></code>;
-plugin entry points return status codes. <code class="docutils literal notranslate"><span class="pre">TTTRLIB_UNSUPPORTED</span></code> is distinct from
-an error – a sniffer saying “not mine” is a normal answer.</p>
-<p><strong>Strings</strong> passed in are valid for the call; strings passed back are owned by
-the plugin until <code class="docutils literal notranslate"><span class="pre">close</span></code>.</p>
-<p>A plugin may not take a name the library already uses – for a format or for a
-fit model. Registration is refused, not shadowed: a plugin that could silently
-replace the built-in <code class="docutils literal notranslate"><span class="pre">fit23</span></code> or the PTU reader would be a supply-chain
-problem rather than a feature.</p>
-</section>
-<section id="what-a-plugin-cannot-do">
-<h2>What a plugin cannot do<a class="headerlink" href="#what-a-plugin-cannot-do" title="Link to this heading">#</a></h2>
-<p>Add a Python class. The language bindings are generated at build time, so there
-is no runtime path to synthesise one. If you need genuinely new types, write an
-ordinary Python package that imports tttrlib – that is the supported answer,
-and it always has been.</p>
-</section>
-<section id="containment-and-its-limits">
-<h2>Containment, and its limits<a class="headerlink" href="#containment-and-its-limits" title="Link to this heading">#</a></h2>
-<p>A plugin that fails to load, fails to initialise, or registers something invalid
-is caught, has every registration it made rolled back, and is marked failed.
-Nothing else changes. It is never unloaded – <code class="docutils literal notranslate"><span class="pre">dlclose</span></code> after static
-constructors have run is a well-known way to crash at exit.</p>
-<p>A plugin that <em>hard-crashes</em> takes the process with it, exactly as a bad numpy
-extension does. There is no sandbox here and pretending otherwise would be
-worse than saying so. The proportionate mitigations are: <code class="docutils literal notranslate"><span class="pre">RTLD_NOW</span></code>, so a
-missing symbol is a diagnosis at load rather than a crash mid-file;
-<code class="docutils literal notranslate"><span class="pre">TTTRLIB_PLUGINS=0</span></code>; and a quarantine marker written before the library is
-opened and removed once it survives – so a plugin that killed the last process
-is skipped on the next run instead of making Python unstartable.</p>
-<p>Directories that are world-writable are refused outright. The temp directory is
-refused too, but only when tttrlib went looking there itself: a path you named
-in <code class="docutils literal notranslate"><span class="pre">TTTRLIB_PLUGIN_PATH</span></code> is a deliberate act, and trying a plugin out before
-installing it is exactly what that variable is for.</p>
+<h2><span class="section-number">11.4. </span>Writing one<a class="headerlink" href="#writing-one" title="Link to this heading">#</a></h2>
+<p>Everything a plugin may call arrives as a function pointer in the host table
+(<code class="docutils literal notranslate"><span class="pre">tttrlib_host_v1</span></code>: <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">set_error</span></code>, and one <code class="docutils literal notranslate"><span class="pre">register_*</span></code> per
+capability); a plugin links against no tttrlib library. The rules that matter:</p>
+<ul class="simple">
+<li><p>Check <code class="docutils literal notranslate"><span class="pre">host-&gt;struct_size</span></code> before touching a <code class="docutils literal notranslate"><span class="pre">register_*</span></code> that was
+appended later than the one you were built against; the header says, per
+field, which came after which.</p></li>
+<li><p>Register only inside <code class="docutils literal notranslate"><span class="pre">init</span></code>. Call <code class="docutils literal notranslate"><span class="pre">set_error</span></code> before returning a non-OK
+status – a bare failure code becomes a message nobody can act on.</p></li>
+<li><p>Buffers the host hands in are valid for the call only; a search that finds
+more than the buffer holds reports the total and is called again with a
+larger one, so results are never truncated silently.</p></li>
+<li><p>Names are refused if a built-in or another plugin owns them.</p></li>
+</ul>
+<p>The header is the specification; <code class="docutils literal notranslate"><span class="pre">modules/plugin/README.md</span></code> maps each table
+to the layer that consults it.</p>
 </section>
 </section>
 
@@ -1139,13 +1397,10 @@ installing it is exactly what that variable is for.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-tttrlib-looks">Where tttrlib looks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#controlling-it">Controlling it</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeing-what-happened">Seeing what happened</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-one">Writing one</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-five-contracts">The five contracts</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-plugin-cannot-do">What a plugin cannot do</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#containment-and-its-limits">Containment, and its limits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-tttrlib-looks">11.1. Where tttrlib looks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-plugin-can-contribute">11.2. What a plugin can contribute</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-example-plugin">11.3. The example plugin</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-one">11.4. Writing one</a></li>
 </ul>
   </nav></div>
 

@@ -1,0 +1,116 @@
+"""Kalman-filter burst detection on a count trace
+==============================================
+
+A single-molecule count trace is "the rate stays what it was, plus process
+noise" — until a molecule crosses the focus and the rate jumps. A Kalman filter
+with identity transition and observation matrices tracks the *background* rate;
+a burst then shows up as an innovation the filter did not expect, and its
+Mahalanobis distance
+
+.. math::
+
+    D_t = \\sqrt{v_t^\\top S_t^{-1} v_t}, \\qquad
+    v_t = y_t - \\hat x_{t|t-1}, \\quad S_t = P_{t|t-1} + R_t
+
+is a dimensionless burst score across any number of detection channels. The
+measurement noise :math:`R_t = \\mathrm{diag}(r\\,\\hat x_{t|t-1}/\\Delta t)` is
+Poisson: the variance of a rate estimated from a bin is the rate itself divided
+by the bin width.
+
+`tttrlib.kalman_filter` runs the recursion over a whole trace in one call and
+returns the filtered state, its covariance and :math:`D_t`; it is a bit-exact
+port of ChiSurf's ``_kalman_filter_loop`` (the closed-form 2×2 inverse included)
+and agrees with filterpy's ``KalmanFilter`` to rounding.
+`TTTR.burst_search_kalman` wraps the same recursion into a photon-index burst
+search (bin the photons, filter, threshold :math:`D`, extract runs, merge gaps).
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+import tttrlib
+
+rng = np.random.default_rng(3)
+RES = 1e-7          # seconds per macro-time tick
+
+# %%
+# Simulate a two-channel photon stream: Poisson background plus injected
+# transits (start, duration, rate), donor/acceptor channels 0/1.
+duration = 1.0
+background_cps = 3000.0
+bursts = ((0.20, 0.003, 30000.0), (0.50, 0.002, 60000.0), (0.80, 0.004, 25000.0),
+          (0.62, 0.0015, 15000.0))
+t = [rng.uniform(0.0, duration, rng.poisson(background_cps * duration))]
+for t0, length, rate in bursts:
+    t.append(rng.uniform(t0, t0 + length, rng.poisson(rate * length)))
+t = np.sort(np.concatenate(t))
+ticks = np.maximum.accumulate(np.round(t / RES).astype(np.int64))
+channels = rng.integers(0, 2, ticks.size).astype(np.int8)
+
+# %%
+# Bin per channel and run the filter directly
+# --------------------------------------------
+dt = 1e-4                                            # 100 us bins
+n_bins = int(np.ceil((ticks[-1] - ticks[0]) * RES / dt)) + 1
+b = ((ticks - ticks[0]) * RES / dt).astype(np.int64)
+counts = np.column_stack([np.bincount(b[channels == c], minlength=n_bins) for c in (0, 1)])
+y = counts.astype(np.float64) / dt                   # observed rate per bin (Hz)
+
+x0 = y[:200].mean(axis=0)                            # initial rate: the first 20 ms
+P0 = np.eye(2) * 1e6
+Q = np.eye(2) * 100.0                                # process noise (rate drift)
+r_scale = 0.1
+x_filt, P_filt, D = tttrlib.kalman_filter(y, x0, P0, Q, dt, r_scale)
+x_filt = np.asarray(x_filt); D = np.asarray(D)
+
+# %%
+# The filtered rate follows the background; D lifts off at every transit.
+z_thresh = 3.0
+time_axis = np.arange(n_bins) * dt
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+ax1.plot(time_axis, y.sum(1) / 1e3, lw=0.5, color="0.6", label="observed rate (both channels)")
+ax1.plot(time_axis, x_filt.sum(1) / 1e3, lw=1.2, color="C0", label="Kalman-filtered rate")
+for t0, length, _ in bursts:
+    ax1.axvspan(t0, t0 + length, color="C3", alpha=0.15)
+ax1.set_ylabel("rate / kHz")
+ax1.legend(loc="upper right")
+ax2.plot(time_axis, D, lw=0.6, color="C0")
+ax2.axhline(z_thresh, color="C3", ls="--", label=f"threshold D = {z_thresh}")
+ax2.set_ylabel("Mahalanobis D")
+ax2.set_xlabel("time / s")
+ax2.legend(loc="upper right")
+fig.tight_layout()
+
+# %%
+# The photon-index burst search on the same photons
+# --------------------------------------------------
+# ``burst_search_kalman`` does the binning, the filter, the threshold, the run
+# extraction and the gap merge in one call and returns photon index pairs.
+tttr = tttrlib.TTTR(ticks.astype(np.uint64), np.zeros(ticks.size, np.uint16),
+                    channels, np.zeros(ticks.size, np.int8))
+tttr.header.set_macro_time_resolution(RES)
+# ``warmup_bins`` seeds the filter's rate from the first bins and reports no
+# burst inside them. Without it (``warmup_bins=0``, the legacy start shared with
+# ChiSurf's detector) the filter starts at rate 0 with ~0 measurement noise,
+# believes that rate exactly, and the first non-empty bin is a huge innovation
+# -- one or two spurious "bursts" at t ~ 0 on every trace.
+found = np.asarray(tttr.burst_search_kalman(L=20, dt=dt, q=100.0, r_scale=r_scale,
+                                            z_thresh=z_thresh, min_len=2, merge_gap=5,
+                                            per_channel=True, warmup_bins=200),
+                   dtype=np.int64).reshape(-1, 2)
+print(f"{found.shape[0]} bursts found (4 injected):")
+for s, e in found:
+    print(f"  photons {s:6d}-{e:6d}  t = {ticks[s] * RES:.4f}-{ticks[e] * RES:.4f} s  ({e - s + 1} photons)")
+
+# %%
+# Overlay the detections on the trace.
+fig, ax = plt.subplots(figsize=(10, 3))
+ax.plot(time_axis, y.sum(1) / 1e3, lw=0.5, color="0.6")
+for s, e in found:
+    ax.axvspan(ticks[s] * RES, ticks[e] * RES, color="C0", alpha=0.35)
+for t0, length, _ in bursts:
+    ax.axvspan(t0, t0 + length, color="C3", alpha=0.15)
+ax.set_xlabel("time / s")
+ax.set_ylabel("rate / kHz")
+ax.set_title("red: injected transits, blue: burst_search_kalman (warmup_bins=200)")
+fig.tight_layout()
+plt.show()

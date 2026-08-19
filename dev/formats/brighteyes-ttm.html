@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -971,8 +985,8 @@ Spectroscopy group (IIT): a Xilinx Kintex-7 TDC with roughly 30 ps resolution,
 built for SPAD arrays of 25 or 49 elements on a scanning microscope.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="c1"># The container must be named -- see &quot;Why it cannot be sniffed&quot; below.</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;scan.ttr&quot;</span><span class="p">,</span> <span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">)</span>
+<span class="c1"># The container must be named -- see "Why it cannot be sniffed" below.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"scan.ttr"</span><span class="p">,</span> <span class="s2">"BRIGHTEYES-TTR"</span><span class="p">)</span>
 
 <span class="n">img</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span>
     <span class="n">tttr_data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
@@ -1047,7 +1061,7 @@ reader.</p>
 are properties of the instrument, not of the file. They are supplied as
 <a class="reference internal" href="../file-formats.html#container-parameters"><span class="std std-ref">container parameters</span></a>, and the container declares
 what it accepts so a caller can ask:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">&quot;file_container&quot;</span><span class="p">)[</span><span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">][</span><span class="s2">&quot;params_schema&quot;</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry</span><span class="p">(</span><span class="s2">"file_container"</span><span class="p">)[</span><span class="s2">"BRIGHTEYES-TTR"</span><span class="p">][</span><span class="s2">"params_schema"</span><span class="p">]</span>
 </pre></div>
 </div>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1109,8 +1123,8 @@ nonlinear codes that look like micro times:</p>
 </div>
 <p>Asking for a calibration turns the codes into arrival times:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span>
-    <span class="s2">&quot;scan.ttr&quot;</span><span class="p">,</span> <span class="s2">&quot;BRIGHTEYES-TTR&quot;</span><span class="p">,</span>
-    <span class="s1">&#39;{&quot;sysclk_MHz&quot;: 240, &quot;laser_MHz&quot;: 80, &quot;auto_calibrate_tdc&quot;: true}&#39;</span><span class="p">)</span>
+    <span class="s2">"scan.ttr"</span><span class="p">,</span> <span class="s2">"BRIGHTEYES-TTR"</span><span class="p">,</span>
+    <span class="s1">'{"sysclk_MHz": 240, "laser_MHz": 80, "auto_calibrate_tdc": true}'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>It is a separate, opt-in, clearly-named step because it is an <strong>estimation</strong>,

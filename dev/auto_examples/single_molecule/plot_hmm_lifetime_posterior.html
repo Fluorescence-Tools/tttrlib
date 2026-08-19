@@ -7,19 +7,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET" />
+<meta property="og:title" content="13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="auto_examples/single_molecule/plot_hmm_lifetime_posterior.html" />
 <meta property="og:site_name" content="tttrlib" />
 <meta property="og:description" content="Intensity alone cannot tell a dark acceptor from real FRET: both lower the acceptor fraction. Only energy transfer also shortens the donor lifetime. This example builds two states that are delibera..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_hmm_lifetime_posterior_fa3d6378.png" />
+<meta property="og:image" content="_images/social_previews/summary_auto_examples_single_molecule_plot_hmm_lifetime_posterior_23f5e83d.png" />
 <meta property="og:image:alt" content="Intensity alone cannot tell a dark acceptor from real FRET: both lower the acceptor fraction. Only energy transfer also shortens the donor lifetime. This example builds two states that are delibera..." />
 <meta name="description" content="Intensity alone cannot tell a dark acceptor from real FRET: both lower the acceptor fraction. Only energy transfer also shortens the donor lifetime. This example builds two states that are delibera..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET &#8212; tttrlib v0.27.0</title>
+    <title>13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET &#8212; tttrlib v0.27.0</title>
   
   
   
@@ -78,8 +78,8 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example" href="plot_burstfilter_dynamic_enhanced.html" />
-    <link rel="prev" title="11.4.14. FRET Burst Analysis with BurstFilter Class" href="plot_fret_burst_analysis.html" />
+    <link rel="next" title="13.4.23. Enhanced BurstFilter: Dynamic Parameter Changes Example" href="plot_burstfilter_dynamic_enhanced.html" />
+    <link rel="prev" title="13.4.21. FRET Burst Analysis with BurstFilter Class" href="plot_fret_burst_analysis.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.27.0" />
@@ -256,7 +256,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -334,6 +334,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -617,7 +624,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -695,6 +702,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -877,59 +891,69 @@
 <li class="toctree-l1"><a class="reference internal" href="../../clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../localization-guide.html">8. Image Localization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../fit-guide.html">9. Fluorescence Decay Fitting</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">10. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">10.1. TTTR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipelines.html">10. Pipelines: reproducible data processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../plugins.html">11. Drop-in plugins</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tttr.html">12. TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/tttr.html">12.1. TTTR files</a></li>
 
 
 
 
-<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">12.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">12.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">12.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">12.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">12.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">12.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">12.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">12.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_write_read_roundtrip_simulated.html">12.6.8. Write a simulated photon stream, read it back</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">12.6.9. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">12.6.10. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">12.6.11. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">12.6.12. TTTR compression examples</a></li>
 </ul>
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../single_molecule.html">11. Single-molecule fluorescence</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">11.1. Burst Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">11.2. Fluorescence intensity analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">11.3. Photon distribution analysis</a></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">11.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../single_molecule.html">13. Single-molecule fluorescence</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../modules/single-molecule.html">13.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/features.html">13.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/pda.html">13.3. Photon distribution analysis</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">13.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">13.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">13.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">13.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_lattice_two_state.html">13.4.4. The HMM lattice on a two-state intensity trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">13.4.5. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_background_rate.html">13.4.6. Estimating the background count rate from inter-photon times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">13.4.7. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">13.4.8. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">13.4.9. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_variational_bayes.html">13.4.10. Variational Bayes for the photon-stream HMM: posterior and ELBO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">13.4.11. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_kalman_burst_detection.html">13.4.12. Kalman-filter burst detection on a count trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">13.4.13. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">13.4.14. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_two_cde.html">13.4.15. 2CDE: within-burst dynamics without a kinetic model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">13.4.16. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstml_two_state.html">13.4.17. BurstML: maximum-likelihood analysis of diffusing two-state FRET bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">13.4.18. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">13.4.19. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_feature_clustering.html">13.4.20. Clustering burst features: k-means and HDBSCAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">13.4.21. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">13.4.23. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
 
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">13.4.28. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">13.4.29. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">13.4.30. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">13.4.31. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">13.4.32. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">13.4.33. Microtime Linearization</a></li>
 
 
 
@@ -937,22 +961,22 @@
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">13.4.41. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">13.4.42. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">13.4.43. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_phasor_diagnostic.html">13.4.44. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">13.4.45. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">13.4.46. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">13.4.47. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">13.4.48. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">13.4.49. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">13.4.50. Benchmarking burst searches against a simulated ground truth</a></li>
 </ul>
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">12. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">12.1. Imaging</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../imaging.html">14. Fluorescence imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging.html">14.1. Imaging</a></li>
 
 
 
@@ -962,13 +986,13 @@
 
 
 
-<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/imaging_mle.html">14.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../modules/ics.html">14.12. Image correlation spectroscopy</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="../../tools.html">13. Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">14. Verbosity / Debug output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">15. References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tools.html">15. Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../verbosity.html">16. Verbosity / Debug output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zreferences.html">17. References</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Example Gallery</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
@@ -993,8 +1017,12 @@
 <li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation.html">Confocor3 two channel cross-correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../correlation/plot_normal_correlation.html">Normal multi-tau correlation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../correlation/plot_correlation_cr_filter.html">Count rate filtered correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_fdc_2d.html">2D fluorescence-decay correlation (2D-FDC / 2D-FLCS)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_fdc_2d_microsecond_fret.html">Microsecond dynamics: 2D-FDC on a single FRET molecule, T3-mode TTTR</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../correlation/plot_confocor3_two_ch_correlation_merge.html">Confocor3 two channel cross-correlation (using merge method)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_fdc_2d_microsecond_fret_diffusion.html">Microsecond 2D-FDC with FREELY DIFFUSING molecules (tau_D = 2 ms)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../correlation/plot_lifetime_fcs.html">Lifetime-filtered correlation (lifetime-FCS)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../correlation/plot_fdc_2d_dynamics_resolution.html">How fast, and how complex: 2D-FDC dynamics resolution on ground truth</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../flim/index.html">Fluorescence lifetime imaging</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1009,6 +1037,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_pixel_masks.html">Using Pixel masks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_read_clsm_data.html">Reading of CLSM data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor.html">Phasor analysis of images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flim/plot_phasor_decay_stack.html">Phasors of a stack of decays</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_mle_lifetime.html">Lifetime analysis</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_tutorial_python.html">Tutorial: Image construction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flim/plot_export_flim_tiff.html">Exporting FLIM images to TIFF (no ImageJ)</a></li>
@@ -1024,11 +1053,13 @@
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit24.html">Fit24: bi-exponential decay model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit25.html">Fit25: select from fixed lifetimes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_usage_2.html">MLE fit23: Usage example 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_blind_irf_estimation.html">Blind IRF estimation from a fluorescence decay</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_routines.html">Convolution routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_pile_up.html">Pile-up</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_convolution_methods.html">Convolving a decay: the recursion or the transform?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_interface.html">Fitting a decay: one interface</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_fit23_benchmark_1.html">MLE fit23: Benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_decay_fit_interface.html">Fitting a decay: one interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../fluorescence_decay/plot_maxent_fret_recovery.html">Maximum-entropy FRET distance recovery, and picking nu</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../image_correlation/index.html">Image correlation spectroscopy</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1041,41 +1072,51 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../miscellaneous/index.html">Miscellaneous</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_2D.html">Make a 2D Histogram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_1D.html">Make a 1D Histogram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_watershed_marching_squares.html">Region segmentation: watershed and iso-contours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_richardson_lucy_deconvolution.html">Richardson-Lucy deconvolution of an image</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_histogram_benchmark.html">Benchmark of histogram routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../miscellaneous/plot_registry_composition.html">The registry: discover algorithms and compose a pipeline</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../release_highlights/index.html">Release Highlights</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_24_0.html">Release Highlights for tttrlib 0.24</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../release_highlights/plot_release_highlights_0_20_0.html">Release Highlights for tttrlib 0.23</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">11.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">11.4.1. Intensity traces</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">11.4.2. PDA from a synthetic photon distribution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">11.4.3. Burst selection routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">11.4.4. Minimal Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">11.4.5. BurstFilter with TTTRSelection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">11.4.6. Microtime Range Selection Example (Fixed Version)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">11.4.7. Training an HMM surrogate (amortised neural estimator)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">11.4.8. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">11.4.9. Photon distribution analysis - 1</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">11.4.10. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">11.4.11. Burst Analysis with JSON Parameter Support</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">11.4.12. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">11.4.13. A full burst pipeline: simulate, search, select, resolve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">11.4.14. FRET Burst Analysis with BurstFilter Class</a></li>
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">11.4.15. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">11.4.16. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">13.4. Single-molecule</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_mcs.html">13.4.1. Intensity traces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_pda_synthetic.html">13.4.2. PDA from a synthetic photon distribution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_burst_selection.html">13.4.3. Burst selection routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_lattice_two_state.html">13.4.4. The HMM lattice on a two-state intensity trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_minimal.html">13.4.5. Minimal Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_background_rate.html">13.4.6. Estimating the background count rate from inter-photon times</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_with_selection.html">13.4.7. BurstFilter with TTTRSelection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example_fixed.html">13.4.8. Microtime Range Selection Example (Fixed Version)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_surrogate.html">13.4.9. Training an HMM surrogate (amortised neural estimator)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_variational_bayes.html">13.4.10. Variational Bayes for the photon-stream HMM: posterior and ELBO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_esrrf.html">13.4.11. CLSM Super-Resolution (eSRRF) Photon Reassignment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_kalman_burst_detection.html">13.4.12. Kalman-filter burst detection on a count trace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_1.html">13.4.13. Photon distribution analysis - 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_limitations.html">13.4.14. CLSM Super-Resolution (eSRRF) Method Limitations Demonstration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_two_cde.html">13.4.15. 2CDE: within-burst dynamics without a kinetic model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_json.html">13.4.16. Burst Analysis with JSON Parameter Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstml_two_state.html">13.4.17. BurstML: maximum-likelihood analysis of diffusing two-state FRET bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_clsm_superres_resolution_curve.html">13.4.18. CLSM Super-Resolution (eSRRF) Resolution Curve Demonstration (Unverified Toy Model)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_burst_pipeline.html">13.4.19. A full burst pipeline: simulate, search, select, resolve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_feature_clustering.html">13.4.20. Clustering burst features: k-means and HDBSCAN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_fret_burst_analysis.html">13.4.21. FRET Burst Analysis with BurstFilter Class</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">13.4.22. Lifetime-resolved HMM: separating a dark state from real FRET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burstfilter_dynamic_enhanced.html">13.4.23. Enhanced BurstFilter: Dynamic Parameter Changes Example</a></li>
 
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">11.4.21. Microtime Range Selection Example</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">11.4.22. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">11.4.23. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">11.4.24. Refining distances and kinetics together (3-state)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">11.4.25. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">11.4.26. Microtime Linearization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_selection_example.html">13.4.28. Microtime Range Selection Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_analysis_with_filter.html">13.4.29. Burst Analysis with BurstFilter Class and Photon Masking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_analysis.html">13.4.30. Photon-by-photon HMM (H2MM) of smFRET dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_distance_refinement.html">13.4.31. Refining distances and kinetics together (3-state)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_bootstrap.html">13.4.32. Error bars on a maximum-likelihood fit, by resampling bursts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_microtime_linearization.html">13.4.33. Microtime Linearization</a></li>
 
 
 
@@ -1083,30 +1124,31 @@
 
 
 
-<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">11.4.34. Burst Analysis Example with BurstFilter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">11.4.35. Photon distribution analysis - 2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">11.4.36. HMM state decoding: faithful distributions and how to store them</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_phasor_diagnostic.html">11.4.37. A phasor check on a converged fit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">11.4.38. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">11.4.39. A blinking acceptor, and why intensity alone cannot see it</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">11.4.40. Two molecules in one burst: the confound you cannot filter out</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">11.4.41. Complete Burst Analysis Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">11.4.42. Advanced Burst Selection Analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">11.4.43. Benchmarking burst searches against a simulated ground truth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_01_burst_analysis.html">13.4.41. Burst Analysis Example with BurstFilter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_single_molecule_pda_2.html">13.4.42. Photon distribution analysis - 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_state_channels.html">13.4.43. HMM state decoding: faithful distributions and how to store them</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_phasor_diagnostic.html">13.4.44. A phasor check on a converged fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_alex_sm.html">13.4.45. ALEX analysis of Shimon Weiss lab <code class="docutils literal notranslate"><span class="pre">.sm</span></code> files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_blinking_acceptor.html">13.4.46. A blinking acceptor, and why intensity alone cannot see it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_hmm_coincidence.html">13.4.47. Two molecules in one burst: the confound you cannot filter out</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_complete_burst_analysis_pipeline.html">13.4.48. Complete Burst Analysis Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_selection_advanced.html">13.4.49. Advanced Burst Selection Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="plot_burst_search_comparison.html">13.4.50. Benchmarking burst searches against a simulated ground truth</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">10.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">10.6.1. TTTR writing / Transcode</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">10.6.2. TTTR-Header</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">10.6.3. Micro time histograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">10.6.4. TTTR writing / Modify CLSM files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">10.6.5. Bundling a measurement’s files into a .pto</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">10.6.6. TTTR file conversion between formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">10.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">10.6.8. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">10.6.9. TTTR reading benchmark</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">10.6.10. Working with TTTR files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">10.6.11. TTTR compression examples</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tttr/index.html">12.6. Working with TTTR objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_transcode.html">12.6.1. TTTR writing / Transcode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_header.html">12.6.2. TTTR-Header</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_microtime_histogram.html">12.6.3. Micro time histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_write.html">12.6.4. TTTR writing / Modify CLSM files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_pto_bundle_files.html">12.6.5. Bundling a measurement’s files into a .pto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_file_conversion.html">12.6.6. TTTR file conversion between formats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_spcqc.html">12.6.7. Becker &amp; Hickl SPC-QC files and conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_write_read_roundtrip_simulated.html">12.6.8. Write a simulated photon stream, read it back</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/t2_t3_conversion.html">12.6.9. Convert PicoQuant T2 &lt;-&gt; T3 record modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_read_benchmark.html">12.6.10. TTTR reading benchmark</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/plot_tttr_files.html">12.6.11. Working with TTTR files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tttr/compression_example.html">12.6.12. TTTR compression examples</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="../microtime_linearization_example.html">Microtime linearization with channel-specific LUTs and shifts</a></li>
@@ -1167,12 +1209,12 @@
     <li class="breadcrumb-item"><a href="../../user_guide.html" class="nav-link">User Guide</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../../single_molecule.html" class="nav-link"><span class="section-number">11. </span>Single-molecule fluorescence</a></li>
+    <li class="breadcrumb-item"><a href="../../single_molecule.html" class="nav-link"><span class="section-number">13. </span>Single-molecule fluorescence</a></li>
     
     
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link"><span class="section-number">11.4. </span>Single-molecule</a></li>
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link"><span class="section-number">13.4. </span>Single-molecule</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">11.4.15. </span>Lifetime-resolved HMM: separating a dark state from real FRET</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><span class="section-number">13.4.22. </span>Lifetime-resolved HMM: separating a dark state from real FRET</span></li>
   </ul>
 </nav>
 </div>
@@ -1195,7 +1237,7 @@
 to download the full example code.</p>
 </div>
 <section class="sphx-glr-example-title" id="lifetime-resolved-hmm-separating-a-dark-state-from-real-fret">
-<span id="sphx-glr-auto-examples-single-molecule-plot-hmm-lifetime-posterior-py"></span><h1><span class="section-number">11.4.15. </span>Lifetime-resolved HMM: separating a dark state from real FRET<a class="headerlink" href="#lifetime-resolved-hmm-separating-a-dark-state-from-real-fret" title="Link to this heading">#</a></h1>
+<span id="sphx-glr-auto-examples-single-molecule-plot-hmm-lifetime-posterior-py"></span><h1><span class="section-number">13.4.22. </span>Lifetime-resolved HMM: separating a dark state from real FRET<a class="headerlink" href="#lifetime-resolved-hmm-separating-a-dark-state-from-real-fret" title="Link to this heading">#</a></h1>
 <p>Intensity alone cannot tell a <strong>dark acceptor</strong> from real FRET: both lower the
 acceptor fraction. Only energy transfer <em>also</em> shortens the donor lifetime. This
 example builds two states that are deliberately identical in intensity — both
@@ -1228,7 +1270,7 @@ against 1.03, and an interval five times too wide).</p></li>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="n">STATE_COLORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#4e79a7&quot;</span><span class="p">,</span> <span class="s2">&quot;#e15759&quot;</span><span class="p">]</span>
+<span class="n">STATE_COLORS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"#4e79a7"</span><span class="p">,</span> <span class="s2">"#e15759"</span><span class="p">]</span>
 
 <span class="c1"># --- ground truth ----------------------------------------------------------</span>
 <span class="n">N_BINS</span> <span class="o">=</span> <span class="mi">64</span>                 <span class="c1"># micro-time bins per stream</span>
@@ -1241,7 +1283,7 @@ against 1.03, and an interval five times too wide).</p></li>
 </pre></div>
 </div>
 <section id="build-the-generating-model">
-<h2><span class="section-number">11.4.15.1. </span>Build the generating model<a class="headerlink" href="#build-the-generating-model" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.1. </span>Build the generating model<a class="headerlink" href="#build-the-generating-model" title="Link to this heading">#</a></h2>
 <p>Both states emit donor and acceptor with probability 0.5, so the intensity
 ratio carries <strong>no</strong> information about which state a photon came from. The
 only difference is the donor lifetime.</p>
@@ -1262,7 +1304,7 @@ only difference is the donor lifetime.</p>
 </div>
 </section>
 <section id="simulate-bursts-keeping-the-state-path">
-<h2><span class="section-number">11.4.15.2. </span>Simulate bursts, keeping the state path<a class="headerlink" href="#simulate-bursts-keeping-the-state-path" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.2. </span>Simulate bursts, keeping the state path<a class="headerlink" href="#simulate-bursts-keeping-the-state-path" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">simulate_bursts</span></code> discards the trajectory, and here the trajectory is what
 lets us score the decoding, so the chain is walked explicitly — propagating
 across each inter-photon gap with <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span>, exactly as the engine
@@ -1296,12 +1338,12 @@ does.</p>
 
 <span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
 <span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_micro</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">streams</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_BINS</span><span class="p">,</span> <span class="n">DT_NS</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">eng</span><span class="o">.</span><span class="n">get_n_photons</span><span class="p">()</span><span class="si">}</span><span class="s2"> photons, alphabet = </span><span class="si">{</span><span class="n">eng</span><span class="o">.</span><span class="n">get_n_symbols</span><span class="p">()</span><span class="si">}</span><span class="s2"> symbols&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">eng</span><span class="o">.</span><span class="n">get_n_photons</span><span class="p">()</span><span class="si">}</span><span class="s2"> photons, alphabet = </span><span class="si">{</span><span class="n">eng</span><span class="o">.</span><span class="n">get_n_symbols</span><span class="p">()</span><span class="si">}</span><span class="s2"> symbols"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="fit-the-lifetimes-from-a-deliberately-wrong-start">
-<h2><span class="section-number">11.4.15.3. </span>Fit the lifetimes, from a deliberately wrong start<a class="headerlink" href="#fit-the-lifetimes-from-a-deliberately-wrong-start" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.3. </span>Fit the lifetimes, from a deliberately wrong start<a class="headerlink" href="#fit-the-lifetimes-from-a-deliberately-wrong-start" title="Link to this heading">#</a></h2>
 <p>The spec is seeded at 8.0 / 0.8 ns against a truth of 4.0 / 2.0, so the fit has
 to travel. Passing it to <code class="docutils literal notranslate"><span class="pre">optimize</span></code> keeps the emission inside the
 lifetime-spectrum family: no free column can go to zero in the middle of a
@@ -1318,33 +1360,33 @@ decay, which is the degenerate solution a free fit falls into.</p>
 <span class="n">fit</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_spec</span><span class="p">)</span>
 
 <span class="n">tau_fit</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">fit_spec</span><span class="o">.</span><span class="n">spectrum</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lifetimes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;donor lifetimes: fitted </span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns&quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;   truth </span><span class="si">{</span><span class="n">TAU_DARK</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">TAU_FRET</span><span class="si">}</span><span class="s2"> ns&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"donor lifetimes: fitted </span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ns"</span>
+      <span class="sa">f</span><span class="s2">"   truth </span><span class="si">{</span><span class="n">TAU_DARK</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">TAU_FRET</span><span class="si">}</span><span class="s2"> ns"</span><span class="p">)</span>
 
 <span class="n">decoded</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">viterbi_path</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="n">decoded</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">decoded</span><span class="p">)</span>
 <span class="n">accuracy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">decoded</span> <span class="o">==</span> <span class="n">path_true</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">decoded</span> <span class="o">==</span> <span class="n">path_true</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;per-photon decoding accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">  (0.5 would be chance)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"per-photon decoding accuracy: </span><span class="si">{</span><span class="n">accuracy</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">  (0.5 would be chance)"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="a-posterior-over-the-kinetics">
-<h2><span class="section-number">11.4.15.4. </span>A posterior over the kinetics<a class="headerlink" href="#a-posterior-over-the-kinetics" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.4. </span>A posterior over the kinetics<a class="headerlink" href="#a-posterior-over-the-kinetics" title="Link to this heading">#</a></h2>
 <p>EM returns one transition matrix; <code class="docutils literal notranslate"><span class="pre">sample</span></code> returns a distribution over them.
 The spec goes in too, so the emission is drawn inside the lifetime family
 instead of being freed.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">post</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">fit_spec</span><span class="p">)</span>
 <span class="n">diag</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;posterior: Rhat_max = </span><span class="si">{</span><span class="n">diag</span><span class="p">[</span><span class="s1">&#39;rhat_max&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, ESS_min = </span><span class="si">{</span><span class="n">diag</span><span class="p">[</span><span class="s1">&#39;ess_min&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"posterior: Rhat_max = </span><span class="si">{</span><span class="n">diag</span><span class="p">[</span><span class="s1">'rhat_max'</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, ESS_min = </span><span class="si">{</span><span class="n">diag</span><span class="p">[</span><span class="s1">'ess_min'</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">_</span><span class="p">,</span> <span class="n">trans_mean</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">mean_model</span><span class="p">()</span>
 <span class="n">lo_i</span><span class="p">,</span> <span class="n">hi_i</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="mf">0.95</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;k(0-&gt;1) = </span><span class="si">{</span><span class="n">trans_mean</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">  &quot;</span>
-      <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">lo_i</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">hi_i</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">]   truth </span><span class="si">{</span><span class="n">K_SWITCH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"k(0-&gt;1) = </span><span class="si">{</span><span class="n">trans_mean</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">  "</span>
+      <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">lo_i</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">hi_i</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">]   truth </span><span class="si">{</span><span class="n">K_SWITCH</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="the-negative-control">
-<h2><span class="section-number">11.4.15.5. </span>The negative control<a class="headerlink" href="#the-negative-control" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.5. </span>The negative control<a class="headerlink" href="#the-negative-control" title="Link to this heading">#</a></h2>
 <p>The claim is that the <em>lifetime</em> carried the separation, so the control is to
 throw the micro-time away and fit the same photons on streams alone. Both
 states emit 50:50 by construction, so there is nothing left to separate them —
@@ -1358,12 +1400,12 @@ way and the comparison above proved nothing.</p>
 <span class="n">path_stream</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><span class="n">path_stream</span><span class="p">)</span>
 <span class="n">acc_stream</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">path_stream</span> <span class="o">==</span> <span class="n">path_true</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
                  <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">path_stream</span> <span class="o">==</span> <span class="n">path_true</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;stream-only decoding accuracy: </span><span class="si">{</span><span class="n">acc_stream</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"stream-only decoding accuracy: </span><span class="si">{</span><span class="n">acc_stream</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="plot">
-<h2><span class="section-number">11.4.15.6. </span>Plot<a class="headerlink" href="#plot" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.6. </span>Plot<a class="headerlink" href="#plot" title="Link to this heading">#</a></h2>
 <p>Left: the two donor decays, which is the whole signal — the stream ratio is
 identical by construction. Right: the same photons decoded with and without
 the micro-time axis.</p>
@@ -1378,31 +1420,31 @@ the micro-time axis.</p>
         <span class="n">minlength</span><span class="o">=</span><span class="n">N_BINS</span><span class="p">,</span>
     <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">photons</span> <span class="o">/=</span> <span class="nb">max</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">ax_decay</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_axis</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span>
+    <span class="n">ax_decay</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_axis</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">"o"</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span>
                   <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">state</span><span class="p">])</span>
     <span class="n">ax_decay</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_axis</span><span class="p">,</span> <span class="n">donor</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">STATE_COLORS</span><span class="p">[</span><span class="n">state</span><span class="p">],</span>
-                  <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;state </span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="n">state</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ns)&quot;</span><span class="p">)</span>
-<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
-<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;micro-time (ns)&quot;</span><span class="p">)</span>
-<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;P(bin | state, donor)&quot;</span><span class="p">)</span>
-<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Donor decay per state</span><span class="se">\n</span><span class="s2">markers: decoded photons   line: fitted spectrum&quot;</span><span class="p">,</span>
-                   <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+                  <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"state </span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">  (</span><span class="si">{</span><span class="n">tau_fit</span><span class="p">[</span><span class="n">state</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ns)"</span><span class="p">)</span>
+<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">"log"</span><span class="p">)</span>
+<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"micro-time (ns)"</span><span class="p">)</span>
+<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"P(bin | state, donor)"</span><span class="p">)</span>
+<span class="n">ax_decay</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Donor decay per state</span><span class="se">\n</span><span class="s2">markers: decoded photons   line: fitted spectrum"</span><span class="p">,</span>
+                   <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
 <span class="n">ax_decay</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
 <span class="n">ax_decay</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
 
 <span class="n">bars</span> <span class="o">=</span> <span class="p">[</span><span class="n">acc_stream</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">]</span>
-<span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;streams only&quot;</span><span class="p">,</span> <span class="s2">&quot;+ micro-time&quot;</span><span class="p">]</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">bars</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;#9aa4ad&quot;</span><span class="p">,</span> <span class="n">STATE_COLORS</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.55</span><span class="p">)</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.35&quot;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.45</span><span class="p">,</span> <span class="mf">0.505</span><span class="p">,</span> <span class="s2">&quot;chance&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.35&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
-             <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">)</span>
+<span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"streams only"</span><span class="p">,</span> <span class="s2">"+ micro-time"</span><span class="p">]</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">bars</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">"#9aa4ad"</span><span class="p">,</span> <span class="n">STATE_COLORS</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.55</span><span class="p">)</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.35"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s2">"--"</span><span class="p">)</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.45</span><span class="p">,</span> <span class="mf">0.505</span><span class="p">,</span> <span class="s2">"chance"</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"0.35"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+             <span class="n">ha</span><span class="o">=</span><span class="s2">"right"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bars</span><span class="p">):</span>
-    <span class="n">ax_post</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="mf">0.012</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">ax_post</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="mf">0.012</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">ax_post</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;per-photon decoding accuracy&quot;</span><span class="p">)</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;The lifetime axis is the whole signal</span><span class="se">\n</span><span class="s2">same photons, same states&quot;</span><span class="p">,</span>
-                  <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
-<span class="n">ax_post</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"per-photon decoding accuracy"</span><span class="p">)</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"The lifetime axis is the whole signal</span><span class="se">\n</span><span class="s2">same photons, same states"</span><span class="p">,</span>
+                  <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">ax_post</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">"y"</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -1410,7 +1452,7 @@ the micro-time axis.</p>
 </div>
 </section>
 <section id="what-this-shows">
-<h2><span class="section-number">11.4.15.7. </span>What this shows<a class="headerlink" href="#what-this-shows" title="Link to this heading">#</a></h2>
+<h2><span class="section-number">13.4.22.7. </span>What this shows<a class="headerlink" href="#what-this-shows" title="Link to this heading">#</a></h2>
 <p>The two states are <strong>indistinguishable by intensity</strong> — both emit 50:50 — so
 the stream-only alphabet decodes them at chance, as the right panel shows. Add
 the micro-time axis and the same photons decode well above it, and the
@@ -1451,7 +1493,7 @@ not merely in practice.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><span class="section-number">11.4.14. </span>FRET Burst Analysis with BurstFilter Class</p>
+        <p class="prev-next-title"><span class="section-number">13.4.21. </span>FRET Burst Analysis with BurstFilter Class</p>
       </div>
     </a>
     <a class="right-next"
@@ -1459,7 +1501,7 @@ not merely in practice.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><span class="section-number">11.4.16. </span>Enhanced BurstFilter: Dynamic Parameter Changes Example</p>
+        <p class="prev-next-title"><span class="section-number">13.4.23. </span>Enhanced BurstFilter: Dynamic Parameter Changes Example</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1482,13 +1524,13 @@ not merely in practice.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-generating-model">11.4.15.1. Build the generating model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate-bursts-keeping-the-state-path">11.4.15.2. Simulate bursts, keeping the state path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-the-lifetimes-from-a-deliberately-wrong-start">11.4.15.3. Fit the lifetimes, from a deliberately wrong start</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-posterior-over-the-kinetics">11.4.15.4. A posterior over the kinetics</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-negative-control">11.4.15.5. The negative control</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot">11.4.15.6. Plot</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-this-shows">11.4.15.7. What this shows</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-the-generating-model">13.4.22.1. Build the generating model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulate-bursts-keeping-the-state-path">13.4.22.2. Simulate bursts, keeping the state path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-the-lifetimes-from-a-deliberately-wrong-start">13.4.22.3. Fit the lifetimes, from a deliberately wrong start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-posterior-over-the-kinetics">13.4.22.4. A posterior over the kinetics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-negative-control">13.4.22.5. The negative control</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plot">13.4.22.6. Plot</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-this-shows">13.4.22.7. What this shows</a></li>
 </ul>
   </nav></div>
 

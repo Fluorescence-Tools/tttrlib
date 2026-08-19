@@ -143,6 +143,40 @@ including gated, sliced, and normalized correlation variants.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Two-dimensional fluorescence lifetime correlation spectroscopy (2D-FLCS) measures the joint distribution of the two micro-times of photon pairs separated by a chosen macro-time lag. Off-diagonal weight in that matrix means the emitter changed its decay between the two photons, so the lag dependence of the coupling measures the interconversion rate directly -- no filter patterns to know in advance, no second detector.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_fdc_2d_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_fdc_2d`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">2D fluorescence-decay correlation (2D-FDC / 2D-FLCS)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Can 2D-FLC resolve fast dynamics — hundreds of nanoseconds — on a single molecule? Here the experiment is reshaped the way the µs regime demands: the macro-time clock is the laser period (T3-mode TCSPC, 25 ns at 40 MHz), the sample is one immobilized FRET molecule&#x27;s donor channel at 500 kcps, and the two conformational states differ in FRET efficiency (E = 0.2 / 0.8, i.e. donor lifetimes 3.2 ns and 0.8 ns at tau0 = 4 ns) with equal exchange rates, so the relaxation time is 1/(k01+k10).">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_fdc_2d_microsecond_fret_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_fdc_2d_microsecond_fret`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microsecond dynamics: 2D-FDC on a single FRET molecule, T3-mode TTTR</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="The raw FCS data format of the Zeiss Confocor3 is relatively simple. Zeiss Confocor3 raw files store time-difference between photons. A relatively small header is followed by a set of 32-bit integers that contain the time difference to the previous registered photon. Photons registered by different channels are stored in separate files.">
 
 .. only:: html
@@ -155,6 +189,23 @@ including gated, sliced, and normalized correlation variants.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Confocor3 two channel cross-correlation (using merge method)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The immobilized-molecule benchmark (``plot_fdc_2d_microsecond_fret.py``) answers the physics question but not the experiment most people run: freely diffusing single molecules at single-molecule concentration. This example repeats the microsecond recovery with open-volume diffusion, tau_diff = w0^2/(4 D) = 2 ms (w0 = 0.3 um, D = 11.25 um2/s), surface-flux injected at ~40 molecules in a 1.5 x 3 um box (~0.15 molecules in the focus on average, 254 kcps donor-channel count rate) -- the same two FRET states E = 0.2 / 0.8 (tau_D 3.2 / 0.8 ns), T3 macro clock at the 25 ns laser period.">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_fdc_2d_microsecond_fret_diffusion_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_fdc_2d_microsecond_fret_diffusion`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Microsecond 2D-FDC with FREELY DIFFUSING molecules (tau_D = 2 ms)</div>
     </div>
 
 
@@ -175,6 +226,23 @@ including gated, sliced, and normalized correlation variants.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A methods benchmark, run entirely on simulated experiments whose answer is known before the analysis starts. Two questions, both about the dynamics the matrix measures — the coupling statistic D(dT) (total variation between the pair distribution and the product of its marginals) should decay with the system&#x27;s relaxation time:">
+
+.. only:: html
+
+  .. image:: /auto_examples/correlation/images/thumb/sphx_glr_plot_fdc_2d_dynamics_resolution_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/correlation/plot_fdc_2d_dynamics_resolution`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">How fast, and how complex: 2D-FDC dynamics resolution on ground truth</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -192,6 +260,10 @@ including gated, sliced, and normalized correlation variants.
    /auto_examples/correlation/plot_confocor3_two_ch_correlation
    /auto_examples/correlation/plot_normal_correlation
    /auto_examples/correlation/plot_correlation_cr_filter
+   /auto_examples/correlation/plot_fdc_2d
+   /auto_examples/correlation/plot_fdc_2d_microsecond_fret
    /auto_examples/correlation/plot_confocor3_two_ch_correlation_merge
+   /auto_examples/correlation/plot_fdc_2d_microsecond_fret_diffusion
    /auto_examples/correlation/plot_lifetime_fcs
+   /auto_examples/correlation/plot_fdc_2d_dynamics_resolution
 

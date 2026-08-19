@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -979,13 +993,13 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <p>Load a TTTR file by filename. The file type is inferred when possible.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;path/to/photon_stream.ptu&quot;</span><span class="p">)</span>
+<span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"path/to/photon_stream.ptu"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tttr</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">tttr</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If type inference is not sufficient for a file, pass the file type explicitly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;path/to/photon_stream.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttr</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"path/to/photon_stream.ptu"</span><span class="p">,</span> <span class="s2">"PTU"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -1015,7 +1029,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </pre></div>
 </div>
 <p>Reconstruct a CLSM intensity image:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">image_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;path/to/image.ptu&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">image_data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"path/to/image.ptu"</span><span class="p">)</span>
 <span class="n">clsm</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMImage</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span>
 <span class="n">clsm</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">micro_time_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">]])</span>
 <span class="n">intensity</span> <span class="o">=</span> <span class="n">clsm</span><span class="o">.</span><span class="n">intensity</span>

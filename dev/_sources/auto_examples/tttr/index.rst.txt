@@ -142,6 +142,23 @@ microtime histograms, and I/O performance benchmarking.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="A TTTR container is a record stream plus a header. This example builds a photon stream from a simulation -- no instrument file needed -- writes it as a PicoQuant PTU (HydraHarp T3 and PicoHarp T3), a HydraHarp HT3 and a Becker &amp; Hickl SPC-130 file with tttrlib.TTTR.write, reads each back, and checks that every macro time, micro time and routing channel survives. The record encoders insert the overflow records the formats need (a 10-bit macro-time field wraps every 1024 ticks in HHT3v2, a 12-bit one in SPC-130), and the readers undo them; the photons themselves are exact.">
+
+.. only:: html
+
+  .. image:: /auto_examples/tttr/images/thumb/sphx_glr_plot_write_read_roundtrip_simulated_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/tttr/plot_write_read_roundtrip_simulated`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Write a simulated photon stream, read it back</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Rebuild a TTTR in the other record mode.">
 
 .. only:: html
@@ -225,6 +242,7 @@ microtime histograms, and I/O performance benchmarking.
    /auto_examples/tttr/plot_pto_bundle_files
    /auto_examples/tttr/plot_tttr_file_conversion
    /auto_examples/tttr/plot_tttr_spcqc
+   /auto_examples/tttr/plot_write_read_roundtrip_simulated
    /auto_examples/tttr/t2_t3_conversion
    /auto_examples/tttr/plot_tttr_read_benchmark
    /auto_examples/tttr/plot_tttr_files

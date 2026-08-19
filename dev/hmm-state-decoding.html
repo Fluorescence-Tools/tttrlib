@@ -256,7 +256,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -334,6 +334,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -617,7 +624,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -695,6 +702,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1154,7 +1168,7 @@ written holding every photon:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">viterbi_path</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="n">cmap</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">build_channel_map</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_states</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">split</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">split_routing_channels</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
-<span class="n">split</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;decoded.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+<span class="n">split</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"decoded.ptu"</span><span class="p">,</span> <span class="s2">"PTU"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The result is <strong>self-describing</strong>: per-state decays, FCS, burst analyses and
@@ -1253,10 +1267,10 @@ sidecar) rather than assuming; that is what it is there for.</p></li>
 <section id="path-b-the-msgpack-state-sidecar">
 <h3>Path B — the msgpack state sidecar<a class="headerlink" href="#path-b-the-msgpack-state-sidecar" title="Link to this heading">#</a></h3>
 <p>The source file is left untouched and the assignment travels beside it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sidecar</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">state_sidecar</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="s2">&quot;viterbi&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
-<span class="n">sidecar</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;decoded_hmm_states.msgpack&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sidecar</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">state_sidecar</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="s2">"viterbi"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cmap</span><span class="p">)</span>
+<span class="n">sidecar</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"decoded_hmm_states.msgpack"</span><span class="p">)</span>
 
-<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmStateSidecar</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;decoded_hmm_states.msgpack&quot;</span><span class="p">)</span>
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HmmStateSidecar</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"decoded_hmm_states.msgpack"</span><span class="p">)</span>
 <span class="n">idx</span> <span class="o">=</span> <span class="n">back</span><span class="o">.</span><span class="n">indices_for_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>          <span class="c1"># source photon indices</span>
 <span class="n">mask</span> <span class="o">=</span> <span class="n">back</span><span class="o">.</span><span class="n">mask_for_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>            <span class="c1"># a TTTRMask, for the selection API</span>
 </pre></div>
@@ -1288,8 +1302,8 @@ for small, human-readable payloads.</p>
 has:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">()</span>          <span class="c1"># msgpack; the bit-packed words verbatim</span>
 <span class="n">mask</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
-<span class="n">mask</span><span class="o">.</span><span class="n">write_msgpack</span><span class="p">(</span><span class="s2">&quot;mask.msgpack&quot;</span><span class="p">)</span>
-<span class="n">mask</span><span class="o">.</span><span class="n">read_msgpack</span><span class="p">(</span><span class="s2">&quot;mask.msgpack&quot;</span><span class="p">)</span>
+<span class="n">mask</span><span class="o">.</span><span class="n">write_msgpack</span><span class="p">(</span><span class="s2">"mask.msgpack"</span><span class="p">)</span>
+<span class="n">mask</span><span class="o">.</span><span class="n">read_msgpack</span><span class="p">(</span><span class="s2">"mask.msgpack"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>which is <code class="docutils literal notranslate"><span class="pre">size/8</span></code> bytes plus a small header — over an order of magnitude

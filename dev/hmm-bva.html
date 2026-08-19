@@ -256,7 +256,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -334,6 +334,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -617,7 +624,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -695,6 +702,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -963,12 +977,12 @@ across its slices. A <em>static</em> species sits on the shot-noise line
 sits above it.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;example.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTU&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"example.ptu"</span><span class="p">,</span> <span class="s2">"PTU"</span><span class="p">)</span>
 <span class="n">bf</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BurstFilter</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">bf</span><span class="o">.</span><span class="n">set_burst_parameters</span><span class="p">(</span><span class="n">min_photons</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">window_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">window_time_max</span><span class="o">=</span><span class="mf">0.5e-3</span><span class="p">)</span>
 <span class="n">bf</span><span class="o">.</span><span class="n">find_bursts</span><span class="p">()</span>
 
-<span class="n">bva</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span>                     <span class="c1"># reuse the filter&#39;s bursts + TTTR</span>
+<span class="n">bva</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">BVA</span><span class="p">(</span><span class="n">bf</span><span class="p">)</span>                     <span class="c1"># reuse the filter's bursts + TTTR</span>
 <span class="n">bva</span><span class="o">.</span><span class="n">set_donor</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>                        <span class="c1"># donor routing channel(s)</span>
 <span class="n">bva</span><span class="o">.</span><span class="n">set_acceptor</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>                     <span class="c1"># acceptor routing channel(s)</span>
 <span class="n">bva</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">bf</span><span class="o">.</span><span class="n">get_bursts</span><span class="p">(),</span> <span class="mi">5</span><span class="p">)</span>           <span class="c1"># burst bounds, photons per slice</span>
@@ -989,8 +1003,8 @@ one-tick transition matrix <span class="math notranslate nohighlight">\(A\)</spa
 (<span class="math notranslate nohighlight">\(B_{ik} = P(\text{stream } k \mid \text{state } i)\)</span>). Because photons
 arrive at irregular macro-times, propagating the chain across a gap of
 <span class="math notranslate nohighlight">\(\Delta t\)</span> ticks uses <span class="math notranslate nohighlight">\(A^{\Delta t}\)</span>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">);</span> <span class="n">green</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
-<span class="n">red</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">);</span>    <span class="n">red</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">green</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">"green"</span><span class="p">);</span> <span class="n">green</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
+<span class="n">red</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">Channel</span><span class="p">(</span><span class="s2">"red"</span><span class="p">);</span>    <span class="n">red</span><span class="o">.</span><span class="n">add_component</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65535</span><span class="p">)</span>
 
 <span class="n">eng</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">HMM</span><span class="p">()</span>
 <span class="n">eng</span><span class="o">.</span><span class="n">set_bursts_from_filter</span><span class="p">(</span><span class="n">bf</span><span class="p">,</span> <span class="p">[</span><span class="n">green</span><span class="p">,</span> <span class="n">red</span><span class="p">],</span> <span class="n">min_photons</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
@@ -1240,7 +1254,7 @@ fitted model carries its own table; run
 <span class="n">data</span>  <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">gamma_obs_np</span><span class="p">(</span><span class="n">n_states</span><span class="p">)[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_streams</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">fit</span><span class="o">.</span><span class="n">obs_micro_np</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 <span class="c1"># (1, 0) is the identity IRF phasor, and the default -- (0, 0) is not</span>
-<span class="c1"># &quot;no IRF&quot; but a division by zero, and now raises rather than giving nan.</span>
+<span class="c1"># "no IRF" but a division by zero, and now raises rather than giving nan.</span>
 <span class="n">gd</span><span class="p">,</span> <span class="n">sd</span> <span class="o">=</span> <span class="n">DecayPhasor</span><span class="o">.</span><span class="n">compute_phasor_bincounts</span><span class="p">(</span><span class="n">counts</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>  <span class="n">freq</span><span class="p">)</span>
 <span class="n">gm</span><span class="p">,</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">DecayPhasor</span><span class="o">.</span><span class="n">compute_phasor_bincounts</span><span class="p">(</span><span class="n">counts</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">freq</span><span class="p">)</span>
 </pre></div>

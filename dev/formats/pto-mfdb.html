@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1106,7 +1120,7 @@ PTO 1.0    EBML/RFC 8794, Matroska element ids — frozen
 </section>
 <section id="file-layout">
 <h3>File layout<a class="headerlink" href="#file-layout" title="Link to this heading">#</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>EBML                DocType &quot;pto&quot;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>EBML                DocType "pto"
 Segment
   SeekHead ×2       the atomic commit
   Info              Title, WritingApp, SegmentUUID
@@ -1114,7 +1128,7 @@ Segment
     AttachedFile    THE README — first object, ASCII, how to read this file
   Attachments
     AttachedFile    THE INSTRUMENT FILE — verbatim, immutable
-  Attachments       the measurement&#39;s mmCIF metadata, when it has any
+  Attachments       the measurement's mmCIF metadata, when it has any
   Attachments       every derived artifact, appended, each with its own reserve
   Tags              artifacts, operations, edges, version stamps
   PtoAnnotations    notes for people
@@ -1246,7 +1260,7 @@ in the column <em>name</em>, when whoever wrote it remembered — <code class="d
 <code class="docutils literal notranslate"><span class="pre">Tau</span></code> sit in the same table, and <code class="docutils literal notranslate"><span class="pre">Count</span> <span class="pre">Rate</span> <span class="pre">(KHz)</span></code> capitalises the kilo.</p>
 <p>So a column carries <strong>one extensible description</strong> rather than a growing list of
 fields, and the name is an attribute of it:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Duration&quot;</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;milliseconds&quot;</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">:</span> <span class="s2">&quot;_mmfdb_burst.duration&quot;</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Duration"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"milliseconds"</span><span class="p">,</span> <span class="s2">"item"</span><span class="p">:</span> <span class="s2">"_mmfdb_burst.duration"</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>The keys are <code class="docutils literal notranslate"><span class="pre">_mmfdb_column.*</span></code> items — <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">item</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code> —

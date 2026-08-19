@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 103 files **from all galleries**:
+**00:00.000** total execution time for 121 files **from all galleries**:
 
 .. container::
 
@@ -65,6 +65,18 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_correlation_plot_estimate_noise.py` (``../examples/correlation/plot_estimate_noise.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d.py` (``../examples/correlation/plot_fdc_2d.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_dynamics_resolution.py` (``../examples/correlation/plot_fdc_2d_dynamics_resolution.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_microsecond_fret.py` (``../examples/correlation/plot_fdc_2d_microsecond_fret.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_microsecond_fret_diffusion.py` (``../examples/correlation/plot_fdc_2d_microsecond_fret_diffusion.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py` (``../examples/correlation/plot_full_correlation.py``)
      - 00:00.000
      - 0.0
@@ -113,6 +125,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_flim_plot_phasor.py` (``../examples/flim/plot_phasor.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_flim_plot_phasor_decay_stack.py` (``../examples/flim/plot_phasor_decay_stack.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py` (``../examples/flim/plot_pixel_masks.py``)
      - 00:00.000
      - 0.0
@@ -129,6 +144,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_tutorial_python.py` (``../examples/flim/plot_tutorial_python.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_blind_irf_estimation.py` (``../examples/fluorescence_decay/plot_blind_irf_estimation.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_convolution_methods.py` (``../examples/fluorescence_decay/plot_convolution_methods.py``)
@@ -161,6 +179,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py` (``../examples/fluorescence_decay/plot_fit26.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_maxent_fret_recovery.py` (``../examples/fluorescence_decay/plot_maxent_fret_recovery.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_pile_up.py` (``../examples/fluorescence_decay/plot_pile_up.py``)
      - 00:00.000
      - 0.0
@@ -191,6 +212,15 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``../examples/miscellaneous/plot_histogram_benchmark.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_registry_composition.py` (``../examples/miscellaneous/plot_registry_composition.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_richardson_lucy_deconvolution.py` (``../examples/miscellaneous/plot_richardson_lucy_deconvolution.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_watershed_marching_squares.py` (``../examples/miscellaneous/plot_watershed_marching_squares.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_release_highlights_plot_release_highlights_0_20_0.py` (``../examples/release_highlights/plot_release_highlights_0_20_0.py``)
      - 00:00.000
      - 0.0
@@ -203,10 +233,16 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_alex_sm.py` (``../examples/single_molecule/plot_alex_sm.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_background_rate.py` (``../examples/single_molecule/plot_background_rate.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_json.py` (``../examples/single_molecule/plot_burst_analysis_json.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_analysis_with_filter.py` (``../examples/single_molecule/plot_burst_analysis_with_filter.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_feature_clustering.py` (``../examples/single_molecule/plot_burst_feature_clustering.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burst_search_comparison.py` (``../examples/single_molecule/plot_burst_search_comparison.py``)
@@ -219,6 +255,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstfilter_with_selection.py` (``../examples/single_molecule/plot_burstfilter_with_selection.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_burstml_two_state.py` (``../examples/single_molecule/plot_burstml_two_state.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_clsm_superres_esrrf.py` (``../examples/single_molecule/plot_clsm_superres_esrrf.py``)
@@ -254,6 +293,9 @@ Computation times
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_distance_refinement.py` (``../examples/single_molecule/plot_hmm_distance_refinement.py``)
      - 00:00.000
      - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_lattice_two_state.py` (``../examples/single_molecule/plot_hmm_lattice_two_state.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_lifetime_posterior.py` (``../examples/single_molecule/plot_hmm_lifetime_posterior.py``)
      - 00:00.000
      - 0.0
@@ -264,6 +306,12 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_surrogate.py` (``../examples/single_molecule/plot_hmm_surrogate.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_hmm_variational_bayes.py` (``../examples/single_molecule/plot_hmm_variational_bayes.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_kalman_burst_detection.py` (``../examples/single_molecule/plot_kalman_burst_detection.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_microtime_linearization.py` (``../examples/single_molecule/plot_microtime_linearization.py``)
@@ -291,6 +339,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_single_molecule_plot_single_molecule_pda_2.py` (``../examples/single_molecule/plot_single_molecule_pda_2.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_single_molecule_plot_two_cde.py` (``../examples/single_molecule/plot_two_cde.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_streaming_plot_streaming_bursts.py` (``../examples/streaming/plot_streaming_bursts.py``)
@@ -336,6 +387,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_plot_tttr_write.py` (``../examples/tttr/plot_tttr_write.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_tttr_plot_write_read_roundtrip_simulated.py` (``../examples/tttr/plot_write_read_roundtrip_simulated.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_tttr_t2_t3_conversion.py` (``../examples/tttr/t2_t3_conversion.py``)

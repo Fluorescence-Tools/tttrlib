@@ -121,6 +121,7 @@ Documentation
    localization-guide
    fit-guide
    performance_guide
+   validation
    user_guide
    modules/index
    auto_examples/index

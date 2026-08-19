@@ -24,23 +24,6 @@ in recent tttrlib releases. Start here to see what's new at a glance.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.20, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all changes, see the release notes in the documentation.">
-
-.. only:: html
-
-  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_20_0_thumb.png
-    :alt:
-
-  :doc:`/auto_examples/release_highlights/plot_release_highlights_0_20_0`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.23</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.24, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all changes, see the release notes in the documentation.">
 
 .. only:: html
@@ -56,6 +39,23 @@ in recent tttrlib releases. Start here to see what's new at a glance.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We are pleased to announce the release of tttrlib 0.20, which comes with many bug fixes and new features! We detail below a few of the major features of this release. For an exhaustive list of all changes, see the release notes in the documentation.">
+
+.. only:: html
+
+  .. image:: /auto_examples/release_highlights/images/thumb/sphx_glr_plot_release_highlights_0_20_0_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/release_highlights/plot_release_highlights_0_20_0`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Release Highlights for tttrlib 0.23</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -66,6 +66,6 @@ in recent tttrlib releases. Start here to see what's new at a glance.
 .. toctree::
    :hidden:
 
-   /auto_examples/release_highlights/plot_release_highlights_0_20_0
    /auto_examples/release_highlights/plot_release_highlights_0_24_0
+   /auto_examples/release_highlights/plot_release_highlights_0_20_0
 

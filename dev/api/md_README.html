@@ -81,7 +81,28 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="autotoc_md0"></a> This directory contains the full manual and web site as displayed at <a href="http://tttrlib.peulen.xyz">http://tttrlib.peulen.xyz</a>.</p>
-<p>Largely the documentation of scikit-learn was used as a template. </p>
+<p>Largely the documentation of scikit-learn was used as a template.</p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+Layout</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">path   </th><th class="markdownTableHeadNone">what it is    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>*.rst</code>   </td><td class="markdownTableBodyNone">the manual: <code>getting-started</code>, <code>quickstart</code>, the user guide (<code>tttr-core</code>, <code>file-formats</code>, <code>burst-analysis</code>, <code>fcs-correlation</code>, <code>clsm-flim-guide</code>, <code>fit-guide</code>, <code>pipelines</code>, <code>plugins</code>, ...), <code>languages</code>, <code>r-package</code>, <code>imagej-plugin</code>, <code>javascript-package</code>, <code>conformance</code>, <code>faq</code>, <code>support</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>formats/</code>   </td><td class="markdownTableBodyNone">one page per file format tttrlib reads or writes, including <code>pto.rst</code> (the container) and <code>pto-mfdb.rst</code> (the profile)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>modules/</code>   </td><td class="markdownTableBodyNone">per-module API pages    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>includes/</code>, <code>sphinxext/</code>, <code>static_root/</code>, <code>logos/</code>, <code>img/</code>   </td><td class="markdownTableBodyNone">templates, extensions, CSS and figures the build uses    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>whats_new/</code>   </td><td class="markdownTableBodyNone">the release notes fragments    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>auto_examples/</code>   </td><td class="markdownTableBodyNone"><b>generated</b> by sphinx-gallery from <code>examples/</code>; not edited by hand    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>xml/</code>, <code>_build/</code>, <code>_doxygen_build/</code>   </td><td class="markdownTableBodyNone"><b>generated</b> (Doxygen XML, the built site); not in version control   </td></tr>
+</table>
+<p>Build it with <code>make -C doc html</code> after <code>pip install -e .</code>; the gallery runs every example, so a broken example fails the docs build. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 <!-- start footer part -->

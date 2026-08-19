@@ -127,6 +127,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="A time-resolved measurement is the fluorescence decay convolved with the instrument response function (IRF). Fitting lifetimes therefore needs the IRF, which is usually measured separately with a scattering sample -- a second measurement that is easy to forget, drifts with the laser and the detector, and is not available at all for archived data.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_blind_irf_estimation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_blind_irf_estimation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Blind IRF estimation from a fluorescence decay</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Overview ========">
 
 .. only:: html
@@ -178,6 +195,23 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared.">
+
+.. only:: html
+
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_benchmark_1_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/fluorescence_decay/plot_fit23_benchmark_1`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Every decay fit in tttrlib is reached the same way — you name the model, hand it the measurement, and read the answer back. This example walks through that once, end to end, and then shows the two things the interface gives you that a per-model API could not: swapping models without changing your code, and fitting thousands of decays in one call.">
 
 .. only:: html
@@ -195,18 +229,18 @@ routines, and demonstrations of different fit configurations and benchmarks.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="In this benchmark fluorescence decays are simulated for a fluorescence lifetime in the range (tau_min, tau_max) with varying number of photons. The simulated and the recovered fluorescence lifetimes are compared.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Recover a FRET distance distribution p(R_DA) from a simulated TCSPC decay with solve_tcspc_mem_fret, and compare three ways of choosing the entropy weight nu: deliberately under-regularised, deliberately over-regularised, and the opt-in &quot;historic MaxEnt&quot; mode that finds nu automatically by targeting a reduced chi-square of 1.">
 
 .. only:: html
 
-  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_fit23_benchmark_1_thumb.png
+  .. image:: /auto_examples/fluorescence_decay/images/thumb/sphx_glr_plot_maxent_fret_recovery_thumb.png
     :alt:
 
-  :doc:`/auto_examples/fluorescence_decay/plot_fit23_benchmark_1`
+  :doc:`/auto_examples/fluorescence_decay/plot_maxent_fret_recovery`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">MLE fit23: Benchmark</div>
+      <div class="sphx-glr-thumbnail-title">Maximum-entropy FRET distance recovery, and picking nu</div>
     </div>
 
 
@@ -226,9 +260,11 @@ routines, and demonstrations of different fit configurations and benchmarks.
    /auto_examples/fluorescence_decay/plot_fit24
    /auto_examples/fluorescence_decay/plot_fit25
    /auto_examples/fluorescence_decay/plot_fit23_usage_2
+   /auto_examples/fluorescence_decay/plot_blind_irf_estimation
    /auto_examples/fluorescence_decay/plot_convolution_routines
    /auto_examples/fluorescence_decay/plot_pile_up
    /auto_examples/fluorescence_decay/plot_convolution_methods
-   /auto_examples/fluorescence_decay/plot_decay_fit_interface
    /auto_examples/fluorescence_decay/plot_fit23_benchmark_1
+   /auto_examples/fluorescence_decay/plot_decay_fit_interface
+   /auto_examples/fluorescence_decay/plot_maxent_fret_recovery
 

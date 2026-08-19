@@ -256,7 +256,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -334,6 +334,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -617,7 +624,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -695,6 +702,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1096,9 +1110,9 @@ python -m cibuildwheel --output-dir wheelhouse
 </pre></div>
 </div>
 <p>Windows (PowerShell):</p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:CIBW_PLATFORM</span><span class="p">=</span><span class="s2">&quot;linux&quot;</span>
-<span class="nv">$env:CIBW_ARCHS_LINUX</span><span class="p">=</span><span class="s2">&quot;aarch64&quot;</span>
-<span class="nv">$env:CIBW_BUILD_VERBOSITY</span><span class="p">=</span><span class="s2">&quot;1&quot;</span>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:CIBW_PLATFORM</span><span class="p">=</span><span class="s2">"linux"</span>
+<span class="nv">$env:CIBW_ARCHS_LINUX</span><span class="p">=</span><span class="s2">"aarch64"</span>
+<span class="nv">$env:CIBW_BUILD_VERBOSITY</span><span class="p">=</span><span class="s2">"1"</span>
 <span class="n">python</span> <span class="n">-m</span> <span class="n">cibuildwheel</span> <span class="p">-</span><span class="n">-output-dir</span> <span class="n">wheelhouse</span>
 </pre></div>
 </div>
@@ -1148,7 +1162,7 @@ python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class=
 <p>Build multiple architectures in one command by separating them with spaces:</p>
 <p><strong>Linux (both x86_64 and aarch64):</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
-<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span><span class="s2">&quot;x86_64 aarch64&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span><span class="s2">"x86_64 aarch64"</span>
 python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
 </pre></div>
 </div>
@@ -1160,7 +1174,7 @@ python -m cibuildwheel --output-dir wheelhouse
 </div>
 <p><strong>macOS (both x86_64 and arm64):</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>macos
-<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_MACOS</span><span class="o">=</span><span class="s2">&quot;x86_64 arm64&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_MACOS</span><span class="o">=</span><span class="s2">"x86_64 arm64"</span>
 python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
 </pre></div>
 </div>
@@ -1169,19 +1183,19 @@ python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class=
 <h3>Building Specific Python Versions<a class="headerlink" href="#Building-Specific-Python-Versions" title="Link to this heading">#</a></h3>
 <p>Limit builds to specific Python versions using <code class="docutils literal notranslate"><span class="pre">CIBW_BUILD</span></code>:</p>
 <p><strong>Python 3.11 and 3.12 only:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">&quot;cp311-* cp312-*&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">"cp311-* cp312-*"</span>
 python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
 </pre></div>
 </div>
 <p><strong>Single Python version (3.12) on Linux ARM64:</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_PLATFORM</span><span class="o">=</span>linux
 <span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_ARCHS_LINUX</span><span class="o">=</span>aarch64
-<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">&quot;cp312-*&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_BUILD</span><span class="o">=</span><span class="s2">"cp312-*"</span>
 python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
 </pre></div>
 </div>
 <p><strong>Exclude specific versions:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_SKIP</span><span class="o">=</span><span class="s2">&quot;cp38-* cp39-*&quot;</span><span class="w">  </span><span class="c1"># Skip Python 3.8 and 3.9</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CIBW_SKIP</span><span class="o">=</span><span class="s2">"cp38-* cp39-*"</span><span class="w">  </span><span class="c1"># Skip Python 3.8 and 3.9</span>
 python<span class="w"> </span>-m<span class="w"> </span>cibuildwheel<span class="w"> </span>--output-dir<span class="w"> </span>wheelhouse
 </pre></div>
 </div>
@@ -1220,7 +1234,7 @@ python<span class="w"> </span>-m<span class="w"> </span>build<span class="w"> </
 <h3>Testing Built Wheels<a class="headerlink" href="#Testing-Built-Wheels" title="Link to this heading">#</a></h3>
 <p>After building, test the wheel before uploading:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>wheelhouse/tttrlib-*.whl
-python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)&quot;</span>
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import tttrlib; d = tttrlib.TTTR(); print(type(d).__name__)"</span>
 </pre></div>
 </div>
 <p>Expected output: <code class="docutils literal notranslate"><span class="pre">TTTR</span></code></p>
@@ -1333,11 +1347,11 @@ twine<span class="w"> </span>upload<span class="w"> </span>--repository<span cla
 <li><p>Installs to <code class="docutils literal notranslate"><span class="pre">{project}/dist/boost-install-{arch}</span></code> (architecture-specific)</p></li>
 </ol>
 <p><strong>Environment Variables Set:</strong></p>
-<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:BOOST_ROOT</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}&quot;</span>
-<span class="nv">$env:BOOST_INCLUDEDIR</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}/include&quot;</span>
-<span class="nv">$env:BOOST_LIBRARYDIR</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}/lib&quot;</span>
-<span class="nv">$env:CMAKE_PREFIX_PATH</span> <span class="p">=</span> <span class="s2">&quot;{project}/dist/boost-install-{arch}&quot;</span>
-<span class="nv">$env:BOOST_ALL_NO_LIB</span> <span class="p">=</span> <span class="s2">&quot;1&quot;</span>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nv">$env:BOOST_ROOT</span> <span class="p">=</span> <span class="s2">"{project}/dist/boost-install-{arch}"</span>
+<span class="nv">$env:BOOST_INCLUDEDIR</span> <span class="p">=</span> <span class="s2">"{project}/dist/boost-install-{arch}/include"</span>
+<span class="nv">$env:BOOST_LIBRARYDIR</span> <span class="p">=</span> <span class="s2">"{project}/dist/boost-install-{arch}/lib"</span>
+<span class="nv">$env:CMAKE_PREFIX_PATH</span> <span class="p">=</span> <span class="s2">"{project}/dist/boost-install-{arch}"</span>
+<span class="nv">$env:BOOST_ALL_NO_LIB</span> <span class="p">=</span> <span class="s2">"1"</span>
 </pre></div>
 </div>
 <p><strong>Wheel repair:</strong></p>
@@ -1374,9 +1388,9 @@ twine<span class="w"> </span>upload<span class="w"> </span>--repository<span cla
 </pre></div>
 </div>
 <p><strong>Environment Variables:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">&quot;-g -Wall&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">CXXFLAGS</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CXXFLAGS</span><span class="si">}</span><span class="s2"> -D_LIBCPP_DISABLE_AVAILABILITY=1&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">MACOSX_DEPLOYMENT_TARGET</span><span class="o">=</span><span class="s2">&quot;10.14&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CFLAGS</span><span class="o">=</span><span class="s2">"-g -Wall"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CXXFLAGS</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">CXXFLAGS</span><span class="si">}</span><span class="s2"> -D_LIBCPP_DISABLE_AVAILABILITY=1"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">MACOSX_DEPLOYMENT_TARGET</span><span class="o">=</span><span class="s2">"10.14"</span>
 </pre></div>
 </div>
 <p><strong>Wheel repair:</strong></p>
@@ -1484,7 +1498,7 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 <p>Install SWIG:</p>
 <p><strong>Linux:</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>swig<span class="w">  </span><span class="c1"># RHEL/CentOS/Fedora</span>
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;swig&gt;=4.1&quot;</span><span class="w">  </span><span class="c1"># not apt: Ubuntu 22.04 ships SWIG 4.0, too old</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"swig&gt;=4.1"</span><span class="w">  </span><span class="c1"># not apt: Ubuntu 22.04 ships SWIG 4.0, too old</span>
 </pre></div>
 </div>
 <p><strong>macOS:</strong></p>

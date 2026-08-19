@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -980,8 +994,8 @@ locally:</p>
 cp<span class="w"> </span>tttrlib_imagej-&lt;version&gt;.jar<span class="w"> </span>Fiji.app/plugins/tttrlib_imagej.jar
 <span class="nb">cd</span><span class="w"> </span>Fiji.app
 ./ImageJ-linux64<span class="w"> </span>--update<span class="w"> </span>add-update-site<span class="w"> </span>tttrlib<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="s2">&quot;https://fluorescence-tools.github.io/tttrlib/imagej/&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="s2">&quot;file:&quot;</span><span class="w"> </span><span class="s2">&quot;/absolute/path/to/site/&quot;</span>
+<span class="w">    </span><span class="s2">"https://fluorescence-tools.github.io/tttrlib/imagej/"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s2">"file:"</span><span class="w"> </span><span class="s2">"/absolute/path/to/site/"</span>
 ./ImageJ-linux64<span class="w"> </span>--update<span class="w"> </span>upload<span class="w"> </span>--update-site<span class="w"> </span>tttrlib<span class="w"> </span>plugins/tttrlib_imagej.jar
 </pre></div>
 </div>
@@ -1066,18 +1080,18 @@ and writes <strong>chisurf’s detector-setup JSON</strong>, so a setup defined 
 <em>Setup:Channel Definition</em> tool works here unchanged, and vice versa.</p>
 <p>A setup holds named <strong>PIE windows</strong> and named <strong>detectors</strong>:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;setups&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;confocal&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;windows&quot;</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;delayed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;detectors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;green&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;chs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;micro_time_ranges&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]],</span>
-<span class="w">                   </span><span class="nt">&quot;g_factor&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;l1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;l2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">},</span>
-<span class="w">        </span><span class="nt">&quot;red&quot;</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;chs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;micro_time_ranges&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="nt">"setups"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"confocal"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"windows"</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"prompt"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2000</span><span class="p">],</span><span class="w"> </span><span class="nt">"delayed"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"detectors"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"green"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"chs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="nt">"micro_time_ranges"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]],</span>
+<span class="w">                   </span><span class="nt">"g_factor"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"l1"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"l2"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">"red"</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="w"> </span><span class="nt">"chs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="nt">"micro_time_ranges"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4095</span><span class="p">]]</span><span class="w"> </span><span class="p">}</span>
 <span class="w">      </span><span class="p">},</span>
-<span class="w">      </span><span class="nt">&quot;polarization_resolved&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">      </span><span class="nt">"polarization_resolved"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;last_used&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;confocal&quot;</span>
+<span class="w">  </span><span class="nt">"last_used"</span><span class="p">:</span><span class="w"> </span><span class="s2">"confocal"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1199,7 +1213,7 @@ returns the <em>true</em> element count, so a return value larger than the array
 means the result was truncated.</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io.github.fluorescencetools.tttrlib.*</span><span class="p">;</span>
 
-<span class="n">TTTR</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TTTR</span><span class="p">(</span><span class="s">&quot;photon_stream.ptu&quot;</span><span class="p">);</span>
+<span class="n">TTTR</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TTTR</span><span class="p">(</span><span class="s">"photon_stream.ptu"</span><span class="p">);</span>
 <span class="kt">long</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="na">size</span><span class="p">();</span>
 
 <span class="kt">long</span><span class="o">[]</span><span class="w"> </span><span class="n">macro</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">long</span><span class="o">[</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">n</span><span class="o">]</span><span class="p">;</span>

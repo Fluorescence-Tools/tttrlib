@@ -76,7 +76,7 @@
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Plugins: adding a format without rebuilding" href="plugins.html" />
+    <link rel="next" title="11. Drop-in plugins" href="plugins.html" />
     <link rel="prev" title="PTO.MFDB — the MMFDB profile of the photon container" href="formats/pto-mfdb.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -987,15 +1001,15 @@ keeps the values, not the types.</p>
 <h2>The native file<a class="headerlink" href="#the-native-file" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">store</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="s2">&quot;acquisition&quot;</span><span class="p">)</span>
-<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Tau&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">4096</span><span class="p">)})</span>
-<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;run.ptu&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)})</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="s2">"acquisition"</span><span class="p">)</span>
+<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">"results"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"Tau"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">4096</span><span class="p">)})</span>
+<span class="n">store</span><span class="o">.</span><span class="n">add_group</span><span class="p">(</span><span class="s2">"meta"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">"run.ptu"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)})</span>
 
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">save_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
-<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">save_store</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">)</span>
 
-<span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span>                 <span class="c1"># the column, reached by path</span>
-<span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span><span class="p">)</span>
+<span class="n">back</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"Tau"</span>                 <span class="c1"># the column, reached by path</span>
+<span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"Tau"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The row count of a group follows from its first column, as <code class="docutils literal notranslate"><span class="pre">add</span></code> already does
@@ -1007,24 +1021,24 @@ works and is what the one-call form does underneath.</p>
 composes a path the way <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#module-pathlib" title="(in Python v3.14)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pathlib</span></code></a> does — it looks nothing up until the
 path is used, so a path can be built before the group exists, held, and
 resolved later:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span>     <span class="c1"># nothing looked up yet</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">back</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"Tau"</span>     <span class="c1"># nothing looked up yet</span>
 <span class="n">p</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>                        <span class="c1"># resolved here</span>
 <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>                       <span class="c1"># and here</span>
 <span class="n">p</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span>
 
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">]</span>              <span class="c1"># the same key space, resolved at once</span>
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;a/b/x&quot;</span><span class="p">]</span>
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;results/&quot;</span><span class="p">]</span>                 <span class="c1"># a group -&gt; DataStore</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"results/Tau"</span><span class="p">]</span>              <span class="c1"># the same key space, resolved at once</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"a/b/x"</span><span class="p">]</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"results/"</span><span class="p">]</span>                 <span class="c1"># a group -&gt; DataStore</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">back</span><span class="o">.</span><span class="n">tree</span><span class="p">())</span>               <span class="c1"># what is in this file?</span>
 <span class="n">back</span><span class="o">.</span><span class="n">paths</span><span class="p">()</span>                     <span class="c1"># every column, by path</span>
 <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">back</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>  <span class="c1"># depth first, parent before child</span>
     <span class="o">...</span>
-<span class="n">back</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;Tau&quot;</span><span class="p">)</span>                <span class="c1"># every Tau anywhere, as paths</span>
+<span class="n">back</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"Tau"</span><span class="p">)</span>                <span class="c1"># every Tau anywhere, as paths</span>
 </pre></div>
 </div>
 <p>Writing works the same way, creating the groups it needs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">back</span><span class="p">[</span><span class="s2">&quot;meta/instrument&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;MicroTime 200&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">back</span><span class="p">[</span><span class="s2">"meta/instrument"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">"MicroTime 200"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>A key without a separator is unchanged.</strong> <code class="docutils literal notranslate"><span class="pre">store[&quot;Tau&quot;]</span></code> is a column and
@@ -1036,11 +1050,11 @@ over the path <code class="docutils literal notranslate"><span class="pre">Sg/Sr
 Two groups have different row counts and no row correspondence, so axes from
 two of them are not something that can be filled, and asking raises rather than
 answering.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">&quot;results&quot;</span> <span class="o">/</span> <span class="s2">&quot;Tau&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>      <span class="c1"># one column, one line</span>
-<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;results/E&quot;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
-<span class="n">back</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">&quot;results/x&quot;</span><span class="p">,</span> <span class="s2">&quot;results/y&quot;</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="s2">&quot;results/tau&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">back</span> <span class="o">/</span> <span class="s2">"results"</span> <span class="o">/</span> <span class="s2">"Tau"</span><span class="p">)</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>      <span class="c1"># one column, one line</span>
+<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">"results/Tau"</span><span class="p">,</span> <span class="s2">"results/E"</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="n">back</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">"results/x"</span><span class="p">,</span> <span class="s2">"results/y"</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="s2">"results/tau"</span><span class="p">)</span>
 
-<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">&quot;results/Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;meta/source&quot;</span><span class="p">)</span>        <span class="c1"># ValueError, and says why</span>
+<span class="n">back</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="s2">"results/Tau"</span><span class="p">,</span> <span class="s2">"meta/source"</span><span class="p">)</span>        <span class="c1"># ValueError, and says why</span>
 </pre></div>
 </div>
 <p>The contract is <code class="docutils literal notranslate"><span class="pre">load(save(s))</span> <span class="pre">==</span> <span class="pre">s</span></code>. Two consequences worth knowing:</p>
@@ -1056,13 +1070,13 @@ comes back as <code class="docutils literal notranslate"><span class="pre">uint8
 <h3>Working with a column<a class="headerlink" href="#working-with-a-column" title="Link to this heading">#</a></h3>
 <p>A column behaves like the array it wraps, so code that used a data frame column
 as a value needs no conversion inserted around it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">col</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">col</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span>
 
-<span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>              <span class="c1"># one value, in the column&#39;s own dtype</span>
+<span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>              <span class="c1"># one value, in the column's own dtype</span>
 <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">col</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>          <span class="c1"># an array</span>
 <span class="nb">list</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="p">[</span><span class="n">v</span> <span class="o">*</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col</span><span class="p">]</span>
 <span class="n">col</span> <span class="o">&gt;</span> <span class="mf">1.0</span>                    <span class="c1"># an elementwise bool array</span>
-<span class="n">col</span> <span class="o">==</span> <span class="s2">&quot;m000.spc&quot;</span>            <span class="c1"># on a text column, via the dictionary</span>
+<span class="n">col</span> <span class="o">==</span> <span class="s2">"m000.spc"</span>            <span class="c1"># on a text column, via the dictionary</span>
 <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.2</span>                 <span class="c1"># writes through, for numeric columns</span>
 <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
 </pre></div>
@@ -1139,14 +1153,14 @@ extension to get a subset read would have got the opposite.</p>
 <p>Each format also has its own verb — <code class="xref py py-func docutils literal notranslate"><span class="pre">load_store()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">read_hdf5()</span></code>,
 <code class="xref py py-func docutils literal notranslate"><span class="pre">pto_store()</span></code> — with its own spelling of the same argument. Five functions
 say it once:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span>     <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span>         <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;run.pto|bursts&quot;</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">,</span>     <span class="n">group</span><span class="o">=</span><span class="s2">"results"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">])</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span>         <span class="n">group</span><span class="o">=</span><span class="s2">"results"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">])</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">"run.pto|bursts"</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">"results"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">])</span>
 
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="s2">&quot;out.h5&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_groups</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>      <span class="c1"># [&#39;results&#39;]</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_columns</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_has</span><span class="p">(</span><span class="s2">&quot;run.pto|bursts&quot;</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="s2">"out.h5"</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">"results"</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_groups</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">)</span>      <span class="c1"># ['results']</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_columns</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span> <span class="s2">"results"</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">table_has</span><span class="p">(</span><span class="s2">"run.pto|bursts"</span><span class="p">,</span> <span class="s2">"results"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>These add <strong>no capability</strong>. Every one is a call to a reader on this page,
@@ -1159,10 +1173,10 @@ write back. The caller is not told which, because the resulting file is the
 same either way. The cost is not the same, so it is published rather than
 hidden:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="n">caps</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry_category_json</span><span class="p">(</span><span class="s2">&quot;table_format&quot;</span><span class="p">))</span>
-<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;dstore&quot;</span><span class="p">][</span><span class="s2">&quot;rewrites_on_partial_write&quot;</span><span class="p">]</span>   <span class="c1"># True  -- reads and rewrites</span>
-<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;hdf5&quot;</span><span class="p">][</span><span class="s2">&quot;rewrites_on_partial_write&quot;</span><span class="p">]</span>     <span class="c1"># False -- replaces in place</span>
-<span class="n">caps</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">][</span><span class="s2">&quot;groups&quot;</span><span class="p">]</span>                         <span class="c1"># False -- no tree at all</span>
+<span class="n">caps</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">registry_category_json</span><span class="p">(</span><span class="s2">"table_format"</span><span class="p">))</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">"dstore"</span><span class="p">][</span><span class="s2">"rewrites_on_partial_write"</span><span class="p">]</span>   <span class="c1"># True  -- reads and rewrites</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">"hdf5"</span><span class="p">][</span><span class="s2">"rewrites_on_partial_write"</span><span class="p">]</span>     <span class="c1"># False -- replaces in place</span>
+<span class="n">caps</span><span class="p">[</span><span class="s2">"csv"</span><span class="p">][</span><span class="s2">"groups"</span><span class="p">]</span>                         <span class="c1"># False -- no tree at all</span>
 </pre></div>
 </div>
 <p>Five, not six: <strong>there is no</strong> <code class="docutils literal notranslate"><span class="pre">table_remove</span></code>. Removing a group is
@@ -1296,17 +1310,17 @@ filtering columns costs nothing structural: a table with no matching column
 comes back empty but keeps its <code class="docutils literal notranslate"><span class="pre">n_rows</span></code>, and so is still distinguishable
 from a table that genuinely has no rows.</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">part</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">part</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">])</span>
 <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">n_rows</span><span class="p">(),</span> <span class="n">n</span><span class="o">.</span><span class="n">column_names</span><span class="p">())</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">walk</span><span class="p">()]</span>
-<span class="c1"># [(&#39;&#39;,    4, [&#39;Tau&#39;]),</span>
-<span class="c1">#  (&#39;g1&#39;,  9, [&#39;Tau&#39;]),</span>
-<span class="c1">#  (&#39;a&#39;,   0, []),          &lt;- kept, with its row count</span>
-<span class="c1">#  (&#39;a/b&#39;, 2, [&#39;Tau&#39;])]</span>
+<span class="c1"># [('',    4, ['Tau']),</span>
+<span class="c1">#  ('g1',  9, ['Tau']),</span>
+<span class="c1">#  ('a',   0, []),          &lt;- kept, with its row count</span>
+<span class="c1">#  ('a/b', 2, ['Tau'])]</span>
 </pre></div>
 </div>
 <p>Reading part of a file costs only that part — the file carries a directory
 saying where each column lives:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">])</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>That works along the other axis too, and for a store that lives inside
@@ -1315,8 +1329,8 @@ how wide its elements are, so a <strong>row range</strong> is an offset and a le
 column — which is what a table viewer needs, since paging a million-row burst
 table otherwise decodes a million rows to show fifty:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># rows 500 000-500 050 of two columns, of a store embedded at `base`</span>
-<span class="n">page</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store_region</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">nbytes</span><span class="p">,</span>
-                                 <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;n_photons&quot;</span><span class="p">],</span>
+<span class="n">page</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store_region</span><span class="p">(</span><span class="s2">"run.pto"</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">nbytes</span><span class="p">,</span>
+                                 <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">,</span> <span class="s2">"n_photons"</span><span class="p">],</span>
                                  <span class="n">first_row</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1377,25 +1391,25 @@ column, that both the native format and HDF5 store and give back. <code class="d
 what it was built for — a burst duration in milliseconds and a lifetime in
 nanoseconds otherwise say so only in their column names, when whoever wrote
 them remembered.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="s2">&quot;nanoseconds&quot;</span><span class="p">)</span>
-<span class="n">store</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">,</span> <span class="s2">&quot;run.ptu&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">store</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span><span class="o">.</span><span class="n">set_units</span><span class="p">(</span><span class="s2">"nanoseconds"</span><span class="p">)</span>
+<span class="n">store</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">"of"</span><span class="p">,</span> <span class="s2">"run.ptu"</span><span class="p">)</span>
 
-<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">&quot;run.dstore&quot;</span><span class="p">)</span>
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>          <span class="c1"># &#39;nanoseconds&#39;</span>
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">)</span>  <span class="c1"># &#39;run.ptu&#39;</span>
-<span class="n">back</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span><span class="p">()</span>       <span class="c1"># the whole object, as JSON text</span>
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="s2">"run.dstore"</span><span class="p">)</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">()</span>          <span class="c1"># 'nanoseconds'</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">"of"</span><span class="p">)</span>  <span class="c1"># 'run.ptu'</span>
+<span class="n">back</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">]</span><span class="o">.</span><span class="n">metadata</span><span class="p">()</span>       <span class="c1"># the whole object, as JSON text</span>
 </pre></div>
 </div>
 <p>There are two setters and the difference matters. <code class="docutils literal notranslate"><span class="pre">set_attribute</span></code> stores a
 <strong>string</strong>, whatever it looks like; <code class="docutils literal notranslate"><span class="pre">set_attribute_json</span></code> takes JSON text and
 stores the <strong>value</strong> it denotes:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>       <span class="c1"># the seven characters</span>
-<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>  <span class="c1"># a list of ranges</span>
-<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="s2">&quot;9007199254740993&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">"na"</span><span class="p">,</span> <span class="s2">"[[2,4]]"</span><span class="p">)</span>       <span class="c1"># the seven characters</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">"na"</span><span class="p">,</span> <span class="s2">"[[2,4]]"</span><span class="p">)</span>  <span class="c1"># a list of ranges</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">"n"</span><span class="p">,</span> <span class="s2">"9007199254740993"</span><span class="p">)</span>
 
-<span class="n">c</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">)</span>        <span class="c1"># &#39;[[2,4]]&#39;   -- unquoted, so units needs no parse</span>
-<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">)</span>   <span class="c1"># &#39;[[2,4]]&#39;   -- exact, so the round trip is exact</span>
-<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">&quot;of&quot;</span><span class="p">)</span>   <span class="c1"># &#39;&quot;run.ptu&quot;&#39; -- a string keeps its quotes</span>
+<span class="n">c</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="s2">"na"</span><span class="p">)</span>        <span class="c1"># '[[2,4]]'   -- unquoted, so units needs no parse</span>
+<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">"na"</span><span class="p">)</span>   <span class="c1"># '[[2,4]]'   -- exact, so the round trip is exact</span>
+<span class="n">c</span><span class="o">.</span><span class="n">attribute_json</span><span class="p">(</span><span class="s2">"of"</span><span class="p">)</span>   <span class="c1"># '"run.ptu"' -- a string keeps its quotes</span>
 </pre></div>
 </div>
 <p>Types survive the file. The description is stored as <strong>msgpack</strong>, not as JSON
@@ -1419,14 +1433,14 @@ scattered pattern — what <code class="xref py py-meth docutils literal notrans
 A contiguous run becomes a range in the description:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">tttrlib</span><span class="o">.</span><span class="n">load_store</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">])</span>
 
-<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">has_mask</span><span class="p">()</span>        <span class="c1"># False -- no bit mask was allocated</span>
-<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">has_missing</span><span class="p">()</span>     <span class="c1"># True  -- the rows are missing all the same</span>
-<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="mi">1_000_001</span><span class="p">)</span>  <span class="c1"># False</span>
-<span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mask_numpy</span><span class="p">()</span>      <span class="c1"># the bool array, whichever way it was stored</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span><span class="o">.</span><span class="n">has_mask</span><span class="p">()</span>        <span class="c1"># False -- no bit mask was allocated</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span><span class="o">.</span><span class="n">has_missing</span><span class="p">()</span>     <span class="c1"># True  -- the rows are missing all the same</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="mi">1_000_001</span><span class="p">)</span>  <span class="c1"># False</span>
+<span class="n">r</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span><span class="o">.</span><span class="n">mask_numpy</span><span class="p">()</span>      <span class="c1"># the bool array, whichever way it was stored</span>
 
-<span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">na_ranges</span><span class="p">():</span>
+<span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span><span class="o">.</span><span class="n">na_ranges</span><span class="p">():</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">last</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">why</span><span class="p">)</span>
-    <span class="c1"># 1000000 2000000 absent in &#39;m002.hdf5&#39;</span>
+    <span class="c1"># 1000000 2000000 absent in 'm002.hdf5'</span>
 </pre></div>
 </div>
 <p>The gap a merge leaves is one whole file’s contribution, so it is one run by
@@ -1453,8 +1467,8 @@ A gather reorders rows, so a range naming the source’s rows says nothing true
 about the result’s; the rest of the description is untouched.</p></li>
 </ul>
 <p>A range can also be written by hand, in either spelling:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">add_na_range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;detector off&quot;</span><span class="p">)</span>
-<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">&quot;na&quot;</span><span class="p">,</span> <span class="s2">&quot;[[2,4]]&quot;</span><span class="p">)</span>      <span class="c1"># the short form, no reason</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">add_na_range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"detector off"</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">set_attribute_json</span><span class="p">(</span><span class="s2">"na"</span><span class="p">,</span> <span class="s2">"[[2,4]]"</span><span class="p">)</span>      <span class="c1"># the short form, no reason</span>
 </pre></div>
 </div>
 <p>Note <code class="docutils literal notranslate"><span class="pre">set_attribute_json</span></code> and not <code class="docutils literal notranslate"><span class="pre">set_attribute</span></code>: the latter would store
@@ -1466,11 +1480,11 @@ missing rows as a result.</p>
 <h2>CSV<a class="headerlink" href="#csv" title="Link to this heading">#</a></h2>
 <p>The format that loses the most and travels the furthest. One table, one file,
 no tree:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">,</span> <span class="n">store</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">))</span>   <span class="c1"># a sub-table</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">"run.csv"</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="s2">"run.csv"</span><span class="p">,</span> <span class="n">store</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s2">"results"</span><span class="p">))</span>   <span class="c1"># a sub-table</span>
 <span class="n">text</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">store</span><span class="p">)</span>                  <span class="c1"># ...or as a string</span>
 
-<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;run.csv&quot;</span><span class="p">)</span>
+<span class="n">back</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"run.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Only the <strong>selected</strong> rows are written when the store is gated, the same as
@@ -1568,12 +1582,12 @@ what HDF5 has no place for: a <code class="docutils literal notranslate"><span c
 column can have missing values at all. Group order is recorded the same way, in
 a <code class="docutils literal notranslate"><span class="pre">groups</span></code> attribute.</p>
 <p>A file is built one group at a time:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;/results&quot;</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;/meta&quot;</span><span class="p">)</span>     <span class="c1"># /results survives</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">"/results"</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">write_hdf5</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">"/meta"</span><span class="p">)</span>     <span class="c1"># /results survives</span>
 
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_groups</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">)</span>     <span class="c1"># [&#39;/results&#39;, &#39;/meta&#39;]</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_has</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;/meta&quot;</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_remove</span><span class="p">(</span><span class="s2">&quot;run.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;/meta&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_groups</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">)</span>     <span class="c1"># ['/results', '/meta']</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_has</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span> <span class="s2">"/meta"</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">hdf5_table_remove</span><span class="p">(</span><span class="s2">"run.h5"</span><span class="p">,</span> <span class="s2">"/meta"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Rules worth stating once:</p>
@@ -1639,7 +1653,7 @@ at all.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Plugins: adding a format without rebuilding</p>
+        <p class="prev-next-title"><span class="section-number">11. </span>Drop-in plugins</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

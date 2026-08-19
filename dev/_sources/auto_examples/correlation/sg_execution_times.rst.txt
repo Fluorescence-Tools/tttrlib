@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 9 files **from auto_examples/correlation**:
+**00:00.000** total execution time for 13 files **from auto_examples/correlation**:
 
 .. container::
 
@@ -42,6 +42,18 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_estimate_noise.py` (``plot_estimate_noise.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d.py` (``plot_fdc_2d.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_dynamics_resolution.py` (``plot_fdc_2d_dynamics_resolution.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_microsecond_fret.py` (``plot_fdc_2d_microsecond_fret.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_correlation_plot_fdc_2d_microsecond_fret_diffusion.py` (``plot_fdc_2d_microsecond_fret_diffusion.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_correlation_plot_full_correlation.py` (``plot_full_correlation.py``)

@@ -256,7 +256,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -334,6 +334,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -617,7 +624,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -695,6 +702,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1011,7 +1025,7 @@ raster by sampling the RGC field as a spatial prior, and the result is a TTTR
 stream that can be written back to a file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reassigned</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">reassign_photons</span><span class="p">(</span>
     <span class="n">clsm</span><span class="p">,</span> <span class="n">tttr</span><span class="p">,</span> <span class="n">magnification</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">sensitivity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">search_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reassigned</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">magnification</span><span class="p">,</span> <span class="s2">&quot;out.ptu&quot;</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">CLSMSuperRes</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">reassigned</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">magnification</span><span class="p">,</span> <span class="s2">"out.ptu"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Micro times and routing channels are preserved, so lifetime information survives

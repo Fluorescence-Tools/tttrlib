@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1080,7 +1094,7 @@ written, because a commit is atomic; see <a class="reference internal" href="#pt
 <section id="relationship-to-ebml-and-matroska">
 <h2><a class="toc-backref" href="#id4" role="doc-backlink">Relationship to EBML and Matroska</a><a class="headerlink" href="#relationship-to-ebml-and-matroska" title="Link to this heading">#</a></h2>
 <p>A PTO file is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>          <span class="p">(</span><span class="mh">0x1A45DFA3</span><span class="p">)</span>   <span class="n">the</span> <span class="n">standard</span> <span class="n">EBML</span> <span class="n">Header</span><span class="p">,</span> <span class="n">DocType</span> <span class="s2">&quot;pto&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>          <span class="p">(</span><span class="mh">0x1A45DFA3</span><span class="p">)</span>   <span class="n">the</span> <span class="n">standard</span> <span class="n">EBML</span> <span class="n">Header</span><span class="p">,</span> <span class="n">DocType</span> <span class="s2">"pto"</span>
 <span class="n">Segment</span>       <span class="p">(</span><span class="mh">0x18538067</span><span class="p">)</span>   <span class="n">everything</span> <span class="k">else</span>
 </pre></div>
 </div>
@@ -1461,7 +1475,7 @@ for programs, and a reader listing metadata usually wants one and not the other.
 <section id="the-ebml-header">
 <h2><a class="toc-backref" href="#id7" role="doc-backlink">The EBML Header</a><a class="headerlink" href="#the-ebml-header" title="Link to this heading">#</a></h2>
 <p>Standard, with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DocType</span>            <span class="o">=</span> <span class="s2">&quot;pto&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DocType</span>            <span class="o">=</span> <span class="s2">"pto"</span>
 <span class="n">DocTypeVersion</span>     <span class="o">=</span> <span class="mi">2</span>
 <span class="n">DocTypeReadVersion</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">EBMLMaxIDLength</span>    <span class="o">=</span> <span class="mi">4</span>
@@ -1478,7 +1492,7 @@ would have got anyway – one it has to decode from the start.</p>
 </section>
 <section id="file-shape">
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">File shape</a><a class="headerlink" href="#file-shape" title="Link to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>                      <span class="n">DocType</span> <span class="s2">&quot;pto&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EBML</span>                      <span class="n">DocType</span> <span class="s2">"pto"</span>
 <span class="n">Segment</span>                   <span class="n">Data</span> <span class="n">Size</span> <span class="ow">in</span> <span class="n">eight</span> <span class="n">octets</span><span class="p">,</span> <span class="n">rewritten</span> <span class="k">as</span> <span class="n">it</span> <span class="n">grows</span>
   <span class="n">SeekHead</span>                <span class="n">index</span> <span class="n">A</span>   <span class="p">[</span><span class="n">CRC</span><span class="o">-</span><span class="mi">32</span><span class="p">,</span> <span class="n">PtoGeneration</span><span class="p">,</span> <span class="n">Seek</span><span class="o">...</span><span class="p">,</span> <span class="n">Void</span><span class="p">]</span>
   <span class="n">SeekHead</span>                <span class="n">index</span> <span class="n">B</span>
@@ -1522,10 +1536,10 @@ thing that stops a repeatedly-interrupted file growing forever.</p>
 <p>An <code class="docutils literal notranslate"><span class="pre">AttachedFile</span></code> with <code class="docutils literal notranslate"><span class="pre">PtoKind</span></code> and <code class="docutils literal notranslate"><span class="pre">PtoEncoding</span></code> added:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AttachedFile</span>
   <span class="n">FileUID</span>        <span class="mh">0x9F2C7A0155E3C104</span>      <span class="n">required</span><span class="p">,</span> <span class="n">non</span><span class="o">-</span><span class="n">zero</span><span class="p">,</span> <span class="n">unique</span>
-  <span class="n">PtoKind</span>        <span class="s2">&quot;photons&quot;</span>               <span class="n">required</span>
-  <span class="n">PtoEncoding</span>    <span class="s2">&quot;dstore&quot;</span>                <span class="n">required</span>
-  <span class="n">FileName</span>       <span class="s2">&quot;channel 0-3&quot;</span>
-  <span class="n">FileMediaType</span>  <span class="s2">&quot;application/x-dstore&quot;</span>
+  <span class="n">PtoKind</span>        <span class="s2">"photons"</span>               <span class="n">required</span>
+  <span class="n">PtoEncoding</span>    <span class="s2">"dstore"</span>                <span class="n">required</span>
+  <span class="n">FileName</span>       <span class="s2">"channel 0-3"</span>
+  <span class="n">FileMediaType</span>  <span class="s2">"application/x-dstore"</span>
   <span class="n">PtoRowCount</span>    <span class="mi">1013994218</span>
   <span class="n">FileData</span>       <span class="o">&lt;</span><span class="mf">8.1</span> <span class="n">GiB</span><span class="o">&gt;</span>
 </pre></div>
@@ -1714,11 +1728,10 @@ the first has made a measurement-level choice on the user’s behalf.</p>
 </section>
 <section id="conformance-and-status">
 <span id="pto-photons-status"></span><h4>Conformance and status<a class="headerlink" href="#conformance-and-status" title="Link to this heading">#</a></h4>
-<p>This section is normative for the <em>format</em>. Implementation in tttrlib is
-tracked by PRD-034 and remains partial; what works today is the write-once
-round trip:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.ptu&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>     <span class="c1"># a native photons object</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>                       <span class="c1"># events and clocks back</span>
+<p>This section is normative for the <em>format</em>. Implementation in tttrlib remains
+partial; what works today is the write-once round trip:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"run.ptu"</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"run.pto"</span><span class="p">)</span>     <span class="c1"># a native photons object</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"run.pto"</span><span class="p">)</span>                       <span class="c1"># events and clocks back</span>
 </pre></div>
 </div>
 <p>The reader applies the three required tags, and the writer emits them. A second
@@ -1753,8 +1766,8 @@ tttr<span class="w"> </span>pto<span class="w"> </span>extract-all<span class="w
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">PtoFile</span><span class="p">()</span>
-<span class="n">f</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">,</span> <span class="s2">&quot;DNA ruler, run 4&quot;</span><span class="p">)</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_bundle</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;measurement/&quot;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">"run.pto"</span><span class="p">,</span> <span class="s2">"DNA ruler, run 4"</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_bundle</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">"measurement/"</span><span class="p">)</span>
 <span class="n">f</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -1835,7 +1848,7 @@ no value element is a flag: its presence is the information.</p>
   <span class="n">Targets</span>
     <span class="n">TagAttachmentUID</span>   <span class="mh">0x3A71</span><span class="o">...</span>        <span class="n">the</span> <span class="n">burst</span> <span class="n">table</span>
   <span class="n">SimpleTag</span>
-    <span class="n">TagName</span>            <span class="s2">&quot;MeasDesc_Resolution&quot;</span>
+    <span class="n">TagName</span>            <span class="s2">"MeasDesc_Resolution"</span>
     <span class="n">PtoTagFloat</span>        <span class="mf">8.0e-11</span>
     <span class="n">PtoTagSourceType</span>   <span class="mh">0x20000008</span>       <span class="n">PTU</span> <span class="n">tyFloat8</span><span class="p">,</span> <span class="n">so</span> <span class="n">it</span> <span class="nb">round</span><span class="o">-</span><span class="n">trips</span>
 </pre></div>
@@ -1913,14 +1926,14 @@ by both.</p>
   <span class="n">Targets</span>
     <span class="n">TagAttachmentUID</span>   <span class="mh">0x3A71</span><span class="o">...</span>              <span class="n">the</span> <span class="n">bursts</span>
   <span class="n">SimpleTag</span>
-    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.derived_from&quot;</span>
+    <span class="n">TagName</span>            <span class="s2">"chisurf.derived_from"</span>
     <span class="n">PtoTagUID</span>          <span class="mh">0x9F2C</span><span class="o">...</span>              <span class="n">the</span> <span class="n">photons</span>
   <span class="n">SimpleTag</span>
-    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.step&quot;</span>
-    <span class="n">TagString</span>          <span class="s2">&quot;burst search&quot;</span>
+    <span class="n">TagName</span>            <span class="s2">"chisurf.step"</span>
+    <span class="n">TagString</span>          <span class="s2">"burst search"</span>
   <span class="n">SimpleTag</span>
-    <span class="n">TagName</span>            <span class="s2">&quot;chisurf.parameters&quot;</span>
-    <span class="n">TagString</span>          <span class="s2">&quot;{</span><span class="se">\&quot;</span><span class="s2">m</span><span class="se">\&quot;</span><span class="s2">: 10, </span><span class="se">\&quot;</span><span class="s2">T</span><span class="se">\&quot;</span><span class="s2">: 500e-6}&quot;</span>
+    <span class="n">TagName</span>            <span class="s2">"chisurf.parameters"</span>
+    <span class="n">TagString</span>          <span class="s2">"{</span><span class="se">\"</span><span class="s2">m</span><span class="se">\"</span><span class="s2">: 10, </span><span class="se">\"</span><span class="s2">T</span><span class="se">\"</span><span class="s2">: 500e-6}"</span>
 </pre></div>
 </div>
 <p>“Everything that mentions this object” is one pass over the <code class="docutils literal notranslate"><span class="pre">Tags</span></code> element,
@@ -2130,13 +2143,13 @@ that fits a double is one fewer thing for the next binding to get wrong.</p>
 that gets recomputed, and that has to hold on the read side too. Every entry
 point below reads its part and not the whole:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">PtoFile</span><span class="p">()</span>
-<span class="n">f</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;run.pto&quot;</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"run.pto"</span><span class="p">)</span>
 
 <span class="c1"># what is in the embedded table, without decoding a single column</span>
 <span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store_columns</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
 
 <span class="c1"># two columns of a four-gigabyte table: two seeks</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Tau&quot;</span><span class="p">,</span> <span class="s2">&quot;n_photons&quot;</span><span class="p">])</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"Tau"</span><span class="p">,</span> <span class="s2">"n_photons"</span><span class="p">])</span>
 
 <span class="c1"># rows 500 000-500 050 of it, which is what a table viewer asks for</span>
 <span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_store</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">first_row</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span> <span class="n">n_rows</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
@@ -2145,23 +2158,23 @@ point below reads its part and not the whole:</p>
 <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">20</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
 
 <span class="c1"># events 10^6 .. 10^6+1000 of an embedded photon stream, via its cues</span>
-<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_events</span><span class="p">(</span><span class="s2">&quot;run.pto|m001.ptu&quot;</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">tttrlib</span><span class="o">.</span><span class="n">pto_events</span><span class="p">(</span><span class="s2">"run.pto|m001.ptu"</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>and reclaiming space, once a file has been edited enough to be worth it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-lean.pto&quot;</span><span class="p">)</span>                 <span class="c1"># holes gone, payloads aligned</span>
-<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-archive.pto&quot;</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># no Void at all; unaligned</span>
-<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">&quot;run-work.pto&quot;</span><span class="p">,</span> <span class="n">reserve</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>   <span class="c1"># room to keep editing in place</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">"run-lean.pto"</span><span class="p">)</span>                 <span class="c1"># holes gone, payloads aligned</span>
+<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">"run-archive.pto"</span><span class="p">,</span> <span class="n">tight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># no Void at all; unaligned</span>
+<span class="n">f</span><span class="o">.</span><span class="n">compact</span><span class="p">(</span><span class="s2">"run-work.pto"</span><span class="p">,</span> <span class="n">reserve</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>   <span class="c1"># room to keep editing in place</span>
 </pre></div>
 </div>
 <p>and on the way in, <code class="docutils literal notranslate"><span class="pre">add_file</span></code> embeds a file without holding it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span><span class="s2">&quot;photons&quot;</span><span class="p">,</span> <span class="s2">&quot;ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;m001.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;/data/m001.ptu&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">f</span><span class="o">.</span><span class="n">add_file</span><span class="p">(</span><span class="s2">"photons"</span><span class="p">,</span> <span class="s2">"ptu"</span><span class="p">,</span> <span class="s2">"m001.ptu"</span><span class="p">,</span> <span class="s2">"/data/m001.ptu"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The same range is reachable through the reader-parameter mechanism, which is
 what makes it work from every binding and from anything that opens a file by
 name alone:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;run.pto|m001.ptu&quot;</span><span class="p">,</span> <span class="s2">&quot;PTO&quot;</span><span class="p">,</span> <span class="s1">&#39;{&quot;first_event&quot;: 1000, &quot;n_events&quot;: 500}&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"run.pto|m001.ptu"</span><span class="p">,</span> <span class="s2">"PTO"</span><span class="p">,</span> <span class="s1">'{"first_event": 1000, "n_events": 500}'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

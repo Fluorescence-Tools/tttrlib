@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1006,13 +1020,13 @@ complete one until somebody on the missing platform installs it.</p>
 </section>
 <section id="quick-start">
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">tttrlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;tttrlib&#39;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">tttrlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">'tttrlib'</span><span class="p">);</span>
 
-<span class="kd">const</span><span class="w"> </span><span class="nx">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">TTTR</span><span class="p">(</span><span class="s1">&#39;measurement.ptu&#39;</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">size</span><span class="p">(),</span><span class="w"> </span><span class="s1">&#39;photons&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">TTTR</span><span class="p">(</span><span class="s1">'measurement.ptu'</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">size</span><span class="p">(),</span><span class="w"> </span><span class="s1">'photons'</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">macroTimes</span><span class="p">);</span><span class="w">            </span><span class="c1">// BigUint64Array</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">microTimes</span><span class="p">);</span><span class="w">            </span><span class="c1">// Uint16Array</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">acquisitionTime</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;s&#39;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">t</span><span class="p">.</span><span class="nx">acquisitionTime</span><span class="p">,</span><span class="w"> </span><span class="s1">'s'</span><span class="p">);</span>
 
 <span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">decay</span><span class="p">,</span><span class="w"> </span><span class="nx">timeAxis</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">getMicrotimeHistogram</span><span class="p">(</span><span class="mf">1</span><span class="p">);</span>
 </pre></div>
@@ -1049,7 +1063,7 @@ reject one rather than convert it.</p>
 plain object rather than the opaque proxy SWIG’s Node-API backend produces by
 default:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="nx">correlator</span><span class="p">.</span><span class="nx">getCorrNormalized</span><span class="p">()</span><span class="w">          </span><span class="c1">// Float64Array, not a VectorDouble</span>
-<span class="nx">extractor</span><span class="p">.</span><span class="nx">getBurstChannelPhotons</span><span class="p">()</span><span class="w">      </span><span class="c1">// {&quot;0&quot;: Float64Array, &quot;8&quot;: ...}</span>
+<span class="nx">extractor</span><span class="p">.</span><span class="nx">getBurstChannelPhotons</span><span class="p">()</span><span class="w">      </span><span class="c1">// {"0": Float64Array, "8": ...}</span>
 </pre></div>
 </div>
 <p>Map keys are strings, because JavaScript object keys are — the same shape either
@@ -1086,8 +1100,8 @@ new tttrlib features on upgrade with no code change.</p>
 <span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">bursts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">t</span><span class="p">.</span><span class="nx">burstSearchByName</span><span class="p">(</span><span class="nx">name</span><span class="p">);</span><span class="w">       </span><span class="c1">// defaults from the schema</span>
 <span class="p">}</span>
 
-<span class="kd">const</span><span class="w"> </span><span class="nx">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">registry</span><span class="p">(</span><span class="s1">&#39;burst_search&#39;</span><span class="p">).</span><span class="nx">sliding_window</span><span class="p">.</span><span class="nx">params_schema</span><span class="p">;</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">containers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">registry</span><span class="p">(</span><span class="s1">&#39;file_container&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">schema</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">registry</span><span class="p">(</span><span class="s1">'burst_search'</span><span class="p">).</span><span class="nx">sliding_window</span><span class="p">.</span><span class="nx">params_schema</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">containers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">registry</span><span class="p">(</span><span class="s1">'file_container'</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">burstSearchByName</span></code> dispatches through the registry’s <code class="docutils literal notranslate"><span class="pre">method</span></code> field, so it

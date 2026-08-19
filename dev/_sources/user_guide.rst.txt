@@ -29,6 +29,8 @@ Previous releases are available through the read-the-docs `page <https://tttrlib
    clsm-flim-guide
    localization-guide
    fit-guide
+   pipelines
+   plugins
    tttr.rst
    single_molecule.rst
    imaging.rst

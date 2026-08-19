@@ -281,7 +281,39 @@ registry says which, so you can build the call without reading the source.
           f"{out24.parameters[2]:.2f} ns, 2I* = {out24.objective:.2f}")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-206
+.. GENERATED FROM PYTHON SOURCE LINES 199-210
+
+Choosing the statistic: ``objective``
+--------------------------------------
+The setup's ``objective`` picks what the optimiser minimises, by name from
+the ``objective`` registry category: the Poisson likelihood (default), the
+same likelihood on the anisotropy-free sum P + 2S, or one of two
+least-squares statistics -- Neyman's data-weighted chi-square and the
+Gehrels-weighted variant for sparse counts. On a well-populated decay all
+three agree; on a few hundred photons the least-squares lifetimes drift
+(Neyman weights a channel that fluctuated low more), which is why the
+likelihood is the default. Least-squares fits report the reduced chi-square
+where the likelihood fits report 2I*.
+
+.. GENERATED FROM PYTHON SOURCE LINES 210-223
+
+.. code-block:: Python
+
+    sparse = np.random.default_rng(2).poisson(expected / 60).astype(float)   # ~500 photons
+    problem_sparse = tttrlib.DecayFitProblem(2, n_bins, dt)
+    problem_sparse.irf = tttrlib.VectorDouble(irf.tolist())
+    problem_sparse.background = tttrlib.VectorDouble(background.tolist())
+    problem_sparse.data = tttrlib.VectorDouble(sparse.tolist())
+    for objective in ("poisson_mle", "neyman_lsq", "gehrels_lsq"):
+        f = tttrlib.DecayFit2("fit23", tttrlib.setup_vector(
+            "fit23", dt=dt, period=period, g_factor=1.0, soft_bifl_scatter_flag=False,
+            objective=objective), irf.tolist())
+        o = f.fit(start, constraints, problem_sparse)
+        print(f"{objective:12s}: tau = {o.parameters[0]:.3f} ns  "
+              f"({'2I*' if objective.endswith('mle') else 'reduced chi2'} = {o.objective:.2f})")
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 224-231
 
 .. note::
    A bi-exponential model fitted to single-exponential data is not
@@ -291,7 +323,7 @@ registry says which, so you can build the call without reading the source.
    photophysics, and treat a second lifetime that moves freely as a sign the
    data do not support it.
 
-.. GENERATED FROM PYTHON SOURCE LINES 208-217
+.. GENERATED FROM PYTHON SOURCE LINES 233-242
 
 Fitting many decays
 -------------------
@@ -303,7 +335,7 @@ per-row working state is copied.
 This is the path a burst analysis or a FLIM image takes: thousands of decays,
 one call.
 
-.. GENERATED FROM PYTHON SOURCE LINES 217-227
+.. GENERATED FROM PYTHON SOURCE LINES 242-252
 
 .. code-block:: Python
 
@@ -318,13 +350,13 @@ one call.
     print(f"{n_rows} decays fitted: tau = {taus.mean():.3f} +/- {taus.std():.3f} ns")
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 228-231
+.. GENERATED FROM PYTHON SOURCE LINES 253-256
 
 The spread across repeats is the statistical uncertainty of the estimator at
 this photon count — which is what you should quote, rather than the optimiser's
 own error estimate from a single fit.
 
-.. GENERATED FROM PYTHON SOURCE LINES 231-242
+.. GENERATED FROM PYTHON SOURCE LINES 256-267
 
 .. code-block:: Python
 

@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 17 files **from auto_examples/flim**:
+**00:00.000** total execution time for 18 files **from auto_examples/flim**:
 
 .. container::
 
@@ -63,6 +63,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_phasor.py` (``plot_phasor.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_flim_plot_phasor_decay_stack.py` (``plot_phasor_decay_stack.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_flim_plot_pixel_masks.py` (``plot_pixel_masks.py``)

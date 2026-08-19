@@ -58,6 +58,40 @@ that support broader analysis workflows and development.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Two small image kernels sit in tttrlib for the pixel-side of photon analysis -- defining regions of interest on an intensity or lifetime map, and drawing their outlines:">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_watershed_marching_squares_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_watershed_marching_squares`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Region segmentation: watershed and iso-contours</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A microscope records the sample convolved with its point spread function (PSF), plus photon noise. Deconvolution tries to invert that. Two estimators are in tttrlib:">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_richardson_lucy_deconvolution_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_richardson_lucy_deconvolution`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Richardson-Lucy deconvolution of an image</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="A direct comparison of the performance of the tttrlib and the Numpy histogram routines (Numpy version 1.13.3, Linux) demonstrates that except for arbitrarily spaced histograms the tttrlib histogram routines outperform numpy by at least a factor of 2 (1D log10 Histograms and 2D Histograms) or by a factor of ~40 (1D linear Histograms)">
 
 .. only:: html
@@ -73,6 +107,23 @@ that support broader analysis workflows and development.
     </div>
 
 
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Everything tttrlib can do is in one registry (``tttrlib.registry()``): every algorithm, fit model, objective, prior, correlation method and pipeline operation registers itself there -- next to its own code -- when the library loads, and so does every capability a drop-in plugin brings. Nothing is listed by hand, so nothing can drift from what the code actually offers.">
+
+.. only:: html
+
+  .. image:: /auto_examples/miscellaneous/images/thumb/sphx_glr_plot_registry_composition_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/miscellaneous/plot_registry_composition`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">The registry: discover algorithms and compose a pipeline</div>
+    </div>
+
+
 .. thumbnail-parent-div-close
 
 .. raw:: html
@@ -85,5 +136,8 @@ that support broader analysis workflows and development.
 
    /auto_examples/miscellaneous/plot_histogram_2D
    /auto_examples/miscellaneous/plot_histogram_1D
+   /auto_examples/miscellaneous/plot_watershed_marching_squares
+   /auto_examples/miscellaneous/plot_richardson_lucy_deconvolution
    /auto_examples/miscellaneous/plot_histogram_benchmark
+   /auto_examples/miscellaneous/plot_registry_composition
 

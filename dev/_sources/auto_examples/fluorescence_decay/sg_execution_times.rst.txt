@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 11 files **from auto_examples/fluorescence_decay**:
+**00:00.000** total execution time for 13 files **from auto_examples/fluorescence_decay**:
 
 .. container::
 
@@ -32,6 +32,9 @@ Computation times
    * - Example
      - Time
      - Mem (MB)
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_blind_irf_estimation.py` (``plot_blind_irf_estimation.py``)
+     - 00:00.000
+     - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_convolution_methods.py` (``plot_convolution_methods.py``)
      - 00:00.000
      - 0.0
@@ -60,6 +63,9 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_fit26.py` (``plot_fit26.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_maxent_fret_recovery.py` (``plot_maxent_fret_recovery.py``)
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_fluorescence_decay_plot_pile_up.py` (``plot_pile_up.py``)

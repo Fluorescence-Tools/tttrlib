@@ -78,6 +78,23 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib&#x27;s hmm_ functions are the log-domain hidden-Markov recursions over a caller-supplied frame-probability matrix log_frameprob of shape (T × K): forward pass, a fused backward / posteriors / ξ sweep, and Viterbi. Emissions are the caller&#x27;s business — a Gaussian mixture, a Poisson rate, a lookup table — which is exactly what lets one lattice serve every model. (This is not* the photon-stream HMM in spectroscopy/hmm; that one has Δt-dependent transitions and a scaled recursion. This one is a uniform-bin lattice, and it is bit-identical to hmmlearn&#x27;s _hmmc.)">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_lattice_two_state_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_lattice_two_state`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">The HMM lattice on a two-state intensity trace</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates microtime range selection for burst analysis without plotting.">
 
 .. only:: html
@@ -90,6 +107,23 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Minimal Microtime Range Selection Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Every burst-analysis quantity that is corrected for background — burst size, FRET efficiency, stoichiometry — needs the background rate first, and the cleanest place to read it is the inter-photon time distribution: for a Poisson background the gaps are exponential with rate \lambda, and the bursts, being much brighter, only ever shorten gaps. So the long gaps belong to the background alone.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_background_rate_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_background_rate`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Estimating the background count rate from inter-photon times</div>
     </div>
 
 
@@ -146,6 +180,23 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="tttrlib.fit_vb is the mean-field variational Bayes fit of the photon-stream HMM (``spectroscopy/hmm``): Dirichlet factors over the initial distribution, the transition matrix and the emission table, iterated with the same forward-backward engine as the maximum-likelihood fit. Unlike HMM.optimize it returns a posterior -- means with standard deviations -- and the evidence lower bound (ELBO), which is the model-selection score priors ask for where BIC counts parameters instead.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_hmm_variational_bayes_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_hmm_variational_bayes`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Variational Bayes for the photon-stream HMM: posterior and ELBO</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates how to perform photon-level enhanced Super-Resolution Radial Fluctuations (eSRRF) on Confocal Laser Scanning Microscopy (CLSM) datasets using tttrlib.CLSMSuperRes.">
 
 .. only:: html
@@ -158,6 +209,23 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">CLSM Super-Resolution (eSRRF) Photon Reassignment Example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A single-molecule count trace is &quot;the rate stays what it was, plus process noise&quot; — until a molecule crosses the focus and the rate jumps. A Kalman filter with identity transition and observation matrices tracks the background rate; a burst then shows up as an innovation the filter did not expect, and its Mahalanobis distance">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_kalman_burst_detection_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_kalman_burst_detection`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Kalman-filter burst detection on a count trace</div>
     </div>
 
 
@@ -197,6 +265,23 @@ example list automatically from the scripts in this directory.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="A burst-averaged FRET efficiency cannot tell a molecule that sat at E = 0.5 from one that switched between 0.2 and 0.8 during the transit. The two-channel kernel density estimator (2CDE, Tomov et al., Biophys. J. 2012, doi:10.1016/j.bpj.2011.11.4025) is a per-burst feature that does: around every photon a kernel density of the donor and of the acceptor stream is evaluated (a Laplace or Gaussian kernel of width \tau, typically 50–100 µs), and">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_two_cde_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_two_cde`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">2CDE: within-burst dynamics without a kinetic model</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This example demonstrates burst analysis using the BurstFilter class with JSON parameter serialization support. Parameters can be saved to and loaded from JSON files.">
 
 .. only:: html
@@ -209,6 +294,23 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">Burst Analysis with JSON Parameter Support</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="FRET_burstML (T. Hoffmann et al.) fits the photon sequences of freely diffusing molecules with a joint model of diffusion through the focus, conformational kinetics and photon counting: the radial coordinate is discretised, the combined evolution operator (diffusion + kinetics − observation) is eigendecomposed once per parameter set, and each burst&#x27;s likelihood is a product of diagonal propagations in the eigenbasis. Brightness, diffusion time, exchange rate, populations, FRET efficiencies and background are all fitted at once, without binning the bursts.">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burstml_two_state_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burstml_two_state`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">BurstML: maximum-likelihood analysis of diffusing two-state FRET bursts</div>
     </div>
 
 
@@ -243,6 +345,23 @@ example list automatically from the scripts in this directory.
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">A full burst pipeline: simulate, search, select, resolve</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A burst table is a point cloud — one row per burst, one column per feature (FRET efficiency E, stoichiometry S, donor lifetime, size, …). Two questions recur: how many populations are there and which burst belongs to which. tttrlib ships the two standard answers as compiled kernels, ported bit-for-bit from ChiSurf and validated against scikit-learn:">
+
+.. only:: html
+
+  .. image:: /auto_examples/single_molecule/images/thumb/sphx_glr_plot_burst_feature_clustering_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/single_molecule/plot_burst_feature_clustering`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Clustering burst features: k-means and HDBSCAN</div>
     </div>
 
 
@@ -582,16 +701,23 @@ example list automatically from the scripts in this directory.
    /auto_examples/single_molecule/plot_single_molecule_mcs
    /auto_examples/single_molecule/plot_pda_synthetic
    /auto_examples/single_molecule/plot_single_molecule_burst_selection
+   /auto_examples/single_molecule/plot_hmm_lattice_two_state
    /auto_examples/single_molecule/plot_microtime_selection_minimal
+   /auto_examples/single_molecule/plot_background_rate
    /auto_examples/single_molecule/plot_burstfilter_with_selection
    /auto_examples/single_molecule/plot_microtime_selection_example_fixed
    /auto_examples/single_molecule/plot_hmm_surrogate
+   /auto_examples/single_molecule/plot_hmm_variational_bayes
    /auto_examples/single_molecule/plot_clsm_superres_esrrf
+   /auto_examples/single_molecule/plot_kalman_burst_detection
    /auto_examples/single_molecule/plot_single_molecule_pda_1
    /auto_examples/single_molecule/plot_clsm_superres_limitations
+   /auto_examples/single_molecule/plot_two_cde
    /auto_examples/single_molecule/plot_burst_analysis_json
+   /auto_examples/single_molecule/plot_burstml_two_state
    /auto_examples/single_molecule/plot_clsm_superres_resolution_curve
    /auto_examples/single_molecule/plot_hmm_burst_pipeline
+   /auto_examples/single_molecule/plot_burst_feature_clustering
    /auto_examples/single_molecule/plot_fret_burst_analysis
    /auto_examples/single_molecule/plot_hmm_lifetime_posterior
    /auto_examples/single_molecule/plot_burstfilter_dynamic_enhanced

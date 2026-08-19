@@ -255,7 +255,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -333,6 +333,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -618,7 +625,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -696,6 +703,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1108,14 +1122,11 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="saving-tables.html#the-hdf5-file">The HDF5 file</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins: adding a format without rebuilding</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#where-tttrlib-looks">Where tttrlib looks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#controlling-it">Controlling it</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#seeing-what-happened">Seeing what happened</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#writing-one">Writing one</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#the-five-contracts">The five contracts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#what-a-plugin-cannot-do">What a plugin cannot do</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plugins.html#containment-and-its-limits">Containment, and its limits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">11. Drop-in plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#where-tttrlib-looks">11.1. Where tttrlib looks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#what-a-plugin-can-contribute">11.2. What a plugin can contribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#the-example-plugin">11.3. The example plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html#writing-one">11.4. Writing one</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="burst-analysis.html">4. Burst Analysis</a><ul>
@@ -1255,6 +1266,12 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="performance_guide.html#example-checklist">Example Checklist</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation against reference implementations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="validation.html#what-is-compared-against-what">What is compared against what</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validation.html#reading-the-register">Reading the register</a></li>
+<li class="toctree-l2"><a class="reference internal" href="validation.html#reproducing">Reproducing</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="workflows.html">1. Workflow Index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tttr-core.html">2. TTTR Core, Selections, Masks, and I/O</a></li>
@@ -1265,41 +1282,43 @@ data model.</p>
 <li class="toctree-l2"><a class="reference internal" href="clsm-flim-guide.html">7. CLSM, FLIM, and Image Workflows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="localization-guide.html">8. Image Localization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fit-guide.html">9. Fluorescence Decay Fitting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tttr.html">10. TTTR objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="single_molecule.html">11. Single-molecule fluorescence</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imaging.html">12. Fluorescence imaging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">13. Tools</a></li>
-<li class="toctree-l2"><a class="reference internal" href="verbosity.html">14. Verbosity / Debug output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zreferences.html">15. References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipelines.html">10. Pipelines: reproducible data processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plugins.html">11. Drop-in plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tttr.html">12. TTTR objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="single_molecule.html">13. Single-molecule fluorescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imaging.html">14. Fluorescence imaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">15. Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="verbosity.html">16. Verbosity / Debug output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zreferences.html">17. References</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#example-gallery">Example Gallery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules/index.html">Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html">10.1. TTTR files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Header">10.2. Header</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Operations">10.3. Operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Selections">10.4. Selections</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#TTTR-ranges">10.5. TTTR ranges</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html">12.1. TTTR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Header">12.2. Header</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Operations">12.3. Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#Selections">12.4. Selections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/tttr.html#TTTR-ranges">12.5. TTTR ranges</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/correlation.html">Correlators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/fcs.html">Fluorescence correlation spectroscopy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/decay.html">Fluorescence decay and lifetime analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html">12.1. Imaging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Mean-lifetime">12.2. Mean lifetime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Formats">12.3. Formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pg4-file">12.4. pg4 file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pr4-file">12.5. pr4 file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Overview">12.6. Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Applications">12.7. Applications</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Image-markers">12.8. Image markers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#CLSMImage">12.9. CLSMImage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Decay-moments">12.10. Decay moments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">11.1. Burst Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html">14.1. Imaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Mean-lifetime">14.2. Mean lifetime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Formats">14.3. Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pg4-file">14.4. pg4 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#pr4-file">14.5. pr4 file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Overview">14.6. Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Applications">14.7. Applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Image-markers">14.8. Image markers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#CLSMImage">14.9. CLSMImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging.html#Decay-moments">14.10. Decay moments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/imaging_mle.html">14.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/single-molecule.html">13.1. Burst Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pda.html">13.3. Photon distribution analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/hmm_bva.html">Dynamic FRET: HMM and BVA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/features.html">11.2. Fluorescence intensity analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">12.12. Image correlation spectroscopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/features.html">13.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/ics.html">14.12. Image correlation spectroscopy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">Example Gallery</a><ul>

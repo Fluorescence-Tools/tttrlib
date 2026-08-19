@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.000** total execution time for 3 files **from auto_examples/miscellaneous**:
+**00:00.000** total execution time for 6 files **from auto_examples/miscellaneous**:
 
 .. container::
 
@@ -39,5 +39,14 @@ Computation times
      - 00:00.000
      - 0.0
    * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_histogram_benchmark.py` (``plot_histogram_benchmark.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_registry_composition.py` (``plot_registry_composition.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_richardson_lucy_deconvolution.py` (``plot_richardson_lucy_deconvolution.py``)
+     - 00:00.000
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_miscellaneous_plot_watershed_marching_squares.py` (``plot_watershed_marching_squares.py``)
      - 00:00.000
      - 0.0

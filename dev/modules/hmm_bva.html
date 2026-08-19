@@ -257,7 +257,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -335,6 +335,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -618,7 +625,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -696,6 +703,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -869,7 +883,7 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="tttr.html">10.1. TTTR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tttr.html">12.1. TTTR files</a></li>
 
 
 
@@ -877,7 +891,7 @@
 <li class="toctree-l1"><a class="reference internal" href="correlation.html">Correlators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fcs.html">Fluorescence correlation spectroscopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="decay.html">Fluorescence decay and lifetime analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="imaging.html">12.1. Imaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imaging.html">14.1. Imaging</a></li>
 
 
 
@@ -887,12 +901,12 @@
 
 
 
-<li class="toctree-l1"><a class="reference internal" href="imaging_mle.html">12.11. Polarization resolved lifetime MLE</a></li>
-<li class="toctree-l1"><a class="reference internal" href="single-molecule.html">11.1. Burst Analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pda.html">11.3. Photon distribution analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="imaging_mle.html">14.11. Polarization resolved lifetime MLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="single-molecule.html">13.1. Burst Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pda.html">13.3. Photon distribution analysis</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Dynamic FRET: HMM and BVA</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">11.2. Fluorescence intensity analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ics.html">12.12. Image correlation spectroscopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">13.2. Fluorescence intensity analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ics.html">14.12. Image correlation spectroscopy</a></li>
 </ul>
 </div>
 </nav></div>
@@ -1003,8 +1017,8 @@ streams = tttrlib.HMM.simulate_bursts(true, [list(t) for t in times], seed=1)
 eng = tttrlib.HMM()
 eng.set_bursts([list(map(int, t)) for t in times],
                [list(map(int, s)) for s in streams], n_streams=2)
-print(eng.get_n_bursts(), &#39;bursts&#39;, eng.get_n_photons(), &#39;photons&#39;,
-      len(eng.get_unique_dt()), &#39;unique dt&#39;)
+print(eng.get_n_bursts(), 'bursts', eng.get_n_photons(), 'photons',
+      len(eng.get_unique_dt()), 'unique dt')
 <br/></pre></div>
 </div>
 </div>
@@ -1018,15 +1032,15 @@ print(eng.get_n_bursts(), &#39;bursts&#39;, eng.get_n_photons(), &#39;photons&#3
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>fits = {k: eng.fit(k, n_restarts=3, max_iter=500, tol=1e-7, seed=0) for k in (1, 2, 3)}
 for k, f in fits.items():
-    print(f&#39;{k} state(s): logL={f.loglik:9.1f}  BIC={f.bic():9.1f}  &#39;
-          f&#39;({f.n_iter} EM maps, converged={f.converged})&#39;)
+    print(f'{k} state(s): logL={f.loglik:9.1f}  BIC={f.bic():9.1f}  '
+          f'({f.n_iter} EM maps, converged={f.converged})')
 
 best = min(fits.values(), key=lambda m: m.bic())
-print(&#39;\nselected states:&#39;, best.n_states())
+print('\nselected states:', best.n_states())
 # order states by donor probability for a stable comparison with the truth
 order = np.argsort(best.obs_np[:, 0])[::-1]
-print(&#39;recovered emission (FRET) matrix:\n&#39;, np.round(best.obs_np[order], 3))
-print(&#39;true emission matrix:\n&#39;, np.round(true.obs_np, 3))
+print('recovered emission (FRET) matrix:\n', np.round(best.obs_np[order], 3))
+print('true emission matrix:\n', np.round(true.obs_np, 3))
 <br/></pre></div>
 </div>
 </div>
@@ -1039,14 +1053,14 @@ print(&#39;true emission matrix:\n&#39;, np.round(true.obs_np, 3))
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>path, icl = eng.viterbi_path(best)
-print(&#39;ICL =&#39;, round(icl, 1))
+print('ICL =', round(icl, 1))
 
 # states of the photons in the first burst
 b0, b1 = 0, len(times[0])
 fig, ax = plt.subplots(figsize=(8, 2))
-ax.step(np.arange(b1 - b0), path[b0:b1], where=&#39;mid&#39;)
-ax.set(xlabel=&#39;photon index in burst&#39;, ylabel=&#39;state&#39;, yticks=[0, 1],
-       title=&#39;Viterbi state path (burst 0)&#39;)
+ax.step(np.arange(b1 - b0), path[b0:b1], where='mid')
+ax.set(xlabel='photon index in burst', ylabel='state', yticks=[0, 1],
+       title='Viterbi state path (burst 0)')
 plt.tight_layout()
 <br/></pre></div>
 </div>
@@ -1079,7 +1093,7 @@ dynamic = [np.concatenate([(rng.random(50) &lt; (0.15 if rng.random() &lt; .5 el
                            for _ in range(8)]) for _ in range(200)]
 
 res = {}
-for name, b in [(&#39;static&#39;, static), (&#39;dynamic&#39;, dynamic)]:
+for name, b in [('static', static), ('dynamic', dynamic)]:
     d, bounds = build_tttr(b)
     bva = tttrlib.BVA(d); bva.set_donor([0]); bva.set_acceptor([1])
     bva.compute(bounds, n_slice)   # positional: (n, 2) bursts, photons/slice
@@ -1095,11 +1109,11 @@ for name, b in [(&#39;static&#39;, static), (&#39;dynamic&#39;, dynamic)]:
 line_p, line_s = tttrlib.BVA.compute_static_bva_line(list(p), n_slice)
 
 fig, ax = plt.subplots(figsize=(6, 5))
-ax.plot(line_p, line_s, &#39;k-&#39;, lw=2, label=&#39;shot-noise (static) line&#39;)
-ax.scatter(*res[&#39;static&#39;], s=14, alpha=.5, label=&#39;static bursts&#39;)
-ax.scatter(*res[&#39;dynamic&#39;], s=14, alpha=.5, label=&#39;dynamic bursts&#39;)
-ax.set(xlabel=&#39;proximity ratio mean&#39;, ylabel=&#39;proximity ratio std&#39;,
-       xlim=(0, 1), ylim=(0, 0.5), title=&#39;Burst Variance Analysis&#39;)
+ax.plot(line_p, line_s, 'k-', lw=2, label='shot-noise (static) line')
+ax.scatter(*res['static'], s=14, alpha=.5, label='static bursts')
+ax.scatter(*res['dynamic'], s=14, alpha=.5, label='dynamic bursts')
+ax.set(xlabel='proximity ratio mean', ylabel='proximity ratio std',
+       xlim=(0, 1), ylim=(0, 0.5), title='Burst Variance Analysis')
 ax.legend()
 plt.tight_layout()
 <br/></pre></div>

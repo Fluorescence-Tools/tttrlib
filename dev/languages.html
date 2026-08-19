@@ -254,7 +254,7 @@
 
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -332,6 +332,13 @@
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -615,7 +622,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="plugins.html">
-    Plugins: adding a format without rebuilding
+    Drop-in plugins
   </a>
 </li>
 
@@ -693,6 +700,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="performance_guide.html">
     Performance Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="validation.html">
+    Validation against reference implementations
   </a>
 </li>
 
@@ -1037,7 +1051,7 @@ SPC, …) and exposes the same per-photon arrays.</p>
 Python</label><div class="sd-tab-content docutils">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tttrlib</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">&quot;bh_spc132.spc&quot;</span><span class="p">,</span> <span class="s2">&quot;SPC-130&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tttrlib</span><span class="o">.</span><span class="n">TTTR</span><span class="p">(</span><span class="s2">"bh_spc132.spc"</span><span class="p">,</span> <span class="s2">"SPC-130"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>                         <span class="c1"># number of photons</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">macro_times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>               <span class="c1"># first macro time</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">micro_times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>               <span class="c1"># first micro time</span>
@@ -1050,7 +1064,7 @@ Python</label><div class="sd-tab-content docutils">
 R</label><div class="sd-tab-content docutils">
 <div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">library</span><span class="p">(</span><span class="n">tttrlib</span><span class="p">)</span>
 
-<span class="n">data</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">TTTR</span><span class="p">(</span><span class="s">&quot;bh_spc132.spc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SPC-130&quot;</span><span class="p">)</span>
+<span class="n">data</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">TTTR</span><span class="p">(</span><span class="s">"bh_spc132.spc"</span><span class="p">,</span><span class="w"> </span><span class="s">"SPC-130"</span><span class="p">)</span>
 <span class="nf">TTTR_size</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="w">                        </span><span class="c1"># number of photons</span>
 <span class="nf">TTTR_get_macro_time_at</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="m">0L</span><span class="p">)</span><span class="w">       </span><span class="c1"># first macro time</span>
 <span class="nf">TTTR_get_micro_time_at</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="m">0L</span><span class="p">)</span><span class="w">       </span><span class="c1"># first micro time</span>
@@ -1065,7 +1079,7 @@ R</label><div class="sd-tab-content docutils">
 Java</label><div class="sd-tab-content docutils">
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io.github.fluorescencetools.tttrlib.*</span><span class="p">;</span>
 
-<span class="n">TTTR</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TTTR</span><span class="p">(</span><span class="s">&quot;bh_spc132.spc&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SPC-130&quot;</span><span class="p">);</span>
+<span class="n">TTTR</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TTTR</span><span class="p">(</span><span class="s">"bh_spc132.spc"</span><span class="p">,</span><span class="w"> </span><span class="s">"SPC-130"</span><span class="p">);</span>
 <span class="kt">long</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="na">size</span><span class="p">();</span><span class="w">                       </span><span class="c1">// number of photons</span>
 <span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="na">get_macro_time_at</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
 <span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="na">get_micro_time_at</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
@@ -1081,9 +1095,9 @@ Java</label><div class="sd-tab-content docutils">
 <input id="sd-tab-item-11" name="sd-tab-set-2" type="radio">
 <label class="sd-tab-label" data-sync-group="tab" data-sync-id="javascript" for="sd-tab-item-11">
 JavaScript</label><div class="sd-tab-content docutils">
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">tttrlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;tttrlib&#39;</span><span class="p">);</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">tttrlib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">'tttrlib'</span><span class="p">);</span>
 
-<span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">TTTR</span><span class="p">(</span><span class="s1">&#39;bh_spc132.spc&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SPC-130&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">tttrlib</span><span class="p">.</span><span class="nx">TTTR</span><span class="p">(</span><span class="s1">'bh_spc132.spc'</span><span class="p">,</span><span class="w"> </span><span class="s1">'SPC-130'</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">size</span><span class="p">());</span><span class="w">                    </span><span class="c1">// number of photons</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">macroTimes</span><span class="p">[</span><span class="mf">0</span><span class="p">]);</span><span class="w">             </span><span class="c1">// BigInt: 56916n</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">microTimes</span><span class="p">[</span><span class="mf">0</span><span class="p">]);</span><span class="w">             </span><span class="c1">// first micro time</span>
