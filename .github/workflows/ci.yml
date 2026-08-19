@@ -990,6 +990,12 @@ jobs:
     needs: setup
     if: needs.setup.outputs.has_src == 'true'
     runs-on: ${{ matrix.os }}
+    # The default is GitHub's 6-hour job limit, which is not a timeout so much
+    # as a way to lose an afternoon: `apt-get install libhdf5-dev` hung on a
+    # Linux runner and the job sat there for 6 h before being cancelled, so the
+    # run reported "cancelled" with no failing test and nothing to read. A
+    # build-and-test of this suite takes ~25 min; 90 fails fast and says where.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.src_matrix) }}
@@ -1029,6 +1035,9 @@ jobs:
       # only HDF5 has to be installed by hand.
       - name: Install HDF5 (Linux)
         if: runner.os == 'Linux'
+        # Its own timeout as well: a hung mirror is the one step that has
+        # actually done this, and 10 minutes is generous for two packages.
+        timeout-minutes: 10
         run: |
           sudo apt-get update
           sudo apt-get install -y libhdf5-dev cmake
