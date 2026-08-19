@@ -1,0 +1,71 @@
+name: apt-install
+description: >
+  Install Debian packages on a GitHub-hosted Linux runner, without inheriting
+  the runner's habit of hanging on a dead Ubuntu mirror.
+
+# Why this exists
+#
+# Every Linux job in this workflow starts by apt-installing a handful of build
+# dependencies, and that step is the single largest source of red runs here --
+# never once because of anything in the commit under test.
+#
+# The cause is specific. The runner's sources point at a *mirrorlist*
+# (`mirror+file:/etc/apt/apt-mirrors.txt`) whose first entry is
+# http://azure.archive.ubuntu.com. When that host is unwell it does not refuse
+# connections, it black-holes them, so apt retries it with backoff -- Ign:,
+# Ign:, Ign: -- for minutes on end. https://archive.ubuntu.com, the next entry,
+# answers correctly the whole time. On 2026-08-19 this cost three runs: the
+# first lost the Build & Test matrix, and the next left the Java, R and ASAN
+# jobs sitting on their first step for over an hour, because unlike Build &
+# Test those steps had no timeout at all and would have run to the six-hour
+# job limit.
+#
+# So: point apt at the archive that works, then retry what is left. The
+# `timeout` wrapper is what makes the retry meaningful -- the failure mode is
+# a *hang*, not a non-zero exit, so a plain `cmd || cmd` would never fire.
+#
+# Kept as one composite action rather than copied into nine jobs so the next
+# apt workaround is written once. Add packages via `with: packages:`.
+
+inputs:
+  packages:
+    description: Space-separated list of packages to install.
+    required: true
+  attempts:
+    description: How many times to try before giving up.
+    required: false
+    default: "3"
+  timeout-seconds:
+    description: Wall clock allowed for each apt invocation.
+    required: false
+    default: "180"
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        APT_PACKAGES: ${{ inputs.packages }}
+        APT_ATTEMPTS: ${{ inputs.attempts }}
+        APT_TIMEOUT: ${{ inputs.timeout-seconds }}
+      run: |
+        set -uo pipefail
+        # Only the Azure-hosted images carry a mirrorlist; guard so this is a
+        # no-op anywhere else rather than an error.
+        if [ -f /etc/apt/apt-mirrors.txt ]; then
+          echo "mirrorlist was: $(tr '\n' ' ' < /etc/apt/apt-mirrors.txt)"
+          echo "https://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+        fi
+        for attempt in $(seq 1 "$APT_ATTEMPTS"); do
+          echo "::group::apt attempt $attempt: $APT_PACKAGES"
+          if timeout "$APT_TIMEOUT" sudo apt-get update && \
+             timeout "$APT_TIMEOUT" sudo apt-get install -y $APT_PACKAGES; then
+            echo "::endgroup::"
+            exit 0
+          fi
+          echo "::endgroup::"
+          echo "::warning::apt attempt $attempt hung or failed; retrying"
+          sleep 10
+        done
+        echo "::error::apt failed $APT_ATTEMPTS times even against archive.ubuntu.com -- infrastructure, not a defect in this commit."
+        exit 1

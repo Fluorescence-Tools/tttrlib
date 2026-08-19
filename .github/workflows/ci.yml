@@ -194,9 +194,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Install SWIG
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y swig
+        uses: ./.github/actions/apt-install
+        with:
+          packages: swig
       - name: Generate Python, R and Java wrappers
         run: ./tools/check_swig_multilang.sh
 
@@ -233,9 +233,11 @@ jobs:
         with:
           r-version: '4.4.3'
       - name: Install system dependencies
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev cmake ninja-build
+      - name: Install SWIG from source if apt's is too old
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev cmake ninja-build
           # apt has SWIG 4.2, and ext/CMakeLists.txt withholds -DSWIGWORDSIZE64
           # from the R module below SWIG 4.4. Without it SWIG resolves uint64_t
           # to 'unsigned long long' while the compiler says 'unsigned long', and
@@ -324,9 +326,9 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev swig cmake ninja-build
       - name: Configure and build JNI module
         run: |
           cmake -S . -B build/java -G Ninja \
@@ -406,9 +408,9 @@ jobs:
           # fails when its dependency path matches nothing.
           cache-dependency-path: ext/js/pkg/package.json
       - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev swig cmake ninja-build
       # SWIG's Node-API backend generates against node-addon-api's napi.h, which
       # is an npm package rather than a system header.
       - name: Install Node-API headers
@@ -507,9 +509,9 @@ jobs:
           # fails when its dependency path matches nothing.
           cache-dependency-path: ext/js/pkg/package.json
       - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake ninja-build
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev swig cmake ninja-build
       - name: Install Node-API headers
         working-directory: ext/js/pkg
         run: npm install
@@ -611,9 +613,12 @@ jobs:
           cache-dependency-path: ext/js/pkg/package.json
       - name: Install build dependencies (Linux)
         if: runner.os == 'Linux'
+        uses: ./.github/actions/apt-install
+        with:
+          packages: cmake ninja-build libhdf5-dev binutils
+      - name: Install a current SWIG (Linux)
+        if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libhdf5-dev binutils
           # ubuntu-22.04's apt swig is 4.0, which has no Node-API backend
           # ("Unknown engine"); the PyPI wheel carries a current SWIG.
           sudo pip3 install "swig~=4.2.1"
@@ -794,7 +799,9 @@ jobs:
           java-version: '17'
       - name: Install SWIG (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y swig cmake ninja-build
+        uses: ./.github/actions/apt-install
+        with:
+          packages: swig cmake ninja-build
       - name: Install SWIG (macOS)
         if: runner.os == 'macOS'
         run: brew install swig ninja
@@ -1035,47 +1042,13 @@ jobs:
       # only HDF5 has to be installed by hand.
       - name: Install HDF5 (Linux)
         if: runner.os == 'Linux'
-        # This step is the most common infrastructure failure in the workflow
-        # and the only one that has cost whole runs -- twice by 2026-08-19,
-        # neither time with anything wrong in the commit under test.
-        #
-        # The cause is specific, and worth writing down because "apt hung" sent
-        # us at the wrong fix once already. The runner's sources point at a
-        # *mirrorlist* (`mirror+file:/etc/apt/apt-mirrors.txt`) whose first
-        # entry is http://azure.archive.ubuntu.com. When that host is unwell it
-        # does not refuse connections, it black-holes them, so apt retries it
-        # with backoff -- Ign:, Ign:, Ign: -- and spends minutes there before
-        # falling back. The fallback, https://archive.ubuntu.com, answers
-        # immediately and correctly the whole time. So the run dies waiting on
-        # a mirror it does not need.
-        #
-        # Hence: drop the mirrorlist and go straight to the mirror that works.
-        # Guarded, because only the Azure-hosted images have that file.
-        #
-        # The retry stays as the second line of defence, for a slow archive
-        # rather than a dead one. `timeout` is what makes it work at all: the
-        # failure is a *hang*, not a non-zero exit, so a plain `||` retry would
-        # never fire and the job would sit there until it was killed.
-        timeout-minutes: 15
-        run: |
-          set -uo pipefail
-          if [ -f /etc/apt/apt-mirrors.txt ]; then
-            echo "mirrorlist was:"; cat /etc/apt/apt-mirrors.txt
-            echo "https://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt
-          fi
-          for attempt in 1 2 3; do
-            echo "::group::apt attempt $attempt"
-            if timeout 180 sudo apt-get update && \
-               timeout 180 sudo apt-get install -y libhdf5-dev cmake; then
-              echo "::endgroup::"
-              exit 0
-            fi
-            echo "::endgroup::"
-            echo "::warning::apt attempt $attempt hung or failed; retrying"
-            sleep 10
-          done
-          echo "::error::apt failed three times even against archive.ubuntu.com -- infrastructure, not a defect in this commit."
-          exit 1
+        # The workaround this used to carry inline now lives in the composite
+        # action, because it was needed by eight other jobs too -- see
+        # .github/actions/apt-install/action.yml for what the mirrorlist does
+        # and why a plain retry could not have fixed it.
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev cmake
       - name: Install HDF5 (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -2180,9 +2153,9 @@ jobs:
           fetch-depth: 0
           filter: blob:none
       - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libhdf5-dev swig cmake pandoc doxygen graphviz
+        uses: ./.github/actions/apt-install
+        with:
+          packages: libhdf5-dev swig cmake pandoc doxygen graphviz
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
