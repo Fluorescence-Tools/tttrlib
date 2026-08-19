@@ -695,8 +695,13 @@ retired so nobody works the same thing twice.)*
     case), 1e-7 through Python, PRD-111 θ Jacobian to 1e-4. Cost **4.4×** one
     forward on 41³ (the ≤ 3× guess was wrong: 1 forward + 1 re-run + a
     memory-bound sweep at ~2.5×; a tabulated variant was slower) —
-    `okf/validation/diffusion_adjoint.md`. Next: stage 1 (voxel features)
-    and 2 (learned field on the six PRD-111 sites), unowned.
+    `okf/validation/diffusion_adjoint.md`. Then moved to tttrlib as
+    `modules/math/include/LatticeDiffusion.h` (tttrlib `213561dfb`, its own
+    `test/cpp/test_lattice_diffusion.cpp`), vendored back into bff with
+    `DiffusionSolver.cpp` a thin wrapper (bff `343e53d`;
+    `test/test_vendored_headers.py` keeps MlpCore.h + LatticeDiffusion.h
+    identical). Next: stage 1 (voxel features) and 2 (learned field on the
+    six PRD-111 sites), unowned.
   - Touching: `imp.bff/include/DiffusionSolver.h`, `imp.bff/src/DiffusionSolver.cpp`,
     `imp.bff/pyext/IMP_bff.types.i`, `imp.bff/pyext/src/sampling/smoluchowski.py`,
     `imp.bff/test/quenching/`, PRD-115.
