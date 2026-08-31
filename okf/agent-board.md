@@ -66,37 +66,39 @@ are still claims and still binding.
 
 ## Open — advertised, unowned
 
-- **T-20260831-03 · [chisurf] MaxEnt's nuisance search is the slow path *and* the
-  correct one — route its inner solve to tttrlib**
+- **T-20260831-03 · [chisurf] MaxEnt's nuisance search costs 160x for nothing on
+  well-formed data — route its inner solve to tttrlib**
   - Status: 🆕 open
   - Owner: —
   - Opened: 2026-08-31 · Picked: — · Done: —
-  - Why: `maxent_decay/core/solver.py` delegates to
-    `tttrlib.solve_tcspc_mem_lifetime` **only** when `optimize_nuisance` is
-    false. Measured on a 512-channel decay, 120-lifetime grid:
+  - **CORRECTED the same day.** This was first written as "the 173x slower path
+    is the one that fits (chi2r 1.03 vs 1.50)". That was **my test fixture, not
+    ChiSurf**: it was built with `np.convolve`, which point-samples the decay at
+    each channel's *left edge*, while a TCSPC channel integrates over the bin.
+    Measured against a 64x-oversampled binned reference, `np.convolve` has
+    rms 6.5e-3 and ChiSurf's `_build_Fi_lifetimes` rms **2.5e-4** — ChiSurf's
+    discretisation is the correct one, and the naive convolution lands exactly
+    **+0.50 channels** early. The nuisance search was spending 20 s undoing that.
+  - With the fixture averaged down from a 32x grid, the real numbers are:
 
     | path | time | χ²ᵣ |
     |---|---:|---:|
-    | tttrlib fast path (`optimize_nuisance=False`) | **139 ms** | 1.50 |
-    | Python nuisance loop (`optimize_nuisance=True`) | **24 064 ms** | **1.03** |
+    | compiled fast path (`optimize_nuisance=False`) | **125 ms** | **1.041** |
+    | Python nuisance loop (`optimize_nuisance=True`) | 20 011 ms | 1.040 |
 
-    The 173× slower path is the one that produces the good fit, and it is the
-    one users need: with nuisance fitting off, a half-channel IRF misalignment
-    is absorbed as a spurious fast component that dominates the short end of the
-    τ grid (that is why `docs/guides/62_maxent_decay.md`'s figure has it on).
+    So the search buys **0.0006** in χ²ᵣ for **160x** the run time when there is
+    no real shift. It still matters when there *is* one — an IRF measured on a
+    different day — which is exactly when it is slowest.
   - What it is **not**: a duplicate to delete. `solve_tcspc_mem_lifetime` takes
     `timeshift` / `background` / `lamp_scatter` as **fixed inputs**; the outer
-    search over them is ChiSurf's own and has no upstream equivalent. Deleting
-    the Python path would delete a feature.
+    search over them is ChiSurf's own and has no upstream equivalent.
   - Interface: keep the outer search; make `_eval_mem_lifetime_single` call the
     compiled solve instead of the in-tree `_run_mem`. The design matrix already
-    crosses the boundary in one call (`tcspc_build_fi_lifetimes`), so this is the
-    remaining Python inner loop.
-  - Tests: the outer search must land on the same nuisance values it does today
-    (timeshift 0.5 channels, IRF background 9 on the guide's fixture) and χ²ᵣ
-    must not rise. `chisurf/plugins/fluorescence_decay/maxent_decay/test/test_solver_contract.py`
-    already pins the result contract both paths must satisfy.
-
+    crosses the boundary in one call (`tcspc_build_fi_lifetimes`), so the inner
+    MEM iteration is the remaining Python loop.
+  - Tests: `maxent_decay/test/test_solver_contract.py` pins the result contract
+    both paths satisfy, and its χ²ᵣ bound is now 1.5 (was 5.0 — loose enough to
+    pass with a half-channel-wrong fixture, which is how this hid).
 - **T-20260831-02 · [chisurf] h2mm: delete the in-tree compute engine; tttrlib becomes required**
   - Status: ✅ done — `core/h2mm.py` 1210 → 376 lines; 136 tests green
   - Owner: opus-5 (tttrlib-routing session, 2026-08-31)
