@@ -68,9 +68,17 @@ are still claims and still binding.
 
 - **T-20260831-03 · [chisurf] MaxEnt's nuisance search costs 160x for nothing on
   well-formed data — route its inner solve to tttrlib**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-31 · Picked: — · Done: —
+  - Status: ✅ done — chisurf `44f4f1578`; nuisance run 20 012 → 6 938 ms
+  - Owner: opus-5 (tttrlib-routing session, 2026-08-31)
+  - Opened: 2026-08-31 · Picked: 2026-08-31 · Done: 2026-08-31
+  - Done by delegating the *inner* optimiser: `tttrlib.tcspc_run_mem` takes the
+    same `(H, g0, m, const_chi2, nu, max_iter, tol, min_prob)` the in-tree
+    `_run_mem` did, returns the same solution to the last printed digit
+    (χ²ᵣ 1.040852, identical `p`) and is **3.1×** faster (70 ms vs 222 ms).
+    The outer search is untouched, as scoped.
+  - One contract change: the compiled optimiser does not report per iteration,
+    so `progress_cb` fires **once** with the converged values and `history` has
+    a single entry. Nothing read the intermediate values.
   - **CORRECTED the same day.** This was first written as "the 173x slower path
     is the one that fits (chi2r 1.03 vs 1.50)". That was **my test fixture, not
     ChiSurf**: it was built with `np.convolve`, which point-samples the decay at
