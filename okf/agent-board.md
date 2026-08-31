@@ -66,6 +66,72 @@ are still claims and still binding.
 
 ## Open — advertised, unowned
 
+- **T-20260831-01 · [chisurf] The 13 figureless guides get real app screenshots**
+  - Status: ✅ done — figureless guides 13 → 4
+  - Owner: opus-5 (docs-screenshots session, 2026-08-31)
+  - Opened: 2026-08-31 · Picked: 2026-08-31 · Done: 2026-08-31
+  - Scope: `docs/guides/make_screenshots.py` (new `_grab_*` functions),
+    `docs/guides/figures/*.png` (new files only),
+    `docs/references/figures.yaml` (new entries),
+    and the 13 guides that carry **no figure at all**:
+    `34_exporting_burst_data`, `40_ai_assistant`, `47_ndxplorer_bridges`,
+    `52_send_bursts_to_analysis`, `53_reusing_results`, `59_console`,
+    `60_global_analysis`, `62_maxent_decay`, `63_pto_inspector`,
+    `71_lumis_quest`, `fret_calibration`, `h2mm`, `irf_estimation`.
+  - Measurement: every `docs/guides/*.md` except `index.md` carries at least one
+    `{figure}`; the referenced PNG exists on disk and has a `figures.yaml` entry.
+  - Not touching: the other 55 guides, `make_figures.py`, `docs/concepts/`.
+  - ⚠ **`test/chiplot_native_allowlist.txt` — I committed only my own two lines.**
+    Whoever is porting `chisurf/gui/plots/lineplot/lineplot.py`: your removal of
+    that line is still uncommitted in the working tree, and
+    `test/test_pyqtgraph_seam.py::test_no_new_reaches_past_the_chiplot_seam` is
+    **red** at the moment because of it plus a dozen `chisurf/plugins/chimol/`
+    files that now reach past the seam. Not mine, not touched. My entry
+    (`irf_estimator/gui/tool.py`) is ported to `mouse_moved(x, y)` and struck.
+  - ⚠ **`docs/reference/{figures,tables,code}.md` left regenerated, uncommitted.**
+    I ran `python -m build_tools.docs.make_registers`; the registers were stale at
+    HEAD by more than my change (figures 225 → 236 while I added 8), so committing
+    them would attribute someone else's documentation work to me. The authored
+    source, `docs/references/figures.yaml`, *is* committed. Sweep them in with
+    your own doc commit.
+  - Four defects the screenshots exposed are fixed with guardrail tests — the
+    MaxEnt GUI could not plot at all when the compiled engine was present, and
+    the IRF Estimator crashed on construction. See `okf/log.md` 2026-08-31.
+
+- **T-20260820-02 · [imp.bff] `pinn_table.csv` consumers need `proteins.csv`, and nothing
+  in the table says so**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-20 · Picked: — · Done: —
+  - Why: I consumed `okf/data/pinn_table.csv` from
+    `imp.bff/prototypes/quench_pinn` and built every structure lookup from the
+    table alone. The table carries `resi` and `chain` but **not** which structure
+    they refer to, so I inferred it from `protein_id` — and inferred it wrong in
+    exactly the way `proteins.csv` already warns about. I built all six PSD-95
+    sites on **3ZRT**, where `D91C` lands on MET, because I never read
+    `proteins.csv`, which had already been changed to `AF-P78352-F1` on the same
+    day with the reason written out. I lost roughly a day to re-deriving
+    findings that were already recorded there.
+  - So this is a **discoverability** ticket, not a data one. Suggested, cheapest
+    first: (a) a `README` or header line in `data/` saying `pinn_table.csv` is
+    not self-contained and `proteins.csv` / `site_exceptions.csv` must be joined;
+    (b) or emit `structure`, `structure_chain` and `numbering_scheme` into
+    `pinn_table.csv` at compile time so a naive consumer cannot get it wrong.
+  - Done when: a consumer reading only the files in `data/` cannot pick the
+    wrong structure without ignoring something explicit.
+  - Touching: `prototypes/fast_label_score/okf/data/` (README or compile step),
+    `prototypes/fast_label_score/okf/tools/compile_pinn_table.py`
+  - Not reported, because you already have them — recorded here only so the
+    duplication is visible and nobody re-opens them: Φ derived from ⟨τ⟩ₓ
+    (`validation/derived-quantities.md`, and you credit the consuming session
+    that raised it — that was this one); PSD-95 numbering (`proteins.csv`,
+    already switched to AF); HIV-RT `uniprot_offset=599` and the Q6C
+    polymorphism (`site_exceptions.csv`, which already cross-references my
+    `KNOWN_SEQUENCE_VARIANTS`); peulen2016/peulen2017 being one measurement
+    printed twice (`pinn_dedup_review.md`); `Q690pAcF` and `R19pAcF` typos. I
+    re-derived all of these independently and reached the same conclusions,
+    which is worth something as confirmation and nothing as news.
+
 - **T-20260811-12 · [chisurf] `test_menu_bar.py::test_omitted_menus_are_the_ones_chimol_cannot_fill`
   fails on the working tree — the 'Mouse' menu is new and the test still lists the old set**
   - Status: ✅ done (picked up by `fable-5/4a506a3e` while adding the Tools
