@@ -66,6 +66,51 @@ are still claims and still binding.
 
 ## Open — advertised, unowned
 
+- **T-20260831-02 · [chisurf] h2mm: delete the in-tree compute engine; tttrlib becomes required**
+  - Status: ✅ done — `core/h2mm.py` 1210 → 376 lines; 136 tests green
+  - Owner: opus-5 (tttrlib-routing session, 2026-08-31)
+  - Opened: 2026-08-31 · Picked: 2026-08-31 · Done: 2026-08-31
+  - **Result: the two long-red perf-guard tests are green, and ChiSurf is now
+    *faster* than the reference** — `test_ab_vs_h2mm_c.py` reports 1.04× the
+    `H2MM_C` time/iter on 2 states and **0.48×** on 3. That suite is the one
+    that matters most now: it checks against an independent implementation
+    rather than against a port of ourselves. The whole H2MM + burst_gs suite
+    dropped from 535 s to 138 s.
+  - Tests: `test_h2mm_engine.py` kept its behaviour tests (re-pointed at
+    `engines`) and lost the three that poked deleted cache internals
+    (`_build_caches`, `_build_caches_eig`, `_fill_caches`) — that property now
+    lives upstream. `test_engine_cancellation.py` rewritten: the "falls back"
+    half is gone, and what is pinned is that neither a stop nor a real error is
+    swallowed. `test_estep_runs.py` deleted (its subject was the deleted code);
+    its semantic half moved into `test_backend_routing.py`.
+  - Gotcha for anyone doing the same to another engine: `fit_one`'s surrogate
+    branch went through the in-tree `fit_states`, whose `surrogate=` arm only
+    forwarded to `surrogate.estimate_model`. It now calls that directly — and
+    `fit_states` no longer takes `surrogate=`, so the surrogate entry point is
+    `fit_one(engine="surrogate"|"surrogate-refine")`.
+  - Docs were part of it: `docs/guides/h2mm.md`, the plugin's
+    `H2MM_01_Simulated_smFRET.ipynb`, and `make_screenshots.py`'s
+    `_grab_burst_export_table` all called `h2mm.viterbi` / `h2mm.fit_states`
+    and would have broken. The regenerated figure is byte-identical.
+  - Follows `T-20260811-16`, which routed every call site and explicitly scoped
+    this out. Everything needed to decide it is measured: the two engines agree
+    to 1e-15, the in-tree one is **44×** slower (302.3 ms vs 6.8 ms for the same
+    50-map EM), and since that ticket nothing outside `engines.py` can reach it.
+  - Scope: `core/h2mm.py` loses its compute (`_estep`, the EM drivers, the
+    transition-power caches, `optimize`, `viterbi`, `fit_states`,
+    `_sync_numba_threads`) and keeps its **data structures** — `H2mmModel`,
+    `BurstPhotons`, `prepare_bursts`, `factory_model`, `simulate_bursts`,
+    `_row_normalize`. `engines.py` loses the fallback branches, the
+    `CHISURF_H2MM_BACKEND=numba` escape and `_backend_fallback`.
+  - Watch: `fit_one`'s surrogate branch went through the in-tree `fit_states`,
+    whose surrogate arm only forwards to `surrogate.estimate_model` — call that
+    directly rather than keeping the engine alive for it.
+  - Tests affected: `test_h2mm_engine.py` (14), `test_ab_vs_h2mm_c.py` (2, the
+    perf guard that has been red — it benchmarks the in-tree engine and should
+    pass once it benchmarks the compiled one), `test_backend_routing.py` (6),
+    `test_engine_cancellation.py` (4), `test_estep_runs.py` (2),
+    `test_surrogate.py` (5), `test_export.py` (5).
+
 - **T-20260831-01 · [chisurf] The 13 figureless guides get real app screenshots**
   - Status: ✅ done — figureless guides 13 → 4
   - Owner: opus-5 (docs-screenshots session, 2026-08-31)
