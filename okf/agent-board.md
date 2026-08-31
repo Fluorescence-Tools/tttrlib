@@ -454,9 +454,24 @@ are still claims and still binding.
     `test/data/numba_parity/`.
 
 - **T-20260811-16 · [chisurf] h2mm: route the two call sites that bypass the backend selector**
-  - Status: 🆕 open
-  - Owner: —
-  - Opened: 2026-08-11 · Picked: — · Done: —
+  - Status: ✅ done — chisurf `<pending>`; 4 sites routed, 6 tests
+  - Owner: opus-5 (tttrlib-routing session, 2026-08-31)
+  - Opened: 2026-08-11 · Picked: 2026-08-31 · Done: 2026-08-31
+  - **Correction on pickup: there are FOUR, not two.** Besides `analysis.py`
+    and `burst_gs/core.py`, `surrogate.py:441` imports `optimize` from
+    `.h2mm`, and so does **`surrogate_tttrlib.py:107` — the C++ surrogate
+    refines its estimate with the numba optimiser**, which is the one that
+    most obviously was not intended.
+  - **Semantics pinned first, as the ticket asks: the two engines AGREE.**
+    `optimize(model, data, max_iter=1, tol=0.0).loglik` is
+    -1758.418772759227 (numba) vs -1758.4187727592298 (tttrlib), rel 1.6e-15;
+    at `max_iter=2`, -1667.0670214702757 vs -1667.0670214702777. So
+    `fixed_loglik` needs **no** special path — the branch the ticket warned
+    might be necessary is not.
+  - Prerequisite that was not in the ticket: the numba engine could not run at
+    all (`NameError: get_num_threads` in `_estep`, 8/14 of
+    `test_h2mm_engine.py` red) until commit `7d4077349` today. Comparing the
+    backends was impossible before that.
   - Why: `burst_h2mm/core/engines.py` selects tttrlib-or-numba per call, but two
     places import the numba engine **directly** and so always get numba even
     when the C++ backend is available and 2× faster:
@@ -480,8 +495,26 @@ are still claims and still binding.
   - Done when: no module outside `engines.py` imports compute entry points from
     `core.h2mm`; data structures (`BurstPhotons`, `H2mmModel`, `prepare_bursts`)
     may still be imported from there.
-  - Touching: `chisurf/plugins/burst/burst_h2mm/core/{engines.py,analysis.py}`,
-    `chisurf/plugins/burst/burst_gs/core.py`, their tests.
+  - Touching: `chisurf/plugins/burst/burst_h2mm/core/{engines.py,analysis.py,
+    surrogate.py,surrogate_tttrlib.py}`, `chisurf/plugins/burst/burst_gs/core.py`,
+    `tests/{test_backend_routing.py,test_engine_cancellation.py}`.
+  - **Measured on landing: tttrlib 6.8 ms vs fallback 302.3 ms for the same
+    50-map EM — 44×, with logliks agreeing to 9.6e-16.** That is what the four
+    bypasses were costing wherever they ran.
+  - `engines.py` gained routed `optimize()` and `fit_states()`; the fallback
+    entry points are now `_optimize_numba` / `_fit_states_numba`, so a call site
+    cannot reach the slow engine by writing the obvious name. **This renamed a
+    symbol a test was patching** — `test_engine_cancellation.py`'s sentinel
+    patched `engines.fit_states`, which is now the router; retargeted to
+    `_fit_states_numba`, matching `_viterbi_numba` beside it.
+  - The guard is `test_backend_routing.py::test_no_module_imports_compute_entry_points_from_the_engine`.
+    **It was verified to fail** on a reintroduced bypass — the first version
+    passed vacuously because `parents[4]` made it scan `chisurf/chisurf`, which
+    does not exist.
+  - **Next, and deliberately NOT done here** (the ticket scopes it out): delete
+    `h2mm.py`'s compute kernels and make tttrlib required. Everything needed to
+    decide is now measured — the engines agree to 1e-15, the fallback is 44×
+    slower, and nothing outside `engines.py` can reach it any more.
 
 *(`T-20260811-07` — PRD-035, the priority ticket — was advertised here by the
 "Remove numba dependencies" session and is now **picked**: see **Active**.)*
