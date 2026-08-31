@@ -66,6 +66,37 @@ are still claims and still binding.
 
 ## Open — advertised, unowned
 
+- **T-20260831-03 · [chisurf] MaxEnt's nuisance search is the slow path *and* the
+  correct one — route its inner solve to tttrlib**
+  - Status: 🆕 open
+  - Owner: —
+  - Opened: 2026-08-31 · Picked: — · Done: —
+  - Why: `maxent_decay/core/solver.py` delegates to
+    `tttrlib.solve_tcspc_mem_lifetime` **only** when `optimize_nuisance` is
+    false. Measured on a 512-channel decay, 120-lifetime grid:
+
+    | path | time | χ²ᵣ |
+    |---|---:|---:|
+    | tttrlib fast path (`optimize_nuisance=False`) | **139 ms** | 1.50 |
+    | Python nuisance loop (`optimize_nuisance=True`) | **24 064 ms** | **1.03** |
+
+    The 173× slower path is the one that produces the good fit, and it is the
+    one users need: with nuisance fitting off, a half-channel IRF misalignment
+    is absorbed as a spurious fast component that dominates the short end of the
+    τ grid (that is why `docs/guides/62_maxent_decay.md`'s figure has it on).
+  - What it is **not**: a duplicate to delete. `solve_tcspc_mem_lifetime` takes
+    `timeshift` / `background` / `lamp_scatter` as **fixed inputs**; the outer
+    search over them is ChiSurf's own and has no upstream equivalent. Deleting
+    the Python path would delete a feature.
+  - Interface: keep the outer search; make `_eval_mem_lifetime_single` call the
+    compiled solve instead of the in-tree `_run_mem`. The design matrix already
+    crosses the boundary in one call (`tcspc_build_fi_lifetimes`), so this is the
+    remaining Python inner loop.
+  - Tests: the outer search must land on the same nuisance values it does today
+    (timeshift 0.5 channels, IRF background 9 on the guide's fixture) and χ²ᵣ
+    must not rise. `chisurf/plugins/fluorescence_decay/maxent_decay/test/test_solver_contract.py`
+    already pins the result contract both paths must satisfy.
+
 - **T-20260831-02 · [chisurf] h2mm: delete the in-tree compute engine; tttrlib becomes required**
   - Status: ✅ done — `core/h2mm.py` 1210 → 376 lines; 136 tests green
   - Owner: opus-5 (tttrlib-routing session, 2026-08-31)
