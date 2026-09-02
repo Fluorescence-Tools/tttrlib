@@ -32,6 +32,26 @@ std::vector<double> maxent_invert(
     return r.p;
 }
 
+std::vector<double> maxent_invert_weighted(
+    const std::vector<double>& A,
+    const std::vector<double>& b,
+    const std::vector<double>& weights,
+    const std::vector<double>& prior,
+    double nu,
+    int n_rows, int n_cols,
+    int max_iter, double tol
+) {
+    std::vector<double> H, g0;
+    double const_term = 0.0;
+    build_normal_equations(A, b, weights, n_rows, n_cols, H, g0, const_term);
+    std::vector<double> m =
+        prior.empty() ? std::vector<double>(n_cols, 1.0) : prior;
+    const double nu_run = 2.0 * nu * nu;
+    const MaxEntResult r =
+        run_mem(H, g0, m, const_term, nu_run, max_iter, tol, 1e-12);
+    return r.p;
+}
+
 } // namespace tttrlib
 
 // ---- registry entries (Registry.h, core): declared next to the code, registered
