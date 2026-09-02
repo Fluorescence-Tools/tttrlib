@@ -1145,3 +1145,233 @@ void Correlator::get_corr_normalized(double** output, int* n_output){
     if(!is_valid) run();
     curve.get_corr_normalized(output, n_output);
 }
+
+// ---- the species matrix: one pass over the stream for every pair -----------
+// Helpers for Correlator::species_matrix_correlation. They are the multi-tau
+// ("wahl") kernel with the weight dimension carried through it: the time axis
+// and the pointer walk are shared by every species pair, only the accumulator
+// gains an n_species x n_species block per photon pair.
+namespace {
+
+/// Coarsen a shared time axis that carries `n_species` weight rows
+/// (photon-major, `w[i * n_species + s]`). Same rule as
+/// CorrelatorPhotonStream::coarsen -- halve the times, merge photons landing
+/// in one coarse bin, left-to-right accumulation -- except that an entry is
+/// dropped only when it is zero in EVERY row. Dropping is an optimisation,
+/// not part of the estimator: a zero weight contributes zero to every product,
+/// and its presence cannot change which survivors merge (they merge on their
+/// own times). Returns the compacted length; works in place.
+size_t coarsen_species_matrix(
+        std::vector<unsigned long long>& t, std::vector<double>& w,
+        size_t n, size_t n_species, bool halve
+) {
+    size_t j = 0, i = 0;
+    while (i < n) {
+        const unsigned long long tt = halve ? t[i] / 2 : t[i];
+        size_t m = i + 1;
+        if (halve) while (m < n && t[m] / 2 == tt) m++;
+        double* dst = w.data() + j * n_species;
+        const double* src = w.data() + i * n_species;
+        if (j != i) for (size_t s = 0; s < n_species; s++) dst[s] = src[s];
+        for (size_t k = i + 1; k < m; k++) {
+            const double* add = w.data() + k * n_species;
+            for (size_t s = 0; s < n_species; s++) dst[s] += add[s];
+        }
+        bool any = false;
+        for (size_t s = 0; s < n_species; s++) if (dst[s] != 0.0) { any = true; break; }
+        if (any) { t[j] = tt; j++; }
+        i = m;
+    }
+    return j;
+}
+
+/// One cascade of the multi-tau walk for every species pair at once.
+/// `corr` is lag-major / pair-minor -- `corr[lag * n_species^2 + a*n_species + b]`
+/// -- so one photon pair's contribution is a contiguous rank-1 n x n block.
+void ccf_wahl_species_block(
+        size_t start_1, size_t end_1, size_t start_2, size_t end_2,
+        size_t i_casc, size_t n_bins, size_t n_species,
+        const std::vector<unsigned long long>& taus, double* corr,
+        const unsigned long long* t, const double* w
+) {
+    const size_t n_pair = n_species * n_species;
+    const size_t scale = (size_t) 1 << i_casc;
+    const size_t offset = (size_t) taus[i_casc * n_bins] / scale;
+    size_t p = start_2;
+    for (size_t i1 = start_1; i1 < end_1; i1++) {
+        const double* wa = w + i1 * n_species;
+        const size_t edge_l = (size_t) t[i1] + offset;
+        const size_t edge_r = edge_l + n_bins;
+        for (size_t i2 = p; i2 < end_2; i2++) {
+            if ((size_t) t[i2] > edge_r) break;
+            if ((size_t) t[i2] > edge_l) {
+                const size_t index = (size_t) t[i2] - edge_l + i_casc * n_bins;
+                const double* wb = w + i2 * n_species;
+                double* c = corr + index * n_pair;
+                for (size_t a = 0; a < n_species; a++) {
+                    const double va = wa[a];
+                    if (va == 0.0) continue;
+                    double* ca = c + a * n_species;
+                    for (size_t b = 0; b < n_species; b++) ca[b] += va * wb[b];
+                }
+            } else p++;
+        }
+    }
+}
+
+/// The unnormalized species matrix: the shared stream walked once per cascade,
+/// coarsened once per cascade, every pair accumulated on the way. Mirrors
+/// Correlator::ccf_wahl (same cascade order, same thread split, same
+/// thread-local reduction) with the weight dimension carried through.
+void ccf_wahl_species_matrix(
+        size_t n_casc, size_t n_bins, size_t n_species,
+        const std::vector<unsigned long long>& taus,
+        std::vector<double>& corr,
+        std::vector<unsigned long long> t,   // by value: coarsened in place
+        std::vector<double> w
+) {
+    size_t n = coarsen_species_matrix(t, w, t.size(), n_species, false);
+    const unsigned int max_threads = correlator_num_threads();
+    const size_t min_block = 16384;   // photons per thread worth forking for
+    for (size_t i_casc = 0; i_casc < n_casc; i_casc++) {
+        size_t n_threads = std::min<size_t>(max_threads, n / min_block);
+        if (n_threads <= 1) {
+            ccf_wahl_species_block(0, n, 0, n, i_casc, n_bins, n_species,
+                                   taus, corr.data(), t.data(), w.data());
+        } else {
+            const size_t scale = (size_t) 1 << i_casc;
+            const size_t offset = (size_t) taus[i_casc * n_bins] / scale;
+            const size_t block = (n + n_threads - 1) / n_threads;
+            const unsigned long long* tp = t.data();
+            const double* wp = w.data();
+            std::vector<std::vector<double>> local(n_threads);
+            std::vector<std::thread> workers;
+            workers.reserve(n_threads);
+            for (size_t th = 0; th < n_threads; th++) {
+                workers.emplace_back([&, th]() {
+                    size_t lo = th * block;
+                    size_t hi = std::min(n, lo + block);
+                    if (lo >= hi) return;
+                    // first partner photon this block can pair with
+                    unsigned long long edge_l = tp[lo] + offset;
+                    size_t start_2 = std::upper_bound(tp, tp + n, edge_l) - tp;
+                    local[th].assign(corr.size(), 0.0);
+                    ccf_wahl_species_block(lo, hi, start_2, n, i_casc, n_bins, n_species,
+                                           taus, local[th].data(), tp, wp);
+                });
+            }
+            for (auto& x : workers) x.join();
+            for (size_t th = 0; th < n_threads; th++) {
+                if (local[th].empty()) continue;
+                for (size_t i = 0; i < corr.size(); i++) corr[i] += local[th][i];
+            }
+        }
+        n = coarsen_species_matrix(t, w, n, n_species, true);
+    }
+}
+
+}  // namespace
+
+void Correlator::species_matrix_correlation(
+        const unsigned long long *macro_times, int n_photons,
+        const double *weights, int n_species, int n_weights_per_species,
+        int n_bins, int n_casc, const std::string &method,
+        double **out_x_axis, int *out_n_lags,
+        double **out_matrix, int *out_n_pairs, int *out_n_matrix_lags
+) {
+    if (n_species < 1)
+        throw std::invalid_argument("species_matrix_correlation: n_species must be at least 1");
+    if (n_photons < 1)
+        throw std::invalid_argument("species_matrix_correlation: the photon stream is empty");
+    if (n_weights_per_species != n_photons)
+        throw std::invalid_argument(
+                "species_matrix_correlation: weights must be (n_species, n_photons); "
+                "got n_photons=" + std::to_string(n_photons) +
+                ", weights columns=" + std::to_string(n_weights_per_species));
+
+    const std::string method_name = method.empty() ? "wahl" : method;
+    const size_t n_pairs = (size_t) n_species * (n_species + 1) / 2;
+
+    // The lag axis: taken from a curve configured exactly like a per-pair
+    // Correlator's, so the axis (and felekyan's different one) is never a
+    // second definition living here.
+    Correlator axis_source;
+    axis_source.set_n_bins(n_bins);
+    axis_source.set_n_casc(n_casc);
+    axis_source.set_correlation_method(method_name);
+    std::vector<unsigned long long> taus = axis_source.curve.x_axis;
+    const size_t n_lags = taus.size();
+
+    axis_source.curve.get_x_axis(out_x_axis, out_n_lags);
+    *out_matrix = (double *) malloc(sizeof(double) * n_pairs * n_lags);
+    if (*out_matrix == nullptr) { free(*out_x_axis); *out_x_axis = nullptr; throw std::bad_alloc(); }
+    *out_n_pairs = (int) n_pairs;
+    *out_n_matrix_lags = (int) n_lags;
+
+    if (method_name != "wahl") {
+        // No shared-axis kernel for this method: compose it per pair, which
+        // is what the caller would have done anyway. Correct, not fast.
+        auto* mt = const_cast<unsigned long long*>(macro_times);
+        size_t pair_index = 0;
+        for (int i = 0; i < n_species; i++) {
+            auto* wi = const_cast<double*>(weights + (size_t) i * n_photons);
+            for (int j = i; j < n_species; j++) {
+                auto* wj = const_cast<double*>(weights + (size_t) j * n_photons);
+                Correlator c;
+                c.set_n_bins(n_bins);
+                c.set_n_casc(n_casc);
+                c.set_correlation_method(method_name);
+                c.set_macrotimes(mt, n_photons, mt, n_photons);
+                c.set_weights(wi, n_photons, wj, n_photons);
+                c.run();
+                double* co; int nco;
+                c.get_corr_normalized(&co, &nco);
+                std::memcpy((*out_matrix) + pair_index * n_lags, co,
+                            sizeof(double) * (size_t) std::min<int>(nco, (int) n_lags));
+                free(co);
+                pair_index++;
+            }
+        }
+        return;
+    }
+
+    // ---- the single pass ---------------------------------------------------
+    // Weights go photon-major so one photon's row of species weights is
+    // contiguous; that is what makes the per-photon-pair update a rank-1 block.
+    std::vector<double> w_photon_major((size_t) n_photons * n_species);
+    for (int s = 0; s < n_species; s++) {
+        const double* row = weights + (size_t) s * n_photons;
+        for (int i = 0; i < n_photons; i++)
+            w_photon_major[(size_t) i * n_species + s] = row[i];
+    }
+    std::vector<unsigned long long> times(macro_times, macro_times + n_photons);
+
+    std::vector<double> raw(n_lags * (size_t) n_species * n_species, 0.0);
+    ccf_wahl_species_matrix((size_t) n_casc, (size_t) n_bins, (size_t) n_species,
+                            taus, raw, std::move(times), std::move(w_photon_major));
+
+    // Normalisation is per pair and unchanged: the per-pair path normalises
+    // with the UNCOARSENED stream (ccf_wahl works on copies), so the weight
+    // sums and dt come from the caller's arrays, summed in the same order
+    // CorrelatorPhotonStream::sum_of_weights uses.
+    std::vector<double> sum_w((size_t) n_species, 0.0);
+    for (int s = 0; s < n_species; s++) {
+        const double* row = weights + (size_t) s * n_photons;
+        sum_w[s] = std::accumulate(row, row + n_photons, 0.0);
+    }
+    const unsigned long long dt = macro_times[n_photons - 1] - macro_times[0];
+
+    const size_t n_pair_block = (size_t) n_species * n_species;
+    std::vector<double> pair_curve(n_lags);
+    size_t pair_index = 0;
+    for (int i = 0; i < n_species; i++) {
+        for (int j = i; j < n_species; j++) {
+            for (size_t k = 0; k < n_lags; k++)
+                pair_curve[k] = raw[k * n_pair_block + (size_t) i * n_species + j];
+            normalize_ccf_wahl(sum_w[i], dt, sum_w[j], dt, taus, pair_curve, (size_t) n_bins);
+            std::memcpy((*out_matrix) + pair_index * n_lags,
+                        pair_curve.data(), sizeof(double) * n_lags);
+            pair_index++;
+        }
+    }
+}

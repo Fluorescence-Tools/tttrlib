@@ -556,6 +556,78 @@ public:
             const std::vector<signed char> &routing_channels_2
     );
 
+    /*!
+     * @brief Correlate a whole species weight matrix in ONE pass over the
+     *        photon stream (the batched form of filtered FCS).
+     *
+     * Species-filtered FCS (fFCS) applies `n_species` per-photon
+     * lifetime-filter weight streams to the SAME arrival times and needs
+     * every auto- (i,i) and cross- (i,j) correlation among them --
+     * n_species*(n_species+1)/2 curves. Composing that from one `Correlator`
+     * per pair walks the identical stream that many times.
+     *
+     * It does not have to. In fFCS every pair shares the arrival times, and
+     * both weight-independent halves of the multi-tau kernel -- the
+     * coarsening of the time axis and the pointer walk that finds each
+     * photon's partners -- can therefore be done once for all pairs. This
+     * entry carries the shared time axis with `n_species` weight rows
+     * attached, coarsens them together, and updates the whole matrix as a
+     * rank-1 outer product per photon pair (the accumulator is lag-major,
+     * pair-minor, so one pair's contribution is a contiguous n*n block).
+     *
+     * The result is bit-identical to the per-pair composition
+     * single-threaded, not merely close. Coarsening merges photons that land
+     * in one coarse bin by time alone; the only weight-dependent step is
+     * dropping an entry whose merged weight is zero, and here an entry is
+     * dropped only when it is zero in *every* row. That difference cannot
+     * change the estimator -- a zero weight contributes zero to every
+     * product, and a dropped or retained zero cannot change which survivors
+     * merge, because they merge on their own times. (With threads on, the
+     * two agree to ~1e-12 relative: the reduction order of the partial sums
+     * differs, exactly as it does between two runs of the per-pair path.)
+     *
+     * The single-pass kernel is the multi-tau ("wahl") one. Any other
+     * `method` -- "felekyan", "laurence", a plugin kernel -- is composed
+     * per pair internally instead, so this entry is always correct and is
+     * fast where the shared-axis argument holds.
+     *
+     * @param[in] macro_times Shared macro-time stream (every pair correlates
+     * these same arrival times; only the per-photon weights differ).
+     * @param[in] n_photons Number of photons in `macro_times`.
+     * @param[in] weights Row-major `(n_species, n_photons)` weight matrix --
+     * one per-photon weight stream per species (a lifetime filter evaluated
+     * at each photon's micro time).
+     * @param[in] n_species Number of species (rows of `weights`).
+     * @param[in] n_weights_per_species Columns of `weights`; must equal
+     * `n_photons`.
+     * @param[in] n_bins Multi-tau correlation bins per cascade.
+     * @param[in] n_casc Multi-tau cascades.
+     * @param[in] method Correlation method name; empty or "default" means
+     * "wahl" (the only method with a single-pass kernel, see above).
+     * @param[out] out_x_axis Lag axis in macro-time-tick units (identical for
+     * every pair; multiply by the macro-time resolution for seconds).
+     * Allocated here with `malloc`, as every other `Correlator` getter does;
+     * the caller (or the binding's typemap) owns and frees it.
+     * @param[out] out_n_lags Number of lag points (`n_casc * n_bins + 1`).
+     * @param[out] out_matrix Row-major `(n_pairs, n_lags)` normalized
+     * correlation matrix, allocated here with `malloc`. Pairs are packed
+     * upper-triangular in `(i, j)`, `i <= j`, row-major:
+     * `pair_index(i, j) = i * n_species - i * (i - 1) / 2 + (j - i)`, i.e.
+     * `(0,0), (0,1), ..., (0,n-1), (1,1), ..., (n-1,n-1)`. The
+     * auto-correlations are the pairs with `j == i`.
+     * @param[out] out_n_pairs Number of pairs (`n_species*(n_species+1)/2`).
+     * @param[out] out_n_matrix_lags Lag points per row of `out_matrix`
+     * (equal to `*out_n_lags`; its own output so the matrix shape is
+     * self-describing on the binding side).
+     */
+    static void species_matrix_correlation(
+            const unsigned long long *macro_times, int n_photons,
+            const double *weights, int n_species, int n_weights_per_species,
+            int n_bins, int n_casc, const std::string &method,
+            double **out_x_axis, int *out_n_lags,
+            double **out_matrix, int *out_n_pairs, int *out_n_matrix_lags
+    );
+
 };
 
 #endif //TTTRLIB_CORRELATOR_H

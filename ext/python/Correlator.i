@@ -31,6 +31,15 @@
 // vectors only; no Python objects touched).
 TTTRLIB_NOGIL(Correlator::run)      // src/Correlator.cpp:84
 
+// species_matrix_correlation: the shared macro-time stream and the full
+// (n_species, n_photons) weight matrix go in once; the (n_pairs, n_lags)
+// normalized-correlation matrix and its shared lag axis come back once.
+%apply (unsigned long long* IN_ARRAY1, int DIM1) {(const unsigned long long *macro_times, int n_photons)}
+%apply (double* IN_ARRAY2, int DIM1, int DIM2) {(const double *weights, int n_species, int n_weights_per_species)}
+%apply (double** ARGOUTVIEWM_ARRAY1, int* DIM1) {(double **out_x_axis, int *out_n_lags)}
+%apply (double** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(double **out_matrix, int *out_n_pairs, int *out_n_matrix_lags)}
+TTTRLIB_NOGIL(Correlator::species_matrix_correlation)
+
 %include "Correlator.h"
 
 #ifdef SWIGPYTHON
