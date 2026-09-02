@@ -299,15 +299,22 @@ class TestPileUpAgainstCoates(unittest.TestCase):
     """
 
     def _coates(self, model, data, rep_MHz, dead_ns, meas_s, inclusive):
+        # chisurf's edge-case semantics (2026-09-02, one kernel for both
+        # trees): unscaled below the pulse deficit, p capped below one,
+        # and the analytic p->0 limit in empty channels.
         rep, dead = rep_MHz * 1e6, dead_ns * 1e-9
         cs = np.cumsum(data)
-        n_det = int(cs[-1])
+        n_det = float(cs[-1])
         live = meas_s - n_det * dead
-        n_pulses = max(live * rep, n_det)
+        n_pulses = live * rep
+        if n_pulses <= n_det:
+            return model.copy()
         used = cs if inclusive else np.concatenate([[0.0], cs[:-1]])
-        r = -np.log(1.0 - data / (n_pulses - used))
-        r = np.where(r == 0, 1.0, r)
-        sf = data / r
+        remaining = n_pulses - used
+        p = np.minimum(data / remaining, 1.0 - 1e-12)
+        r = -np.log(1.0 - p)
+        empty = r <= 0.0
+        sf = np.where(empty, remaining, data / np.where(empty, 1.0, r))
         return model * (sf / sf.sum() * len(data))
 
     def test_matches_the_inclusive_transcription_exactly(self):
@@ -322,6 +329,32 @@ class TestPileUpAgainstCoates(unittest.TestCase):
         rel = np.abs(got - excl).max() / np.abs(got).max()
         self.assertGreater(rel, 1e-6)   # the two conventions are distinguishable ...
         self.assertLess(rel, 1e-3)      # ... and differ by one channel's counts
+
+    def test_a_too_short_measurement_time_leaves_the_model_unscaled(self):
+        """Coates diverges when the pulses cannot account for the photons;
+        the model must come back untouched, not as NaN (chisurf's fix)."""
+        n = 64
+        model = np.exp(-np.arange(n) * 0.1)
+        data = np.full(n, 1e6)
+        got = model.copy()
+        # 1e-6 s of measurement cannot supply 6.4e7 photons at 80 MHz.
+        tttrlib.add_pile_up_to_model(got, data, 80.0, 100.0, 1e-6, "coates", 0, -1)
+        np.testing.assert_array_equal(got, model)
+        self.assertTrue(np.all(np.isfinite(got)))
+
+    def test_an_empty_channel_takes_the_analytic_limit_not_zero(self):
+        """A channel with zero counts made eq. 4 a 0/0; the old kernel zeroed
+        the model there, the analytic p->0 limit keeps it smooth."""
+        rng = np.random.default_rng(9)
+        n = 128
+        model = np.exp(-np.arange(n) * 0.15)
+        data = rng.poisson(model / model.sum() * 2e4).astype(float)
+        assert (data == 0).any(), "the fixture needs empty channels"
+        got = model.copy()
+        tttrlib.add_pile_up_to_model(got, data, 80.0, 100.0, 10.0, "coates", 0, -1)
+        want = self._coates(model, data, 80.0, 100.0, 10.0, True)
+        np.testing.assert_allclose(got, want, rtol=1e-12)
+        self.assertTrue(np.all(got[data == 0] > 0.0))
 
 
 # ---------------------------------------------------------------------------

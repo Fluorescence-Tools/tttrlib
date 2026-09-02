@@ -701,18 +701,11 @@ void sconv(double *fit, double *p, double *lamp, int start, int stop) {
 
 /* shifting lamp */
 void shift_lamp(double *lampsh, double *lamp, double ts, int n_points, double out_value) {
-    int tsint = (int) (floor(ts));
-    double tsdbl = ts - (double) tsint;
-    int out_left = 0, out_right = 0, j;
-
-    if (tsint < 0) out_left = -tsint;
-    if (tsint + 1 > 0) out_right = tsint + 1;
-
-    for (j = 0; j < out_left; j++) lampsh[j] = out_value;
-    for (j = out_left; j < (n_points - out_right); j++)
-        lampsh[j] = lamp[j + tsint] * (1 - tsdbl) + lamp[j + tsint + 1] * (tsdbl);
-    for (j = (n_points - out_right); j < n_points; j++) lampsh[j] = out_value;
-
+    // The body is `shift_lamp_ad<double>` in the header, so that a consumer
+    // holding only the header -- imp.bff's TCSPC decay node, where the
+    // timeshift is a fit parameter -- shifts a response function with this
+    // implementation rather than a second one of its own.
+    shift_lamp_ad<double>(lampsh, lamp, ts, n_points, out_value);
 }
 
 
@@ -726,9 +719,11 @@ void add_pile_up_to_model(
         int start,
         int stop
 ){
+    // Window clamping lives in the template. (The line this replaces,
+    // `stop = std::min(n_data, n_model);`, unconditionally overwrote a
+    // caller's stop -- the parameter was silently ignored.)
     stop = stop < 0 ? n_data : std::min(n_data, stop);
     start = start < 0 ? 0 : std::min(n_data, start);
-    stop = std::min(n_data, n_model);
 if (is_verbose()) {
     std::clog << "ADD PILE-UP" << std::endl;
     std::clog << "-- Repetition_rate [MHz]: " << repetition_rate << std::endl;
@@ -743,35 +738,18 @@ if (is_verbose()) {
 if (is_verbose()) {
         std::clog << "-- pile_up_model: " << pile_up_model << std::endl;
 }
-        repetition_rate *= 1e6;
-        instrument_dead_time *= 1e-9;
-        std::vector<double> cum_sum(n_data);
-        std::partial_sum(data, data + n_data, cum_sum.begin(), std::plus<double>());
-        // long is 32 bits on Windows; a decay can hold more than 2^31 photons.
-        long long n_pulse_detected = (long long) cum_sum[cum_sum.size() - 1];
-        double total_dead_time = n_pulse_detected * instrument_dead_time;
-        double live_time = measurement_time - total_dead_time;
-        double n_excitation_pulses = std::max(live_time * repetition_rate, (double) n_pulse_detected);
-if (is_verbose()) {
-        std::clog << "-- live_time [s]: " << live_time << std::endl;
-        std::clog << "-- total_dead_time [s]: " << total_dead_time << std::endl;
-        std::clog << "-- n_pulse_detected [#]: " << n_pulse_detected << std::endl;
-        std::clog << "-- n_excitation_pulses [#]: " << n_excitation_pulses << std::endl;
-}
-        // Coates, 1968, eq. 2 & 4
-        std::vector<double> rescaled_data(n_data);
-
-        for(int i = start; i < stop; i++)
-            rescaled_data[i] = -std::log(1.0 - data[i] / (n_excitation_pulses - cum_sum[i]));
-        for(int i = start; i < stop; i++)
-            rescaled_data[i] = (rescaled_data[i] == 0) ? 1.0 : rescaled_data[i];
-        // rescale model function to preserve data counting statistics
-        std::vector<double> sf(n_data);
-        for(int i = start; i < stop; i++)
-            sf[i] = data[i] / rescaled_data[i];
-        double s = std::accumulate(sf.begin(),sf.end(),0.0);
-        for(int i = start; i < stop; i++)
-            model[i] = model[i] * (sf[i] / s * n_data);
+        // The body is `add_pile_up_to_model_ad<double>` in the header, so a
+        // consumer holding only the header -- imp.bff's TCSPC decay node --
+        // applies pile-up with this implementation rather than a second one
+        // of its own. The template also carries chisurf's edge-case
+        // semantics: a too-short measurement time leaves the model unscaled
+        // instead of producing NaN, the detection probability is capped
+        // strictly below one, and an empty channel takes the analytic p->0
+        // limit instead of forcing the model to zero there.
+        add_pile_up_to_model_ad<double>(
+            model, n_model, data, n_data,
+            repetition_rate, instrument_dead_time, measurement_time,
+            start, stop);
     }
 }
 
