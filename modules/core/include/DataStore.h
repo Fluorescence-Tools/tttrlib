@@ -1299,6 +1299,14 @@ public:
     std::size_t n_rows() const { return n_rows_; }
     int n_columns() const { return static_cast<int>(columns_.size()); }
 
+    //! A compiled expression together with the buffers it is bound to.
+    /*! Held so a repeated gate -- which is what an interactive selection is --
+        costs only its evaluation, and so the referenced columns are widened
+        once rather than per call. */
+    struct ExpressionProgram;
+    mutable std::map<std::string, std::shared_ptr<ExpressionProgram> >
+        expression_cache_;
+
     Column& column(int i) { return columns_.at(i); }
     const Column& column(int i) const { return columns_.at(i); }
 
@@ -1639,6 +1647,66 @@ public:
         });
         apply(m, how);
     }
+
+    /*!
+     * \brief Select the rows for which a boolean expression is true.
+     *
+     * The general form of a gate, where \ref select_range and the geometric
+     * selectors are fixed shapes: `"(g-b)/(r-b) > 0.3"` names columns and is
+     * compiled once, then evaluated over the store's own memory.
+     *
+     * Columns are referred to by name. Only the columns the expression names
+     * are read, so a gate on two columns of a forty-column store touches two.
+     * The expression is compiled by \ref ExpressionEngine and evaluated a block
+     * of rows at a time, straight into the packed bits of the answer. An
+     * expression over float32 columns is evaluated in single precision -- the
+     * data's own -- so it agrees bit for bit with the same expression in numpy
+     * or pandas; anything else is evaluated in double, with each column
+     * converted as its block is read rather than widened into a copy first.
+     *
+     * Rows a referenced column marks invalid are never selected, the same rule
+     * \ref select_range follows: "not measured" cannot satisfy a condition.
+     * A row past the end of a referenced column is treated the same way.
+     *
+     * Python's `**` may be used for exponentiation, and `&`, `|`, `~` for the
+     * elementwise boolean operators. A result that is not already boolean is
+     * true where it is not zero, as `numpy.ndarray.astype(bool)` is.
+     *
+     * A handful of expressions the engine does not implement -- an unknown
+     * function, or a gate that reads a Bool or String column -- are evaluated
+     * by a general interpreter instead. They give the same answers; they are
+     * simply not fast.
+     *
+     * \param expr boolean expression over the column names
+     * \param how how to combine the result with the current selection
+     *
+     * \throws std::invalid_argument if the expression does not compile, names
+     *         an unknown column, or reads an Int64/UInt64 column whose values
+     *         cannot be represented exactly. Python callers see this as a
+     *         ValueError.
+     */
+    void select_expression(const std::string& expr,
+                           Combine how = Combine::Replace);
+
+    //! The rows an expression selects, without touching the selection.
+    /*! Shared by \ref select_expression and \ref count_expression so the two
+        cannot drift apart. */
+    BitMask expression_mask(const std::string& expr) const;
+
+    //! Drop compiled expressions; anything that moves a column must call this.
+    void clear_expression_cache() const;
+
+    //! Clear the bit of every row a referenced column marks as not measured.
+    void apply_validity(const std::vector<int>& indices, BitMask& m) const;
+
+    /*!
+     * \brief How many rows an expression selects, without changing the
+     *        selection or materialising a mask.
+     *
+     * The cheapest form of the question, for a caller that only wants the
+     * count.
+     */
+    std::size_t count_expression(const std::string& expr) const;
 
     /// Select the rows whose value in `col` equals `value`. For categories and
     /// integer columns, where a range is the wrong question.

@@ -32,6 +32,11 @@ columnar `DataStore`, and **the registry**.
   columns, dictionary-encoded strings, bit-packed masks, zero-copy NumPy/R
   views. The files that *save* one are [`io/store`](../io/store),
   [`io/hdf5`](../io/hdf5), [`io/csv`](../io/csv) and [`io/pto`](../io/pto).
+- **`ExpressionEngine.h`** (header-only) — a string such as
+  `"(g-b)/(r-b) > 0.3"` compiled once and evaluated block-wise over columns:
+  tokeniser, shunting-yard parser, constant folding, common-subexpression
+  elimination, and a SIMD block evaluator that answers a gate as packed bits
+  rather than a float per row. `DataStore::select_expression` is its caller.
 - **`MicrotimeLinearization.h` / `MicrotimeLinearization.cpp`** — per-channel
   DNL correction (look-up table) and micro-time shifts.
 - **`FileCheck.h` / `FileCheck.cpp`** — what a file is: the content sniffers

@@ -2,6 +2,75 @@
 
 ## [Unreleased]
 
+- **`DataStore.select_expression` / `count_expression` run on a new
+  block-vectorised evaluator** (`modules/core/{include,src}/ExpressionEngine`),
+  ported from imp.bff because the dependency runs tttrlib → imp.bff and the
+  second caller could not reach it there. The query is compiled once —
+  tokeniser, shunting-yard, constant folding, common-subexpression elimination
+  — and evaluated 512 rows at a time straight into the packed bits of the row
+  mask, where before it was an ExprTk tree walked once per row into a float
+  array that a second pass then packed. Columns are read in their own type:
+  a gate over float32 columns is evaluated in float32, so it agrees bit for bit
+  with numpy over the same arrays, and anything else is converted per block
+  rather than widened into a full-length copy. **1.3–2.5× faster on every one
+  of ndxplorer's six queries at 100k, 1M and 5M rows**, and 2.5–16× pandas.
+  ExprTk is gone entirely (2026-09-02): a Bool or String column is widened
+  into the program's own double buffer and evaluated by the same engine, an
+  expression the engine does not implement is refused with a `ValueError`
+  rather than answered by a fallback whose multi-argument functions were
+  silently wrong, and `root`/`logn`/`frac` joined the engine so the last
+  correct uses of the fallback kept working. Semantics that changed, all
+  towards numpy's:
+  truthiness is now "not zero is true" rather than `> 0.5`; `min`/`max`
+  propagate NaN; a unary minus before `**` no longer swallows a following
+  comparison (`-x**2 < 0` used to compile as `-((x**2) < 0)`); a number may no
+  longer run straight into a name, so `1e+` is refused instead of evaluating as
+  `1 + e`. A row a referenced column records as never measured is now excluded
+  whether the column stores that as bits or as ranges. Query errors are raised
+  as `std::invalid_argument`, so Python callers see `ValueError` rather than
+  `RuntimeError`.
+
+- **Image kernels and MLP inference paths ported from ermig1979/Simd's
+  concepts** (`junk/Simd`, MIT — credited in each header; re-expressed
+  std-only, nothing linked; survey in `okf/design/simd-port-survey.md`),
+  then made fast and re-measured: `MlpGemm.h` (the `MatGemm` policy extracted
+  from `NeuralNet.cpp`, now threaded over row tiles — the OpenMP path
+  previously bypassed the micro-kernel entirely, so the MLP hot GEMMs ran
+  single-threaded; 2.7× the portable path at batch 512 wall-clock, and
+  1.7–2.6× behind Eigen, both recorded), `MlpQuant.h` (dynamic-range int8
+  MLP inference), `RankFilters.h` (2-D median/min/max/midpoint; integer
+  medians ride a sliding histogram — exact by construction, 2.4× a naive
+  window-sort), `IntegralImage.h` (summed-area tables, ~1100× on repeated
+  rectangle sums), `ResizeImage.h` (separable table-driven area + bilinear,
+  threaded), `FastGaussian.h` (3-box gaussian, running sums, threaded:
+  ~10× the direct convolution at σ=4 on 512²), and `DriftEstimator.h`
+  (pyramid SAD translation search with parabolic sub-pixel refinement —
+  recovers synthetic shifts to < 0.05 px, ~0.5 ms at 192×160).
+  `MlpCore.h` is untouched (imp.bff's vendored copy stays byte-identical).
+  Completing the survey's flagged-useful list, also: `Gradients.h` (Sobel
+  x/y and Laplace-8, clamped-column borders), `WarpAffine.h`
+  (inverse-mapped bilinear affine warp, OpenCV 2x3 convention), bicubic
+  resize (Keys a=-0.5) in `ResizeImage.h`, and `ImageStat.h` (value
+  histogram, intensity-weighted moments m00..m02). All of it is exposed to
+  Python through `ImageOps.h` / `ext/python/ImageOps.i` as NumPy-in/NumPy-out
+  calls (`median_filter`, `resize`, `gaussian_blur`, `sobel_dx`, `laplace`,
+  `warp_affine`, `estimate_drift`, `integral_image_u16`, `image_histogram`,
+  `moments`, ...), with the end-to-end tutorial
+  `examples/miscellaneous/plot_image_kernels.py`. A/B tests against
+  brute-force references for every kernel in `test/cpp/` (also in the
+  header-only CI job), binding-level parity in
+  `test/python/misc/test_image_ops.py`, the example's smoke test in
+  `test/python/misc/test_image_kernel_examples.py`, benchmarks in
+  `benchmarks/bench_mlp_gemm.cpp` (wall clock — the kernels are threaded,
+  which CLOCK_THREAD_CPUTIME_ID cannot see) and
+  `benchmarks/bench_image_kernels.cpp` (results consumed so nothing is
+  optimised away). SIMD pass, measured at 512², OpenMP builds: median 5×5
+  3.5 ms (19× naive, row-striped sliding histogram), Sobel 0.04 ms and
+  affine warp 0.08 ms (row threading), gaussian ~10× direct convolution,
+  area resize 6× its first draft; the MLP GEMM's remaining 2–2.5× gap to
+  Eigen is recorded as the standing blocked-GEMM project (a K×2 micro-kernel
+  unroll measured at noise level and is not counted as a win).
+
 - **`NeuralNet.from_onnx_file` and `from_safetensors_file`: a network trained
   anywhere loads here (and in imp.bff), no ONNX/protobuf library involved.**
   The MLP subset of ONNX — `Gemm` or `MatMul`+`Add` with constant weights,
