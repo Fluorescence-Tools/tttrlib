@@ -3852,3 +3852,20 @@ one supersedes.
     invisible, so it is a ticket anyone can pick.
   - CRITICAL: read the "detector-setup-driven columns" section — do NOT
     continue the green/red hardcoding in `cmd_sm.cpp`.
+- **T-20260902-17 · [chisurf] PDA algebra dedup — pch/pda3c reference relocations (PRD-127) — DONE**
+  - Status: ✅ done — 2026-09-02
+  - Owner: claude/prd-127-pda-dedup (picked up straight from PRD-127, no prior board ticket existed)
+  - Opened: 2026-09-02 · Picked: 2026-09-02 · Done: 2026-09-02
+  - Why: PRD-105 phase-4 register row — Python PDA/PCH copies living beside the tttrlib calls that already superseded them.
+  - Done when: `convolve_pch` and `burst_log_likelihood_reference` have no production callers left in `chisurf/`, each relocated to `test/` as a named frozen reference; `mfd/histogram.py` audited and dispositioned. All true now — see `okf/prds/prd-127.md`'s resolution note (chisurf repo).
+  - Touching: `chisurf/core/fluorescence/pda3c/__init__.py`, `chisurf/core/fluorescence/pda3c/likelihood.py`, `chisurf/core/models/pch/pch.py`, `chisurf/plugins/pch/api/algorithms.py`, `chisurf/plugins/pch/tests/test_algorithms.py`, `test/models/test_pda3c_likelihood.py`, `test/prd_mention_allowlist.txt` (all chisurf repo).
+  - Progress: `pch.convolve_pch` and `pda3c.likelihood.burst_log_likelihood_reference` moved to `test/` (zero production callers, verified not assumed); `mfd/histogram.py`'s per-burst nested sum found to be a genuine generalisation with no `tttrlib.Pda` equivalent (global S1S2 vs per-burst-conditioned), left in place, PRD's own premise corrected. S1S2 cache defect (`2c3930b11`) re-verified intact, outside this PRD's files. 29/29 + 11/11 tests pass. chisurf commit `6e158d7cf`. Pre-existing, unrelated: `chisurf.core.graph` missing (breaks `chisurf.core.fitting.fit` imports broadly) and `test/test_prd_mentions.py` has pre-existing failures on untouched files — flagged, not fixed, out of footprint.
+
+- **T-20260902-18 · [chisurf] GopichSzabo persists its engine across likelihood evaluations (PRD-130) — DONE**
+  - Status: ✅ done — 2026-09-02 (Minimizer move blocked, see below)
+  - Owner: claude/prd-130-gopichszabo (picked up straight from PRD-130, no prior board ticket existed)
+  - Opened: 2026-09-02 · Picked: 2026-09-02 · Done: 2026-09-02
+  - Why: PRD-105 phase-5 register row — the likelihood rebuilt a fresh engine and a redundant numpy eigendecomposition on every scipy evaluation.
+  - Done when: engine persists across evaluations, rebuilding only on scheme-structure change; the guard's real degenerate-scheme refusal survives; `fit()` moves onto `bff.Minimizer`. First two true; the Minimizer move is blocked (`IMP.bff.Minimizer`/MINPACK `lmdif` needs per-burst residuals, `GopichSzabo.log_likelihood()` returns one batched total scalar) — recorded as a follow-on needing a tttrlib API addition in `okf/prds/prd-130.md` (chisurf repo).
+  - Touching: `chisurf/core/fluorescence/burst/gopich_szabo.py`, `test/fluorescence/test_gopich_szabo.py`, `okf/prds/prd-130.md` (all chisurf repo).
+  - Progress: `EngineCache` persists one `tttrlib.GopichSzabo()` per `(n_states, n_colors)`, per-caller scoped (not a module singleton). 139 evaluations → 1 construction on a real fit; answers unchanged (1e-12 parity). 43/43 tests pass (`test/fluorescence/test_gopich_szabo.py`, incl. 10 new). chisurf commit `ad0cb455b`.
