@@ -844,6 +844,42 @@ void BurstFilter::merge_bursts(int max_gap, long long** merge_output, int* merge
     }
 }
 
+void BurstFilter::bursts_from_mask(unsigned char* in_mask, int n_mask,
+                                   int max_gap,
+                                   long long** mask_output, int* mask_dim1,
+                                   int* mask_dim2) {
+    // One pass, runs closed at the trailing sentinel. The merge condition is
+    // the NumPy reference's, expressed with the *exclusive* stop it used:
+    // next_start - prev_stop_exclusive - 1 <= max_gap (bridges gaps of up to
+    // max_gap + 1 -- see the header on why that off-by-one is kept).
+    std::vector<int64_t> out;
+    int64_t start = -1;
+    for (int64_t i = 0; i <= n_mask; ++i) {
+        const bool selected = (i < n_mask) && (in_mask[i] != 0);
+        if (selected && start < 0) {
+            start = i;
+        } else if (!selected && start >= 0) {
+            const int64_t stop = i - 1;                 // inclusive
+            if (!out.empty() && max_gap > 0 &&
+                start - (out.back() + 1) - 1 <= max_gap) {
+                out.back() = stop;
+            } else {
+                out.push_back(start);
+                out.push_back(stop);
+            }
+            start = -1;
+        }
+    }
+    *mask_dim1 = static_cast<int>(out.size() / 2);
+    *mask_dim2 = 2;
+    if (!out.empty()) {
+        *mask_output = (long long*)malloc(out.size() * sizeof(long long));
+        std::copy(out.begin(), out.end(), *mask_output);
+    } else {
+        *mask_output = (long long*)malloc(sizeof(long long)); // non-NULL for ARGOUTVIEWM (empty)
+    }
+}
+
 } // namespace tttrlib
 
 // ---- registry entries (Registry.h, core): declared next to the code, registered

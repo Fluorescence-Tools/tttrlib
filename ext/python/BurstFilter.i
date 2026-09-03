@@ -227,6 +227,8 @@ using json = nlohmann::json;
 %apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **duration_output, int *duration_dim1, int *duration_dim2)};
 %apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **background_output, int *background_dim1, int *background_dim2)};
 %apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **merge_output, int *merge_dim1, int *merge_dim2)};
+%apply(long long** ARGOUTVIEWM_ARRAY2, int* DIM1, int* DIM2) {(long long **mask_output, int *mask_dim1, int *mask_dim2)};
+%apply (unsigned char* IN_ARRAY1, int DIM1) {(unsigned char* in_mask, int n_mask)};
 
 %rename(_reset_to_raw_bursts) tttrlib::BurstFilter::reset_to_raw_bursts;
 %rename(_reapply_filters) tttrlib::BurstFilter::reapply_filters;

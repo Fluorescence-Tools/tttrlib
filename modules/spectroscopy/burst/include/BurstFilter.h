@@ -229,7 +229,34 @@ public:
      * @param n_output Number of elements in output array
      */
     void merge_bursts(int max_gap, long long** merge_output, int* merge_dim1, int* merge_dim2);
-    
+
+    /**
+     * @brief Intervals of consecutive selected photons in a boolean mask.
+     *
+     * The mask-level twin of the search methods: a photon *filter* (count
+     * rate, CUSUM, species gate ...) produces a per-photon selection mask,
+     * and this converts it to inclusive ``[start, stop]`` index pairs.
+     * Static, because it needs no TTTR -- the mask already encodes the
+     * selection.
+     *
+     * Gap rule, ported bit-faithfully from the NumPy reference it replaces
+     * (chisurf ``find_bursts``): with ``max_gap > 0``, two runs are merged
+     * when ``next_start - prev_stop_exclusive - 1 <= max_gap`` -- which
+     * bridges unselected stretches of up to ``max_gap + 1`` photons. That
+     * off-by-one is the reference's documented behaviour (its own doctest
+     * merges a 2-gap at ``max_gap=1``), so it is kept, not corrected:
+     * every existing burst table was built with it.
+     *
+     * @param in_mask selection mask, one entry per photon (0 = unselected)
+     * @param n_mask its length
+     * @param max_gap merge threshold as defined above; 0 = no merging
+     * @param mask_output (k, 2) inclusive [start, stop] pairs
+     */
+    static void bursts_from_mask(unsigned char* in_mask, int n_mask,
+                                 int max_gap,
+                                 long long** mask_output, int* mask_dim1,
+                                 int* mask_dim2);
+
     /**
      * @brief Serialize burst parameters to JSON
      * @return JSON object containing burst parameters
