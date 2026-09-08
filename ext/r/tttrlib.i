@@ -52,9 +52,9 @@
 
 TTTRLIB_R_ENUM_AS_INT(tttrlib::hist::AxisKind)
 TTTRLIB_R_ENUM_AS_INT(tttrlib::hist::HistStorage)
-TTTRLIB_R_ENUM_AS_INT(tttrlib::data::ColumnType)
+TTTRLIB_R_ENUM_AS_INT(pto::ColumnType)
 TTTRLIB_R_ENUM_AS_INT(tttrlib::io::Hdf5WriteMode)
-TTTRLIB_R_ENUM_AS_INT(tttrlib::io::PtoType)
+TTTRLIB_R_ENUM_AS_INT(pto::PtoType)
 
 TTTRLIB_R_ENUM_AS_INT(tttrlib::TiffDType)
 TTTRLIB_R_ENUM_AS_INT(SuperResMethod)

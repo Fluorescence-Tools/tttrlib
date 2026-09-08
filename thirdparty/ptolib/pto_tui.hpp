@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// tttrlib PTO Terminal UI Library (pto_tui.hpp)
+// ptolib PTO Terminal UI Library (pto_tui.hpp)
 #ifndef PTO_TUI_HPP
 #define PTO_TUI_HPP
 
@@ -13,6 +13,14 @@
 #include <algorithm>
 
 #if defined(_WIN32)
+// Before <windows.h>, always: it defines `min` and `max` as macros otherwise,
+// and every `std::min(a, b)` in this file and in ptolib.h then fails to parse.
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#  endif
 #include <windows.h>
 #include <conio.h>
 #else

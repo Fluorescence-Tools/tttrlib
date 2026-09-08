@@ -7,20 +7,18 @@ import tempfile
 import unittest
 import tttrlib
 
-_BUILD_BIN = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../build/modules/io/pto/pto")
-)
-
-
 def _find_pto():
-    """The standalone pto tool: build tree first, then PATH.
+    """The standalone pto tool, which now ships with ptolib.
 
-    Same rule as misc/test_cli.py. An install-only test job -- a wheel or a
-    conda package under test -- has no build tree, so the tests that drive the
-    tool skip instead of failing on a path that was never going to be there.
+    The C99 tool that used to be built under build/modules/io/pto moved to
+    https://github.com/tpeulen/ptolib together with the container it inspects.
+    Point PTOLIB_PTO at a built one, or have it on PATH; without either the
+    tests that drive the tool skip instead of failing on a path that was never
+    going to be there (an install-only test job has no ptolib build).
     """
-    if os.path.isfile(_BUILD_BIN) and os.access(_BUILD_BIN, os.X_OK):
-        return _BUILD_BIN
+    env = os.environ.get("PTOLIB_PTO")
+    if env and os.path.isfile(env) and os.access(env, os.X_OK):
+        return env
     return shutil.which("pto")
 
 

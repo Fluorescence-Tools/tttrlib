@@ -7,11 +7,8 @@ interoperability; this is for keeping what you had.
 
 ## Contents
 
-- **`include/io_store.h`** — the file layout and the API (`write_store`,
-  `read_store`, `read_store_into`, `store_columns`, `store_groups`,
-  `store_has`, region reads).
-- **`src/io_store.cpp`** — the writer and the reader, including the partial
-  and region reads a large table needs.
+- **`include/io_store.h`** — re-exports the `.dstore` API from ptolib (`thirdparty/ptolib/ptolib.h`) under `tttrlib::io`.
+- **`src/io_store.cpp`** — an empty translation unit; the implementation is compiled once in `modules/core/src/DataStore.cpp` (`PTOLIB_IMPLEMENTATION`).
 
 ## Dependencies
 

@@ -9,6 +9,9 @@ PTO — the PhoTon cOntainer
 :Extension: ``.pto`` (a profile tags the stem: ``.mmfdb.pto``, see below)
 :Media type: ``application/x-pto``
 :Built on: EBML (:rfc:`8794`), DocType ``pto``
+:Maintained in: `ptolib <https://github.com/tpeulen/ptolib>`_, ``docs/pto.rst`` — the
+   reference implementation and this text live together there since 2026-09-07;
+   this page is a copy and is refreshed with the vendored header.
 
 PTO is a **container and nothing else**. It binds a set of opaque payloads
 together in one file, gives each one an identity, and lets typed metadata be

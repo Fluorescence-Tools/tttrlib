@@ -4,39 +4,10 @@
 #include "io_store.h"
 %}
 
-%include "std_string.i"
-%include "std_vector.i"
-
-// io_store.h and io_pto.h are spelled in <cstdint> types throughout, and only
-// the Python backend resolves `std::uint64_t` on its own. Everywhere else it
-// stays an unknown type and every offset, size and UID comes out as an opaque
-// SWIGTYPE proxy -- so a Java caller could open a container and then do nothing
-// with what it told them. `stdint.i` would fix it and cannot be included here:
-// see the note at the top of misc_types.i about int64_t on glibc. This says the
-// one thing that is needed instead.
-//
-// Not for R, which gives std::uint64_t its own typemaps in ext/r/tttrlib.i:
-// `unsigned long long` there goes through as.integer(), which is 32-bit and
-// silently NA above 2^31, and a %apply here would overwrite the fix with the
-// very thing it corrects.
-#ifndef SWIGR
-%apply unsigned long long { std::uint64_t };
-#endif
-
-// A SWIG VectorString is not a list and has no __eq__, so
-// store_groups(f) == ['a', 'b'] would be False however right the answer was --
-// every caller ends up writing list(...) round it. group_names/group_paths on
-// DataStore already get this treatment; these are the same shape and should
-// not be the exception. Must precede the %include: a pythonappend declared
-// after the header it applies to is silently ignored.
-#ifdef SWIGPYTHON
-%feature("pythonappend") tttrlib::io::store_groups %{
-    val = list(val)
-%}
-%feature("pythonappend") tttrlib::io::store_columns %{
-    val = list(val)
-%}
-#endif  // SWIGPYTHON
+// The .dstore functions are ptolib's, wrapped once by Ptolib.i; io_store.h
+// only re-exports them under tttrlib::io. The Python helpers below are
+// tttrlib's and stay.
+%include "Ptolib.i"
 
 %include "io_store.h"
 

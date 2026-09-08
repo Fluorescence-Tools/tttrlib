@@ -513,7 +513,7 @@ int tiff_read_f64_into(const std::string& path,
 // defines no ARGOUTVIEW typemaps, because a void-returning method has no
 // jresult to assign, so the view getters wrap as opaque SWIGTYPE_p_double.
 %define %VIEW_INTO(METHOD, INTONAME, CTYPE)
-%extend tttrlib::data::Column {
+%extend pto::Column {
   int INTONAME(CTYPE* INPLACE_ARRAY1, int DIM1) {
     CTYPE* buf = 0; int n = 0;
     $self->METHOD(&buf, &n);

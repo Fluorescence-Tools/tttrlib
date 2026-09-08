@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+- **The PTO container and the DataStore moved to ptolib**
+  (https://github.com/tpeulen/ptolib, private for now), one C++17 header that
+  tttrlib and IMP.bff both vendor (`thirdparty/ptolib/ptolib.h`, refreshed by
+  `tools/sync_ptolib.sh`, byte-compared by
+  `test/python/misc/test_vendored_ptolib.py`). Two implementations of the same
+  format had drifted: tttrlib refused any container with fewer than two
+  SeekHeads, so it could not open IMP.bff's `.drot.pto` libraries, and IMP.bff's
+  walker ignored the generation index. **No public API changed**: `DataStore`,
+  `Column`, `BitMask`, the `.dstore` functions, `PtoFile`, `PtoTag`,
+  `pto_add_store` and the rest keep their names in `tttrlib::data` /
+  `tttrlib::io` and in every binding (`PtoFile` is now `pto::File` plus the
+  photon-aware members; the base appears as `PtoFileBase`). The implementation
+  is compiled once, in `modules/core/src/DataStore.cpp`
+  (`PTOLIB_IMPLEMENTATION`); `ExpressionEngine.h` went with it. New through the
+  shared header: `PtoFile.verify()`, `.elements()`, `.ebml_offset()`,
+  `.set_cues()`, `.flush()`; a single-index container opens read-only and
+  `compact()` makes an editable copy. The C99 `pto` tool, the `ptoview` TUI and
+  the `pto_read` C reader left the tree — they are C++ tools in ptolib now
+  (`pto ls|tree|info|tags|cat|extract|verify|columns|groups|head|pack|add|
+  bundle|ui`); `tttr pto` and `tttr tui` remain. `test_pto_executable_containers.py`
+  finds the tool through `PTOLIB_PTO` or `PATH` and skips otherwise. The
+  specification pages `doc/formats/pto.rst` and
+  `okf/specs/pto-binary-decoding.md` are maintained in ptolib's `docs/` from
+  now on; the copies here point there.
+
 - **`DataStore.select_expression` / `count_expression` run on a new
   block-vectorised evaluator** (`modules/core/{include,src}/ExpressionEngine`),
   ported from imp.bff because the dependency runs tttrlib → imp.bff and the

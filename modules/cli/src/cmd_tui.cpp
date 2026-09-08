@@ -24,7 +24,7 @@
 #endif
 
 #include "cxxopts.hpp"
-#include "pto_tui.hpp"
+#include "ptolib/pto_tui.hpp"
 
 #include "io_pto.h"
 
