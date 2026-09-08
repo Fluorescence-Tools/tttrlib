@@ -5,7 +5,7 @@
  *        encoding, in one header.
  * \author Thomas-Otavio Peulen
  * \copyright MIT License, Thomas-Otavio Peulen
- * \version 0.3.1
+ * \version 0.3.2
  *
  * PTO is a self-contained, packed data container: an EBML document (DocType
  * `"pto"`) that binds opaque payloads into one file, gives each a UID that
@@ -32,8 +32,8 @@
 
 #define PTOLIB_VERSION_MAJOR 0
 #define PTOLIB_VERSION_MINOR 3
-#define PTOLIB_VERSION_PATCH 1
-#define PTOLIB_VERSION_STRING "0.3.1"
+#define PTOLIB_VERSION_PATCH 2
+#define PTOLIB_VERSION_STRING "0.3.2"
 
 #ifndef PTOLIB_API
 #define PTOLIB_API
